@@ -15,11 +15,11 @@ such that
          (x_ExplicitVarSizeWithFlags_Values_theVal[q17] % 2 = 0 <-> x_ExplicitVarSizeWithFlags_Values_isEven[q17])
              | q17 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         flatten([[toInt(x_ExplicitVarSizeWithFlags_Values_isEven[q1]); int(1)],
+         flatten([[-toInt(x_ExplicitVarSizeWithFlags_Values_isEven[q1]); int(1)],
                   [x_ExplicitVarSizeWithFlags_Values_theVal[q1]; int(1)];
                       int(1..2)])
          <lex
-         flatten([[toInt(x_ExplicitVarSizeWithFlags_Values_isEven[q1 + 1]); int(1)],
+         flatten([[-toInt(x_ExplicitVarSizeWithFlags_Values_isEven[q1 + 1]); int(1)],
                   [x_ExplicitVarSizeWithFlags_Values_theVal[q1 + 1]; int(1)];
                       int(1..2)])
              | q1 : int(1..5)]),
@@ -28,11 +28,11 @@ such that
              | q2 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..5)]),
     and([q6 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         flatten([[toInt(x_ExplicitVarSizeWithMarker_Values_isEven[q6]); int(1)],
+         flatten([[-toInt(x_ExplicitVarSizeWithMarker_Values_isEven[q6]); int(1)],
                   [x_ExplicitVarSizeWithMarker_Values_theVal[q6]; int(1)];
                       int(1..2)])
          <lex
-         flatten([[toInt(x_ExplicitVarSizeWithMarker_Values_isEven[q6 + 1]); int(1)],
+         flatten([[-toInt(x_ExplicitVarSizeWithMarker_Values_isEven[q6 + 1]); int(1)],
                   [x_ExplicitVarSizeWithMarker_Values_theVal[q6 + 1]; int(1)];
                       int(1..2)])
              | q6 : int(1..5)]),

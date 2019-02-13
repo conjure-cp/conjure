@@ -3,17 +3,17 @@ language ESSENCE' 1.0
 find x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2), int(1..6)] of int(1..7)
 branching on [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy]
 such that
-    alldifferent_except([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q16, q17] != 7) *
-                         catchUndef(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q16, q17], 0)
-                             | q16 : int(1..2), q17 : int(1..6)],
+    alldifferent_except([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q18, q19] != 7) *
+                         catchUndef(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q18, q19], 0)
+                             | q18 : int(1..2), q19 : int(1..6)],
                         0),
-    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q18, q21] != 7) | q21 : int(1..6)]) =
-         sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q19, q23] != 7) | q23 : int(1..6)])
-             | q18 : int(1..2), q19 : int(1..2)]),
-    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q24, q26] != 7) | q26 : int(1..6)]) >= 1
-             | q24 : int(1..2)]),
-    x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[1, ..] <lex
-    x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[2, ..],
+    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q20, q23] != 7) | q23 : int(1..6)]) =
+         sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q21, q25] != 7) | q25 : int(1..6)])
+             | q20 : int(1..2), q21 : int(1..2)]),
+    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q26, q28] != 7) | q28 : int(1..6)]) >= 1
+             | q26 : int(1..2)]),
+    [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[1, q13] | q13 : int(1..6)] <lex
+    [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[2, q14] | q14 : int(1..6)],
     and([and([x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] <
               x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8 + 1]
               \/ x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] = 7
@@ -26,6 +26,6 @@ such that
     and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q10] != 7) | q10 : int(1..6)]) <= 6
              | q7 : int(1..2)]),
     6 =
-    sum([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q13, q15] != 7) | q15 : int(1..6)])
-             | q13 : int(1..2)])
+    sum([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q15, q17] != 7) | q17 : int(1..6)])
+             | q15 : int(1..2)])
 

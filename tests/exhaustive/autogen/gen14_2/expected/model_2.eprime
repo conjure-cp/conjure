@@ -8,30 +8,30 @@ branching on
      var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
 such that
     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker = var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
-    and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q18] =
-              var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q18]
-                  | q18 : int(1..2)])
-             | q16 : int(1..2)]),
-    alldifferent_except([toInt(q20 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
-                               var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q20, q21]
+    and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q18, q20] =
+              var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q18, q20]
+                  | q20 : int(1..2)])
+             | q18 : int(1..2)]),
+    alldifferent_except([toInt(q22 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+                               var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q22, q23]
                                != 3)
                          *
                          catchUndef(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy
-                                        [q20, q21],
+                                        [q22, q23],
                                     0)
-                             | q20 : int(1..2), q21 : int(1..2)],
+                             | q22 : int(1..2), q23 : int(1..2)],
                         0),
-    and([q22 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q22, q24] != 3)
-                  | q24 : int(1..2)])
+    and([q24 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q24, q26] != 3)
+                  | q26 : int(1..2)])
          >= 1
-             | q22 : int(1..2)]),
+             | q24 : int(1..2)]),
     2 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-    var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[1, ..] <lex
-    var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[2, ..],
+    [var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[1, q12] | q12 : int(1..2)] <lex
+    [var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[2, q13] | q13 : int(1..2)],
     and([q5 > var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q5, q15] = 1
-                  | q15 : int(1..2)])
+         and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q5, q17] = 1
+                  | q17 : int(1..2)])
              | q5 : int(1..2)]),
     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker <= 2,
     and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
@@ -49,10 +49,10 @@ such that
          <= 2
              | q6 : int(1..2)]),
     2 =
-    sum([toInt(q12 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) *
-         catchUndef(sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q12, q14]
+    sum([toInt(q14 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) *
+         catchUndef(sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q14, q16]
                                != 3)
-                             | q14 : int(1..2)]),
+                             | q16 : int(1..2)]),
                     0)
-             | q12 : int(1..2)])
+             | q14 : int(1..2)])
 
