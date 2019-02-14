@@ -211,7 +211,30 @@ suite "level3":
 
                 echo ms.children[1].children[0].name
 
-    test "MarkerMarkerMarker":
+    test "MMF":
+        init(pathPrefix & "recursive/markerMarkerFlags")
+
+        for d in getPrettyDomainsOfNode(db, "11"):
+            if (d of MarkerSet):
+                let s = cast[MarkerSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of MarkerSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of FlagSet)
+                check(grandkid1.included == @[1])
+
+                let child2 = s.children[1]
+                check(child2 of MarkerSet)
+
+                let grandkid2 = child2.children[0]
+                check(grandkid2.included == @[2])
+                check(grandkid2 of FlagSet)
+
+    test "MMM":
         init(pathPrefix & "recursive/markerMarkerMarker")
 
         for d in getPrettyDomainsOfNode(db, "9"):
@@ -252,7 +275,7 @@ suite "level3":
                 check(grandkid2 of FlagSet)
 
 suite "level4":
-    test "MarkerMarkerMarkerMarker":
+    test "MMMM":
         init(pathPrefix & "recursive/markerMarkerMarkerMarker")
         for d in getPrettyDomainsOfNode(db, "2"):
             if (d of MarkerSet):
@@ -270,9 +293,7 @@ suite "level4":
         for d in getPrettyDomainsOfNode(db, "2"):
             if (d of FlagSet):
                 let s = cast[FlagSet](d)
-
                 echo s
-
                 let child1 = s.children[0]
                 let grandkid1 = child1.children[0]
                 let greatGrandKid1 = grandkid1.children[0]

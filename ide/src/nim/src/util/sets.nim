@@ -67,7 +67,7 @@ proc getNestedPrettyExplicitOrOccurrenceOrDummySet*(db: DbConn, inner: Set, pare
         if (parent of FlagSet):
             let fS = cast[FlagSet](parent)
 
-            if (setId > fS.maxSetTo1):
+            if (setId > fS.markerLower):
                 break
 
             # echo fS.maxSetTo1
@@ -182,7 +182,7 @@ proc getPrettyNestedFlagSet(db: DbConn, inner: Set, parent: Set, outerSetName, n
         if maxSetTo1Table.hasKey(setId):
             if num <= maxSetTo1Table[setId]:
                 currentSet.included.add(lower)
-                currentSet.maxSetTo1 = maxSetTo1Table[setId]
+                currentSet.markerLower = maxSetTo1Table[setId]
         
         if maxSetTo0Table.hasKey(setId):
             if num <= maxSetTo0Table[setId] and not lower in currentSet.included:
@@ -397,45 +397,46 @@ proc getPrettySetDomain(db: DbConn, variable: Variable, parent: Set, nodeId: str
 
 
     if variable of MarkerSet:
-        let mSet = cast[MarkerSet](variable)
-        let query0 = "SELECT lower, upper FROM domain WHERE name like '" & variable.name & "%_Marker' and index0 is null and index1 is null and index2 is null and nodeId = ?;"
-        # echo query0
-        var res = db.getRow(sql(query0), nodeId)
-        # echo res
-        discard res[0].parseInt(mSet.markerLower)
-        discard res[1].parseInt(mSet.markerUpper)
+        parseMarker(db, variable, variable.name, nodeId, @[])
+        # let mSet = cast[MarkerSet](variable)
+        # let query0 = "SELECT lower, upper FROM domain WHERE name like '" & variable.name & "%_Marker' and index0 is null and index1 is null and index2 is null and nodeId = ?;"
+        # # echo query0
+        # var res = db.getRow(sql(query0), nodeId)
+        # # echo res
+        # discard res[0].parseInt(mSet.markerLower)
+        # discard res[1].parseInt(mSet.markerUpper)
 
 
 
-        # echo mSet.getCardinality()
-        # echo "HEEEERE"
+        # # echo mSet.getCardinality()
+        # # echo "HEEEERE"
 
-        if (mSet.inner != nil):
-            if( mSet.inner of OccurrenceSet or mSet.inner of DummySet or mSet.inner of ExplicitSet):
-                getNestedPrettyExplicitOrOccurrenceOrDummySet(db, s.inner, mSet, mSet.name, nodeId, depth + 1)
+        # if (mSet.inner != nil):
+        #     if( mSet.inner of OccurrenceSet or mSet.inner of DummySet or mSet.inner of ExplicitSet):
+        #         getNestedPrettyExplicitOrOccurrenceOrDummySet(db, s.inner, mSet, mSet.name, nodeId, depth + 1)
             
-            if (mSet.inner of MarkerSet):
-                # var pp: seq[int]
-                getPrettyNestedMarkedSet(db, mSet, mSet.name, nodeId, @[])
+        #     if (mSet.inner of MarkerSet):
+        #         # var pp: seq[int]
+        #         getPrettyNestedMarkedSet(db, mSet, mSet.name, nodeId, @[])
 
-            if (mSet.inner of FlagSet):
-                getPrettyNestedFlagSet(db, s.inner, mSet, mSet.name, nodeId, depth + 1)
-            return
+        #     if (mSet.inner of FlagSet):
+        #         getPrettyNestedFlagSet(db, s.inner, mSet, mSet.name, nodeId, depth + 1)
+        #     return
         
         
 
 
-        let query1 = "SELECT index0, lower FROM domain WHERE name like '" & variable.name & "%_ExplicitVarSizeWithMarker_Values%' and lower = upper and nodeId = ? order by name asc;"
-        # echo query1
-        for res in db.rows(sql(query1), nodeId):
-            # echo res
-            discard res[1].parseInt(lower)
-            # discard res[0].findAll(digitRe)[0].parseInt(num)
-            # num = nameToNumber(res[0], 0)
+        # let query1 = "SELECT index0, lower FROM domain WHERE name like '" & variable.name & "%_ExplicitVarSizeWithMarker_Values%' and lower = upper and nodeId = ? order by name asc;"
+        # # echo query1
+        # for res in db.rows(sql(query1), nodeId):
+        #     # echo res
+        #     discard res[1].parseInt(lower)
+        #     # discard res[0].findAll(digitRe)[0].parseInt(num)
+        #     # num = nameToNumber(res[0], 0)
 
-            discard res[0].parseInt(num)
+        #     discard res[0].parseInt(num)
 
-            if num <= mSet.markerLower:
-                mSet.included.add(lower)
-            if num > mSet.markerUpper:
-                mSet.excluded.add(lower)
+        #     if num <= mSet.markerLower:
+        #         mSet.included.add(lower)
+        #     if num > mSet.markerUpper:
+        #         mSet.excluded.add(lower)

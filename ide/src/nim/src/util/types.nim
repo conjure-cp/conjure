@@ -43,8 +43,8 @@ type MarkerSet* = ref object of Set
 
 type FlagSet* = ref object of Set
     # flagCount : int
-    maxSetTo1*: int
-    maxSetTo0*: int
+    markerLower*: int
+    markerUpper*: int
     id* : int
     # cardinality : int
 
@@ -67,7 +67,7 @@ proc newMarkerSet*(name : string, lowerBound, upperBound: int = -1,inner: Set = 
     return MarkerSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, markerLower: -1, markerUpper: -1, inner: inner, id : -1)
 
 proc newFlagSet*(name : string, lowerBound, upperBound: int = -1, inner: Set = nil): FlagSet =
-    return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, maxSetTo1: 0,maxSetTo0: 0, inner: inner)
+    return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, markerLower: -1, markerUpper: -1, inner: inner)
 
 proc newExplicitSet*(name : string, lowerBound, upperBound: int = -1, cardinality: int = -1, inner: Set = nil): ExplicitSet =
     return ExplicitSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, cardinality: cardinality, inner: inner)
@@ -93,7 +93,7 @@ proc getCardinality*(s: Set): string =
     if s of FlagSet:
         let fS = cast[FlagSet](s)
         # return getPrettyRange($max(fS.included.len(), fS.lowerBound), $(fS.flagCount - fS.excluded.len()))
-        return getPrettyRange($fS.maxSetTo1, $fS.maxSetTo1)
+        return getPrettyRange($fS.markerLower, $fS.markerUpper)
     
     if s of ExplicitSet:
         let eS = cast[ExplicitSet](s)
@@ -142,7 +142,7 @@ proc `$`*(v:Variable): string =
         result =  "<Variable> " & v.name & " " & v.rng 
 
 
-let maxIndex* = 9
+let maxIndex* = 4
 
 proc getSetName*(parent : Set, setId : int): string =
     return parent.name & "-" & $setId
