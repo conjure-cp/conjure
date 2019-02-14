@@ -1,5 +1,5 @@
-include common
 import re, strutils, os, tables, json, db_sqlite, parseutils 
+import ../types
 
 
 proc getParentIdIndex(parents: seq[int]): string =
@@ -29,9 +29,7 @@ proc getValuesQuery(parents: seq[int], parentLower: int, outerSetName: string): 
     result &= outerSetName & "\\_%\\Marker_Values\\_%' escape '\\' " & parentIdIndexes 
     result &= " " & markerIdIndex  &  nullIndexes & " and nodeId = ?;"
 
-# proc getIntermediateMarker()
-
-proc getPrettyNestedMarkedSet(db: DbConn, parent: Set, outerSetName, nodeId: string,  parents: seq[int]) =
+proc getPrettyNestedMarkedSet*(db: DbConn, parent: Set, outerSetName, nodeId: string,  parents: seq[int]) =
 
     var setId = 0
     var copy = parents
@@ -71,19 +69,8 @@ proc getPrettyNestedMarkedSet(db: DbConn, parent: Set, outerSetName, nodeId: str
             var newCopy = copy
             newCopy.add(currentSet.id)
             let includedValuesQuery = getValuesQuery(newCopy, currentSet.markerLower, outerSetName)
-            # echo includedValuesQuery
             
             for res in db.rows(sql(includedValuesQuery), nodeId):
                 var lower : int
                 discard res[0].parseInt(lower)
                 currentSet.included.add(lower)
-
-            let excludedValuesQuery = includedValuesQuery.replace("<=", ">")
-
-            for res in db.rows(sql(excludedValuesQuery), nodeId):
-                var lower : int
-                discard res[0].parseInt(lower)
-
-                if (not lower in currentSet.included):
-                    currentSet.excluded.add(lower)
-            # echo excludedValuesQuery

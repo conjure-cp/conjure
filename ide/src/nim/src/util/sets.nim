@@ -1,4 +1,4 @@
-include setUtils/marker
+import types, setUtils/marker, setUtils/flags
 import re, strutils, os, tables, json, db_sqlite, parseutils 
 
 let digitRe = re"\_(\d+)"
@@ -10,7 +10,7 @@ proc nameToNumber(name: string, depth: int): int =
     discard numbers[depth][1..^1].parseInt(setId)
     return setId
 
-proc getNestedPrettyExplicitOrOccurrenceOrDummySet(db: DbConn, inner: Set, parent: Set, outerSetName: string, nodeId : string, depth : int) =
+proc getNestedPrettyExplicitOrOccurrenceOrDummySet*(db: DbConn, inner: Set, parent: Set, outerSetName: string, nodeId : string, depth : int) =
 
     echo "@ Nested occurence or dummy or explicit"
 
@@ -393,60 +393,8 @@ proc getPrettySetDomain(db: DbConn, variable: Variable, parent: Set, nodeId: str
                 dSet.included.add(lower)
 
     if variable of FlagSet:
-        # var maxSetTo1 : int
-        let fSet = cast[FlagSet](variable)
+        parseFlags(db, variable, variable.name, nodeId, @[])
 
-        let query1 = "SELECT name FROM domain WHERE name like '" & variable.name & "_%ExplicitVarSizeWithFlags%_Flags_%' and lower = 1 and upper = 1 and nodeId = ? order by name desc limit 1;"
-        # echo query1
-        var res = db.getValue(sql(query1), nodeId)
-
-        if res != "":
-            # let numbers = res.findAll(digitRe)
-            # discard numbers[0][1..^1].parseInt(fSet.maxSetTo1)
-            fSet.maxSetTo1 = nameToNumber(res, 0)
-
-        let query2 = sql("SELECT name FROM domain WHERE name like '" & variable.name & "_%ExplicitVarSizeWithFlags%_Flags_%' and lower = 0 and upper = 0 and nodeId = ? order by name desc limit 1;")
-        res = db.getValue(query2, nodeId)
-        if res != "":
-            # discard res.findAll(digitRe)[0].parseInt(fSet.maxSetTo0)
-            # let numbers = res.findAll(digitRe)
-            # discard numbers[0][1..^1].parseInt(fSet.maxSetTo0)
-            fSet.maxSetTo0 = nameToNumber(res, 0)
-
-
-        if (fSet.inner != nil):
-            if( fSet.inner of OccurrenceSet or fSet.inner of DummySet or fSet.inner of ExplicitSet):
-                getNestedPrettyExplicitOrOccurrenceOrDummySet(db, s.inner, fSet, fSet.name, nodeId, depth + 1)
-            
-            if (fSet.inner of MarkerSet):
-                # var pp : seq[int]
-                getPrettyNestedMarkedSet(db, fSet, fSet.name, nodeId, @[])
-
-            if (fSet.inner of FlagSet):
-                getPrettyNestedFlagSet(db, s.inner, fSet, fSet.name, nodeId, depth + 1)
-
-            return
-
-        # echo "here"
-        # select * from domain where name like "%s_ExplicitVarSizeWithFlags_Values_%"  and lower = upper order by name asc 
-        let query3 = "SELECT name, lower FROM domain WHERE name like '" & variable.name & "_%ExplicitVarSizeWithFlags_Values_%' and lower = upper and nodeId = ? order by name asc;"
-
-        # echo query3
-
-        for res in db.rows(sql(query3), nodeId):
-            discard res[1].parseInt(lower)
-            discard res[0].findAll(digitRe)[0].parseInt(num)
-
-            # echo "num " & $num
-            # echo "maxSetTo0 " & $fSet.maxSetTo0
-            # echo "maxSetTo1 " & $fSet.maxSetTo1
-
-            if num <= fSet.maxSetTo1:
-                fSet.included.add(lower)
-
-            elif num <= fSet.maxSetTo0:
-                fSet.excluded.add(lower)
-            
 
     if variable of MarkerSet:
         let mSet = cast[MarkerSet](variable)

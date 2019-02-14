@@ -6,8 +6,8 @@ type
     MinionParseException* = object of Exception
 
 type TreeViewNode* = ref object of RootObj
-  name: string
-  children: seq[TreeViewNode]
+  name*: string
+  children*: seq[TreeViewNode]
   
 
 # type HiddenTreeViewNode* = ref object of RootObj
@@ -15,36 +15,38 @@ type TreeViewNode* = ref object of RootObj
 #   children: seq[TreeViewNode]
 
 type Variable* = ref object of RootObj
-  name: string
-  rng: string
+  name*: string
+  rng*: string
 
 type Expression* = ref object of Variable
 
 type Set* = ref object of Variable
     lowerBound: int
     upperBound: int
-    included: seq[int]
-    excluded: seq[int]
-    inner: Set
-    children: seq[Set]
+    included*: seq[int]
+    excluded*: seq[int]
+    inner*: Set
+    children*: seq[Set]
 
 type OccurrenceSet* = ref object of Set
 
 
 type DummySet* = ref object of Set
-    dummyVal : int
-    excludedCount : int
+    dummyVal* : int
+    excludedCount* : int
 
 type MarkerSet* = ref object of Set
-    markerLower : int
-    markerUpper : int
-    id : int
+    markerLower* : int
+    markerUpper*: int
+    id* : int
     # cardinality : int
 
 type FlagSet* = ref object of Set
     # flagCount : int
-    maxSetTo1: int
-    maxSetTo0: int
+    maxSetTo1*: int
+    maxSetTo0*: int
+    id* : int
+    # cardinality : int
 
 type ExplicitSet* = ref object of Set
     cardinality : int
@@ -100,7 +102,7 @@ proc getCardinality*(s: Set): string =
     return "SET TYPE NOT SUPPORTED"
 
 
-proc getSetType(s: Set): string =
+proc getSetType*(s: Set): string =
     if s of ExplicitSet:
         result = "<ESet> "
     if s of FlagSet:
@@ -120,30 +122,27 @@ proc `$`*(v:Variable): string =
 
     if v of Set:
         let s = cast[Set](v)
-
         result = getSetType(s)
-
         result &= s.name
-
-        if s.inner == nil:
-            result &= " " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded 
-
         result &= " cardinality " & getCardinality(s)
 
         if (s.inner != nil):
             result &= " {" & getSetType(s.inner) & "}"
+        else:
+            result &= " " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded 
 
         if s.children.len() > 0:
             result &= "\n"
             var indent = ""
             for i in countUp(1, s.name.split("-").len()):
-                indent &= "      "
+                indent &= "       "
             for child in s.children:
                 result &= indent & $child & "\n"
-            # result &= "\n}"
-
     else:
         result =  "<Variable> " & v.name & " " & v.rng 
 
 
-let maxIndex = 9
+let maxIndex* = 9
+
+proc getSetName*(parent : Set, setId : int): string =
+    return parent.name & "-" & $setId
