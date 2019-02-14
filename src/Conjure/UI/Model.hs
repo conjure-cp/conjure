@@ -181,7 +181,9 @@ outputModels config model = do
                     let filename = dir </> "model" ++ gen ++ ".eprime"
                     if estimateNumberOfModels config
                         then do
-                            let estimate = product $ 1 : [ numOptions
+                            let
+                                estimate :: Integer
+                                estimate = product $ 1 : [ toInteger numOptions
                                                          | (_question, _choice, numOptions) <-
                                                              eprime |> mInfo |> miTrailCompact
                                                          ]
