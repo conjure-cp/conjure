@@ -21,6 +21,9 @@ type Variable* = ref object of RootObj
 type Expression* = ref object of Variable
 
 type Set* = ref object of Variable
+    markerLower* : int
+    markerUpper* : int
+    id* : int
     lowerBound: int
     upperBound: int
     included*: seq[int]
@@ -36,16 +39,16 @@ type DummySet* = ref object of Set
     excludedCount* : int
 
 type MarkerSet* = ref object of Set
-    markerLower* : int
-    markerUpper*: int
-    id* : int
+    # markerLower* : int
+    # markerUpper*: int
+    # id* : int
     # cardinality : int
 
 type FlagSet* = ref object of Set
     # flagCount : int
-    markerLower*: int
-    markerUpper*: int
-    id* : int
+    # markerLower*: int
+    # markerUpper*: int
+    # id* : int
     # cardinality : int
 
 type ExplicitSet* = ref object of Set

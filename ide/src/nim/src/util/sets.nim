@@ -393,11 +393,11 @@ proc getPrettySetDomain(db: DbConn, variable: Variable, parent: Set, nodeId: str
                 dSet.included.add(lower)
 
     if variable of FlagSet:
-        parseFlags(db, variable, variable.name, nodeId, @[])
+        parseFlags(db, cast[Set](variable), variable.name, nodeId, @[])
 
 
     if variable of MarkerSet:
-        parseMarker(db, variable, variable.name, nodeId, @[])
+        parseMarker(db, cast[Set](variable), variable.name, nodeId, @[])
         # let mSet = cast[MarkerSet](variable)
         # let query0 = "SELECT lower, upper FROM domain WHERE name like '" & variable.name & "%_Marker' and index0 is null and index1 is null and index2 is null and nodeId = ?;"
         # # echo query0

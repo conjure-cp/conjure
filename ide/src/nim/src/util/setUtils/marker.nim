@@ -36,10 +36,9 @@ proc getValuesQuery(parents: seq[int], parentLower: int, outerSetName: string): 
     result &= outerSetName & "\\_%\\Marker_Values\\_%' escape '\\' " & parentIdIndexes 
     result &=  nullIndexes & " and nodeId = ?;"
 
-proc parseMarker*(db: DbConn, v: Variable, outerSetName, nodeId: string,  parents: seq[int]) =
+proc parseMarker*(db: DbConn, s: Set, outerSetName, nodeId: string,  parents: seq[int]) =
 
     var copy = parents
-    var parent = cast[MarkerSet](v)
     echo "Marker copy " & $parents
 
     let markerQuery = getMarkerQuery(copy, outerSetName)
@@ -49,36 +48,32 @@ proc parseMarker*(db: DbConn, v: Variable, outerSetName, nodeId: string,  parent
     echo markerQuery
     echo res
 
-    discard res[0].parseInt(parent.markerLower)
-    discard res[1].parseInt(parent.markerUpper)
+    discard res[0].parseInt(s.markerLower)
+    discard res[1].parseInt(s.markerUpper)
     
-    for setId in countUp(1, parent.markerLower): 
+    for setId in countUp(1, s.markerLower): 
         # echo res
 
         # discard res[0].parseInt(parent.markerLower)
         # discard res[1].parseInt(parent.markerUpper)
         # echo parent
 
-        if (parent.inner != nil):
+        if (s.inner != nil):
 
             # echo parent.name
 
-            var currentSet : MarkerSet
-            let casted = cast[MarkerSet](parent.inner)
-            currentSet.deepCopy(casted)
+            var currentSet : Set
+            currentSet.deepCopy(s.inner)
             currentSet.id = setId
-            currentSet.name = getSetName(parent, setId)
-            parent.children.add(currentSet)
+            currentSet.name = getSetName(s, setId)
+            s.children.add(currentSet)
             var newCopy = copy
             newCopy.add(setId)
         
 
-            if (parent.inner of MarkerSet):
+            if (s.inner of MarkerSet):
                 parseMarker(db, currentSet, outerSetName, nodeId, newCopy)
-            if (parent.inner of FlagSet):
-                # let casted = cast[FlagSet](parent.inner)
-                # var fSet : FlagSet
-                # fSet.deepCopy(casted)
+            if (s.inner of FlagSet):
                 parseFlags(db, currentSet, outerSetName, nodeId, newCopy)
             # if (currentSet.inner of FlagSet):
             #     discard
@@ -88,11 +83,11 @@ proc parseMarker*(db: DbConn, v: Variable, outerSetName, nodeId: string,  parent
         else:
             echo "HEEREERE!!!"
             var newCopy = copy
-            newCopy.add(parent.id)
-            let valuesQuery = getValuesQuery(newCopy, parent.markerLower, outerSetName)
+            newCopy.add(s.id)
+            let valuesQuery = getValuesQuery(newCopy, s.markerLower, outerSetName)
             # echo valuesQuery
             
             for res in db.rows(sql(valuesQuery), nodeId):
                 var lower : int
                 discard res[0].parseInt(lower)
-                parent.included.add(lower)
+                s.included.add(lower)
