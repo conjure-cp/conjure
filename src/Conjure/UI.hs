@@ -181,7 +181,12 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    deriving (Eq, Ord, Show, Data, Typeable)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize UI
+instance Hashable  UI
+instance ToJSON    UI where toJSON = genericToJSON jsonOptions
+instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
 data OutputFormat = Plain | Binary | JSON
