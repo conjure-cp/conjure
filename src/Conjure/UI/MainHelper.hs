@@ -128,6 +128,7 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             , Config.responses                  = responsesList
+            , Config.estimateNumberOfModels     = estimateNumberOfModels
             }
     runNameGen model $ outputModels config model
 mainWithArgs TranslateParameter{..} = do
@@ -339,6 +340,7 @@ mainWithArgs config@Solve{..} = do
             pp logLevel $ "Generating models for" <+> pretty essence
             liftIO $ removeDirectoryIfExists outputDirectory
             let modelling = let savedChoices = def
+                                estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
             mainWithArgs modelling

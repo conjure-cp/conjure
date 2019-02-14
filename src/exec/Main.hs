@@ -20,6 +20,9 @@ import System.Console.CmdArgs ( cmdArgs )
 -- terminal-size
 import qualified System.Console.Terminal.Size as Terminal ( size, width )
 
+-- pretty-show
+import Text.Show.Pretty ( ppDoc )
+
 
 main :: IO ()
 main = do
@@ -62,7 +65,9 @@ main = do
                      >>= helpAutoWidth
     input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do
-            logDebug ("Command line options: " <+> pretty (show input))
+            when (estimateNumberOfModels input) $
+                liftIO $ print $ vcat ["Command line options", ppDoc input]
+            logDebug ("Command line options:" <+> pretty (show input))
             let ?typeCheckerMode = StronglyTyped
             mainWithArgs input
     case limitTime input of

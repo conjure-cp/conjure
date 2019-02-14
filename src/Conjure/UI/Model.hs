@@ -103,11 +103,12 @@ import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
 import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
-import Pipes ( Producer, await, yield, (>->), cat )
+import Pipes ( Pipe, Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels ::
+    forall m .
     MonadIO m =>
     MonadFail m =>
     MonadLog m =>
@@ -139,10 +140,21 @@ outputModels config model = do
         ["Identifiers cannot contain a quotation mark character in them:" <+> prettyList id "," primeyIdentifiers]
 
     let dir = outputDirectory config
-    liftIO $ createDirectoryIfMissing True dir
+
+    unless (estimateNumberOfModels config) $
+        liftIO $ createDirectoryIfMissing True dir
 
     let
+        limitModelsIfEstimating :: Pipe LogOrModel LogOrModel m ()
+        limitModelsIfEstimating =
+            if estimateNumberOfModels config
+                then limitModelsNeeded 1
+                else Pipes.cat
+
+        limitModelsIfNeeded :: Pipe LogOrModel LogOrModel m ()
         limitModelsIfNeeded = maybe Pipes.cat limitModelsNeeded (limitModels config)
+
+        limitModelsNeeded :: Int -> Pipe LogOrModel LogOrModel m ()
         limitModelsNeeded 0 = return ()
         limitModelsNeeded n = do
             x <- Pipes.await
@@ -167,7 +179,17 @@ outputModels config model = do
                                        |> concat
                                 else padLeft 6 '0' (show i)
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    writeModel (lineWidth config) Plain (Just filename) eprime
+                    if estimateNumberOfModels config
+                        then do
+                            let estimate = product $ 1 : [ numOptions
+                                                         | (_question, _choice, numOptions) <-
+                                                             eprime |> mInfo |> miTrailCompact
+                                                         ]
+                            liftIO $ print
+                                        $ "These options would generate at least"
+                                        <+> pretty estimate
+                                        <+> (if estimate == 1 then "model" else "models") <> "."
+                        else writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
 
     let ?typeCheckerMode = RelaxedIntegerTags
@@ -176,7 +198,8 @@ outputModels config model = do
                 (return (numberingStart config))
                 (const $ return ())
                 (toCompletion config model
-                    >-> limitModelsIfNeeded)
+                    >-> limitModelsIfNeeded
+                    >-> limitModelsIfEstimating)
 
 
 toCompletion :: forall m .
