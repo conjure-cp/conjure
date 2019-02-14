@@ -663,7 +663,7 @@ lambdaToFunction (AbsPatSet ts) body = \ p ->
             _ -> bug "lambdaToFunction, AbsPatSet"
     in
         unroll ts ps body
-lambdaToFunction p@AbstractPatternMetaVar{} _ = bug $ "Unsupported AbstractPattern, got " <+> pretty (show p)
+lambdaToFunction p@AbstractPatternMetaVar{} _ = bug $ "Unsupported AbstractPattern, got" <+> pretty (show p)
 
 
 ------------------------------------------------------------------------------------------------------------------------

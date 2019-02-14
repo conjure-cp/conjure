@@ -139,7 +139,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                 [ val
                 | fr <- froms
                 , let val = case lookup fr vals of
-                                Nothing -> fail $ vcat [ "No value for " <+> pretty fr
+                                Nothing -> fail $ vcat [ "No value for" <+> pretty fr
                                                        , "In:" <+> pretty (AbsLitFunction vals)
                                                        ]
                                 Just v  -> return v
