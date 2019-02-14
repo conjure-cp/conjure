@@ -290,6 +290,8 @@ Library
         build-depends: template-haskell == 2.12.*
     if impl(ghc == 8.4.*)
         build-depends: template-haskell == 2.13.*
+    if impl(ghc == 8.6.*)
+        build-depends: template-haskell == 2.14.*
 
     if impl(ghc < 8.4)
         build-depends: semigroups >= 0.18.4
@@ -305,6 +307,7 @@ Library
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        NoMonadFailDesugaring
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -341,6 +344,7 @@ Executable conjure
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        NoMonadFailDesugaring
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -399,6 +403,7 @@ Test-Suite conjure-testing
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        NoMonadFailDesugaring
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
