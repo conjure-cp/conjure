@@ -33,7 +33,7 @@ suite "level1":
                 check(eS.excluded.len() == 0)
                 check(eS.getCardinality() == "int(4)")
 
-    test "Flags":
+    test "F":
         echo pathPrefix & "flags"
         init(pathPrefix & "flags")
         for d in getPrettyDomainsOfNode(db, "7"):
@@ -166,7 +166,7 @@ suite "level2":
                 check(mS.children[0].getCardinality() == "int(2)")
 
     
-    test "FlagsFlags":
+    test "FF":
         init(pathPrefix & "recursive/flagsFlags")
 
         for d in getPrettyDomainsOfNode(db, "8"):
@@ -184,32 +184,54 @@ suite "level2":
     
 
 suite "level3":
-    test "MarkerMarkerOccurrence":
-        init(pathPrefix & "recursive/markerMarkerOccurrence")
+    # test "MarkerMarkerOccurrence":
+    #     init(pathPrefix & "recursive/markerMarkerOccurrence")
 
-        for d in getPrettyDomainsOfNode(db, "7"):
-            # echo d
-            if (d of MarkerSet):
-                let mS = cast[MarkerSet](d)
+    #     for d in getPrettyDomainsOfNode(db, "7"):
+    #         # echo d
+    #         if (d of MarkerSet):
+    #             let mS = cast[MarkerSet](d)
 
-                # echo mS.children
+    #             # echo mS.children
 
-                check(mS.inner of MarkerSet)
-                check(mS.getCardinality() == "int(2)")
+    #             check(mS.inner of MarkerSet)
+    #             check(mS.getCardinality() == "int(2)")
 
-                check(mS.inner.inner of OccurrenceSet)
+    #             check(mS.inner.inner of OccurrenceSet)
 
-                check(mS.children[0].getCardinality() == "int(1)")
-                check(mS.children[0].children[0].getCardinality() == "int(1)")
-                check(mS.children[0].children[0].included.len() == 0)
-                check(mS.children[0].children[0].excluded == @[1])
+    #             check(mS.children[0].getCardinality() == "int(1)")
+    #             check(mS.children[0].children[0].getCardinality() == "int(1)")
+    #             check(mS.children[0].children[0].included.len() == 0)
+    #             check(mS.children[0].children[0].excluded == @[1])
 
-                check(mS.children[1].getCardinality() == "int(1)")
-                check(mS.children[1].children[0].getCardinality() == "int(1)")
-                check(mS.children[1].children[0].included.len() == 0)
-                check(mS.children[1].children[0].excluded == @[1])
+    #             check(mS.children[1].getCardinality() == "int(1)")
+    #             check(mS.children[1].children[0].getCardinality() == "int(1)")
+    #             check(mS.children[1].children[0].included.len() == 0)
+    #             check(mS.children[1].children[0].excluded == @[1])
 
-                echo ms.children[1].children[0].name
+    #             echo ms.children[1].children[0].name
+    test "FFM":
+        init(pathPrefix & "recursive/flagsFlagsMarker")
+
+        for d in getPrettyDomainsOfNode(db, "11"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of FlagSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of MarkerSet)
+                check(grandkid1.included == @[1])
+
+                let child2 = s.children[1]
+                check(child2 of FlagSet)
+
+                let grandkid2 = child2.children[0]
+                check(grandkid2.included == @[2])
+                check(grandkid2 of MarkerSet)
 
     test "MMF":
         init(pathPrefix & "recursive/markerMarkerFlags")

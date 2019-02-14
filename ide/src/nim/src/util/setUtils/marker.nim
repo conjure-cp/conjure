@@ -69,12 +69,17 @@ proc parseMarker*(db: DbConn, v: Variable, outerSetName, nodeId: string,  parent
             currentSet.id = setId
             currentSet.name = getSetName(parent, setId)
             parent.children.add(currentSet)
+            var newCopy = copy
+            newCopy.add(setId)
         
 
             if (parent.inner of MarkerSet):
-                var newCopy = copy
-                newCopy.add(setId)
                 parseMarker(db, currentSet, outerSetName, nodeId, newCopy)
+            if (parent.inner of FlagSet):
+                # let casted = cast[FlagSet](parent.inner)
+                # var fSet : FlagSet
+                # fSet.deepCopy(casted)
+                parseFlags(db, currentSet, outerSetName, nodeId, newCopy)
             # if (currentSet.inner of FlagSet):
             #     discard
                 # parseFlags(db, currentSet, outerSetName, nodeId, copy)
