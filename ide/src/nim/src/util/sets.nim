@@ -186,6 +186,8 @@ proc decideSet(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[in
 
 proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int]) =
 
+    # echo "HERE!!"
+
     var copy = parents
     var flagQuery = getFlagQuery(parents, outerSetName)
     # echo flagQuery
@@ -226,6 +228,7 @@ proc parseMarker(db: DbConn, s: Set, outerSetName, nodeId: string,  parents: seq
     for setId in countUp(1, s.markerLower): 
 
         if (s.inner != nil):
+            # echo "DECIDING"
 
             let childSet = makeChildSet(s, setId)
             var newCopy = copy
