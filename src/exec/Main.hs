@@ -66,8 +66,10 @@ main = do
             logDebug ("Command line options:" <+> pretty (show input))
             let ?typeCheckerMode = StronglyTyped
             mainWithArgs input
-            when (estimateNumberOfModels input) $
-                liftIO $ putStrLn $ renderWide $ pretty $ toJSON input
+            case input of
+                Modelling{} | estimateNumberOfModels input ->
+                    liftIO $ putStrLn $ renderWide $ pretty $ toJSON input
+                _ -> return ()
     case limitTime input of
         Just sec | sec > 0 -> do
             putStrLn $ "Running with a time limit of " ++ show sec ++ " seconds."
