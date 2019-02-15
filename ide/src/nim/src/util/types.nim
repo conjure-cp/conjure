@@ -52,7 +52,7 @@ type FlagSet* = ref object of Set
     # cardinality : int
 
 type ExplicitSet* = ref object of Set
-    cardinality : int
+    cardinality* : int
 
 proc newVariable*(name, rng: string = "UNDEFINED"): Variable =
     return Variable(name: name, rng: rng)

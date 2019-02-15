@@ -34,9 +34,13 @@ proc getInnerSetQuery*(s, parent: Set, ancestors: seq[int], outerSetName: string
     result = "SELECT index" & $index & ", lower FROM domain WHERE name like '%" & outerSetName 
 
     if (s of OccurrenceSet):
-        result &= "_Occurrence%' and lower = upper "
+        result &= "\\_%Occurrence%' "
     if (s of DummySet):
-        result &= "_ExplicitVarSizeWithDummy%' and lower = upper "
+        result &= "\\_%ExplicitVarSizeWithDummy%' "
+    if (s of ExplicitSet):
+        result &= "\\_%Explicit\\_%' "
+
+    result &= "escape '\\' and lower = upper "
 
     if parent != nil:
         result &= getParentIdIndexes(ancestors)
