@@ -33,14 +33,6 @@ suite "level1":
                 check(eS.excluded.len() == 0)
                 check(eS.getCardinality() == "int(4)")
 
-    test "Marker":
-        init(pathPrefix & "marker")
-        for d in getPrettyDomainsOfNode(db, "3"):
-            if d of MarkerSet:
-                let mS = cast[MarkerSet](d)
-                check(mS.included.len() == 0)
-                check(mS.excluded.len() == 0)
-                check(mS.getCardinality() == "int(1..5)")
 
 suite "level2":
 
@@ -395,3 +387,27 @@ suite "temp":
                 check(fS.included == @[1,2,3])
                 check(fS.excluded.len() == 0)
                 check(fS.getCardinality() == "int(3)")
+                
+    test "M":
+        init(pathPrefix & "marker")
+        for d in getPrettyDomainsOfNode(db, "4"):
+            if d of MarkerSet:
+                let mS = cast[MarkerSet](d)
+                check(mS.included == @[6])
+                check(mS.excluded.len() == 0)
+                check(mS.getCardinality() == "int(1)")
+
+    test "MM":
+        init(pathPrefix & "recursive/markerMarker")
+
+        for d in getPrettyDomainsOfNode(db, "5"):
+            # echo d
+            if (d of MarkerSet):
+                let mS = cast[MarkerSet](d)
+
+                check(mS.inner of MarkerSet)
+                check(mS.getCardinality() == "int(1)")
+
+                check(mS.children[0].included == @[1, 2])
+                check(mS.children[0].excluded.len() == 0)
+                check(mS.children[0].getCardinality() == "int(2)")
