@@ -555,3 +555,107 @@ suite "occurrence":
                 check(greatGrandKid1.included == @[1])
                 check(greatGrandKid1.excluded == @[2])
 
+suite "dummy":
+
+    test "D":
+        init(pathPrefix & "dummy")
+        for d in getPrettyDomainsOfNode(db, "7"):
+            if (d of DummySet):
+                let s = cast[DummySet](d)
+                check(s.getCardinality() == "int(3)")
+                check(s.included == @[1, 2, 3])
+                check(s.excluded.len() == 0)
+
+    test "MD":
+        init(pathPrefix & "recursive/markerDummy")
+        for d in getPrettyDomainsOfNode(db, "7"):
+            if (d of MarkerSet):
+                let s = cast[MarkerSet](d)
+                check(s.getCardinality() == "int(1)")
+
+                let child1 = s.children[0]
+                check(child1 of DummySet)
+                check(child1.included == @[1,2])
+                check(child1.excluded.len() == 0)
+
+    test "FD":
+        init(pathPrefix & "recursive/flagsDummy")
+        for d in getPrettyDomainsOfNode(db, "7"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+                check(s.getCardinality() == "int(1)")
+                let child1 = s.children[0]
+                check(child1 of DummySet)
+                check(child1.included == @[1,2])
+                check(child1.excluded.len() == 0)
+
+    test "MMD":
+        init(pathPrefix & "recursive/markerMarkerDummy")
+
+        for d in getPrettyDomainsOfNode(db, "10"):
+            if (d of MarkerSet):
+                let s = cast[MarkerSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of MarkerSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of DummySet)
+                check(grandkid1.included == @[1])
+                check(grandkid1.excluded.len() == 0)
+
+                let child2 = s.children[1]
+                check(child2 of MarkerSet)
+
+                let grandkid2 = child2.children[0]
+                check(grandkid2 of DummySet)
+                check(grandkid2.included == @[2])
+                check(grandkid2.excluded.len() == 0)
+
+    test "FFD":
+        init(pathPrefix & "recursive/flagsFlagsDummy")
+
+        for d in getPrettyDomainsOfNode(db, "14"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of FlagSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of DummySet)
+                check(grandkid1.included == @[1])
+                check(grandkid1.excluded.len() == 0)
+
+                let child2 = s.children[1]
+                check(child2 of FlagSet)
+
+                let grandkid2 = child2.children[0]
+                check(grandkid2 of DummySet)
+                check(grandkid2.included == @[2])
+                check(grandkid2.excluded.len() == 0)
+
+
+    test "FFFD":
+        init(pathPrefix & "recursive/flagsFlagsFlagsDummy")
+
+        for d in getPrettyDomainsOfNode(db, "2"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of FlagSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of FlagSet)
+
+                let greatGrandKid1 = grandkid1.children[0]
+                check(greatGrandKid1 of DummySet)
+                check(greatGrandKid1.included == @[1])
+                check(greatGrandKid1.excluded.len() == 0)
