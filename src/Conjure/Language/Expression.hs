@@ -229,21 +229,20 @@ instance Pretty Declaration where
                     Constant c -> modifierC c
                     _          -> id
 
-            modifierC c =
-                case (isPrim1DT c, isPrim2D c, isPrim3D c) of
-                    (Just primTable, _, _) ->
-                        if null primTable
-                            then id
-                            else \ s -> vcat [s, pretty (comment1D (maxIntWidth primTable) primTable)]
-                    (_, Just primTable, _) ->
-                        if null (concat primTable)
-                            then id
-                            else \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
-                    (_, _, Just primTable) ->
-                        if null (concat (concat primTable))
-                            then id
-                            else \ s -> vcat [s, pretty (comment3D (maxIntWidth primTable) primTable)]
-                    _ -> id
+            modifierC c
+                | Just primTable <- isPrim1DT c
+                , not (null primTable) = \ s ->
+                    vcat [s, pretty (comment1D (maxIntWidth primTable) primTable)]
+            modifierC c
+                | Just primTable <- isPrim2D c
+                , not (null (concat primTable)) = \ s ->
+                    vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
+            modifierC c
+                | Just primTable <- isPrim3D c
+                , not (null (concat (concat primTable))) = \ s ->
+                    vcat [s, pretty (comment3D (maxIntWidth primTable) primTable)]
+            modifierC _ = id
+
         in
             modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
