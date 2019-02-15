@@ -19,7 +19,7 @@ proc getMarkerQuery*(parents: seq[int], outerSetName: string): string =
 
 proc getMarkerValuesQuery*(parents: seq[int], parentLower: int, outerSetName: string): string =
     let parentIdIndexes = getParentIdIndexes(parents)
-    let markerIdIndex = getSingleIndex(parents.len(), parentLower)
+    let markerIdIndex = getSingleIndexLE(parents.len(), parentLower)
     let nullIndexes = getNullIndexes(parents.len() + 1)
     result &= "SELECT lower, name FROM domain WHERE lower = upper and name like '" 
     result &= outerSetName & "\\_%\\Marker_Values\\_%' escape '\\' " & parentIdIndexes 

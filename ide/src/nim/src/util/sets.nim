@@ -174,17 +174,42 @@ proc getNestedPrettyExplicitOrOccurrenceOrDummySet*(db: DbConn, inner: Set, pare
 #         parseMarker(db, cast[Set](variable), variable.name, nodeId, @[])
 
 
-proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int])
-proc parseMarker(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int])
+proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, parents: seq[int])
+proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, parents: seq[int])
+proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, parents: seq[int])
 
-proc decideSet(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int]) =
+proc decideSet(db: DbConn, s,  parent: Set, outerSetName, nodeId: string, parents: seq[int]) =
     if s of FlagSet:
-        parseFlags(db, s, outerSetName, nodeId, parents)
+        parseFlags(db, s, parent, outerSetName, nodeId, parents)
 
     if s of MarkerSet:
-        parseMarker(db, s, outerSetName, nodeId, parents)
+        parseMarker(db, s, parent, outerSetName, nodeId, parents)
 
-proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int]) =
+    if s of OccurrenceSet:
+        parseOccurrence(db, s, parent, outerSetName, nodeId, parents)
+
+proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, parents: seq[int]) =
+    var index = parents.len()
+    var query = "SELECT index" & $index & ", lower FROM domain WHERE name like '%" & outerSetName 
+    query &= "_Occurrence%' and lower = upper "
+
+    if parent != nil:
+        query &= getParentIdIndexes(parents)
+
+    query &= " and nodeId = ?;"
+    
+    echo query
+    for res in db.fastRows(sql(query), nodeId):
+        echo res
+        var number : int
+        discard res[0].parseInt(number)
+
+        if (res[1] == "1"):
+            s.included.add(number)
+        else:
+            s.excluded.add(number)
+
+proc parseFlags(db: DbConn, s, parent : Set, outerSetName, nodeId: string, parents: seq[int]) =
 
     # echo "HERE!!"
 
@@ -203,14 +228,14 @@ proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[i
             let childSet = makeChildSet(s, setID)
             var newCopy = copy
             newCopy.add(setId)
-            decideSet(db, childSet, outerSetName, nodeId, newCopy)
+            decideSet(db, childSet, s, outerSetName, nodeId, newCopy)
         else:
             let valuesQuery = getFlagValuesQuery(s, copy, outerSetName)
             # echo valuesQuery
             includeValues(db, s, valuesQuery, nodeId)
             break;
 
-proc parseMarker(db: DbConn, s: Set, outerSetName, nodeId: string,  parents: seq[int]) =
+proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,  parents: seq[int]) =
 
     var copy = parents
     # echo "Marker copy " & $parents
@@ -233,7 +258,7 @@ proc parseMarker(db: DbConn, s: Set, outerSetName, nodeId: string,  parents: seq
             let childSet = makeChildSet(s, setId)
             var newCopy = copy
             newCopy.add(setId)
-            decideSet(db, childSet, outerSetName, nodeId, newCopy)
+            decideSet(db, childSet, s, outerSetName, nodeId, newCopy)
         else:
             # echo "HEEREERE!!!"
             let valuesQuery = getMarkerValuesQuery(copy, s.markerLower, outerSetName)

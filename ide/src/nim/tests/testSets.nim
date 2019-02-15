@@ -350,17 +350,24 @@ suite "temp":
 
         for d in getPrettyDomainsOfNode(db, "9"):
             if (d of MarkerSet):
-                let mS = cast[MarkerSet](d)
+                let s = cast[MarkerSet](d)
 
-                echo mS
+                echo s
 
-                let child1 = ms.children[0]
+                let child1 = s.children[0]
+                check(child1 of MarkerSet)
+
                 let grandkid1 = child1.children[0]
                 check(grandkid1.included == @[1])
+                check(grandkid1 of MarkerSet)
 
-                let child2 = ms.children[1]
+                let child2 = s.children[1]
+                check(child2 of MarkerSet)
+
                 let grandkid2 = child2.children[0]
                 check(grandkid2.included == @[2])
+                check(grandkid2 of MarkerSet)
+
 
 
     test "FF":
@@ -443,3 +450,108 @@ suite "temp":
                 check(child1.included == @[3])
                 check(child1.excluded.len() == 0)
                 check(child1.getCardinality() == "int(1)")
+
+suite "occurrence":
+
+    test "O":
+        init(pathPrefix & "occurrence")
+        for d in getPrettyDomainsOfNode(db, "7"):
+            if (d of OccurrenceSet):
+                let s = cast[OccurrenceSet](d)
+                check(s.getCardinality() == "int(1)")
+                check(s.included == @[6])
+                check(s.excluded == @[1,2,3,4,5,7,8,9])
+
+    test "MO":
+        init(pathPrefix & "recursive/markerOccurrence")
+        for d in getPrettyDomainsOfNode(db, "7"):
+            if (d of MarkerSet):
+                let s = cast[MarkerSet](d)
+                check(s.getCardinality() == "int(1)")
+
+                let child1 = s.children[0]
+                check(child1 of OccurrenceSet)
+                check(child1.included == @[3])
+                check(child1.excluded == @[1,2])
+
+    test "FO":
+        init(pathPrefix & "recursive/flagsOccurrence")
+        for d in getPrettyDomainsOfNode(db, "7"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+                check(s.getCardinality() == "int(1)")
+                let child1 = s.children[0]
+                check(child1 of OccurrenceSet)
+                check(child1.included == @[3])
+                check(child1.excluded == @[1,2])
+
+    test "MMO":
+        init(pathPrefix & "recursive/markerMarkerOccurrence")
+
+        for d in getPrettyDomainsOfNode(db, "8"):
+            if (d of MarkerSet):
+                let s = cast[MarkerSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of MarkerSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of OccurrenceSet)
+                check(grandkid1.included == @[2])
+                check(grandkid1.excluded == @[1])
+
+                let child2 = s.children[1]
+                check(child2 of MarkerSet)
+
+                let grandkid2 = child2.children[0]
+                check(grandkid2 of OccurrenceSet)
+                check(grandkid2.included == @[1])
+                check(grandkid2.excluded == @[2])
+
+    test "FFO":
+        init(pathPrefix & "recursive/flagsFlagsOccurrence")
+
+        for d in getPrettyDomainsOfNode(db, "12"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of FlagSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of OccurrenceSet)
+                check(grandkid1.included == @[2])
+                check(grandkid1.excluded == @[1])
+
+                let child2 = s.children[1]
+                check(child2 of FlagSet)
+
+                let grandkid2 = child2.children[0]
+                check(grandkid2 of OccurrenceSet)
+                check(grandkid2.included == @[1])
+                check(grandkid2.excluded == @[2])
+
+    test "FFFO":
+        init(pathPrefix & "recursive/flagsFlagsFlagsOccurrence")
+
+        for d in getPrettyDomainsOfNode(db, "2"):
+            if (d of FlagSet):
+                let s = cast[FlagSet](d)
+
+                echo s
+
+                let child1 = s.children[0]
+                check(child1 of FlagSet)
+
+                let grandkid1 = child1.children[0]
+                check(grandkid1 of FlagSet)
+
+                let greatGrandKid1 = grandkid1.children[0]
+                check(greatGrandKid1 of OccurrenceSet)
+                check(greatGrandKid1.included == @[1])
+                check(greatGrandKid1.excluded == @[2])
+

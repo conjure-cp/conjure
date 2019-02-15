@@ -5,6 +5,9 @@ proc getNullIndexes*(depth: int): string =
         result &= " and index" & $i & " is null "; 
 
 proc getSingleIndex*(depth, parentLower: int): string =
+    return "and index" & $(depth) & " = " & $parentLower & " " 
+
+proc getSingleIndexLE*(depth, parentLower: int): string =
     return "and index" & $(depth) & " <= " & $parentLower & " " 
 
 proc getParentIdIndexes*(parents: seq[int]): string =
