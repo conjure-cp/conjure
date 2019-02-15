@@ -174,6 +174,16 @@ proc getNestedPrettyExplicitOrOccurrenceOrDummySet*(db: DbConn, inner: Set, pare
 #         parseMarker(db, cast[Set](variable), variable.name, nodeId, @[])
 
 
+proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int])
+proc parseMarker(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int])
+
+proc decideSet(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int]) =
+    if s of FlagSet:
+        parseFlags(db, s, outerSetName, nodeId, parents)
+
+    if s of MarkerSet:
+        parseMarker(db, s, outerSetName, nodeId, parents)
+
 proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[int]) =
 
     var copy = parents
@@ -191,9 +201,7 @@ proc parseFlags(db: DbConn, s: Set, outerSetName, nodeId: string, parents: seq[i
             let childSet = makeChildSet(s, setID)
             var newCopy = copy
             newCopy.add(setId)
-
-            if (s.inner of FlagSet):
-                parseFlags(db, childSet, outerSetName, nodeId, newCopy)
+            decideSet(db, childSet, outerSetName, nodeId, newCopy)
         else:
             let valuesQuery = getFlagValuesQuery(s, copy, outerSetName)
             # echo valuesQuery
@@ -222,21 +230,9 @@ proc parseMarker(db: DbConn, s: Set, outerSetName, nodeId: string,  parents: seq
             let childSet = makeChildSet(s, setId)
             var newCopy = copy
             newCopy.add(setId)
-
-            if (s.inner of MarkerSet):
-                parseMarker(db, childSet, outerSetName, nodeId, newCopy)
-            if (s.inner of FlagSet):
-                parseFlags(db, childSet, outerSetName, nodeId, newCopy)
-
+            decideSet(db, childSet, outerSetName, nodeId, newCopy)
         else:
             # echo "HEEREERE!!!"
             let valuesQuery = getMarkerValuesQuery(copy, s.markerLower, outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
             break;
-
-proc getPrettySetDomain(db: DbConn, variable: Variable, nodeId: string, parents: seq[int]) =
-    if variable of FlagSet:
-        parseFlags(db, cast[Set](variable), variable.name, nodeId, parents)
-
-    if variable of MarkerSet:
-        parseMarker(db, cast[Set](variable), variable.name, nodeId, parents)

@@ -170,7 +170,8 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : (seq[Variable]) =
         # echo variable
 
         if (variable of Set):
-            getPrettySetDomain(db, variable,  nodeId, @[])
+            let s = cast[Set](variable)
+            decideSet(db, s, s.name, nodeId, @[])
             # break
 
         elif variable of Expression:
