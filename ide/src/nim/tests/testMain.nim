@@ -7,7 +7,6 @@ suite "init":
         let validPath = "../test/testData/sets/dummy"
         init(validPath)
 
-
     test "initNoDBFile":
         let badPath = "../test/testData/extension/noDBFile"
         expect(CannotOpenDatabaseException):
@@ -83,52 +82,288 @@ suite "getLabel":
 suite "loadSimpleDomains":
     let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
     init(validPath)
-    test "1":
-        for i in countUp(1, 10):
-            let response = loadSimpleDomains("100", "1", $i)
-            # echo response.vars
-            # echo response.changedNames
+    test "changed":
+        var response = loadSimpleDomains("1")
+        check(response.changedNames.len() == 0)
 
+        response = loadSimpleDomains("2")
+        check(response.changedNames == @["y"])
 
-        # for node in core:
+        response = loadSimpleDomains("3")
+        check(response.changedNames == @["z"])
 
+        response = loadSimpleDomains("4")
+        check(response.changedNames == @["s_ExplicitVarSizeWithMarkerR5R5_Marker"])
 
-# suite "Test for Main":
-#     echo "suite setup: run once before the tests"
+    test "expressions":
+        check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1", false).vars.len())
 
-#     init(path)
+    test "prettyDomainUpdateRoot":
+        let expected1 = """{
+        "name": "Items",
+        "children": [
+          {
+            "name": "Domain Variables",
+            "children": [
+              {
+                "name": "y",
+                "children": [
+                  {
+                    "name": "int(1..9)",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "s",
+                "children": [
+                  {
+                    "name": "Type",
+                    "children": [
+                      {
+                        "name": "Marker",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cardinality",
+                    "children": [
+                      {
+                        "name": "int(2..16)",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Children",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "z",
+                "children": [
+                  {
+                    "name": "int(1..9)",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "x",
+                "children": [
+                  {
+                    "name": "int(1)",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Expressions",
+            "children": []
+          },
+          {
+            "name": "Changed Expressions",
+            "children": []
+          }
+        ]
+        }"""
 
-#     test "loadNodes":
-#         let nodes = loadNodes("10", "0")
-#         check(nodes.len() == 10)
+        let pretty1 = loadPrettyDomains("1", "")
+        check(pretty1 == parseJson(expected1))
 
-#     test "loadSimpleDomains":
-#         let ls =  loadSimpleDomains("1", "0", "2" )
+    test "prettyDomainUpdateNode2":
 
-#     test "loadPrettyDomains":
-#         let lp =  loadPrettyDomains("1", "")
+        let expected2 = """{
+        "vars": [
+          {
+            "name": "y",
+            "rng": "int(1)"
+          },
+          {
+            "name": "s",
+            "Cardinality": "int(2..16)",
+            "Children": {
+              "children": [
+                {
+                  "name": "s-1",
+                  "_children": []
+                },
+                {
+                  "name": "s-2",
+                  "_children": []
+                }
+              ]
+            }
+          },
+          {
+            "name": "z",
+            "rng": "int(1..9)"
+          },
+          {
+            "name": "x",
+            "rng": "int(1)"
+          }
+        ],
+        "changed": [
+          "liDomain Variablesy",
+          "liItemsDomain Variables",
+          "liItems"
+        ],
+        "changedExpressions": []
+        }"""
 
-#     test "getLongestBranchingVarName":
-#         let longest = getLongestBranchingVarName()
+        let pretty2 = loadPrettyDomains("2", "")
+        check(pretty2 == parseJson(expected2))
 
-#     test "expandSet":
-#         init("../test/testData/sets/recursive/markerMarkerOccurrence")
-#         let lp =  loadPrettyDomains("2", "")
-#         check(getExpandedSetChild("2", "s.s-1").name == "s-1")
-#         check(getExpandedSetChild("2", "s.s-1.s-1-1").name == "s-1-1")
-#         check(getExpandedSetChild("2", "s.s-2.s-2-1").name == "s-2-1")
+    test "prettyDomainUpdateExpandedChild":
 
-#     test "loadSetChild":
-#         init("../test/testData/sets/recursive/markerMarkerOccurrence")
-#         let lp =  loadPrettyDomains("2", "")
-#         echo loadSetChild("2", "s.1")
+        let expected3 = """{
+        "vars": [
+          {
+            "name": "s-1",
+            "Cardinality": "int(1..4)"
+          },
+          {
+            "name": "y",
+            "rng": "int(1)"
+          },
+          {
+            "name": "s",
+            "Cardinality": "int(2..16)",
+            "Children": {
+              "children": [
+                {
+                  "name": "s-1",
+                  "_children": []
+                },
+                {
+                  "name": "s-2",
+                  "_children": []
+                }
+              ]
+            }
+          },
+          {
+            "name": "z",
+            "rng": "int(1..9)"
+          },
+          {
+            "name": "x",
+            "rng": "int(1)"
+          }
+        ],
+        "changed": [
+          "liDomain Variablesy",
+          "liItemsDomain Variables",
+          "liItems"
+        ],
+        "changedExpressions": []
+        }"""
 
+        let pretty3 = loadPrettyDomains("2", "s.s-1")
 
+    test "prettyDomainUpdateRemovedChild":
 
-        # let domains = getPrettyDomainsOfNode(db, "2")
-        # echo (%getExpandedSetChildren("2", "s", "1:1")).pretty()
-        # echo (%getExpandedSetChildren("2", "s", "1:2")).pretty()
-        # echo (%getExpandedSetChildren("2", "s", "1:1.Children.s")).pretty()
+        let expected4 = """{
+        "vars": [
+          {
+            "name": "blah",
+            "removed": true
+          },
+          {
+            "name": "y",
+            "rng": "int(1)"
+          },
+          {
+            "name": "s",
+            "Cardinality": "int(2..16)",
+            "Children": {
+              "children": [
+                {
+                  "name": "s-1",
+                  "_children": []
+                },
+                {
+                  "name": "s-2",
+                  "_children": []
+                }
+              ]
+            }
+          },
+          {
+            "name": "z",
+            "rng": "int(1..9)"
+          },
+          {
+            "name": "x",
+            "rng": "int(1)"
+          }
+        ],
+        "changed": [
+          "liDomain Variablesy",
+          "liItemsDomain Variables",
+          "liItems"
+        ],
+        "changedExpressions": []
+        }"""
 
+        let pretty4 = loadPrettyDomains("2", "s.blah")
 
+    test "getExpandedSetChildFailed":
+        check(getExpandedSetChild("2","s.3.ASDASD") == nil)
 
+    test "getExpandedSetChildSuccess":
+        # check(getExpandedSetChild("2","s.3.ASDASD") == nil)
+        check(getExpandedSetChild("2","s.s-1") != nil)
+
+    test "loadSetChild":
+        let expected = """{
+        "structure": {
+          "name": "s-1",
+          "children": [
+            {
+              "name": "Type",
+              "children": [
+                {
+                  "name": "Marker",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Cardinality",
+              "children": [
+                {
+                  "name": "int(1..4)",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Children",
+              "children": []
+            }
+          ]
+        },
+        "update": {
+          "name": "s-1",
+          "Cardinality": "int(1..4)",
+          "Children": {
+            "children": [
+              {
+                "name": "s-1-1",
+                "_children": []
+              }
+            ]
+          }
+        },
+        "path": "s.s-1"
+        }"""
+
+        check(loadSetChild("2","s.s-1") == parseJson(expected))
+
+    

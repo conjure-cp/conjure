@@ -1,9 +1,9 @@
 import json, re, jester
 import util/main
+import util/jsonify
 import util/types
 
 routes:
-
     get re"/init/(.*)":
         let path = request.matches[0]
         try:
@@ -22,7 +22,7 @@ routes:
         resp "OK"
 
     get "/simpleDomains/@amount/@start/@nodeId":
-        resp %loadSimpleDomains(@"amount", @"start", @"nodeId")
+        resp %loadSimpleDomains(@"nodeId")
         
     get "/prettyDomains/@nodeId/@paths?":
         resp loadPrettyDomains(@"nodeId", @"paths")
@@ -33,9 +33,6 @@ routes:
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
 
-    # get "/allNodes":
-    #     resp loadAllNodes()
-
     get "/loadCore":
         resp %loadCore()
 
@@ -44,6 +41,3 @@ routes:
 
     get "/loadSet/@nodeId/@path":
         resp loadSetChild(@"nodeId",@"path")
-
-    # get "/loadChildSets/@id/@setName":
-    #     resp loadChildSets(@"setName", @"id")
