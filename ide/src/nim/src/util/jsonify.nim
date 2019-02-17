@@ -87,7 +87,7 @@ proc setToJson*(s: Set, nodeId : string, wantCollapsedChildren : bool): JsonNode
 
 proc getSetChanges*(newSet, oldSet: Set): seq[string] =
 
-    let prefix = "li" & newSet.name
+    let prefix = newSet.name
 
     if (newSet.getCardinality() != oldSet.getCardinality()):
         result.add(prefix & "Cardinality")
@@ -99,15 +99,16 @@ proc getSetChanges*(newSet, oldSet: Set): seq[string] =
         result.add(prefix & "Excluded")
 
 proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[string] =
-    let prefix = "liExpressions" 
+    # let prefix = "liExpressions" 
 
     if (newExpression.rng != oldExpression.rng):
-        result.add(prefix & newExpression.name) 
+        result.add(newExpression.name) 
 
 proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
 
     if (newVariable.rng != oldVariable.rng):
-        result.add("liDomain Variables" & newVariable.name )
+        # result.add("liDomain Variables" & newVariable.name )
+        result.add(newVariable.name)
 
 proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string] =
 
@@ -120,16 +121,11 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
         elif (newVar of Expression):
             let changedExpressions = getExpressionChanges(cast[Expression](newVar), cast[Expression](oldVar))
             result = result.concat(changedExpressions)
-            if changedExpressions.len() > 0:
-                result.add("liItemsExpressions")
+            # if changedExpressions.len() > 0:
+                # result.add("liItemsExpressions")
         else:
             result = result.concat(getVariableChanges(newVar, oldVar))
     
-    if result.len() > 0:
-        result.add("liItemsDomain Variables")
-        result.add("liItems")
-
-
-
-    
-
+    # if result.len() > 0:
+    #     result.add("liItemsDomain Variables")
+    #     result.add("liItems")

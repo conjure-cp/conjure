@@ -5,43 +5,6 @@ include process
 
 var db : DbConn
 
-proc getExpandedSetChild*(nodeId, path : string): Set =
-
-    # echo prettyLookup
-
-    result = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
-
-    for name in path.split(".")[1..^1]:
-        for kid in result.children:
-            if kid.name == name:
-                result = kid
-                break;
-                
-    if result.name != path.split(".")[^1]:
-        return nil
-
-proc getJsonVarList*(domainsAtNode: seq[Variable], paths, nodeId: string): JsonNode =
-    result = %*[]
-    if paths != "":
-        for path in paths.split(":"):
-            let child = (getExpandedSetChild(nodeId, path))
-
-            if (child == nil):
-                result.add(%*{"name": path.split(".")[^1], "removed": true})
-            else:
-                result.add(setToJson(child, nodeId, false))
-
-    for v in domainsAtNode:
-        if (v of Set):
-            result.add(setToJson(cast[Set](v), nodeId, true))
-        else:
-            result.add(%v)
-
-proc loadSetChild*(nodeId, path : string): JsonNode =
-    let s = getExpandedSetChild(nodeId, path)
-    let update = setToJson(s, nodeId, true)
-    return %*{"structure" : %setToTreeView(s), "update" : update, "path" : path}
-
 proc getLabel(varName : string, value: string, branch : string): string =
 
     result &= varName
@@ -158,6 +121,46 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDo
 
     return  SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
+proc getExpandedSetChild*(nodeId, path : string): Set =
+
+    # echo prettyLookup
+
+    # echo nodeId
+    # echo "path is " & path
+
+    result = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
+
+    for name in path.split(".")[1..^1]:
+        for kid in result.children:
+            if kid.name == name:
+                result = kid
+                break;
+                
+    if result.name != path.split(".")[^1]:
+        return nil
+
+
+proc getChildSets(paths, nodeId: string): seq[Set] =
+    if paths != "":
+        for path in paths.split(":"):
+            result.add(getExpandedSetChild(nodeId, path))
+
+
+proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
+    result = %*[]
+
+    for v in domainsAtNode:
+        if (v != nil):
+            if (v of Set):
+                result.add(setToJson(cast[Set](v), nodeId, true))
+            else:
+                result.add(%v)
+
+proc loadSetChild*(nodeId, path : string): JsonNode =
+    let s = getExpandedSetChild(nodeId, path)
+    let update = setToJson(s, nodeId, true)
+    return %*{"structure" : %setToTreeView(s), "update" : update, "path" : path}
+
 
 proc temp(db: DbConn, nodeId, paths: string): JsonNode = 
     var domainsAtNode : seq[Variable]
@@ -165,12 +168,18 @@ proc temp(db: DbConn, nodeId, paths: string): JsonNode =
     var changeList : seq[string]
     discard parseInt(nodeId, id)
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
+    for kid in getChildSets(paths, nodeId):
+        if kid != nil:
+            domainsAtNode.add(kid)
 
     if (id != 1):
         var domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
+        for kid in getChildSets(paths, $(id - 1)):
+            if kid != nil:
+                domainsAtPrev.add(kid)
         changeList = getPrettyChanges(domainsAtNode, domainsAtPrev)
     
-        return %*{"vars" : getJsonVarList(domainsAtNode, paths, nodeId), "changed" : changeList, "changedExpressions": %[] }
+        return %*{"vars" : getJsonVarList(domainsAtNode, nodeId), "changed" : changeList, "changedExpressions": %[] }
 
     return domainsToJson(domainsAtNode)
 

@@ -43,13 +43,13 @@ window.addEventListener('message', event => {
 
     switch (message.command) {
         case 'loadSet':
-            console.log("structure")
-            console.log(message.data.structure)
+            // console.log("structure")
+            // console.log(message.data.structure)
 
             path2Node[message.data.structure.name].children = message.data.structure.children;
 
-            console.log("updated: ")
-            console.log(path2Node[message.data.structure.name]);
+            // console.log("updated: ")
+            // console.log(path2Node[message.data.structure.name]);
 
             render(rootNode, rootNode);
 
@@ -78,7 +78,7 @@ export function setChangedExpressions(expressions) {
 
 export function updateNodes(data) {
 
-    console.log(data)
+    // console.log(data)
 
     data.forEach(element => {
 
@@ -118,11 +118,33 @@ export function setChangedList(list) {
 }
 
 export function setChanged() {
+
+    console.log(changedList)
+
     d3.selectAll("li").classed("changed", false);
 
-    changedList.forEach(element => {
 
-        d3.select('[id="' + element + '"]').classed("changed", true);
+    
+
+    changedList.forEach(name => {
+
+        var ancestors = [name]
+
+        // console.log(name)
+
+        var obj = path2Node[name].parent;
+
+        while(obj){
+
+            // console.log(ancestors)
+            ancestors.push(obj.name);
+            obj = obj.parent;
+        }
+
+        ancestors.forEach(element => {
+            d3.select('[id="' + element + '"]').classed("changed", true);
+        })
+
         // console.log(d3.select('[id="' + element + '"]' ).classed("changed"));
 
     });
@@ -160,14 +182,20 @@ export function render(data, parent) {
     //entered nodes
     var entered = nodeEls.enter().append("li").classed("node", true)
         .attr("id", (d) => {
-
-            let parentName = "";
-
+            var name = d.name;
             if (d.parent) {
-                parentName = d.parent.name;
+                d.parent.children.forEach(element => {
+                    if (element.name == "Cardinality"){
+                        // console.log(d.name)
+                        // console.log(element)
+                        name = d.parent.name + d.name;
+                    }
+                })
             }
 
-            return "li" + parentName + d.name;
+            d["label"] = name;
+
+            return name;
         })
         // .style("margin-bottom", "200px")
         .style("top", parent.y + "px")
@@ -211,11 +239,11 @@ export function render(data, parent) {
         .each((d) => {
             // console.log(d)
             // if (d.Cardinality) {
-                // path2Node[getVarPath(d)] = d;
-            path2Node[d.name] = d;
+            // path2Node[getVarPath(d)] = d;
+            path2Node[d.label] = d;
             // }
             // else{
-                // path2Node[d.name] = d;
+            // path2Node[d.name] = d;
             // }
         })
     //add arrows if it is a folder
