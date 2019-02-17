@@ -4,34 +4,17 @@ include process
 
 var db : DbConn
 
-type SimpleDomainResponse = ref object of RootObj
-    changedNames : seq[string]
-    vars : seq[Variable]
+proc getLabel(varName : string, value: string, branch : string): string =
 
-type PrettyDomainResponse = ref object of RootObj
-    changedIds : seq[string]
-    vars : seq[Variable]
+    result &= varName
 
-type ParentChild = ref object of RootObj
-    nodeId: int
-    parentId: int
-    label: string
-    children: seq[int]
+    if (branch == "1"):
+        result &= " = "
+    else:
+        result &= " != "
 
-type ChildResponse = ref object of RootObj
-    nodeId: int
-    children: seq[int]
+    result &= value
 
-type Node = ref object of RootObj
-    id: int
-    name: string
-    children: seq[Node]
-
-type Blah = ref object of RootObj
-    b : Table[int, seq[int]]
-
-proc `$`(r: ParentChild): string =
-    return $r.parentId & " : " & $r.children
 
 proc init*(dirPath: string) =
 
@@ -56,17 +39,22 @@ proc init*(dirPath: string) =
         
     setCurrentDir(current)
 
+    if dbFilePath == "":
+        raise newException(CannotOpenDatabaseException, "No files with .db extension found")
+
     initParser(minionFilePath, eprimeFilePath)
+
 
     db = open(dbFilePath, "", "", "") 
 
 
-proc loadNodes*(amount, start: string): JsonNode =
+proc loadNodes*(amount, start: string): seq[ParentChild] =
 
-    var list :seq[ParentChild]
     var nId, pId, childId : int
+
+    let query = "select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?"
     
-    for row1 in db.fastRows(sql"select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?", start, amount):
+    for row1 in db.fastRows(sql(query), start, amount):
         discard parseInt(row1[0], nId)
         var kids : seq[int]
         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
@@ -75,23 +63,10 @@ proc loadNodes*(amount, start: string): JsonNode =
 
         discard parseInt(row1[1], pId)
 
-        var equality: string
-
-        if (row1[4] == "1"):
-            equality = " = "
-        else:
-            equality = " != "
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
 
 
-        list.add(ParentChild(parentId: pId, nodeId: nId, label: row1[2] & equality & row1[3], children: kids))
-
-    # echo nodes
-    # echo list
-    
-    return %list
-
-
-proc loadChildren*(id : string): JsonNode = 
+proc loadChildren*(id : string): ChildResponse = 
 
     var nId, childId : int
     discard parseInt(id, nId)
@@ -99,11 +74,10 @@ proc loadChildren*(id : string): JsonNode =
     for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
         discard parseInt(row[0], childId)
         kids.add(childId)
-    return %ChildResponse(nodeId: nId , children: kids)
+    return ChildResponse(nodeId: nId , children: kids)
 
 
-proc loadCore*(): JsonNode = 
-    var list :seq[ParentChild]
+proc loadCore*(): seq[ParentChild] = 
     var nId, pId, childId : int
 
     let query = sql(
@@ -125,40 +99,27 @@ proc loadCore*(): JsonNode =
 
         discard parseInt(row1[1], pId)
 
-        var equality: string
-
-        if (row1[4] == "1"):
-            equality = " = "
-        else:
-            equality = " != "
-
-        list.add(ParentChild(parentId: pId, nodeId: nId, label: row1[2] & equality & row1[3], children: kids))
-
-    return %list
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
 
 
-proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
+
+proc loadSimpleDomains*(amount, start, nodeId: string): SimpleDomainResponse =
 
     var list : seq[string]
     var id : int
     var domainsAtPrev : seq[Variable]
     discard parseInt(nodeId, id)
 
-    let domainsAtNode = getSimpleDomainsOfNode(db, amount, start, nodeId)
-    # echo start
-    # echo domainsAtNode
+    let domainsAtNode = getSimpleDomainsOfNode(db, nodeId)
 
     if (id != 1):
-        domainsAtPrev = getSimpleDomainsOfNode(db, amount, start, $(id - 1))
+        domainsAtPrev = getSimpleDomainsOfNode(db,  $(id - 1))
         
         for i in 0..<domainsAtNode.len():
             if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
                 list.add(domainsAtNode[i].name)
-                # list.add(i)
 
-    # echo "3"
-
-    return  %SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
+    return  SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
 
 proc setToJson(s: Set, nodeId : string, wantCollapsedChildren : bool): JsonNode =

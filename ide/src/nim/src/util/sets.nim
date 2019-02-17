@@ -7,7 +7,7 @@ proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, a
 proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
 proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
 
-proc decideSet(db: DbConn, s,  parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+proc decideSet*(db: DbConn, s,  parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
     if s of FlagSet:
         parseFlags(db, s, parent, outerSetName, nodeId, ancestors)
     if s of MarkerSet:

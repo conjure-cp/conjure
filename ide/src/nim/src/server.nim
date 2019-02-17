@@ -1,4 +1,4 @@
-import jester
+import json, re, jester
 import util/main
 import util/types
 
@@ -22,13 +22,13 @@ routes:
         resp "OK"
 
     get "/simpleDomains/@amount/@start/@nodeId":
-        resp loadSimpleDomains(@"amount", @"start", @"nodeId")
+        resp %loadSimpleDomains(@"amount", @"start", @"nodeId")
         
     get "/prettyDomains/@nodeId/@paths?":
         resp loadPrettyDomains(@"nodeId", @"paths")
 
     get "/loadNodes/@amount/@start":
-        resp loadNodes(@"amount", @"start")
+        resp %loadNodes(@"amount", @"start")
 
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
@@ -37,10 +37,10 @@ routes:
     #     resp loadAllNodes()
 
     get "/loadCore":
-        resp loadCore()
+        resp %loadCore()
 
     get "/loadChildren/@id":
-        resp loadChildren(@"id")
+        resp %loadChildren(@"id")
 
     get "/loadSet/@nodeId/@path":
         resp loadSetChild(@"nodeId",@"path")

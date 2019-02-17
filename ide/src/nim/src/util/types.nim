@@ -1,18 +1,21 @@
 import strutils
 
+let maxIndex* = 4
+
+# Exceptions
+
+type
+    CannotOpenEprimeException* = object of Exception
+type
+    CannotOpenMinionException* = object of Exception
+type
+    CannotOpenDatabaseException* = object of Exception
 type
     EprimeParseException* = object of Exception
 type
     MinionParseException* = object of Exception
 
-type TreeViewNode* = ref object of RootObj
-  name*: string
-  children*: seq[TreeViewNode]
-  
-
-# type HiddenTreeViewNode* = ref object of RootObj
-#   name: string
-#   children: seq[TreeViewNode]
+# Decision variables
 
 type Variable* = ref object of RootObj
   name*: string
@@ -39,17 +42,8 @@ type DummySet* = ref object of Set
     excludedCount* : int
 
 type MarkerSet* = ref object of Set
-    # markerLower* : int
-    # markerUpper*: int
-    # id* : int
-    # cardinality : int
 
 type FlagSet* = ref object of Set
-    # flagCount : int
-    # markerLower*: int
-    # markerUpper*: int
-    # id* : int
-    # cardinality : int
 
 type ExplicitSet* = ref object of Set
     cardinality* : int
@@ -95,7 +89,6 @@ proc getCardinality*(s: Set): string =
 
     if s of FlagSet:
         let fS = cast[FlagSet](s)
-        # return getPrettyRange($max(fS.included.len(), fS.lowerBound), $(fS.flagCount - fS.excluded.len()))
         return getPrettyRange($fS.markerLower, $fS.markerLower)
     
     if s of ExplicitSet:
@@ -145,7 +138,33 @@ proc `$`*(v:Variable): string =
         result =  "<Variable> " & v.name & " " & v.rng 
 
 
-let maxIndex* = 4
-
 proc getSetName*(parent : Set, setId : int): string =
     return parent.name & "-" & $setId
+
+
+# Responses
+
+type SimpleDomainResponse* = ref object of RootObj
+    changedNames* : seq[string]
+    vars* : seq[Variable]
+
+type ParentChild* = ref object of RootObj
+    nodeId*: int
+    parentId*: int
+    label*: string
+    children*: seq[int]
+
+type ChildResponse* = ref object of RootObj
+    nodeId*: int
+    children*: seq[int]
+
+type Node* = ref object of RootObj
+    id*: int
+    name*: string
+    children*: seq[Node]
+
+# Json
+
+type TreeViewNode* = ref object of RootObj
+  name*: string
+  children*: seq[TreeViewNode]
