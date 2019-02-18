@@ -283,7 +283,6 @@ rule_Image_Matrix_Indexing = "image-matrix-indexing" `namedRule` theRule where
     ty <- typeOf mat
     case ty of TypeMatrix{} -> return () ; _ -> na "only applies to matrices" 
     (TypePermutation inn) <- typeOf perm
-    ti <- typeOf indexer
     if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn 
        then do
          return

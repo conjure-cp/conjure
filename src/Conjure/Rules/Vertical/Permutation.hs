@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Conjure.Rules.Vertical.Permutation where
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Matrix (flattenIfNeeded)
 
 rule_Cardinality :: Rule
 rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
@@ -106,7 +105,7 @@ rule_Matrix_Image = "matrix-image" `namedRule` theRule where
       (TypePermutation inn) <- typeOf perm
       if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
         then do
-          y' <- flattenIfNeeded y
+          let y' = flattenIfNeeded (matrixNumDims ty) y
           dm@(DomainMatrix dyindex _) <- domainOf y'
           return
               ( "Horizontal rule for image matrix"
@@ -140,7 +139,7 @@ rule_Matrix_Image_Comprehension = "matrix-image-comprehension" `namedRule` theRu
       if let ?typeCheckerMode = StronglyTyped in not $ typesUnify [ty, inn]
         then do
           unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-          y' <- flattenIfNeeded y
+          let y' = flattenIfNeeded (matrixNumDims ty) y
           dm@(DomainMatrix dyindex _) <- domainOf y'
           return
               ( "Horizontal rule for image matrix in comprehension"
