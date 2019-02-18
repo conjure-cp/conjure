@@ -1531,9 +1531,10 @@ fixRelationProj= transformBi f
             case match opRelationProj p of
                 Just (func, [Just arg]) ->
                     case typeOf func of
-                        Just TypeFunction{} -> make opImage func arg
-                        Just TypeSequence{} -> make opImage func arg
-                        _                   -> p
+                        Just TypeFunction{}    -> make opImage func arg
+                        Just TypeSequence{}    -> make opImage func arg
+                        Just TypePermutation{} -> make opImage func arg
+                        _                      -> p
                 _ -> p
 
 
