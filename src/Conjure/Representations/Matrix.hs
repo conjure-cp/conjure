@@ -6,6 +6,7 @@ module Conjure.Representations.Matrix
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate
@@ -20,7 +21,7 @@ matrix
     -> ((Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)]))
     -> ((Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant))
     -> Representation m
-matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrixDownC matrixUp
+matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrixDownC matrixUp symmetryOrdering
 
     where
 
@@ -193,3 +194,13 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     let values = map snd mid4
                     return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
         matrixUp _ _ = na "{matrixUp}"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain =
+            case domain of
+                DomainMatrix indexDom innerDom -> do
+                    (iPat, i) <- quantifiedVarOverDomain indexDom
+                    let mi = [essence| &inp[&i] |]
+                    res <- innerSO downX1 mi innerDom
+                    return [essence| flatten([ &res | &iPat : &indexDom ]) |]
+                _ -> bug $ "symmetryOrdering matrix" <+> pretty inp <+> pretty domain

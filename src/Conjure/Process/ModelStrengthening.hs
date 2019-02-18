@@ -270,7 +270,7 @@ matching :: Expression
          -> Maybe (a, (Expression, Expression))
 matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
                       [x] -> pure x
-                      _   -> fail $ "no matching operator for expression: " <+> pretty e
+                      _   -> fail $ "no matching operator for expression:" <+> pretty e
 
 -- | (In)equality operator lens pairs.
 ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]

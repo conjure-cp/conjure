@@ -105,6 +105,7 @@ data Config = Config
     , smartFilenames             :: Bool
     , lineWidth                  :: Int
     , responses                  :: Maybe [Int]
+    , estimateNumberOfModels     :: Bool
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -133,6 +134,7 @@ instance Default Config where
         , smartFilenames             = False
         , lineWidth                  = 120
         , responses                  = Nothing
+        , estimateNumberOfModels     = False
         }
 
 data RuleResult m = RuleResult

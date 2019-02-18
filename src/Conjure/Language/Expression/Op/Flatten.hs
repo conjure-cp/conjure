@@ -27,7 +27,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
         case ty of
             TypeList n -> return (TypeList (flattenType n))
             TypeMatrix _ n -> return (TypeList (flattenType n))
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
     typeOf p@(OpFlatten (Just n) m) = do
         let flattenType lvl ty | lvl < 0 = return ty
             flattenType lvl (TypeList inner) = flattenType (lvl-1) inner

@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithMarker :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
+setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -157,3 +157,18 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [marker, values] <- downX1 inp
+            Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] inner
+            return
+                [essence|
+                    flatten([ [ &marker ]
+                            , flatten([ &soValues
+                                      | &iPat : &index
+                                      ])
+                            ])
+                |]

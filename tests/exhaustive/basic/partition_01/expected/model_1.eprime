@@ -4,7 +4,7 @@ find x_PartitionAsSet_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(3
 branching on [x_PartitionAsSet_ExplicitR2_Occurrence]
 such that
     and([1 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q11, q1]) | q11 : int(1..2)]) | q1 : int(3..8)]),
-    [toInt(x_PartitionAsSet_ExplicitR2_Occurrence[1, q8]) | q8 : int(3..8)] <lex
-    [toInt(x_PartitionAsSet_ExplicitR2_Occurrence[2, q9]) | q9 : int(3..8)],
+    [-toInt(x_PartitionAsSet_ExplicitR2_Occurrence[1, q8]) | q8 : int(3..8)] <lex
+    [-toInt(x_PartitionAsSet_ExplicitR2_Occurrence[2, q9]) | q9 : int(3..8)],
     and([3 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q5, q6]) | q6 : int(3..8)]) | q5 : int(1..2)])
 

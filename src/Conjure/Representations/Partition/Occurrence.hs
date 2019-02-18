@@ -25,7 +25,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 --   only use part numbers from 1.._NumParts, never use the others
 --      part(i) is used -> part(i-1) is used, forAll i:int(3..maxNumParts)
 partitionOccurrence :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-partitionOccurrence = Representation chck downD structuralCons downC up
+partitionOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -314,3 +314,13 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                       , "domain:" <+> pretty domain
                       , "ctxt:" <+> vcat (map pretty ctxt)
                       ]
+
+        -- not sure if this is correct...
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            -- [numPartsVar, whichPart, partSizesVar, firstIndexVar] <- downX1 inp
+            xs <- downX1 inp
+            Just xsDoms' <- downD ("SO", domain)
+            let xsDoms = map snd xsDoms'
+            soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
+            return $ make opFlatten (fromList soValues)

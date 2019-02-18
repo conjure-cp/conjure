@@ -12,7 +12,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 function1DPartial :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-function1DPartial = Representation chck downD structuralCons downC up
+function1DPartial = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -204,3 +204,18 @@ function1DPartial = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} Function1DPartial"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [flags, values] <- downX1 inp
+            Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
+            return
+                [essence|
+                    flatten([ flatten([ [-toInt(&flags[&i])]
+                                      , &soValues
+                                      ])
+                            | &iPat : &innerDomainFr
+                            ])
+                |]

@@ -24,7 +24,7 @@ partitionAsSet
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
     -> Representation m
-partitionAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up
+partitionAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -198,3 +198,9 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner innerDomain

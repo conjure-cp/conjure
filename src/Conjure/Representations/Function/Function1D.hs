@@ -21,7 +21,7 @@ import Conjure.Representations.Common
 
 
 function1D :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
-function1D = Representation chck downD structuralCons downC up
+function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -139,7 +139,7 @@ function1D = Representation chck downD structuralCons downC up
                 [ val
                 | fr <- froms
                 , let val = case lookup fr vals of
-                                Nothing -> fail $ vcat [ "No value for " <+> pretty fr
+                                Nothing -> fail $ vcat [ "No value for" <+> pretty fr
                                                        , "In:" <+> pretty (AbsLitFunction vals)
                                                        ]
                                 Just v  -> return v
@@ -177,6 +177,19 @@ function1D = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = na "{up} Function1D"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
+            return
+                [essence|
+                    flatten([ &soValues
+                            | &iPat : &innerDomainFr
+                            ])
+                |]
 
 
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]

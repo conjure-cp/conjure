@@ -9,11 +9,11 @@ branching on
 such that
     and([x_ExplicitVarSizeWithFlagsR2_Flags[q1 + 1] ->
          flatten([[x_ExplicitVarSizeWithFlagsR2_Values_1[q1]; int(1)],
-                  [toInt(x_ExplicitVarSizeWithFlagsR2_Values_2_Occurrence[q1, q7]) | q7 : int(1..3)];
+                  [-toInt(x_ExplicitVarSizeWithFlagsR2_Values_2_Occurrence[q1, q7]) | q7 : int(1..3)];
                       int(1..2)])
          <lex
          flatten([[x_ExplicitVarSizeWithFlagsR2_Values_1[q1 + 1]; int(1)],
-                  [toInt(x_ExplicitVarSizeWithFlagsR2_Values_2_Occurrence[q1 + 1, q8]) | q8 : int(1..3)];
+                  [-toInt(x_ExplicitVarSizeWithFlagsR2_Values_2_Occurrence[q1 + 1, q8]) | q8 : int(1..3)];
                       int(1..2)])
              | q1 : int(1..2)]),
     and([x_ExplicitVarSizeWithFlagsR2_Flags[q2] = false ->
