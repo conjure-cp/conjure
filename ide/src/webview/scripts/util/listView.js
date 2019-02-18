@@ -55,6 +55,8 @@ window.addEventListener('message', event => {
 
             updateNodes([message.data.update])
 
+            globals.sendPrettyRequest();
+
             break;
     }
 
@@ -70,7 +72,7 @@ export function getRootNode() {
 }
 
 export function setChangedExpressions(expressions) {
-    console.log(path2Node)
+    // console.log(expressions)
     // console.log(name2Node["Changed Expressions"])
     path2Node["Changed Expressions"]["children"] = expressions
 
@@ -119,25 +121,26 @@ export function setChangedList(list) {
 
 export function setChanged() {
 
-    console.log(changedList)
+    // console.log(changedList)
 
     d3.selectAll("li").classed("changed", false);
 
+    var ancestors = []
 
-    
 
     changedList.forEach(name => {
 
-        var ancestors = [name]
-
+        ancestors.push(name);
         // console.log(name)
 
         var obj = path2Node[name].parent;
 
-        while(obj){
+        while (obj) {
 
-            // console.log(ancestors)
-            ancestors.push(obj.name);
+            console.log(ancestors)
+            if (!ancestors.includes(obj.label)) {
+                ancestors.push(obj.label);
+            }
             obj = obj.parent;
         }
 
@@ -185,7 +188,7 @@ export function render(data, parent) {
             var name = d.name;
             if (d.parent) {
                 d.parent.children.forEach(element => {
-                    if (element.name == "Cardinality"){
+                    if (element.name == "Cardinality") {
                         // console.log(d.name)
                         // console.log(element)
                         name = d.parent.name + d.name;

@@ -58,22 +58,26 @@ proc parseSetEprime(s: JsonNode, name: string): Set =
         bounds = arr[^1]["DomainInt"].getElems()[0]
 
 
-        if (bounds.hasKey("RangeBounded")):
-            bounds = arr[^1]["DomainInt"].getElems()[0]["RangeBounded"]
-        else:
-            bounds = arr[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
+        # if (bounds.hasKey("RangeBounded")):
+        #     bounds = arr[^1]["DomainInt"].getElems()[0]["RangeBounded"]
+        # else:
+        #     bounds = arr[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
         # echo bounds.pretty()
         # echo bounds
-        var l = bounds[0]["Constant"]["ConstantInt"].getInt(-1)
-        var u = bounds[1]["Constant"]["ConstantInt"].getInt(-1)
+        # var l = bounds[0]["Constant"]["ConstantInt"].getInt(-1)
+        # var u = bounds[1]["Constant"]["ConstantInt"].getInt(-1)
 
-        if (l == -1):
-            l = bounds[0]["Constant"]["ConstantInt"][1].getInt(-1)
-            u = bounds[1]["Constant"]["ConstantInt"][1].getInt(-1)
+        # if (l == -1):
+        #     l = bounds[0]["Constant"]["ConstantInt"][1].getInt(-1)
+        #     u = bounds[1]["Constant"]["ConstantInt"][1].getInt(-1)
 
-            if (l == -1):
-                echo "ERRORORORRORORORORRO"
+        #     if (l == -1):
+        #         echo "ERRORORORRORORORORRO"
 
+        let l = -1
+        let u = -1
+
+        
 
         if arr[0].hasKey("Set_Explicit"):
             return newExplicitSet(name, lowerBound = l, upperBound = u,

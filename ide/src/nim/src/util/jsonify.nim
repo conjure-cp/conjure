@@ -85,7 +85,7 @@ proc setToJson*(s: Set, nodeId : string, wantCollapsedChildren : bool): JsonNode
 
     return json
 
-proc getSetChanges*(newSet, oldSet: Set): seq[string] =
+proc getSetChanges*(newSet, oldSet: Set, isNested : bool = false): seq[string] =
 
     let prefix = newSet.name
 
@@ -97,6 +97,12 @@ proc getSetChanges*(newSet, oldSet: Set): seq[string] =
 
     if (newSet.excluded != oldSet.excluded):
         result.add(prefix & "Excluded")
+
+    if isNested:
+        if result.len() > 0:
+            return @[prefix]
+        else:
+            return @[]
 
 proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[string] =
     # let prefix = "liExpressions" 
@@ -117,7 +123,13 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
         let oldVar = domainsAtPrev[i]
 
         if (newVar of Set):
-            result = result.concat(getSetChanges(cast[Set](newVar), cast[Set](oldVar)))
+            let newSet = cast[Set](newVar)
+            let oldSet = cast[Set](oldVar)
+            result = result.concat(getSetChanges(newSet, oldSet))
+
+            for i in countUp(0, newSet.children.len() - 1):
+                result = result.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
+
         elif (newVar of Expression):
             let changedExpressions = getExpressionChanges(cast[Expression](newVar), cast[Expression](oldVar))
             result = result.concat(changedExpressions)
