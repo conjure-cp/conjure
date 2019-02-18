@@ -2094,26 +2094,26 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     -- when found, return the skipping operator for the quantifier
     -- if none exists, do not apply the rule.
     -- (or maybe we should call bug right ahead, it can't be anything else.)
-    queryQ z0 =
-        case Zipper.up z0 of
-            Nothing -> na "rule_InlineConditions (meh-1)"
-            Just z -> do
-                let h = hole z
-                case ( match opAnd h, match opOr h, match opSum h
-                     , match opMin h, match opMax h, match opOrdering h ) of
-                    (Just{}, _, _, _, _, _) -> return ("and", opAndSkip)
-                    (_, Just{}, _, _, _, _) -> return ("or" , opOrSkip )
-                    (_, _, Just{}, _, _, _) -> return ("sum", opSumSkip)
-                    (_, _, _, Just{}, _, _) -> na "rule_InlineConditions (min)"
-                    (_, _, _, _, Just{}, _) -> na "rule_InlineConditions (max)"
-                    (_, _, _, _, _, Just{}) -> return ("ordering", opSumSkip)
-                    _                       -> na "rule_InlineConditions (meh-2)"
-                                            -- case Zipper.up z of
-                                            --     Nothing -> na "queryQ"
-                                            --     Just u  -> queryQ u
+    queryQ z0 = case Zipper.up z0 of
+                    Nothing -> na "rule_InlineConditions (top)"
+                    Just z -> queryQ_handleLevel z (hole z)
+
+    queryQ_handleLevel z h
+        | Just{} <- match opAnd      h = return ("and", opAndSkip)
+        | Just{} <- match opOr       h = return ("or" , opOrSkip )
+        | Just{} <- match opSum      h = return ("sum", opSumSkip)
+        | Just{} <- match opMin      h = na "rule_InlineConditions (min)"
+        | Just{} <- match opMax      h = na "rule_InlineConditions (max)"
+        | Just{} <- match opOrdering h = return ("ordering", opSumSkip)
+        | Comprehension{} <- h         = queryQ z
+        | Just{} <- match opFlatten  h = queryQ z
+        | otherwise                    = na "rule_InlineConditions (stop)"
 
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
+
+    opSumSkip b [essence| flatten(&x)|] = make opFlatten (opSumSkip b x)
+    opSumSkip b (Comprehension body gocs) = Comprehension (opSumSkip b body) gocs
     opSumSkip b x = [essence| toInt(&b) * catchUndef(&x, 0) |]
 
 

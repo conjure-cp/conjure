@@ -158,9 +158,9 @@ symmetryOrdering inp =
                     DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
                     _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
             _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
-        -- Comprehension body stmts -> do
-        --     xs <- downX1 body
-        --     return [Comprehension x stmts | x <- xs]
+        Comprehension body stmts -> do
+            xs <- symmetryOrdering body
+            return $ make opFlatten $ Comprehension xs stmts
         -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
         _ -> bug ("symmetryOrdering:" <++> pretty (show inp))
 
