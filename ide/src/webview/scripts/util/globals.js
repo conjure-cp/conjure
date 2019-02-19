@@ -1,6 +1,7 @@
 exports.vscode = acquireVsCodeApi();
 exports.totalLoaded = 0
-exports.selectedId = 1;
+exports.rootId = 1;
+exports.selectedId = exports.rootId;
 exports.currentDomainId = 0;
 exports.id2Node = {};
 exports.id2Parent = {};
@@ -384,5 +385,5 @@ exports.vscode.postMessage({
     command: 'simpleDomains',
     amount: Number($("#domCount").val()),
     start: 0,
-    nodeId: 1,
+    nodeId: exports.rootId,
 });

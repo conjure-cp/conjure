@@ -228,7 +228,7 @@ export function render(data, parent) {
 
             toggleChildren(d);
             render(data, d);
-            if (globals.selectedId != 1) {
+            if (globals.selectedId != globals.rootId) {
                 setChanged();
             }
 

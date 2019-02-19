@@ -46,7 +46,7 @@ import * as listView from "./util/listView"
                     }
                 }
 
-                globals.collapseNode(1);
+                globals.collapseNode(globals.rootId);
 
                 update(globals.id2Node[0]);
                 globals.waiting = false;
@@ -86,7 +86,7 @@ import * as listView from "./util/listView"
                 listView.setNodeId(globals.selectedId);
                 globals.currentDomainId += Number($("#domCount").val());
 
-                if (globals.selectedId === 1) {
+                if (globals.selectedId === globals.rootId) {
                     globals.simpleDomainsAtRoot = message.data.vars;
 
                     if (init) {
@@ -121,7 +121,7 @@ import * as listView from "./util/listView"
 
                 listView.setNodeId(globals.selectedId);
 
-                if (globals.selectedId == 1) {
+                if (globals.selectedId == globals.rootId) {
                     listView.render(message.data, message.data);
                 }
                 else {
@@ -156,7 +156,7 @@ import * as listView from "./util/listView"
 
     function update(source) {
 
-        let nodes = globals.tree.nodes(globals.id2Node[1]).reverse(),
+        let nodes = globals.tree.nodes(globals.id2Node[globals.rootId]).reverse(),
             links = globals.tree.links(nodes);
 
         nodes.forEach((d) => { d.y = d.depth * 100; });
