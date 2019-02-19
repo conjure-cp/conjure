@@ -2,7 +2,7 @@ import strutils
 
 # Constants
 
-let maxIndex* = 10
+let maxIndex* = 9
 let rootNodeId* = 0
 
 # Exceptions
@@ -80,7 +80,7 @@ proc getPrettyRange*(lowerBound: string, upperBound: string): string =
 
 proc getCardinality*(s: Set): string =
     if s of OccurrenceSet:
-        return getPrettyRange($max(len(s.included), s.lowerBound), $(s.upperBound - len(s.excluded))) 
+        return getPrettyRange($s.included.len(), $s.included.len()) 
 
     if s of DummySet:
         let d = cast[DummySet](s)

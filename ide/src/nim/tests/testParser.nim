@@ -79,19 +79,19 @@ suite "parser":
 
                 check(s.inner.inner of DummySet)
 
-    test "eprimeGolomb":
-        let path = "/home/tom/EssenceCatalog/problems/csplib-prob006/conjure-output/model000001.eprime";
-        let varList = @["x", "y", "z", "s"]
+    # test "eprimeGolomb":
+    #     let path = "/home/tom/EssenceCatalog/problems/csplib-prob006/conjure-output/model000001.eprime";
+    #     let varList = @["x", "y", "z", "s"]
 
-        for variable in parseEprime(path).values():
+    #     for variable in parseEprime(path).values():
 
-            echo variable
-            check(variable.name in varList)
+    #         echo variable
+    #         check(variable.name in varList)
 
-            if (variable.name == "s"):
-                check(variable of MarkerSet)
-                let s = cast[MarkerSet](variable)
+    #         if (variable.name == "s"):
+    #             check(variable of MarkerSet)
+    #             let s = cast[MarkerSet](variable)
 
-                check(s.inner of MarkerSet)
+    #             check(s.inner of MarkerSet)
 
-                check(s.inner.inner of DummySet)
+    #             check(s.inner.inner of DummySet)

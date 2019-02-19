@@ -28,6 +28,7 @@ proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
 
         var number : int
         discard res[1].parseInt(number)
+
         if number != d.dummyVal:
             d.included.add(number)
         else:

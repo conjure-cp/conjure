@@ -43,20 +43,10 @@ window.addEventListener('message', event => {
 
     switch (message.command) {
         case 'loadSet':
-            // console.log("structure")
-            // console.log(message.data.structure)
-
             path2Node[message.data.structure.name].children = message.data.structure.children;
-
-            // console.log("updated: ")
-            // console.log(path2Node[message.data.structure.name]);
-
             render(rootNode, rootNode);
-
             updateNodes([message.data.update])
-
             globals.sendPrettyRequest();
-
             break;
     }
 
@@ -79,8 +69,6 @@ export function setChangedExpressions(expressions) {
 }
 
 export function updateNodes(data) {
-
-    // console.log(data)
 
     data.forEach(element => {
 
@@ -138,8 +126,8 @@ export function setChanged() {
         while (obj) {
 
             console.log(ancestors)
-            if (!ancestors.includes(obj.label)) {
-                ancestors.push(obj.label);
+            if (!ancestors.includes(obj.domIdentifier)) {
+                ancestors.push(obj.domIdentifier);
             }
             obj = obj.parent;
         }
@@ -147,8 +135,6 @@ export function setChanged() {
         ancestors.forEach(element => {
             d3.select('[id="' + element + '"]').classed("changed", true);
         })
-
-        // console.log(d3.select('[id="' + element + '"]' ).classed("changed"));
 
     });
 }
@@ -197,7 +183,7 @@ export function render(data, parent) {
                 })
             }
 
-            d["label"] = name;
+            d["domIdentifier"] = name;
 
             return name;
         })
@@ -214,15 +200,12 @@ export function render(data, parent) {
 
                     let p = getVarPath(d);
 
-                    // console.log(p)
-
                     globals.pathList.push(p);
 
                     globals.vscode.postMessage({
                         command: 'loadSet',
                         nodeId: globals.selectedId,
                         path: p
-                        // path: d.name,
                     });
                 }
             }
@@ -241,14 +224,7 @@ export function render(data, parent) {
             // d3.selectAll(".changed").classed("changed", false);
         })
         .each((d) => {
-            // console.log(d)
-            // if (d.Cardinality) {
-            // path2Node[getVarPath(d)] = d;
-            path2Node[d.label] = d;
-            // }
-            // else{
-            // path2Node[d.name] = d;
-            // }
+            path2Node[d.domIdentifier] = d;
         })
     //add arrows if it is a folder
     entered.append("span").attr("class", function (d) {
@@ -256,27 +232,16 @@ export function render(data, parent) {
             : d._children ? "fas fa-chevron-right" : "";
         return "caret " + icon;
     });
-    //add icons for folder for file
-    // entered.append("span").attr("class", function (d) {
-    //     var icon = d.children || d._children ? "glyphicon-folder-close"
-    //         : "glyphicon-file";
-    //     return  icon;
-    // });
-    //add text
+
     entered.append("span").attr("class", "filename")
         .html(function (d) { return d.name; });
-
 
     //  update the ranges
 
     d3.selectAll("span.filename").html((d) => {
         // console.log("D is  " + d.name);
-
         return d.name;
-
-
     })
-
 
     //update caret direction
     nodeEls.select("span.caret").attr("class", function (d) {
@@ -299,8 +264,6 @@ function getVarPath(node) {
 
     function recurse(node) {
 
-        // console.log(node.name);
-
         if (node.name != "Children" && node.name != "Items") {
             path.push(node.name);
         }
@@ -319,7 +282,3 @@ function getVarPath(node) {
 }
 
 createUL();
-
-// let data = {name: "doggo", _children: [{name: "dasdasda", _children : []}]};
-// render(data, data);
-// console.log("RENDERING")

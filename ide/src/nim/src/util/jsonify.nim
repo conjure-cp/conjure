@@ -118,7 +118,11 @@ proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
 
 proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string] =
 
-    for i in countUp(0, domainsAtNode.len() - 1):
+    var numberOfCommonVariables = domainsAtNode.len()
+    if (domainsAtPrev.len() < numberOfCommonVariables):
+        numberOfCommonVariables = domainsAtPrev.len()
+
+    for i in countUp(0, numberOfCommonVariables - 1):
         let newVar = domainsAtNode[i]
         let oldVar = domainsAtPrev[i]
 
@@ -126,9 +130,10 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
             let newSet = cast[Set](newVar)
             let oldSet = cast[Set](oldVar)
             result = result.concat(getSetChanges(newSet, oldSet))
-
-            for i in countUp(0, newSet.children.len() - 1):
-                result = result.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
+            
+            if (newSet.children.len() > 0 and newSet.children.len() == oldSet.children.len()):
+                for i in countUp(0, newSet.children.len() - 1):
+                    result = result.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
 
         elif (newVar of Expression):
             let changedExpressions = getExpressionChanges(cast[Expression](newVar), cast[Expression](oldVar))

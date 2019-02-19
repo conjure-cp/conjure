@@ -26,20 +26,20 @@ suite "loadNodes":
     let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
     init(validPath)
 
-    test "fromZero":
-        let nodes = loadNodes("3", "0")
+    test "fromStart":
+        let nodes = loadNodes("3", "-1")
         check(nodes.len() == 3)
-        check(nodes[0].nodeId == 1)
+        check(nodes[0].nodeId == 0)
         check(nodes[0].parentId == -1)
-        check(nodes[0].label == "x = 1")
+        check(nodes[0].label == "")
 
-        check(nodes[1].nodeId == 2)
-        check(nodes[1].parentId == 1)
-        check(nodes[1].label == "y = 1")
+        check(nodes[1].nodeId == 1)
+        check(nodes[1].parentId == 0)
+        check(nodes[1].label == "x = 1")
 
-        check(nodes[2].nodeId == 3)
-        check(nodes[2].parentId == 2)
-        check(nodes[2].label == "z = 1")
+        check(nodes[2].nodeId == 2)
+        check(nodes[2].parentId == 1)
+        check(nodes[2].label == "y = 1")
         
 
     test "fromTwo":
@@ -64,15 +64,15 @@ suite "loadCore":
 
     test "1":
         let core = loadCore()
-        check(core.len() == 9)
+        check(core.len() == 10)
 
-        for i in countUp(0, 7):
-            check(core[i].nodeId == i+1)
-            check(core[i].children[0] == i+2)
+        for i in countUp(1, 7):
+            check(core[i].nodeId == i)
+            check(core[i].children[0] == i+1)
 
-        check(core[0].label == "x = 1")
-        check(core[1].label == "y = 1")
-        check(core[2].label == "z = 1")
+        check(core[1].label == "x = 1")
+        check(core[2].label == "y = 1")
+        check(core[3].label == "z = 1")
 
 suite "getLabel":
     test "simple":
@@ -83,7 +83,7 @@ suite "loadSimpleDomains":
     let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
     init(validPath)
     test "changed":
-        var response = loadSimpleDomains("1")
+        var response = loadSimpleDomains("0")
         check(response.changedNames.len() == 0)
 
         response = loadSimpleDomains("2")
@@ -98,11 +98,15 @@ suite "loadSimpleDomains":
     test "expressions":
         check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1", false).vars.len())
 
+    
+
+
 suite "loadPrettyDomains":
     let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
     init(validPath)
+    
     test "prettyDomainUpdateRoot":
-        let expected1 = """{
+        let expected0 = """{
         "name": "Items",
         "children": [
           {
@@ -157,7 +161,7 @@ suite "loadPrettyDomains":
                 "name": "x",
                 "children": [
                   {
-                    "name": "int(1)",
+                    "name": "int(1..9)",
                     "children": []
                   }
                 ]
@@ -174,17 +178,16 @@ suite "loadPrettyDomains":
           }
         ]
         }"""
+        let pretty0 = loadPrettyDomains("0", "")
+        check(pretty0 == parseJson(expected0))
 
-        let pretty1 = loadPrettyDomains("1", "")
-        check(pretty1 == parseJson(expected1))
+    test "prettyDomainUpdateNode1":
 
-    test "prettyDomainUpdateNode2":
-
-        let expected2 = """{
+        let expected1 = """{
         "vars": [
           {
             "name": "y",
-            "rng": "int(1)"
+            "rng": "int(1..9)"
           },
           {
             "name": "s",
@@ -212,19 +215,18 @@ suite "loadPrettyDomains":
           }
         ],
         "changed": [
-          "liDomain Variablesy",
-          "liItemsDomain Variables",
-          "liItems"
+            "x"
         ],
         "changedExpressions": []
         }"""
 
-        let pretty2 = loadPrettyDomains("2", "")
-        # check(pretty2 == parseJson(expected2))
+        let pretty1 = loadPrettyDomains("1", "")
+        # echo pretty1.pretty()
+        check(pretty1 == parseJson(expected1))
 
     test "prettyDomainUpdateExpandedChild":
 
-        let expected3 = """{
+        let expected2 = """{
         "vars": [
           {
             "name": "y",
@@ -268,66 +270,18 @@ suite "loadPrettyDomains":
           }
         ],
         "changed": [
-          "liDomain Variablesy",
-          "liItemsDomain Variables",
-          "liItems"
+            "y"
         ],
         "changedExpressions": []
         }"""
 
-        let pretty3 = loadPrettyDomains("2", "s.s-1")
-        echo pretty3.pretty()
-        # check(pretty3 == parseJson(expected3))
+        let pretty2 = loadPrettyDomains("2", "s.s-1")
+        # echo pretty2.pretty()
+        check(pretty2 == parseJson(expected2))
 
-    test "prettyDomainUpdateRemovedChild":
-
-        let expected4 = """{
-        "vars": [
-          {
-            "name": "blah",
-            "removed": true
-          },
-          {
-            "name": "y",
-            "rng": "int(1)"
-          },
-          {
-            "name": "s",
-            "Cardinality": "int(2..16)",
-            "Children": {
-              "children": [
-                {
-                  "name": "s-1",
-                  "_children": []
-                },
-                {
-                  "name": "s-2",
-                  "_children": []
-                }
-              ]
-            }
-          },
-          {
-            "name": "z",
-            "rng": "int(1..9)"
-          },
-          {
-            "name": "x",
-            "rng": "int(1)"
-          }
-        ],
-        "changed": [
-          "liDomain Variablesy",
-          "liItemsDomain Variables",
-          "liItems"
-        ],
-        "changedExpressions": []
-        }"""
-
-        let pretty4 = loadPrettyDomains("2", "s.blah")
-
-    test "updateChildren":
-        discard
+    test "collapsedSetsAppearInChangedList":
+        let pretty5 = loadPrettyDomains("5", "")
+        check(%"s-1" in pretty5["changed"].getElems())
 
 
     test "getExpandedSetChildFailed":
@@ -383,4 +337,13 @@ suite "loadPrettyDomains":
 
         check(loadSetChild("2","s.s-1") == parseJson(expected))
 
+suite "dontCrash":
+    let validPath = "../test/testData/sets/recursive/markerMarkerFlags"
+    init(validPath)
+
+    test "bug1":
+        let pretty1 = loadPrettyDomains("1", "")
+
+    test "bug2":
+        let pretty1 = loadPrettyDomains("1", "s.s-1:s.s-1.s-1-1:s.s-2:s.s-2.s-2-1")
     
