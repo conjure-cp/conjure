@@ -84,11 +84,11 @@ proc loadCore*(): seq[ParentChild] =
     let query = sql(
         """with recursive
         correctPath(n) as (
-        select max(nodeId) from Node
+        select nodeId from Node where isSolution = 1
         union 
         select parentId  from Node, correctPath
-            where nodeId=correctPath.n  and parentId > 0
-        )
+            where nodeId=correctPath.n 
+                    )
         select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId in correctPath;""")
 
     for row1 in db.fastRows(query):

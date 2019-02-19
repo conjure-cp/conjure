@@ -20,6 +20,7 @@ suite "process":
         check(noExpression.len() < withExpression.len())
         # echo noExpression
 
+
     test "pretty":
         let prettyDomains = getPrettyDomainsOfNode(db, "15")
         check(prettyDomains[0].name == "y")
@@ -32,3 +33,13 @@ suite "process":
 
         check(prettyDomains[3].name == "x")
         check(prettyDomains[3].rng == "int(1)")
+
+suite "experiment":
+    let minionPath = absolutePath("/home/tom/minion-private/build/golomb/model000001-03.eprime-minion")
+    let eprimePath = absolutePath("/home/tom/minion-private/build/golomb/model000001.eprime")
+    initParser(minionPath, eprimePath)
+    let db = open("/home/tom/minion-private/build/golomb/test.db", "", "", "") 
+
+    test "golomb":
+        let noExpression = getSimpleDomainsOfNode(db, "0", false)
+        echo noExpression
