@@ -48,6 +48,8 @@ import * as listView from "./util/listView"
 
                 globals.collapseNode(globals.rootId);
 
+                console.log(globals.id2Node);
+
                 update(globals.id2Node[0]);
                 globals.waiting = false;
 
@@ -162,7 +164,7 @@ import * as listView from "./util/listView"
         nodes.forEach((d) => { d.y = d.depth * 100; });
 
         let node = svg.selectAll("g.node")
-            .data(nodes, (d) => { return d.id || (d.id = ++i); });
+            .data(nodes, (d) => { return d.id; });
 
         let nodeEnter = node.enter().append("g")
             .attr("class", "node")

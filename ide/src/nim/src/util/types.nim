@@ -1,6 +1,9 @@
 import strutils
 
-let maxIndex* = 4
+# Constants
+
+let maxIndex* = 10
+let rootNodeId* = 0
 
 # Exceptions
 

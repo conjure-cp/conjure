@@ -154,7 +154,8 @@ export function setChanged() {
 }
 
 export function render(data, parent) {
-    // console.log("CALLED RENDER");
+    console.log("CALLED RENDER");
+    // console.log(JSON.stringify(data));
 
     if (init) {
         init = false;
@@ -179,7 +180,7 @@ export function render(data, parent) {
     }
 
     var nodeEls = ul.selectAll("li.node").data(nodes, function (d) {
-        d.id = d.id || ++id;
+        d.id = d.id || id++;
         return d.id;
     });
     //entered nodes

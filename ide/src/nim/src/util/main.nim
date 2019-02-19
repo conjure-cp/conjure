@@ -7,6 +7,9 @@ var db : DbConn
 
 proc getLabel(varName : string, value: string, branch : string): string =
 
+    if varName == "":
+        return ""
+
     result &= varName
 
     if (branch == "1"):
@@ -112,7 +115,7 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDo
 
     let domainsAtNode = getSimpleDomainsOfNode(db, nodeId, wantExpressions)
 
-    if (id != 1):
+    if (id != rootNodeId):
         domainsAtPrev = getSimpleDomainsOfNode(db,  $(id - 1), wantExpressions)
         
         for i in 0..<domainsAtNode.len():
@@ -172,7 +175,7 @@ proc temp(db: DbConn, nodeId, paths: string): JsonNode =
         if kid != nil:
             domainsAtNode.add(kid)
 
-    if (id != 1):
+    if (id != rootNodeId):
         var domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
         for kid in getChildSets(paths, $(id - 1)):
             if kid != nil:

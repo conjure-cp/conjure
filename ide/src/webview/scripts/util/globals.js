@@ -1,6 +1,6 @@
 exports.vscode = acquireVsCodeApi();
 exports.totalLoaded = 0
-exports.rootId = 1;
+exports.rootId = 0;
 exports.selectedId = exports.rootId;
 exports.currentDomainId = 0;
 exports.id2Node = {};
@@ -205,7 +205,7 @@ exports.previousNode = () => {
 }
 
 exports.upNode = () => {
-    if (exports.selectedId > 1) {
+    if (exports.selectedId > exports.rootId) {
         exports.selectedId = exports.id2Parent[exports.selectedId].id;
     }
     exports.selectNode(exports.selectedId);
