@@ -105,6 +105,28 @@ proc loadCore*(): seq[ParentChild] =
 
         result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
 
+    if result.len() == 0:
+        let query1 = sql(
+            """with recursive
+            correctPath(n) as (
+            select max(nodeId) from Node 
+            union 
+            select parentId  from Node, correctPath
+                where nodeId=correctPath.n 
+                        )
+            select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId in correctPath;""")
+
+        for row1 in db.fastRows(query1):
+            discard parseInt(row1[0], nId)
+            var kids : seq[int]
+            for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+                discard parseInt(row2[0], childId)
+                kids.add(childId)
+
+            discard parseInt(row1[1], pId)
+
+            result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
+
 
 proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
 

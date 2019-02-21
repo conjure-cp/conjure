@@ -4,7 +4,7 @@ exports.rootId = 0;
 exports.selectedId = exports.rootId;
 exports.currentDomainId = 0;
 exports.id2Node = {};
-exports.id2Parent = {};
+// exports.id2Parent = {};
 exports.id2ChildIds = {};
 exports.correctPath = [];
 exports.viewerWidth = $(document).width();
@@ -206,7 +206,8 @@ exports.previousNode = () => {
 
 exports.upNode = () => {
     if (exports.selectedId > exports.rootId) {
-        exports.selectedId = exports.id2Parent[exports.selectedId].id;
+        // exports.selectedId = exports.id2Parent[exports.selectedId].id;
+        exports.selectedId = exports.id2Node[exports.selectedId].parent.id;
     }
     exports.selectNode(exports.selectedId);
 }
@@ -338,7 +339,7 @@ exports.appendRows = (data) => {
 exports.addNode = (nodeId, parentId, label) => {
 
     exports.totalLoaded++;
-    let newNode = { id: nodeId, name: label };
+    let newNode = { id: nodeId, name: label, parent: exports.id2Node[parentId] };
     // console.log(exports.currentId);
     // console.log(parentId);
     // console.log(exports.id2Node);
@@ -354,7 +355,7 @@ exports.addNode = (nodeId, parentId, label) => {
 
     exports.id2Node[parentId].children.push(newNode);
     exports.id2Node[nodeId] = newNode;
-    exports.id2Parent[nodeId] = exports.id2Node[parentId];
+    // exports.id2Parent[nodeId] = exports.id2Node[parentId];
 }
 
 exports.getChildren = (parentId) => {

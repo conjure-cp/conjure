@@ -98,8 +98,6 @@ suite "loadSimpleDomains":
     test "expressions":
         check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1", false).vars.len())
 
-    
-
 
 suite "loadPrettyDomains":
     let validPath = "../test/testData/sets/recursive/markerMarkerMarker"

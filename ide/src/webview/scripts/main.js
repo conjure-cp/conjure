@@ -1,6 +1,6 @@
 import Mousetrap from "./util/mousetrap"
 import { appendControls } from "./util/screen"
-import globals from "./util/globals"
+import globals, { loadNNodes } from "./util/globals"
 import colours from "./util/colours"
 import * as listView from "./util/listView"
 
@@ -17,8 +17,10 @@ import * as listView from "./util/listView"
 
                 break;
             case 'loadCore':
-                message.data.forEach((element) => {
 
+                console.log(message.data);
+
+                message.data.forEach((element) => {
                     globals.correctPath.push(element.nodeId);
                 });
 
@@ -48,9 +50,9 @@ import * as listView from "./util/listView"
 
                 globals.collapseNode(globals.rootId);
 
-                console.log(globals.id2Node);
+                // console.log(globals.id2Node);
 
-                update(globals.id2Node[0]);
+                update(globals.id2Node[globals.rootId]);
                 globals.waiting = false;
 
                 globals.selectNode(globals.selectedId);
@@ -127,14 +129,12 @@ import * as listView from "./util/listView"
                     listView.render(message.data, message.data);
                 }
                 else {
-
                     listView.setChangedExpressions(message.data.changedExpressions);
                     listView.updateNodes(message.data.vars);
                     listView.setChangedList(message.data.changed);
                     listView.setChanged()
                 }
                 globals.waiting = false;
-
                 break;
         }
         globals.waiting = false;
@@ -172,7 +172,7 @@ import * as listView from "./util/listView"
                 return "node" + d.id;
             })
             .attr("transform", (d) => {
-                let parent = globals.id2Parent[d.id]
+                let parent = globals.id2Node[d.id].parent;
                 if (parent) {
                     return "translate(" + parent.x + "," + parent.y + ")";
                 }
@@ -326,6 +326,7 @@ import * as listView from "./util/listView"
 
     // globals.loadNNodes();
     // globals.selectNode(globals.selectedId);
-    console.log("HELLO")
+    console.log("HELLO");
+    console.log(globals.id2Node);
     $("#form").validate();
 })()

@@ -125,7 +125,7 @@ export function setChanged() {
 
         while (obj) {
 
-            console.log(ancestors)
+            // console.log(ancestors)
             if (!ancestors.includes(obj.domIdentifier)) {
                 ancestors.push(obj.domIdentifier);
             }
@@ -140,7 +140,7 @@ export function setChanged() {
 }
 
 export function render(data, parent) {
-    console.log("CALLED RENDER");
+    // console.log("CALLED RENDER");
     // console.log(JSON.stringify(data));
 
     if (init) {
