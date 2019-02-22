@@ -4,21 +4,27 @@ import Tree from './Tree';
 
 export default class Listener {
 
+    public static setLoadedCount() {
+        $("#total").text(Globals.data.totalLoaded + "/" + "?");
+    }
+
     public static bindListener() {
 
         let init = true;
 
         window.addEventListener('message', event => {
-            const message = event.data
+            const message = event.data;
+
+
             switch (message.command) {
+
                 case 'loadChildren':
-                    Globals.data.id2ChildIds[message.data.nodeId] = message.data.children
-                    Tree.update(Globals.data.id2Node[message.data.nodeId]);
-
+                    let nodeId = message.data.nodeId;
+                    Globals.data.id2ChildIds[nodeId] = message.data.children;
+                    Tree.update(Globals.data.id2Node[nodeId]);
                     break;
-                case 'loadCore':
 
-                    console.log(message.data);
+                case 'loadCore':
 
                     message.data.forEach((element: any) => {
                         Globals.data.correctPath.push(element.nodeId);
@@ -26,62 +32,57 @@ export default class Listener {
 
                     for (let i = 0; i < message.data.length; i++) {
 
-                        let element = message.data[i]
+                        let element = message.data[i];
 
                         if (!Globals.data.id2Node[element.nodeId]) {
 
                             Globals.data.addNode(element.nodeId, element.parentId, element.label);
-                            Globals.data.id2ChildIds[element.nodeId] = element.children
+                            Globals.data.id2ChildIds[element.nodeId] = element.children;
 
                             element.children.forEach((kidId: any) => {
 
                                 if (!Globals.data.correctPath.includes(kidId)) {
 
-                                    Globals.data.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""))
-                                    Globals.vscode.postMessage({
-                                        command: 'loadChildren',
-                                        id: kidId,
-                                    });
+                                    Globals.data.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""));
+                                    Globals.loadChildIds(kidId);
                                 }
-
-                            })
+                            });
                         }
                     }
 
                     Globals.data.collapseNode(Globals.data.rootId);
 
-                    // console.log(Globals.data.id2Node);
-
                     Tree.update(Globals.data.id2Node[Globals.data.rootId]);
+
                     Globals.data.waiting = false;
 
                     Tree.selectNode(Globals.data.selectedId);
 
-                    $("#total").text(Globals.data.totalLoaded + "/" + Globals.data.correctPath[Globals.data.correctPath.length - 1]);
+                    Listener.setLoadedCount();
 
                     break;
 
                 case 'longestBranchingVariable':
-                    Tree.tree.nodeSize([Number(message.data) * 13, 0])
 
+                    Tree.tree.nodeSize([Number(message.data) * 13, 0]);
                     break;
 
                 case 'loadNodes':
 
                     message.data.forEach((element: any) => {
-
                         if (!Globals.data.id2Node[element.nodeId]) {
                             Globals.data.addNode(element.nodeId, element.parentId, element.label);
-                            Globals.data.id2ChildIds[element.nodeId] = element.children
+                            Globals.data.id2ChildIds[element.nodeId] = element.children;
                         }
                     });
 
-                    Tree.update(Globals.data.id2Node[0]);
+                    Tree.update(Globals.data.id2Node[Globals.data.rootId]);
+
                     Globals.data.waiting = false;
 
                     Tree.selectNode(Globals.data.selectedId);
 
-                    $("#total").text(Globals.data.totalLoaded + "/" + Globals.data.correctPath[Globals.data.correctPath.length - 1]);
+                    Listener.setLoadedCount();
 
                     break;
 
@@ -100,7 +101,7 @@ export default class Listener {
                         }
 
                         $("#pane").empty();
-                        Globals.tabulate()
+                        Globals.tabulate();
                         Globals.appendRows(message.data.vars);
                     }
 

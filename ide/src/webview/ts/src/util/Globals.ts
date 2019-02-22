@@ -9,6 +9,42 @@ export default class Globals {
     public static data = new Data();
     public static vscode = acquireVsCodeApi();
 
+    public static tabulate() {
+        var table = d3.select('#pane').append('table')
+        var thead = table.append('thead')
+
+        // append the header row
+        thead.append('tr')
+            .selectAll('th')
+            .data(Globals.data.columns).enter()
+            .append('th')
+            .text(function (column: any) { return column; });
+    }
+
+    public static appendRows(data: any) {
+        var table = d3.select('#pane').append('table');
+        var tbody = table.append('tbody');
+
+        var rows = tbody.selectAll('tr')
+            .data(data)
+            .enter()
+            .append('tr')
+            .attr("id", (d: any, i: any) => { return d.name; })
+
+        // create a cell in each row for each column
+        var cells = rows.selectAll('td')
+            .data((row: any) => {
+                return Globals.data.columns.map((column) => {
+                    return { column: column, value: row[column] };
+                });
+            })
+            .enter()
+            .append('td')
+            .text((d: any) => { return d.value; });
+    }
+
+
+
     public static nextNode() {
 
         let stepSize = Number($("#stepSize").val());
@@ -31,7 +67,7 @@ export default class Globals {
 
         let prevId = Globals.data.selectedId - 1;
 
-        if (Globals.data.id2Node[prevId]){
+        if (Globals.data.id2Node[prevId]) {
             Globals.data.selectedId--;
             Tree.selectNode(Globals.data.selectedId);
         }
@@ -100,44 +136,10 @@ export default class Globals {
         });
     }
 
-    public static tabulate() {
-        var table = d3.select('#pane').append('table')
-        var thead = table.append('thead')
-
-        // append the header row
-        thead.append('tr')
-            .selectAll('th')
-            .data(Globals.data.columns).enter()
-            .append('th')
-            .text(function (column: any) { return column; });
-    }
-
-    public static appendRows(data: any) {
-        var table = d3.select('#pane').append('table');
-        var tbody = table.append('tbody');
-
-        var rows = tbody.selectAll('tr')
-            .data(data)
-            .enter()
-            .append('tr')
-            .attr("id", (d: any, i: any) => { return d.name; })
-
-        // create a cell in each row for each column
-        var cells = rows.selectAll('td')
-            .data((row: any) => {
-                return Globals.data.columns.map((column) => {
-                    return { column: column, value: row[column] };
-                });
-            })
-            .enter()
-            .append('td')
-            .text((d: any) => { return d.value; });
-    }
-
-    public static requestChildren(parentId: number) {
+    public static loadChildIds(nodeId: number) {
         Globals.vscode.postMessage({
-            command: 'children',
-            parentId: parentId,
+            command: 'loadChildren',
+            id: nodeId,
         });
     }
 
