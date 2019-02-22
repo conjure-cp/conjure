@@ -55,7 +55,7 @@ export default class Listener {
                     Tree.update(Globals.data.id2Node[Globals.data.rootId]);
                     Globals.data.waiting = false;
 
-                    Globals.selectNode(Globals.data.selectedId);
+                    Tree.selectNode(Globals.data.selectedId);
 
                     $("#total").text(Globals.data.totalLoaded + "/" + Globals.data.correctPath[Globals.data.correctPath.length - 1]);
 
@@ -79,7 +79,7 @@ export default class Listener {
                     Tree.update(Globals.data.id2Node[0]);
                     Globals.data.waiting = false;
 
-                    Globals.selectNode(Globals.data.selectedId);
+                    Tree.selectNode(Globals.data.selectedId);
 
                     $("#total").text(Globals.data.totalLoaded + "/" + Globals.data.correctPath[Globals.data.correctPath.length - 1]);
 
@@ -125,14 +125,14 @@ export default class Listener {
 
                     Listview.setNodeId();
 
-                    if (Globals.data.selectedId == Globals.data.rootId) {
+                    if (Globals.data.selectedId === Globals.data.rootId) {
                         Listview.render(message.data, message.data);
                     }
                     else {
                         Listview.setChangedExpressions(message.data.changedExpressions);
                         Listview.updateNodes(message.data.vars);
                         Listview.setChangedList(message.data.changed);
-                        Listview.setChanged()
+                        Listview.setChanged();
                     }
                     Globals.data.waiting = false;
                     break;

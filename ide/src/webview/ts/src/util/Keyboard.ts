@@ -32,13 +32,13 @@ export default class Keyboard {
         Mousetrap.bind('c', () => {
             Globals.data.collapseNode(Globals.data.selectedId);
             Tree.update(Globals.data.id2Node[Globals.data.selectedId]);
-            Globals.selectNode(Globals.data.selectedId)
+            Tree.selectNode(Globals.data.selectedId)
         }, 'keydown');
 
         Mousetrap.bind('e', () => {
             Globals.data.expandNode(Globals.data.selectedId);
             Tree.update(Globals.data.id2Node[Globals.data.selectedId]);
-            Globals.selectNode(Globals.data.selectedId)
+            Tree.selectNode(Globals.data.selectedId)
         }, 'keydown');
 
         Mousetrap.bind('m', () => {
@@ -48,7 +48,7 @@ export default class Keyboard {
         Mousetrap.bind('f', () => {
             Globals.data.collapseFailed();
             Tree.update(Globals.data.id2Node[Globals.data.selectedId]);
-            Globals.selectNode(Globals.data.selectedId)
+            Tree.selectNode(Globals.data.selectedId)
             Tree.update(Globals.data.id2Node[1]);
         }, 'keydown');
     }
