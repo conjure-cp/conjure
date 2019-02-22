@@ -5,8 +5,8 @@ find x_ExplicitVarSizeWithFlagsR2_Values_Occurrence: matrix indexed by [int(1..4
 branching on [x_ExplicitVarSizeWithFlagsR2_Flags, x_ExplicitVarSizeWithFlagsR2_Values_Occurrence]
 such that
     and([x_ExplicitVarSizeWithFlagsR2_Flags[q1 + 1] ->
-         [toInt(x_ExplicitVarSizeWithFlagsR2_Values_Occurrence[q1, q7]) | q7 : int(1..2)] <lex
-         [toInt(x_ExplicitVarSizeWithFlagsR2_Values_Occurrence[q1 + 1, q8]) | q8 : int(1..2)]
+         [-toInt(x_ExplicitVarSizeWithFlagsR2_Values_Occurrence[q1, q7]) | q7 : int(1..2)] <lex
+         [-toInt(x_ExplicitVarSizeWithFlagsR2_Values_Occurrence[q1 + 1, q8]) | q8 : int(1..2)]
              | q1 : int(1..3)]),
     and([x_ExplicitVarSizeWithFlagsR2_Flags[q2] = false ->
          and([x_ExplicitVarSizeWithFlagsR2_Values_Occurrence[q2, q9] = false | q9 : int(1..2)])

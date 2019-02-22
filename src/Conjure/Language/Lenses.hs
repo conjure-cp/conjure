@@ -563,6 +563,27 @@ opFlatten _ =
     )
 
 
+flattenIfNeeded ::
+    Int ->
+    Expression ->
+    Expression
+flattenIfNeeded dims m =
+    if dims > 1
+        then make opFlatten m
+        else m
+
+
+oneDimensionaliser ::
+    Int -> -- current number of dimensions
+    Expression ->
+    Expression
+oneDimensionaliser dims x =
+    case dims of
+        0 -> fromList [x]
+        1 -> x
+        _ -> make opFlatten x
+
+
 opConcatenate
     :: ( Op x :< x
        , Pretty x
@@ -1474,6 +1495,28 @@ opLex _ =
     )
 
 
+opOrdering
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x -> x, (x,x)) -> x
+       , x -> m (x -> x -> x, (x,x))
+       )
+opOrdering _ =
+    ( \ (mk, (x,y)) -> mk x y
+    , \ p -> case project p of
+        Just (MkOpLt       (OpLt       x y)) -> return (\ x' y' -> inject (MkOpLt       (OpLt       x' y')), (x,y) )
+        Just (MkOpLeq      (OpLeq      x y)) -> return (\ x' y' -> inject (MkOpLeq      (OpLeq      x' y')), (x,y) )
+        Just (MkOpTildeLt  (OpTildeLt  x y)) -> return (\ x' y' -> inject (MkOpTildeLt  (OpTildeLt  x' y')), (x,y) )
+        Just (MkOpTildeLeq (OpTildeLeq x y)) -> return (\ x' y' -> inject (MkOpTildeLeq (OpTildeLeq x' y')), (x,y) )
+        Just (MkOpLexLt    (OpLexLt    x y)) -> return (\ x' y' -> inject (MkOpLexLt    (OpLexLt    x' y')), (x,y) )
+        Just (MkOpLexLeq   (OpLexLeq   x y)) -> return (\ x' y' -> inject (MkOpLexLeq   (OpLexLeq   x' y')), (x,y) )
+        _ -> na ("Lenses.opOrdering:" <++> pretty p)
+    )
+
+
 fixTHParsing :: Data a => a -> a
 fixTHParsing p =
     let ?typeCheckerMode = RelaxedIntegerTags
@@ -1488,9 +1531,10 @@ fixRelationProj= transformBi f
             case match opRelationProj p of
                 Just (func, [Just arg]) ->
                     case typeOf func of
-                        Just TypeFunction{} -> make opImage func arg
-                        Just TypeSequence{} -> make opImage func arg
-                        _                   -> p
+                        Just TypeFunction{}    -> make opImage func arg
+                        Just TypeSequence{}    -> make opImage func arg
+                        Just TypePermutation{} -> make opImage func arg
+                        _                      -> p
                 _ -> p
 
 

@@ -71,7 +71,7 @@ instance EvaluateOp OpImage where
                     [ "Sequence is multiply defined at this point:" <+> pretty a
                     , "Sequence value:" <+> pretty f
                     ]
-    evaluateOp op@(OpImage p@(viewConstantPermutation -> Just xss) i) = do
+    evaluateOp (OpImage p@(viewConstantPermutation -> Just xss) i) = do
       (TypePermutation ip) <- typeOf p
       ti <- typeOf i
       if typesUnify [ti, ip]

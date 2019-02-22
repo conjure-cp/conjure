@@ -20,7 +20,7 @@ permutationAsFunction
     :: forall m . (MonadFail m, NameGen m, EnumerateDomain m)
     => (forall x . DispatchFunction m x)
     -> Representation m
-permutationAsFunction dispatch = Representation chck downD structuralCons downC up
+permutationAsFunction dispatch = Representation chck downD structuralCons downC up symmetryOrdering
  where
    chck :: TypeOf_ReprCheck m
    chck f (DomainPermutation _ s innerDomain)
@@ -129,5 +129,9 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
                                    , "domain:" <+> pretty domain
                                    ]
 
- 
-
+   symmetryOrdering :: TypeOf_SymmetryOrdering m
+   symmetryOrdering innerSO downX1 inp domain = do
+       [x] <- downX1 inp
+       Just [(_, xDomain)] <- downD ("SO", domain)
+       soValues <- innerSO downX1 x xDomain
+       return soValues

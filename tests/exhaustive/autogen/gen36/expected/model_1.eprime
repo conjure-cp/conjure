@@ -14,16 +14,18 @@ such that
     2 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Marker ->
     flatten([[var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[1];
                   int(1)],
-             [toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                        [1, q12, q13])
-                  | q12 : int(1..2), q13 : int(2, 5)];
+             flatten([[-toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+                                  [1, q12, q13])
+                           | q13 : int(2, 5)]
+                          | q12 : int(1..2)]);
                  int(1..2)])
     <lex
     flatten([[var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[2];
                   int(1)],
-             [toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                        [2, q14, q15])
-                  | q14 : int(1..2), q15 : int(2, 5)];
+             flatten([[-toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+                                  [2, q14, q15])
+                           | q15 : int(2, 5)]
+                          | q14 : int(1..2)]);
                  int(1..2)]),
     and([q2 > var6_ExplicitVarSizeWithMarkerR18R5R2_Marker ->
          var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q2] = 0 /\
@@ -51,12 +53,12 @@ such that
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Marker ->
          (2 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3] ->
-          [toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                     [q3, 1, q20])
+          [-toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+                      [q3, 1, q20])
                | q20 : int(2, 5)]
           <lex
-          [toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                     [q3, 2, q21])
+          [-toInt(var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+                      [q3, 2, q21])
                | q21 : int(2, 5)])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Marker ->
