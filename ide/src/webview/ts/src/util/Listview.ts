@@ -1,5 +1,5 @@
-import "./treelist"
-// import Data from "./Data"
+import "./treelist";
+
 declare var jsPanel: any;
 declare var d3: any;
 
