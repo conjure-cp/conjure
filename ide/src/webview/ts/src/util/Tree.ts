@@ -29,7 +29,7 @@ export default class Tree {
         });
 
     public static zoomed() {
-        Tree.svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+        Tree.svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
     }
 
     public static focusNode = (node: any) => {
@@ -47,16 +47,16 @@ export default class Tree {
     }
 
     public static selectNode = (nodeId: number) => {
-        Globals.data.selectedId = nodeId;
+        Globals.s.selectedId = nodeId;
 
-        let allCircles = ".node circle"
+        let allCircles = ".node circle";
         d3.selectAll(allCircles).classed("selected", false);
         let s = "#node" + nodeId + " circle";
         d3.select(s).classed("selected", true);
 
-        Tree.focusNode(Globals.data.id2Node[nodeId]);
+        Tree.focusNode(Globals.s.id2Node[nodeId]);
 
-        if (!Globals.data.frozen) {
+        if (!Globals.s.frozen) {
             Globals.loadDomains();
         }
     }
@@ -72,10 +72,10 @@ export default class Tree {
             childLength = node.children.length;
         }
 
-        if (Globals.data.id2ChildIds[node.id]) {
-            if (childLength < Globals.data.id2ChildIds[node.id].length) {
+        if (Globals.s.id2ChildIds[node.id]) {
+            if (childLength < Globals.s.id2ChildIds[node.id].length) {
 
-                if (!Globals.data.correctPath.includes(node.id)) {
+                if (!Globals.s.correctPath.includes(node.id)) {
 
                     domElement.classed("red", true);
 
@@ -85,33 +85,33 @@ export default class Tree {
         }
     }
 
-    public static update(source: any) {
+    public static update(source: Node) {
 
-        let nodes = Tree.tree.nodes(Globals.data.id2Node[Globals.data.rootId]).reverse(),
+        let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse(),
             links = Tree.tree.links(nodes);
 
-        nodes.forEach((d: any) => { d.y = d.depth * Tree.gap; });
+        nodes.forEach((node: Node) => { node.y = node.depth * Tree.gap; });
 
         let node = Tree.svg.selectAll("g.node")
-            .data(nodes, (d: any) => { return d.id; });
+            .data(nodes, (node: Node) => { return node.id; });
 
         let nodeEnter = node.enter().append("g")
             .attr("class", "node")
-            .attr("id", (d: any) => {
-                return "node" + d.id;
+            .attr("id", (node: Node) => {
+                return "node" + node.id;
             })
-            .attr("transform", (d: any) => {
-                let parent = Globals.data.id2Node[d.id].parent;
+            .attr("transform", (node: Node) => {
+                let parent = Globals.s.id2Node[node.id].parent;
                 if (parent) {
                     return "translate(" + parent.x + "," + parent.y + ")";
                 }
             })
-            .on("click", (d: any) => {
-                Tree.selectNode(d.id);
-            })
+            .on("click", (node: Node) => {
+                Tree.selectNode(node.id);
+            });
 
         nodeEnter.append("circle")
-            .attr("r", 1e-6)
+            .attr("r", 1e-6);
 
         nodeEnter.append("text")
             .attr("y", () => {
@@ -119,12 +119,12 @@ export default class Tree {
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
-            .text((d: any) => { return d.name; })
+            .text((node: Node) => { return node.name; })
             .style("fill-opacity", 1e-6);
 
         let nodeUpdate = node.transition()
             .duration(Tree.duration)
-            .attr("transform", (d: any) => { return "translate(" + d.x + "," + d.y + ")"; })
+            .attr("transform", (node: Node) => { return "translate(" + node.x + "," + node.y + ")"; });
 
         nodeUpdate.select("circle")
             .attr("r", 10)
@@ -135,7 +135,7 @@ export default class Tree {
 
         let nodeExit = node.exit().transition()
             .duration(Tree.duration)
-            .attr("transform", (d: any) => { return "translate(" + source.x + "," + source.y + ")"; })
+            .attr("transform", () => { return "translate(" + source.x + "," + source.y + ")"; })
             .remove();
         nodeExit.select("circle")
             .attr("r", 1e-6);
@@ -143,11 +143,11 @@ export default class Tree {
             .style("fill-opacity", 1e-6);
 
         let link = Tree.svg.selectAll("path.link")
-            .data(links, (d: any) => { return d.target.id; });
+            .data(links, (link: any) => { return link.target.id; });
 
         link.enter().insert("path", "g")
-            .attr("class", (d: any) => {
-                if (Globals.data.correctPath.includes(d.target.id)) {
+            .attr("class", (link: any) => {
+                if (Globals.s.correctPath.includes(link.target.id)) {
                     return "link";
                 }
                 return "link red";
@@ -171,9 +171,9 @@ export default class Tree {
             })
             .remove();
 
-        nodes.forEach((d: any) => {
-            d.x0 = d.x;
-            d.y0 = d.y;
+        nodes.forEach((node: Node) => {
+            node.x0 = node.x;
+            node.y0 = node.y;
         });
     }
 }

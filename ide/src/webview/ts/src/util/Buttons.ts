@@ -11,31 +11,32 @@ export default class Buttons {
         d3.select("#freeze")
             .on("change", () => {
                 Globals.loadDomains();
-                Globals.data.frozen = !Globals.data.frozen;
-            })
+                Globals.s.frozen = !Globals.s.frozen;
+            });
+
         d3.select("#check")
             .on("change", () => {
                 $("#pane").empty();
-                Globals.data.pretty = !Globals.data.pretty;
+                Globals.s.pretty = !Globals.s.pretty;
 
-                if (Globals.data.pretty) {
+                if (Globals.s.pretty) {
                     Listview.createUL();
                     let r = Listview.getRootNode();
                     console.log(r);
-                    Listview.render(r, r);
+                    Listview.update(r);
                 }
                 else {
 
-                    if (!Globals.data.simpleDomainsAtRoot) {
+                    if (!Globals.s.simpleDomainsAtRoot) {
                         Globals.loadDomains();
                     }
                     else {
                         Globals.tabulate();
-                        Globals.appendRows(Globals.data.simpleDomainsAtRoot);
+                        Globals.appendRows(Globals.s.simpleDomainsAtRoot);
                     }
                 }
 
-                Tree.selectNode(Globals.data.selectedId);
+                Tree.selectNode(Globals.s.selectedId);
             });
     }
 }

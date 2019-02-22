@@ -1,22 +1,23 @@
 import Node from './Node';
-import Data from './Data';
+import State from './State';
 import Tree from './Tree';
 
 declare var acquireVsCodeApi: any;
 declare var d3: any;
 
 export default class Globals {
-    public static data = new Data();
+    public static s = new State();
     public static vscode = acquireVsCodeApi();
+    public static columns = ["name", "rng"];
 
     public static tabulate() {
-        var table = d3.select('#pane').append('table')
-        var thead = table.append('thead')
+        var table = d3.select('#pane').append('table');
+        var thead = table.append('thead');
 
         // append the header row
         thead.append('tr')
             .selectAll('th')
-            .data(Globals.data.columns).enter()
+            .data(Globals.columns).enter()
             .append('th')
             .text(function (column: any) { return column; });
     }
@@ -29,12 +30,12 @@ export default class Globals {
             .data(data)
             .enter()
             .append('tr')
-            .attr("id", (d: any, i: any) => { return d.name; })
+            .attr("id", (d: any, i: any) => { return d.name; });
 
         // create a cell in each row for each column
         var cells = rows.selectAll('td')
             .data((row: any) => {
-                return Globals.data.columns.map((column) => {
+                return Globals.columns.map((column) => {
                     return { column: column, value: row[column] };
                 });
             })
@@ -49,73 +50,75 @@ export default class Globals {
 
         let stepSize = Number($("#stepSize").val());
 
-        if (Globals.data.id2Node[Globals.data.selectedId]._children) {
-            Globals.data.toggleNode(Globals.data.selectedId);
+        let node = Globals.s.id2Node[Globals.s.selectedId];
+
+        if (node._children) {
+            Node.toggleNode(node);
             return;
         }
 
-        if (!Globals.data.id2Node[Globals.data.selectedId + stepSize]) {
+        if (!Globals.s.id2Node[Globals.s.selectedId + stepSize]) {
             Globals.loadNNodes();
         }
         else {
-            Globals.data.selectedId += stepSize;
-            Tree.selectNode(Globals.data.selectedId);
+            Globals.s.selectedId += stepSize;
+            Tree.selectNode(Globals.s.selectedId);
         }
     }
 
     public static previousNode() {
 
-        let prevId = Globals.data.selectedId - 1;
+        let prevId = Globals.s.selectedId - 1;
 
-        if (Globals.data.id2Node[prevId]) {
-            Globals.data.selectedId--;
-            Tree.selectNode(Globals.data.selectedId);
+        if (Globals.s.id2Node[prevId]) {
+            Globals.s.selectedId--;
+            Tree.selectNode(Globals.s.selectedId);
         }
     }
 
     public static rightNode() {
-        if (Globals.data.id2Node[Globals.data.selectedId].children) {
-            let childCount = Globals.data.id2Node[Globals.data.selectedId].children.length;
+        if (Globals.s.id2Node[Globals.s.selectedId].children) {
+            let childCount = Globals.s.id2Node[Globals.s.selectedId].children.length;
             if (childCount > 1) {
-                Globals.data.selectedId = Globals.data.id2Node[Globals.data.selectedId].children[childCount - 1].id;
+                Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].children[childCount - 1].id;
             }
-            Tree.selectNode(Globals.data.selectedId);
+            Tree.selectNode(Globals.s.selectedId);
         }
     }
 
     public static upNode() {
-        if (Globals.data.selectedId > Globals.data.rootId) {
-            Globals.data.selectedId = Globals.data.id2Node[Globals.data.selectedId].parent.id;
+        if (Globals.s.selectedId > Globals.s.rootId) {
+            Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].parent.id;
         }
-        Tree.selectNode(Globals.data.selectedId);
+        Tree.selectNode(Globals.s.selectedId);
     }
 
     public static loadNNodes() {
 
-        if (!Globals.data.waiting) {
+        if (!Globals.s.waiting) {
 
             Globals.vscode.postMessage({
                 command: 'loadNodes',
                 amount: Number($("#stepSize").val()),
-                start: Globals.data.selectedId
+                start: Globals.s.selectedId
             });
 
-            Globals.data.waiting = true;
+            Globals.s.waiting = true;
         }
     }
 
     public static loadDomains() {
 
-        if (!Globals.data.waiting) {
+        if (!Globals.s.waiting) {
 
-            if (Globals.data.pretty) {
+            if (Globals.s.pretty) {
                 Globals.sendPrettyRequest();
             }
             else {
                 Globals.sendSimpleRequest();
             }
 
-            Globals.data.waiting = true;
+            Globals.s.waiting = true;
         }
     }
 
@@ -123,16 +126,16 @@ export default class Globals {
         Globals.vscode.postMessage({
             command: "simpleDomains",
             amount: Number($("#domCount").val()),
-            start: Globals.data.currentDomainId,
-            nodeId: Globals.data.selectedId,
+            start: Globals.s.currentDomainId,
+            nodeId: Globals.s.selectedId,
         });
     }
 
     public static sendPrettyRequest() {
         Globals.vscode.postMessage({
             command: "prettyDomains",
-            nodeId: Globals.data.selectedId,
-            paths: Globals.data.pathList.join(":")
+            nodeId: Globals.s.selectedId,
+            paths: Globals.s.pathList.join(":")
         });
     }
 
@@ -164,7 +167,7 @@ export default class Globals {
             command: 'simpleDomains',
             amount: Number($("#domCount").val()),
             start: 0,
-            nodeId: Globals.data.rootId,
+            nodeId: Globals.s.rootId,
         });
     }
 }
