@@ -19,9 +19,9 @@ export default class Data {
     constructor(){
     }
 
-    public expandNode = (nodeId: number) => {
+    public expandNode (nodeId: number) {
 
-        function recurse(node: any) {
+        let recurse = (node: any) => {
 
             for (var i in node._children) {
                 recurse(node._children[i]);
@@ -34,17 +34,17 @@ export default class Data {
         recurse(node);
     }
 
-    public collapseNode = (nodeId: number) => {
+    public collapseNode (nodeId: number) {
 
 
-        function recurse(node: any) {
+        let recurse = (node: Node) => {
 
             for (var i in node.children) {
                 recurse(node.children[i]);
             }
 
             this.hideChildren(node.id);
-        }
+        };
 
         let node = this.id2Node[nodeId];
         recurse(node);
@@ -62,9 +62,6 @@ export default class Data {
     }
 
     public hideChildren(nodeId: number) {
-        // console.log(nodeId);
-        // console.log(exports.id2Node);
-        // console.log(exports.id2Node[nodeId]);
         if (this.id2Node[nodeId]) {
             if (this.id2Node[nodeId].children) {
                 this.id2Node[nodeId]._children = this.id2Node[nodeId].children;
@@ -73,7 +70,7 @@ export default class Data {
         }
     }
 
-    public toggleNode = (nodeId: any) => {
+    public toggleNode (nodeId: number) {
 
         if (this.id2Node[nodeId]._children) {
             this.showChildren(nodeId);
@@ -83,7 +80,7 @@ export default class Data {
         }
     }
 
-    public collapseFailed = () => {
+    public collapseFailed() {
         this.correctPath.forEach((nodeId: number) => {
             if (this.id2ChildIds[nodeId]) {
                 this.id2ChildIds[nodeId].forEach((childId: number) => {
@@ -98,21 +95,18 @@ export default class Data {
         if (!this.correctPath.includes(this.selectedId)) {
 
             for (var i = 0; i < this.correctPath.length; i++) {
-
                 let nodeId = this.correctPath[i];
 
                 if (nodeId > this.selectedId) {
-
                     this.selectedId = nodeId;
-
                     break;
                 }
-            };
+            }
         }
     }
 
 
-    public addNode = (nodeId: number, parentId: number, label: string) => {
+    public addNode (nodeId: number, parentId: number, label: string) {
 
         this.totalLoaded++;
         // let newNode = { id: nodeId, name: label, parent: this.id2Node[parentId] };
