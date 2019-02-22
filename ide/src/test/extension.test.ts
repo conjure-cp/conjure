@@ -14,27 +14,31 @@ import fs = require('fs');
 // import * as vscode from 'vscode';
 // import * as myExtension from '../extension';
 
+import Node from '../webview/ts/src/util/Node';
+
 // Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", function () {
 
-        let testDir = "/home/tom/Documents/sh/essence/conjure-output";
+        // let testDir = "/home/tom/Documents/sh/essence/conjure-output";
 
-        let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
-        let minion = (fs.readFileSync(testDir + "/model000001.eprime-minion", 'utf8'));
-        let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
-        let path = "/test.db";
+        // let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
+        // let minion = (fs.readFileSync(testDir + "/model000001.eprime-minion", 'utf8'));
+        // let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
+        // let path = "/test.db";
 
     test("Parse DB", () => {
-        const sqlite3 = require('sqlite3').verbose();
+        console.log("DSADASDASDAS");
+        console.log(Node.blah());
+        // const sqlite3 = require('sqlite3').verbose();
 
-        let db = new sqlite3.Database(path, (err: any) => {
-            if (err) {
-                console.error(err.message);
-            }
-            console.log('Connected to the database.');
+        // let db = new sqlite3.Database(path, (err: any) => {
+        //     if (err) {
+        //         console.error(err.message);
+        //     }
+        //     console.log('Connected to the database.');
         });
 
-        console.log(db);
+        // console.log(db);
 
         // async function recursive(node: TreeNode) {
         //     const sql = 'select * from Nodes where ParentID=' + node.name;
@@ -64,14 +68,14 @@ suite("Extension Tests", function () {
         // let contents = parser;
         // console.log(contents);
 
-    });
+    // });
 
-    test("Parse JSON", () => {
-        let parser = new Parser.JSONParser(json, eprime, minion);
-        let contents = parser.parseJson();
-        console.log(contents);
+    // test("Parse JSON", () => {
+    //     let parser = new Parser.JSONParser(json, eprime, minion);
+    //     let contents = parser.parseJson();
+    //     console.log(contents);
 
-    });
+    // });
 
     // Defines a Mocha unit test
     // test("Something 1", function() {

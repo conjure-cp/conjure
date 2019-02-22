@@ -225,7 +225,8 @@ export default class WebviewHelper {
         let htmlContent = fs.readFileSync(htmlUri.path);
         const css = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview', 'main.css'));
         const cssUri = css.with({ scheme: 'vscode-resource' });
-        const scriptPath = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'out/', 'bundle.js'));
+        // const scriptPath = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'out/', 'bundle.js'));
+        const scriptPath = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/ts/dist/', 'bundle.js'));
         const scriptUri = scriptPath.with({ scheme: 'vscode-resource' });
         // const explorer = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/scripts', 'explorer.js'));
         // const explorerUri = explorer.with({ scheme: 'vscode-resource' });
@@ -249,7 +250,7 @@ export default class WebviewHelper {
 
         var htmlFile = createHTML({
             title: 'example',
-            script: [jspanelJS, d3, jquery, validator, scriptUri, mouseTrap],
+            script: [jspanelJS, d3, jquery, validator, mouseTrap, scriptUri],
             // script: [jquery, treeViewUri, explorerUri],
             scriptAsync: false,
             css: [jspanelCSS, bootstrap, fontawesome, cssUri],
