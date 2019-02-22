@@ -1,5 +1,6 @@
 import Node from './Node';
 import Data from './Data';
+import Tree from './Tree';
 
 declare var acquireVsCodeApi: any;
 declare var d3: any;
@@ -7,43 +8,7 @@ declare var d3: any;
 export default class Globals {
     public static data = new Data();
     public static vscode = acquireVsCodeApi();
-    public static viewerWidth = $(document).width();
-    public static viewerHeight = $(document).height();
-    public static margin = { top: 40, right: 30, bottom: 50, left: 30 };
-    public static width = Globals.viewerWidth! - Globals.margin.left - Globals.margin.right;
-    public static height = Globals.viewerHeight! - Globals.margin.top - Globals.margin.bottom;
     public static duration = 750;
-    private static z : any;
-    public static tree = d3.layout.tree()
-        .size([Globals.height, Globals.width])
-    // .nodeSize([300, 100]);
-
-    public static setup = (zoom: any) => {
-        Globals.z = zoom;
-    }
-
-    public static diagonal = d3.svg.diagonal()
-        .projection((d: any) => {
-            return [d.x, d.y];
-        });
-
-
-    public static focusNode = (node: any) => {
-        // scale = 7;''
-        // console.log(node);
-        let scale = Globals.z.scale();
-        let x = -node.x * scale;
-        let y = -node.y * scale;
-
-        x += Globals.width / 3;
-        y += Globals.height / 2;
-
-        d3.select('g').transition()
-            .duration(Globals.duration)
-            .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
-        Globals.z.translate([x, y]);
-    }
-
 
     public static nextNode = () => {
 
@@ -126,7 +91,7 @@ export default class Globals {
         // console.log(nodeId)
         // console.log(exports.id2Node[nodeId])
 
-        Globals.focusNode(Globals.data.id2Node[nodeId]);
+        Tree.focusNode(Globals.data.id2Node[nodeId]);
 
 
         Globals.data.currentDomainId = 0;
@@ -225,6 +190,145 @@ export default class Globals {
             parentId: parentId,
         });
     }
+
+
+    // public static zoom = d3.behavior.zoom()
+    //     .on("zoom", Globals.zoomed);
+
+    // public static svg = d3.select("#tree")
+    //     .append("svg")
+    //     .call(Globals.zoom)
+    //     .attr("width", Globals.viewerWidth)
+    //     .attr("height", Globals.viewerHeight)
+    //     .append("g")
+
+    // public static zoomed() {
+    //     Globals.svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+    // }
+
+    // public static update(source: any) {
+
+    //     console.log("update called!");
+
+    //     let nodes = Globals.tree.nodes(Globals.data.id2Node[Globals.data.rootId]).reverse(),
+    //         links = Globals.tree.links(nodes);
+
+    //     nodes.forEach((d: any) => { d.y = d.depth * 100; });
+
+    //     let node = Globals.svg.selectAll("g.node")
+    //         .data(nodes, (d: any) => { return d.id; });
+
+    //     let nodeEnter = node.enter().append("g")
+    //         .attr("class", "node")
+    //         .attr("id", (d: any) => {
+    //             return "node" + d.id;
+    //         })
+    //         .attr("transform", (d: any) => {
+    //             let parent = Globals.data.id2Node[d.id].parent;
+    //             if (parent) {
+    //                 return "translate(" + parent.x + "," + parent.y + ")";
+    //             }
+    //         })
+    //         .on("click", (d: any) => {
+    //             Globals.selectNode(d.id);
+    //         })
+
+    //     nodeEnter.append("circle")
+    //         .attr("r", 1e-6)
+
+    //     nodeEnter.append("text")
+    //         .attr("y", () => {
+    //             return -50
+    //         })
+    //         .attr("dy", ".35em")
+    //         .attr("text-anchor", "middle")
+    //         .text((d: any) => { return d.name; })
+    //         .style("fill-opacity", 1e-6);
+
+    //     let nodeUpdate = node.transition()
+    //         .duration(Globals.duration)
+    //         .attr("transform", (d: any) => { return "translate(" + d.x + "," + d.y + ")"; })
+
+    //     nodeUpdate.select("circle")
+    //         .attr("r", 10)
+    //         .each((d: any) => {
+
+    //             let s = "#node" + d.id + " circle";
+
+    //             let domElement = d3.select(s);
+    //             domElement.classed("hasOthers red", false);
+
+    //             let childLength = 0;
+    //             if (d.children) {
+    //                 childLength = d.children.length;
+    //             }
+
+    //             if (Globals.data.id2ChildIds[d.id]) {
+    //                 if (childLength < Globals.data.id2ChildIds[d.id].length) {
+
+    //                     if (!Globals.data.correctPath.includes(d.id)) {
+
+    //                         domElement.classed("hasOthers red", true);
+
+    //                     }
+    //                     domElement.classed("hasOthers", true);
+    //                 }
+    //             }
+
+    //         })
+
+    //     nodeUpdate.select("text")
+    //         .style("fill-opacity", 1);
+
+
+    //     let nodeExit = node.exit().transition()
+    //         .duration(Globals.duration)
+    //         .attr("transform", (d: any) => { return "translate(" + source.x + "," + source.y + ")"; })
+    //         .remove();
+    //     nodeExit.select("circle")
+    //         .attr("r", 1e-6);
+    //     nodeExit.select("text")
+    //         .style("fill-opacity", 1e-6);
+
+    //     let link = Globals.svg.selectAll("path.link")
+    //         .data(links, (d: any) => { return d.target.id; });
+
+    //     link.enter().insert("path", "g")
+    //         .attr("class", (d: any) => {
+
+    //             if (Globals.data.correctPath.includes(d.target.id)) {
+    //                 return "link"
+    //             }
+
+    //             return "link red";
+
+    //         })
+    //         .attr("d", (d: any) => {
+    //             let o = { x: d.source.x, y: d.source.y };
+    //             return Globals.diagonal({ source: o, target: o });
+    //         })
+    //         .style("stroke-opacity", 1e-6);
+
+    //     link.transition()
+    //         .duration(Globals.duration)
+    //         .attr("d", Globals.diagonal)
+    //         .style("stroke-opacity", 1);
+
+    //     link.exit().transition()
+    //         .duration(Globals.duration)
+    //         .attr("d", (d: any) => {
+    //             let o = { x: d.source.x, y: d.source.y };
+    //             return Globals.diagonal({ source: o, target: o });
+    //         })
+    //         .remove();
+
+    //     nodes.forEach((d: any) => {
+    //         d.x0 = d.x;
+    //         d.y0 = d.y;
+    //     });
+
+    // }
+
 
     public static initialize = () => {
         Globals.vscode.postMessage({
