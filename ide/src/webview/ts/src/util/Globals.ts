@@ -9,35 +9,35 @@ export default class Globals {
     public static data = new Data();
     public static vscode = acquireVsCodeApi();
 
-    public static nextNode = () => {
+    public static nextNode() {
 
         let stepSize = Number($("#stepSize").val());
 
         if (Globals.data.id2Node[Globals.data.selectedId]._children) {
             Globals.data.toggleNode(Globals.data.selectedId);
-            return
+            return;
         }
 
         if (!Globals.data.id2Node[Globals.data.selectedId + stepSize]) {
             Globals.loadNNodes();
-            // console.log("NEXT")
         }
         else {
-            // exports.selectedId = exports.currentId;
             Globals.data.selectedId += stepSize;
             Tree.selectNode(Globals.data.selectedId);
         }
     }
 
-    //TODO check that the previous node is not withn a collapsed node
-    public static previousNode = () => {
-        if (Globals.data.selectedId > 1) {
+    public static previousNode() {
+
+        let prevId = Globals.data.selectedId - 1;
+
+        if (Globals.data.id2Node[prevId]){
             Globals.data.selectedId--;
             Tree.selectNode(Globals.data.selectedId);
         }
     }
 
-    public static rightNode = () => {
+    public static rightNode() {
         if (Globals.data.id2Node[Globals.data.selectedId].children) {
             let childCount = Globals.data.id2Node[Globals.data.selectedId].children.length;
             if (childCount > 1) {
@@ -47,54 +47,43 @@ export default class Globals {
         }
     }
 
-    public static upNode = () => {
+    public static upNode() {
         if (Globals.data.selectedId > Globals.data.rootId) {
-            // exports.selectedId = exports.id2Parent[exports.selectedId].id;
             Globals.data.selectedId = Globals.data.id2Node[Globals.data.selectedId].parent.id;
         }
         Tree.selectNode(Globals.data.selectedId);
     }
 
-    public static loadNNodes = () => {
+    public static loadNNodes() {
 
         if (!Globals.data.waiting) {
-
-            // console.log("requesting more");
 
             Globals.vscode.postMessage({
                 command: 'loadNodes',
                 amount: Number($("#stepSize").val()),
                 start: Globals.data.selectedId
-                // start: exports.currentId
             });
 
-            // console.log("SET WAIT TRUE NODES");
             Globals.data.waiting = true;
-        }
-        else {
-            // console.log("waiting");
-
         }
     }
 
-    public static loadDomains = () => {
-
-        // console.log(exports.waiting);
+    public static loadDomains() {
 
         if (!Globals.data.waiting) {
 
             if (Globals.data.pretty) {
-                Globals.sendPrettyRequest()
+                Globals.sendPrettyRequest();
             }
             else {
-                Globals.sendSimpleRequest()
+                Globals.sendSimpleRequest();
             }
 
             Globals.data.waiting = true;
         }
-        // console.log("SET WAIT TRUE DOMAINS, pretty: " + exports.pretty );
     }
-    public static sendSimpleRequest = () => {
+
+    public static sendSimpleRequest() {
         Globals.vscode.postMessage({
             command: "simpleDomains",
             amount: Number($("#domCount").val()),
@@ -103,7 +92,7 @@ export default class Globals {
         });
     }
 
-    public static sendPrettyRequest = () => {
+    public static sendPrettyRequest() {
         Globals.vscode.postMessage({
             command: "prettyDomains",
             nodeId: Globals.data.selectedId,
@@ -111,9 +100,7 @@ export default class Globals {
         });
     }
 
-
-
-    public static tabulate = () => {
+    public static tabulate() {
         var table = d3.select('#pane').append('table')
         var thead = table.append('thead')
 
@@ -125,7 +112,7 @@ export default class Globals {
             .text(function (column: any) { return column; });
     }
 
-    public static appendRows = (data: any) => {
+    public static appendRows(data: any) {
         var table = d3.select('#pane').append('table');
         var tbody = table.append('tbody');
 
@@ -133,18 +120,12 @@ export default class Globals {
             .data(data)
             .enter()
             .append('tr')
-            .attr("id", (d: any, i: any) => {
-                // console.log(d);
-                // return "row" + (i + exports.currentDomainId - Number($("#domCount").val())) 
-                return d.name;
-            })
+            .attr("id", (d: any, i: any) => { return d.name; })
 
         // create a cell in each row for each column
         var cells = rows.selectAll('td')
             .data((row: any) => {
                 return Globals.data.columns.map((column) => {
-                    //dasdas
-                    ////dasdas
                     return { column: column, value: row[column] };
                 });
             })
@@ -153,14 +134,14 @@ export default class Globals {
             .text((d: any) => { return d.value; });
     }
 
-    public static getChildren = (parentId: number) => {
+    public static requestChildren(parentId: number) {
         Globals.vscode.postMessage({
             command: 'children',
             parentId: parentId,
         });
     }
 
-    public static initialize = () => {
+    public static initialize() {
         Globals.vscode.postMessage({
             command: 'init',
         });

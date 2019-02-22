@@ -175,6 +175,5 @@ export default class Tree {
             d.x0 = d.x;
             d.y0 = d.y;
         });
-
     }
 }
