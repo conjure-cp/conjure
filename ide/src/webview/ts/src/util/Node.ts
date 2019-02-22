@@ -12,7 +12,7 @@ export default class Node{
         this.name = name;
         this.parent = parent;
         this.children = null;
-        this._children = [];
+        this._children = null;
         this.x = 0;
         this.y = 0;
     }

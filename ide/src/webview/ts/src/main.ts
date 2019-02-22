@@ -1,6 +1,6 @@
 // let Mousetrap = require( './util/mousetrap');
 // import { appendControls } from "./util/screen"
-// import Globals, { loadNNodes } from "./util/Globals"
+// import Globals.data, { loadNNodes } from "./util/Globals.data"
 // import colours from "./util/colours"
 // import * as listView from "./util/listView"
 
@@ -19,8 +19,8 @@ import Listview from './util/Listview';
         const message = event.data
         switch (message.command) {
             case 'loadChildren':
-                Globals.id2ChildIds[message.data.nodeId] = message.data.children
-                update(Globals.id2Node[message.data.nodeId]);
+                Globals.data.id2ChildIds[message.data.nodeId] = message.data.children
+                update(Globals.data.id2Node[message.data.nodeId]);
 
                 break;
             case 'loadCore':
@@ -28,23 +28,23 @@ import Listview from './util/Listview';
                 console.log(message.data);
 
                 message.data.forEach((element: any) => {
-                    Globals.correctPath.push(element.nodeId);
+                    Globals.data.correctPath.push(element.nodeId);
                 });
 
                 for (let i = 0; i < message.data.length; i++) {
 
                     let element = message.data[i]
 
-                    if (!Globals.id2Node[element.nodeId]) {
+                    if (!Globals.data.id2Node[element.nodeId]) {
 
-                        Globals.addNode(element.nodeId, element.parentId, element.label);
-                        Globals.id2ChildIds[element.nodeId] = element.children
+                        Globals.data.addNode(element.nodeId, element.parentId, element.label);
+                        Globals.data.id2ChildIds[element.nodeId] = element.children
 
                         element.children.forEach((kidId: any) => {
 
-                            if (!Globals.correctPath.includes(kidId)) {
+                            if (!Globals.data.correctPath.includes(kidId)) {
 
-                                Globals.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""))
+                                Globals.data.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""))
                                 Globals.vscode.postMessage({
                                     command: 'loadChildren',
                                     id: kidId,
@@ -55,16 +55,16 @@ import Listview from './util/Listview';
                     }
                 }
 
-                Globals.collapseNode(Globals.rootId);
+                Globals.data.collapseNode(Globals.data.rootId);
 
-                // console.log(Globals.id2Node);
+                // console.log(Globals.data.id2Node);
 
-                update(Globals.id2Node[Globals.rootId]);
-                Globals.waiting = false;
+                update(Globals.data.id2Node[Globals.data.rootId]);
+                Globals.data.waiting = false;
 
-                Globals.selectNode(Globals.selectedId);
+                Globals.selectNode(Globals.data.selectedId);
 
-                $("#total").text(Globals.totalLoaded + "/" + Globals.correctPath[Globals.correctPath.length - 1]);
+                $("#total").text(Globals.data.totalLoaded + "/" + Globals.data.correctPath[Globals.data.correctPath.length - 1]);
 
                 break;
 
@@ -77,32 +77,32 @@ import Listview from './util/Listview';
 
                 message.data.forEach((element: any) => {
 
-                    if (!Globals.id2Node[element.nodeId]) {
-                        Globals.addNode(element.nodeId, element.parentId, element.label);
-                        Globals.id2ChildIds[element.nodeId] = element.children
+                    if (!Globals.data.id2Node[element.nodeId]) {
+                        Globals.data.addNode(element.nodeId, element.parentId, element.label);
+                        Globals.data.id2ChildIds[element.nodeId] = element.children
                     }
                 });
 
-                update(Globals.id2Node[0]);
-                Globals.waiting = false;
+                update(Globals.data.id2Node[0]);
+                Globals.data.waiting = false;
 
-                Globals.selectNode(Globals.selectedId);
+                Globals.selectNode(Globals.data.selectedId);
 
-                $("#total").text(Globals.totalLoaded + "/" + Globals.correctPath[Globals.correctPath.length - 1]);
+                $("#total").text(Globals.data.totalLoaded + "/" + Globals.data.correctPath[Globals.data.correctPath.length - 1]);
 
                 break;
 
             case 'simpleDomains':
 
                 Listview.setNodeId();
-                Globals.currentDomainId += Number($("#domCount").val());
+                Globals.data.currentDomainId += Number($("#domCount").val());
 
-                if (Globals.selectedId === Globals.rootId) {
-                    Globals.simpleDomainsAtRoot = message.data.vars;
+                if (Globals.data.selectedId === Globals.data.rootId) {
+                    Globals.data.simpleDomainsAtRoot = message.data.vars;
 
                     if (init) {
                         init = false;
-                        Globals.waiting = false;
+                        Globals.data.waiting = false;
                         break;
                     }
 
@@ -124,7 +124,7 @@ import Listview from './util/Listview';
                         }
                     });
                 }
-                Globals.waiting = false;
+                Globals.data.waiting = false;
 
                 break;
 
@@ -132,7 +132,7 @@ import Listview from './util/Listview';
 
                 Listview.setNodeId();
 
-                if (Globals.selectedId == Globals.rootId) {
+                if (Globals.data.selectedId == Globals.data.rootId) {
                     Listview.render(message.data, message.data);
                 }
                 else {
@@ -141,10 +141,10 @@ import Listview from './util/Listview';
                     Listview.setChangedList(message.data.changed);
                     Listview.setChanged()
                 }
-                Globals.waiting = false;
+                Globals.data.waiting = false;
                 break;
         }
-        Globals.waiting = false;
+        Globals.data.waiting = false;
     });
 
 
@@ -165,7 +165,7 @@ import Listview from './util/Listview';
 
     function update(source: any) {
 
-        let nodes = Globals.tree.nodes(Globals.id2Node[Globals.rootId]).reverse(),
+        let nodes = Globals.tree.nodes(Globals.data.id2Node[Globals.data.rootId]).reverse(),
             links = Globals.tree.links(nodes);
 
         nodes.forEach((d: any) => { d.y = d.depth * 100; });
@@ -179,7 +179,7 @@ import Listview from './util/Listview';
                 return "node" + d.id;
             })
             .attr("transform", (d: any) => {
-                let parent = Globals.id2Node[d.id].parent;
+                let parent = Globals.data.id2Node[d.id].parent;
                 if (parent) {
                     return "translate(" + parent.x + "," + parent.y + ")";
                 }
@@ -218,10 +218,10 @@ import Listview from './util/Listview';
                     childLength = d.children.length;
                 }
 
-                if (Globals.id2ChildIds[d.id]) {
-                    if (childLength < Globals.id2ChildIds[d.id].length) {
+                if (Globals.data.id2ChildIds[d.id]) {
+                    if (childLength < Globals.data.id2ChildIds[d.id].length) {
 
-                        if (!Globals.correctPath.includes(d.id)) {
+                        if (!Globals.data.correctPath.includes(d.id)) {
 
                             domElement.classed("hasOthers red", true);
 
@@ -251,7 +251,7 @@ import Listview from './util/Listview';
         link.enter().insert("path", "g")
             .attr("class", (d: any) => {
 
-                if (Globals.correctPath.includes(d.target.id)) {
+                if (Globals.data.correctPath.includes(d.target.id)) {
                     return "link"
                 }
 
@@ -288,7 +288,7 @@ import Listview from './util/Listview';
     // appendControls();
     Mousetrap.bind('s', () => {
         Globals.nextNode();
-        update(Globals.id2Node[Globals.selectedId]);
+        update(Globals.data.id2Node[Globals.data.selectedId]);
     }, 'keydown');
     Mousetrap.bind('w', Globals.upNode, 'keydown');
 
@@ -296,28 +296,28 @@ import Listview from './util/Listview';
 
     Mousetrap.bind('d', Globals.rightNode, 'keydown');
     Mousetrap.bind('a', () => {
-        if (Globals.id2Node[Globals.selectedId].children) {
-            if (Globals.id2Node[Globals.selectedId].children.length > 1) {
+        if (Globals.data.id2Node[Globals.data.selectedId].children) {
+            if (Globals.data.id2Node[Globals.data.selectedId].children.length > 1) {
                 Globals.nextNode();
             }
         }
     }, 'keydown');
 
     Mousetrap.bind('t', () => {
-        Globals.toggleNode(Globals.selectedId);
-        update(Globals.id2Node[Globals.selectedId]);
+        Globals.data.toggleNode(Globals.data.selectedId);
+        update(Globals.data.id2Node[Globals.data.selectedId]);
     }, 'keydown');
 
     Mousetrap.bind('c', () => {
-        Globals.collapseNode(Globals.selectedId);
-        update(Globals.id2Node[Globals.selectedId]);
-        Globals.selectNode(Globals.selectedId)
+        Globals.data.collapseNode(Globals.data.selectedId);
+        update(Globals.data.id2Node[Globals.data.selectedId]);
+        Globals.selectNode(Globals.data.selectedId)
     }, 'keydown');
 
     Mousetrap.bind('e', () => {
-        Globals.expandNode(Globals.selectedId);
-        update(Globals.id2Node[Globals.selectedId]);
-        Globals.selectNode(Globals.selectedId)
+        Globals.data.expandNode(Globals.data.selectedId);
+        update(Globals.data.id2Node[Globals.data.selectedId]);
+        Globals.selectNode(Globals.data.selectedId)
     }, 'keydown');
 
     Mousetrap.bind('m', () => {
@@ -325,15 +325,15 @@ import Listview from './util/Listview';
     }, 'keydown');
 
     Mousetrap.bind('f', () => {
-        Globals.collapseFailed();
-        update(Globals.id2Node[Globals.selectedId]);
-        Globals.selectNode(Globals.selectedId)
-        // update(Globals.id2Node[1]);
+        Globals.data.collapseFailed();
+        update(Globals.data.id2Node[Globals.data.selectedId]);
+        Globals.selectNode(Globals.data.selectedId)
+        // update(Globals.data.id2Node[1]);
     }, 'keydown');
 
     Globals.loadNNodes();
-    Globals.selectNode(Globals.selectedId);
+    Globals.selectNode(Globals.data.selectedId);
     console.log("HELLO");
-    console.log(Globals.id2Node);
+    console.log(Globals.data.id2Node);
     // $("#form").validate();
 })()

@@ -1,5 +1,5 @@
 import "./treelist"
-// import globals from "./globals"
+// import Data from "./Data"
 declare var jsPanel: any;
 declare var d3: any;
 
@@ -8,7 +8,7 @@ import Globals from './Globals';
 export default class Listview {
 
     public static setNodeId() {
-        panel.setHeaderTitle("Node: " + Globals.selectedId);
+        panel.setHeaderTitle("Node: " + Globals.data.selectedId);
     }
 
     public static render(data: any, parent: any) {
@@ -72,11 +72,11 @@ export default class Listview {
 
                         let p = getVarPath(d);
 
-                        Globals.pathList.push(p);
+                        Globals.data.pathList.push(p);
 
                         Globals.vscode.postMessage({
                             command: 'loadSet',
-                            nodeId: Globals.selectedId,
+                            nodeId: Globals.data.selectedId,
                             path: p
                         });
                     }
@@ -84,7 +84,7 @@ export default class Listview {
 
                 toggleChildren(d);
                 Listview.render(data, d);
-                if (Globals.selectedId != Globals.rootId) {
+                if (Globals.data.selectedId != Globals.data.rootId) {
                     Listview.setChanged();
                 }
 
