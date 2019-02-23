@@ -3,7 +3,7 @@ export variable, setType, expression
 
 # Constants
 
-let maxIndex* = 9
+let maxIndex* = 4
 let rootNodeId* = 0
 
 # Exceptions

@@ -8,7 +8,6 @@ proc getSet(nodeId: string): Set =
     for d in getPrettyDomainsOfNode(db, nodeId):
         if d of Set:
             return Set(d)
-
     return nil
 
 suite "core":
@@ -198,6 +197,14 @@ suite "core":
         check(s.included.toSeq() == @[1,2,3])
         check(s.excluded.toSeq().len() == 0)
         check(s.getCardinality() == "int(3)")
+
+    # test "FNotExcluded":
+    #     init(pathPrefix & "flags")
+    #     let d = getSet("4")
+    #     let s = FlagSet(d)
+    #     check(s.notExcluded.toSeq() == @[1,2,3,4,5,6,7,8,9])
+    #     # check(s.excluded.toSeq().len() == 0)
+    #     check(s.getCardinality() == "int(1..8)")
                 
     test "M":
         init(pathPrefix & "marker")

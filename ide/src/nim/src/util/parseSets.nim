@@ -74,16 +74,21 @@ proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
                 e.included.incl(lower)
             break
 
-proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int]) =
+proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
 
-    var flagQuery = getFlagQuery(ancestors, outerSetName)
-    var highestFlag = db.getValue(sql(flagQuery), nodeId)
+    var lowerQuery = getFlagLowerBoundQuery(ancestors, outerSetName)
+    # echo lowerQuery
+    var lowerBound = db.getValue(sql(lowerQuery), nodeId)
 
-    if highestFlag == "":
-        highestFlag = "0"
+    if lowerBound == "":
+        lowerBound = "0"
 
-    discard highestFlag.parseInt(s.markerLower)
+    discard lowerBound.parseInt(s.markerLower)
+
+    var upperQuery = getFlagUpperBoundQuery(ancestors, outerSetName)
+    var upperBound = db.getValue(sql(upperQuery), nodeId)
+
+    discard upperBound.parseInt(s.markerUpper)
 
     for setId in countUp(1, s.markerLower):
 
@@ -93,12 +98,11 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
             copy.add(setId)
             decideSet(db, childSet, s, outerSetName, nodeId, copy)
         else:
-            let valuesQuery = getFlagValuesQuery(s, ancestors, outerSetName)
+            let valuesQuery = getFlagValuesIncludedQuery(s, ancestors, outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
             break;
 
-proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int]) =
+proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
 
     let markerQuery = getMarkerQuery(ancestors, outerSetName)
     var res = db.getRow(sql(markerQuery), nodeId)

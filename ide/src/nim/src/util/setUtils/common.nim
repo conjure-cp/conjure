@@ -1,6 +1,10 @@
 import ../types
 import db_sqlite, parseutils, intsets
 
+proc getNotNullIndexes*(start, finish: int): string =
+    for i in countUp(start, finish):
+        result &= " and index" & $i & " is not null ";
+
 proc getNullIndexes*(depth: int): string =
     for i in countUp(depth, maxIndex):
         result &= " and index" & $i & " is null ";

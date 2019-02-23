@@ -8,12 +8,12 @@ type Set* = ref object of Variable
     lowerBound: int
     upperBound: int
     included*: IntSet
+    notExcluded*: IntSet
     excluded*: IntSet
     inner*: Set
     children*: seq[Set]
 
 type OccurrenceSet* = ref object of Set
-
 
 type DummySet* = ref object of Set
     dummyVal*: int
@@ -69,7 +69,7 @@ proc getCardinality*(s: Set): string =
 
     if s of FlagSet:
         let fS = FlagSet(s)
-        return getPrettyRange($fS.markerLower, $fS.markerLower)
+        return getPrettyRange($fS.markerLower, $fS.markerUpper)
 
     if s of ExplicitSet:
         let eS = ExplicitSet(s)
