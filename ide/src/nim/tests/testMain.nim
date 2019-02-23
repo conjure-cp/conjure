@@ -104,79 +104,44 @@ suite "loadPrettyDomains":
     init(validPath)
     
     test "prettyDomainUpdateRoot":
-        let expected0 = """{
-        "name": "Items",
-        "children": [
+        let expected0 = """
+        {
+        "vars": [
           {
-            "name": "Domain Variables",
-            "children": [
-              {
-                "name": "y",
-                "children": [
-                  {
-                    "name": "int(1..9)",
-                    "children": []
-                  }
-                ]
-              },
-              {
-                "name": "s",
-                "children": [
-                  {
-                    "name": "Type",
-                    "children": [
-                      {
-                        "name": "Marker",
-                        "children": []
-                      }
-                    ]
-                  },
-                  {
-                    "name": "Cardinality",
-                    "children": [
-                      {
-                        "name": "int(2..16)",
-                        "children": []
-                      }
-                    ]
-                  },
-                  {
-                    "name": "Children",
-                    "children": []
-                  }
-                ]
-              },
-              {
-                "name": "z",
-                "children": [
-                  {
-                    "name": "int(1..9)",
-                    "children": []
-                  }
-                ]
-              },
-              {
-                "name": "x",
-                "children": [
-                  {
-                    "name": "int(1..9)",
-                    "children": []
-                  }
-                ]
-              }
-            ]
+            "name": "y",
+            "rng": "int(1..9)"
           },
           {
-            "name": "Expressions",
-            "children": []
+            "name": "s",
+            "Cardinality": "int(2..16)",
+            "Children": {
+              "children": [
+                {
+                  "name": "s-1",
+                  "_children": []
+                },
+                {
+                  "name": "s-2",
+                  "_children": []
+                }
+              ]
+            }
           },
           {
-            "name": "Changed Expressions",
-            "children": []
+            "name": "z",
+            "rng": "int(1..9)"
+          },
+          {
+            "name": "x",
+            "rng": "int(1..9)"
           }
-        ]
-        }"""
+        ],
+        "changed": [],
+        "changedExpressions": []
+      }
+      """
         let pretty0 = loadPrettyDomains("0", "")
+        # echo pretty0.pretty()
         check(pretty0 == parseJson(expected0))
 
     test "prettyDomainUpdateNode1":

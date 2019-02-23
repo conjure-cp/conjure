@@ -160,12 +160,5 @@ export default class Globals {
         Globals.vscode.postMessage({
             command: 'loadCore',
         });
-
-        // Globals.vscode.postMessage({
-        //     command: 'simpleDomains',
-        //     amount: Number($("#domCount").val()),
-        //     start: 0,
-        //     nodeId: Globals.s.rootId,
-        // });
     }
 }

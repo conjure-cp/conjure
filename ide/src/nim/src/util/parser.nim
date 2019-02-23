@@ -84,7 +84,7 @@ proc parseSetEprime(s: JsonNode, name: string): Set =
             cardinality = arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-            return newDummySet(name, lowerBound = l, upperBound = u, dummyVal = u + 1) 
+            return newDummySet(name, lowerBound = l, upperBound = u, dummyVal = 3) 
 
         elif arr[0].hasKey("Set_Occurrence"):
             return newOccurrenceSet(name, lowerBound = l, upperBound = u) 

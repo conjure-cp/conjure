@@ -84,7 +84,7 @@ proc getCardinality*(s: Set): string =
 
     if s of DummySet:
         let d = cast[DummySet](s)
-        return getPrettyRange($max(len(d.included), d.lowerBound), $(d.upperBound - d.excludedCount)) 
+        return getPrettyRange($s.included.len(), $s.included.len()) 
 
     if s of MarkerSet:
         let mS = cast[MarkerSet](s)

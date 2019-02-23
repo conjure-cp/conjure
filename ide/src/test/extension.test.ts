@@ -5,8 +5,8 @@
 
 // The module 'assert' provides assertion methods from node
 // import * as assert from 'assert';
-import * as Parser from '../parser';
 import fs = require('fs');
+import * as Parser from '../parser';
 // import { parse } from 'url';
 
 // You can import and use all API from the 'vscode' module
@@ -36,8 +36,8 @@ suite("Extension Tests", function () {
         //         console.error(err.message);
         //     }
         //     console.log('Connected to the database.');
-        });
 
+        });
         // console.log(db);
 
         // async function recursive(node: TreeNode) {
