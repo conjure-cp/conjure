@@ -50,6 +50,8 @@ suite "setToJson":
           }
         ]
         }""")
+
+        # echo %setToTreeView(Set(prettyDomains[1]))
       
         check((%setToTreeView(Set(prettyDomains[1]))) == parseJson(expected))
         

@@ -1,11 +1,11 @@
 # Hello Nim!
-import  jester, typetraits, sequtils 
+import jester, typetraits, sequtils
 import jsonify
 include process
 
-var db : DbConn
+var db: DbConn
 
-proc getLabel(varName : string, value: string, branch : string): string =
+proc getLabel(varName: string, value: string, branch: string): string =
 
     if varName == "":
         return ""
@@ -25,67 +25,72 @@ proc init*(dirPath: string) =
     let current = getCurrentDir()
     setCurrentDir(dirPath)
 
-    var minionFilePath : string
-    var eprimeFilePath : string
-    var dbFilePath : string
+    var minionFilePath: string
+    var eprimeFilePath: string
+    var dbFilePath: string
 
     for f in walkFiles("*.eprime-minion"):
-        minionFilePath =  absolutePath(f)
+        minionFilePath = absolutePath(f)
         break;
 
     for f in walkFiles("*.eprime"):
-        eprimeFilePath =  absolutePath(f)
+        eprimeFilePath = absolutePath(f)
         break;
 
     for f in walkFiles("*.db"):
-        dbFilePath =  absolutePath(f)
+        dbFilePath = absolutePath(f)
         break;
-        
+
     setCurrentDir(current)
 
     if dbFilePath == "":
-        raise newException(CannotOpenDatabaseException, "No files with .db extension found")
+        raise newException(CannotOpenDatabaseException,
+                "No files with .db extension found")
 
     initParser(minionFilePath, eprimeFilePath)
 
 
-    db = open(dbFilePath, "", "", "") 
+    db = open(dbFilePath, "", "", "")
 
 
 proc loadNodes*(amount, start: string): seq[ParentChild] =
 
-    var nId, pId, childId : int
+    var nId, pId, childId: int
 
     let query = "select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?"
-    
+
     for row1 in db.fastRows(sql(query), start, amount):
         discard parseInt(row1[0], nId)
-        var kids : seq[int]
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+        var kids: seq[int]
+        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
+                row1[0]):
             discard parseInt(row2[0], childId)
             kids.add(childId)
 
         discard parseInt(row1[1], pId)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(
+                row1[2], row1[3], row1[4]), children: kids))
 
 
-proc loadChildren*(id : string): ChildResponse = 
+proc loadChildren*(id: string): ChildResponse =
 
-    var nId, childId : int
+    var nId, childId: int
     discard parseInt(id, nId)
-    var kids : seq[int]
-    for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
+    var kids: seq[int]
+    for row in db.fastRows(sql"select nodeId from Node where parentId = ?",
+            id):
         discard parseInt(row[0], childId)
         kids.add(childId)
-    return ChildResponse(nodeId: nId , children: kids)
+    return ChildResponse(nodeId: nId, children: kids)
 
 
-proc loadCore*(): seq[ParentChild] = 
-    var nId, pId, childId : int
+proc loadCore*(): seq[ParentChild] =
+    var nId, pId, childId: int
 
     let query = sql(
-        """with recursive
+
+                """with recursive
         correctPath(n) as (
         select nodeId from Node where isSolution = 1
         union 
@@ -96,18 +101,21 @@ proc loadCore*(): seq[ParentChild] =
 
     for row1 in db.fastRows(query):
         discard parseInt(row1[0], nId)
-        var kids : seq[int]
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+        var kids: seq[int]
+        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
+                row1[0]):
             discard parseInt(row2[0], childId)
             kids.add(childId)
 
         discard parseInt(row1[1], pId)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(
+                row1[2], row1[3], row1[4]), children: kids))
 
     if result.len() == 0:
         let query1 = sql(
-            """with recursive
+
+                    """with recursive
             correctPath(n) as (
             select max(nodeId) from Node 
             union 
@@ -118,35 +126,37 @@ proc loadCore*(): seq[ParentChild] =
 
         for row1 in db.fastRows(query1):
             discard parseInt(row1[0], nId)
-            var kids : seq[int]
-            for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+            var kids: seq[int]
+            for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
+                    row1[0]):
                 discard parseInt(row2[0], childId)
                 kids.add(childId)
 
             discard parseInt(row1[1], pId)
 
-            result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids))
+            result.add(ParentChild(parentId: pId, nodeId: nId,
+                    label: getLabel(row1[2], row1[3], row1[4]), children: kids))
 
 
 proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
 
-    var list : seq[string]
-    var id : int
-    var domainsAtPrev : seq[Variable]
+    var list: seq[string]
+    var id: int
+    var domainsAtPrev: seq[Variable]
     discard parseInt(nodeId, id)
 
     let domainsAtNode = getSimpleDomainsOfNode(db, nodeId, wantExpressions)
 
     if (id != rootNodeId):
-        domainsAtPrev = getSimpleDomainsOfNode(db,  $(id - 1), wantExpressions)
-        
+        domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
+
         for i in 0..<domainsAtNode.len():
             if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
                 list.add(domainsAtNode[i].name)
 
-    return  SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
+    return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
-proc getExpandedSetChild*(nodeId, path : string): Set =
+proc getExpandedSetChild*(nodeId, path: string): Set =
 
     # echo prettyLookup
 
@@ -160,7 +170,7 @@ proc getExpandedSetChild*(nodeId, path : string): Set =
             if kid.name == name:
                 result = kid
                 break;
-                
+
     if result.name != path.split(".")[^1]:
         return nil
 
@@ -181,16 +191,16 @@ proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
             else:
                 result.add(%v)
 
-proc loadSetChild*(nodeId, path : string): JsonNode =
+proc loadSetChild*(nodeId, path: string): JsonNode =
     let s = getExpandedSetChild(nodeId, path)
     let update = setToJson(s, nodeId, true)
-    return %*{"structure" : %setToTreeView(s), "update" : update, "path" : path}
+    return %*{"structure": %setToTreeView(s), "update": update, "path": path}
 
 
-proc temp(db: DbConn, nodeId, paths: string): JsonNode = 
-    var domainsAtNode : seq[Variable]
-    var id : int
-    var changeList : seq[string]
+proc temp(db: DbConn, nodeId, paths: string): JsonNode =
+    var domainsAtNode: seq[Variable]
+    var id: int
+    var changeList: seq[string]
     discard parseInt(nodeId, id)
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
     for kid in getChildSets(paths, nodeId):
@@ -203,8 +213,9 @@ proc temp(db: DbConn, nodeId, paths: string): JsonNode =
             if kid != nil:
                 domainsAtPrev.add(kid)
         changeList = getPrettyChanges(domainsAtNode, domainsAtPrev)
-    
-    return %*{"vars" : getJsonVarList(domainsAtNode, nodeId), "changed" : changeList, "changedExpressions": %[] }
+
+    return %*{"vars": getJsonVarList(domainsAtNode, nodeId),
+            "changed": changeList, "changedExpressions": %[]}
 
 proc getSkeleton*(): JsonNode =
     return domainsToJson(getPrettyDomainsOfNode(db, "0"))
@@ -214,5 +225,6 @@ proc getSkeleton*(): JsonNode =
 proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
     temp(db, nodeId, paths)
 
-proc getLongestBranchingVarName*() : JsonNode =
-    return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+proc getLongestBranchingVarName*(): JsonNode =
+    return % db.getRow(sql"select max(length(branchingVariable)) from Node")[
+            0]

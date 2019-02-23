@@ -1,4 +1,4 @@
-import variable, setType, expression 
+import variable, setType, expression
 export variable, setType, expression
 
 # Constants
@@ -23,8 +23,8 @@ type
 # Responses
 
 type SimpleDomainResponse* = ref object of RootObj
-    changedNames* : seq[string]
-    vars* : seq[Variable]
+    changedNames*: seq[string]
+    vars*: seq[Variable]
 
 type ParentChild* = ref object of RootObj
     nodeId*: int
@@ -44,5 +44,5 @@ type Node* = ref object of RootObj
 # Json
 
 type TreeViewNode* = ref object of RootObj
-  name*: string
-  children*: seq[TreeViewNode]
+    name*: string
+    children*: seq[TreeViewNode]

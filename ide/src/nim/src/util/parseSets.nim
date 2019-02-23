@@ -1,13 +1,19 @@
 import types, setUtils/marker, setUtils/flags, setUtils/common
-import re, strutils, os, tables, json, db_sqlite, parseutils 
+import re, strutils, os, tables, json, db_sqlite, parseutils, intsets
 
-proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
-proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
-proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
-proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
-proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
+proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int])
+proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int])
+proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int])
+proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int])
+proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int])
 
-proc decideSet*(db: DbConn, s,  parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+proc decideSet*(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int]) =
     if s of FlagSet:
         parseFlags(db, s, parent, outerSetName, nodeId, ancestors)
     if s of MarkerSet:
@@ -20,37 +26,40 @@ proc decideSet*(db: DbConn, s,  parent: Set, outerSetName, nodeId: string, ances
         parseExplicit(db, s, parent, outerSetName, nodeId, ancestors)
 
 
-proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int]) =
     let d = DummySet(s)
     var query = getInnerSetQuery(d, parent, ancestors, outerSetName)
 
     for res in db.fastRows(sql(query), nodeId):
 
-        var number : int
+        var number: int
         discard res[1].parseInt(number)
 
         if number != d.dummyVal:
-            d.included.add(number)
+            d.included.incl(number)
         else:
             d.excludedCount.inc()
 
-proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int]) =
     var query = getInnerSetQuery(s, parent, ancestors, outerSetName)
 
     for res in db.fastRows(sql(query), nodeId):
 
-        var number : int
+        var number: int
         discard res[0].parseInt(number)
 
         if (res[1] == "1"):
-            s.included.add(number)
+            s.included.incl(number)
         else:
-            s.excluded.add(number)
+            s.excluded.incl(number)
 
-proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int]) =
     let e = ExplicitSet(s)
 
-    for setId in countUp(1, e.cardinality): 
+    for setId in countUp(1, e.cardinality):
 
         if (e.inner != nil):
             let childSet = makeChildSet(e, setID)
@@ -60,12 +69,13 @@ proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, anc
         else:
             var query = getInnerSetQuery(e, parent, ancestors, outerSetName)
             for res in db.rows(sql(query), nodeId):
-                var lower : int
+                var lower: int
                 discard res[1].parseInt(lower)
-                e.included.add(lower)
+                e.included.incl(lower)
             break
 
-proc parseFlags(db: DbConn, s, parent : Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int]) =
 
     var flagQuery = getFlagQuery(ancestors, outerSetName)
     var highestFlag = db.getValue(sql(flagQuery), nodeId)
@@ -87,15 +97,16 @@ proc parseFlags(db: DbConn, s, parent : Set, outerSetName, nodeId: string, ances
             includeValues(db, s, valuesQuery, nodeId)
             break;
 
-proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,  ancestors: seq[int]) =
+proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+        ancestors: seq[int]) =
 
     let markerQuery = getMarkerQuery(ancestors, outerSetName)
     var res = db.getRow(sql(markerQuery), nodeId)
 
     discard res[0].parseInt(s.markerLower)
     discard res[1].parseInt(s.markerUpper)
-    
-    for setId in countUp(1, s.markerLower): 
+
+    for setId in countUp(1, s.markerLower):
 
         if (s.inner != nil):
             let childSet = makeChildSet(s, setId)
@@ -103,6 +114,7 @@ proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,  ance
             copy.add(setId)
             decideSet(db, childSet, s, outerSetName, nodeId, copy)
         else:
-            let valuesQuery = getMarkerValuesQuery(ancestors, s.markerLower, outerSetName)
+            let valuesQuery = getMarkerValuesQuery(ancestors, s.markerLower,
+                    outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
             break;

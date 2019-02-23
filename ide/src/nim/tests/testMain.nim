@@ -16,7 +16,7 @@ suite "init":
         let badPath = "../test/testData/extension/noEprimeFile"
         expect(IOError):
             init(badPath)
-    
+
     test "initNoMinionFile":
         let badPath = "../test/testData/extension/noMinionFile"
         expect(IOError):
@@ -40,7 +40,7 @@ suite "loadNodes":
         check(nodes[2].nodeId == 2)
         check(nodes[2].parentId == 1)
         check(nodes[2].label == "y = 1")
-        
+
 
     test "fromTwo":
         let nodes = loadNodes("3", "2")
@@ -93,16 +93,18 @@ suite "loadSimpleDomains":
         check(response.changedNames == @["z"])
 
         response = loadSimpleDomains("4")
-        check(response.changedNames == @["s_ExplicitVarSizeWithMarkerR5R5_Marker"])
+        check(response.changedNames == @[
+                "s_ExplicitVarSizeWithMarkerR5R5_Marker"])
 
     test "expressions":
-        check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1", false).vars.len())
+        check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1",
+                false).vars.len())
 
 
 suite "loadPrettyDomains":
     let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
     init(validPath)
-    
+
     test "prettyDomainUpdateRoot":
         let expected0 = """
         {
@@ -248,11 +250,11 @@ suite "loadPrettyDomains":
 
 
     test "getExpandedSetChildFailed":
-        check(getExpandedSetChild("2","s.3.ASDASD") == nil)
+        check(getExpandedSetChild("2", "s.3.ASDASD") == nil)
 
     test "getExpandedSetChildSuccess":
         # check(getExpandedSetChild("2","s.3.ASDASD") == nil)
-        check(getExpandedSetChild("2","s.s-1") != nil)
+        check(getExpandedSetChild("2", "s.s-1") != nil)
 
     test "loadSetChild":
         let expected = """{
@@ -298,7 +300,7 @@ suite "loadPrettyDomains":
         "path": "s.s-1"
         }"""
 
-        check(loadSetChild("2","s.s-1") == parseJson(expected))
+        check(loadSetChild("2", "s.s-1") == parseJson(expected))
 
 suite "dontCrash":
     let validPath = "../test/testData/sets/recursive/markerMarkerFlags"
@@ -308,5 +310,6 @@ suite "dontCrash":
         let pretty1 = loadPrettyDomains("1", "")
 
     test "bug2":
-        let pretty1 = loadPrettyDomains("1", "s.s-1:s.s-1.s-1-1:s.s-2:s.s-2.s-2-1")
-    
+        let pretty1 = loadPrettyDomains("1",
+                "s.s-1:s.s-1.s-1-1:s.s-2:s.s-2.s-2-1")
+

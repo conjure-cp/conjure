@@ -1,14 +1,14 @@
 
-import variable, util, strutils
+import variable, util, strutils, intsets
 
 type Set* = ref object of Variable
-    markerLower* : int
-    markerUpper* : int
-    id* : int
+    markerLower*: int
+    markerUpper*: int
+    id*: int
     lowerBound: int
     upperBound: int
-    included*: seq[int]
-    excluded*: seq[int]
+    included*: IntSet
+    excluded*: IntSet
     inner*: Set
     children*: seq[Set]
 
@@ -16,41 +16,52 @@ type OccurrenceSet* = ref object of Set
 
 
 type DummySet* = ref object of Set
-    dummyVal* : int
-    excludedCount* : int
+    dummyVal*: int
+    excludedCount*: int
 
 type MarkerSet* = ref object of Set
 
 type FlagSet* = ref object of Set
 
 type ExplicitSet* = ref object of Set
-    cardinality* : int
+    cardinality*: int
 
-proc getSetName*(parent : Set, setId : int): string =
+proc getSetName*(parent: Set, setId: int): string =
     return parent.name & "-" & $setId
 
-proc newOccurrenceSet*(name : string, lowerBound, upperBound: int = -1, inner: Set = nil): OccurrenceSet =
-    return OccurrenceSet(name: name, rng: "UNDEFINED", upperBound: upperBound, lowerBound: lowerBound, inner: inner)
+proc newOccurrenceSet*(name: string, lowerBound, upperBound: int = -1,
+        inner: Set = nil): OccurrenceSet =
+    return OccurrenceSet(name: name, rng: "UNDEFINED", upperBound: upperBound,
+            lowerBound: lowerBound, inner: inner)
 
-proc newDummySet*(name : string,  lowerBound, upperBound: int = -1, dummyVal : int = -1): DummySet =
-    return DummySet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, dummyVal: dummyVal, excludedCount: 0)
+proc newDummySet*(name: string, lowerBound, upperBound: int = -1,
+        dummyVal: int = -1): DummySet =
+    return DummySet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
+            upperBound: upperBound, dummyVal: dummyVal, excludedCount: 0)
 
-proc newMarkerSet*(name : string, lowerBound, upperBound: int = -1,inner: Set = nil): MarkerSet =
-    return MarkerSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, markerLower: -1, markerUpper: -1, inner: inner, id : -1)
+proc newMarkerSet*(name: string, lowerBound, upperBound: int = -1,
+        inner: Set = nil): MarkerSet =
+    return MarkerSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
+            upperBound: upperBound, markerLower: -1, markerUpper: -1,
+            inner: inner, id: -1)
 
-proc newFlagSet*(name : string, lowerBound, upperBound: int = -1, inner: Set = nil): FlagSet =
-    return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, markerLower: -1, inner: inner)
+proc newFlagSet*(name: string, lowerBound, upperBound: int = -1,
+        inner: Set = nil): FlagSet =
+    return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
+            upperBound: upperBound, markerLower: -1, inner: inner)
 
-proc newExplicitSet*(name : string, lowerBound, upperBound: int = -1, cardinality: int = -1, inner: Set = nil): ExplicitSet =
-    return ExplicitSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, cardinality: cardinality, inner: inner)
+proc newExplicitSet*(name: string, lowerBound, upperBound: int = -1,
+        cardinality: int = -1, inner: Set = nil): ExplicitSet =
+    return ExplicitSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
+            upperBound: upperBound, cardinality: cardinality, inner: inner)
 
 proc getCardinality*(s: Set): string =
     if s of OccurrenceSet:
-        return getPrettyRange($s.included.len(), $s.included.len()) 
+        return getPrettyRange($s.included.len(), $s.included.len())
 
     if s of DummySet:
         let d = DummySet(s)
-        return getPrettyRange($s.included.len(), $s.included.len()) 
+        return getPrettyRange($s.included.len(), $s.included.len())
 
     if s of MarkerSet:
         let mS = MarkerSet(s)
@@ -59,11 +70,11 @@ proc getCardinality*(s: Set): string =
     if s of FlagSet:
         let fS = FlagSet(s)
         return getPrettyRange($fS.markerLower, $fS.markerLower)
-    
+
     if s of ExplicitSet:
         let eS = ExplicitSet(s)
         return getPrettyRange($eS.cardinality, $eS.cardinality)
-    
+
     return "SET TYPE NOT SUPPORTED"
 
 
@@ -89,7 +100,9 @@ proc `$`(s: Set): string =
     if (s.inner != nil):
         result &= " {" & getSetType(s.inner) & "}"
     else:
-        result &= " " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded 
+        result &= " " & getPrettyRange($s.lowerBound,
+                $s.upperBound) & " inc " & $s.included & " exc " &
+                        $s.excluded
 
     if s.children.len() > 0:
         result &= "\n"

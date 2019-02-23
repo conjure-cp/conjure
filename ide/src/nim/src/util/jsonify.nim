@@ -1,10 +1,10 @@
-import json, tables, strutils, parseutils, sequtils, db_sqlite
+import json, tables, strutils, parseutils, sequtils, db_sqlite, intsets
 import types, process
 
 
-proc setToTreeView*(s : Set): TreeViewNode =
+proc setToTreeView*(s: Set): TreeViewNode =
 
-    var setType : string
+    var setType: string
 
     if (s of OccurrenceSet):
         setType = "Occurrence"
@@ -18,11 +18,13 @@ proc setToTreeView*(s : Set): TreeViewNode =
         setType = "Explicit"
 
     let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
-    let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])
-    let included = TreeViewNode(name: "Included", children: @[TreeViewNode(name: ($s.included)[2..^2])])
-    let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(name: ($s.excluded)[2..^2])])
+    let cardinality = TreeViewNode(name: "Cardinality", children: @[
+            TreeViewNode(name: s.getCardinality())])
+        
+    let included = TreeViewNode(name: "Included", children: @[TreeViewNode(  name: ($s.included))])
+    let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(  name: ($s.excluded))])
 
-    let kids = TreeViewNode(name: "Children", children: @[]) 
+    let kids = TreeViewNode(name: "Children", children: @[])
 
     if (s.inner == nil):
         return (TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
@@ -41,7 +43,8 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
 
     for d in domains:
         if d of Expression:
-            expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
+            expressions.children.add(TreeViewNode(name: d.name, children: @[
+                    TreeViewNode(name: d.rng)]))
 
         elif d of Set:
             let s = Set(d)
@@ -49,43 +52,45 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
             variables.children.add(treeRep)
 
         else:
-            variables.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
-        
+            variables.children.add(TreeViewNode(name: d.name, children: @[
+                    TreeViewNode(name: d.rng)]))
+
     return %root
 
-proc getCollapsedSetChildren*(s : Set): JsonNode =
+proc getCollapsedSetChildren*(s: Set): JsonNode =
     let json = %*{}
     if s.children.len() > 0:
         discard
         json["children"] = %*[]
 
         for kid in s.children:
-            json["children"].add(%*{"name" : kid.name, "_children": []})
-    
+            json["children"].add(%*{"name": kid.name, "_children": []})
+
     return json
 
 proc expressionsToJson*(expressions: seq[Expression]): JsonNode =
-    var list : seq[TreeViewNode]
+    var list: seq[TreeViewNode]
     for exp in expressions:
-        list.add(TreeViewNode(name: exp.name, children: @[TreeViewNode(name: exp.rng)]))
+        list.add(TreeViewNode(name: exp.name,
+                children: @[TreeViewNode(name: exp.rng)]))
     return %list
 
-proc setToJson*(s: Set, nodeId : string, wantCollapsedChildren : bool): JsonNode =
+proc setToJson*(s: Set, nodeId: string, wantCollapsedChildren: bool): JsonNode =
 
     let json = %*{}
 
     json["name"] = %s.name
     json["Cardinality"] = %s.getCardinality()
     if (s.inner == nil):
-        json["Included"] = %s.included
-        json["Excluded"] = %s.excluded
+        json["Included"] = %toSeq(s.included.items)
+        json["Excluded"] = %toSeq(s.excluded.items)
     else:
         if wantCollapsedChildren:
             json["Children"] = getCollapsedSetChildren(s)
 
     return json
 
-proc getSetChanges*(newSet, oldSet: Set, isNested : bool = false): seq[string] =
+proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
 
     let prefix = newSet.name
 
@@ -104,11 +109,12 @@ proc getSetChanges*(newSet, oldSet: Set, isNested : bool = false): seq[string] =
         else:
             return @[]
 
-proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[string] =
-    # let prefix = "liExpressions" 
+proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[
+        string] =
+    # let prefix = "liExpressions"
 
     if (newExpression.rng != oldExpression.rng):
-        result.add(newExpression.name) 
+        result.add(newExpression.name)
 
 proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
 
@@ -116,7 +122,8 @@ proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
         # result.add("liDomain Variables" & newVariable.name )
         result.add(newVariable.name)
 
-proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string] =
+proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[
+        string] =
 
     var numberOfCommonVariables = domainsAtNode.len()
     if (domainsAtPrev.len() < numberOfCommonVariables):
@@ -130,19 +137,22 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
             let newSet = Set(newVar)
             let oldSet = Set(oldVar)
             result = result.concat(getSetChanges(newSet, oldSet))
-            
-            if (newSet.children.len() > 0 and newSet.children.len() == oldSet.children.len()):
+
+            if (newSet.children.len() > 0 and newSet.children.len(
+                    ) == oldSet.children.len()):
                 for i in countUp(0, newSet.children.len() - 1):
-                    result = result.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
+                    result = result.concat(getSetChanges(newSet.children[i],
+                            oldSet.children[i], true))
 
         elif (newVar of Expression):
-            let changedExpressions = getExpressionChanges(Expression(newVar), Expression(oldVar))
+            let changedExpressions = getExpressionChanges(Expression(newVar),
+                    Expression(oldVar))
             result = result.concat(changedExpressions)
             # if changedExpressions.len() > 0:
                 # result.add("liItemsExpressions")
         else:
             result = result.concat(getVariableChanges(newVar, oldVar))
-    
+
     # if result.len() > 0:
     #     result.add("liItemsDomain Variables")
     #     result.add("liItems")

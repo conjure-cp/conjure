@@ -1,9 +1,9 @@
 import types, util, parser, parseSets
-import re, strutils, os, tables, json, db_sqlite, parseutils 
+import re, strutils, os, tables, json, db_sqlite, parseutils
 
 var prettyLookup* = initTable[string, Table[string, Variable]]()
-var eprimeLookup : Table[string, Variable]
-var auxLookup : Table[string, Expression]
+var eprimeLookup: Table[string, Variable]
+var auxLookup: Table[string, Expression]
 
 proc initParser(minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup.clear()
@@ -11,7 +11,8 @@ proc initParser(minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup = parseEprime(eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
 
-proc getSimpleDomainsOfNode(db: DbConn,  nodeId: string, wantExpressions: bool = false): seq[Variable] =
+proc getSimpleDomainsOfNode(db: DbConn, nodeId: string,
+        wantExpressions: bool = false): seq[Variable] =
 
     var query = "select name, lower, upper from domain where"
     if (not wantExpressions):
@@ -29,8 +30,7 @@ proc getSimpleDomainsOfNode(db: DbConn,  nodeId: string, wantExpressions: bool =
             v.rng = getPrettyRange(domain[1], domain[2])
             result.add(v)
 
-
-proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string) : (seq[Variable]) =
+proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string): (seq[Variable]) =
     # echo eprimeLookup
 
     prettyLookup[nodeId] = initTable[string, Variable]()
@@ -43,7 +43,8 @@ proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string) : (seq[Variable]) =
             let s = Set(variable)
             decideSet(db, s, nil, s.name, nodeId, @[])
         else:
-            let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & variable.name & "' and nodeId = ?;")
+            let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" &
+                    variable.name & "' and nodeId = ?;")
             var res = db.getRow(query0, nodeId)
             variable.rng = getPrettyRange(res[0], res[1])
 

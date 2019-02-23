@@ -1,5 +1,5 @@
 import types
-import re, strutils, os, tables, json, db_sqlite, parseutils 
+import re, strutils, os, tables, json, db_sqlite, parseutils
 
 proc parseSetEprime(s: JsonNode, name: string): Set
 
@@ -16,7 +16,7 @@ proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
     try:
         for key in parseJson(clean)["representations"].getElems():
 
-            if ( not key[0].haskey("Name")):
+            if (not key[0].haskey("Name")):
                 continue
 
             let name = key[0]["Name"].getStr()
@@ -48,12 +48,13 @@ proc parseSetEprime(s: JsonNode, name: string): Set =
 
         if (arr[0].hasKey("Set_Explicit")):
             return newExplicitSet(name,
-            cardinality = arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1),
+            cardinality = arr[1]["SizeAttr_Size"]["Constant"][
+                    "ConstantInt"].getInt(-1),
             inner = parseSetEprime(innerArr, name))
 
     if arr[^1].hasKey("DomainInt"):
 
-        var bounds  : JsonNode
+        var bounds: JsonNode
 
         bounds = arr[^1]["DomainInt"].getElems()[0]
 
@@ -77,23 +78,25 @@ proc parseSetEprime(s: JsonNode, name: string): Set =
         let l = -1
         let u = -1
 
-        
+
 
         if arr[0].hasKey("Set_Explicit"):
             return newExplicitSet(name, lowerBound = l, upperBound = u,
-            cardinality = arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
+            cardinality = arr[1]["SizeAttr_Size"]["Constant"][
+                    "ConstantInt"].getInt(-1))
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-            return newDummySet(name, lowerBound = l, upperBound = u, dummyVal = 3) 
+            return newDummySet(name, lowerBound = l, upperBound = u,
+                    dummyVal = 3)
 
         elif arr[0].hasKey("Set_Occurrence"):
-            return newOccurrenceSet(name, lowerBound = l, upperBound = u) 
+            return newOccurrenceSet(name, lowerBound = l, upperBound = u)
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithMarker"):
-            return newMarkerSet(name, lowerBound = l, upperBound = u) 
+            return newMarkerSet(name, lowerBound = l, upperBound = u)
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithFlags"):
-            return newFlagSet(name, lowerBound = l, upperBound = u) 
+            return newFlagSet(name, lowerBound = l, upperBound = u)
 
 proc parseAux*(minionFilePath: string): Table[string, Expression] =
     var lookup = initTable[string, Expression]()
@@ -104,7 +107,8 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
     for a in find:
         let splitted = a.split("#")
         let name = splitted[0].strip()
-        var rhs = splitted[1].replace(re"\(?Active-CSE: \d* occurrences of this expression or equivalent: ","")
+        var rhs = splitted[1].replace(re"\(?Active-CSE: \d* occurrences of this expression or equivalent: ",
+                "")
 
         let nestedAux = re"aux\d*"
 
