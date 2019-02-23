@@ -19,7 +19,13 @@ routes:
             # resp HttpCode(501)
             echo("IOERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-        resp "OK"
+        let prettyAtRoot = getSkeleton()
+        let simpleAtRoot = %loadSimpleDomains("0")
+
+        resp %*{"pretty" : prettyAtRoot, "simple": simpleAtRoot}
+            
+        # resp %*{"pretty": getSkeleton() "simple": loadSimpleDomains("0")}
+        # resp "OK"
 
     get "/simpleDomains/@amount/@start/@nodeId":
         resp %loadSimpleDomains(@"nodeId")

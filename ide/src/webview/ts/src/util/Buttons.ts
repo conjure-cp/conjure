@@ -20,10 +20,10 @@ export default class Buttons {
                 Globals.s.pretty = !Globals.s.pretty;
 
                 if (Globals.s.pretty) {
-                    Listview.createUL();
-                    let r = Listview.getRootNode();
-                    console.log(r);
-                    Listview.update(r);
+                    Globals.lv.createUL();
+                    // let r = Globals.lv.getRootNode();
+                    // console.log(r);
+                    Globals.lv.update(Globals.lv.id2Node["Items"]);
                 }
                 else {
 

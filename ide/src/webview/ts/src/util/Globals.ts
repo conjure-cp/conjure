@@ -1,12 +1,14 @@
 import Node from './Node';
 import State from './State';
 import Tree from './Tree';
+import Listview from './Listview';
 
 declare var acquireVsCodeApi: any;
 declare var d3: any;
 
 export default class Globals {
     public static s = new State();
+    public static lv = new Listview();
     public static vscode = acquireVsCodeApi();
     public static columns = ["name", "rng"];
 
@@ -152,10 +154,6 @@ export default class Globals {
         });
 
         Globals.vscode.postMessage({
-            command: 'correctPath',
-        });
-
-        Globals.vscode.postMessage({
             command: 'longestBranchingVariable',
         });
 
@@ -163,11 +161,11 @@ export default class Globals {
             command: 'loadCore',
         });
 
-        Globals.vscode.postMessage({
-            command: 'simpleDomains',
-            amount: Number($("#domCount").val()),
-            start: 0,
-            nodeId: Globals.s.rootId,
-        });
+        // Globals.vscode.postMessage({
+        //     command: 'simpleDomains',
+        //     amount: Number($("#domCount").val()),
+        //     start: 0,
+        //     nodeId: Globals.s.rootId,
+        // });
     }
 }

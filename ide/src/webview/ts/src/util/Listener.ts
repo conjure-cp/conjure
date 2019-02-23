@@ -11,13 +11,24 @@ export default class Listener {
 
     public static bindListener() {
 
-        let init = true;
-
         window.addEventListener('message', event => {
             const message = event.data;
 
 
             switch (message.command) {
+
+                case 'loadSet':
+                    Globals.lv.id2Node[message.data.structure.name].children = message.data.structure.children;
+                    Globals.lv.updateFromRoot();
+                    Globals.lv.updateNodes([message.data.update]);
+                    Globals.sendPrettyRequest();
+                    break;
+
+                case 'init':
+                    console.log(message.data.simple);
+                    Globals.lv.update(message.data.pretty);
+                    Globals.s.simpleDomainsAtRoot = message.data.simple.vars;
+                    break;
 
                 case 'loadChildren':
                     let nodeId = message.data.nodeId;
@@ -55,8 +66,6 @@ export default class Listener {
 
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
 
-                    Globals.s.waiting = false;
-
                     Tree.selectNode(Globals.s.selectedId);
 
                     Listener.setLoadedCount();
@@ -79,8 +88,6 @@ export default class Listener {
 
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
 
-                    Globals.s.waiting = false;
-
                     Tree.selectNode(Globals.s.selectedId);
 
                     Listener.setLoadedCount();
@@ -89,54 +96,25 @@ export default class Listener {
 
                 case 'simpleDomains':
 
-                    Listview.updatePanelTitle();
-                    Globals.s.currentDomainId += Number($("#domCount").val());
+                    Globals.lv.updatePanelTitle();
+                    message.data.vars.forEach((variable: any) => {
+                        $("#" + $.escapeSelector(variable.name)).removeClass("changed");
 
-                    if (Globals.s.selectedId === Globals.s.rootId) {
-                        Globals.s.simpleDomainsAtRoot = message.data.vars;
+                        let li = $("#" + $.escapeSelector(variable.name) + " > :last-child");
+                        li.text(variable.rng);
 
-                        if (init) {
-                            init = false;
-                            Globals.s.waiting = false;
-                            break;
+                        if (message.data.changedNames.includes(variable.name)) {
+                            $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
                         }
-
-                        $("#pane").empty();
-                        Globals.tabulate();
-                        Globals.appendRows(message.data.vars);
-                    }
-
-                    else {
-                        message.data.vars.forEach((variable: any) => {
-                            $("#" + $.escapeSelector(variable.name)).removeClass("changed");
-
-                            let li = $("#" + $.escapeSelector(variable.name) + " > :last-child");
-                            li.text(variable.rng);
-
-                            if (message.data.changedNames.includes(variable.name)) {
-                                $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
-
-                            }
-                        });
-                    }
-                    Globals.s.waiting = false;
-
+                    });
                     break;
 
                 case 'prettyDomains':
 
-                    Listview.updatePanelTitle();
-
-                    if (Globals.s.selectedId === Globals.s.rootId) {
-                        Listview.update(message.data);
-                    }
-                    else {
-                        Listview.setChangedExpressions(message.data.changedExpressions);
-                        Listview.updateNodes(message.data.vars);
-                        Listview.setChangedList(message.data.changed);
-                        Listview.setChanged();
-                    }
-                    Globals.s.waiting = false;
+                    Globals.lv.updatePanelTitle();
+                    Globals.lv.setChangedExpressions(message.data.changedExpressions);
+                    Globals.lv.updateNodes(message.data.vars);
+                    Globals.lv.setChanged(message.data.changed);
                     break;
             }
             Globals.s.waiting = false;
