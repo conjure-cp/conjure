@@ -355,7 +355,6 @@ suite "dummy":
     #     init(pathPrefix & "dummy")
     #     for d in getPrettyDomainsOfNode(db, "7"):
     #         if (d of DummySet):
-    #             let s = cast[DummySet](d)
     #             check(s.getCardinality() == "int(3)")
     #             check(s.included == @[1, 2, 3])
     #             check(s.excluded.len() == 0)

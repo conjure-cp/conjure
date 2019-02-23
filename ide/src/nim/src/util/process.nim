@@ -40,7 +40,7 @@ proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string) : (seq[Variable]) =
         result.add(variable)
 
         if (variable of Set):
-            let s = cast[Set](variable)
+            let s = Set(variable)
             decideSet(db, s, nil, s.name, nodeId, @[])
         else:
             let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & variable.name & "' and nodeId = ?;")

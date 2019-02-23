@@ -83,19 +83,19 @@ proc getCardinality*(s: Set): string =
         return getPrettyRange($s.included.len(), $s.included.len()) 
 
     if s of DummySet:
-        let d = cast[DummySet](s)
+        let d = DummySet(s)
         return getPrettyRange($s.included.len(), $s.included.len()) 
 
     if s of MarkerSet:
-        let mS = cast[MarkerSet](s)
+        let mS = MarkerSet(s)
         return getPrettyRange($mS.markerLower, $mS.markerUpper)
 
     if s of FlagSet:
-        let fS = cast[FlagSet](s)
+        let fS = FlagSet(s)
         return getPrettyRange($fS.markerLower, $fS.markerLower)
     
     if s of ExplicitSet:
-        let eS = cast[ExplicitSet](s)
+        let eS = ExplicitSet(s)
         return getPrettyRange($eS.cardinality, $eS.cardinality)
     
     return "SET TYPE NOT SUPPORTED"
@@ -111,7 +111,7 @@ proc getSetType*(s: Set): string =
     if s of OccurrenceSet:
         result = "<OSet> "
     if s of DummySet:
-        let d = cast[DummySet](s)
+        let d = DummySet(s)
         result = "<DSet>  dummy " & $d.dummyVal & " "
 
 
@@ -120,7 +120,7 @@ proc `$`*(v:Variable): string =
         return "<Expr> " & v.name & " " & v.rng
 
     if v of Set:
-        let s = cast[Set](v)
+        let s = Set(v)
         result = getSetType(s)
         result &= s.name
         result &= " cardinality " & getCardinality(s)

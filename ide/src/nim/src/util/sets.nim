@@ -21,7 +21,7 @@ proc decideSet*(db: DbConn, s,  parent: Set, outerSetName, nodeId: string, ances
 
 
 proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
-    let d = cast[DummySet](s)
+    let d = DummySet(s)
     var query = getInnerSetQuery(d, parent, ancestors, outerSetName)
 
     for res in db.fastRows(sql(query), nodeId):
@@ -48,7 +48,7 @@ proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, a
             s.excluded.add(number)
 
 proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
-    let e = cast[ExplicitSet](s)
+    let e = ExplicitSet(s)
 
     for setId in countUp(1, e.cardinality): 
 

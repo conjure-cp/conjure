@@ -153,7 +153,7 @@ proc getExpandedSetChild*(nodeId, path : string): Set =
     # echo nodeId
     # echo "path is " & path
 
-    result = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
+    result = Set(prettyLookup[nodeId][path.split(".")[0]])
 
     for name in path.split(".")[1..^1]:
         for kid in result.children:
@@ -177,7 +177,7 @@ proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
     for v in domainsAtNode:
         if (v != nil):
             if (v of Set):
-                result.add(setToJson(cast[Set](v), nodeId, true))
+                result.add(setToJson(Set(v), nodeId, true))
             else:
                 result.add(%v)
 

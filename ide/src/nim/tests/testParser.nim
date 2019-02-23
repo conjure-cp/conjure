@@ -21,7 +21,7 @@ suite "parser":
 
             if (variable.name == "s"):
                 check(variable of FlagSet)
-                let s = cast[FlagSet](variable)
+                let s = FlagSet(variable)
                 check(s.inner of FlagSet)
                 check(s.inner.inner of FlagSet)
 
@@ -36,7 +36,7 @@ suite "parser":
 
             if (variable.name == "s"):
                 check(variable of ExplicitSet)
-                let s = cast[ExplicitSet](variable)
+                let s = ExplicitSet(variable)
                 check(s.cardinality == 2)
 
                 check(s.inner of MarkerSet)
@@ -56,7 +56,7 @@ suite "parser":
 
             if (variable.name == "s"):
                 check(variable of FlagSet)
-                let s = cast[FlagSet](variable)
+                let s = FlagSet(variable)
 
                 check(s.inner of FlagSet)
 
@@ -73,25 +73,8 @@ suite "parser":
 
             if (variable.name == "s"):
                 check(variable of MarkerSet)
-                let s = cast[MarkerSet](variable)
+                let s = MarkerSet(variable)
 
                 check(s.inner of MarkerSet)
 
                 check(s.inner.inner of DummySet)
-
-    # test "eprimeGolomb":
-    #     let path = "/home/tom/EssenceCatalog/problems/csplib-prob006/conjure-output/model000001.eprime";
-    #     let varList = @["x", "y", "z", "s"]
-
-    #     for variable in parseEprime(path).values():
-
-    #         echo variable
-    #         check(variable.name in varList)
-
-    #         if (variable.name == "s"):
-    #             check(variable of MarkerSet)
-    #             let s = cast[MarkerSet](variable)
-
-    #             check(s.inner of MarkerSet)
-
-    #             check(s.inner.inner of DummySet)

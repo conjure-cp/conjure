@@ -44,7 +44,7 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
             expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
         elif d of Set:
-            let s = cast[Set](d)
+            let s = Set(d)
             let treeRep = (setToTreeView(s))
             variables.children.add(treeRep)
 
@@ -127,8 +127,8 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
         let oldVar = domainsAtPrev[i]
 
         if (newVar of Set):
-            let newSet = cast[Set](newVar)
-            let oldSet = cast[Set](oldVar)
+            let newSet = Set(newVar)
+            let oldSet = Set(oldVar)
             result = result.concat(getSetChanges(newSet, oldSet))
             
             if (newSet.children.len() > 0 and newSet.children.len() == oldSet.children.len()):
@@ -136,7 +136,7 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
                     result = result.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
 
         elif (newVar of Expression):
-            let changedExpressions = getExpressionChanges(cast[Expression](newVar), cast[Expression](oldVar))
+            let changedExpressions = getExpressionChanges(Expression(newVar), Expression(oldVar))
             result = result.concat(changedExpressions)
             # if changedExpressions.len() > 0:
                 # result.add("liItemsExpressions")
