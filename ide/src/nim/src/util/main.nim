@@ -69,8 +69,7 @@ proc loadNodes*(amount, start: string): seq[ParentChild] =
 
         discard parseInt(row1[1], pId)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(
-                row1[2], row1[3], row1[4]), children: kids))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel( row1[2], row1[3], row1[4]), children: kids))
 
 
 proc loadChildren*(id: string): ChildResponse =
@@ -97,9 +96,13 @@ proc loadCore*(): seq[ParentChild] =
         select parentId  from Node, correctPath
             where nodeId=correctPath.n 
                     )
-        select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId in correctPath;""")
+        select nodeId, parentId, branchingVariable, value, isLeftChild, isSolution from Node where nodeId in correctPath;""")
 
     for row1 in db.fastRows(query):
+        var sol = false
+        if (row1[5] == "1"):
+            sol = true
+
         discard parseInt(row1[0], nId)
         var kids: seq[int]
         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
@@ -109,8 +112,8 @@ proc loadCore*(): seq[ParentChild] =
 
         discard parseInt(row1[1], pId)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(
-                row1[2], row1[3], row1[4]), children: kids))
+
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel( row1[2], row1[3], row1[4]), children: kids, isSolution: sol))
 
     if result.len() == 0:
         let query1 = sql(

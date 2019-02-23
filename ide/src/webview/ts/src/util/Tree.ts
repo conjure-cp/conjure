@@ -75,13 +75,16 @@ export default class Tree {
         if (Globals.s.id2ChildIds[node.id]) {
             if (childLength < Globals.s.id2ChildIds[node.id].length) {
 
-                if (!Globals.s.correctPath.includes(node.id)) {
-
+                if (!Globals.s.solAncestorIds.includes(node.id)) {
                     domElement.classed("red", true);
-
                 }
+
                 domElement.classed("hasOthers", true);
             }
+        }
+
+        if (Globals.s.solNodIds.includes(node.id)) {
+            domElement.classed("solution", true);
         }
     }
 
@@ -147,7 +150,7 @@ export default class Tree {
 
         link.enter().insert("path", "g")
             .attr("class", (link: any) => {
-                if (Globals.s.correctPath.includes(link.target.id)) {
+                if (Globals.s.solAncestorIds.includes(link.target.id)) {
                     return "link";
                 }
                 return "link red";

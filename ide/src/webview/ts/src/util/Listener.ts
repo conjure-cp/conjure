@@ -39,12 +39,17 @@ export default class Listener {
                 case 'loadCore':
 
                     message.data.forEach((element: any) => {
-                        Globals.s.correctPath.push(element.nodeId);
+                        Globals.s.solAncestorIds.push(element.nodeId);
                     });
 
                     for (let i = 0; i < message.data.length; i++) {
 
                         let element = message.data[i];
+
+                        if (element.isSolution === true){
+                            Globals.s.solNodIds.push(element.nodeId);
+                            console.log(element.nodeId);
+                        }
 
                         if (!Globals.s.id2Node[element.nodeId]) {
 
@@ -53,7 +58,7 @@ export default class Listener {
 
                             element.children.forEach((kidId: any) => {
 
-                                if (!Globals.s.correctPath.includes(kidId)) {
+                                if (!Globals.s.solAncestorIds.includes(kidId)) {
 
                                     Globals.s.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""));
                                     Globals.loadChildIds(kidId);

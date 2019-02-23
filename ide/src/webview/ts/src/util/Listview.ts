@@ -82,7 +82,7 @@ export default class Listview {
     public update(source: Node) {
 
         // console.log("in update");
-        console.log(source);
+        // console.log(source);
 
         var nodes = this.tree.nodes(source);
 

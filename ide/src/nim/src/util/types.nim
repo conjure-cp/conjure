@@ -31,6 +31,7 @@ type ParentChild* = ref object of RootObj
     parentId*: int
     label*: string
     children*: seq[int]
+    isSolution*: bool
 
 type ChildResponse* = ref object of RootObj
     nodeId*: int

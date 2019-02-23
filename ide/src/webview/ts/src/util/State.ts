@@ -6,9 +6,10 @@ export default class State {
     public selectedId = this.rootId;
     public currentDomainId = 0;
     public id2Node: { [id: number]: Node; } = {};
-    public id2ChildIds: any = {};
-    public correctPath: any[] = [];
-    public pathList: any[] = [];
+    public id2ChildIds: { [id: number]: [number]; } = {};
+    public solAncestorIds: number[] = [];
+    public solNodIds: number[] = [];
+    public pathList: string[] = [];
     public simpleDomainsAtRoot: any;
     public init = true;
     public pretty = true;
@@ -18,19 +19,19 @@ export default class State {
     constructor() { }
 
     public collapseFailed() {
-        this.correctPath.forEach((nodeId: number) => {
+        this.solAncestorIds.forEach((nodeId: number) => {
             let childIds = this.id2ChildIds[nodeId];
             childIds.forEach((childId: number) => {
-                if (!this.correctPath.includes(childId)) {
+                if (!this.solAncestorIds.includes(childId)) {
                     Node.collapseNode(this.id2Node[childId]);
                 }
             });
         });
 
-        let correctAncestor : Node = null;
+        let correctAncestor: Node = null;
 
         let recurse = (node: Node) => {
-            if (this.correctPath.includes(node.id)){
+            if (this.solAncestorIds.includes(node.id)) {
                 correctAncestor = node;
                 return;
             }
@@ -43,6 +44,7 @@ export default class State {
     }
 
     public addNode(nodeId: number, parentId: number, label: string) {
+
 
         this.totalLoaded++;
         let newNode = new Node(nodeId, label, this.id2Node[parentId]);
