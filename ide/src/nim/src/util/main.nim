@@ -214,8 +214,7 @@ proc temp(db: DbConn, nodeId, paths: string): JsonNode =
                 domainsAtPrev.add(kid)
         changeList = getPrettyChanges(domainsAtNode, domainsAtPrev)
 
-    return %*{"vars": getJsonVarList(domainsAtNode, nodeId),
-            "changed": changeList, "changedExpressions": %[]}
+    return %*{"vars": getJsonVarList(domainsAtNode, nodeId), "changed": changeList, "changedExpressions": %[]}
 
 proc getSkeleton*(): JsonNode =
     return domainsToJson(getPrettyDomainsOfNode(db, "0"))

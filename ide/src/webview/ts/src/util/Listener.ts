@@ -25,7 +25,7 @@ export default class Listener {
                     break;
 
                 case 'init':
-                    console.log(message.data.simple);
+                    // console.log(message.data.simple);
                     Globals.lv.update(message.data.pretty);
                     Globals.s.simpleDomainsAtRoot = message.data.simple.vars;
                     break;

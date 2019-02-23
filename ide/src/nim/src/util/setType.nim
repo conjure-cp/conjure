@@ -80,16 +80,16 @@ proc getCardinality*(s: Set): string =
 
 proc getSetType*(s: Set): string =
     if s of ExplicitSet:
-        result = "<ESet> "
+        return "<ESet> "
     if s of FlagSet:
-        result = "<FSet> "
+        return "<FSet> "
     if s of MarkerSet:
-        result = "<MSet> "
+        return "<MSet> "
     if s of OccurrenceSet:
-        result = "<OSet> "
+        return "<OSet> "
     if s of DummySet:
         let d = DummySet(s)
-        result = "<DSet>  dummy " & $d.dummyVal & " "
+        return "<DSet>  dummy " & $d.dummyVal & " "
 
 proc `$`(s: Set): string =
 

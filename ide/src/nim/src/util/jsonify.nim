@@ -21,13 +21,12 @@ proc setToTreeView*(s: Set): TreeViewNode =
     let cardinality = TreeViewNode(name: "Cardinality", children: @[
             TreeViewNode(name: s.getCardinality())])
         
-    let included = TreeViewNode(name: "Included", children: @[TreeViewNode(  name: ($s.included))])
-    let excluded = TreeViewNode(name: "Not excluded", children: @[TreeViewNode(  name: ($s.notExcluded))])
+    let notExcluded = TreeViewNode(name: "Not excluded", children: @[TreeViewNode(  name: ($s.notExcluded))])
 
     let kids = TreeViewNode(name: "Children", children: @[])
 
     if (s.inner == nil):
-        return (TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
+        return (TreeViewNode(name: s.name, children: @[t, cardinality, notExcluded]))
 
     return (TreeViewNode(name: s.name, children: @[t, cardinality, kids]))
 
@@ -43,8 +42,7 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
 
     for d in domains:
         if d of Expression:
-            expressions.children.add(TreeViewNode(name: d.name, children: @[
-                    TreeViewNode(name: d.rng)]))
+            expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
         elif d of Set:
             let s = Set(d)
@@ -52,8 +50,7 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
             variables.children.add(treeRep)
 
         else:
-            variables.children.add(TreeViewNode(name: d.name, children: @[
-                    TreeViewNode(name: d.rng)]))
+            variables.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
     return %root
 
@@ -139,8 +136,7 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
                             oldSet.children[i], true))
 
         elif (newVar of Expression):
-            let changedExpressions = getExpressionChanges(Expression(newVar),
-                    Expression(oldVar))
+            let changedExpressions = getExpressionChanges(Expression(newVar), Expression(oldVar))
             result = result.concat(changedExpressions)
         else:
             result = result.concat(getVariableChanges(newVar, oldVar))

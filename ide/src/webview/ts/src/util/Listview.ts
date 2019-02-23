@@ -82,7 +82,7 @@ export default class Listview {
     public update(source: Node) {
 
         // console.log("in update");
-        // console.log(source);
+        console.log(source);
 
         var nodes = this.tree.nodes(source);
 
@@ -204,8 +204,18 @@ export default class Listview {
 
                     // if (setNode.children.length > 3){
                     if (element.Included) {
-                        setNode[2].children[0].name = element.Included;
-                        setNode[3].children[0].name = element.Excluded;
+
+                        let notExcluded = element["Not excluded"];
+                        let incList = element.Included;
+
+                        for (let i = 0; i < notExcluded.length; i++){
+                            if (incList.includes(notExcluded[i])){
+                                notExcluded[i] = "<b style='color:gold'>" + notExcluded[i] + "</b>";
+                            } 
+                        }
+
+                        // setNode[2].children[0].name = element.Included;
+                        setNode[2].children[0].name = notExcluded.join(", ");
                     }
 
                     if (element.Children && !setNode[2].children) {
