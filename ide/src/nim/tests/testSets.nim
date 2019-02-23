@@ -10,12 +10,6 @@ proc getSet(nodeId: string): Set =
             return Set(d)
 
     return nil
-    
-
-
-
-
-
 
 suite "core":
     test "MMMM":
