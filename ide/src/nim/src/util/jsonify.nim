@@ -22,7 +22,7 @@ proc setToTreeView*(s: Set): TreeViewNode =
             TreeViewNode(name: s.getCardinality())])
         
     let included = TreeViewNode(name: "Included", children: @[TreeViewNode(  name: ($s.included))])
-    let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(  name: ($s.excluded))])
+    let excluded = TreeViewNode(name: "Not excluded", children: @[TreeViewNode(  name: ($s.notExcluded))])
 
     let kids = TreeViewNode(name: "Children", children: @[])
 
@@ -83,7 +83,7 @@ proc setToJson*(s: Set, nodeId: string, wantCollapsedChildren: bool): JsonNode =
     json["Cardinality"] = %s.getCardinality()
     if (s.inner == nil):
         json["Included"] = %toSeq(s.included.items)
-        json["Excluded"] = %toSeq(s.excluded.items)
+        json["Not excluded"] = %toSeq(s.notExcluded.items)
     else:
         if wantCollapsedChildren:
             json["Children"] = getCollapsedSetChildren(s)
@@ -100,8 +100,8 @@ proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
     if (newSet.included != oldSet.included):
         result.add(prefix & "Included")
 
-    if (newSet.excluded != oldSet.excluded):
-        result.add(prefix & "Excluded")
+    if (newSet.notExcluded != oldSet.notExcluded):
+        result.add(prefix & "Not excluded")
 
     if isNested:
         if result.len() > 0:
@@ -122,14 +122,9 @@ proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
         # result.add("liDomain Variables" & newVariable.name )
         result.add(newVariable.name)
 
-proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[
-        string] =
+proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string] =
 
-    var numberOfCommonVariables = domainsAtNode.len()
-    if (domainsAtPrev.len() < numberOfCommonVariables):
-        numberOfCommonVariables = domainsAtPrev.len()
-
-    for i in countUp(0, numberOfCommonVariables - 1):
+    for i in countUp(0, min(domainsAtPrev.len(), domainsAtNode.len()) - 1):
         let newVar = domainsAtNode[i]
         let oldVar = domainsAtPrev[i]
 
@@ -138,8 +133,7 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[
             let oldSet = Set(oldVar)
             result = result.concat(getSetChanges(newSet, oldSet))
 
-            if (newSet.children.len() > 0 and newSet.children.len(
-                    ) == oldSet.children.len()):
+            if (newSet.children.len() > 0 and newSet.children.len() == oldSet.children.len()):
                 for i in countUp(0, newSet.children.len() - 1):
                     result = result.concat(getSetChanges(newSet.children[i],
                             oldSet.children[i], true))
@@ -148,11 +142,5 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[
             let changedExpressions = getExpressionChanges(Expression(newVar),
                     Expression(oldVar))
             result = result.concat(changedExpressions)
-            # if changedExpressions.len() > 0:
-                # result.add("liItemsExpressions")
         else:
             result = result.concat(getVariableChanges(newVar, oldVar))
-
-    # if result.len() > 0:
-    #     result.add("liItemsDomain Variables")
-    #     result.add("liItems")

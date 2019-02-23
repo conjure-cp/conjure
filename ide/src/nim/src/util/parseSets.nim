@@ -5,9 +5,9 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int])
 proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int])
-proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int])
-proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int])
 proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int])
@@ -26,34 +26,40 @@ proc decideSet*(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         parseExplicit(db, s, parent, outerSetName, nodeId, ancestors)
 
 
-proc parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
+func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int]) =
     let d = DummySet(s)
     var query = getInnerSetQuery(d, parent, ancestors, outerSetName)
 
     for res in db.fastRows(sql(query), nodeId):
 
-        var number: int
-        discard res[1].parseInt(number)
+        var lower: int
+        var upper: int
+        discard res[1].parseInt(lower)
+        discard res[2].parseInt(upper)
 
-        if number != d.dummyVal:
-            d.included.incl(number)
+        if lower != d.dummyVal:
+            if lower == upper:
+                d.included.incl(lower)
+
+            for i in countUp(lower, min(upper, d.dummyVal - 1)):
+                d.notExcluded.incl(i)
         else:
             d.excludedCount.inc()
 
-proc parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int]) =
+func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
     var query = getInnerSetQuery(s, parent, ancestors, outerSetName)
 
     for res in db.fastRows(sql(query), nodeId):
 
-        var number: int
-        discard res[0].parseInt(number)
+        var lower: int
+        discard res[0].parseInt(lower)
 
-        if (res[1] == "1"):
-            s.included.incl(number)
-        else:
-            s.excluded.incl(number)
+        if (res[1] == "1" and res[2] == "1"):
+            s.included.incl(lower)
+
+        if (res[2] != "0"):
+            s.notExcluded.incl(lower)
 
 proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int]) =
@@ -70,14 +76,20 @@ proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
             var query = getInnerSetQuery(e, parent, ancestors, outerSetName)
             for res in db.rows(sql(query), nodeId):
                 var lower: int
+                var upper: int
                 discard res[1].parseInt(lower)
-                e.included.incl(lower)
+                discard res[2].parseInt(upper)
+
+                if (lower == upper):
+                    e.included.incl(lower)
+
+                for i in countUp(lower, upper):
+                    e.notExcluded.incl(i)
             break
 
 proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
 
-    var lowerQuery = getFlagLowerBoundQuery(ancestors, outerSetName)
-    # echo lowerQuery
+    var lowerQuery = getTrueFlagCountQuery(ancestors, outerSetName)
     var lowerBound = db.getValue(sql(lowerQuery), nodeId)
 
     if lowerBound == "":
@@ -85,10 +97,10 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
 
     discard lowerBound.parseInt(s.markerLower)
 
-    var upperQuery = getFlagUpperBoundQuery(ancestors, outerSetName)
-    var upperBound = db.getValue(sql(upperQuery), nodeId)
+    var nonExcludedQuery = getNonFalseFlagCountQuery(ancestors, outerSetName)
+    var nonExcludedCount = db.getValue(sql(nonExcludedQuery), nodeId)
 
-    discard upperBound.parseInt(s.markerUpper)
+    discard nonExcludedCount.parseInt(s.notExcludedCount)
 
     for setId in countUp(1, s.markerLower):
 
@@ -100,6 +112,17 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
         else:
             let valuesQuery = getFlagValuesIncludedQuery(s, ancestors, outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
+            
+            s.notExcluded.incl(s.included)
+
+            var falseQuery = getFalseFlagCountQuery(ancestors, outerSetName)
+            var falseFlagCount = db.getValue(sql(falseQuery), nodeId)
+
+            discard falseFlagCount.parseInt(s.markerUpper)
+
+            let nonExcludedValuesQuery = getNonExcludedFlagValuesQuery(s, ancestors, outerSetName)
+
+            dontExcludeValues(db, s, nonExcludedValuesQuery, nodeId)
             break;
 
 proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
@@ -121,4 +144,8 @@ proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ances
             let valuesQuery = getMarkerValuesQuery(ancestors, s.markerLower,
                     outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
+            
+            let nonExcludedValuesQuery = getNonExcludedMarkerValuesQuery(s, ancestors, outerSetName)
+
+            dontExcludeValues(db, s, nonExcludedValuesQuery, nodeId)
             break;

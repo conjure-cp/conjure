@@ -19,11 +19,20 @@ proc getParentIdIndexes*(ancestors: seq[int]): string =
     for i in countUp(0, ancestors.len() - 1):
         result &= " and index" & $i & " = " & $ancestors[i] & " "
 
-proc includeValues*(db: DbConn, s: Set, valuesQuery: string, nodeId: string) =
+proc includeValues*(db: DbConn, s: Set, valuesQuery, nodeId: string) =
     for res in db.rows(sql(valuesQuery), nodeId):
         var lower: int
         discard res[0].parseInt(lower)
         s.included.incl(lower)
+
+proc dontExcludeValues*(db: DbConn, s: Set, valuesQuery, nodeId: string) =
+    var lower: int
+    var upper: int
+    for res in db.fastRows(sql(valuesQuery), nodeId):
+        discard res[0].parseInt(lower)
+        discard res[1].parseInt(upper)
+        for i in countUp(lower, upper):
+            s.notExcluded.incl(i)
 
 proc makeChildSet*(s: Set, setId: int): Set =
     var currentSet: Set
@@ -36,7 +45,7 @@ proc makeChildSet*(s: Set, setId: int): Set =
 proc getInnerSetQuery*(s, parent: Set, ancestors: seq[int],
         outerSetName: string): string =
     var index = ancestors.len()
-    result = "SELECT index" & $index & ", lower FROM domain WHERE name like '%" & outerSetName
+    result = "SELECT index" & $index & ", lower, upper FROM domain WHERE name like '%" & outerSetName
 
     if (s of OccurrenceSet):
         result &= "\\_%Occurrence%' "
@@ -45,7 +54,7 @@ proc getInnerSetQuery*(s, parent: Set, ancestors: seq[int],
     if (s of ExplicitSet):
         result &= "\\_%Explicit\\_%' "
 
-    result &= "escape '\\' and lower = upper "
+    result &= "escape '\\' "
 
     if parent != nil:
         result &= getParentIdIndexes(ancestors)

@@ -2,6 +2,7 @@
 import variable, util, strutils, intsets
 
 type Set* = ref object of Variable
+    notExcludedCount*: int
     markerLower*: int
     markerUpper*: int
     id*: int
@@ -9,7 +10,6 @@ type Set* = ref object of Variable
     upperBound: int
     included*: IntSet
     notExcluded*: IntSet
-    excluded*: IntSet
     inner*: Set
     children*: seq[Set]
 
@@ -57,11 +57,11 @@ proc newExplicitSet*(name: string, lowerBound, upperBound: int = -1,
 
 proc getCardinality*(s: Set): string =
     if s of OccurrenceSet:
-        return getPrettyRange($s.included.len(), $s.included.len())
+        return getPrettyRange($s.included.len(), $s.notExcluded.len())
 
     if s of DummySet:
         let d = DummySet(s)
-        return getPrettyRange($s.included.len(), $s.included.len())
+        return getPrettyRange($s.included.len(), $s.notExcluded.len())
 
     if s of MarkerSet:
         let mS = MarkerSet(s)
@@ -69,7 +69,7 @@ proc getCardinality*(s: Set): string =
 
     if s of FlagSet:
         let fS = FlagSet(s)
-        return getPrettyRange($fS.markerLower, $fS.markerUpper)
+        return getPrettyRange($fS.markerLower, $fS.notExcludedCount)
 
     if s of ExplicitSet:
         let eS = ExplicitSet(s)
@@ -98,11 +98,9 @@ proc `$`(s: Set): string =
     result &= " cardinality " & getCardinality(s)
 
     if (s.inner != nil):
-        result &= " {" & getSetType(s.inner) & "}"
+        result &= " [" & getSetType(s.inner) & "]"
     else:
-        result &= " " & getPrettyRange($s.lowerBound,
-                $s.upperBound) & " inc " & $s.included & " exc " &
-                        $s.excluded
+        result &= " " &  " {" & $s.included  & "} " & " {" & $s.notExcluded & "}"
 
     if s.children.len() > 0:
         result &= "\n"

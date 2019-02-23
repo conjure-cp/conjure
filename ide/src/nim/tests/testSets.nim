@@ -187,7 +187,6 @@ suite "core":
         let child1 = s.children[0]
         check(child1 of FlagSet)
         check(child1.included.toSeq() == @[3])
-        check(child1.excluded.toSeq().len() == 0)
         check(child1.getCardinality() == "int(1)")
 
     test "F":
@@ -195,24 +194,31 @@ suite "core":
         let d = getSet("7")
         let s = FlagSet(d)
         check(s.included.toSeq() == @[1,2,3])
-        check(s.excluded.toSeq().len() == 0)
         check(s.getCardinality() == "int(3)")
 
-    # test "FNotExcluded":
-    #     init(pathPrefix & "flags")
-    #     let d = getSet("4")
-    #     let s = FlagSet(d)
-    #     check(s.notExcluded.toSeq() == @[1,2,3,4,5,6,7,8,9])
-    #     # check(s.excluded.toSeq().len() == 0)
-    #     check(s.getCardinality() == "int(1..8)")
+    test "FNotExcluded":
+        init(pathPrefix & "flags")
+        let d = getSet("4")
+        let s = FlagSet(d)
+        check(s.getCardinality() == "int(1..8)")
+        check(s.notExcluded.toSeq() == @[1,2,3,4,5,6,7,8,9])
+        check((s.included - s.notExcluded).toSeq().len() == 0)
+        # check(s.excluded.toSeq().len() == 0)
                 
     test "M":
         init(pathPrefix & "marker")
         let d = getSet("4")
         let s = MarkerSet(d)
         check(s.included.toSeq() == @[6])
-        check(s.excluded.toSeq().len() == 0)
         check(s.getCardinality() == "int(1)")
+
+    test "MNotExcluded":
+        init(pathPrefix & "marker")
+        let d = getSet("2")
+        let s = MarkerSet(d)
+        check(s.getCardinality() == "int(1..5)")
+        check(s.included.toSeq().len() == 0)
+        check(s.notExcluded.toSeq() == @[1,2,3,4,5,6,7,8,9])
 
     test "MM":
         init(pathPrefix & "recursive/markerMarker")
@@ -226,7 +232,6 @@ suite "core":
         check(child1 of MarkerSet)
 
         check(child1.included.toSeq() == @[1, 2])
-        check(child1.excluded.toSeq().len() == 0)
         check(child1.getCardinality() == "int(2)")
     
     test "MF":
@@ -239,7 +244,6 @@ suite "core":
         let child1 = s.children[0]
         check(child1 of FlagSet)
         check(child1.included.toSeq() == @[3])
-        check(child1.excluded.toSeq().len() == 0)
         check(child1.getCardinality() == "int(1)")
 
     test "FM":
@@ -253,7 +257,6 @@ suite "core":
         let child1 = s.children[0]
         check(child1 of MarkerSet)
         check(child1.included.toSeq() == @[3])
-        check(child1.excluded.len() == 0)
         check(child1.getCardinality() == "int(1)")
 
 suite "occurrence":
@@ -264,7 +267,13 @@ suite "occurrence":
         let s = OccurrenceSet(d)
         check(s.getCardinality() == "int(1)")
         check(s.included.toSeq() == @[6])
-        check(s.excluded.toSeq() == @[1,2,3,4,5,7,8,9])
+
+    test "ONotExcluded":
+        init(pathPrefix & "occurrence")
+        let d = getSet("4")
+        let s = OccurrenceSet(d)
+        check(s.getCardinality() == "int(0..4)")
+        check(s.notExcluded.toSeq() == @[3,4,5,6])
 
     test "MO":
         init(pathPrefix & "recursive/markerOccurrence")
@@ -276,7 +285,6 @@ suite "occurrence":
         let child1 = s.children[0]
         check(child1 of OccurrenceSet)
         check(child1.included.toSeq() == @[3])
-        check(child1.excluded.toSeq() == @[1,2])
 
     test "FO":
         init(pathPrefix & "recursive/flagsOccurrence")
@@ -287,7 +295,6 @@ suite "occurrence":
         let child1 = s.children[0]
         check(child1 of OccurrenceSet)
         check(child1.included.toSeq() == @[3])
-        check(child1.excluded.toSeq() == @[1,2])
 
     test "MMO":
         init(pathPrefix & "recursive/markerMarkerOccurrence")
@@ -301,7 +308,6 @@ suite "occurrence":
         let grandkid1 = child1.children[0]
         check(grandkid1 of OccurrenceSet)
         check(grandkid1.included.toSeq() == @[2])
-        check(grandkid1.excluded.toSeq() == @[1])
 
         let child2 = s.children[1]
         check(child2 of MarkerSet)
@@ -309,7 +315,6 @@ suite "occurrence":
         let grandkid2 = child2.children[0]
         check(grandkid2 of OccurrenceSet)
         check(grandkid2.included.toSeq() == @[1])
-        check(grandkid2.excluded.toSeq() == @[2])
 
     test "FFO":
         init(pathPrefix & "recursive/flagsFlagsOccurrence")
@@ -323,7 +328,6 @@ suite "occurrence":
         let grandkid1 = child1.children[0]
         check(grandkid1 of OccurrenceSet)
         check(grandkid1.included.toSeq() == @[2])
-        check(grandkid1.excluded.toSeq() == @[1])
 
         let child2 = s.children[1]
         check(child2 of FlagSet)
@@ -331,7 +335,6 @@ suite "occurrence":
         let grandkid2 = child2.children[0]
         check(grandkid2 of OccurrenceSet)
         check(grandkid2.included.toSeq() == @[1])
-        check(grandkid2.excluded.toSeq() == @[2])
 
     test "FFFO":
         init(pathPrefix & "recursive/flagsFlagsFlagsOccurrence")
@@ -348,7 +351,6 @@ suite "occurrence":
         let greatGrandKid1 = grandkid1.children[0]
         check(greatGrandKid1 of OccurrenceSet)
         check(greatGrandKid1.included.toSeq() == @[1])
-        check(greatGrandKid1.excluded.toSeq() == @[2])
 
 suite "dummy":
 
@@ -369,7 +371,17 @@ suite "dummy":
         let child1 = s.children[0]
         check(child1 of DummySet)
         check(child1.included.toSeq() == @[1,2])
-        check(child1.excluded.toSeq().len() == 0)
+
+    test "MDNotExcluded":
+        init(pathPrefix & "recursive/markerDummy")
+        let d = getSet("5")
+        let s = MarkerSet(d)
+        check(s.getCardinality() == "int(1)")
+
+        let child1 = s.children[0]
+        check(child1 of DummySet)
+        check(child1.getCardinality() == "int(0..2)")
+        check(child1.notExcluded.toSeq() == @[1,2])
 
     test "FD":
         init(pathPrefix & "recursive/flagsDummy")
@@ -379,7 +391,6 @@ suite "dummy":
         let child1 = s.children[0]
         check(child1 of DummySet)
         check(child1.included.toSeq() == @[1,2])
-        check(child1.excluded.toSeq().len() == 0)
 
     test "MMD":
         init(pathPrefix & "recursive/markerMarkerDummy")
@@ -393,7 +404,6 @@ suite "dummy":
         let grandkid1 = child1.children[0]
         check(grandkid1 of DummySet)
         check(grandkid1.included.toSeq() == @[1])
-        check(grandkid1.excluded.toSeq().len() == 0)
 
         let child2 = s.children[1]
         check(child2 of MarkerSet)
@@ -401,7 +411,6 @@ suite "dummy":
         let grandkid2 = child2.children[0]
         check(grandkid2 of DummySet)
         check(grandkid2.included.toSeq() == @[2])
-        check(grandkid2.excluded.toSeq().len() == 0)
 
     test "FFD":
         init(pathPrefix & "recursive/flagsFlagsDummy")
@@ -415,7 +424,6 @@ suite "dummy":
         let grandkid1 = child1.children[0]
         check(grandkid1 of DummySet)
         check(grandkid1.included.toSeq() == @[1])
-        check(grandkid1.excluded.toSeq().len() == 0)
 
         let child2 = s.children[1]
         check(child2 of FlagSet)
@@ -423,7 +431,6 @@ suite "dummy":
         let grandkid2 = child2.children[0]
         check(grandkid2 of DummySet)
         check(grandkid2.included.toSeq() == @[2])
-        check(grandkid2.excluded.toSeq().len() == 0)
 
 
     test "FFFD":
@@ -441,7 +448,6 @@ suite "dummy":
         let greatGrandKid1 = grandkid1.children[0]
         check(greatGrandKid1 of DummySet)
         check(greatGrandKid1.included.toSeq() == @[1])
-        check(greatGrandKid1.excluded.toSeq().len() == 0)
 
 suite "explicit":
     test "E":
@@ -451,7 +457,14 @@ suite "explicit":
                 # echo s
         check(s.getCardinality() == "int(3)")
         check(s.included.toSeq() == @[1, 2, 3])
-        check(s.excluded.toSeq().len() == 0)
+
+    test "ENotExcluded":
+        init(pathPrefix & "explicit")
+        let d = getSet("2")
+        let s = ExplicitSet(d)
+        #         # echo s
+        check(s.getCardinality() == "int(3)")
+        check(s.notExcluded.toSeq() == @[1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     test "EE":
         init(pathPrefix & "recursive/explicitExplicit")
@@ -559,7 +572,6 @@ suite "explicit":
         let grandkid1 = child1.children[0]
         check(grandkid1 of ExplicitSet)
         check(grandkid1.included.toSeq() == @[1])
-        check(grandkid1.excluded.toSeq().len() == 0)
 
         let child2 = s.children[1]
         check(child2 of FlagSet)
@@ -567,7 +579,6 @@ suite "explicit":
         let grandkid2 = child2.children[0]
         check(grandkid2 of ExplicitSet)
         check(grandkid2.included.toSeq() == @[2])
-        check(grandkid2.excluded.toSeq().len() == 0)
 
 
     test "EEE":
@@ -622,4 +633,3 @@ suite "explicit":
         let greatGrandKid1 = s.children[0].children[0].children[0] 
         check(greatGrandKid1 of OccurrenceSet)
         check(greatGrandKid1.included.toSeq() == @[1])
-        check(greatGrandKid1.excluded.toSeq() == @[2])
