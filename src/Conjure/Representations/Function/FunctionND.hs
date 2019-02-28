@@ -174,7 +174,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
                     missing <- concatForM domVals $ \ val ->
                         case active val of
-                            Nothing -> return [val]
+                            Nothing -> return [ConstantAbstract $ AbsLitTuple $ prevIndices ++ [val]]
                             Just {} -> return []
 
                     unless (null missing) $
