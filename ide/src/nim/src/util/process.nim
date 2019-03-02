@@ -5,18 +5,20 @@ var prettyLookup* = initTable[string, Table[string, Variable]]()
 var eprimeLookup: Table[string, Variable]
 var auxLookup: Table[string, Expression]
 
-proc initParser(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
+proc initParser*(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup.clear()
     auxLookup.clear()
     eprimeLookup = parseEprime(db, eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
 
-proc getSimpleDomainsOfNode(db: DbConn, nodeId: string, wantExpressions: bool = false): seq[Variable] =
+proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): seq[Variable] =
 
     var query = "select name, lower, upper from domain where"
     if (not wantExpressions):
         query &= " name not like 'aux%' and "
     query &= " nodeId = ? order by name limit ?"
+
+    # echo query
 
     for domain in db.fastRows(sql(query), nodeId, "-1"):
 

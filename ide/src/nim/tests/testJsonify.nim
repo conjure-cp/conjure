@@ -1,12 +1,14 @@
-import unittest, os, constants
+import unittest, os, json, constants
 import util/types
+import util/process
+import util/init
 import util/jsonify
-include util/main
+# include util/main
 
 suite "setToJson":
     let validPath = testDataPath & "/sets/recursive/flagsFlagsFlags"
     echo validPath
-    init(validPath)
+    let db = findFiles(validPath)
 
     test "1":
         let prettyDomains = getPrettyDomainsOfNode(db, "10")

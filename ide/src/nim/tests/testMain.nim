@@ -1,6 +1,8 @@
-import unittest, constants
+import unittest, json, constants
 import util/types
-include util/main
+import util/types
+import util/main
+# include util/main
 
 suite "init":
     test "initValidPath":
@@ -84,6 +86,9 @@ suite "loadSimpleDomains":
     init(validPath)
     test "changed":
         var response = loadSimpleDomains("0")
+
+        # echo %response
+
         check(response.changedNames.len() == 0)
 
         response = loadSimpleDomains("2")

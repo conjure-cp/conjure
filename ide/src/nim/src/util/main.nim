@@ -1,15 +1,19 @@
 # Hello Nim!
-import jester, typetraits, sequtils
+import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json
 import jsonify
-include process
-
-proc getDecendants(db: DbConn): CountTable[int]
+import init
+import process
+# include process
 
 var db: DbConn
 var decTable: CountTable[int]
 
+proc init*(dirPath: string) =
+    db = findFiles(dirPath)
+    decTable = getDecendants(db)
 
-proc getLabel(varName: string, value: string, branch: string): string =
+
+proc getLabel*(varName: string, value: string, branch: string): string =
 
     if varName == "":
         return ""
@@ -23,40 +27,6 @@ proc getLabel(varName: string, value: string, branch: string): string =
 
     result &= value
 
-
-proc init*(dirPath: string) =
-
-    let current = getCurrentDir()
-    setCurrentDir(dirPath)
-
-    var minionFilePath: string
-    var eprimeFilePath: string
-    var dbFilePath: string
-
-    for f in walkFiles("*.eprime-minion"):
-        minionFilePath = absolutePath(f)
-        break;
-
-    for f in walkFiles("*.eprime"):
-        eprimeFilePath = absolutePath(f)
-        break;
-
-    for f in walkFiles("*.db"):
-        dbFilePath = absolutePath(f)
-        break;
-
-    setCurrentDir(current)
-
-
-    if dbFilePath == "":
-        raise newException(CannotOpenDatabaseException, "No files with .db extension found")
-
-    db = open(dbFilePath, "", "", "")
-
-    initParser(db, minionFilePath, eprimeFilePath)
-
-
-    decTable = getDecendants(db)
 
 proc loadNodes*(amount, start: string): seq[ParentChild] =
 
@@ -155,35 +125,6 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
     
     if result.len() == 0:
         return loadCore(true)
-
-proc getDecendants(db: DbConn): CountTable[int] =
-
-    # let db = open("/home/tom/minion-private/build/gears/test.db", "", "", "")
-    let query = "select nodeId, parentId from Node where parentId >= 0;"
-
-    var countTable = initCountTable[int]()
-    var id2Parent = initTable[int, int]()
-    var nodeId, parentId : int
-
-    for res in db.fastRows(sql(query)):
-        discard res[0].parseInt(nodeId)
-        discard res[1].parseInt(parentId)
-
-        id2Parent[nodeId] = parentId
-    
-    let leaves = toSeq(id2Parent.keys).filter() do (x: int) -> bool : not countTable.hasKey(x)
-
-    for leaf in leaves:
-        var current = id2Parent[leaf]
-
-        while true:
-            countTable.inc(current)
-            if id2Parent.hasKey(current):
-                current = id2Parent[current]
-            else:
-                break
-
-    return countTable
 
 
 proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
