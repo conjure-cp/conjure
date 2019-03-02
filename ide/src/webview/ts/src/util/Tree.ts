@@ -73,19 +73,31 @@ export default class Tree {
         }
 
         if (Globals.s.id2ChildIds[node.id]) {
+
+            // Globals.s.solAncestorIds
+
             if (childLength < Globals.s.id2ChildIds[node.id].length) {
 
-                if (!Globals.s.solAncestorIds.includes(node.id)) {
-                    domElement.classed("red", true);
+
+                if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0){
+                    domElement.classed("hasOthers", true);
                 }
 
-                domElement.classed("hasOthers", true);
+                else {
+                    domElement.classed("hasOthers red", true);
+                }
+
             }
         }
 
         if (Globals.s.solNodIds.includes(node.id)) {
             domElement.classed("solution", true);
         }
+
+        // console.log(node.decCount + 10);
+
+        domElement.attr("r", Math.log(node.decCount + 10) * 4);
+
     }
 
     public static update(source: Node) {
@@ -130,7 +142,7 @@ export default class Tree {
             .attr("transform", (node: Node) => { return "translate(" + node.x + "," + node.y + ")"; });
 
         nodeUpdate.select("circle")
-            .attr("r", 10)
+            // .attr("r", 10)
             .each((d: Node) => { Tree.fillCircle(d); });
 
         nodeUpdate.select("text")
@@ -150,7 +162,7 @@ export default class Tree {
 
         link.enter().insert("path", "g")
             .attr("class", (link: any) => {
-                if (Globals.s.solAncestorIds.includes(link.target.id)) {
+                if (Globals.s.solAncestorIds.includes(link.target.id) && Globals.s.solNodIds.length > 0) {
                     return "link";
                 }
                 return "link red";

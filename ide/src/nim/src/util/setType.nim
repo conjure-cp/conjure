@@ -6,8 +6,6 @@ type Set* = ref object of Variable
     markerLower*: int
     markerUpper*: int
     id*: int
-    lowerBound: int
-    upperBound: int
     included*: IntSet
     notExcluded*: IntSet
     inner*: Set
@@ -29,31 +27,37 @@ type ExplicitSet* = ref object of Set
 proc getSetName*(parent: Set, setId: int): string =
     return parent.name & "-" & $setId
 
-proc newOccurrenceSet*(name: string, lowerBound, upperBound: int = -1,
-        inner: Set = nil): OccurrenceSet =
-    return OccurrenceSet(name: name, rng: "UNDEFINED", upperBound: upperBound,
-            lowerBound: lowerBound, inner: inner)
 
-proc newDummySet*(name: string, lowerBound, upperBound: int = -1,
-        dummyVal: int = -1): DummySet =
-    return DummySet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
-            upperBound: upperBound, dummyVal: dummyVal, excludedCount: 0)
+proc initSet(name: string, s: Set, inner: Set = nil) =
+    s.name = name
+    s.inner = inner
+    s.notExcludedCount = -1
+    s.markerLower = -1
+    s.markerUpper = -1
+    s.id = -1
 
-proc newMarkerSet*(name: string, lowerBound, upperBound: int = -1,
-        inner: Set = nil): MarkerSet =
-    return MarkerSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
-            upperBound: upperBound, markerLower: -1, markerUpper: -1,
-            inner: inner, id: -1)
+proc newOSet*(name: string): OccurrenceSet =
+    new result
+    initSet(name, result)
 
-proc newFlagSet*(name: string, lowerBound, upperBound: int = -1,
-        inner: Set = nil): FlagSet =
-    return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
-            upperBound: upperBound, markerLower: -1, inner: inner)
+proc newDSet*(name: string, dummyVal: int): DummySet =
+    new result
+    result.excludedCount = 0
+    result.dummyVal = dummyVal
+    initSet(name, result)
 
-proc newExplicitSet*(name: string, lowerBound, upperBound: int = -1,
-        cardinality: int = -1, inner: Set = nil): ExplicitSet =
-    return ExplicitSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound,
-            upperBound: upperBound, cardinality: cardinality, inner: inner)
+proc newMSet*(name: string, inner: Set = nil): MarkerSet =
+    new result
+    initSet(name, result, inner)
+
+proc newFSet*(name: string, inner: Set = nil): FlagSet =
+    new result
+    initSet(name, result, inner)
+
+proc newESet*(name: string, cardinality: int, inner: Set = nil): ExplicitSet =
+    new result
+    result.cardinality = cardinality
+    initSet(name, result, inner)
 
 proc getCardinality*(s: Set): string =
     if s of OccurrenceSet:
@@ -91,7 +95,7 @@ proc getSetType*(s: Set): string =
         let d = DummySet(s)
         return "<DSet>  dummy " & $d.dummyVal & " "
 
-proc `$`(s: Set): string =
+proc `$`*(s: Set): string =
 
     result = getSetType(s)
     result &= s.name
@@ -100,7 +104,7 @@ proc `$`(s: Set): string =
     if (s.inner != nil):
         result &= " [" & getSetType(s.inner) & "]"
     else:
-        result &= " " &  " {" & $s.included  & "} " & " {" & $s.notExcluded & "}"
+        result &= " " & " {" & $s.included & "} " & " {" & $s.notExcluded & "}"
 
     if s.children.len() > 0:
         result &= "\n"

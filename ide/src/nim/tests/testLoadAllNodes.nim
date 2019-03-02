@@ -1,23 +1,23 @@
-import unittest
-import util/main
-# include util/process
+# import unittest
+# import util/main
+# # include util/process
 
-import times, os, strutils
+# import times, os, strutils
 
-template benchmark(benchmarkName: string, code: untyped) =
-  block:
-    let t0 = epochTime()
-    code
-    let elapsed = epochTime() - t0
-    let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
-    echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
+# template benchmark(benchmarkName: string, code: untyped) =
+#   block:
+#     let t0 = epochTime()
+#     code
+#     let elapsed = epochTime() - t0
+#     let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
+#     echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
 
-suite "Test for occurrence sets":
-    echo "suite setup: run once before the tests"
+# suite "Test for occurrence sets":
+#     echo "suite setup: run once before the tests"
 
-    # initParser(minionPath, eprimePath)
-    # init("../test/testData/sets/dummy")
-    init("/home/tom/EssenceCatalog/problems/csplib-prob053-GracefulGears/conjure-output")
+#     # initParser(minionPath, eprimePath)
+#     # init("../test/testData/sets/dummy")
+#     init("/home/tom/EssenceCatalog/problems/csplib-prob053-GracefulGears/conjure-output")
 
     # test "blah":
         # echo loadAllNodes()

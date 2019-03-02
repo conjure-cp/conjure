@@ -1,7 +1,9 @@
-import unittest, os, tables, strutils
+import unittest, os, tables, strutils, db_sqlite
 import util/types, util/parser
 
 suite "parser":
+
+    var db = open("", "", "", "")
 
     test "aux":
         let path = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime-minion")
@@ -14,9 +16,9 @@ suite "parser":
         let path = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime")
         let varList = @["x", "y", "z", "s"]
 
-        for variable in parseEprime(path).values():
+        for variable in parseEprime(db, path).values():
 
-            echo variable
+            # echo variable
             check(variable.name in varList)
 
             if (variable.name == "s"):
@@ -29,9 +31,9 @@ suite "parser":
         let path = absolutePath("../test/testData/sets/recursive/explicitMarkerFlags/model000001.eprime")
         let varList = @["x", "y", "z", "s"]
 
-        for variable in parseEprime(path).values():
+        for variable in parseEprime(db,path).values():
 
-            echo variable
+            # echo variable
             check(variable.name in varList)
 
             if (variable.name == "s"):
@@ -49,9 +51,9 @@ suite "parser":
         let path = absolutePath("../test/testData/sets/recursive/flagsFlagsOccurrence/model000001.eprime")
         let varList = @["x", "y", "z", "s"]
 
-        for variable in parseEprime(path).values():
+        for variable in parseEprime(db,path).values():
 
-            echo variable
+            # echo variable
             check(variable.name in varList)
 
             if (variable.name == "s"):
@@ -63,12 +65,13 @@ suite "parser":
                 check(s.inner.inner of OccurrenceSet)
 
     test "eprimeMMD":
+        db = open("../test/testData/sets/recursive/markerMarkerDummy/test.db", "", "", "")
         let path = absolutePath("../test/testData/sets/recursive/markerMarkerDummy/model000001.eprime")
         let varList = @["x", "y", "z", "s"]
 
-        for variable in parseEprime(path).values():
+        for variable in parseEprime(db, path).values():
 
-            echo variable
+            # echo variable
             check(variable.name in varList)
 
             if (variable.name == "s"):

@@ -6,13 +6,15 @@ suite "initParser":
     test "validPath":
         let minionPath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime-minion")
         let eprimePath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime")
-        initParser(minionPath, eprimePath)
+        let db = open("../test/testData/sets/recursive/flagsFlagsFlags/test.db", "", "", "") 
+        initParser(db, minionPath, eprimePath)
+
     
 suite "process":
     let minionPath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime-minion")
     let eprimePath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime")
-    initParser(minionPath, eprimePath)
     let db = open("../test/testData/sets/recursive/flagsFlagsFlags/test.db", "", "", "") 
+    initParser(db, minionPath, eprimePath)
 
     test "simple":
         let noExpression = getSimpleDomainsOfNode(db, "15", false)
@@ -37,9 +39,9 @@ suite "process":
 suite "experiment":
     let minionPath = absolutePath("/home/tom/minion-private/build/golomb/model000001-03.eprime-minion")
     let eprimePath = absolutePath("/home/tom/minion-private/build/golomb/model000001.eprime")
-    initParser(minionPath, eprimePath)
+    initParser(db, minionPath, eprimePath)
     let db = open("/home/tom/minion-private/build/golomb/test.db", "", "", "") 
 
     test "golomb":
         let noExpression = getSimpleDomainsOfNode(db, "0", false)
-        echo noExpression
+        # echo noExpression

@@ -38,8 +38,10 @@ routes:
 
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
+        # resp 100
 
     get "/loadCore":
+        # resp %proccessCore()
         resp %loadCore()
 
     get "/loadChildren/@id":

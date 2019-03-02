@@ -31,12 +31,17 @@ export default class Listener {
                     break;
 
                 case 'loadChildren':
+                    console.log(message.data)
+
                     let nodeId = message.data.nodeId;
+                    Globals.s.id2Node[nodeId].decCount = message.data.decendantCount;
                     Globals.s.id2ChildIds[nodeId] = message.data.children;
                     Tree.update(Globals.s.id2Node[nodeId]);
                     break;
 
                 case 'loadCore':
+
+                    // console.log(message.data);
 
                     message.data.forEach((element: any) => {
                         Globals.s.solAncestorIds.push(element.nodeId);
@@ -48,7 +53,6 @@ export default class Listener {
 
                         if (element.isSolution === true){
                             Globals.s.solNodIds.push(element.nodeId);
-                            console.log(element.nodeId);
                         }
 
                         if (!Globals.s.id2Node[element.nodeId]) {
@@ -56,10 +60,13 @@ export default class Listener {
                             Globals.s.addNode(element.nodeId, element.parentId, element.label);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
 
-                            element.children.forEach((kidId: any) => {
+                            element.children.forEach((kidId: number) => {
 
                                 if (!Globals.s.solAncestorIds.includes(kidId)) {
 
+                                    // Globals.s.addNode(kidId, element.nodeId, "ASDASDAS");
+
+                                    // Globals.s.addNode(kidId, element.nodeId, Globals.s.id2Node[kidId].name);
                                     Globals.s.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""));
                                     Globals.loadChildIds(kidId);
                                 }
@@ -88,6 +95,7 @@ export default class Listener {
                         if (!Globals.s.id2Node[element.nodeId]) {
                             Globals.s.addNode(element.nodeId, element.parentId, element.label);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
+                            Globals.loadChildIds(element.nodeId);
                         }
                     });
 

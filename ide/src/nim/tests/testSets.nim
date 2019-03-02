@@ -182,6 +182,9 @@ suite "core":
         let d = getSet("8")
         let s = FlagSet(d)
 
+        # echo s
+        # echo typeof(s)
+
         check(s.getCardinality() == "int(1)")
 
         let child1 = s.children[0]
@@ -354,13 +357,12 @@ suite "occurrence":
 
 suite "dummy":
 
-    # test "D":
-    #     init(pathPrefix & "dummy")
-    #     for d in getPrettyDomainsOfNode(db, "7"):
-    #         if (d of DummySet):
-    #             check(s.getCardinality() == "int(3)")
-    #             check(s.included.toSeq() == @[1, 2, 3])
-    #             check(s.excluded.toSeq().len() == 0)
+    test "D":
+        init(pathPrefix & "dummy")
+        let d = getSet("7")
+        let s = DummySet(d)
+        check(s.getCardinality() == "int(3)")
+        check(s.included.toSeq() == @[1, 2, 3])
 
     test "MD":
         init(pathPrefix & "recursive/markerDummy")
@@ -380,8 +382,8 @@ suite "dummy":
 
         let child1 = s.children[0]
         check(child1 of DummySet)
-        check(child1.getCardinality() == "int(0..2)")
-        check(child1.notExcluded.toSeq() == @[1,2])
+        check(child1.getCardinality() == "int(0..3)")
+        check(child1.notExcluded.toSeq() == @[1,2,3])
 
     test "FD":
         init(pathPrefix & "recursive/flagsDummy")

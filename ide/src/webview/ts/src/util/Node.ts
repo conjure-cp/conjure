@@ -9,6 +9,7 @@ export default class Node {
     public x0: number | null;
     public y0: number | null;
     public depth: number;
+    public decCount: number = 0;
 
     constructor(id: number, name: string, parent: Node) {
         this.id = id;

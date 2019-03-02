@@ -3,7 +3,11 @@ import jester, typetraits, sequtils
 import jsonify
 include process
 
+proc getDecendants(db: DbConn): CountTable[int]
+
 var db: DbConn
+var decTable: CountTable[int]
+
 
 proc getLabel(varName: string, value: string, branch: string): string =
 
@@ -43,15 +47,16 @@ proc init*(dirPath: string) =
 
     setCurrentDir(current)
 
+
     if dbFilePath == "":
-        raise newException(CannotOpenDatabaseException,
-                "No files with .db extension found")
-
-    initParser(minionFilePath, eprimeFilePath)
-
+        raise newException(CannotOpenDatabaseException, "No files with .db extension found")
 
     db = open(dbFilePath, "", "", "")
 
+    initParser(db, minionFilePath, eprimeFilePath)
+
+
+    decTable = getDecendants(db)
 
 proc loadNodes*(amount, start: string): seq[ParentChild] =
 
@@ -62,10 +67,10 @@ proc loadNodes*(amount, start: string): seq[ParentChild] =
     for row1 in db.fastRows(sql(query), start, amount):
         discard parseInt(row1[0], nId)
         var kids: seq[int]
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
-                row1[0]):
-            discard parseInt(row2[0], childId)
-            kids.add(childId)
+        # for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
+        #         row1[0]):
+        #     discard parseInt(row2[0], childId)
+        #     kids.add(childId)
 
         discard parseInt(row1[1], pId)
 
@@ -76,69 +81,109 @@ proc loadChildren*(id: string): ChildResponse =
 
     var nId, childId: int
     discard parseInt(id, nId)
-    var kids: seq[int]
-    for row in db.fastRows(sql"select nodeId from Node where parentId = ?",
-            id):
+    var kids: seq[int] 
+
+    for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
         discard parseInt(row[0], childId)
         kids.add(childId)
-    return ChildResponse(nodeId: nId, children: kids)
+    return ChildResponse(nodeId: nId, children: kids, decendantCount: decTable[nId])
 
 
-proc loadCore*(): seq[ParentChild] =
+
+proc loadCore*(deepest : bool = false): seq[ParentChild] =
     var nId, pId, childId: int
 
-    let query = sql(
-
+    let solutionQuery = sql(
                 """with recursive
         correctPath(n) as (
-        select nodeId from Node where isSolution = 1
+        select nodeId from Node where isSolution = 1  
         union 
         select parentId  from Node, correctPath
             where nodeId=correctPath.n 
                     )
         select nodeId, parentId, branchingVariable, value, isLeftChild, isSolution from Node where nodeId in correctPath;""")
 
+    let deepestQuery = sql(
+                """with recursive
+        correctPath(n) as (
+        select max(nodeId) from Node
+        union 
+        select parentId  from Node, correctPath
+            where nodeId=correctPath.n 
+                    )
+        select nodeId, parentId, branchingVariable, value, isLeftChild, isSolution from Node where nodeId in correctPath;""")
+
+    var query : SqlQuery
+
+    if deepest:
+        query = deepestQuery
+    else:
+        query = solutionQuery
+
+
     for row1 in db.fastRows(query):
         var sol = false
         if (row1[5] == "1"):
             sol = true
 
+        # let decQuery = """
+        # with recursive
+        # decendants(n) as (
+        # select nodeId from Node where parentId = ?
+        # union 
+        # select nodeId  from Node, decendants
+        #     where parentId = decendants.n 
+        #             )
+        # select count(nodeId) from Node where nodeId in decendants;"""
+
+        # var decCount : int
+        # discard db.getValue(sql(decQuery), row1[0]).parseInt(decCount)
+
         discard parseInt(row1[0], nId)
         var kids: seq[int]
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
-                row1[0]):
+        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
             discard parseInt(row2[0], childId)
             kids.add(childId)
 
+
         discard parseInt(row1[1], pId)
 
+        let l = getLabel(row1[2], row1[3], row1[4])
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel( row1[2], row1[3], row1[4]), children: kids, isSolution: sol))
 
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, children: kids, isSolution: sol))
+    
     if result.len() == 0:
-        let query1 = sql(
+        return loadCore(true)
 
-                    """with recursive
-            correctPath(n) as (
-            select max(nodeId) from Node 
-            union 
-            select parentId  from Node, correctPath
-                where nodeId=correctPath.n 
-                        )
-            select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId in correctPath;""")
+proc getDecendants(db: DbConn): CountTable[int] =
 
-        for row1 in db.fastRows(query1):
-            discard parseInt(row1[0], nId)
-            var kids: seq[int]
-            for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
-                    row1[0]):
-                discard parseInt(row2[0], childId)
-                kids.add(childId)
+    # let db = open("/home/tom/minion-private/build/gears/test.db", "", "", "")
+    let query = "select nodeId, parentId from Node where parentId >= 0;"
 
-            discard parseInt(row1[1], pId)
+    var countTable = initCountTable[int]()
+    var id2Parent = initTable[int, int]()
+    var nodeId, parentId : int
 
-            result.add(ParentChild(parentId: pId, nodeId: nId,
-                    label: getLabel(row1[2], row1[3], row1[4]), children: kids))
+    for res in db.fastRows(sql(query)):
+        discard res[0].parseInt(nodeId)
+        discard res[1].parseInt(parentId)
+
+        id2Parent[nodeId] = parentId
+    
+    let leaves = toSeq(id2Parent.keys).filter() do (x: int) -> bool : not countTable.hasKey(x)
+
+    for leaf in leaves:
+        var current = id2Parent[leaf]
+
+        while true:
+            countTable.inc(current)
+            if id2Parent.hasKey(current):
+                current = id2Parent[current]
+            else:
+                break
+
+    return countTable
 
 
 proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
@@ -228,5 +273,5 @@ proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
     temp(db, nodeId, paths)
 
 proc getLongestBranchingVarName*(): JsonNode =
-    return % db.getRow(sql"select max(length(branchingVariable)) from Node")[
-            0]
+    # return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+    return % 15
