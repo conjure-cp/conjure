@@ -1,19 +1,11 @@
-import unittest, json
+import unittest, json, constants
 include util/main
 # include util/process
-
-suite "initParser":
-    test "validPath":
-        let minionPath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime-minion")
-        let eprimePath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime")
-        let db = open("../test/testData/sets/recursive/flagsFlagsFlags/test.db", "", "", "") 
-        initParser(db, minionPath, eprimePath)
-
     
 suite "process":
-    let minionPath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime-minion")
-    let eprimePath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime")
-    let db = open("../test/testData/sets/recursive/flagsFlagsFlags/test.db", "", "", "") 
+    let minionPath = testDataPath & "/sets/recursive/flagsFlagsFlags/model000001.eprime-minion"
+    let eprimePath = testDataPath & "/sets/recursive/flagsFlagsFlags/model000001.eprime"
+    let db = open(testDataPath & "/sets/recursive/flagsFlagsFlags/test.db", "", "", "") 
     initParser(db, minionPath, eprimePath)
 
     test "simple":
@@ -36,12 +28,12 @@ suite "process":
         check(prettyDomains[3].name == "x")
         check(prettyDomains[3].rng == "int(1)")
 
-suite "experiment":
-    let minionPath = absolutePath("/home/tom/minion-private/build/golomb/model000001-03.eprime-minion")
-    let eprimePath = absolutePath("/home/tom/minion-private/build/golomb/model000001.eprime")
-    initParser(db, minionPath, eprimePath)
-    let db = open("/home/tom/minion-private/build/golomb/test.db", "", "", "") 
+# suite "experiment":
+#     let minionPath = "/home/tom/minion-private/build/golomb/model000001-03.eprime-minion"
+#     let eprimePath = "/home/tom/minion-private/build/golomb/model000001.eprime"
+#     initParser(db, minionPath, eprimePath)
+#     let db = open("/home/tom/minion-private/build/golomb/test.db", "", "", "") 
 
-    test "golomb":
-        let noExpression = getSimpleDomainsOfNode(db, "0", false)
-        # echo noExpression
+#     test "golomb":
+#         let noExpression = getSimpleDomainsOfNode(db, "0", false)
+#         # echo noExpression

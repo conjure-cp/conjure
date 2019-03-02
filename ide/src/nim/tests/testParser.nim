@@ -1,4 +1,4 @@
-import unittest, os, tables, strutils, db_sqlite
+import unittest, os, tables, strutils, db_sqlite, constants
 import util/types, util/parser
 
 suite "parser":
@@ -6,14 +6,14 @@ suite "parser":
     var db = open("", "", "", "")
 
     test "aux":
-        let path = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime-minion")
+        let path = testDataPath & "/sets/recursive/flagsFlagsFlags/model000001.eprime-minion"
 
         for expression in parseAux(path).values():
 
             check(not expression.name.contains("aux"))
 
     test "eprimeFFF":
-        let path = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags/model000001.eprime")
+        let path = testDataPath & "/sets/recursive/flagsFlagsFlags/model000001.eprime"
         let varList = @["x", "y", "z", "s"]
 
         for variable in parseEprime(db, path).values():
@@ -28,7 +28,7 @@ suite "parser":
                 check(s.inner.inner of FlagSet)
 
     test "eprimeEMF":
-        let path = absolutePath("../test/testData/sets/recursive/explicitMarkerFlags/model000001.eprime")
+        let path = testDataPath & "/sets/recursive/explicitMarkerFlags/model000001.eprime"
         let varList = @["x", "y", "z", "s"]
 
         for variable in parseEprime(db,path).values():
@@ -48,7 +48,7 @@ suite "parser":
 
 
     test "eprimeFFO":
-        let path = absolutePath("../test/testData/sets/recursive/flagsFlagsOccurrence/model000001.eprime")
+        let path = testDataPath & "/sets/recursive/flagsFlagsOccurrence/model000001.eprime"
         let varList = @["x", "y", "z", "s"]
 
         for variable in parseEprime(db,path).values():
@@ -65,8 +65,8 @@ suite "parser":
                 check(s.inner.inner of OccurrenceSet)
 
     test "eprimeMMD":
-        db = open("../test/testData/sets/recursive/markerMarkerDummy/test.db", "", "", "")
-        let path = absolutePath("../test/testData/sets/recursive/markerMarkerDummy/model000001.eprime")
+        db = open(testDataPath & "/sets/recursive/markerMarkerDummy/test.db", "", "", "")
+        let path = testDataPath & "/sets/recursive/markerMarkerDummy/model000001.eprime"
         let varList = @["x", "y", "z", "s"]
 
         for variable in parseEprime(db, path).values():

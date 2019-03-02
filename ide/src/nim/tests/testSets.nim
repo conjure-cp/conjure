@@ -1,7 +1,7 @@
-import unittest, intsets
+import unittest, intsets, constants
 include util/main
 
-let pathPrefix = "../test/testData/sets/"
+let pathPrefix = testDataPath & "/sets/"
 
 
 proc getSet(nodeId: string): Set =

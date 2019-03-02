@@ -1,10 +1,10 @@
-import unittest, os
+import unittest, os, constants
 import util/types
 import util/jsonify
 include util/main
 
 suite "setToJson":
-    let validPath = absolutePath("../test/testData/sets/recursive/flagsFlagsFlags")
+    let validPath = testDataPath & "/sets/recursive/flagsFlagsFlags"
     echo validPath
     init(validPath)
 

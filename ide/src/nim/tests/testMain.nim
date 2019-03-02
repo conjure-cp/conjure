@@ -1,29 +1,29 @@
-import unittest
+import unittest, constants
 import util/types
 include util/main
 
 suite "init":
     test "initValidPath":
-        let validPath = "../test/testData/sets/dummy"
+        let validPath = testDataPath & "/sets/dummy"
         init(validPath)
 
     test "initNoDBFile":
-        let badPath = "../test/testData/extension/noDBFile"
+        let badPath = testDataPath & "/extension/noDBFile"
         expect(CannotOpenDatabaseException):
             init(badPath)
 
     test "initNoEprimeFile":
-        let badPath = "../test/testData/extension/noEprimeFile"
+        let badPath = testDataPath & "/extension/noEprimeFile"
         expect(IOError):
             init(badPath)
 
     test "initNoMinionFile":
-        let badPath = "../test/testData/extension/noMinionFile"
+        let badPath = testDataPath & "/extension/noMinionFile"
         expect(IOError):
             init(badPath)
 
 suite "loadNodes":
-    let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
+    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
 
     test "fromStart":
@@ -50,7 +50,7 @@ suite "loadNodes":
         check(nodes[2].nodeId == 5)
 
 suite "loadChildren":
-    let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
+    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
 
     test "oneChild":
@@ -59,7 +59,7 @@ suite "loadChildren":
         check(response.children == @[2])
 
 suite "loadCore":
-    let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
+    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
 
     test "1":
@@ -80,7 +80,7 @@ suite "getLabel":
         check(getLabel("y", "4", "1") == "y = 4")
 
 suite "loadSimpleDomains":
-    let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
+    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
     test "changed":
         var response = loadSimpleDomains("0")
@@ -102,7 +102,7 @@ suite "loadSimpleDomains":
 
 
 suite "loadPrettyDomains":
-    let validPath = "../test/testData/sets/recursive/markerMarkerMarker"
+    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
 
     test "prettyDomainUpdateRoot":
@@ -303,7 +303,7 @@ suite "loadPrettyDomains":
         check(loadSetChild("2", "s.s-1") == parseJson(expected))
 
 suite "dontCrash":
-    let validPath = "../test/testData/sets/recursive/markerMarkerFlags"
+    let validPath = testDataPath & "/sets/recursive/markerMarkerFlags"
     init(validPath)
 
     test "bug1":
