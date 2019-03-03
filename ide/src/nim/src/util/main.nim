@@ -31,21 +31,22 @@ proc loadNodes*(amount, start: string): seq[ParentChild] =
         discard parseInt(row1[1], pId)
         
         let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
+        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label:l, children: kids, decendantCount: decTable[nId]))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label:l, prettyLabel:pL, children: kids, decendantCount: decTable[nId]))
 
 
-proc loadChildren*(id: string): ChildResponse =
+# proc loadChildren*(id: string): ChildResponse =
 
-    var nId, childId: int
-    discard parseInt(id, nId)
-    var kids: seq[int] 
+#     var nId, childId: int
+#     discard parseInt(id, nId)
+#     var kids: seq[int] 
 
-    for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
-        discard parseInt(row[0], childId)
-        kids.add(childId)
-    return ChildResponse(nodeId: nId, children: kids, decendantCount: decTable[nId])
+#     for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
+#         discard parseInt(row[0], childId)
+#         kids.add(childId)
+#     return ChildResponse(nodeId: nId, children: kids, decendantCount: decTable[nId])
 
 
 
@@ -95,8 +96,9 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
         discard parseInt(row1[1], pId)
 
         let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
+        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, children: kids, isSolution: sol, decendantCount: decTable[nId]))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, prettyLabel: pL, children: kids, isSolution: sol, decendantCount: decTable[nId]))
     
     if result.len() == 0:
         return loadCore(true)

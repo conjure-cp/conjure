@@ -1,6 +1,6 @@
 import Globals from './Globals';
 import Tree from './Tree';
-import Listview from './Listview';
+import Node from './Node';
 
 declare var d3: any;
 
@@ -12,6 +12,30 @@ export default class Buttons {
             .on("change", () => {
                 Globals.loadDomains();
                 Globals.s.frozen = !Globals.s.frozen;
+            });
+
+        d3.select("#labels")
+            .on("change", () => {
+                let domObjects = $("g.node");
+
+
+                for (var i = 0; i < domObjects.length; i++) {
+                    let id = domObjects[i].id;
+
+                    if ($("#labels").prop("checked") === true) {
+                        $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].prettyLabel);
+                    }
+                    else {
+                        $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].name);
+                    }
+
+                }
+
+                // console.log("should have changed");
+                // Node.collapseNode(Globals.s.id2Node[0]);
+                // Node.expandNode(Globals.s.id2Node[0]);
+                // Node.toggleNode(Globals.s.id2Node[0]);
+                Tree.update(Globals.s.id2Node[Globals.s.rootId]);
             });
 
         d3.select("#check")

@@ -137,7 +137,14 @@ export default class Tree {
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
-            .text((node: Node) => { return node.name; })
+            .text((node: Node) => {
+                if ($("#labels").prop("checked") === true){
+                 return node.prettyLabel; 
+                }
+                else{
+                    return node.name;
+                }
+                })
             .style("fill-opacity", 1e-6);
 
         let nodeUpdate = node.transition()

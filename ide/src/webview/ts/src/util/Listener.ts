@@ -34,9 +34,9 @@ export default class Listener {
                     message.data.forEach((node: any) => {
                         Globals.s.id2Node[node.nodeId].decCount = node.decendantCount;
                         Globals.s.id2Node[node.nodeId].name = node.label;
+                        Globals.s.id2Node[node.nodeId].prettyLabel = node.prettyLabel;
                         Globals.s.id2ChildIds[node.nodeId] = node.children;
                         Tree.update(Globals.s.id2Node[node.nodeId]);
-
                     });
 
                     break;
@@ -62,14 +62,14 @@ export default class Listener {
 
                         if (!Globals.s.id2Node[element.nodeId]) {
 
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.decendantCount);
+                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
 
                             element.children.forEach((kidId: number) => {
 
                                 if (!Globals.s.solAncestorIds.includes(kidId)) {
 
-                                    Globals.s.addNode(kidId, element.nodeId, "", 0);
+                                    Globals.s.addNode(kidId, element.nodeId, "", "", 0);
                                     Globals.loadChildIds(element.nodeId);
                                 }
                             });
@@ -95,7 +95,7 @@ export default class Listener {
 
                     message.data.forEach((element: any) => {
                         if (!Globals.s.id2Node[element.nodeId]) {
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.decendantCount);
+                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
                             // Globals.loadChildIds(element.nodeId);
                         }

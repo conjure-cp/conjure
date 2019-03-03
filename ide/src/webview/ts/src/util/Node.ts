@@ -1,6 +1,7 @@
 export default class Node {
     public id: number;
     public name: string;
+    public prettyLabel: string;
     public parent: Node | null;
     public children: Node[] | null;
     public _children: Node[] | null;
@@ -11,7 +12,7 @@ export default class Node {
     public depth: number;
     public decCount: number = 0;
 
-    constructor(id: number, name: string, parent: Node, decCount: number) {
+    constructor(id: number, name: string, prettyLabel: string, parent: Node, decCount: number) {
         this.id = id;
         this.name = name;
         this.parent = parent;
@@ -23,6 +24,7 @@ export default class Node {
         this.y0 = null;
         this.depth = 0;
         this.decCount = decCount;
+        this.prettyLabel = prettyLabel;
     }
     public static expandNode(node: Node) {
 

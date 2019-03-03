@@ -4,22 +4,23 @@ import util, strutils, intsets, sequtils, algorithm, system, types, parseutils
 proc getPrettyBranchingCondition*(vars: seq[Variable], branchName: string, isLeft: string, val: string): string 
 
 
-proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string ): string =
+proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPretty: bool = false): string =
 
     if branchName == "":
         return ""
 
-    # var pretty = ""
+    if wantPretty:
+        var pretty = ""
 
-    # if ("_" in branchName):
-    #     pretty = getPrettyBranchingCondition(vars, branchName, isLeft, value)
+        if ("_" in branchName):
+            pretty = getPrettyBranchingCondition(vars, branchName, isLeft, value)
 
-    # if  pretty != "":
+        if  pretty != "":
 
-    #     echo branchName, isLeft, value
-    #     echo pretty
+            echo branchName, isLeft, value
+            echo pretty
 
-    #     return pretty
+            return pretty
 
     result &= branchName
 
