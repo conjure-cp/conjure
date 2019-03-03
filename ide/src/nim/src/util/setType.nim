@@ -1,5 +1,5 @@
 
-import variable, util, strutils, intsets
+import variable, util, strutils, intsets, sequtils, algorithm, system
 
 type Set* = ref object of Variable
     notExcludedCount*: int
@@ -113,3 +113,34 @@ proc `$`*(s: Set): string =
             indent &= "       "
         for child in s.children:
             result &= indent & $child & "\n"
+
+proc getPrettyNotExcluded*(s: Set): string =
+
+    result = "int("
+
+    var list = s.notExcluded.toSeq()
+
+    list.sort(cmp)
+
+    var index = 0
+
+    result &= $list[0]
+
+    while (index < list.len() - 1):
+
+        while (list[index + 1] - list[index] == 1):
+            index.inc()
+            if (index == list.len() - 1):
+                break
+        
+        if ($list[index] != result[^1..^1]):
+            result &= ".." & $list[index]
+
+        index.inc()
+
+        if (index <= list.len()-1):
+            result &= ","
+            result &= list[index]
+        
+    
+    result &= ")"
