@@ -200,22 +200,31 @@ export default class Listview {
                     let setNode = this.id2Node[element.name].children;
                     // console.log(element)
 
-                    setNode[1].children[0].name = element.Cardinality
+                    setNode[1].children[0].name = element.Cardinality;
 
                     // if (setNode.children.length > 3){
                     if (element.Included) {
 
-                        let notExcluded = element["Not excluded"];
-                        let incList = element.Included;
+                        setNode[2].children[0].name = element["Not excluded"];
 
-                        for (let i = 0; i < notExcluded.length; i++){
-                            if (incList.includes(notExcluded[i])){
-                                notExcluded[i] = "<b style='color:gold'>" + notExcluded[i] + "</b>";
-                            } 
-                        }
+                        // let inc = element.Included;
 
-                        // setNode[2].children[0].name = element.Included;
-                        setNode[2].children[0].name = notExcluded.join(", ");
+                        // if (!element.Cardinality.includes[".."]){
+                        //     let c = Number(element.Cardinality)
+                        // }
+
+                        setNode[3].children[0].name = element.Included;
+
+                        // let notExcluded = element["Not excluded"];
+                        // let incList = element.Included;
+
+                        // for (let i = 0; i < notExcluded.length; i++){
+                            // if (incList.includes(notExcluded[i])){
+                                // notExcluded[i] = "<b style='color:gold'>" + notExcluded[i] + "</b>";
+                            // } 
+                        // }
+
+                        // setNode[2].children[0].name = notExcluded.join(", ");
                     }
 
                     if (element.Children && !setNode[2].children) {

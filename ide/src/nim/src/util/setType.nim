@@ -114,15 +114,19 @@ proc `$`*(s: Set): string =
         for child in s.children:
             result &= indent & $child & "\n"
 
-proc getPrettyNotExcluded*(s: Set): string =
 
+proc prettifyIntSet(i: IntSet): string =
     result = "int("
 
-    var list = s.notExcluded.toSeq()
+    var list = i.toSeq()
+
+    if list.len() == 0:
+        return "int()"
 
     list.sort(cmp)
 
     var index = 0
+    var prevNum = $list[0]
 
     result &= $list[0]
 
@@ -133,14 +137,24 @@ proc getPrettyNotExcluded*(s: Set): string =
             if (index == list.len() - 1):
                 break
         
-        if ($list[index] != result[^1..^1]):
+        if ($list[index] != prevNum):
             result &= ".." & $list[index]
+            prevNum = $list[index]
 
         index.inc()
 
         if (index <= list.len()-1):
             result &= ","
             result &= list[index]
+            prevNum = $list[index]
         
     
     result &= ")"
+
+
+
+proc getPrettyIncluded*(s: Set): string =
+    return prettifyIntSet(s.included)
+
+proc getPrettyNotExcluded*(s: Set): string =
+    return prettifyIntSet(s.notExcluded)
