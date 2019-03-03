@@ -5,7 +5,7 @@ import Node from './Node';
 export default class Tree {
 
     public static gap = 100;
-    public static duration = 750;
+    public static duration = 500;
     public static viewerWidth = $(document).width();
     public static viewerHeight = $(document).height();
     public static margin = { top: 40, right: 30, bottom: 50, left: 30 };
@@ -59,9 +59,16 @@ export default class Tree {
         if (!Globals.s.frozen) {
             Globals.loadDomains();
         }
+
+        Globals.lv.updatePanelTitle();
     }
 
     private static fillCircle(node: Node) {
+
+        // console.log(node);
+
+        let size = 10;
+
         let s = "#node" + node.id + " circle";
 
         let domElement = d3.select(s);
@@ -72,14 +79,15 @@ export default class Tree {
             childLength = node.children.length;
         }
 
-        if (Globals.s.id2ChildIds[node.id]) {
+        if (Globals.s.solNodIds.includes(node.id)) {
+            domElement.classed("solution", true);
+        }
 
-            // Globals.s.solAncestorIds
+        if (Globals.s.id2ChildIds[node.id]) {
 
             if (childLength < Globals.s.id2ChildIds[node.id].length) {
 
-
-                if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0){
+                if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0) {
                     domElement.classed("hasOthers", true);
                 }
 
@@ -87,17 +95,12 @@ export default class Tree {
                     domElement.classed("hasOthers red", true);
                 }
 
+                size = Math.log(node.decCount + 10) * 3;
             }
+
         }
 
-        if (Globals.s.solNodIds.includes(node.id)) {
-            domElement.classed("solution", true);
-        }
-
-        // console.log(node.decCount + 10);
-
-        domElement.attr("r", Math.log(node.decCount + 10) * 4);
-
+        domElement.attr("r", size);
     }
 
     public static update(source: Node) {
@@ -152,8 +155,8 @@ export default class Tree {
             .duration(Tree.duration)
             .attr("transform", () => { return "translate(" + source.x + "," + source.y + ")"; })
             .remove();
-        nodeExit.select("circle")
-            .attr("r", 1e-6);
+        // nodeExit.select("circle")
+        //     .attr("r", 1e-6);
         nodeExit.select("text")
             .style("fill-opacity", 1e-6);
 

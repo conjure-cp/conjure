@@ -14,7 +14,6 @@ export default class Listener {
         window.addEventListener('message', event => {
             const message = event.data;
 
-
             switch (message.command) {
 
                 case 'loadSet':
@@ -31,7 +30,7 @@ export default class Listener {
                     break;
 
                 case 'loadChildren':
-                    console.log(message.data)
+                    // console.log(message.data)
 
                     let nodeId = message.data.nodeId;
                     Globals.s.id2Node[nodeId].decCount = message.data.decendantCount;
@@ -51,23 +50,20 @@ export default class Listener {
 
                         let element = message.data[i];
 
-                        if (element.isSolution === true){
+                        if (element.isSolution === true) {
                             Globals.s.solNodIds.push(element.nodeId);
                         }
 
                         if (!Globals.s.id2Node[element.nodeId]) {
 
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label);
+                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.decendantCount);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
 
                             element.children.forEach((kidId: number) => {
 
                                 if (!Globals.s.solAncestorIds.includes(kidId)) {
 
-                                    // Globals.s.addNode(kidId, element.nodeId, "ASDASDAS");
-
-                                    // Globals.s.addNode(kidId, element.nodeId, Globals.s.id2Node[kidId].name);
-                                    Globals.s.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""));
+                                    Globals.s.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""), 0);
                                     Globals.loadChildIds(kidId);
                                 }
                             });
@@ -93,9 +89,9 @@ export default class Listener {
 
                     message.data.forEach((element: any) => {
                         if (!Globals.s.id2Node[element.nodeId]) {
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label);
+                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.decendantCount);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
-                            Globals.loadChildIds(element.nodeId);
+                            // Globals.loadChildIds(element.nodeId);
                         }
                     });
 
@@ -109,7 +105,6 @@ export default class Listener {
 
                 case 'simpleDomains':
 
-                    Globals.lv.updatePanelTitle();
                     message.data.vars.forEach((variable: any) => {
                         $("#" + $.escapeSelector(variable.name)).removeClass("changed");
 
@@ -124,7 +119,6 @@ export default class Listener {
 
                 case 'prettyDomains':
 
-                    Globals.lv.updatePanelTitle();
                     Globals.lv.setChangedExpressions(message.data.changedExpressions);
                     Globals.lv.updateNodes(message.data.vars);
                     Globals.lv.setChanged(message.data.changed);

@@ -47,8 +47,8 @@ export default class Keyboard {
         Mousetrap.bind('e', () => {
             let node = Globals.s.id2Node[Globals.s.selectedId];
             Node.expandNode(node);
-            Tree.update(node);
             Tree.selectNode(node.id);
+            Tree.update(node);
         }, 'keydown');
 
         Mousetrap.bind('m', () => {

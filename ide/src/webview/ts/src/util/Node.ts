@@ -11,7 +11,7 @@ export default class Node {
     public depth: number;
     public decCount: number = 0;
 
-    constructor(id: number, name: string, parent: Node) {
+    constructor(id: number, name: string, parent: Node, decCount: number) {
         this.id = id;
         this.name = name;
         this.parent = parent;
@@ -22,6 +22,7 @@ export default class Node {
         this.x0 = null;
         this.y0 = null;
         this.depth = 0;
+        this.decCount = decCount;
     }
     public static expandNode(node: Node) {
 

@@ -12,7 +12,6 @@ proc init*(dirPath: string) =
     db = findFiles(dirPath)
     decTable = getDecendants(db)
 
-
 proc getLabel*(varName: string, value: string, branch: string): string =
 
     if varName == "":
@@ -32,19 +31,18 @@ proc loadNodes*(amount, start: string): seq[ParentChild] =
 
     var nId, pId, childId: int
 
-    let query = "select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?"
+    let query = "select nodeId, parentId, branchingVariable, value, isLeftChild from Node where parentId = ? order by nodeId asc"
 
-    for row1 in db.fastRows(sql(query), start, amount):
+    for row1 in db.fastRows(sql(query), start):
         discard parseInt(row1[0], nId)
         var kids: seq[int]
-        # for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?",
-        #         row1[0]):
-        #     discard parseInt(row2[0], childId)
-        #     kids.add(childId)
+        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+            discard parseInt(row2[0], childId)
+            kids.add(childId)
 
         discard parseInt(row1[1], pId)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel( row1[2], row1[3], row1[4]), children: kids))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids, decendantCount: decTable[nId]))
 
 
 proc loadChildren*(id: string): ChildResponse =
@@ -90,38 +88,24 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
     else:
         query = solutionQuery
 
-
     for row1 in db.fastRows(query):
         var sol = false
+
         if (row1[5] == "1"):
             sol = true
 
-        # let decQuery = """
-        # with recursive
-        # decendants(n) as (
-        # select nodeId from Node where parentId = ?
-        # union 
-        # select nodeId  from Node, decendants
-        #     where parentId = decendants.n 
-        #             )
-        # select count(nodeId) from Node where nodeId in decendants;"""
-
-        # var decCount : int
-        # discard db.getValue(sql(decQuery), row1[0]).parseInt(decCount)
-
         discard parseInt(row1[0], nId)
         var kids: seq[int]
+
         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
             discard parseInt(row2[0], childId)
             kids.add(childId)
-
 
         discard parseInt(row1[1], pId)
 
         let l = getLabel(row1[2], row1[3], row1[4])
 
-
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, children: kids, isSolution: sol))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, children: kids, isSolution: sol, decendantCount: decTable[nId]))
     
     if result.len() == 0:
         return loadCore(true)
@@ -214,5 +198,5 @@ proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
     temp(db, nodeId, paths)
 
 proc getLongestBranchingVarName*(): JsonNode =
-    # return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
-    return % 15
+    return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+    # return % 15

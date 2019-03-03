@@ -1,7 +1,15 @@
-import json, re, jester
+import json, re, jester, times, strutils
 import util/main
 import util/jsonify
 import util/types
+
+template benchmark(benchmarkName: string, code: untyped) =
+  block:
+    let t0 = epochTime()
+    code
+    let elapsed = epochTime() - t0
+    let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
+    echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
 
 routes:
     get re"/init/(.*)":
@@ -19,7 +27,12 @@ routes:
             # resp HttpCode(501)
             echo("IOERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
+        # benchmark "getPretty":
+
         let prettyAtRoot = getSkeleton()
+
+        # benchmark "getSimple":
+
         let simpleAtRoot = %loadSimpleDomains("0")
 
         resp %*{"pretty" : prettyAtRoot, "simple": simpleAtRoot}

@@ -43,11 +43,11 @@ export default class State {
         this.selectedId = correctAncestor.id;
     }
 
-    public addNode(nodeId: number, parentId: number, label: string) {
+    public addNode(nodeId: number, parentId: number, label: string, decCount: number) {
 
 
         this.totalLoaded++;
-        let newNode = new Node(nodeId, label, this.id2Node[parentId]);
+        let newNode = new Node(nodeId, label, this.id2Node[parentId], decCount);
 
         if (parentId === -1) {
             this.id2Node[nodeId] = newNode;
