@@ -58,7 +58,8 @@ routes:
         resp %loadCore()
 
     get "/loadChildren/@id":
-        resp %loadChildren(@"id")
+        resp %loadNodes("1", @"id")
+        # resp %loadChildren(@"id")
 
     get "/loadSet/@nodeId/@path":
         resp loadSetChild(@"nodeId",@"path")

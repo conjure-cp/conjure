@@ -31,12 +31,18 @@ export default class Listener {
 
                 case 'loadChildren':
                     // console.log(message.data)
+                    message.data.forEach((node: any) => {
+                        Globals.s.id2Node[node.nodeId].decCount = node.decendantCount;
+                        Globals.s.id2Node[node.nodeId].name = node.label;
+                        Globals.s.id2ChildIds[node.nodeId] = node.children;
+                        Tree.update(Globals.s.id2Node[node.nodeId]);
 
-                    let nodeId = message.data.nodeId;
-                    Globals.s.id2Node[nodeId].decCount = message.data.decendantCount;
-                    Globals.s.id2ChildIds[nodeId] = message.data.children;
-                    Tree.update(Globals.s.id2Node[nodeId]);
+                    });
+
                     break;
+
+
+
 
                 case 'loadCore':
 
@@ -63,8 +69,8 @@ export default class Listener {
 
                                 if (!Globals.s.solAncestorIds.includes(kidId)) {
 
-                                    Globals.s.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""), 0);
-                                    Globals.loadChildIds(kidId);
+                                    Globals.s.addNode(kidId, element.nodeId, "", 0);
+                                    Globals.loadChildIds(element.nodeId);
                                 }
                             });
                         }

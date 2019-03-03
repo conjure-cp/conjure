@@ -1,9 +1,12 @@
 import types, util, parser, parseSets
-import re, strutils, os, tables, json, db_sqlite, parseutils
+import re, strutils, os, tables, json, db_sqlite, parseutils, sequtils
 
 var prettyLookup* = initTable[string, Table[string, Variable]]()
 var eprimeLookup: Table[string, Variable]
 var auxLookup: Table[string, Expression]
+
+proc getInitialVariables*() : seq[Variable] =
+    return toSeq(eprimeLookup.values())
 
 proc initParser*(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup.clear()

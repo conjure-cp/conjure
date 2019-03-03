@@ -3,6 +3,7 @@ import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strut
 import jsonify
 import init
 import process
+import branchingCondition
 # include process
 
 var db: DbConn
@@ -12,26 +13,13 @@ proc init*(dirPath: string) =
     db = findFiles(dirPath)
     decTable = getDecendants(db)
 
-proc getLabel*(varName: string, value: string, branch: string): string =
-
-    if varName == "":
-        return ""
-
-    result &= varName
-
-    if (branch == "1"):
-        result &= " = "
-    else:
-        result &= " != "
-
-    result &= value
 
 
 proc loadNodes*(amount, start: string): seq[ParentChild] =
 
     var nId, pId, childId: int
 
-    let query = "select nodeId, parentId, branchingVariable, value, isLeftChild from Node where parentId = ? order by nodeId asc"
+    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value from Node where parentId = ? order by nodeId asc"
 
     for row1 in db.fastRows(sql(query), start):
         discard parseInt(row1[0], nId)
@@ -41,8 +29,11 @@ proc loadNodes*(amount, start: string): seq[ParentChild] =
             kids.add(childId)
 
         discard parseInt(row1[1], pId)
+        
+        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: getLabel(row1[2], row1[3], row1[4]), children: kids, decendantCount: decTable[nId]))
+
+        result.add(ParentChild(parentId: pId, nodeId: nId, label:l, children: kids, decendantCount: decTable[nId]))
 
 
 proc loadChildren*(id: string): ChildResponse =
@@ -69,7 +60,7 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
         select parentId  from Node, correctPath
             where nodeId=correctPath.n 
                     )
-        select nodeId, parentId, branchingVariable, value, isLeftChild, isSolution from Node where nodeId in correctPath;""")
+        select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
 
     let deepestQuery = sql(
                 """with recursive
@@ -79,7 +70,7 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
         select parentId  from Node, correctPath
             where nodeId=correctPath.n 
                     )
-        select nodeId, parentId, branchingVariable, value, isLeftChild, isSolution from Node where nodeId in correctPath;""")
+        select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
 
     var query : SqlQuery
 
@@ -103,7 +94,7 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
 
         discard parseInt(row1[1], pId)
 
-        let l = getLabel(row1[2], row1[3], row1[4])
+        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
 
         result.add(ParentChild(parentId: pId, nodeId: nId, label: l, children: kids, isSolution: sol, decendantCount: decTable[nId]))
     
