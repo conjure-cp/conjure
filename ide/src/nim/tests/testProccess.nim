@@ -1,5 +1,6 @@
-import unittest, json, constants
+import unittest, json, constants 
 include util/main
+include util/types
 # include util/process
     
 suite "process":
@@ -14,6 +15,7 @@ suite "process":
         check(noExpression.len() < withExpression.len())
         # echo noExpression
 
+        # check(noExpression.len() < withExpression.len())
 
     test "pretty":
         let prettyDomains = getPrettyDomainsOfNode(db, "15")
@@ -27,6 +29,18 @@ suite "process":
 
         check(prettyDomains[3].name == "x")
         check(prettyDomains[3].rng == "int(1)")
+
+suite "sanity":
+    let minionPath = testDataPath & "golomb/model000001-05.eprime-minion"
+    let eprimePath = testDataPath & "golomb/model000001.eprime"
+    let db = open(testDataPath & "golomb/test.db", "", "", "") 
+    initParser(db, minionPath, eprimePath)
+    test "simpleCheckForAux":
+        let withExpression = getSimpleDomainsOfNode(db, "0", true)
+        # for exp in withExpression:
+        #     if exp of Expression:
+        #         echo exp
+        #         check(not exp.name.contains("aux"))
 
 # suite "experiment":
 #     let minionPath = "/home/tom/minion-private/build/golomb/model000001-03.eprime-minion"

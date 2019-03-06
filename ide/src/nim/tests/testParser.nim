@@ -1,4 +1,4 @@
-import unittest, os, tables, strutils, db_sqlite, constants
+import unittest, os, tables, strutils, db_sqlite, constants, sequtils
 import util/types, util/parser
 
 suite "parser":
@@ -6,10 +6,13 @@ suite "parser":
     var db = open("", "", "", "")
 
     test "aux":
-        let path = testDataPath & "/sets/recursive/flagsFlagsFlags/model000001.eprime-minion"
+        let path = testDataPath & "golomb/model000001-05.eprime-minion"
+        let auxVars = toSeq(parseAux(path).values())
+        
+        check((auxVars).len() == 495)
 
+        # echo auxVars.len()
         for expression in parseAux(path).values():
-
             check(not expression.name.contains("aux"))
 
     test "eprimeFFF":

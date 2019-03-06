@@ -1,4 +1,4 @@
-import json, re, jester, times, strutils
+import json, re, jester, times, strutils, parseutils
 import util/main
 import util/jsonify
 import util/types
@@ -27,27 +27,21 @@ routes:
             # resp HttpCode(501)
             echo("IOERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-        # benchmark "getPretty":
-
         let prettyAtRoot = getSkeleton()
-
-        # benchmark "getSimple":
 
         let simpleAtRoot = %loadSimpleDomains("0")
 
         resp %*{"pretty" : prettyAtRoot, "simple": simpleAtRoot}
-            
-        # resp %*{"pretty": getSkeleton() "simple": loadSimpleDomains("0")}
-        # resp "OK"
 
-    get "/simpleDomains/@amount/@start/@nodeId":
-        resp %loadSimpleDomains(@"nodeId")
+    get "/simpleDomains/@nodeId/@wantExpressions":
+
+        resp %loadSimpleDomains(@"nodeId", parseBool(@"wantExpressions"))
         
-    get "/prettyDomains/@nodeId/@paths?":
-        resp loadPrettyDomains(@"nodeId", @"paths")
+    get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
+        resp loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))
 
-    get "/loadNodes/@amount/@start":
-        resp %loadNodes(@"amount", @"start")
+    get "/loadNodes/@start":
+        resp %loadNodes(@"start")
 
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
@@ -58,8 +52,7 @@ routes:
         resp %loadCore()
 
     get "/loadChildren/@id":
-        resp %loadNodes("1", @"id")
-        # resp %loadChildren(@"id")
+        resp %loadNodes(@"id")
 
     get "/loadSet/@nodeId/@path":
         resp loadSetChild(@"nodeId",@"path")

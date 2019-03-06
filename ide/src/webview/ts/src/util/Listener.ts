@@ -62,14 +62,14 @@ export default class Listener {
 
                         if (!Globals.s.id2Node[element.nodeId]) {
 
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount);
+                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
 
                             element.children.forEach((kidId: number) => {
 
                                 if (!Globals.s.solAncestorIds.includes(kidId)) {
 
-                                    Globals.s.addNode(kidId, element.nodeId, "", "", 0);
+                                    Globals.s.addNode(kidId, element.nodeId, "", "", 0, true);
                                     Globals.loadChildIds(element.nodeId);
                                 }
                             });
@@ -95,7 +95,7 @@ export default class Listener {
 
                     message.data.forEach((element: any) => {
                         if (!Globals.s.id2Node[element.nodeId]) {
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount);
+                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
                             Globals.s.id2ChildIds[element.nodeId] = element.children;
                             // Globals.loadChildIds(element.nodeId);
                         }
@@ -112,6 +112,9 @@ export default class Listener {
                 case 'simpleDomains':
 
                     message.data.vars.forEach((variable: any) => {
+
+                        // console.log(message.data.changedNames);
+
                         $("#" + $.escapeSelector(variable.name)).removeClass("changed");
 
                         let li = $("#" + $.escapeSelector(variable.name) + " > :last-child");

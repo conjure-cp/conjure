@@ -1,8 +1,8 @@
 import variable
 
 type Expression* = ref object of Variable
-proc newExpression*(name, rng: string = "UNDEFINED"): Expression =
-    return Expression(name: name, rng: rng)
+proc newExpression*(name: string): Expression =
+    return Expression(name: name)
 
-proc `$`*(v: Expression): string =
-    return "<Expr> " & v.name & " " & v.rng
+proc `$`*(e: Expression): string =
+    return "<Expr> " & e.name & " " & e.rng

@@ -17,8 +17,8 @@ proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPrett
 
         if  pretty != "":
 
-            echo branchName, isLeft, value
-            echo pretty
+            # echo branchName, isLeft, value
+            # echo pretty
 
             return pretty
 

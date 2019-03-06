@@ -1,8 +1,7 @@
-import unittest, json, constants
+import unittest, json, constants, strutils
 import util/types
 import util/types
 import util/main
-# include util/main
 
 suite "init":
     test "initValidPath":
@@ -28,38 +27,6 @@ suite "loadNodes":
     let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
 
-    test "fromStart":
-        let nodes = loadNodes("3", "-1")
-        check(nodes.len() == 3)
-        check(nodes[0].nodeId == 0)
-        check(nodes[0].parentId == -1)
-        check(nodes[0].label == "")
-
-        check(nodes[1].nodeId == 1)
-        check(nodes[1].parentId == 0)
-        check(nodes[1].label == "x = 1")
-
-        check(nodes[2].nodeId == 2)
-        check(nodes[2].parentId == 1)
-        check(nodes[2].label == "y = 1")
-
-
-    test "fromTwo":
-        let nodes = loadNodes("3", "2")
-        check(nodes.len() == 3)
-        check(nodes[0].nodeId == 3)
-        check(nodes[1].nodeId == 4)
-        check(nodes[2].nodeId == 5)
-
-suite "loadChildren":
-    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
-    init(validPath)
-
-    test "oneChild":
-        let response = loadChildren("1")
-        check(response.nodeId == 1)
-        check(response.children == @[2])
-
 suite "loadCore":
     let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
     init(validPath)
@@ -76,10 +43,6 @@ suite "loadCore":
         check(core[2].label == "y = 1")
         check(core[3].label == "z = 1")
 
-suite "getLabel":
-    test "simple":
-        check(getLabel("x", "0", "0") == "x != 0")
-        check(getLabel("y", "4", "1") == "y = 4")
 
 suite "loadSimpleDomains":
     let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
@@ -102,8 +65,21 @@ suite "loadSimpleDomains":
                 "s_ExplicitVarSizeWithMarkerR5R5_Marker"])
 
     test "expressions":
-        check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1",
-                false).vars.len())
+        check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1", false).vars.len())
+
+suite "sanity":
+    let validPath = testDataPath & "golomb"
+    init(validPath)
+
+    # echo auxLookup
+
+    test "checkForAux":
+        let doms = loadSimpleDomains("1", true).vars
+        for d in doms:
+            # echo d
+            if (d of Expression):
+                echo Expression(d)
+            #     check(not d.name.contains("aux"))
 
 
 suite "loadPrettyDomains":

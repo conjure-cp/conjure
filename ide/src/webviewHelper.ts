@@ -12,47 +12,12 @@ export default class WebviewHelper {
 
     private static serverURL = "http://0.0.0.0:5000";
 
-    // private static async getFile() {
-
-    //     let file: any;
-
-    //     while (!file) {
-    //         file = await vscode.window.showOpenDialog({});
-
-    //         if (file) {
-    //             let path = file[0].path;
-    //             console.log(path);
-
-    //             if (path.split(".", 2)[1] == "json"){
-    //                 return (Parser.parseJson(fs.readFileSync(file[0].path, 'utf8')));
-    //             }
-    //             else if (path.split(".", 2)[1] == "sqlite"){
-    //                 return (Parser.parseDB(fs.readFileSync(file[0].path, 'utf8')));
-    //             }
-    //             else{
-    //                 vscode.window.showErrorMessage("Unexpected file format! only json and sqlite are supported!");
-    //             }
-    //         }
-    //         else {
-    //             vscode.window.showErrorMessage("There was an error please try again");
-    //         }
-    //     }
-    // }
-
-
-
-    // public static  async activate(context: vscode.ExtensionContext) {
-
     public static handleServerError(error: any) {
-
-        // console.log(ECONNREFUSED)
 
         if (error.code === "ECONNREFUSED") {
             vscode.window.showErrorMessage('Could not connect to server');
         }
 
-        // console.log("ERROR");
-        // console.log(Object.keys(error));
         console.log(error.code);
         console.log(error.errno);
         console.log(error.syscall);
@@ -65,23 +30,6 @@ export default class WebviewHelper {
     public static activate(context: vscode.ExtensionContext) {
 
         WebviewHelper.context = context;
-
-
-        // let testDir = await this.getFolder();
-
-        // let testDir = "brokenDir";
-        // let testDir = "/home/tom/conjure/ide/src/test/testData/sets/flags";
-        // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
-        // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
-        // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test"
-        // let testDir = "/home/tom/minion-private/build/conjure-output";
-        // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/CarSequencing~random33";
-
-        // if (testDir) {
-
-            // this.launch(testDir);
-
-        // }
     }
 
 
@@ -124,7 +72,7 @@ export default class WebviewHelper {
                         break;
                     case 'loadNodes':
                         // console.log(message.id);
-                        request(this.serverURL + '/loadNodes/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/loadNodes/' +  message.start, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -135,7 +83,7 @@ export default class WebviewHelper {
                         break;
                     case 'simpleDomains':
                         // console.log(message.id);
-                        request(this.serverURL + '/simpleDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/simpleDomains/' + message.nodeId + '/' + message.wantExpressions, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -146,7 +94,7 @@ export default class WebviewHelper {
                         break;
                     case 'prettyDomains':
                         // console.log(message.id);
-                        request(this.serverURL + '/prettyDomains/' + message.nodeId + '/' + message.paths, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/prettyDomains/' + message.nodeId + '/' + message.wantExpressions + '/' + message.paths, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }

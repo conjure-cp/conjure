@@ -11,8 +11,9 @@ export default class Node {
     public y0: number | null;
     public depth: number;
     public decCount: number = 0;
+    public isLeftChild: boolean;
 
-    constructor(id: number, name: string, prettyLabel: string, parent: Node, decCount: number) {
+    constructor(id: number, name: string, prettyLabel: string, parent: Node, decCount: number, isLeftchild: boolean) {
         this.id = id;
         this.name = name;
         this.parent = parent;
@@ -25,6 +26,7 @@ export default class Node {
         this.depth = 0;
         this.decCount = decCount;
         this.prettyLabel = prettyLabel;
+        this.isLeftChild = isLeftchild;
     }
     public static expandNode(node: Node) {
 

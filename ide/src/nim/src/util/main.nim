@@ -15,7 +15,7 @@ proc init*(dirPath: string) =
 
 
 
-proc loadNodes*(amount, start: string): seq[ParentChild] =
+proc loadNodes*(start: string): seq[ParentChild] =
 
     var nId, pId, childId: int
 
@@ -34,7 +34,7 @@ proc loadNodes*(amount, start: string): seq[ParentChild] =
         let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label:l, prettyLabel:pL, children: kids, decendantCount: decTable[nId]))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label:l, prettyLabel:pL, isLeftChild: parsebool(row1[3]), children: kids, decendantCount: decTable[nId]))
 
 
 # proc loadChildren*(id: string): ChildResponse =
@@ -98,29 +98,11 @@ proc loadCore*(deepest : bool = false): seq[ParentChild] =
         let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
         let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, prettyLabel: pL, children: kids, isSolution: sol, decendantCount: decTable[nId]))
+        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, prettyLabel: pL, children: kids, isLeftChild: parsebool(row1[3]), isSolution: sol, decendantCount: decTable[nId]))
     
     if result.len() == 0:
         return loadCore(true)
 
-
-proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
-
-    var list: seq[string]
-    var id: int
-    var domainsAtPrev: seq[Variable]
-    discard parseInt(nodeId, id)
-
-    let domainsAtNode = getSimpleDomainsOfNode(db, nodeId, wantExpressions)
-
-    if (id != rootNodeId):
-        domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
-
-        for i in 0..<domainsAtNode.len():
-            if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                list.add(domainsAtNode[i].name)
-
-    return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
 
@@ -187,8 +169,31 @@ proc getSkeleton*(): JsonNode =
     # return domainsToJson(domainsAtNode)
 
 
-proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
+proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): JsonNode =
     temp(db, nodeId, paths)
+
+proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = true): SimpleDomainResponse =
+
+    var list: seq[string]
+    var id: int
+    var domainsAtPrev: seq[Variable]
+    discard parseInt(nodeId, id)
+
+    let domainsAtNode = getSimpleDomainsOfNode(db, nodeId, wantExpressions)
+
+    # for d in domainsAtNode:
+        # if d of Expression:
+            # echo d.name
+
+    if (id != rootNodeId):
+        domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
+
+        for i in 0..<domainsAtNode.len():
+            if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
+                list.add(domainsAtNode[i].name)
+
+    return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
+
 
 proc getLongestBranchingVarName*(): JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]

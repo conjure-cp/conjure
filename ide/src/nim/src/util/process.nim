@@ -13,26 +13,38 @@ proc initParser*(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
     auxLookup.clear()
     eprimeLookup = parseEprime(db, eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
+    # echo auxLookup.len()
 
 proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): seq[Variable] =
 
     var query = "select name, lower, upper from domain where"
+
     if (not wantExpressions):
         query &= " name not like 'aux%' and "
+
     query &= " nodeId = ? order by name limit ?"
 
-    # echo query
+    # echo auxLookup
+    # echo wantExpressions
 
     for domain in db.fastRows(sql(query), nodeId, "-1"):
 
         if (auxLookup.hasKey(domain[0])):
-            let d = auxLookup[domain[0]]
-            d.rng = getPrettyRange(domain[1], domain[2])
-            result.add(d)
+            var e = newExpression(auxLookup[domain[0]].name)
+            e.rng = getPrettyRange(domain[1], domain[2])
+            result.add(e)
         else:
+
             let v = newVariable(name = domain[0])
+            # echo v
             v.rng = getPrettyRange(domain[1], domain[2])
             result.add(v)
+
+    # echo result
+    # for res in result:
+    #     echo res
+    #     if res of Expression:
+    #         echo Expression(res)
 
 proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string): (seq[Variable]) =
     # echo eprimeLookup

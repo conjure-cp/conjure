@@ -14,6 +14,12 @@ export default class Buttons {
                 Globals.s.frozen = !Globals.s.frozen;
             });
 
+        d3.select("#expressions")
+            .on("change", () => {
+                // Globals.loadDomains();
+                // Globals.s.frozen = !Globals.s.frozen;
+            });
+
         d3.select("#labels")
             .on("change", () => {
                 let domObjects = $("g.node");
@@ -31,10 +37,6 @@ export default class Buttons {
 
                 }
 
-                // console.log("should have changed");
-                // Node.collapseNode(Globals.s.id2Node[0]);
-                // Node.expandNode(Globals.s.id2Node[0]);
-                // Node.toggleNode(Globals.s.id2Node[0]);
                 Tree.update(Globals.s.id2Node[Globals.s.rootId]);
             });
 

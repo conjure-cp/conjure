@@ -1,4 +1,5 @@
 import Node from './Node';
+import { id2Node } from './globals';
 
 export default class State {
     public totalLoaded = 0;
@@ -43,11 +44,12 @@ export default class State {
         this.selectedId = correctAncestor.id;
     }
 
-    public addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number) {
+    public addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number, isLeftChild: boolean) {
 
+        // console.log(parentId)
 
         this.totalLoaded++;
-        let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount);
+        let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount, isLeftChild);
 
         if (parentId === -1) {
             this.id2Node[nodeId] = newNode;
@@ -58,8 +60,18 @@ export default class State {
             this.id2Node[parentId].children = [];
         }
 
+        // if (isLeftChild){
+        //     this.id2Node[parentId].children.unshift(newNode);
+        // }
+        // else{
+        //     this.id2Node[parentId].children.push(newNode);
+        // }
         this.id2Node[parentId].children.push(newNode);
+
         this.id2Node[nodeId] = newNode;
+        // console.log("adding");
+        // console.log(nodeId);
+        // console.log(this.id2Node[1]);
     }
 
 }

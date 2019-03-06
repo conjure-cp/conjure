@@ -127,9 +127,8 @@ export default class Globals {
     public static sendSimpleRequest() {
         Globals.vscode.postMessage({
             command: "simpleDomains",
-            amount: Number($("#domCount").val()),
-            start: Globals.s.currentDomainId,
             nodeId: Globals.s.selectedId,
+            wantExpressions: $("#expressions").prop("checked"),
         });
     }
 
@@ -137,6 +136,7 @@ export default class Globals {
         Globals.vscode.postMessage({
             command: "prettyDomains",
             nodeId: Globals.s.selectedId,
+            wantExpressions: "0",
             paths: Globals.s.pathList.join(":")
         });
     }

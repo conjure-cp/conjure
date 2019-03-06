@@ -33,6 +33,7 @@ type ParentChild* = ref object of RootObj
     prettyLabel*: string
     children*: seq[int]
     isSolution*: bool
+    isLeftChild*: bool
     decendantCount*: int
 
 # type ChildResponse* = ref object of RootObj

@@ -25,13 +25,7 @@ proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
 
         if key[1].hasKey("DomainSet"):
             varLookup[name] = parseSetEprime(db, key[1]["DomainSet"], name)
-    # except:
-    # echo varLookup
-        # return varLookup
-        # raise
-        # raise newException(EprimeParseException, "Failed to parse eprime")
 
-    # echo varLookup
     return varLookup
 
 proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
@@ -80,7 +74,12 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
     var lookup = initTable[string, Expression]()
     let auxDef = re"aux\d* #(.*)"
     let minionFile = readFile(minionFilePath)
+
+    # echo minionFile[0..100]
+
     let find = minionFile.findAll(auxDef)
+
+    echo find.len()
 
     for a in find:
         let splitted = a.split("#")
@@ -90,7 +89,6 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
 
         let nestedAux = re"aux\d*"
 
-        # while (rhs.findAll(nestedAux).len() > 0):
         for nested in rhs.findAll(nestedAux):
             if (lookup.hasKey(nested)):
                 rhs = rhs.replace(nested, lookup[nested].name)
@@ -100,8 +98,7 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
     # for e in lookup.values():
     #     echo e.name
 
-    return lookup
+    # echo lookup.len()
 
-    # except:
-        # raise newException(MinionParseException, "Failed to parse eprime")
+    return lookup
 
