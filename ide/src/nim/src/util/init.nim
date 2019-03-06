@@ -66,6 +66,8 @@ proc getDecendants*(db: DbConn): CountTable[int] =
 
 
 proc addChild(parent, child : JsonNode, isLeftChild: bool) =
+    if not parent.hasKey("children"):
+        parent["children"] = %[]
 
     if isLeftChild:
         parent["children"] = %(concat(@[child], parent["children"].getElems()))
@@ -132,8 +134,8 @@ proc processQuery(db: DbConn, query: SqlQuery, map: JsonNode, decTable: CountTab
 
         # echo map
 
-        let obj = %*{"id": nId, "label": l, "prettyLabel": pL, "children": %[], "childCount": childCount, "isSolution": row1[5].parseBool(), "decCount" : decTable[nId] - 1}
-
+        let obj = %*{"id": nId, "name": $nId, "label": l, "prettyLabel": pL, "childCount": childCount, "isSolution": row1[5].parseBool(), "decCount" : decTable[nId] - 1}
+        # let obj = %*{"name": $nId, "decCount": decTable[nId]}
         if pId == -1:
             map[$nId] = obj
         else:
@@ -159,9 +161,33 @@ proc getCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
         failedQuery = solutionFailedQuery
         coreQuery = solutionQuery
 
+
     solAncestorIds = processQuery(db, coreQuery, map, decTable)
     discard processQuery(db, failedQuery, map, decTable)
+
+
+    # return %*{"solAncestorIds": %solAncestorIds, "tree" : parseJson(broken)}
 
     return %*{"solAncestorIds": %solAncestorIds, "tree" : map["0"]}
 
 
+
+    # let s = """
+    # {
+    #   "id": 92,
+    #   "label": "colour_Function1D_00020 = 5",
+    #   "prettyLabel": "colour_Function1D_00020 = 5",
+    #   "childCount": 1,
+    #   "isSolution": false,
+    #   "decCount": 1,
+    #   "children": [
+    #     {
+    #       "id": 93,
+    #       "label": "colour_Function1D_00020 != 18",
+    #       "prettyLabel": "colour_Function1D_00020 != 18",
+    #       "childCount": 0,
+    #       "isSolution": false,
+    #       "decCount": 0
+    #     }
+    #   ]
+    # }"""

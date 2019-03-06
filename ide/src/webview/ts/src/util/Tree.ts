@@ -93,9 +93,11 @@ export default class Tree {
 
     public static update(source: Node) {
 
-        // let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse(),
-        let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]),
-            links = Tree.tree.links(nodes);
+        console.log(Globals.s.id2Node);
+
+        let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse();
+        // let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]),
+        let links = Tree.tree.links(nodes);
 
         // console.log(nodes);
 

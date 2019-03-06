@@ -27,7 +27,8 @@ export default class Listener {
                     // console.log(message.data.simple);
                     Globals.lv.update(message.data.pretty);
                     Globals.s.simpleDomainsAtRoot = message.data.simple.vars;
-                    // console.log(message.data.core.tree);
+
+                    console.log(message.data.core.tree);
                     Globals.s.id2Node[Globals.s.rootId] = message.data.core.tree;
                     Globals.s.solAncestorIds = message.data.core.solAncestorIds;
                     Tree.update(message.data.core.tree);
@@ -43,7 +44,7 @@ export default class Listener {
 
                 case 'loadNodes':
 
-                    console.log(message.data);
+                    // // console.log(message.data);
 
                     var parent = null;
 
@@ -75,7 +76,7 @@ export default class Listener {
 
                     Tree.selectNode(Globals.s.selectedId);
 
-                    // Listener.setLoadedCount();
+                    Listener.setLoadedCount();
 
                     break;
 

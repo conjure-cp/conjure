@@ -79,7 +79,7 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
 
     let find = minionFile.findAll(auxDef)
 
-    echo find.len()
+    # echo find.len()
 
     for a in find:
         let splitted = a.split("#")
