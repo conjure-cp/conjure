@@ -9,9 +9,10 @@ import branchingCondition
 var db: DbConn
 var decTable: CountTable[int]
 
-proc init*(dirPath: string) =
+proc init*(dirPath: string): JsonNode =
     db = findFiles(dirPath)
     decTable = getDecendants(db)
+    return getCore(db, decTable)
 
 
 
@@ -19,22 +20,21 @@ proc loadNodes*(start: string): seq[ParentChild] =
 
     var nId, pId, childId: int
 
-    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value from Node where parentId = ? order by nodeId asc"
+    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = ? order by nodeId asc"
 
     for row1 in db.fastRows(sql(query), start):
         discard parseInt(row1[0], nId)
-        var kids: seq[int]
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
-            discard parseInt(row2[0], childId)
-            kids.add(childId)
 
         discard parseInt(row1[1], pId)
+
+        var childCount : int
+        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
         
         let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
         let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label:l, prettyLabel:pL, isLeftChild: parsebool(row1[3]), children: kids, decendantCount: decTable[nId]))
+        result.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
 
 
 # proc loadChildren*(id: string): ChildResponse =
@@ -50,58 +50,58 @@ proc loadNodes*(start: string): seq[ParentChild] =
 
 
 
-proc loadCore*(deepest : bool = false): seq[ParentChild] =
-    var nId, pId, childId: int
+# proc loadCore*(deepest : bool = false): seq[ParentChild] =
+#     var nId, pId, childId: int
 
-    let solutionQuery = sql(
-                """with recursive
-        correctPath(n) as (
-        select nodeId from Node where isSolution = 1  
-        union 
-        select parentId  from Node, correctPath
-            where nodeId=correctPath.n 
-                    )
-        select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
+#     let solutionQuery = sql(
+#                 """with recursive
+#         correctPath(n) as (
+#         select nodeId from Node where isSolution = 1  
+#         union 
+#         select parentId  from Node, correctPath
+#             where nodeId=correctPath.n 
+#                     )
+#         select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
 
-    let deepestQuery = sql(
-                """with recursive
-        correctPath(n) as (
-        select max(nodeId) from Node
-        union 
-        select parentId  from Node, correctPath
-            where nodeId=correctPath.n 
-                    )
-        select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
+#     let deepestQuery = sql(
+#                 """with recursive
+#         correctPath(n) as (
+#         select max(nodeId) from Node
+#         union 
+#         select parentId  from Node, correctPath
+#             where nodeId=correctPath.n 
+#                     )
+#         select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
 
-    var query : SqlQuery
+#     var query : SqlQuery
 
-    if deepest:
-        query = deepestQuery
-    else:
-        query = solutionQuery
+#     if deepest:
+#         query = deepestQuery
+#     else:
+#         query = solutionQuery
 
-    for row1 in db.fastRows(query):
-        var sol = false
+#     for row1 in db.fastRows(query):
+#         var sol = false
 
-        if (row1[5] == "1"):
-            sol = true
+#         if (row1[5] == "1"):
+#             sol = true
 
-        discard parseInt(row1[0], nId)
-        var kids: seq[int]
+#         discard parseInt(row1[0], nId)
+#         var kids: seq[int]
 
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
-            discard parseInt(row2[0], childId)
-            kids.add(childId)
+#         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+#             discard parseInt(row2[0], childId)
+#             kids.add(childId)
 
-        discard parseInt(row1[1], pId)
+#         discard parseInt(row1[1], pId)
 
-        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
-        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
+#         let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
+#         let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
-        result.add(ParentChild(parentId: pId, nodeId: nId, label: l, prettyLabel: pL, children: kids, isLeftChild: parsebool(row1[3]), isSolution: sol, decendantCount: decTable[nId]))
+#         result.add(ParentChild(parentId: pId, nodeId: nId, label: l, prettyLabel: pL, children: kids, isLeftChild: parsebool(row1[3]), isSolution: sol, decendantCount: decTable[nId]))
     
-    if result.len() == 0:
-        return loadCore(true)
+#     if result.len() == 0:
+#         return loadCore(true)
 
 
 proc getExpandedSetChild*(nodeId, path: string): Set =

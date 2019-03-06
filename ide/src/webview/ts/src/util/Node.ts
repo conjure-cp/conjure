@@ -1,5 +1,6 @@
 export default class Node {
     public id: number;
+    public label: string;
     public name: string;
     public prettyLabel: string;
     public parent: Node | null;
@@ -12,10 +13,11 @@ export default class Node {
     public depth: number;
     public decCount: number = 0;
     public isLeftChild: boolean;
+    public childCount : number;
+    public isSolution: boolean;
 
     constructor(id: number, name: string, prettyLabel: string, parent: Node, decCount: number, isLeftchild: boolean) {
         this.id = id;
-        this.name = name;
         this.parent = parent;
         this.children = null;
         this._children = null;
@@ -84,6 +86,28 @@ export default class Node {
         else if (node.children) {
             Node.hideChildren(node);
         }
+    }
+
+    public static hasMoreChildren(node: Node): boolean{
+        let childLength = 0;
+        if (node.children) {
+            childLength = node.children.length;
+        }
+
+        return (childLength < node.childCount);
+    }
+
+
+    public static calculateRadius(node: Node): number{
+        // console.log(node);
+
+
+        if (node.decCount === 0 || node.children && node.children.length === node.childCount){
+            return 10;
+        }
+
+        return Math.log(node.decCount + 10) * 3;
+
     }
 
 }

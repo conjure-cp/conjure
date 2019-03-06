@@ -54,6 +54,9 @@ export default class Globals {
 
         let node = Globals.s.id2Node[Globals.s.selectedId];
 
+        // console.log("current");
+        // console.log(node);
+
         if (node._children) {
             Node.toggleNode(node);
             return;
@@ -157,8 +160,8 @@ export default class Globals {
             command: 'longestBranchingVariable',
         });
 
-        Globals.vscode.postMessage({
-            command: 'loadCore',
-        });
+        // Globals.vscode.postMessage({
+        //     command: 'loadCore',
+        // });
     }
 }

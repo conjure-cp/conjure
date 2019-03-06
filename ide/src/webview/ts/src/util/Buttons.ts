@@ -24,7 +24,6 @@ export default class Buttons {
             .on("change", () => {
                 let domObjects = $("g.node");
 
-
                 for (var i = 0; i < domObjects.length; i++) {
                     let id = domObjects[i].id;
 
@@ -32,7 +31,7 @@ export default class Buttons {
                         $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].prettyLabel);
                     }
                     else {
-                        $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].name);
+                        $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].label);
                     }
 
                 }

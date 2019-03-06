@@ -2,6 +2,7 @@ import json, re, jester, times, strutils, parseutils
 import util/main
 import util/jsonify
 import util/types
+import util/init
 
 template benchmark(benchmarkName: string, code: untyped) =
   block:
@@ -14,8 +15,11 @@ template benchmark(benchmarkName: string, code: untyped) =
 routes:
     get re"/init/(.*)":
         let path = request.matches[0]
+
+        var core : JsonNode
+
         try:
-            init(path)
+            core = init(path)
 
         except EprimeParseException:
             resp HttpCode(503)
@@ -31,7 +35,9 @@ routes:
 
         let simpleAtRoot = %loadSimpleDomains("0")
 
-        resp %*{"pretty" : prettyAtRoot, "simple": simpleAtRoot}
+        # let core = %getCore()
+
+        resp %*{"pretty" : prettyAtRoot, "simple": simpleAtRoot, "core": core}
 
     get "/simpleDomains/@nodeId/@wantExpressions":
 
@@ -47,9 +53,9 @@ routes:
         resp getLongestBranchingVarName()
         # resp 100
 
-    get "/loadCore":
-        # resp %proccessCore()
-        resp %loadCore()
+    # get "/loadCore":
+    #     # resp %proccessCore()
+    #     resp %loadCore()
 
     get "/loadChildren/@id":
         resp %loadNodes(@"id")

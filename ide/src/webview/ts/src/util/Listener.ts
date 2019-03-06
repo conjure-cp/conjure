@@ -27,17 +27,24 @@ export default class Listener {
                     // console.log(message.data.simple);
                     Globals.lv.update(message.data.pretty);
                     Globals.s.simpleDomainsAtRoot = message.data.simple.vars;
+                    // console.log(message.data.core.tree);
+                    Globals.s.id2Node[Globals.s.rootId] = message.data.core.tree;
+                    Globals.s.solAncestorIds = message.data.core.solAncestorIds;
+                    Tree.update(message.data.core.tree);
+                    Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
+                    Tree.update(message.data.core.tree);
+                    Tree.selectNode(Globals.s.rootId);
                     break;
 
                 case 'loadChildren':
-                    // console.log(message.data)
-                    message.data.forEach((node: any) => {
-                        Globals.s.id2Node[node.nodeId].decCount = node.decendantCount;
-                        Globals.s.id2Node[node.nodeId].name = node.label;
-                        Globals.s.id2Node[node.nodeId].prettyLabel = node.prettyLabel;
-                        Globals.s.id2ChildIds[node.nodeId] = node.children;
-                        Tree.update(Globals.s.id2Node[node.nodeId]);
-                    });
+                    // // console.log(message.data)
+                    // message.data.forEach((node: any) => {
+                    //     Globals.s.id2Node[node.nodeId].decCount = node.decendantCount;
+                    //     Globals.s.id2Node[node.nodeId].name = node.label;
+                    //     Globals.s.id2Node[node.nodeId].prettyLabel = node.prettyLabel;
+                    //     // Globals.s.id2ChildIds[node.nodeId] = node.children;
+                    //     Tree.update(Globals.s.id2Node[node.nodeId]);
+                    // });
 
                     break;
 
@@ -63,7 +70,7 @@ export default class Listener {
                         if (!Globals.s.id2Node[element.nodeId]) {
 
                             Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
-                            Globals.s.id2ChildIds[element.nodeId] = element.children;
+                            // Globals.s.id2ChildIds[element.nodeId] = element.children;
 
                             element.children.forEach((kidId: number) => {
 
@@ -88,24 +95,47 @@ export default class Listener {
 
                 case 'longestBranchingVariable':
 
-                    Tree.tree.nodeSize([Number(message.data) * 13, 0]);
+                    // Tree.tree.nodeSize([Number(message.data) * 13, 0]);
                     break;
 
                 case 'loadNodes':
 
+                    console.log(message.data);
+
+                    var parent = null;
+
                     message.data.forEach((element: any) => {
-                        if (!Globals.s.id2Node[element.nodeId]) {
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
-                            Globals.s.id2ChildIds[element.nodeId] = element.children;
-                            // Globals.loadChildIds(element.nodeId);
+                        if (!Globals.s.id2Node[element.id]) {
+
+                            console.log("addindg " + element.id);
+
+                            parent = Globals.s.id2Node[element.parentId];
+
+                            if (!parent.children){
+                                Globals.s.id2Node[element.parentId].children = [];
+                            }
+
+                            if (element.isLeftChild){
+                                parent.children.unshift(element);
+                            }
+                            else{
+                                parent.children.push(element);
+                            }
+
+                    //         Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
+                    //         Globals.s.id2ChildIds[element.nodeId] = element.children;
+                    //         // Globals.loadChildIds(element.nodeId);
                         }
                     });
 
+                    console.log(parent);
+
+                    // Tree.update(parent);
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
 
                     Tree.selectNode(Globals.s.selectedId);
 
-                    Listener.setLoadedCount();
+                    // Listener.setLoadedCount();
 
                     break;
 

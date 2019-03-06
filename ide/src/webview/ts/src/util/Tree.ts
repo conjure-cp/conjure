@@ -11,7 +11,7 @@ export default class Tree {
     public static margin = { top: 40, right: 30, bottom: 50, left: 30 };
     public static width = Tree.viewerWidth! - Tree.margin.left - Tree.margin.right;
     public static height = Tree.viewerHeight! - Tree.margin.top - Tree.margin.bottom;
-    public static tree = d3.layout.tree().size([Tree.height, Tree.width]);
+    public static tree = d3.layout.tree().size([Tree.height, Tree.width]).nodeSize([300, 0]);
 
     public static zoom = d3.behavior.zoom()
         .on("zoom", Tree.zoomed);
@@ -32,7 +32,7 @@ export default class Tree {
         Tree.svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
     }
 
-    public static focusNode = (node: any) => {
+    public static focusNode = (node: Node) => {
         let scale = Tree.zoom.scale();
         let x = -node.x * scale;
         let y = -node.y * scale;
@@ -63,50 +63,41 @@ export default class Tree {
         Globals.lv.updatePanelTitle();
     }
 
+
     private static fillCircle(node: Node) {
 
-        // console.log(node);
-
-        let size = 10;
 
         let s = "#node" + node.id + " circle";
 
         let domElement = d3.select(s);
         domElement.classed("hasOthers red", false);
 
-        let childLength = 0;
-        if (node.children) {
-            childLength = node.children.length;
-        }
-
         if (Globals.s.solNodIds.includes(node.id)) {
             domElement.classed("solution", true);
         }
 
-        if (Globals.s.id2ChildIds[node.id]) {
+        if (Node.hasMoreChildren(node)) {
 
-            if (childLength < Globals.s.id2ChildIds[node.id].length) {
+            if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0) {
+                domElement.classed("hasOthers", true);
+            }
 
-                if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0) {
-                    domElement.classed("hasOthers", true);
-                }
-
-                else {
-                    domElement.classed("hasOthers red", true);
-                }
-
-                size = Math.log(node.decCount + 10) * 3;
+            else {
+                domElement.classed("hasOthers red", true);
             }
 
         }
 
-        domElement.attr("r", size);
+        domElement.attr("r", Node.calculateRadius(node));
     }
 
     public static update(source: Node) {
 
-        let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse(),
+        // let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse(),
+        let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]),
             links = Tree.tree.links(nodes);
+
+        // console.log(nodes);
 
         nodes.forEach((node: Node) => { node.y = node.depth * Tree.gap; });
 
@@ -119,13 +110,22 @@ export default class Tree {
                 return "node" + node.id;
             })
             .attr("transform", (node: Node) => {
-                let parent = Globals.s.id2Node[node.id].parent;
+                // console.log(node.parent);
+                let parent = node.parent;
                 if (parent) {
                     return "translate(" + parent.x + "," + parent.y + ")";
                 }
             })
             .on("click", (node: Node) => {
                 Tree.selectNode(node.id);
+            })
+            .each((d: Node) => {
+                if (!Globals.s.id2Node[d.id]) {
+                    Globals.s.id2Node[d.id] = d;
+                }
+                if (d.isSolution) {
+                    Globals.s.solNodIds.push(d.id);
+                }
             });
 
         nodeEnter.append("circle")
@@ -138,25 +138,46 @@ export default class Tree {
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .text((node: Node) => {
-                if ($("#labels").prop("checked") === true){
-                 return node.prettyLabel; 
+
+                if ($("#labels").prop("checked") === true) {
+                    return node.prettyLabel;
                 }
-                else{
-                    return node.name;
+                else {
+                    return node.label;
                 }
-                })
+            })
             .style("fill-opacity", 1e-6);
+
+        nodeEnter.append("text")
+            .attr("y", (node: Node) => {
+                return Node.calculateRadius(node) + 13;
+            })
+            .attr("class", "decCount")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .text((node: Node) => {
+                if (Node.hasMoreChildren(node)){
+                    return node.decCount;
+                }
+            });
 
         let nodeUpdate = node.transition()
             .duration(Tree.duration)
             .attr("transform", (node: Node) => { return "translate(" + node.x + "," + node.y + ")"; });
 
         nodeUpdate.select("circle")
-            // .attr("r", 10)
             .each((d: Node) => { Tree.fillCircle(d); });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
+
+        nodeUpdate.select("text.decCount")
+            .text((node: Node) => {
+                if (Node.hasMoreChildren(node)){
+                    return node.decCount;
+                }
+            });
+            
 
         let nodeExit = node.exit().transition()
             .duration(Tree.duration)

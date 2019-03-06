@@ -7,7 +7,7 @@ export default class State {
     public selectedId = this.rootId;
     public currentDomainId = 0;
     public id2Node: { [id: number]: Node; } = {};
-    public id2ChildIds: { [id: number]: [number]; } = {};
+    // public id2ChildIds: { [id: number]: [number]; } = {};
     public solAncestorIds: number[] = [];
     public solNodIds: number[] = [];
     public pathList: string[] = [];
@@ -20,28 +20,28 @@ export default class State {
     constructor() { }
 
     public collapseFailed() {
-        this.solAncestorIds.forEach((nodeId: number) => {
-            let childIds = this.id2ChildIds[nodeId];
-            childIds.forEach((childId: number) => {
-                if (!this.solAncestorIds.includes(childId)) {
-                    Node.collapseNode(this.id2Node[childId]);
-                }
-            });
-        });
+        // this.solAncestorIds.forEach((nodeId: number) => {
+        //     let childIds = this.id2ChildIds[nodeId];
+        //     childIds.forEach((childId: number) => {
+        //         if (!this.solAncestorIds.includes(childId)) {
+        //             Node.collapseNode(this.id2Node[childId]);
+        //         }
+        //     });
+        // });
 
-        let correctAncestor: Node = null;
+        // let correctAncestor: Node = null;
 
-        let recurse = (node: Node) => {
-            if (this.solAncestorIds.includes(node.id)) {
-                correctAncestor = node;
-                return;
-            }
-            recurse(node.parent);
-        };
+        // let recurse = (node: Node) => {
+        //     if (this.solAncestorIds.includes(node.id)) {
+        //         correctAncestor = node;
+        //         return;
+        //     }
+        //     recurse(node.parent);
+        // };
 
-        recurse(this.id2Node[this.selectedId]);
+        // recurse(this.id2Node[this.selectedId]);
 
-        this.selectedId = correctAncestor.id;
+        // this.selectedId = correctAncestor.id;
     }
 
     public addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number, isLeftChild: boolean) {

@@ -27,14 +27,14 @@ type SimpleDomainResponse* = ref object of RootObj
     vars*: seq[Variable]
 
 type ParentChild* = ref object of RootObj
-    nodeId*: int
+    id*: int
     parentId*: int
     label*: string
     prettyLabel*: string
-    children*: seq[int]
+    childCount*: int
     isSolution*: bool
     isLeftChild*: bool
-    decendantCount*: int
+    decCount*: int
 
 # type ChildResponse* = ref object of RootObj
 #     nodeId*: int
