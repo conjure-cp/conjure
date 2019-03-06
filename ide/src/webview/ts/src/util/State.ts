@@ -44,15 +44,18 @@ export default class State {
         // this.selectedId = correctAncestor.id;
     }
 
-    public addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number, isLeftChild: boolean) {
+    public addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number, isLeftChild: boolean, childCount: number, isSolution: boolean) {
 
-        // console.log(parentId)
+        // console.log(parentId);
+        // console.log(this.id2Node[parentId]);
 
         this.totalLoaded++;
-        let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount, isLeftChild);
+        let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount, isLeftChild, childCount, isSolution);
 
         if (parentId === -1) {
+            // console.log("nodeId is")
             this.id2Node[nodeId] = newNode;
+            console.log(this.id2Node);
             return;
         }
 
@@ -60,15 +63,18 @@ export default class State {
             this.id2Node[parentId].children = [];
         }
 
-        // if (isLeftChild){
-        //     this.id2Node[parentId].children.unshift(newNode);
-        // }
-        // else{
-        //     this.id2Node[parentId].children.push(newNode);
-        // }
-        this.id2Node[parentId].children.push(newNode);
+        if (isLeftChild){
+            this.id2Node[parentId].children.unshift(newNode);
+        }
+        else{
+            this.id2Node[parentId].children.push(newNode);
+        }
+        // this.id2Node[parentId].children.push(newNode);
 
         this.id2Node[nodeId] = newNode;
+        // console.log(this.id2Node);
+
+
         // console.log("adding");
         // console.log(nodeId);
         // console.log(this.id2Node[1]);

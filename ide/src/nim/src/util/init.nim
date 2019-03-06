@@ -165,3 +165,56 @@ proc getCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
     return %*{"solAncestorIds": %solAncestorIds, "tree" : map["0"]}
 
 
+
+proc makeCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
+    var coreQuery : SqlQuery
+    var failedQuery : SqlQuery
+    var nId, pId: int
+    var solAncestorIds : seq[int]
+    var nodeList: seq[ParentChild]
+
+    let firstQuery = "select nodeId from Node where isSolution = 1 limit 1"
+    if db.getValue(sql(firstQuery)) == "":
+        coreQuery = noSolutionQuery
+        failedQuery = noSolutionFailedQuery
+    else:
+        failedQuery = solutionFailedQuery
+        coreQuery = solutionQuery
+
+
+    for row1 in db.fastRows(coreQuery):
+
+        discard parseInt(row1[0], nId)
+
+        solAncestorIds.add(nId)
+
+        var childCount : int
+        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
+
+        discard parseInt(row1[1], pId)
+
+        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
+        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
+
+        # echo parseBool(row1[3])
+
+        nodeList.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1, isSolution: parseBool(row1[5]) ))
+
+    for row1 in db.fastRows(failedQuery):
+
+        discard parseInt(row1[0], nId)
+
+        var childCount : int
+        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
+
+        discard parseInt(row1[1], pId)
+
+        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
+        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
+
+        nodeList.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
+
+    return %*{"nodes": %nodeList, "solAncestorIds": %solAncestorIds}
+
+
+        # echo map

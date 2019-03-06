@@ -66,13 +66,15 @@ export default class Tree {
 
     private static fillCircle(node: Node) {
 
+        // console.log(node.isSolution)
 
         let s = "#node" + node.id + " circle";
 
         let domElement = d3.select(s);
         domElement.classed("hasOthers red", false);
 
-        if (Globals.s.solNodIds.includes(node.id)) {
+        // if (Globals.s.solNodIds.includes(node.id)) {
+        if (node.isSolution) {
             domElement.classed("solution", true);
         }
 

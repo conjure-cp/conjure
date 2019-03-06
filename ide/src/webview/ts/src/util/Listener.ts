@@ -27,13 +27,29 @@ export default class Listener {
                     // console.log(message.data.simple);
                     Globals.lv.update(message.data.pretty);
                     Globals.s.simpleDomainsAtRoot = message.data.simple.vars;
-                    // console.log(message.data.core.tree);
-                    Globals.s.id2Node[Globals.s.rootId] = message.data.core.tree;
+
                     Globals.s.solAncestorIds = message.data.core.solAncestorIds;
-                    Tree.update(message.data.core.tree);
-                    Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
-                    Tree.update(message.data.core.tree);
-                    Tree.selectNode(Globals.s.rootId);
+
+                    console.log(message.data.core.nodes);
+
+                    for (let i = 0; i < message.data.core.nodes.length; i++) {
+                        let element = message.data.core.nodes[i];
+                        // console.log(element.isSolution)
+                        Globals.s.addNode(element.id, element.parentId, element.label, element.prettyLabel, element.decCount, element.isLeftChild, element.childCount, element.isSolution);
+                    }
+                    console.log(Globals.s.id2Node[Globals.s.rootId]);
+
+
+                    Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+                    
+
+                    // Globals.s.id2Node[Globals.s.rootId] = message.data.core.tree;
+
+                    // Globals.s.id2Node[Globals.s.rootId] = message.data.core.tree;
+                    // Tree.update(message.data.core.tree);
+                    // Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
+                    // Tree.update(message.data.core.tree);
+                    // Tree.selectNode(Globals.s.rootId);
                     break;
 
                 case 'loadChildren':
@@ -69,14 +85,14 @@ export default class Listener {
 
                         if (!Globals.s.id2Node[element.nodeId]) {
 
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
+                            // Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild, element.childCount);
                             // Globals.s.id2ChildIds[element.nodeId] = element.children;
 
                             element.children.forEach((kidId: number) => {
 
                                 if (!Globals.s.solAncestorIds.includes(kidId)) {
 
-                                    Globals.s.addNode(kidId, element.nodeId, "", "", 0, true);
+                                    // Globals.s.addNode(kidId, element.nodeId, "", "", 0, true);
                                     Globals.loadChildIds(element.nodeId);
                                 }
                             });

@@ -12,7 +12,7 @@ var decTable: CountTable[int]
 proc init*(dirPath: string): JsonNode =
     db = findFiles(dirPath)
     decTable = getDecendants(db)
-    return getCore(db, decTable)
+    return %makeCore(db, decTable)
 
 
 

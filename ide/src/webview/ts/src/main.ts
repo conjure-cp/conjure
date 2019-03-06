@@ -5,7 +5,7 @@ import Buttons  from './util/Buttons';
 
 Listener.bindListener();
 Globals.initialize();
-Globals.loadNNodes();
+// Globals.loadNNodes();
 Keyboard.bindKeys();
 Buttons.bindButtons();
 console.log("HELLO");
