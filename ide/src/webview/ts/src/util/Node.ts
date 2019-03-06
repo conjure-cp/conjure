@@ -16,20 +16,6 @@ export default class Node {
     public childCount : number;
     public isSolution: boolean;
 
-    constructor(id: number, name: string, prettyLabel: string, parent: Node, decCount: number, isLeftchild: boolean) {
-        this.id = id;
-        this.parent = parent;
-        this.children = null;
-        this._children = null;
-        this.x = 0;
-        this.y = 0;
-        this.x0 = null;
-        this.y0 = null;
-        this.depth = 0;
-        this.decCount = decCount;
-        this.prettyLabel = prettyLabel;
-        this.isLeftChild = isLeftchild;
-    }
     public static expandNode(node: Node) {
 
         let recurse = (insideNode: Node) => {

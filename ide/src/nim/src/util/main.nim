@@ -14,11 +14,9 @@ proc init*(dirPath: string): JsonNode =
     decTable = getDecendants(db)
     return getCore(db, decTable)
 
-
-
 proc loadNodes*(start: string): seq[ParentChild] =
 
-    var nId, pId, childId: int
+    var nId, pId: int
 
     let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = ? order by nodeId asc"
 
@@ -36,80 +34,7 @@ proc loadNodes*(start: string): seq[ParentChild] =
 
         result.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
 
-
-# proc loadChildren*(id: string): ChildResponse =
-
-#     var nId, childId: int
-#     discard parseInt(id, nId)
-#     var kids: seq[int] 
-
-#     for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
-#         discard parseInt(row[0], childId)
-#         kids.add(childId)
-#     return ChildResponse(nodeId: nId, children: kids, decendantCount: decTable[nId])
-
-
-
-# proc loadCore*(deepest : bool = false): seq[ParentChild] =
-#     var nId, pId, childId: int
-
-#     let solutionQuery = sql(
-#                 """with recursive
-#         correctPath(n) as (
-#         select nodeId from Node where isSolution = 1  
-#         union 
-#         select parentId  from Node, correctPath
-#             where nodeId=correctPath.n 
-#                     )
-#         select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
-
-#     let deepestQuery = sql(
-#                 """with recursive
-#         correctPath(n) as (
-#         select max(nodeId) from Node
-#         union 
-#         select parentId  from Node, correctPath
-#             where nodeId=correctPath.n 
-#                     )
-#         select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in correctPath;""")
-
-#     var query : SqlQuery
-
-#     if deepest:
-#         query = deepestQuery
-#     else:
-#         query = solutionQuery
-
-#     for row1 in db.fastRows(query):
-#         var sol = false
-
-#         if (row1[5] == "1"):
-#             sol = true
-
-#         discard parseInt(row1[0], nId)
-#         var kids: seq[int]
-
-#         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
-#             discard parseInt(row2[0], childId)
-#             kids.add(childId)
-
-#         discard parseInt(row1[1], pId)
-
-#         let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
-#         let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
-
-#         result.add(ParentChild(parentId: pId, nodeId: nId, label: l, prettyLabel: pL, children: kids, isLeftChild: parsebool(row1[3]), isSolution: sol, decendantCount: decTable[nId]))
-    
-#     if result.len() == 0:
-#         return loadCore(true)
-
-
 proc getExpandedSetChild*(nodeId, path: string): Set =
-
-    # echo prettyLookup
-
-    # echo nodeId
-    # echo "path is " & path
 
     result = Set(prettyLookup[nodeId][path.split(".")[0]])
 
@@ -181,10 +106,6 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = true): SimpleDom
 
     let domainsAtNode = getSimpleDomainsOfNode(db, nodeId, wantExpressions)
 
-    # for d in domainsAtNode:
-        # if d of Expression:
-            # echo d.name
-
     if (id != rootNodeId):
         domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
 
@@ -197,4 +118,3 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = true): SimpleDom
 
 proc getLongestBranchingVarName*(): JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
-    # return % 15

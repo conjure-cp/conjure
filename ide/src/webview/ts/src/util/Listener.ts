@@ -36,63 +36,6 @@ export default class Listener {
                     Tree.selectNode(Globals.s.rootId);
                     break;
 
-                case 'loadChildren':
-                    // // console.log(message.data)
-                    // message.data.forEach((node: any) => {
-                    //     Globals.s.id2Node[node.nodeId].decCount = node.decendantCount;
-                    //     Globals.s.id2Node[node.nodeId].name = node.label;
-                    //     Globals.s.id2Node[node.nodeId].prettyLabel = node.prettyLabel;
-                    //     // Globals.s.id2ChildIds[node.nodeId] = node.children;
-                    //     Tree.update(Globals.s.id2Node[node.nodeId]);
-                    // });
-
-                    break;
-
-
-
-
-                case 'loadCore':
-
-                    // console.log(message.data);
-
-                    message.data.forEach((element: any) => {
-                        Globals.s.solAncestorIds.push(element.nodeId);
-                    });
-
-                    for (let i = 0; i < message.data.length; i++) {
-
-                        let element = message.data[i];
-
-                        if (element.isSolution === true) {
-                            Globals.s.solNodIds.push(element.nodeId);
-                        }
-
-                        if (!Globals.s.id2Node[element.nodeId]) {
-
-                            Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
-                            // Globals.s.id2ChildIds[element.nodeId] = element.children;
-
-                            element.children.forEach((kidId: number) => {
-
-                                if (!Globals.s.solAncestorIds.includes(kidId)) {
-
-                                    Globals.s.addNode(kidId, element.nodeId, "", "", 0, true);
-                                    Globals.loadChildIds(element.nodeId);
-                                }
-                            });
-                        }
-                    }
-
-                    Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
-
-                    Tree.update(Globals.s.id2Node[Globals.s.rootId]);
-
-                    Tree.selectNode(Globals.s.selectedId);
-
-                    Listener.setLoadedCount();
-
-                    break;
-
                 case 'longestBranchingVariable':
 
                     // Tree.tree.nodeSize([Number(message.data) * 13, 0]);
@@ -122,9 +65,6 @@ export default class Listener {
                                 parent.children.push(element);
                             }
 
-                    //         Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
-                    //         Globals.s.id2ChildIds[element.nodeId] = element.children;
-                    //         // Globals.loadChildIds(element.nodeId);
                         }
                     });
 
