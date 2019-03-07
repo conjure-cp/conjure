@@ -79,7 +79,6 @@ export default class ConjureHelper {
         if (document.languageId !== ESSENCE) {
             return;
         }
-        // console.log("Do linting here");
 
         let diagnostics: vscode.Diagnostic[] = [];
 
@@ -89,11 +88,6 @@ export default class ConjureHelper {
             vscode.window.showInformationMessage('Conjure could not be found please make sure its in your path.');
             return;
         }
-
-        // console.log("here")
-        // process.stdout.on('data', (data: string) => {
-        // 	console.log(`stdout: ${data}`);
-        // });
 
         process.stderr.on('data', (data: string) => {
             console.log(`stderr: ${data}`);
@@ -138,7 +132,8 @@ export default class ConjureHelper {
         let dir = path.dirname(doc.uri.path);
         console.log(dir);
 
-        let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
+        // let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
+        let args = ['modelling', doc.uri.path, "-o", dir];
 
         exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
@@ -172,48 +167,17 @@ export default class ConjureHelper {
     public static async visualisePath() {
         let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
         if (folder) {
-            // console.log(folder[0].path);
-            // return folder[0].path;
-
             WebviewHelper.launch(folder[0].path);
-
         }
     }
 
-    public static visualiseCurrent() {
-        // if (this.solve()) {
-        let current = vscode.window.activeTextEditor;
-        if (!current) {
-            vscode.window.showErrorMessage("No active text editor!");
-            return;
-        }
-
-        let doc = current.document;
-        let dir = path.dirname(doc.uri.path);
-
-        WebviewHelper.launch(path.join(dir, "conjure-output"));
-
-
-    }
-
-    private static findEssenceFiles(dir: string): string[] {
-        let files = fs.readdirSync(dir);
-        return files.filter(el => /\.essence$/.test(el));
-    }
-
-    private static findSolutionFiles(dir: string): string[] {
-        let files = fs.readdirSync(dir);
-        return files.filter(el => /\.solution$/.test(el));
-    }
-
-
-    public static solve(): boolean {
+    public static solveAndVisualise(wantVisualisation: boolean){
         console.log("SOLVE------------------------");
         // vscode.workspace.textDocuments[0].
         let current = vscode.window.activeTextEditor;
         if (!current) {
             vscode.window.showErrorMessage("No active text editor!");
-            return false;
+            return;
         }
 
         let paramFile = current.document;
@@ -221,12 +185,10 @@ export default class ConjureHelper {
         // console.log(extension);
         if (extension !== ".param") {
             vscode.window.showErrorMessage("This is not a param file");
-            return false;
+            return;
         }
 
-
         let dir = path.dirname(paramFile.uri.path);
-        // let dir = vscode.workspace.getWorkspaceFolder(doc.uri);
 
         let essenceFiles = this.findEssenceFiles(dir);
 
@@ -238,73 +200,68 @@ export default class ConjureHelper {
 
             if (essenceFiles.length === 0) {
                 vscode.window.showErrorMessage("No essence files found in parent directory");
-                return false;
+                return;
             }
-            // return false;
         }
 
         if (essenceFiles.length > 1) {
             vscode.window.showErrorMessage("More than one essence file was found, aborting.");
-            return false;
+            return;
         }
 
         let modelPath = path.join(dir, essenceFiles[0]);
 
-        let args = ['solve', modelPath, paramFile.uri.path, '--solver-options', '"-dumptreesql"'];
+        let args = ['solve', modelPath, paramFile.uri.path];
 
+        if (wantVisualisation) {
+            args.push('--savilerow-options');
+            args.push('"-O0 -reduce-domains"');
+            args.push('--solver-options');
+            args.push('"-dumptreesql conjure-output/out.db"');
+        }
+
+        vscode.window.showInformationMessage('Solving..');
 
         exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
-
-            vscode.window.showInformationMessage('Solving..');
-
-            // console.log("here");
 
             if (e instanceof Error) {
 
                 vscode.window.showErrorMessage(e.message);
-                return false;
-            }
-
-            let solutions = this.findSolutionFiles(dir);
-
-
-            if (solutions.length === 0) {
-                vscode.window.showInformationMessage("No solution.");
                 return;
             }
 
-            console.log(solutions)
+            if (wantVisualisation) {
+                WebviewHelper.launch(path.join(dir, "conjure-output"));
+            }
+            else {
+                let solutions = this.findSolutionFiles(dir);
 
-            solutions.forEach(fileName => {
-                let paramFileName = (path.parse(paramFile.fileName).name);
-
-                if (fileName.includes(paramFileName)) {
-
-                    console.log(paramFileName);
-                    console.log(fileName);
-
-                    let uri = vscode.Uri.file(path.join(dir, fileName));
-                    vscode.commands.executeCommand('vscode.openFolder', uri);
-                    vscode.window.showInformationMessage("Done!");
+                if (solutions.length === 0) {
+                    vscode.window.showInformationMessage("No solution.");
+                    return;
                 }
-            });
 
-            // fs.readdir(dir, function (err, files) {
-            //     const solutionFiles = files.filter(el => /\.solution$/.test(el));
+                solutions.forEach(fileName => {
+                    let paramFileName = (path.parse(paramFile.fileName).name);
 
-            //     console.log(solutionFiles);
+                    if (fileName.includes(paramFileName)) {
 
-            //     if (solutionFiles.length === 0) {
-            //         vscode.window.showInformationMessage("No solution.");
-            //         return;
-            //     }
-
-            //     let uri = vscode.Uri.file(path.join(dir, solutionFiles[0]));
-            //     vscode.commands.executeCommand('vscode.openFolder', uri);
-
-
-            // });
+                        let uri = vscode.Uri.file(path.join(dir, fileName));
+                        vscode.commands.executeCommand('vscode.openFolder', uri);
+                        vscode.window.showInformationMessage("Done!");
+                    }
+                });
+            }
         });
-        return true;
+    }
+
+    private static findEssenceFiles(dir: string): string[] {
+        let files = fs.readdirSync(dir);
+        return files.filter(el => /\.essence$/.test(el));
+    }
+
+    private static findSolutionFiles(dir: string): string[] {
+        let files = fs.readdirSync(dir);
+        return files.filter(el => /\.solution$/.test(el));
     }
 }
