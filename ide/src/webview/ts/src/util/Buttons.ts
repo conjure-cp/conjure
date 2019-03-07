@@ -34,6 +34,8 @@ export default class Buttons {
                         $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].label);
                     }
 
+                    console.log("YOOO")
+
                 }
 
                 Tree.update(Globals.s.id2Node[Globals.s.rootId]);
