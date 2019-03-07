@@ -30,7 +30,7 @@ proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool =
     for domain in db.fastRows(sql(query), nodeId, "-1"):
 
         if (auxLookup.hasKey(domain[0])):
-            var e = newExpression(auxLookup[domain[0]].name)
+            var e = newExpression(auxLookup[domain[0]].name, domain[0])
             e.rng = getPrettyRange(domain[1], domain[2])
             result.add(e)
         else:
@@ -46,23 +46,27 @@ proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool =
     #     if res of Expression:
     #         echo Expression(res)
 
-proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string): (seq[Variable]) =
-    # echo eprimeLookup
+proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): (seq[Variable]) =
 
     prettyLookup[nodeId] = initTable[string, Variable]()
     prettyLookup[nodeId].deepCopy(eprimeLookup)
 
-    # echo prettyLookup[nodeId]
-
     for variable in prettyLookup[nodeId].values():
         result.add(variable)
-
         if (variable of Set):
             let s = Set(variable)
             decideSet(db, s, nil, s.name, nodeId, @[])
         else:
-            # echo variable
             let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & variable.name & "' and nodeId = ?;")
             var res = db.getRow(query0, nodeId)
             variable.rng = getPrettyRange(res[0], res[1])
+
+    if wantExpressions:
+        for expression in auxLookup.values():
+            result.add(expression)
+            let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & expression.auxName & "' and nodeId = ?;")
+            var res = db.getRow(query0, nodeId)
+            expression.rng = getPrettyRange(res[0], res[1])
+
+    # echo result
 

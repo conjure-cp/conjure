@@ -79,20 +79,19 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
 
     let find = minionFile.findAll(auxDef)
 
-    echo find.len()
+    # echo find.len()
 
     for a in find:
         let splitted = a.split("#")
-        let name = splitted[0].strip()
-        var rhs = splitted[1].replace(
-                re"\(?Active-CSE: \d* occurrences of this expression or equivalent: ", "")
+        let auxName = splitted[0].strip()
+        var rhs = splitted[1].replace(re"\(?Active-CSE: \d* occurrences of this expression or equivalent: ", "")
 
         let nestedAux = re"aux\d*"
 
         for nested in rhs.findAll(nestedAux):
             if (lookup.hasKey(nested)):
                 rhs = rhs.replace(nested, lookup[nested].name)
-        lookup[name] = newExpression(rhs)
+        lookup[auxName] = newExpression(rhs, auxName)
 
     # echo lookup
     # for e in lookup.values():

@@ -181,10 +181,7 @@ export default class Listview {
 
 
     public setChangedExpressions(expressions: any) {
-        // console.log(expressions)
-        // console.log(name2Node["Changed Expressions"])
-        this.id2Node["Changed Expressions"]["children"] = expressions
-
+        this.id2Node["Changed Expressions"]["children"] = expressions;
     }
 
     public updateNodes(data: any[]) {
@@ -233,6 +230,7 @@ export default class Listview {
                 }
             }
             else {
+                console.log(element.name);
                 this.id2Node[element.name].children[0].name = element.rng;
             }
 
@@ -271,8 +269,11 @@ export default class Listview {
                 }
             }
 
-            ancestors.forEach((element: any) => {
-                d3.select('[id="' + element + '"]').classed("changed", true);
+            // console.log("---------");
+            ancestors.forEach((id: string) => {
+                // console.log(element);
+                d3.select('[id="' + $.escapeSelector(id) + '"]').classed("changed", true);
+                // $($.escapeSelector( "#" + id)).attr("class","changed");
             })
 
         });

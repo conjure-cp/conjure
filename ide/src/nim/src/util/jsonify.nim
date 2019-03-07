@@ -42,6 +42,7 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
     root.children = @[variables, expressions, changedExpressions]
 
     for d in domains:
+        # echo ">>>", d.rng
         if d of Expression:
             expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
@@ -107,8 +108,7 @@ proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
         else:
             return @[]
 
-proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[
-        string] =
+proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[ string] =
     # let prefix = "liExpressions"
 
     if (newExpression.rng != oldExpression.rng):
@@ -120,7 +120,10 @@ proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
         # result.add("liDomain Variables" & newVariable.name )
         result.add(newVariable.name)
 
-proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string] =
+proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): (seq[string], seq[Expression]) =
+
+    var changedExpressions : seq[Expression]
+    var changedVariableNames: seq[string]
 
     for i in countUp(0, min(domainsAtPrev.len(), domainsAtNode.len()) - 1):
         let newVar = domainsAtNode[i]
@@ -129,15 +132,18 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): seq[string]
         if (newVar of Set):
             let newSet = Set(newVar)
             let oldSet = Set(oldVar)
-            result = result.concat(getSetChanges(newSet, oldSet))
+            changedVariableNames = changedVariableNames.concat(getSetChanges(newSet, oldSet))
 
             if (newSet.children.len() > 0 and newSet.children.len() == oldSet.children.len()):
                 for i in countUp(0, newSet.children.len() - 1):
-                    result = result.concat(getSetChanges(newSet.children[i],
-                            oldSet.children[i], true))
+                    changedVariableNames = changedVariableNames.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
 
         elif (newVar of Expression):
-            let changedExpressions = getExpressionChanges(Expression(newVar), Expression(oldVar))
-            result = result.concat(changedExpressions)
+            let changed = getExpressionChanges(Expression(newVar), Expression(oldVar))
+            if changed.len() > 0:
+                changedExpressions.add(Expression(newVar))
+            changedVariableNames = changedVariableNames.concat(changed)
         else:
-            result = result.concat(getVariableChanges(newVar, oldVar))
+            changedVariableNames = changedVariableNames.concat(getVariableChanges(newVar, oldVar))
+    
+    return (changedVariableNames, changedExpressions)

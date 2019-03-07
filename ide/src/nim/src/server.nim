@@ -45,6 +45,7 @@ routes:
         
     get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
         resp loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))
+        # resp loadPrettyDomains(@"nodeId", @"paths", true)
 
     get "/loadNodes/@start":
         resp %loadNodes(@"start")

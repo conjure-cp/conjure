@@ -282,7 +282,6 @@ exports.loadDomains = () => {
 exports.sendSimpleRequest = () => {
         exports.vscode.postMessage({
             command: "simpleDomains",
-            amount: Number($("#domCount").val()),
             start: exports.currentDomainId,
             nodeId: exports.selectedId,
         });
@@ -292,7 +291,8 @@ exports.sendPrettyRequest = () => {
         exports.vscode.postMessage({
             command: "prettyDomains",
             nodeId: exports.selectedId,
-            paths: exports.pathList.join(":")
+            paths: exports.pathList.join(":"),
+            wantExpressions: true
         });
 }
 
@@ -370,17 +370,17 @@ exports.vscode.postMessage({
 });
 
 
-exports.vscode.postMessage({
-    command: 'correctPath',
-});
+// exports.vscode.postMessage({
+//     command: 'correctPath',
+// });
 
-exports.vscode.postMessage({
-    command: 'longestBranchingVariable',
-});
+// exports.vscode.postMessage({
+//     command: 'longestBranchingVariable',
+// });
 
-exports.vscode.postMessage({
-    command: 'loadCore',
-});
+// exports.vscode.postMessage({
+//     command: 'loadCore',
+// });
 
 exports.vscode.postMessage({
     command: 'simpleDomains',

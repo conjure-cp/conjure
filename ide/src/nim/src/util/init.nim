@@ -110,61 +110,6 @@ let noSolutionFailedQuery = sql("""with recursive
                 )
     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId not in correctPath and parentId in correctPath;""")
 
-proc processQuery(db: DbConn, query: SqlQuery, map: JsonNode, decTable: CountTable): seq[int]  =
-
-    # var map = %*{}
-    var nId, pId: int
-    var solAncestorIds : seq[int]
-
-    for row1 in db.fastRows(query):
-
-        discard parseInt(row1[0], nId)
-
-        solAncestorIds.add(nId)
-
-        var childCount : int
-        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
-
-        discard parseInt(row1[1], pId)
-
-        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
-        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
-
-        # echo map
-
-        let obj = %*{"id": nId, "label": l, "prettyLabel": pL, "children": %[], "childCount": childCount, "isSolution": row1[5].parseBool(), "decCount" : decTable[nId] - 1}
-
-        if pId == -1:
-            map[$nId] = obj
-        else:
-            map[$nId] = obj
-            addChild(map[$pId], obj, parseBool(row1[3]))
-
-    return solAncestorIds
-
-
-proc getCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
-
-    var map = %*{}
-    var coreQuery : SqlQuery
-    var failedQuery : SqlQuery
-
-    var solAncestorIds : seq[int]
-
-    let firstQuery = "select nodeId from Node where isSolution = 1 limit 1"
-    if db.getValue(sql(firstQuery)) == "":
-        coreQuery = noSolutionQuery
-        failedQuery = noSolutionFailedQuery
-    else:
-        failedQuery = solutionFailedQuery
-        coreQuery = solutionQuery
-
-    solAncestorIds = processQuery(db, coreQuery, map, decTable)
-    discard processQuery(db, failedQuery, map, decTable)
-
-    return %*{"solAncestorIds": %solAncestorIds, "tree" : map["0"]}
-
-
 
 proc makeCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
     var coreQuery : SqlQuery

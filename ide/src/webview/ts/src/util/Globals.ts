@@ -131,7 +131,7 @@ export default class Globals {
         Globals.vscode.postMessage({
             command: "simpleDomains",
             nodeId: Globals.s.selectedId,
-            wantExpressions: $("#expressions").prop("checked"),
+            wantExpressions: !$("#expressions").prop("checked"),
         });
     }
 
@@ -139,7 +139,7 @@ export default class Globals {
         Globals.vscode.postMessage({
             command: "prettyDomains",
             nodeId: Globals.s.selectedId,
-            wantExpressions: "0",
+            wantExpressions: !$("#expressions").prop("checked"),
             paths: Globals.s.pathList.join(":")
         });
     }

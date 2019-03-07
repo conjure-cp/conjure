@@ -1,3 +1,4 @@
+declare var d3: any;
 import Listview from './Listview';
 import Globals from './Globals';
 import Tree from './Tree';
@@ -30,14 +31,14 @@ export default class Listener {
 
                     Globals.s.solAncestorIds = message.data.core.solAncestorIds;
 
-                    console.log(message.data.core.nodes);
+                    // console.log(message.data.core.nodes);
 
                     for (let i = 0; i < message.data.core.nodes.length; i++) {
                         let element = message.data.core.nodes[i];
                         // console.log(element.isSolution)
                         Globals.s.addNode(element.id, element.parentId, element.label, element.prettyLabel, element.decCount, element.isLeftChild, element.childCount, element.isSolution);
                     }
-                    console.log(Globals.s.id2Node[Globals.s.rootId]);
+                    // console.log(Globals.s.id2Node[Globals.s.rootId]);
 
 
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
@@ -157,6 +158,8 @@ export default class Listener {
 
                 case 'simpleDomains':
 
+                    console.log(message.data.changedNames);    
+
                     message.data.vars.forEach((variable: any) => {
 
                         // console.log(message.data.changedNames);
@@ -167,7 +170,8 @@ export default class Listener {
                         li.text(variable.rng);
 
                         if (message.data.changedNames.includes(variable.name)) {
-                            $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
+                            d3.select('[id="' + $.escapeSelector(variable.name) + '"]').classed("changed", true);
+                            // $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
                         }
                     });
                     break;
