@@ -275,7 +275,7 @@ exports.loadDomains = () => {
             exports.sendSimpleRequest()
         }
 
-        exports.waiting = true;
+        // exports.waiting = true;
     }
     // console.log("SET WAIT TRUE DOMAINS, pretty: " + exports.pretty );
 }

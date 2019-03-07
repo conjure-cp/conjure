@@ -196,6 +196,17 @@ export default class ConjureHelper {
 
     }
 
+    private static findEssenceFiles(dir: string): string[] {
+        let files = fs.readdirSync(dir);
+        return files.filter(el => /\.essence$/.test(el));
+    }
+
+    private static findSolutionFiles(dir: string): string[] {
+        let files = fs.readdirSync(dir);
+        return files.filter(el => /\.solution$/.test(el));
+    }
+
+
     public static solve(): boolean {
         console.log("SOLVE------------------------");
         // vscode.workspace.textDocuments[0].
@@ -205,60 +216,94 @@ export default class ConjureHelper {
             return false;
         }
 
-        let doc = current.document;
-        let extension = path.extname(doc.fileName);
+        let paramFile = current.document;
+        let extension = path.extname(paramFile.fileName);
         // console.log(extension);
         if (extension !== ".param") {
             vscode.window.showErrorMessage("This is not a param file");
             return false;
         }
 
-        vscode.window.showInformationMessage('Solving..');
 
-        let dir = path.dirname(doc.uri.path);
-        console.log(dir);
+        let dir = path.dirname(paramFile.uri.path);
+        // let dir = vscode.workspace.getWorkspaceFolder(doc.uri);
 
-        fs.readdir(dir, function (err, files) {
-            const essenceFile = files.filter(el => /\.essence$/.test(el))[0];
+        let essenceFiles = this.findEssenceFiles(dir);
 
-            let modelPath = path.join(dir, essenceFile);
+        if (essenceFiles.length === 0) {
 
-            let args = ['solve', modelPath, doc.uri.path, '--solver-options', '"-dumptreejson out.json"'];
+            dir = path.join(dir, "../");
 
-            // console.log("conjure " + args.join(" "));
+            essenceFiles = this.findEssenceFiles(dir);
 
-            exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+            if (essenceFiles.length === 0) {
+                vscode.window.showErrorMessage("No essence files found in parent directory");
+                return false;
+            }
+            // return false;
+        }
 
-                if (e instanceof Error) {
+        if (essenceFiles.length > 1) {
+            vscode.window.showErrorMessage("More than one essence file was found, aborting.");
+            return false;
+        }
 
-                    // console.error(e);
-                    vscode.window.showErrorMessage(e.message);
+        let modelPath = path.join(dir, essenceFiles[0]);
 
-                    return false;
-                    // throw e;
+        let args = ['solve', modelPath, paramFile.uri.path, '--solver-options', '"-dumptreesql"'];
 
-                }
 
-                // console.log('stdout ', stdout);
+        exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
-                // console.log('stderr ', stderr);
+            vscode.window.showInformationMessage('Solving..');
 
-                fs.readdir(dir, function (err, files) {
-                    const solutionFiles = files.filter(el => /\.solution$/.test(el));
+            // console.log("here");
 
-                    console.log(solutionFiles);
+            if (e instanceof Error) {
 
-                    if (solutionFiles.length === 0) {
-                        vscode.window.showInformationMessage("No solution.");
-                        return;
-                    }
+                vscode.window.showErrorMessage(e.message);
+                return false;
+            }
 
-                    let uri = vscode.Uri.file(path.join(dir, solutionFiles[0]));
+            let solutions = this.findSolutionFiles(dir);
+
+
+            if (solutions.length === 0) {
+                vscode.window.showInformationMessage("No solution.");
+                return;
+            }
+
+            console.log(solutions)
+
+            solutions.forEach(fileName => {
+                let paramFileName = (path.parse(paramFile.fileName).name);
+
+                if (fileName.includes(paramFileName)) {
+
+                    console.log(paramFileName);
+                    console.log(fileName);
+
+                    let uri = vscode.Uri.file(path.join(dir, fileName));
                     vscode.commands.executeCommand('vscode.openFolder', uri);
-
-
-                });
+                    vscode.window.showInformationMessage("Done!");
+                }
             });
+
+            // fs.readdir(dir, function (err, files) {
+            //     const solutionFiles = files.filter(el => /\.solution$/.test(el));
+
+            //     console.log(solutionFiles);
+
+            //     if (solutionFiles.length === 0) {
+            //         vscode.window.showInformationMessage("No solution.");
+            //         return;
+            //     }
+
+            //     let uri = vscode.Uri.file(path.join(dir, solutionFiles[0]));
+            //     vscode.commands.executeCommand('vscode.openFolder', uri);
+
+
+            // });
         });
         return true;
     }
