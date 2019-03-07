@@ -30,9 +30,9 @@ proc findFiles*(dirPath: string): DbConn =
     if (dbFiles.len() > 1):
         raise newException(InitException, "More than one db file found!")
 
-    minionFilePath = minionFiles[0] 
-    eprimeFilePath = eprimeFiles[0]
-    dbFilePath = dbFiles[0]
+    minionFilePath = absolutePath(minionFiles[0])
+    eprimeFilePath = absolutePath(eprimeFiles[0])
+    dbFilePath = absolutePath(dbFiles[0])
 
     setCurrentDir(current)
 

@@ -204,6 +204,8 @@ export default class ConjureHelper {
             }
         }
 
+        this.deleteFiles(dir);
+
         if (essenceFiles.length > 1) {
             vscode.window.showErrorMessage("More than one essence file was found, aborting.");
             return;
@@ -217,6 +219,7 @@ export default class ConjureHelper {
             args.push('--solver-options');
             args.push('"-dumptreesql conjure-output/out.db"');
         }
+
 
         vscode.window.showInformationMessage('Solving..');
 
@@ -234,10 +237,6 @@ export default class ConjureHelper {
             else {
                 let solutions = this.findSolutionFiles(dir);
 
-                if (solutions.length === 0) {
-                    vscode.window.showInformationMessage("No solution.");
-                    return;
-                }
 
                 solutions.forEach(fileName => {
                     let paramFileName = (path.parse(paramFile.fileName).name);
@@ -249,6 +248,8 @@ export default class ConjureHelper {
                         vscode.window.showInformationMessage("Done!");
                     }
                 });
+
+                // vscode.window.showInformationMessage("No solution.");
             }
         });
     }
@@ -261,5 +262,27 @@ export default class ConjureHelper {
     private static findSolutionFiles(dir: string): string[] {
         let files = fs.readdirSync(dir);
         return files.filter(el => /\.solution$/.test(el));
+    }
+
+    private static deleteFiles(dir: string){
+        var rimraf = require("rimraf");
+        rimraf.sync(path.join(dir, "conjure-output"));
+        // dir = path.join(dir, "conjure-output");
+        // let files = fs.readdirSync(dir);
+        // let db  = files.filter(el => /\.db$/.test(el));
+        // let eprime  = files.filter(el => /\.eprime$/.test(el));
+        // let minion  = files.filter(el => /\.eprime-minion$/.test(el));
+
+        // db.forEach(fileName => {
+        //     fs.unlinkSync(path.join(dir, fileName));
+        // });
+
+        // eprime.forEach(fileName => {
+        //     fs.unlinkSync(path.join(dir, fileName));
+        // });
+
+        // minion.forEach(fileName => {
+        //     fs.unlinkSync(path.join(dir, fileName));
+        // });
     }
 }

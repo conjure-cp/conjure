@@ -56,15 +56,11 @@ export default class WebviewHelper {
                             if (err) {
                                 this.handleServerError(err);
                             }
-                            if (res.statusCode === 501){
-                                vscode.window.showErrorMessage('Selected path not valid');
+
+                            if (res.body.error){
+                                vscode.window.showErrorMessage(res.body.error);
                             }
-                            if (res.statusCode === 502){
-                                vscode.window.showErrorMessage('Minion file not valid');
-                            }
-                            if (res.statusCode === 503){
-                                vscode.window.showErrorMessage('Eprime file not valid');
-                            }
+
                             else {
                                 panel.webview.postMessage({ command: "init", data: res.body });
                             }

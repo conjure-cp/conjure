@@ -21,15 +21,11 @@ routes:
         try:
             core = init(path)
 
-        except EprimeParseException:
-            resp HttpCode(503)
-            echo "Failed to parse Eprime file"
-        except MinionParseException:
-            resp HttpCode(502)
-            echo "Failed to parse Minion file"
-        except :
-            # resp HttpCode(501)
-            echo("IOERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        except:
+            # let e = getCurrentException()
+            let msg = getCurrentExceptionMsg()
+            resp %*{"error":msg}
+            # raise
 
         let prettyAtRoot = getSkeleton()
 
@@ -50,8 +46,8 @@ routes:
     get "/loadNodes/@start":
         resp %loadNodes(@"start")
 
-    get "/longestBranchingVariable":
-        resp getLongestBranchingVarName()
+    # get "/longestBranchingVariable":
+        # resp getLongestBranchingVarName()
         # resp 100
 
     # get "/loadCore":

@@ -4,6 +4,11 @@ import util/init
 import util/main
 
 suite "findFiles":
+    test "everythingOkay":
+        let path = testDataPath & "sets/dummy"
+        discard findFiles(path)
+
+
     test "Missing files":
         expect(InitException):
             let path = testDataPath & "extension/noDBFile"
