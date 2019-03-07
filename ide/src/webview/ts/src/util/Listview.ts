@@ -181,6 +181,7 @@ export default class Listview {
 
 
     public setChangedExpressions(expressions: any) {
+        console.log(expressions);
         this.id2Node["Changed Expressions"]["children"] = expressions;
     }
 
@@ -230,7 +231,7 @@ export default class Listview {
                 }
             }
             else {
-                console.log(element.name);
+                // console.log(element.name);
                 this.id2Node[element.name].children[0].name = element.rng;
             }
 

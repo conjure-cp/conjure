@@ -5,19 +5,19 @@ import util/branchingCondition
 suite "O":
     test "OExc":
         let oSet = newOSet("s")
-        check(getLabel(@[Variable(oSet)], "s_Occurrence_00001", "1", "0", true) == "1 was excluded from s")
+        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "1", "0", true) == "8 was excluded from s")
         
     test "ONotExc":
         let oSet = newOSet("s")
-        check(getLabel(@[Variable(oSet)], "s_Occurrence_00001", "0", "0", true) == "1 was not excluded from s")
+        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "0", "0", true) == "8 was not excluded from s")
 
     test "OInc":
         let oSet = newOSet("s")
-        check(getLabel(@[Variable(oSet)], "s_Occurrence_00001", "1", "1", true) == "1 was included in s")
+        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "1", "1", true) == "8 was included in s")
 
     test "ONotInc":
         let oSet = newOSet("s")
-        check(getLabel(@[Variable(oSet)], "s_Occurrence_00001", "0", "1", true) == "1 was not included in s")
+        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "0", "1", true) == "8 was not included in s")
 
 suite "E":
     test "Ein":

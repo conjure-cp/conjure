@@ -81,24 +81,35 @@ proc loadSetChild*(nodeId, path: string): JsonNode =
 
 proc temp(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): JsonNode =
     var domainsAtNode: seq[Variable]
+    var domainsAtPrev: seq[Variable]
     var changedExpressions: seq[Expression]
     var changedList: seq[string]
     var id: int
-
     discard parseInt(nodeId, id)
+
+    # if not prettyLookup.hasKey(nodeId):
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId, wantExpressions))
+    # else:
+        # domainsAtNode = toSeq(prettyLookup[nodeId].values())
 
     for kid in getChildSets(paths, nodeId):
         if kid != nil:
             domainsAtNode.add(kid)
 
     if (id != rootNodeId):
-        var domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1), wantExpressions)
-        for kid in getChildSets(paths, $(id - 1)):
+        let oldId = $(id - 1)
+        # if not prettyLookup.hasKey(oldId):
+        domainsAtPrev = getPrettyDomainsOfNode(db, oldId, wantExpressions)
+        # else:
+            # domainsAtPrev = toSeq(prettyLookup[oldId].values())
+
+        for kid in getChildSets(paths, oldId):
             if kid != nil:
                 domainsAtPrev.add(kid)
 
         (changedList, changedExpressions) = getPrettyChanges(domainsAtNode, domainsAtPrev)
+
+        echo changedExpressions
 
     # echo domainsAtNode
 
@@ -125,12 +136,6 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = true): SimpleDom
         domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
 
         for i in 0..<domainsAtNode.len():
-
-            if domainsAtNode[i].name == "((!Ticks_Occurrence_00001) \\/ (!Ticks_Occurrence_00006))":
-                echo domainsAtNode[i].rng, "   ", domainsAtPrev[i].rng
-
-            # echo "old   ", "new"
-            # echo domainsAtNode[i], domainsAtPrev[i]
 
             if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
                 # echo domainsAtNode[i]

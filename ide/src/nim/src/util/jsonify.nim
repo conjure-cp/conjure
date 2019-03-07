@@ -108,18 +108,6 @@ proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
         else:
             return @[]
 
-proc getExpressionChanges*(newExpression, oldExpression: Expression): seq[ string] =
-    # let prefix = "liExpressions"
-
-    if (newExpression.rng != oldExpression.rng):
-        result.add(newExpression.name)
-
-proc getVariableChanges*(newVariable, oldVariable: Variable): seq[string] =
-
-    if (newVariable.rng != oldVariable.rng):
-        # result.add("liDomain Variables" & newVariable.name )
-        result.add(newVariable.name)
-
 proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): (seq[string], seq[Expression]) =
 
     var changedExpressions : seq[Expression]
@@ -138,12 +126,10 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): (seq[string
                 for i in countUp(0, newSet.children.len() - 1):
                     changedVariableNames = changedVariableNames.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
 
-        elif (newVar of Expression):
-            let changed = getExpressionChanges(Expression(newVar), Expression(oldVar))
-            if changed.len() > 0:
-                changedExpressions.add(Expression(newVar))
-            changedVariableNames = changedVariableNames.concat(changed)
-        else:
-            changedVariableNames = changedVariableNames.concat(getVariableChanges(newVar, oldVar))
+            # let changed = getExpressionChanges(Expression(newVar), Expression(oldVar))
+        elif newVar.rng != oldVar.rng:
+            if (newVar of Expression):
+                    changedExpressions.add(Expression(newVar))
+            changedVariableNames.add(newVar.name)
     
     return (changedVariableNames, changedExpressions)
