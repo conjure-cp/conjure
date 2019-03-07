@@ -214,8 +214,6 @@ export default class ConjureHelper {
         let args = ['solve', modelPath, paramFile.uri.path];
 
         if (wantVisualisation) {
-            args.push('--savilerow-options');
-            args.push('"-O0 -reduce-domains"');
             args.push('--solver-options');
             args.push('"-dumptreesql conjure-output/out.db"');
         }

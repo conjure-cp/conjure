@@ -12,23 +12,29 @@ proc findFiles*(dirPath: string): DbConn =
     var eprimeFilePath: string
     var dbFilePath: string
 
-    for f in walkFiles("*.eprime-minion"):
-        minionFilePath = absolutePath(f)
-        break;
+    let minionFiles = toSeq(walkFiles("*.eprime-minion"))
+    if (minionFiles.len() == 0):
+        raise newException(InitException, "No minion file found!")
+    if (minionFiles.len() > 1):
+        raise newException(InitException, "More than one minion file found!")
 
-    for f in walkFiles("*.eprime"):
-        eprimeFilePath = absolutePath(f)
-        break;
+    let eprimeFiles = toSeq(walkFiles("*.eprime"))
+    if (eprimeFiles.len() == 0):
+        raise newException(InitException, "No eprime file found!")
+    if (eprimeFiles.len() > 1):
+        raise newException(InitException, "More than one eprime file found!")
+    
+    let dbFiles = toSeq(walkFiles("*.db"))
+    if (dbFiles.len() == 0):
+        raise newException(InitException, "No db file found!")
+    if (dbFiles.len() > 1):
+        raise newException(InitException, "More than one db file found!")
 
-    for f in walkFiles("*.db"):
-        dbFilePath = absolutePath(f)
-        break;
+    minionFilePath = minionFiles[0] 
+    eprimeFilePath = eprimeFiles[0]
+    dbFilePath = dbFiles[0]
 
     setCurrentDir(current)
-
-    if dbFilePath == "":
-        raise newException(CannotOpenDatabaseException,
-                "No files with .db extension found")
 
     let db = open(dbFilePath, "", "", "")
 

@@ -7,6 +7,8 @@ let maxIndex* = 4
 let rootNodeId* = 0
 
 # Exceptions
+type
+    InitException* = object of Exception
 
 type
     CannotOpenEprimeException* = object of Exception
