@@ -71,8 +71,12 @@ proc walkTree(obj: JsonNode, db: DbConn, wentLeft: bool, pId: string) =
         if (obj.hasKey("branchVal")):
             assert($obj["branchVal"].getInt() == value)
 
-        if (obj.hasKey("isSolution")):
+        if (obj.hasKey("solution")):
             assert(isSolution == "1")
+        else:
+            assert(isSolution == "0")
+            
+
 
             
     # echo obj
