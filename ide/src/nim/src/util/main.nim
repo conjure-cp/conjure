@@ -16,30 +16,9 @@ proc init*(dirPath: string): Core =
 
 proc loadNodes*(start: string): seq[Node] =
 
-    var nId, pId, childId: int
-
-    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = ? order by nodeId asc"
-
-    for row1 in db.fastRows(sql(query), start):
-        discard parseInt(row1[0], nId)
-
-        discard parseInt(row1[1], pId)
-
-        var childCount : int
-        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
-
-        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
-        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
-        
-        let l = getLabel(getInitialVariables(), vName, row1[3], value)
-        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
-
-        var decCount = 0
-        if (decTable.hasKey(nId)):
-            decCount = decTable[nId]
-
-        result.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decCount))
-
+    let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
+                    start & "  order by nodeId asc")
+    discard processQuery(db, query, result, decTable)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
 

@@ -49,21 +49,18 @@ proc getDecendants*(db: DbConn): CountTable[int] =
 
     var countTable = initCountTable[int]()
     var id2Parent = initTable[int, int]()
-    var parent2Id = initTable[int, int]()
     var nodeId, parentId: int
 
     for res in db.fastRows(sql(query)):
         discard res[0].parseInt(nodeId)
         discard res[1].parseInt(parentId)
         id2Parent[nodeId] = parentId
-        parent2Id[parentId] = nodeId
 
     for n in id2Parent.keys():
         var current = n
 
         while true:
-            if (parent2Id.hasKey(current)):
-                countTable.inc(current)
+            countTable.inc(current)
             if id2Parent.hasKey(current):
                 current = id2Parent[current]
             else:
@@ -109,7 +106,7 @@ let noSolutionFailedQuery = sql("""with recursive
     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId not in correctPath and parentId in correctPath;""")
 
 
-proc processQuery( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: CountTable[int]): seq[int] =
+proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: CountTable[int]): seq[int] =
 
     var nId, pId: int
 
@@ -123,15 +120,14 @@ proc processQuery( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: C
         var childCount : int
         discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
 
-        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
-        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
+        let row2 = db.getRow(sql"select branchingVariable, value from Node where nodeId = ?", pId)
 
-        let l = getLabel(getInitialVariables(), vName, row1[3], value)
-        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
+        let l = getLabel(getInitialVariables(), row2[0], row1[3], row2[1])
+        let pL = getLabel(getInitialVariables(), row2[0], row1[3], row2[1], true)
 
         var decCount = 0
         if (decTable.hasKey(nId)):
-            decCount = decTable[nId]
+            decCount = decTable[nId] - 1
 
         list.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decCount, isSolution: parseBool(row1[5])))
 

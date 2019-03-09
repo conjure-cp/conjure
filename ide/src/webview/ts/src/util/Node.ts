@@ -108,7 +108,14 @@ export default class Node {
             return 10;
         }
 
-        return Math.log(node.decCount + 10) * 3;
+        let size =  Math.log(node.decCount + 10) * 3;
+
+
+        if (size < 10){
+            return 10;
+        }
+
+        return size;
 
     }
 

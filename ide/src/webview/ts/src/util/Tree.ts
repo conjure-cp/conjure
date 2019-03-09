@@ -90,10 +90,10 @@ export default class Tree {
 
         }
 
-        domElement.attr("r", Node.calculateRadius(node));
+        // domElement.attr("r", Node.calculateRadius(node));
     }
 
-    public static getDecLabelHeight(node: Node){
+    public static getDecLabelHeight(node: Node) {
         return Node.calculateRadius(node) + 13;
     }
 
@@ -135,7 +135,8 @@ export default class Tree {
             });
 
         nodeEnter.append("circle")
-            .attr("r", 1e-6);
+            .attr("r", (node: Node) => { return Node.calculateRadius(node); });
+
 
         nodeEnter.append("text")
             .attr("y", () => {
@@ -162,7 +163,7 @@ export default class Tree {
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .text((node: Node) => {
-                if (Node.hasMoreChildren(node)){
+                if (Node.hasMoreChildren(node)) {
                     return node.decCount;
                 }
             });
@@ -172,7 +173,48 @@ export default class Tree {
             .attr("transform", (node: Node) => { return "translate(" + node.x + "," + node.y + ")"; });
 
         nodeUpdate.select("circle")
-            .each((d: Node) => { Tree.fillCircle(d); });
+            // .attr("r", 10)
+            // .transition()
+            // .duration(10)
+            .attr("r", (node: Node) => {
+                // let s = "#node" + node.id + " circle";
+
+                // let domElement = d3.select(s);
+
+                // console.log(circle);
+
+                return Node.calculateRadius(node);
+
+            })
+            .attr("class", (node: Node) => {
+                
+                let res = "";
+
+                if (Globals.s.selectedId === node.id){
+                    res += "selected ";
+                }
+
+                if (node.isSolution) {
+                    return res + " solution";
+                }
+
+                if (Node.hasMoreChildren(node)) {
+
+                    if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0) {
+                        return res + " hasOthers";
+                    }
+
+                    else {
+                       return  res + " hasOthers red";
+                    }
+
+                }
+
+
+            });
+
+
+        // .each((d: Node) => { Tree.fillCircle(d); });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
@@ -182,11 +224,11 @@ export default class Tree {
                 return Tree.getDecLabelHeight(node);
             })
             .text((node: Node) => {
-                if (Node.hasMoreChildren(node)){
+                if (Node.hasMoreChildren(node)) {
                     return node.decCount;
                 }
             });
-            
+
 
         let nodeExit = node.exit().transition()
             .duration(Tree.duration)
