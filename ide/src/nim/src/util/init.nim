@@ -49,20 +49,21 @@ proc getDecendants*(db: DbConn): CountTable[int] =
 
     var countTable = initCountTable[int]()
     var id2Parent = initTable[int, int]()
+    var parent2Id = initTable[int, int]()
     var nodeId, parentId: int
 
     for res in db.fastRows(sql(query)):
         discard res[0].parseInt(nodeId)
         discard res[1].parseInt(parentId)
-
         id2Parent[nodeId] = parentId
-
+        parent2Id[parentId] = nodeId
 
     for n in id2Parent.keys():
         var current = n
 
         while true:
-            countTable.inc(current)
+            if (parent2Id.hasKey(current)):
+                countTable.inc(current)
             if id2Parent.hasKey(current):
                 current = id2Parent[current]
             else:
@@ -128,7 +129,11 @@ proc processQuery( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: C
         let l = getLabel(getInitialVariables(), vName, row1[3], value)
         let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
 
-        list.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1, isSolution: parseBool(row1[5]) ))
+        var decCount = 0
+        if (decTable.hasKey(nId)):
+            decCount = decTable[nId]
+
+        list.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decCount, isSolution: parseBool(row1[5])))
 
 
 proc makeCore*(db: DbConn, decTable: CountTable[int]): Core =
@@ -149,5 +154,3 @@ proc makeCore*(db: DbConn, decTable: CountTable[int]): Core =
     discard processQuery(db, failedQuery, nodeList, decTable)
 
     return Core(nodes: nodeList, solAncestorIds: solAncestorIds)
-
-    # return %*{"nodes": %nodeList, "solAncestorIds": %solAncestorIds}

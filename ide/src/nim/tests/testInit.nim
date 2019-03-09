@@ -1,4 +1,4 @@
-import unittest, os, json, constants
+import unittest, os, json, constants, db_sqlite, tables, parseutils
 import util/types
 import util/init
 import util/main
@@ -35,3 +35,17 @@ suite "findFiles":
         expect(InitException):
             let path = testDataPath & "extension/multipleMinionFiles"
             discard findFiles(path)
+
+suite "decendants":
+    test "calculationIsCorrect":
+        let path = testDataPath & "golomb"
+        let db = findFiles(path)
+        let t = getDecendants(db)
+        let totalNodes = db.getValue(sql"select count(nodeId) from Node")
+        check($(t[0]+1) == totalNodes)
+
+        var leafId: int
+        for leaf in db.fastRows(sql"select nodeId from Node where nodeId not in (select parentId from Node) "):
+            discard leaf[0].parseInt(leafId)
+            echo leafId
+            check(not t.hasKey(leafId))

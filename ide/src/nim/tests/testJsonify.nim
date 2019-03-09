@@ -3,7 +3,6 @@ import util/types
 import util/process
 import util/init
 import util/jsonify
-# include util/main
 
 suite "setToJson":
     let validPath = testDataPath & "/sets/recursive/flagsFlagsFlags"

@@ -34,8 +34,11 @@ proc loadNodes*(start: string): seq[Node] =
         let l = getLabel(getInitialVariables(), vName, row1[3], value)
         let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
 
+        var decCount = 0
+        if (decTable.hasKey(nId)):
+            decCount = decTable[nId]
 
-        result.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
+        result.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decCount))
 
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
@@ -105,7 +108,6 @@ proc prettifyDomains(db: DbConn, nodeId, paths: string, wantExpressions: bool = 
 
 proc getSkeleton*(): TreeViewNode =
     return domainsToJson(getPrettyDomainsOfNode(db, "0", true))
-
 
 proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): PrettyDomainResponse =
     prettifyDomains(db, nodeId, paths, wantExpressions)
