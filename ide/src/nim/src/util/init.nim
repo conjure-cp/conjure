@@ -144,8 +144,15 @@ proc makeCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
 
         discard parseInt(row1[1], pId)
 
-        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
-        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
+
+        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
+        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
+
+
+
+        let l = getLabel(getInitialVariables(), vName, row1[3], value)
+        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
+        # let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
         # echo parseBool(row1[3])
 
@@ -160,8 +167,12 @@ proc makeCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
 
         discard parseInt(row1[1], pId)
 
-        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
-        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
+        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
+        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
+
+        let l = getLabel(getInitialVariables(), vName, row1[3], value)
+        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
+        # let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
         nodeList.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
 

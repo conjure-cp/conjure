@@ -29,9 +29,12 @@ proc loadNodes*(start: string): seq[ParentChild] =
 
         var childCount : int
         discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
+
+        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
+        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
         
-        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
-        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
+        let l = getLabel(getInitialVariables(), vName, row1[3], value)
+        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
 
 
         result.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))

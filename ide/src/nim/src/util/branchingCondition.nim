@@ -68,8 +68,8 @@ proc getPrettyBranchingCondition*(vars: seq[Variable], branchName: string, isLef
                 return $num & " was excluded from " & name
             else:
                 if val == "1":
-                    return $num & " was not included in " & name
-                return $num & " was not excluded from " & name
+                    return $num & " was excluded from " & name
+                return $num & " was included in " & name
 
         if s of ExplicitSet:
             if isLeft == "1":
