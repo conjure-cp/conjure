@@ -2,30 +2,29 @@ import types, util, parser, parseSets
 import re, strutils, os, tables, json, db_sqlite, parseutils, sequtils
 
 var prettyLookup* = initTable[string, Table[string, Variable]]()
-var eprimeLookup: Table[string, Variable]
-var auxLookup: Table[string, Expression]
+var eprimeLookup = initTable[string, Variable]()
+var auxLookup = initTable[string, Expression]()
 
 proc getInitialVariables*() : seq[Variable] =
     return toSeq(eprimeLookup.values())
 
 proc initParser*(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
-    eprimeLookup.clear()
-    auxLookup.clear()
-    eprimeLookup = parseEprime(db, eprimeFilePath)
-    auxLookup = parseAux(minionFilePath)
+    try:
+        eprimeLookup.clear()
+        auxLookup.clear()
+        eprimeLookup = parseEprime(db, eprimeFilePath)
+        auxLookup = parseAux(minionFilePath)
+    except:
+        discard
+        
     # echo auxLookup.len()
 
 proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): seq[Variable] =
 
     var query = "select name, lower, upper from domain where"
-
     if (not wantExpressions):
         query &= " name not like 'aux%' and "
-
     query &= " nodeId = ? order by name limit ?"
-
-    # echo auxLookup
-    # echo wantExpressions
 
     for domain in db.fastRows(sql(query), nodeId, "-1"):
 
@@ -34,17 +33,9 @@ proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool =
             e.rng = getPrettyRange(domain[1], domain[2])
             result.add(e)
         else:
-
             let v = newVariable(name = domain[0])
-            # echo v
             v.rng = getPrettyRange(domain[1], domain[2])
             result.add(v)
-
-    # echo result
-    # for res in result:
-    #     echo res
-    #     if res of Expression:
-    #         echo Expression(res)
 
 proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): (seq[Variable]) =
 

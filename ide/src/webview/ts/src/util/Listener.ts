@@ -45,6 +45,7 @@ export default class Listener {
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
                     Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+                    Tree.selectNode(Globals.s.rootId);
 
                     break;
 

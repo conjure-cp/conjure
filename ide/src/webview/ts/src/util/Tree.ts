@@ -52,9 +52,10 @@ export default class Tree {
         let allCircles = ".node circle";
         d3.selectAll(allCircles).classed("selected", false);
         let s = "#node" + nodeId + " circle";
+        console.log("selecting " + nodeId);
         d3.select(s).classed("selected", true);
-
         Tree.focusNode(Globals.s.id2Node[nodeId]);
+
 
         if (!Globals.s.frozen) {
             Globals.loadDomains();
@@ -177,44 +178,10 @@ export default class Tree {
             // .transition()
             // .duration(10)
             .attr("r", (node: Node) => {
-                // let s = "#node" + node.id + " circle";
-
-                // let domElement = d3.select(s);
-
-                // console.log(circle);
-
                 return Node.calculateRadius(node);
 
             })
-            .attr("class", (node: Node) => {
-                
-                let res = "";
-
-                if (Globals.s.selectedId === node.id){
-                    res += "selected ";
-                }
-
-                if (node.isSolution) {
-                    return res + " solution";
-                }
-
-                if (Node.hasMoreChildren(node)) {
-
-                    if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0) {
-                        return res + " hasOthers";
-                    }
-
-                    else {
-                       return  res + " hasOthers red";
-                    }
-
-                }
-
-
-            });
-
-
-        // .each((d: Node) => { Tree.fillCircle(d); });
+            .each((d: Node) => { Tree.fillCircle(d); });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);

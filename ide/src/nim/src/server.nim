@@ -19,12 +19,12 @@ routes:
 
         var response: InitResponse
 
-        try:
-            response = newInitResponse(path)
-        except:
+        # try:
+        response = newInitResponse(path)
+        # except:
             # let e = getCurrentException()
-            let msg = getCurrentExceptionMsg()
-            resp %*{"error":msg}
+            # let msg = getCurrentExceptionMsg()
+            # resp %*{"error":msg}
         resp %response 
 
     get "/simpleDomains/@nodeId/@wantExpressions":
