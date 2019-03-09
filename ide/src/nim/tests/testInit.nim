@@ -47,5 +47,4 @@ suite "decendants":
         var leafId: int
         for leaf in db.fastRows(sql"select nodeId from Node where nodeId not in (select parentId from Node) "):
             discard leaf[0].parseInt(leafId)
-            echo leafId
             check(not t.hasKey(leafId))

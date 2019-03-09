@@ -93,6 +93,10 @@ export default class Tree {
         domElement.attr("r", Node.calculateRadius(node));
     }
 
+    public static getDecLabelHeight(node: Node){
+        return Node.calculateRadius(node) + 13;
+    }
+
     public static update(source: Node) {
 
         // let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse(),
@@ -152,7 +156,7 @@ export default class Tree {
 
         nodeEnter.append("text")
             .attr("y", (node: Node) => {
-                return Node.calculateRadius(node) + 13;
+                return Tree.getDecLabelHeight(node);
             })
             .attr("class", "decCount")
             .attr("dy", ".35em")
@@ -174,6 +178,9 @@ export default class Tree {
             .style("fill-opacity", 1);
 
         nodeUpdate.select("text.decCount")
+            .attr("y", (node: Node) => {
+                return Tree.getDecLabelHeight(node);
+            })
             .text((node: Node) => {
                 if (Node.hasMoreChildren(node)){
                     return node.decCount;

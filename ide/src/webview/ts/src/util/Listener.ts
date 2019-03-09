@@ -3,6 +3,7 @@ import Listview from './Listview';
 import Globals from './Globals';
 import Tree from './Tree';
 import Node from './Node';
+import { notDeepEqual } from 'assert';
 
 export default class Listener {
 
@@ -42,6 +43,8 @@ export default class Listener {
 
 
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+                    Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
+                    Tree.update(Globals.s.id2Node[Globals.s.rootId]);
 
                     break;
 
@@ -59,7 +62,7 @@ export default class Listener {
                     message.data.forEach((element: any) => {
                         if (!Globals.s.id2Node[element.id]) {
 
-                            console.log("addindg " + element.id);
+                            // console.log("addindg " + element.id);
 
                             parent = Globals.s.id2Node[element.parentId];
 
@@ -80,7 +83,7 @@ export default class Listener {
                         }
                     });
 
-                    console.log(parent);
+                    // console.log(parent);
 
                     // Tree.update(parent);
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
@@ -93,7 +96,7 @@ export default class Listener {
 
                 case 'simpleDomains':
 
-                    console.log(message.data.changedNames);    
+                    // console.log(message.data.changedNames);    
 
                     message.data.vars.forEach((variable: any) => {
 
@@ -112,7 +115,7 @@ export default class Listener {
                     break;
 
                 case 'prettyDomains':
-                    console.log(message.data);
+                    // console.log(message.data);
 
                     Globals.lv.setChangedExpressions(message.data.changedExpressions);
                     Globals.lv.updateNodes(message.data.vars);

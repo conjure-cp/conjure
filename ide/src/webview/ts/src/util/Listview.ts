@@ -181,7 +181,7 @@ export default class Listview {
 
 
     public setChangedExpressions(expressions: any) {
-        console.log(expressions);
+        // console.log(expressions);
         this.id2Node["Changed Expressions"]["children"] = expressions;
     }
 

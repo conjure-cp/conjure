@@ -104,8 +104,7 @@ export default class Node {
     public static calculateRadius(node: Node): number{
         // console.log(node);
 
-
-        if (node.decCount === 0 || node.children && node.children.length === node.childCount){
+        if (node.children && node.children.length === node.childCount){
             return 10;
         }
 
