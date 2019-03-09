@@ -53,8 +53,6 @@ suite "setToJson":
         ]
         }""")
 
-        # echo %setToTreeView(Set(prettyDomains[1]))
-      
         check((%setToTreeView(Set(prettyDomains[1]))) == parseJson(expected))
         
     test "domainsToJson":
@@ -133,10 +131,4 @@ suite "setToJson":
         ]
         }"""
 
-        check(json == parseJson(expected))            
-
-# suite "":
-#     let validPath = absolutePath("../test/testData/sets/recursive/markerMarkerMarker")
-#     echo validPath
-#     init(validPath)
-        # echo pretty2.pretty()
+        check(%json == parseJson(expected))            

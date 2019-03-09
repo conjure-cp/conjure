@@ -1,4 +1,4 @@
-import variable, setType, expression
+import variable, setType, expression, json
 export variable, setType, expression
 
 # Constants
@@ -9,7 +9,6 @@ let rootNodeId* = 0
 # Exceptions
 type
     InitException* = object of Exception
-
 type
     CannotOpenEprimeException* = object of Exception
 type
@@ -23,12 +22,16 @@ type
 
 
 # Responses
+type PrettyDomainResponse* = ref object of RootObj
+    vars*: JsonNode
+    changed*: seq[string]
+    changedExpressions*: JsonNode
 
 type SimpleDomainResponse* = ref object of RootObj
     changedNames*: seq[string]
     vars*: seq[Variable]
 
-type ParentChild* = ref object of RootObj
+type Node* = ref object of RootObj
     id*: int
     parentId*: int
     label*: string
@@ -38,18 +41,12 @@ type ParentChild* = ref object of RootObj
     isLeftChild*: bool
     decCount*: int
 
-# type ChildResponse* = ref object of RootObj
-#     nodeId*: int
-#     children*: seq[int]
-#     decendantCount*: int
+type Core* = ref object of RootObj
+    nodes*: seq[Node]
+    solAncestorIds*: seq[int]
 
-type Node* = ref object of RootObj
-    id*: int
-    name*: string
-    children*: seq[Node]
-
-# Json
 
 type TreeViewNode* = ref object of RootObj
     name*: string
     children*: seq[TreeViewNode]
+

@@ -32,7 +32,7 @@ proc setToTreeView*(s: Set): TreeViewNode =
     return (TreeViewNode(name: s.name, children: @[t, cardinality, kids]))
 
 
-proc domainsToJson*(domains: seq[Variable]): JsonNode =
+proc domainsToJson*(domains: seq[Variable]): TreeViewNode =
 
     let root = TreeViewNode(name: "Items")
     let variables = TreeViewNode(name: "Domain Variables")
@@ -54,7 +54,7 @@ proc domainsToJson*(domains: seq[Variable]): JsonNode =
         else:
             variables.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
-    return %root
+    return root
 
 proc getCollapsedSetChildren*(s: Set): JsonNode =
     let json = %*{}

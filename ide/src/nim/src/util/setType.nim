@@ -24,9 +24,6 @@ type FlagSet* = ref object of Set
 type ExplicitSet* = ref object of Set
     cardinality*: int
 
-proc getSetName*(parent: Set, setId: int): string =
-    return parent.name & "-" & $setId
-
 
 proc initSet(name: string, s: Set, inner: Set = nil) =
     s.name = name
@@ -81,6 +78,8 @@ proc getCardinality*(s: Set): string =
 
     return "SET TYPE NOT SUPPORTED"
 
+proc getSetName*(parent: Set, setId: int): string =
+    return parent.name & "-" & $setId
 
 proc getSetType*(s: Set): string =
     if s of ExplicitSet:
@@ -113,43 +112,6 @@ proc `$`*(s: Set): string =
             indent &= "       "
         for child in s.children:
             result &= indent & $child & "\n"
-
-
-proc prettifyIntSet(i: IntSet): string =
-    result = "int("
-
-    var list = i.toSeq()
-
-    if list.len() == 0:
-        return "int()"
-
-    list.sort(cmp)
-
-    var index = 0
-    var prevNum = $list[0]
-
-    result &= $list[0]
-
-    while (index < list.len() - 1):
-
-        while (list[index + 1] - list[index] == 1):
-            index.inc()
-            if (index == list.len() - 1):
-                break
-        
-        if ($list[index] != prevNum):
-            result &= ".." & $list[index]
-            prevNum = $list[index]
-
-        index.inc()
-
-        if (index <= list.len()-1):
-            result &= ","
-            result &= list[index]
-            prevNum = $list[index]
-        
-    
-    result &= ")"
 
 
 

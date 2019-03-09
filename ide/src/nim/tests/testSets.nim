@@ -4,11 +4,6 @@ include util/main
 let pathPrefix = testDataPath & "/sets/"
 
 
-proc getSet(nodeId: string): Set =
-    for d in getPrettyDomainsOfNode(db, nodeId):
-        if d of Set:
-            return Set(d)
-    return nil
 
 suite "core":
     test "MMMM":

@@ -2,6 +2,7 @@ import unittest, json, constants, strutils
 import util/types
 import util/types
 import util/main
+import util/jsonify
 
 suite "init":
     test "initValidPath":
@@ -40,155 +41,84 @@ suite "loadPrettyDomains":
     discard init(validPath)
 
     test "prettyDomainUpdateRoot":
-        let expected0 = """
-        {
-        "vars": [
-          {
-            "name": "y",
-            "rng": "int(1..9)"
-          },
-          {
-            "name": "s",
-            "Cardinality": "int(2..16)",
-            "Children": {
-              "children": [
-                {
-                  "name": "s-1",
-                  "_children": []
-                },
-                {
-                  "name": "s-2",
-                  "_children": []
-                }
-              ]
-            }
-          },
-          {
-            "name": "z",
-            "rng": "int(1..9)"
-          },
-          {
-            "name": "x",
-            "rng": "int(1..9)"
-          }
-        ],
-        "changed": [],
-        "changedExpressions": []
-      }
-      """
-        let pretty0 = loadPrettyDomains("0", "")
-        # echo pretty0.pretty()
-        check(pretty0 == parseJson(expected0))
+        let nodeId = "0"
+
+        let pretty0 = loadPrettyDomains(nodeId, "")
+        let vars = pretty0.vars
+
+        let y = %*{"name": "y", "rng": "int(1..9)"}
+        check(vars[0] == y)
+
+        check(vars[1] == setToJson(getSet(nodeId), nodeId, true))
+
+        let z = %* {"name": "z", "rng": "int(1..9)"}
+        check(vars[2] == z)
+        
+        let x = %* {"name": "x", "rng": "int(1..9)"}
+        check(vars[3] == x)
+
+        check(pretty0.changed.len() == 0)
+        check(pretty0.changedExpressions.len() == 0)
 
     test "prettyDomainUpdateNode1":
 
-        let expected1 = """{
-        "vars": [
-          {
-            "name": "y",
-            "rng": "int(1..9)"
-          },
-          {
-            "name": "s",
-            "Cardinality": "int(2..16)",
-            "Children": {
-              "children": [
-                {
-                  "name": "s-1",
-                  "_children": []
-                },
-                {
-                  "name": "s-2",
-                  "_children": []
-                }
-              ]
-            }
-          },
-          {
-            "name": "z",
-            "rng": "int(1..9)"
-          },
-          {
-            "name": "x",
-            "rng": "int(1)"
-          }
-        ],
-        "changed": [
-            "x"
-        ],
-        "changedExpressions": []
-        }"""
+        let nodeId = "1"
 
-        let pretty1 = loadPrettyDomains("1", "")
-        # echo pretty1.pretty()
-        check(pretty1 == parseJson(expected1))
+        let pretty1 = loadPrettyDomains(nodeId, "")
+        let vars = pretty1.vars
+
+        let y = %*{"name": "y", "rng": "int(1..9)"}
+        check(vars[0] == y)
+
+        check(vars[1] == setToJson(getSet(nodeId), nodeId, true))
+
+        let z = %* {"name": "z", "rng": "int(1..9)"}
+        check(vars[2] == z)
+        
+        let x = %* {"name": "x", "rng": "int(1)"}
+        check(vars[3] == x)
+
+        check(pretty1.changed == @["x"])
+        check(pretty1.changedExpressions.len() == 0)
 
     test "prettyDomainUpdateExpandedChild":
 
-        let expected2 = """{
-        "vars": [
-          {
-            "name": "y",
-            "rng": "int(1)"
-          },
-          {
-            "name": "s",
-            "Cardinality": "int(2..16)",
-            "Children": {
-              "children": [
-                {
-                  "name": "s-1",
-                  "_children": []
-                },
-                {
-                  "name": "s-2",
-                  "_children": []
-                }
-              ]
-            }
-          },
-          {
-            "name": "z",
-            "rng": "int(1..9)"
-          },
-          {
-            "name": "x",
-            "rng": "int(1)"
-          },
-          {
-            "name": "s-1",
-            "Cardinality": "int(1..4)",
-            "Children": {
-              "children": [
-                {
-                  "name": "s-1-1",
-                  "_children": []
-                }
-              ]
-            }
-          }
-        ],
-        "changed": [
-            "y"
-        ],
-        "changedExpressions": []
-        }"""
+        let nodeId = "2"
 
-        let pretty2 = loadPrettyDomains("2", "s.s-1")
-        # echo pretty2.pretty()
-        check(pretty2 == parseJson(expected2))
+        let pretty1 = loadPrettyDomains(nodeId, "s.s-1")
+        let vars = pretty1.vars
+
+        let y = %*{"name": "y", "rng": "int(1)"}
+        check(vars[0] == y)
+
+        check(vars[1] == setToJson(getSet(nodeId), nodeId, true))
+
+        let z = %* {"name": "z", "rng": "int(1..9)"}
+        check(vars[2] == z)
+        
+        let x = %* {"name": "x", "rng": "int(1)"}
+        check(vars[3] == x)
+
+        check(vars[4] == setToJson(getSet(nodeId).children[0], nodeId, true))
+
+        check(pretty1.changed == @["y"])
+        check(pretty1.changedExpressions.len() == 0)
 
     test "collapsedSetsAppearInChangedList":
-        let pretty5 = loadPrettyDomains("5", "")
-        check(%"s-1" in pretty5["changed"].getElems())
+        let nodeId = "5"
+        let pretty5 = loadPrettyDomains(nodeId, "s.s-1")
+        check("s-1" in pretty5.changed)
 
 
     test "getExpandedSetChildFailed":
-        check(getExpandedSetChild("2", "s.3.ASDASD") == nil)
+        let nodeId = "2"
+        discard loadPrettyDomains(nodeId, "")
+        check(getExpandedSetChild(nodeId, "s.3.ASDASD") == nil)
 
     test "getExpandedSetChildSuccess":
-        # check(getExpandedSetChild("2","s.3.ASDASD") == nil)
-        check(getExpandedSetChild("2", "s.s-1") != nil)
+        let nodeId = "2"
+        discard loadPrettyDomains(nodeId, "")
+        check(getExpandedSetChild(nodeId, "s.s-1") != nil)
 
     test "loadSetChild":
         let expected = """{
@@ -244,6 +174,5 @@ suite "dontCrash":
         let pretty1 = loadPrettyDomains("1", "")
 
     test "bug2":
-        let pretty1 = loadPrettyDomains("1",
-                "s.s-1:s.s-1.s-1-1:s.s-2:s.s-2.s-2-1")
+        let pretty1 = loadPrettyDomains("1", "s.s-1:s.s-1.s-1-1:s.s-2:s.s-2.s-2-1")
 

@@ -8,7 +8,6 @@ suite "findFiles":
         let path = testDataPath & "sets/dummy"
         discard findFiles(path)
 
-
     test "Missing files":
         expect(InitException):
             let path = testDataPath & "extension/noDBFile"

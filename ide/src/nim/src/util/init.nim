@@ -71,15 +71,6 @@ proc getDecendants*(db: DbConn): CountTable[int] =
     return countTable
 
 
-proc addChild(parent, child : JsonNode, isLeftChild: bool) =
-
-    if isLeftChild:
-        parent["children"] = %(concat(@[child], parent["children"].getElems()))
-    else:
-        parent["children"].add(child)
-
-
-
 let solutionQuery = sql("""with recursive
         correctPath(n) as (
         select nodeId from Node where isSolution = 1  
@@ -117,12 +108,34 @@ let noSolutionFailedQuery = sql("""with recursive
     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId not in correctPath and parentId in correctPath;""")
 
 
-proc makeCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
+proc processQuery( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: CountTable[int]): seq[int] =
+
+    var nId, pId: int
+
+    for row1 in db.fastRows(query):
+
+        discard parseInt(row1[0], nId)
+        discard parseInt(row1[1], pId)
+
+        result.add(nId)
+
+        var childCount : int
+        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
+
+        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
+        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
+
+        let l = getLabel(getInitialVariables(), vName, row1[3], value)
+        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
+
+        list.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1, isSolution: parseBool(row1[5]) ))
+
+
+proc makeCore*(db: DbConn, decTable: CountTable[int]): Core =
     var coreQuery : SqlQuery
     var failedQuery : SqlQuery
-    var nId, pId: int
     var solAncestorIds : seq[int]
-    var nodeList: seq[ParentChild]
+    var nodeList: seq[Node]
 
     let firstQuery = "select nodeId from Node where isSolution = 1 limit 1"
     if db.getValue(sql(firstQuery)) == "":
@@ -132,51 +145,9 @@ proc makeCore*(db: DbConn, decTable: CountTable[int]): JsonNode =
         failedQuery = solutionFailedQuery
         coreQuery = solutionQuery
 
+    solAncestorIds = processQuery(db, coreQuery, nodeList, decTable)
+    discard processQuery(db, failedQuery, nodeList, decTable)
 
-    for row1 in db.fastRows(coreQuery):
+    return Core(nodes: nodeList, solAncestorIds: solAncestorIds)
 
-        discard parseInt(row1[0], nId)
-
-        solAncestorIds.add(nId)
-
-        var childCount : int
-        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
-
-        discard parseInt(row1[1], pId)
-
-
-        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
-        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
-
-
-
-        let l = getLabel(getInitialVariables(), vName, row1[3], value)
-        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
-        # let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
-
-        # echo parseBool(row1[3])
-
-        nodeList.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1, isSolution: parseBool(row1[5]) ))
-
-    for row1 in db.fastRows(failedQuery):
-
-        discard parseInt(row1[0], nId)
-
-        var childCount : int
-        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
-
-        discard parseInt(row1[1], pId)
-
-        let vName = db.getValue(sql"select branchingVariable from Node where nodeId = ?", pId)
-        let value = db.getValue(sql"select value from Node where nodeId = ?", pId)
-
-        let l = getLabel(getInitialVariables(), vName, row1[3], value)
-        let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
-        # let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
-
-        nodeList.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
-
-    return %*{"nodes": %nodeList, "solAncestorIds": %solAncestorIds}
-
-
-        # echo map
+    # return %*{"nodes": %nodeList, "solAncestorIds": %solAncestorIds}

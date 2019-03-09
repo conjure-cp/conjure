@@ -9,14 +9,12 @@ import branchingCondition
 var db: DbConn
 var decTable: CountTable[int]
 
-proc init*(dirPath: string): JsonNode =
+proc init*(dirPath: string): Core =
     db = findFiles(dirPath)
     decTable = getDecendants(db)
-    return %makeCore(db, decTable)
+    return makeCore(db, decTable)
 
-
-
-proc loadNodes*(start: string): seq[ParentChild] =
+proc loadNodes*(start: string): seq[Node] =
 
     var nId, pId, childId: int
 
@@ -37,15 +35,12 @@ proc loadNodes*(start: string): seq[ParentChild] =
         let pL = getLabel(getInitialVariables(), vName, row1[3], value, true)
 
 
-        result.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
+        result.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
 
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
 
-    # echo prettyLookup
-
-    # echo nodeId
-    # echo "path is " & path
+    # echo prettyLookup[nodeId]
 
     result = Set(prettyLookup[nodeId][path.split(".")[0]])
 
@@ -74,7 +69,6 @@ proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
                 result.add(setToJson(Set(v), nodeId, true))
             else:
                 result.add(%v)
-    # echo result
 
 proc loadSetChild*(nodeId, path: string): JsonNode =
     let s = getExpandedSetChild(nodeId, path)
@@ -82,7 +76,8 @@ proc loadSetChild*(nodeId, path: string): JsonNode =
     return %*{"structure": %setToTreeView(s), "update": update, "path": path}
 
 
-proc temp(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): JsonNode =
+proc prettifyDomains(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): PrettyDomainResponse =
+    new result
     var domainsAtNode: seq[Variable]
     var domainsAtPrev: seq[Variable]
     var changedExpressions: seq[Expression]
@@ -90,10 +85,7 @@ proc temp(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): Jso
     var id: int
     discard parseInt(nodeId, id)
 
-    # if not prettyLookup.hasKey(nodeId):
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId, wantExpressions))
-    # else:
-        # domainsAtNode = toSeq(prettyLookup[nodeId].values())
 
     for kid in getChildSets(paths, nodeId):
         if kid != nil:
@@ -101,10 +93,7 @@ proc temp(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): Jso
 
     if (id != rootNodeId):
         let oldId = $(id - 1)
-        # if not prettyLookup.hasKey(oldId):
         domainsAtPrev = getPrettyDomainsOfNode(db, oldId, wantExpressions)
-        # else:
-            # domainsAtPrev = toSeq(prettyLookup[oldId].values())
 
         for kid in getChildSets(paths, oldId):
             if kid != nil:
@@ -112,19 +101,14 @@ proc temp(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): Jso
 
         (changedList, changedExpressions) = getPrettyChanges(domainsAtNode, domainsAtPrev)
 
-        # echo changedExpressions
+    return PrettyDomainResponse(vars: getJsonVarList(domainsAtNode, nodeId), changed: changedList, changedExpressions: expressionsToJson(changedExpressions))
 
-    # echo domainsAtNode
-
-    return %*{"vars": getJsonVarList(domainsAtNode, nodeId), "changed": changedList, "changedExpressions": expressionsToJson(changedExpressions)}
-
-proc getSkeleton*(): JsonNode =
+proc getSkeleton*(): TreeViewNode =
     return domainsToJson(getPrettyDomainsOfNode(db, "0", true))
-    # return domainsToJson(domainsAtNode)
 
 
-proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): JsonNode =
-    temp(db, nodeId, paths, wantExpressions)
+proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): PrettyDomainResponse =
+    prettifyDomains(db, nodeId, paths, wantExpressions)
 
 proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
 
@@ -139,9 +123,7 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDo
         domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
 
         for i in 0..<domainsAtNode.len():
-
             if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                # echo domainsAtNode[i]
                 list.add(domainsAtNode[i].name)
 
     return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
@@ -149,4 +131,9 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDo
 
 proc getLongestBranchingVarName*(): JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
-    # return % 15
+
+proc getSet*(nodeId: string): Set =
+    for d in getPrettyDomainsOfNode(db, nodeId):
+        if d of Set:
+            return Set(d)
+    return nil

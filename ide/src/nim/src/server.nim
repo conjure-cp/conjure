@@ -3,6 +3,7 @@ import util/main
 import util/jsonify
 import util/types
 import util/init
+import util/response
 
 template benchmark(benchmarkName: string, code: untyped) =
   block:
@@ -16,32 +17,21 @@ routes:
     get re"/init/(.*)":
         let path = request.matches[0]
 
-        var core : JsonNode
+        var response: InitResponse
 
         try:
-            core = init(path)
-
+            response = newInitResponse(path)
         except:
             # let e = getCurrentException()
             let msg = getCurrentExceptionMsg()
             resp %*{"error":msg}
-            # raise
-
-        let prettyAtRoot = getSkeleton()
-
-        let simpleAtRoot = %loadSimpleDomains("0")
-
-        # let core = %getCore()
-
-        resp %*{"pretty" : prettyAtRoot, "simple": simpleAtRoot, "core": core}
+        resp %response 
 
     get "/simpleDomains/@nodeId/@wantExpressions":
-
         resp %loadSimpleDomains(@"nodeId", parseBool(@"wantExpressions"))
         
     get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
-        resp loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))
-        # resp loadPrettyDomains(@"nodeId", @"paths", true)
+        resp %loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))
 
     get "/loadNodes/@start":
         resp %loadNodes(@"start")
