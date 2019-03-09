@@ -112,7 +112,7 @@ proc temp(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): Jso
 
         (changedList, changedExpressions) = getPrettyChanges(domainsAtNode, domainsAtPrev)
 
-        echo changedExpressions
+        # echo changedExpressions
 
     # echo domainsAtNode
 
@@ -126,7 +126,7 @@ proc getSkeleton*(): JsonNode =
 proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): JsonNode =
     temp(db, nodeId, paths, wantExpressions)
 
-proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = true): SimpleDomainResponse =
+proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
 
     var list: seq[string]
     var id: int

@@ -9,7 +9,7 @@ suite "O":
         
     test "ONotExc":
         let oSet = newOSet("s")
-        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "0", "0", true) == "8 was not excluded from s")
+        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "0", "0", true) == "8 was included in s")
 
     test "OInc":
         let oSet = newOSet("s")
@@ -17,7 +17,7 @@ suite "O":
 
     test "ONotInc":
         let oSet = newOSet("s")
-        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "0", "1", true) == "8 was not included in s")
+        check(getLabel(@[Variable(oSet)], "s_Occurrence_00008", "0", "1", true) == "8 was excluded from s")
 
 suite "E":
     test "Ein":

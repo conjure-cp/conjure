@@ -6,50 +6,18 @@ import util/main
 suite "init":
     test "initValidPath":
         let validPath = testDataPath & "/sets/dummy"
-        init(validPath)
-
-    test "initNoDBFile":
-        let badPath = testDataPath & "/extension/noDBFile"
-        expect(CannotOpenDatabaseException):
-            init(badPath)
-
-    test "initNoEprimeFile":
-        let badPath = testDataPath & "/extension/noEprimeFile"
-        expect(IOError):
-            init(badPath)
-
-    test "initNoMinionFile":
-        let badPath = testDataPath & "/extension/noMinionFile"
-        expect(IOError):
-            init(badPath)
+        discard init(validPath)
 
 suite "loadNodes":
     let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
-    init(validPath)
-
-suite "loadCore":
-    let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
-    init(validPath)
-
-    test "1":
-        let core = loadCore()
-        check(core.len() == 10)
-
-        for i in countUp(1, 7):
-            check(core[i].nodeId == i)
-            check(core[i].children[0] == i+1)
-
-        check(core[1].label == "x = 1")
-        check(core[2].label == "y = 1")
-        check(core[3].label == "z = 1")
+    discard init(validPath)
 
 
 suite "loadSimpleDomains":
     let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
-    init(validPath)
+    discard init(validPath)
     test "changed":
         var response = loadSimpleDomains("0")
-
         # echo %response
 
         check(response.changedNames.len() == 0)
@@ -67,24 +35,9 @@ suite "loadSimpleDomains":
     test "expressions":
         check(loadSimpleDomains("1", true).vars.len() > loadSimpleDomains("1", false).vars.len())
 
-suite "sanity":
-    let validPath = testDataPath & "golomb"
-    init(validPath)
-
-    # echo auxLookup
-
-    test "checkForAux":
-        let doms = loadSimpleDomains("1", true).vars
-        for d in doms:
-            # echo d
-            if (d of Expression):
-                echo Expression(d)
-            #     check(not d.name.contains("aux"))
-
-
 suite "loadPrettyDomains":
     let validPath = testDataPath & "/sets/recursive/markerMarkerMarker"
-    init(validPath)
+    discard init(validPath)
 
     test "prettyDomainUpdateRoot":
         let expected0 = """
@@ -285,7 +238,7 @@ suite "loadPrettyDomains":
 
 suite "dontCrash":
     let validPath = testDataPath & "/sets/recursive/markerMarkerFlags"
-    init(validPath)
+    discard init(validPath)
 
     test "bug1":
         let pretty1 = loadPrettyDomains("1", "")
