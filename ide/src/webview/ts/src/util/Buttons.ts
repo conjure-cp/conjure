@@ -1,6 +1,15 @@
 import Globals from './Globals';
 import Tree from './Tree';
-import Node from './Node';
+// import Node from './Node';
+// import d3_save_svg from '../../node_modules/d3-save-svg';
+let s = require( '../../node_modules/save-svg-as-png/lib/saveSvgAsPng.js');
+
+// let s = require('./save');
+
+// import * from './save' as Save
+
+// let save = require()
+
 
 declare var d3: any;
 
@@ -65,5 +74,15 @@ export default class Buttons {
 
                 Tree.selectNode(Globals.s.selectedId);
             });
+
+            d3.select('#saveButton').on('click', function() {
+                s.saveSvgAsPng(d3.select('#theTree').node(), "diagram.png");
+            //     var config = {
+            //       filename: 'customFileName',
+            //     }
+            //     d3_save_svg.save(d3.select('svg').node(), config);
+                console.log("saved");
+              });
     }
+
 }

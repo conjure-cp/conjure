@@ -190,11 +190,13 @@ export default class WebviewHelper {
         // const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
         const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js";
 
+        const canvas = "https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js";
+        const fileSaver = "https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js";
 
 
         var htmlFile = createHTML({
             title: 'example',
-            script: [jspanelJS, d3, jquery, validator, mouseTrap, scriptUri],
+            script: [jspanelJS, d3, jquery, validator, mouseTrap, canvas, fileSaver,  scriptUri],
             // script: [jquery, treeViewUri, explorerUri],
             scriptAsync: false,
             css: [jspanelCSS, bootstrap, fontawesome, cssUri],

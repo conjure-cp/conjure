@@ -11,7 +11,7 @@ export default class Tree {
     public static margin = { top: 40, right: 30, bottom: 50, left: 30 };
     public static width = Tree.viewerWidth! - Tree.margin.left - Tree.margin.right;
     public static height = Tree.viewerHeight! - Tree.margin.top - Tree.margin.bottom;
-    public static tree = d3.layout.tree().size([Tree.height, Tree.width]).nodeSize([300, 0]);
+    public static tree = d3.layout.tree().size([Tree.height, Tree.width]).nodeSize([200, 0]);
 
     public static zoom = d3.behavior.zoom()
         .on("zoom", Tree.zoomed);
@@ -19,6 +19,7 @@ export default class Tree {
     public static svg = d3.select("#tree")
         .append("svg")
         .call(Tree.zoom)
+        .attr("id", "theTree")
         .attr("width", Tree.viewerWidth)
         .attr("height", Tree.viewerHeight)
         .append("g");
