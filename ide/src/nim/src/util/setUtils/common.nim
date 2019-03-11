@@ -23,7 +23,7 @@ proc includeValues*(db: DbConn, s: Set, valuesQuery, nodeId: string) =
     for res in db.rows(sql(valuesQuery), nodeId):
         var lower: int
         discard res[0].parseInt(lower)
-        s.included.incl(lower)
+        s.includeInSet(lower)
 
 proc dontExcludeValues*(db: DbConn, s: Set, valuesQuery, nodeId: string) =
     var lower: int
@@ -32,7 +32,7 @@ proc dontExcludeValues*(db: DbConn, s: Set, valuesQuery, nodeId: string) =
         discard res[0].parseInt(lower)
         discard res[1].parseInt(upper)
         for i in countUp(lower, upper):
-            s.notExcluded.incl(i)
+            s.dontExclude(i)
 
 proc makeChildSet*(s: Set, setId: int): Set =
     var currentSet: Set

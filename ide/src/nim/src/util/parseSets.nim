@@ -40,10 +40,10 @@ func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
 
         if lower != d.dummyVal:
             if lower == upper:
-                d.included.incl(lower)
+                d.includeInSet(lower)
 
             for i in countUp(lower, min(upper, d.dummyVal - 1)):
-                d.notExcluded.incl(i)
+                d.dontExclude(i)
         else:
             d.excludedCount.inc()
 
@@ -56,10 +56,10 @@ func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, a
         discard res[0].parseInt(lower)
 
         if (res[1] == "1" and res[2] == "1"):
-            s.included.incl(lower)
+            s.includeInSet(lower)
 
         if (res[2] != "0"):
-            s.notExcluded.incl(lower)
+            s.dontExclude(lower)
 
 proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         ancestors: seq[int]) =
@@ -81,10 +81,10 @@ proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
                 discard res[2].parseInt(upper)
 
                 if (lower == upper):
-                    e.included.incl(lower)
+                    e.includeInSet(lower)
 
                 for i in countUp(lower, upper):
-                    e.notExcluded.incl(i)
+                    e.dontExclude(i)
             break
 
 proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
@@ -113,7 +113,7 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
             let valuesQuery = getFlagValuesIncludedQuery(s, ancestors, outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
             
-            s.notExcluded.incl(s.included)
+            # s.dontExclude(s.included)
 
             var falseQuery = getFalseFlagCountQuery(ancestors, outerSetName)
             var falseFlagCount = db.getValue(sql(falseQuery), nodeId)

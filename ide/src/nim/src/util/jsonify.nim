@@ -96,10 +96,10 @@ proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
     if (newSet.getCardinality() != oldSet.getCardinality()):
         result.add(prefix & "Cardinality")
 
-    if (newSet.included != oldSet.included):
+    if (newSet.getIncluded() != oldSet.getIncluded()):
         result.add(prefix & "Included")
 
-    if (newSet.notExcluded != oldSet.notExcluded):
+    if (newSet.getNotExcluded() != oldSet.getNotExcluded()):
         result.add(prefix & "Not excluded")
 
     if isNested:

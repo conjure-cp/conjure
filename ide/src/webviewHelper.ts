@@ -208,7 +208,7 @@ export default class WebviewHelper {
         });
 
 
-        fs.writeFileSync('/home/tom/Desktop/blah.html', htmlFile, 'utf8');
+        // fs.writeFileSync('/home/tom/Desktop/blah.html', htmlFile, 'utf8');
 
         return htmlFile;
 

@@ -7,6 +7,7 @@ proc getPrettyRange*(lowerBound: string, upperBound: string): string =
     return "int(" & $lowerBound & ".." & $upperBound & ")"
 
 proc prettifyIntSet*(i: IntSet): string =
+
     result = "int("
 
     var list = toSeq(i.items())

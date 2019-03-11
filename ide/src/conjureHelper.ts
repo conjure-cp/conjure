@@ -112,7 +112,7 @@ export default class ConjureHelper {
     public static model() {
 
         vscode.window.showInformationMessage('Modelling..');
-        console.log("MODEL------------------------");
+        console.log("MODEL------------------------!!!!!");
 
         let current = vscode.window.activeTextEditor;
         if (!current) {
@@ -139,7 +139,7 @@ export default class ConjureHelper {
 
             if (e instanceof Error) {
 
-                // console.error(e);
+                console.error(e);
                 vscode.window.showErrorMessage(e.message);
 
                 return;
@@ -171,7 +171,8 @@ export default class ConjureHelper {
         }
     }
 
-    public static solveAndVisualise(wantVisualisation: boolean){
+
+    public static solveAndVisualise(wantVisualisation: boolean) {
         console.log("SOLVE------------------------");
         // vscode.workspace.textDocuments[0].
         let current = vscode.window.activeTextEditor;
@@ -204,7 +205,7 @@ export default class ConjureHelper {
             }
         }
 
-        this.deleteFiles(dir);
+        // this.deleteFiles(dir);
 
         if (essenceFiles.length > 1) {
             vscode.window.showErrorMessage("More than one essence file was found, aborting.");
@@ -213,14 +214,22 @@ export default class ConjureHelper {
 
         let modelPath = path.join(dir, essenceFiles[0]);
 
+        let conjureOutName = this.makeDirName(path.parse(modelPath).name, path.parse(paramFile.fileName).name)
+
+        console.log(conjureOutName)
+
         let args = ['solve', modelPath, paramFile.uri.path];
 
+
+
+
+
         if (wantVisualisation) {
+            args.push('-o');
+            args.push(conjureOutName)
             args.push('--solver-options');
-            args.push('"-dumptreesql conjure-output/out.db -nodelimit 10000"');
-            args.push('--savilerow-options -O0');
-
-
+            args.push('"-dumptreesql ' + conjureOutName + '/out.db -nodelimit 10000"');
+            // args.push('--savilerow-options -O0');
         }
 
 
@@ -235,7 +244,7 @@ export default class ConjureHelper {
             }
 
             if (wantVisualisation) {
-                WebviewHelper.launch(path.join(dir, "conjure-output"));
+                WebviewHelper.launch(path.join(dir, conjureOutName));
             }
             else {
                 let solutions = this.findSolutionFiles(dir);
@@ -267,25 +276,16 @@ export default class ConjureHelper {
         return files.filter(el => /\.solution$/.test(el));
     }
 
-    private static deleteFiles(dir: string){
-        var rimraf = require("rimraf");
-        rimraf.sync(path.join(dir, "conjure-output"));
-        // dir = path.join(dir, "conjure-output");
-        // let files = fs.readdirSync(dir);
-        // let db  = files.filter(el => /\.db$/.test(el));
-        // let eprime  = files.filter(el => /\.eprime$/.test(el));
-        // let minion  = files.filter(el => /\.eprime-minion$/.test(el));
+    private static makeDirName(modelName: string, paramName: string) {
+        return modelName + "-" + paramName + "-conjure-output"
 
-        // db.forEach(fileName => {
-        //     fs.unlinkSync(path.join(dir, fileName));
-        // });
-
-        // eprime.forEach(fileName => {
-        //     fs.unlinkSync(path.join(dir, fileName));
-        // });
-
-        // minion.forEach(fileName => {
-        //     fs.unlinkSync(path.join(dir, fileName));
-        // });
     }
+
+    // private static deleteFiles(dir: string){
+    //     var rimraf = require("rimraf");
+    //     rimraf.sync(path.join(dir, "conjure-output/*.db"));
+    //     rimraf.sync(path.join(dir, "conjure-output/*.eprime-minion"));
+    //     rimraf.sync(path.join(dir, "conjure-output/*.eprime"));
+    //     rimraf.sync(path.join(dir, "conjure-output/.conjure-checksum"));
+    // }
 }

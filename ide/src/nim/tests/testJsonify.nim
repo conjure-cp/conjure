@@ -131,3 +131,13 @@ suite "setToJson":
         }"""
 
         check(%json == parseJson(expected))            
+
+suite "testGolomb":
+    let validPath = testDataPath & "golomb"
+    echo validPath
+    let db = findFiles(validPath)
+
+    test "domainsToJson":
+        let prettyDomains = getPrettyDomainsOfNode(db, "0", true)
+        let skeleton = domainsToJson(prettyDomains)
+        # echo (%skeleton).pretty()

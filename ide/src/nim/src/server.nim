@@ -22,9 +22,9 @@ routes:
         # try:
         response = newInitResponse(path)
         # except:
-            # let e = getCurrentException()
-            # let msg = getCurrentExceptionMsg()
-            # resp %*{"error":msg}
+        #     let e = getCurrentException()
+        #     let msg = getCurrentExceptionMsg()
+        #     resp %*{"error":msg}
         resp %response 
 
     get "/simpleDomains/@nodeId/@wantExpressions":

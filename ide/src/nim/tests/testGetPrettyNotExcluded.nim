@@ -9,59 +9,59 @@ suite "Included":
 
     test "1":
         let oSet = newOSet("s")
-        oSet.included.incl(1)
+        oSet.includeInSet(1)
         check(oSet.getPrettyIncluded() == "int(1)")
 
     test "26,28,31..32":
         let oSet = newOSet("s")
-        oSet.included.incl(26)
-        oSet.included.incl(28)
-        oSet.included.incl(31)
-        oSet.included.incl(32)
+        oSet.includeInSet(26)
+        oSet.includeInSet(28)
+        oSet.includeInSet(31)
+        oSet.includeInSet(32)
         check(oSet.getPrettyIncluded() == "int(26,28,31..32)")
 
     test "1..10":
         let oSet = newOSet("s")
 
         for i in countUp(1,10):
-            oSet.included.incl(i)
+            oSet.includeInSet(i)
         
         check(oSet.getPrettyIncluded() == "int(1..10)")
 
     test "1,3,5":
         let oSet = newOSet("s")
-        oSet.included.incl(1)
-        oSet.included.incl(3)
-        oSet.included.incl(5)
+        oSet.includeInSet(1)
+        oSet.includeInSet(3)
+        oSet.includeInSet(5)
         check(oSet.getPrettyIncluded() == "int(1,3,5)")
 
     test "1..5,8,11":
         let oSet = newOSet("s")
 
         for i in countUp(1,5):
-            oSet.included.incl(i)
-        oSet.included.incl(8)
-        oSet.included.incl(11)
+            oSet.includeInSet(i)
+        oSet.includeInSet(8)
+        oSet.includeInSet(11)
         check(oSet.getPrettyIncluded() == "int(1..5,8,11)")
 
     test "1..5,10..20":
         let oSet = newOSet("s")
 
         for i in countUp(1,5):
-            oSet.included.incl(i)
+            oSet.includeInSet(i)
         for i in countUp(10,20):
-            oSet.included.incl(i)
+            oSet.includeInSet(i)
         check(oSet.getPrettyIncluded() == "int(1..5,10..20)")
 
     test "1..5,8,10..20,69":
         let oSet = newOSet("s")
 
         for i in countUp(1,5):
-            oSet.included.incl(i)
-        oSet.included.incl(8)
+            oSet.includeInSet(i)
+        oSet.includeInSet(8)
         for i in countUp(10,20):
-            oSet.included.incl(i)
-        oSet.included.incl(69)
+            oSet.includeInSet(i)
+        oSet.includeInSet(69)
         check(oSet.getPrettyIncluded() == "int(1..5,8,10..20,69)")
 
 

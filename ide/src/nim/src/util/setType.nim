@@ -6,8 +6,8 @@ type Set* = ref object of Variable
     markerLower*: int
     markerUpper*: int
     id*: int
-    included*: IntSet
-    notExcluded*: IntSet
+    included: IntSet
+    notExcluded: IntSet
     inner*: Set
     children*: seq[Set]
 
@@ -78,6 +78,19 @@ proc getCardinality*(s: Set): string =
 
     return "SET TYPE NOT SUPPORTED"
 
+
+proc includeInSet*(s: Set, num: int) =
+    s.included.incl(num)
+
+proc dontExclude*(s: Set, num: int) =
+    s.notExcluded.incl(num)
+
+proc getIncluded*(s: Set): seq[int] =
+    return toSeq(s.included.items())
+
+proc getNotExcluded*(s: Set): seq[int] =
+    return toSeq(s.notExcluded.items())
+
 proc getSetName*(parent: Set, setId: int): string =
     return parent.name & "-" & $setId
 
@@ -112,7 +125,6 @@ proc `$`*(s: Set): string =
             indent &= "       "
         for child in s.children:
             result &= indent & $child & "\n"
-
 
 
 proc getPrettyIncluded*(s: Set): string =
