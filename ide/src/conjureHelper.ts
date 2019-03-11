@@ -218,6 +218,9 @@ export default class ConjureHelper {
         if (wantVisualisation) {
             args.push('--solver-options');
             args.push('"-dumptreesql conjure-output/out.db -nodelimit 10000"');
+            args.push('--savilerow-options -O0');
+
+
         }
 
 

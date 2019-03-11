@@ -36,9 +36,8 @@ routes:
     get "/loadNodes/@start":
         resp %loadNodes(@"start")
 
-    # get "/longestBranchingVariable":
-        # resp getLongestBranchingVarName()
-        # resp 100
+    get "/longestBranchingVariable":
+        resp getLongestBranchingVarName()
 
     # get "/loadCore":
     #     # resp %proccessCore()

@@ -9,7 +9,7 @@ proc getPrettyRange*(lowerBound: string, upperBound: string): string =
 proc prettifyIntSet*(i: IntSet): string =
     result = "int("
 
-    var list = i.toSeq()
+    var list = toSeq(i.items())
 
     if list.len() == 0:
         return "int()"

@@ -50,7 +50,8 @@ export default class Globals {
 
     public static nextNode() {
 
-        let stepSize = Number($("#stepSize").val());
+        // let stepSize = Number($("#stepSize").val());
+        let stepSize = 1;
 
         let node = Globals.s.id2Node[Globals.s.selectedId];
 
@@ -104,7 +105,8 @@ export default class Globals {
 
             Globals.vscode.postMessage({
                 command: 'loadNodes',
-                amount: Number($("#stepSize").val()),
+                // amount: Number($("#stepSize").val()),
+                amount: 1,
                 start: Globals.s.selectedId
             });
 

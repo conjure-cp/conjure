@@ -51,7 +51,8 @@ export default class Listener {
 
                 case 'longestBranchingVariable':
 
-                    // Tree.tree.nodeSize([Number(message.data) * 13, 0]);
+                    // console.log(message.data);
+                    Tree.tree.nodeSize([Number(message.data) * 13, 0]);
                     break;
 
                 case 'loadNodes':
