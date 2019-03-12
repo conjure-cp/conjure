@@ -203,13 +203,14 @@ export default class ConjureHelper {
 
         let args = ['solve', modelPath, paramFile.uri.path];
 
-        if (wantVisualisation) {
-            args.push('-o');
-            args.push(conjureOutName);
-            args.push('--solver-options');
-            args.push('"-dumptreesql ' + conjureOutName + '/out.db -nodelimit 10000"');
-            args.push('--savilerow-options -O0');
-        }
+        args.push('-o');
+        args.push(conjureOutName);
+
+        // if (wantVisualisation) {
+        args.push('--solver-options');
+        args.push('"-dumptreesql ' + conjureOutName + '/out.db -nodelimit 1"');
+        args.push('--savilerow-options -O0');
+        // }
 
 
         vscode.window.showInformationMessage('Solving..');
@@ -217,7 +218,6 @@ export default class ConjureHelper {
         exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
             if (e instanceof Error) {
-
                 vscode.window.showErrorMessage(e.message);
                 return;
             }
@@ -225,22 +225,28 @@ export default class ConjureHelper {
             if (wantVisualisation) {
                 WebviewHelper.launch(path.join(dir, conjureOutName));
             }
-            else {
-                let solutions = this.findSolutionFiles(dir);
 
+            else {
+                let solutions = this.findSolutionFiles(path.join(dir, conjureOutName));
+             
+                console.log(solutions);
+
+                if (solutions.length == 0){
+                    vscode.window.showInformationMessage("No solution.");
+                    return
+                }
 
                 solutions.forEach(fileName => {
                     let paramFileName = (path.parse(paramFile.fileName).name);
 
                     if (fileName.includes(paramFileName)) {
 
-                        let uri = vscode.Uri.file(path.join(dir, fileName));
+                        let uri = vscode.Uri.file(path.join(dir, conjureOutName, fileName));
+                        console.log(uri);
                         vscode.commands.executeCommand('vscode.open', uri);
                         vscode.window.showInformationMessage("Done!");
                     }
                 });
-
-                // vscode.window.showInformationMessage("No solution.");
             }
         });
     }
