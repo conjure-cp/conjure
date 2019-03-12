@@ -204,19 +204,9 @@ export default class ConjureHelper {
         // console.log(conjureOutName)
 
         let args = ['solve', modelPath, paramFile.uri.path, '-o', conjureOutName];
-        this.parseArgs(dir, conjureOutName, args);
+        this.parseArgs(dir, conjureOutName, args, wantVisualisation);
 
         console.log(args. join(" "));
-
-        // args.push('-o');
-        // args.push(conjureOutName);
-
-        // if (wantVisualisation) {
-        // args.push('--solver-options');
-        // args.push('"-dumptreesql ' + conjureOutName + '/out.db -nodelimit 1"');
-        // args.push('--savilerow-options -O0');
-        // }
-
 
         vscode.window.showInformationMessage('Solving..');
 
@@ -255,7 +245,7 @@ export default class ConjureHelper {
             }
         });
     }
-    private static parseArgs(dir: string, conjureOutName: string, args: string[]){
+    private static parseArgs(dir: string, conjureOutName: string, args: string[], wantVisualisation: boolean){
         // let args: string[] = []
         let files = fs.readdirSync(dir);
         let configFiles = files.filter(el => /config.json$/.test(el));
@@ -270,38 +260,60 @@ export default class ConjureHelper {
             return;
         }
 
-        let f = fs.readFileSync(path.join(dir, configFiles[0] ), { encoding: 'utf8' });
-        let json = JSON.parse(f);
+        let f : string;
+        let json: any;
+
+        try{
+            f = fs.readFileSync(path.join(dir, configFiles[0] ), { encoding: 'utf8' });
+            json = JSON.parse(f);
+        }
+        catch(e){
+            vscode.window.showErrorMessage("Something went wrong parsing the config file, is it valid json?");
+            vscode.window.showErrorMessage(e);
+            return;
+        }
+
+
+        let obj: any = {}
+
+        if (wantVisualisation){
+            if (json.solveAndVisualise){
+                obj = json.solveAndVisualise;
+            }
+        }
+        else{
+            if (json.solve){
+                obj = json.solve;
+            }
+        }
 
         var minionOptions = {};
-        if (json.minionOptions){
-            minionOptions = json.minionOptions;
+        if (obj.minionOptions){
+            minionOptions = obj.minionOptions;
         }
 
         var savileRowOptions = {};
-        if (json.savileRowOptions){
-            savileRowOptions = json.savileRowOptions;
+        if (obj.savileRowOptions){
+            savileRowOptions = obj.savileRowOptions;
         }
         
-        args.push(this.parseSavileRowArgs(savileRowOptions));
-        args.push(this.parseMinionArgs(conjureOutName, minionOptions));
+        args.push(this.parseSavileRowArgs(savileRowOptions, wantVisualisation));
+        args.push(this.parseMinionArgs(conjureOutName, minionOptions, wantVisualisation));
     }
-    private static parseSavileRowArgs(savilerowOptions: any){
-        let defaultSavileRowArgs: any =
-        {
-        }
+    private static parseSavileRowArgs(savilerowOptions: any, wantVisualisation: boolean){
+        let defaultSavileRowArgs: any = {};
         let mandatorySavileRowArgs: string[] = [];
         return "--savilerow-options \"" + this.getArgString(savilerowOptions, defaultSavileRowArgs, mandatorySavileRowArgs) + "\"";
     }
 
-    private static parseMinionArgs(conjureOutName: string, minionOptions: any){
-        let defaultMinionArgs: any =
-        {
-            "nodelimit": 1000,
-            "dumptreesql": conjureOutName + "/out.db",
-        }
+    private static parseMinionArgs(conjureOutName: string, minionOptions: any, wantVisualisation: boolean){
+        let defaultMinionArgs: any = { "nodelimit": 1000 };
+        let mandatoryMinionArgs = [];
 
-        let mandatoryMinionArgs = ["dumptreesql", "dumptreejson"];
+        if (wantVisualisation){
+            defaultMinionArgs["dumptreesql"] = conjureOutName + "/out.db";
+            mandatoryMinionArgs.push("dumptreejson", "dumptreesql");
+        }
 
         return "--solver-options \"" + this.getArgString(minionOptions, defaultMinionArgs, mandatoryMinionArgs) + "\"";
     }
