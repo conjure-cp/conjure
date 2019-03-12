@@ -43,17 +43,6 @@ export default class ConjureHelper {
             }
         });
 
-        // context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(ESSENCE, {
-        //         provideDocumentFormattingEdits(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken){
-        //             // let textEdit = new vscode.TextEdit(new vscode.Range(new vscode.Position(0,2), new vscode.Position(0,10)), "SAD");
-        //             // return [textEdit];
-        //             const firstLine = document.lineAt(0);
-        //             if (firstLine.text !== '42') {
-        //                 return [vscode.TextEdit.insert(firstLine.range.start, '42\n')];
-        //             }
-        //         }
-        // }
-        // ));
 
 
         context.subscriptions.push(vscode.languages.registerHoverProvider(ESSENCE, {
@@ -132,8 +121,7 @@ export default class ConjureHelper {
         let dir = path.dirname(doc.uri.path);
         console.log(dir);
 
-        // let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
-        let args = ['modelling', doc.uri.path, "-o", dir];
+        let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
 
         exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
@@ -146,15 +134,12 @@ export default class ConjureHelper {
                 // throw e;
             }
 
-            // console.log('stdout ', stdout);
-
-            // console.log('stderr ', stderr);
 
             fs.readdir(dir, function (err, files) {
                 const eprimeFiles = files.filter(el => /\.eprime$/.test(el));
 
                 let uri = vscode.Uri.file(path.join(dir, eprimeFiles[0]));
-                vscode.commands.executeCommand('vscode.openFolder', uri);
+                vscode.commands.executeCommand('vscode.open', uri);
 
 
             });
@@ -205,8 +190,6 @@ export default class ConjureHelper {
             }
         }
 
-        // this.deleteFiles(dir);
-
         if (essenceFiles.length > 1) {
             vscode.window.showErrorMessage("More than one essence file was found, aborting.");
             return;
@@ -219,10 +202,6 @@ export default class ConjureHelper {
         console.log(conjureOutName)
 
         let args = ['solve', modelPath, paramFile.uri.path];
-
-
-
-
 
         if (wantVisualisation) {
             args.push('-o');
@@ -256,7 +235,7 @@ export default class ConjureHelper {
                     if (fileName.includes(paramFileName)) {
 
                         let uri = vscode.Uri.file(path.join(dir, fileName));
-                        vscode.commands.executeCommand('vscode.openFolder', uri);
+                        vscode.commands.executeCommand('vscode.open', uri);
                         vscode.window.showInformationMessage("Done!");
                     }
                 });
