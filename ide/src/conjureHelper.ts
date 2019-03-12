@@ -199,17 +199,22 @@ export default class ConjureHelper {
 
         let conjureOutName = this.makeDirName(path.parse(modelPath).name, path.parse(paramFile.fileName).name)
 
-        console.log(conjureOutName)
+        this.deleteSolutions(dir, conjureOutName);
 
-        let args = ['solve', modelPath, paramFile.uri.path];
+        // console.log(conjureOutName)
 
-        args.push('-o');
-        args.push(conjureOutName);
+        let args = ['solve', modelPath, paramFile.uri.path, '-o', conjureOutName];
+        this.parseArgs(dir, conjureOutName, args);
+
+        console.log(args. join(" "));
+
+        // args.push('-o');
+        // args.push(conjureOutName);
 
         // if (wantVisualisation) {
-        args.push('--solver-options');
-        args.push('"-dumptreesql ' + conjureOutName + '/out.db -nodelimit 1"');
-        args.push('--savilerow-options -O0');
+        // args.push('--solver-options');
+        // args.push('"-dumptreesql ' + conjureOutName + '/out.db -nodelimit 1"');
+        // args.push('--savilerow-options -O0');
         // }
 
 
@@ -250,6 +255,88 @@ export default class ConjureHelper {
             }
         });
     }
+    private static parseArgs(dir: string, conjureOutName: string, args: string[]){
+        // let args: string[] = []
+        let files = fs.readdirSync(dir);
+        let configFiles = files.filter(el => /config.json$/.test(el));
+
+        if (configFiles.length == 0){
+            vscode.window.showErrorMessage("No config files found");
+            return;
+        }
+
+        if (configFiles.length > 1){
+            vscode.window.showErrorMessage("More than one config file was found, aborting.");
+            return;
+        }
+
+        let f = fs.readFileSync(path.join(dir, configFiles[0] ), { encoding: 'utf8' });
+        let json = JSON.parse(f);
+
+        var minionOptions = {};
+        if (json.minionOptions){
+            minionOptions = json.minionOptions;
+        }
+
+        var savileRowOptions = {};
+        if (json.savileRowOptions){
+            savileRowOptions = json.savileRowOptions;
+        }
+        
+        args.push(this.parseSavileRowArgs(savileRowOptions));
+        args.push(this.parseMinionArgs(conjureOutName, minionOptions));
+    }
+    private static parseSavileRowArgs(savilerowOptions: any){
+        let defaultSavileRowArgs: any =
+        {
+        }
+        let mandatorySavileRowArgs: string[] = [];
+        return "--savilerow-options \"" + this.getArgString(savilerowOptions, defaultSavileRowArgs, mandatorySavileRowArgs) + "\"";
+    }
+
+    private static parseMinionArgs(conjureOutName: string, minionOptions: any){
+        let defaultMinionArgs: any =
+        {
+            "nodelimit": 1000,
+            "dumptreesql": conjureOutName + "/out.db",
+        }
+
+        let mandatoryMinionArgs = ["dumptreesql", "dumptreejson"];
+
+        return "--solver-options \"" + this.getArgString(minionOptions, defaultMinionArgs, mandatoryMinionArgs) + "\"";
+    }
+
+    private static getArgString(obj: any, defaultSettings: any, mandatoryArgs: string[]){
+        let argList: string[] = []
+        // minionArgs.push('--solver-options')
+
+        Object.keys(defaultSettings).forEach(function(key) {
+            if (mandatoryArgs.includes(key)){
+                argList.push("-" + key + " " + defaultSettings[key]);
+                return;
+            }
+
+            if (!obj[key]){
+                argList.push("-" + key + " " + defaultSettings[key]);
+            }
+        });
+
+        Object.keys(obj).forEach(function(key) {
+            if (mandatoryArgs.includes(key){
+                return;
+            }
+            argList.push("-" + key + " " + obj[key]);
+        });
+
+        return argList.join(" ");
+
+    }
+    private static deleteSolutions(dir: string, conjureOutName: string){
+        var rimraf = require("rimraf");
+        // let glob = path.join(dir, conjureOutName, "*.solution");
+        // console.log(glob);
+        rimraf.sync(path.join(dir, conjureOutName, "*.solution"));
+    }
 
     private static findEssenceFiles(dir: string): string[] {
         let files = fs.readdirSync(dir);
@@ -262,15 +349,6 @@ export default class ConjureHelper {
     }
 
     private static makeDirName(modelName: string, paramName: string) {
-        return modelName + "-" + paramName + "-conjure-output"
-
+        return modelName + "-" + paramName + "-conjure-output";
     }
-
-    // private static deleteFiles(dir: string){
-    //     var rimraf = require("rimraf");
-    //     rimraf.sync(path.join(dir, "conjure-output/*.db"));
-    //     rimraf.sync(path.join(dir, "conjure-output/*.eprime-minion"));
-    //     rimraf.sync(path.join(dir, "conjure-output/*.eprime"));
-    //     rimraf.sync(path.join(dir, "conjure-output/.conjure-checksum"));
-    // }
 }
