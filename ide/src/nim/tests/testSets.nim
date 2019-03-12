@@ -630,3 +630,4 @@ suite "explicit":
         let greatGrandKid1 = s.children[0].children[0].children[0] 
         check(greatGrandKid1 of OccurrenceSet)
         check(greatGrandKid1.getIncluded() == @[1])
+        

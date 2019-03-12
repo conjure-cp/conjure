@@ -4,7 +4,7 @@
         "target": "es2018",
         "outDir": "out",
         "lib": [
-            "es2018", "dom"
+            "es2018", "es2017", "dom"
         ],
         "sourceMap": true,
         "rootDir": "src",
@@ -16,8 +16,15 @@
         // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
         // "noUnusedParameters": true,  /* Report errors on unused parameters. */
     },
+    // "files": [
+    //     "src/extension.ts",
+    //     "src/conjureHelper.ts",
+    //     "src/webviewHelper.ts",
+    //     "src/webview/ts/"
+    // ]
+
     "exclude": [
-        "node_modules",
-        ".vscode-test"
+        "./node_modules/*"
+        // "src/webview/ts/node_modules"
     ]
 }

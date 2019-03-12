@@ -1,7 +1,7 @@
 export default class Node {
     public id: number;
     public label: string;
-    public name: string;
+    public name: string = "";
     public prettyLabel: string;
     public parent: Node | null;
     public children: Node[] | null;
@@ -31,14 +31,14 @@ export default class Node {
         this.prettyLabel = prettyLabel;
         this.isLeftChild = isLeftchild;
         this.childCount = childCount;
-        this.isSolution = isSolution
+        this.isSolution = isSolution;
     }
     public static expandNode(node: Node) {
 
         let recurse = (insideNode: Node) => {
 
-            for (var i in insideNode._children) {
-                recurse(insideNode._children[i]);
+            for (var i in insideNode._children!) {
+                recurse(insideNode._children![Number(i)]);
             }
 
             Node.showChildren(insideNode);
@@ -52,8 +52,8 @@ export default class Node {
 
         let recurse = (insideNode: Node) => {
 
-            for (var i in insideNode.children) {
-                recurse(insideNode.children[i]);
+            for (var i in insideNode.children!) {
+                recurse(insideNode.children![Number(i)]);
             }
 
             Node.hideChildren(insideNode);

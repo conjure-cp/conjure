@@ -197,7 +197,7 @@ export default class ConjureHelper {
 
         let modelPath = path.join(dir, essenceFiles[0]);
 
-        let conjureOutName = this.makeDirName(path.parse(modelPath).name, path.parse(paramFile.fileName).name)
+        let conjureOutName = this.makeDirName(path.parse(modelPath).name, path.parse(paramFile.fileName).name);
 
         this.deleteSolutions(dir, conjureOutName);
 
@@ -226,9 +226,9 @@ export default class ConjureHelper {
              
                 console.log(solutions);
 
-                if (solutions.length == 0){
+                if (solutions.length === 0){
                     vscode.window.showInformationMessage("No solution.");
-                    return
+                    return;
                 }
 
                 solutions.forEach(fileName => {
@@ -250,7 +250,7 @@ export default class ConjureHelper {
         let files = fs.readdirSync(dir);
         let configFiles = files.filter(el => /config.json$/.test(el));
 
-        if (configFiles.length == 0){
+        if (configFiles.length === 0){
             vscode.window.showErrorMessage("No config files found");
             return;
         }
@@ -274,7 +274,7 @@ export default class ConjureHelper {
         }
 
 
-        let obj: any = {}
+        let obj: any = {};
 
         if (wantVisualisation){
             if (json.solveAndVisualise){
@@ -319,7 +319,7 @@ export default class ConjureHelper {
     }
 
     private static getArgString(obj: any, defaultSettings: any, mandatoryArgs: string[]){
-        let argList: string[] = []
+        let argList: string[] = [];
         // minionArgs.push('--solver-options')
 
         Object.keys(defaultSettings).forEach(function(key) {
@@ -334,7 +334,7 @@ export default class ConjureHelper {
         });
 
         Object.keys(obj).forEach(function(key) {
-            if (mandatoryArgs.includes(key){
+            if (mandatoryArgs.includes(key)){
                 return;
             }
             argList.push("-" + key + " " + obj[key]);

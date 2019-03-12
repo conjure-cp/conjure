@@ -97,9 +97,9 @@ export default class Listview {
             .attr("id", (node: Node) => {
                 let name = node.name;
                 if (node.parent) {
-                    node.parent.children.forEach((element: Node) => {
+                    node.parent.children!.forEach((element: Node) => {
                         if (element.name === "Cardinality") {
-                            name = node.parent.name + node.name;
+                            name = node.parent!.name + node.name;
                         }
                     });
                 }

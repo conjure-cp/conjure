@@ -1,9 +1,7 @@
 declare var d3: any;
-import Listview from './Listview';
 import Globals from './Globals';
 import Tree from './Tree';
 import Node from './Node';
-import { notDeepEqual } from 'assert';
 
 export default class Listener {
 
@@ -73,10 +71,10 @@ export default class Listener {
                             }
 
                             if (element.isLeftChild){
-                                parent.children.unshift(element);
+                                parent.children!.unshift(element);
                             }
                             else{
-                                parent.children.push(element);
+                                parent.children!.push(element);
                             }
 
                     //         Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);

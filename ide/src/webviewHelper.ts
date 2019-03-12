@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 // import * as Parser from './parser';
 import fs = require('fs');
-import { ECONNREFUSED } from 'constants';
+// import { ECONNREFUSED } from 'constants';
 const request = require('request');
 let createHTML = require('create-html');
 

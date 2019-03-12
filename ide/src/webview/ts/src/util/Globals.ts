@@ -35,7 +35,7 @@ export default class Globals {
             .attr("id", (d: any, i: any) => { return d.name; });
 
         // create a cell in each row for each column
-        var cells = rows.selectAll('td')
+        rows.selectAll('td')
             .data((row: any) => {
                 return Globals.columns.map((column) => {
                     return { column: column, value: row[column] };
@@ -84,9 +84,9 @@ export default class Globals {
 
     public static rightNode() {
         if (Globals.s.id2Node[Globals.s.selectedId].children) {
-            let childCount = Globals.s.id2Node[Globals.s.selectedId].children.length;
+            let childCount = Globals.s.id2Node[Globals.s.selectedId].children!.length;
             if (childCount > 1) {
-                Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].children[childCount - 1].id;
+                Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].children![childCount - 1].id;
             }
             Tree.selectNode(Globals.s.selectedId);
         }
@@ -94,7 +94,7 @@ export default class Globals {
 
     public static upNode() {
         if (Globals.s.selectedId > Globals.s.rootId) {
-            Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].parent.id;
+            Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].parent!.id;
         }
         Tree.selectNode(Globals.s.selectedId);
     }

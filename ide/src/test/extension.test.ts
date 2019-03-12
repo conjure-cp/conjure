@@ -5,8 +5,8 @@
 
 // The module 'assert' provides assertion methods from node
 // import * as assert from 'assert';
-import fs = require('fs');
-import * as Parser from '../parser';
+// import fs = require('fs');
+// import * as Parser from '../parser';
 // import { parse } from 'url';
 
 // You can import and use all API from the 'vscode' module
@@ -14,10 +14,10 @@ import * as Parser from '../parser';
 // import * as vscode from 'vscode';
 // import * as myExtension from '../extension';
 
-import Node from '../webview/ts/src/util/Node';
+// import Node from '../webview/ts/src/util/Node';
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite("Extension Tests", function () {
+// suite("Extension Tests", function () {
 
         // let testDir = "/home/tom/Documents/sh/essence/conjure-output";
 
@@ -26,9 +26,9 @@ suite("Extension Tests", function () {
         // let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
         // let path = "/test.db";
 
-    test("Parse DB", () => {
-        console.log("DSADASDASDAS");
-        console.log(Node.blah());
+    // test("Parse DB", () => {
+        // console.log("DSADASDASDAS");
+        // console.log(Node.blah());
         // const sqlite3 = require('sqlite3').verbose();
 
         // let db = new sqlite3.Database(path, (err: any) => {
@@ -37,7 +37,7 @@ suite("Extension Tests", function () {
         //     }
         //     console.log('Connected to the database.');
 
-        });
+        // });
         // console.log(db);
 
         // async function recursive(node: TreeNode) {
@@ -82,4 +82,4 @@ suite("Extension Tests", function () {
     //     assert.equal(-1, [1, 2, 3].indexOf(5));
     //     assert.equal(-1, [1, 2, 3].indexOf(0));
     // });
-});
+// });

@@ -5,7 +5,8 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
-    "develop": "webpack --mode development --watch"
+    "develop": "webpack --mode development --watch",
+    "build": "webpack --mode production"
   },
   "author": "",
   "license": "ISC",

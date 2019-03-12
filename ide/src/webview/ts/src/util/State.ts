@@ -1,5 +1,5 @@
 import Node from './Node';
-import { id2Node } from './globals';
+// import { id2Node } from './globals';
 
 export default class State {
     public totalLoaded = 0;
@@ -64,10 +64,10 @@ export default class State {
         }
 
         if (isLeftChild){
-            this.id2Node[parentId].children.unshift(newNode);
+            this.id2Node[parentId].children!.unshift(newNode);
         }
         else{
-            this.id2Node[parentId].children.push(newNode);
+            this.id2Node[parentId].children!.push(newNode);
         }
         // this.id2Node[parentId].children.push(newNode);
 
