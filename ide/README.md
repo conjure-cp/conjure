@@ -5,6 +5,7 @@
 git clone https://github.com/minion/minion-private
 cd minion-private
 git checkout dumptreesql
+cd build
 mkdir build
 ../configure.py
 (sed '$s/$/ -l sqlite3/' Makefile)  >  temp
