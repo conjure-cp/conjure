@@ -204,6 +204,7 @@ export default class ConjureHelper {
         // console.log(conjureOutName)
 
         let args = ['solve', modelPath, paramFile.uri.path, '-o', conjureOutName];
+
         this.parseArgs(dir, conjureOutName, args, wantVisualisation);
 
         console.log(args. join(" "));
@@ -252,6 +253,8 @@ export default class ConjureHelper {
 
         if (configFiles.length === 0){
             vscode.window.showErrorMessage("No config files found");
+            args.push(this.parseSavileRowArgs({}, wantVisualisation));
+            args.push(this.parseMinionArgs(conjureOutName, {}, wantVisualisation));
             return;
         }
 
@@ -299,6 +302,7 @@ export default class ConjureHelper {
         
         args.push(this.parseSavileRowArgs(savileRowOptions, wantVisualisation));
         args.push(this.parseMinionArgs(conjureOutName, minionOptions, wantVisualisation));
+
     }
     private static parseSavileRowArgs(savilerowOptions: any, wantVisualisation: boolean){
         let defaultSavileRowArgs: any = {};
