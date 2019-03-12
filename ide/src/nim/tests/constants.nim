@@ -1,1 +1,1 @@
-let testDataPath* = "/cs/home/to26/SearchTreeVisualisationTests/testData/"
+let testDataPath* = "/home/tom/SearchTreeVisualisationTests/testData/"

@@ -166,7 +166,7 @@ export default class Tree {
             .attr("text-anchor", "middle")
             .text((node: Node) => {
                 if (Node.hasMoreChildren(node)) {
-                    return node.decCount;
+                    return node.decCount + " nodes below";
                 }
             });
 
@@ -193,7 +193,7 @@ export default class Tree {
             })
             .text((node: Node) => {
                 if (Node.hasMoreChildren(node)) {
-                    return node.decCount;
+                    return node.decCount + " Nodes below";
                 }
             });
 

@@ -109,6 +109,7 @@ let noSolutionFailedQuery = sql("""with recursive
 proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: CountTable[int]): seq[int] =
 
     var nId, pId: int
+    var l, pL: string
 
     for row1 in db.fastRows(query):
 
@@ -122,12 +123,18 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: 
 
         let row2 = db.getRow(sql"select branchingVariable, value from Node where nodeId = ?", pId)
 
-        let l = getLabel(getInitialVariables(), row2[0], row1[3], row2[1])
-        let pL = getLabel(getInitialVariables(), row2[0], row1[3], row2[1], true)
+        if pId == rootNodeId:
+            l = "Root Propagation" 
+            pL = l
+        else:
+            l = getLabel(getInitialVariables(), row2[0], row1[3], row2[1])
+            pL = getLabel(getInitialVariables(), row2[0], row1[3], row2[1], true)
 
         var decCount = 0
         if (decTable.hasKey(nId)):
-            decCount = decTable[nId] - 1
+            decCount = decTable[nId]
+        if (nId != rootNodeId):
+            decCount.dec()
 
         list.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decCount, isSolution: parseBool(row1[5])))
 
