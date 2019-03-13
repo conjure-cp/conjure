@@ -40,15 +40,15 @@ export default class Keyboard {
         Mousetrap.bind('c', () => {
             let node = Globals.s.id2Node[Globals.s.selectedId];
             Node.collapseNode(node);
-            Tree.selectNode(node.id);
             Tree.update(node);
+            Tree.selectNode(node.id);
         }, 'keydown');
 
         Mousetrap.bind('e', () => {
             let node = Globals.s.id2Node[Globals.s.selectedId];
             Node.expandNode(node);
-            Tree.selectNode(node.id);
             Tree.update(node);
+            Tree.selectNode(node.id);
         }, 'keydown');
 
         Mousetrap.bind('m', () => {
