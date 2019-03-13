@@ -66,7 +66,7 @@ export default class State {
         if (parentId === -1) {
             // console.log("nodeId is")
             this.id2Node[nodeId] = newNode;
-            console.log(this.id2Node);
+            // console.log(this.id2Node);
             return;
         }
 

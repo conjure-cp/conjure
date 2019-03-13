@@ -75,8 +75,20 @@ export default class Listview {
         return path.reverse().join(".");
     }
 
-    public updateFromRoot(){
+    public updateFromRoot() {
         this.update(this.id2Node["Items"]);
+    }
+
+    private getVarName(node: Node): string {
+        let name = node.name;
+        if (node.parent && node.parent.children) {
+            node.parent.children!.forEach((element: Node) => {
+                if (element.name === "Cardinality") {
+                    name = node.parent!.name + node.name;
+                }
+            });
+        }
+        return name;
     }
 
     public update(source: Node) {
@@ -95,16 +107,16 @@ export default class Listview {
 
         var entered = nodeEls.enter().append("li").classed("node", true)
             .attr("id", (node: Node) => {
-                let name = node.name;
-                if (node.parent) {
-                    node.parent.children!.forEach((element: Node) => {
-                        if (element.name === "Cardinality") {
-                            name = node.parent!.name + node.name;
-                        }
-                    });
-                }
+                // let name = node.name;
+                // if (node.parent) {
+                //     node.parent.children!.forEach((element: Node) => {
+                //         if (element.name === "Cardinality") {
+                //             name = node.parent!.name + node.name;
+                //         }
+                //     });
+                // }
                 // node["domIdentifier"] = name;
-                return name;
+                return this.getVarName(node);
             })
             // .style("margin-bottom", "200px")
             .style("top", () => {
@@ -139,18 +151,19 @@ export default class Listview {
                 this.update(source);
 
             })
-            .on("mouseover",  (d: any) => {
+            .on("mouseover", (d: any) => {
                 // d3.select(this).classed("changed", true);
             })
             .on("mouseout", (d: any) => {
                 // d3.selectAll(".changed").classed("changed", false);
             })
-            .each((d: any) => {
-                this.id2Node[d.name] = d;
-                if (d.name === "Expressions" && d.children && $("#expressions").prop("checked")){
-                    Node.toggleNode(d);
+            .each((node: Node) => {
+                // this.id2Node[d.name] = d;
+                this.id2Node[this.getVarName(node)] = node;
+                if (node.name === "Expressions" && node.children && $("#expressions").prop("checked")) {
+                    Node.toggleNode(node);
                 }
-            })
+            });
         //add arrows if it is a folder
         entered.append("span").attr("class", (d: any) => {
             var icon = d.children ? "fas fa-chevron-down"
@@ -184,6 +197,7 @@ export default class Listview {
 
 
     public setChangedExpressions(expressions: any) {
+        console.log(this.id2Node);
         // console.log(expressions);
         this.id2Node["Changed Expressions"]["children"] = expressions;
     }
@@ -193,9 +207,6 @@ export default class Listview {
         data.forEach((element: any) => {
 
             if (element.hasOwnProperty("Cardinality")) {
-                // if (!name2Node[element.name].children){
-                // console.log(name2Node[element.name]);
-                // }
                 if (this.id2Node[element.name].children) {
 
                     let setNode = this.id2Node[element.name].children;
@@ -207,22 +218,15 @@ export default class Listview {
                     if (element.Included) {
 
                         setNode[2].children[0].name = element["Not excluded"];
-
-                        // let inc = element.Included;
-
-                        // if (!element.Cardinality.includes[".."]){
-                        //     let c = Number(element.Cardinality)
-                        // }
-
                         setNode[3].children[0].name = element.Included;
 
                         // let notExcluded = element["Not excluded"];
                         // let incList = element.Included;
 
                         // for (let i = 0; i < notExcluded.length; i++){
-                            // if (incList.includes(notExcluded[i])){
-                                // notExcluded[i] = "<b style='color:gold'>" + notExcluded[i] + "</b>";
-                            // } 
+                        // if (incList.includes(notExcluded[i])){
+                        // notExcluded[i] = "<b style='color:gold'>" + notExcluded[i] + "</b>";
+                        // } 
                         // }
 
                         // setNode[2].children[0].name = notExcluded.join(", ");
@@ -255,13 +259,21 @@ export default class Listview {
 
         var ancestors: any = [];
 
-        changedList.forEach((name: any) => {
+        changedList.forEach((name: string) => {
 
             ancestors.push(name);
+
+            // console.log("here");
+
+            console.log(name);
+            console.log(this.id2Node);
 
             if (this.id2Node[name]) {
 
                 var obj = this.id2Node[name].parent;
+
+                console.log(obj);
+
 
                 while (obj) {
 
@@ -273,12 +285,17 @@ export default class Listview {
                 }
             }
 
+
+            // console.log(name);
+            // console.log(ancestors);
+
+
             // console.log("---------");
             ancestors.forEach((id: string) => {
-                // console.log(element);
+                // console.log(id);
                 d3.select('[id="' + $.escapeSelector(id) + '"]').classed("changed", true);
                 // $($.escapeSelector( "#" + id)).attr("class","changed");
-            })
+            });
 
         });
     }
