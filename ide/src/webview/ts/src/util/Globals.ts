@@ -46,6 +46,42 @@ export default class Globals {
             .text((d: any) => { return d.value; });
     }
 
+    public static previousSolutionNode(){
+
+        if (Globals.s.solNodIds.length === 0){
+            return;
+        }
+
+        if (!Globals.s.solNodIds.includes(Globals.s.selectedId)){
+            Globals.s.selectedId = Globals.s.solNodIds[Globals.s.solNodIds.length - 1];
+            return;
+        }
+
+        let currentSolId = Globals.s.solNodIds.indexOf(Globals.s.selectedId);
+
+        if (currentSolId - 1 >= 0){
+            Globals.s.selectedId = Globals.s.solNodIds[currentSolId - 1];
+        }
+    }
+
+
+    public static nextSolutionNode(){
+
+        if (Globals.s.solNodIds.length === 0){
+            return;
+        }
+
+        if (!Globals.s.solNodIds.includes(Globals.s.selectedId)){
+            Globals.s.selectedId = Globals.s.solNodIds[0];
+            return;
+        }
+
+        let currentSolId = Globals.s.solNodIds.indexOf(Globals.s.selectedId);
+
+        if (currentSolId + 1 < Globals.s.solNodIds.length){
+            Globals.s.selectedId = Globals.s.solNodIds[currentSolId + 1];
+        }
+    }
 
 
     public static nextNode() {
