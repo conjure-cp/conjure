@@ -20,28 +20,39 @@ export default class State {
     constructor() { }
 
     public collapseFailed() {
-        // this.solAncestorIds.forEach((nodeId: number) => {
-        //     let childIds = this.id2ChildIds[nodeId];
-        //     childIds.forEach((childId: number) => {
-        //         if (!this.solAncestorIds.includes(childId)) {
-        //             Node.collapseNode(this.id2Node[childId]);
-        //         }
-        //     });
-        // });
+        this.solAncestorIds.forEach((nodeId: number) => {
 
-        // let correctAncestor: Node = null;
+            let current = this.id2Node[nodeId];
 
-        // let recurse = (node: Node) => {
-        //     if (this.solAncestorIds.includes(node.id)) {
-        //         correctAncestor = node;
-        //         return;
-        //     }
-        //     recurse(node.parent);
-        // };
+            if (!current.children){
+                return;
+            }
+            // let childIds = this.id2ChildIds[nodeId];
+            current.children.forEach((child: Node) => {
+                if (!this.solAncestorIds.includes(child.id)) {
+                    Node.collapseNode(child);
+                }
+            });
+        });
 
-        // recurse(this.id2Node[this.selectedId]);
+        // let correctAncestor: Node;
 
-        // this.selectedId = correctAncestor.id;
+        let recurse = (node: Node) => {
+            if (this.solAncestorIds.includes(node.id)) {
+                this.selectedId = node.id;
+                // correctAncestor = node;
+                return;
+            }
+
+            if (node.parent === null){
+                return;
+            }
+
+            recurse(node.parent);
+        };
+
+        recurse(this.id2Node[this.selectedId]);
+
     }
 
     public addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number, isLeftChild: boolean, childCount: number, isSolution: boolean) {
