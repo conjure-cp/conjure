@@ -21,6 +21,7 @@ export default class Listview {
     public duration = 250;
 
     public panel = jsPanel.create({
+        // $("body").css( "background-color" );
         theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
         headerTitle: 'my panel #1',
         position: 'right-top 0 58',
@@ -38,6 +39,12 @@ export default class Listview {
 
 
     constructor() {
+        console.log("bg colour: ");
+        let col = $("body").css("background-colour")
+        console.log(col);
+        // console.log(getComputedStyle(document.body).getPropertyValue('--background-color'));
+
+
         this.createUL();
         this.tree = d3.layout.treelist()
             .childIndent(this.childIdent)
