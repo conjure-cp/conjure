@@ -200,7 +200,14 @@ export default class Tree {
 
         let nodeExit = node.exit().transition()
             .duration(Tree.duration)
-            .attr("transform", () => { return "translate(" + source.x + "," + source.y + ")"; })
+            .attr("transform", (node: Node) => { 
+                // return "translate(" + source.x + "," + source.y + ")"; })
+                let parent = node.parent;
+                if (parent) {
+                    return "translate(" + parent.x + "," + parent.y + ")";
+                }
+                return "translate(" + source.x + "," + source.y + ")"; 
+            })
             .remove();
         // nodeExit.select("circle")
         //     .attr("r", 1e-6);

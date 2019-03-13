@@ -4,20 +4,20 @@ import types, process
 
 proc setToTreeView*(s: Set): TreeViewNode =
 
-    var setType: string
+    var representation: string
 
     if (s of OccurrenceSet):
-        setType = "Occurrence"
+        representation = "Occurrence"
     if (s of DummySet):
-        setType = "Dummy"
+        representation = "Dummy"
     if (s of MarkerSet):
-        setType = "Marker"
+        representation = "Marker"
     if (s of FlagSet):
-        setType = "Flags"
+        representation = "Flags"
     if (s of ExplicitSet):
-        setType = "Explicit"
+        representation = "Explicit"
 
-    let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
+    let rep = TreeViewNode(name: "Representation", children: @[TreeViewNode(name: representation)])
     let cardinality = TreeViewNode(name: "Cardinality", children: @[
             TreeViewNode(name: s.getCardinality())])
         
@@ -27,9 +27,9 @@ proc setToTreeView*(s: Set): TreeViewNode =
     let kids = TreeViewNode(name: "Children", children: @[])
 
     if (s.inner == nil):
-        return (TreeViewNode(name: s.name, children: @[t, cardinality, notExcluded, included]))
+        return (TreeViewNode(name: s.name, children: @[rep, cardinality, notExcluded, included]))
 
-    return (TreeViewNode(name: s.name, children: @[t, cardinality, kids]))
+    return (TreeViewNode(name: s.name, children: @[rep, cardinality, kids]))
 
 
 proc domainsToJson*(domains: seq[Variable]): TreeViewNode =
