@@ -4,13 +4,13 @@ import Node from './Node';
 
 export default class Tree {
 
-    public static gap = 100;
     public static duration = 500;
     public static viewerWidth = $(document).width();
     public static viewerHeight = $(document).height();
     public static margin = { top: 40, right: 30, bottom: 50, left: 30 };
     public static width = Tree.viewerWidth! - Tree.margin.left - Tree.margin.right;
     public static height = Tree.viewerHeight! - Tree.margin.top - Tree.margin.bottom;
+    public static nodeHeight = 150;
     public static tree = d3.layout.tree().size([Tree.height, Tree.width]) .nodeSize([200, 0]);
 
     public static zoom = d3.behavior.zoom()
@@ -107,7 +107,7 @@ export default class Tree {
 
         // console.log(nodes);
 
-        nodes.forEach((node: Node) => { node.y = node.depth * Tree.gap; });
+        nodes.forEach((node: Node) => { node.y = node.depth * Tree.nodeHeight; });
 
         let node = Tree.svg.selectAll("g.node")
             .data(nodes, (node: Node) => { return node.id; });
@@ -142,7 +142,7 @@ export default class Tree {
 
         nodeEnter.append("text")
             .attr("y", () => {
-                return -50;
+                return -Tree.nodeHeight/2;
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")

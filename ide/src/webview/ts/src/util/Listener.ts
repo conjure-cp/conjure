@@ -6,7 +6,7 @@ import Node from './Node';
 export default class Listener {
 
     public static setLoadedCount() {
-        $("#total").text(Globals.s.totalLoaded + "/" + "?");
+        $("#total").text(Globals.s.totalLoaded + "/" + Number(Globals.s.id2Node[Globals.s.rootId].decCount + 1));
     }
 
     public static bindListener() {
@@ -30,6 +30,8 @@ export default class Listener {
 
                     Globals.s.solAncestorIds = message.data.core.solAncestorIds;
 
+                    Globals.s.totalLoaded += message.data.core.nodes.length;
+
                     // console.log(message.data.core.nodes);
 
                     for (let i = 0; i < message.data.core.nodes.length; i++) {
@@ -44,13 +46,15 @@ export default class Listener {
                     Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
                     Tree.update(Globals.s.id2Node[Globals.s.rootId]);
                     Tree.selectNode(Globals.s.rootId);
+                    this.setLoadedCount();
 
                     break;
 
                 case 'longestBranchingVariable':
 
                     // console.log(message.data);
-                    Tree.tree.nodeSize([Number(message.data) * 13, 0]);
+                    // Tree.tree.nodeSize([1000, Tree.nodeHeight]);
+                    Tree.tree.nodeSize([Number(message.data) * 13, Tree.nodeHeight]);
                     break;
 
                 case 'loadNodes':
@@ -60,6 +64,8 @@ export default class Listener {
                     var parent = null;
 
                     message.data.forEach((element: any) => {
+
+
                         if (!Globals.s.id2Node[element.id]) {
 
                             // console.log("addindg " + element.id);
@@ -79,6 +85,7 @@ export default class Listener {
 
                     //         Globals.s.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
                     //         Globals.s.id2ChildIds[element.nodeId] = element.children;
+                            Globals.s.totalLoaded++;
                     //         // Globals.loadChildIds(element.nodeId);
                         }
                     });
@@ -90,7 +97,7 @@ export default class Listener {
 
                     Tree.selectNode(Globals.s.selectedId);
 
-                    // Listener.setLoadedCount();
+                    Listener.setLoadedCount();
 
                     break;
 
