@@ -10,7 +10,8 @@ export default class Globals {
     public static s = new State();
     public static lv = new Listview();
     public static vscode = acquireVsCodeApi();
-    public static columns = ["name", "rng"];
+    public static columns = ["Name", "Domain"];
+    // public static columns = ["name", "rng"];
 
     public static tabulate() {
         var table = d3.select('#pane').append('table');
@@ -38,7 +39,17 @@ export default class Globals {
         rows.selectAll('td')
             .data((row: any) => {
                 return Globals.columns.map((column) => {
-                    return { column: column, value: row[column] };
+                    let val;
+
+                    if (column === "Domain"){
+                        val = row["rng"];
+                    }
+
+                    if (column === "Name"){
+                        val = row["name"];
+                    }
+
+                    return { column: column, value: val };
                 });
             })
             .enter()

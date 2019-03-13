@@ -10,7 +10,7 @@ proc newInitResponse*(path: string): InitResponse =
 
     let core = init(path)
     let prettyAtRoot = getSkeleton()
-    let simpleAtRoot = loadSimpleDomains("0")
+    let simpleAtRoot = loadSimpleDomains("0", true)
 
     return InitResponse(prettyAtRoot: prettyAtRoot, simpleAtRoot: simpleAtRoot, core: core)
 

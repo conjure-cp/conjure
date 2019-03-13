@@ -6,14 +6,16 @@ import Node from './Node';
 export default class Keyboard {
 
     public static bindKeys() {
-        Mousetrap.bind('[', () => {
+        Mousetrap.bind(']', () => {
+            Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
             Node.expandNode(Globals.s.id2Node[Globals.s.rootId]);
             Tree.update(Globals.s.id2Node[Globals.s.rootId]);
             Globals.nextSolutionNode();
             Tree.selectNode(Globals.s.selectedId);
         }, 'keydown');
 
-        Mousetrap.bind(']', () => {
+        Mousetrap.bind('[', () => {
+            Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
             Node.expandNode(Globals.s.id2Node[Globals.s.rootId]);
             Tree.update(Globals.s.id2Node[Globals.s.rootId]);
             Globals.previousSolutionNode();
