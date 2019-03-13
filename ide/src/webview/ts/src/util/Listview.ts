@@ -147,6 +147,9 @@ export default class Listview {
             })
             .each((d: any) => {
                 this.id2Node[d.name] = d;
+                if (d.name === "Expressions" && d.children && $("#expressions").prop("checked")){
+                    Node.toggleNode(d);
+                }
             })
         //add arrows if it is a folder
         entered.append("span").attr("class", (d: any) => {
