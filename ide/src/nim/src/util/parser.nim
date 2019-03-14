@@ -7,7 +7,7 @@ proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
 
     var varLookup = initTable[string, Variable]()
     var clean = ""
-    # try:
+
     for line in readFile(eprimeFilePath).split("Conjure's")[1].split("\n"):
         if len(line) == 0:
             continue
@@ -41,15 +41,13 @@ proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
             return newFSet(name, inner = parseSetEprime(db, innerArr, name))
 
         if (arr[0].hasKey("Set_Explicit")):
-            let card = arr[1]["SizeAttr_Size"]["Constant"][
-                    "ConstantInt"].getInt(-1)
+            let card = arr[1]["SizeAttr_Size"]["Constant"][ "ConstantInt"].getInt(-1)
             return newEset(name, card, inner = parseSetEprime(db, innerArr, name))
 
     elif arr[^1].hasKey("DomainInt"):
 
         if arr[0].hasKey("Set_Explicit"):
-            return newEset(name, cardinality = arr[1]["SizeAttr_Size"][
-                    "Constant"]["ConstantInt"].getInt(-1))
+            return newEset(name, cardinality = arr[1]["SizeAttr_Size"][ "Constant"]["ConstantInt"].getInt(-1))
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
             let query = "select upper from Domain where nodeId = 0 and name like '" & name & "\\_%Dummy%' escape '\\' limit 1;" 
@@ -69,17 +67,11 @@ proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
 
 proc parseAux*(minionFilePath: string): Table[string, Expression] =
 
-    # try:
-
     var lookup = initTable[string, Expression]()
     let auxDef = re"aux\d* #(.*)"
     let minionFile = readFile(minionFilePath)
 
-    # echo minionFile[0..100]
-
     let find = minionFile.findAll(auxDef)
-
-    # echo find.len()
 
     for a in find:
         let splitted = a.split("#")
@@ -92,12 +84,6 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
             if (lookup.hasKey(nested)):
                 rhs = rhs.replace(nested, lookup[nested].name)
         lookup[auxName] = newExpression(rhs, auxName)
-
-    # echo lookup
-    # for e in lookup.values():
-    #     echo e.name
-
-    # echo lookup.len()
 
     return lookup
 
