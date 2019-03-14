@@ -60,7 +60,6 @@ export default class State {
         // console.log(parentId);
         // console.log(this.id2Node[parentId]);
 
-        this.totalLoaded++;
         let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount, isLeftChild, childCount, isSolution);
 
         if (parentId === -1) {
