@@ -1,4 +1,6 @@
+declare var d3: any;
 import Node from './Node';
+import Globals from './Globals';
 
 export default class State {
     public static totalLoaded = 0;
@@ -20,7 +22,7 @@ export default class State {
 
             let current = this.id2Node[nodeId];
 
-            if (!current.children){
+            if (!current.children) {
                 return;
             }
             // let childIds = this.id2ChildIds[nodeId];
@@ -40,7 +42,7 @@ export default class State {
                 return;
             }
 
-            if (node.parent === null){
+            if (node.parent === null) {
                 return;
             }
 
@@ -58,6 +60,9 @@ export default class State {
         // console.log(this.id2Node[parentId]);
 
         // let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount, isLeftChild, childCount, isSolution);
+        if (newNode.isSolution) {
+            State.solNodIds.push(newNode.id);
+        }
 
         if (parentId === -1) {
             // console.log("nodeId is")
@@ -70,10 +75,10 @@ export default class State {
             this.id2Node[parentId].children = [];
         }
 
-        if (newNode.isLeftChild){
+        if (newNode.isLeftChild) {
             this.id2Node[parentId].children!.unshift(newNode);
         }
-        else{
+        else {
             this.id2Node[parentId].children!.push(newNode);
         }
         // this.id2Node[parentId].children.push(newNode);
@@ -87,4 +92,26 @@ export default class State {
         // console.log(this.id2Node[1]);
     }
 
+    public static fillCircle(node: Node) {
+
+        let s = "#node" + node.id + " circle";
+
+        let domElement = d3.select(s);
+        domElement.classed("hasOthers red", false);
+
+        if (node.isSolution) {
+            domElement.classed("solution", true);
+        }
+
+        if (Node.hasMoreChildren(node)) {
+
+            if (State.solAncestorIds.includes(node.id) && State.solNodIds.length > 0) {
+                domElement.classed("hasOthers", true);
+            }
+
+            else {
+                domElement.classed("hasOthers red", true);
+            }
+        }
+    }
 }

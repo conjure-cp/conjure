@@ -1,5 +1,5 @@
 declare var d3: any;
-import Globals from './Globals';
+import Globals from '../testable/Globals';
 import State from '../testable/State';
 import Node from '../testable/Node';
 
@@ -33,7 +33,6 @@ export default class Tree {
     public static zoomed() {
         Tree.svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
     }
-
     public static focusNode = (node: Node) => {
         let scale = Tree.zoom.scale();
         let x = -node.x * scale;
@@ -60,45 +59,12 @@ export default class Tree {
 
 
         if (!State.frozen) {
-            Globals.loadDomains();
+            Globals.loadDomains(Globals.vscode);
         }
 
         Globals.lv.updatePanelTitle();
     }
 
-
-    private static fillCircle(node: Node) {
-
-        // console.log(node.isSolution)
-
-        let s = "#node" + node.id + " circle";
-
-        let domElement = d3.select(s);
-        domElement.classed("hasOthers red", false);
-
-        // if (State.solNodIds.includes(node.id)) {
-        if (node.isSolution) {
-            domElement.classed("solution", true);
-        }
-
-        if (Node.hasMoreChildren(node)) {
-
-            if (State.solAncestorIds.includes(node.id) && State.solNodIds.length > 0) {
-                domElement.classed("hasOthers", true);
-            }
-
-            else {
-                domElement.classed("hasOthers red", true);
-            }
-
-        }
-
-        // domElement.attr("r", Node.calculateRadius(node));
-    }
-
-    public static getDecLabelHeight(node: Node) {
-        return Node.calculateRadius(node) + 13;
-    }
 
     public static update(source: Node) {
 
@@ -132,9 +98,6 @@ export default class Tree {
                 if (!State.id2Node[d.id]) {
                     State.id2Node[d.id] = d;
                 }
-                if (d.isSolution) {
-                    State.solNodIds.push(d.id);
-                }
             });
 
         nodeEnter.append("circle")
@@ -160,7 +123,7 @@ export default class Tree {
 
         nodeEnter.append("text")
             .attr("y", (node: Node) => {
-                return Tree.getDecLabelHeight(node);
+                return Node.getDecLabelHeight(node);
             })
             .attr("class", "decCount")
             .attr("dy", ".35em")
@@ -169,7 +132,7 @@ export default class Tree {
                 if (Node.hasMoreChildren(node)) {
                     return node.decCount + " nodes below";
                 }
-            });
+            })
 
         let nodeUpdate = node.transition()
             .duration(Tree.duration)
@@ -183,14 +146,14 @@ export default class Tree {
                 return Node.calculateRadius(node);
 
             })
-            .each((d: Node) => { Tree.fillCircle(d); });
+            .each((d: Node) => { State.fillCircle(d); });
 
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
 
         nodeUpdate.select("text.decCount")
             .attr("y", (node: Node) => {
-                return Tree.getDecLabelHeight(node);
+                return Node.getDecLabelHeight(node);
             })
             .text((node: Node) => {
                 if (Node.hasMoreChildren(node)) {

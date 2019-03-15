@@ -1,4 +1,4 @@
-import Globals from './Globals';
+import Globals from '../testable/Globals';
 import Tree from './Tree';
 import State from '../testable/State';
 // import Node from './Node';
@@ -20,7 +20,7 @@ export default class Buttons {
 
         d3.select("#freeze")
             .on("change", () => {
-                Globals.loadDomains();
+                Globals.loadDomains(Globals.vscode);
                 State.frozen = !State.frozen;
             });
 
@@ -65,11 +65,11 @@ export default class Buttons {
                 else {
 
                     if (!State.simpleDomainsAtRoot) {
-                        Globals.loadDomains();
+                        Globals.loadDomains(Globals.vscode);
                     }
                     else {
-                        Globals.tabulate();
-                        Globals.appendRows(State.simpleDomainsAtRoot);
+                        Globals.lv.tabulate();
+                        Globals.lv.appendRows(State.simpleDomainsAtRoot);
                     }
                 }
 

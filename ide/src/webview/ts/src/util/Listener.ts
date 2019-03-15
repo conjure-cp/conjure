@@ -1,5 +1,5 @@
 declare var d3: any;
-import Globals from './Globals';
+import Globals from '../testable/Globals';
 import Tree from './Tree';
 import Node from '../testable/Node';
 import State from '../testable/State';
@@ -8,6 +8,24 @@ export default class Listener {
 
     public static setLoadedCount() {
         $("#total").text(State.totalLoaded + "/" + Number(State.id2Node[State.rootId].decCount + 1));
+    }
+
+    public static initHandler(data: any) {
+        Globals.lv.update(data.prettyAtRoot);
+
+        State.simpleDomainsAtRoot = data.simpleAtRoot.vars;
+        State.solAncestorIds = data.core.solAncestorIds;
+        State.totalLoaded += data.core.nodes.length;
+
+        for (let i = 0; i < data.core.nodes.length; i++) {
+            let element = data.core.nodes[i];
+            State.addNode(element.parentId, element);
+        }
+
+        Node.collapseNode(State.id2Node[State.rootId]);
+        Tree.update(State.id2Node[State.rootId]);
+        Tree.selectNode(State.rootId);
+        Listener.setLoadedCount();
     }
 
     public static bindListener() {
@@ -21,38 +39,12 @@ export default class Listener {
                     Globals.lv.id2Node[message.data.structure.name].children = message.data.structure.children;
                     Globals.lv.updateFromRoot();
                     Globals.lv.updateNodes([message.data.update]);
-                    Globals.sendPrettyRequest();
+                    Globals.sendPrettyRequest(Globals.vscode);
                     break;
 
                 case 'init':
                     // console.log(message.data);
-                    Globals.lv.update(message.data.prettyAtRoot);
-                    State.simpleDomainsAtRoot = message.data.simpleAtRoot.vars;
-
-                    State.solAncestorIds = message.data.core.solAncestorIds;
-
-                    State.totalLoaded += message.data.core.nodes.length;
-
-                    // console.log(message.data.core.nodes);
-
-                    for (let i = 0; i < message.data.core.nodes.length; i++) {
-                        let element = message.data.core.nodes[i];
-                        // console.log(element.isSolution)
-                        State.addNode(element.parentId,  element);                        
-
-
-
-                        // State.addNode(element.id, element.parentId, element.label, element.prettyLabel, element.decCount, element.isLeftChild, element.childCount, element.isSolution);
-                    }
-                    // console.log(State.id2Node[State.rootId]);
-
-
-                    Tree.update(State.id2Node[State.rootId]);
-                    Node.collapseNode(State.id2Node[State.rootId]);
-                    Tree.update(State.id2Node[State.rootId]);
-                    Tree.selectNode(State.rootId);
-                    this.setLoadedCount();
-
+                    Listener.initHandler(message.data);
                     break;
 
                 case 'longestBranchingVariable':
@@ -66,38 +58,14 @@ export default class Listener {
 
                     // console.log(message.data);
 
-                    var parent = null;
-
                     message.data.forEach((element: any) => {
 
-
                         if (!State.id2Node[element.id]) {
-
-                            // console.log("addindg " + element.id);
-
-                            parent = State.id2Node[element.parentId];
-
-                            if (!parent.children){
-                                State.id2Node[element.parentId].children = [];
-                            }
-
-                            if (element.isLeftChild){
-                                parent.children!.unshift(element);
-                            }
-                            else{
-                                parent.children!.push(element);
-                            }
-
-                    //         State.addNode(element.nodeId, element.parentId, element.label, element.prettyLabel, element.decendantCount, element.isLeftChild);
-                    //         State.id2ChildIds[element.nodeId] = element.children;
+                            State.addNode(element.parentId, element);
                             State.totalLoaded++;
-                    //         // Globals.loadChildIds(element.nodeId);
                         }
                     });
 
-                    // console.log(parent);
-
-                    // Tree.update(parent);
                     Tree.update(State.id2Node[State.rootId]);
 
                     Tree.selectNode(State.selectedId);

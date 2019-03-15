@@ -10,17 +10,21 @@ module.exports = function (config) {
 
       frameworks: ["jasmine", "karma-typescript"],
       files: [
-        "src/testable/**/*.ts", // *.tsx for React Jsx
+        "src/**/*.ts", // *.tsx for React Jsx
         "test/**/*.ts", // *.tsx for React Jsx
+        "src/fake.js",
         "https://code.jquery.com/jquery-3.3.1.min.js",
         "https://d3js.org/d3.v3.min.js",
-        "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js"
+        "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js"
+
       ],
       preprocessors: {
         "**/*.ts": "karma-typescript" // *.tsx for React Jsx
       },
       reporters: ["progress", "karma-typescript"],
       browsers: ["ChromeHeadless"],
+      // browsers: ["Chrome"],
 
       karmaTypescriptConfig: {
         tsconfig: "./tsconfig.json",

@@ -1,8 +1,9 @@
 declare var Mousetrap: any;
-import Globals from './Globals';
+import Globals from '../testable/Globals';
 import Tree from './Tree';
 import Node from '../testable/Node';
 import State from '../testable/State';
+import Navigate from '../testable/Navigate';
 
 export default class Keyboard {
 
@@ -11,7 +12,7 @@ export default class Keyboard {
             Node.collapseNode(State.id2Node[State.rootId]);
             Node.expandNode(State.id2Node[State.rootId]);
             Tree.update(State.id2Node[State.rootId]);
-            Globals.nextSolutionNode();
+            Navigate.nextSolutionNode();
             Tree.selectNode(State.selectedId);
         }, 'keydown');
 
@@ -19,7 +20,7 @@ export default class Keyboard {
             Node.collapseNode(State.id2Node[State.rootId]);
             Node.expandNode(State.id2Node[State.rootId]);
             Tree.update(State.id2Node[State.rootId]);
-            Globals.previousSolutionNode();
+            Navigate.previousSolutionNode();
             Tree.selectNode(State.selectedId);
         }, 'keydown');
 
@@ -28,23 +29,29 @@ export default class Keyboard {
         }, 'keydown');
 
         Mousetrap.bind('s', () => {
-            Globals.nextNode();
+            Navigate.nextNode(Globals.vscode);
+            Tree.selectNode(State.selectedId);
             Tree.update(State.id2Node[State.selectedId]);
         }, 'keydown');
 
-        Mousetrap.bind('w', Globals.upNode, 'keydown');
+        Mousetrap.bind('w', () => {
+            Navigate.upNode();
+            Tree.selectNode(State.selectedId);
+        }, 'keydown');
 
-        Mousetrap.bind('shift', Globals.previousNode, 'keydown');
+        Mousetrap.bind('shift', () => {
+            Navigate.previousNode();
+            Tree.selectNode(State.selectedId);
+        }, 'keydown');
 
-        Mousetrap.bind('d', Globals.rightNode, 'keydown');
+        Mousetrap.bind('d', () => {
+            Navigate.rightNode();
+            Tree.selectNode(State.selectedId);
+        },  'keydown');
 
         Mousetrap.bind('a', () => {
-            let node = State.id2Node[State.selectedId];
-            if (node.children) {
-                if (node.children.length > 1) {
-                    Tree.selectNode(node.children[0].id);
-                }
-            }
+            Navigate.leftNode();
+            Tree.selectNode(State.selectedId);
         }, 'keydown');
 
         Mousetrap.bind('t', () => {
@@ -65,10 +72,6 @@ export default class Keyboard {
             Node.expandNode(node);
             Tree.update(node);
             Tree.selectNode(node.id);
-        }, 'keydown');
-
-        Mousetrap.bind('m', () => {
-            Globals.loadDomains();
         }, 'keydown');
 
         Mousetrap.bind('f', () => {

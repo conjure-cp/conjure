@@ -119,4 +119,8 @@ export default class Node {
 
     }
 
+    public static getDecLabelHeight(node: Node) {
+        return Node.calculateRadius(node) + 13;
+    }
+
 }

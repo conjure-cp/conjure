@@ -1,5 +1,5 @@
 import "./treelist";
-import Globals from './Globals';
+import Globals from '../testable/Globals';
 import State from '../testable/State';
 import Node from '../testable/Node';
 
@@ -20,6 +20,50 @@ export default class Listview {
     public nodeHeight = 30;
 
     public duration = 250;
+
+    public tabulate() {
+        var table = d3.select('#pane').append('table');
+        var thead = table.append('thead');
+
+        thead.append('tr')
+            .selectAll('th')
+            .data(Globals.columns).enter()
+            .append('th')
+            .text(function (column: any) { return column; });
+    }
+
+    public appendRows(data: any) {
+        var table = d3.select('#pane').append('table');
+        var tbody = table.append('tbody');
+
+        var rows = tbody.selectAll('tr')
+            .data(data)
+            .enter()
+            .append('tr')
+            .attr("id", (d: any, i: any) => { return d.name; });
+
+        // create a cell in each row for each column
+        rows.selectAll('td')
+            .data((row: any) => {
+                return Globals.columns.map((column) => {
+                    let val;
+
+                    if (column === "Domain") {
+                        val = row["rng"];
+                    }
+
+                    if (column === "Name") {
+                        val = row["name"];
+                    }
+
+                    return { column: column, value: val };
+                });
+            })
+            .enter()
+            .append('td')
+            .text((d: any) => { return d.value; });
+    }
+
 
     public panel = jsPanel.create({
         // $("body").css( "background-color" );

@@ -98,10 +98,17 @@ describe('Test Node Class ', function () {
             let node = new Node(0, "simple", "pretty", null, 0, true, 2, false);
             expect(Node.calculateRadius(node)).toBe(10);
         });
-        it('The radius should be not too big', function () {
+        it('The radius should be smaller than 50', function () {
 
             let node = new Node(0, "simple", "pretty", null, 10000000, true, 2, false);
             expect(Node.calculateRadius(node)).toBeLessThan(50);
+        });
+    });
+
+    describe('Calculate Descendant count label y poistion', function () {
+        it('The label height should be 23', function () {
+            let node = new Node(0, "simple", "pretty", null, 0, true, 2, false);
+            expect(Node.getDecLabelHeight(node)).toBe(23);
         });
     });
 });
