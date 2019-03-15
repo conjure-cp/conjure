@@ -1,7 +1,7 @@
 declare var d3: any;
 import Globals from './Globals';
 import Tree from './Tree';
-import Node from './Node';
+import Node from '../testable/Node';
 
 export default class Listener {
 

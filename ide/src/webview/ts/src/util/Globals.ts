@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from '../testable/Node';
 import State from './State';
 import Tree from './Tree';
 import Listview from './Listview';

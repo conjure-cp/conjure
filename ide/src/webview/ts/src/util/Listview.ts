@@ -1,6 +1,6 @@
 import "./treelist";
 import Globals from './Globals';
-import Node from './Node';
+import Node from '../testable/Node';
 
 declare var jsPanel: any;
 declare var d3: any;

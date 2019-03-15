@@ -1,6 +1,6 @@
 declare var d3: any;
 import Globals from './Globals';
-import Node from './Node';
+import Node from '../testable/Node';
 
 export default class Tree {
 
@@ -107,8 +107,8 @@ export default class Tree {
 
         // console.log(nodes);
 
-        nodes.forEach((node: Node) => { node.y = node.depth * Tree.nodeHeight; });
 
+        nodes.forEach((node: Node) => { node.y = node.depth * Tree.nodeHeight; });
         let node = Tree.svg.selectAll("g.node")
             .data(nodes, (node: Node) => { return node.id; });
 

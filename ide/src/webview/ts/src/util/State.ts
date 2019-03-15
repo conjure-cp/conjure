@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from '../testable/Node';
 // import { id2Node } from './globals';
 
 export default class State {
