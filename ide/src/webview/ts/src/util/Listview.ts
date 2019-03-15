@@ -1,5 +1,6 @@
 import "./treelist";
 import Globals from './Globals';
+import State from '../testable/State';
 import Node from '../testable/Node';
 
 declare var jsPanel: any;
@@ -57,7 +58,7 @@ export default class Listview {
         this.ul = d3.select("#pane").append("ul").classed("treelist", "true");
     }
     public updatePanelTitle() {
-        this.panel.setHeaderTitle("Node: " + Globals.s.selectedId);
+        this.panel.setHeaderTitle("Node: " + State.selectedId);
     }
 
     public getSetPath(node: Node) {
@@ -144,11 +145,11 @@ export default class Listview {
 
                         let p = this.getSetPath(d);
 
-                        Globals.s.pathList.push(p);
+                        State.pathList.push(p);
 
                         Globals.vscode.postMessage({
                             command: 'loadSet',
-                            nodeId: Globals.s.selectedId,
+                            nodeId: State.selectedId,
                             path: p
                         });
                     }

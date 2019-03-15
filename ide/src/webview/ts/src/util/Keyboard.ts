@@ -2,33 +2,34 @@ declare var Mousetrap: any;
 import Globals from './Globals';
 import Tree from './Tree';
 import Node from '../testable/Node';
+import State from '../testable/State';
 
 export default class Keyboard {
 
     public static bindKeys() {
         Mousetrap.bind(']', () => {
-            Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
-            Node.expandNode(Globals.s.id2Node[Globals.s.rootId]);
-            Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+            Node.collapseNode(State.id2Node[State.rootId]);
+            Node.expandNode(State.id2Node[State.rootId]);
+            Tree.update(State.id2Node[State.rootId]);
             Globals.nextSolutionNode();
-            Tree.selectNode(Globals.s.selectedId);
+            Tree.selectNode(State.selectedId);
         }, 'keydown');
 
         Mousetrap.bind('[', () => {
-            Node.collapseNode(Globals.s.id2Node[Globals.s.rootId]);
-            Node.expandNode(Globals.s.id2Node[Globals.s.rootId]);
-            Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+            Node.collapseNode(State.id2Node[State.rootId]);
+            Node.expandNode(State.id2Node[State.rootId]);
+            Tree.update(State.id2Node[State.rootId]);
             Globals.previousSolutionNode();
-            Tree.selectNode(Globals.s.selectedId);
+            Tree.selectNode(State.selectedId);
         }, 'keydown');
 
         Mousetrap.bind('r', () => {
-            Tree.selectNode(Globals.s.rootId);
+            Tree.selectNode(State.rootId);
         }, 'keydown');
 
         Mousetrap.bind('s', () => {
             Globals.nextNode();
-            Tree.update(Globals.s.id2Node[Globals.s.selectedId]);
+            Tree.update(State.id2Node[State.selectedId]);
         }, 'keydown');
 
         Mousetrap.bind('w', Globals.upNode, 'keydown');
@@ -38,7 +39,7 @@ export default class Keyboard {
         Mousetrap.bind('d', Globals.rightNode, 'keydown');
 
         Mousetrap.bind('a', () => {
-            let node = Globals.s.id2Node[Globals.s.selectedId];
+            let node = State.id2Node[State.selectedId];
             if (node.children) {
                 if (node.children.length > 1) {
                     Tree.selectNode(node.children[0].id);
@@ -47,20 +48,20 @@ export default class Keyboard {
         }, 'keydown');
 
         Mousetrap.bind('t', () => {
-            let node = Globals.s.id2Node[Globals.s.selectedId];
+            let node = State.id2Node[State.selectedId];
             Node.toggleNode(node);
             Tree.update(node);
         }, 'keydown');
 
         Mousetrap.bind('c', () => {
-            let node = Globals.s.id2Node[Globals.s.selectedId];
+            let node = State.id2Node[State.selectedId];
             Node.collapseNode(node);
             Tree.update(node);
             Tree.selectNode(node.id);
         }, 'keydown');
 
         Mousetrap.bind('e', () => {
-            let node = Globals.s.id2Node[Globals.s.selectedId];
+            let node = State.id2Node[State.selectedId];
             Node.expandNode(node);
             Tree.update(node);
             Tree.selectNode(node.id);
@@ -71,11 +72,11 @@ export default class Keyboard {
         }, 'keydown');
 
         Mousetrap.bind('f', () => {
-            Globals.s.collapseFailed();
-            let node = Globals.s.id2Node[Globals.s.selectedId];
+            State.collapseFailed();
+            let node = State.id2Node[State.selectedId];
             Tree.update(node);
             Tree.selectNode(node.id);
-            Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+            Tree.update(State.id2Node[State.rootId]);
         }, 'keydown');
     }
 }

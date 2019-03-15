@@ -1,5 +1,6 @@
 import Globals from './Globals';
 import Tree from './Tree';
+import State from '../testable/State';
 // import Node from './Node';
 // import d3_save_svg from '../../node_modules/d3-save-svg';
 let s = require( '../../node_modules/save-svg-as-png/lib/saveSvgAsPng.js');
@@ -20,13 +21,13 @@ export default class Buttons {
         d3.select("#freeze")
             .on("change", () => {
                 Globals.loadDomains();
-                Globals.s.frozen = !Globals.s.frozen;
+                State.frozen = !State.frozen;
             });
 
         d3.select("#expressions")
             .on("change", () => {
                 // Globals.loadDomains();
-                // Globals.s.frozen = !Globals.s.frozen;
+                // State.frozen = !State.frozen;
             });
 
         d3.select("#labels")
@@ -37,25 +38,25 @@ export default class Buttons {
                     let id = domObjects[i].id;
 
                     if ($("#labels").prop("checked") === true) {
-                        $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].prettyLabel);
+                        $("#" + id + " text").text(State.id2Node[Number(id.replace("node", ""))].prettyLabel);
                     }
                     else {
-                        $("#" + id + " text").text(Globals.s.id2Node[Number(id.replace("node", ""))].label);
+                        $("#" + id + " text").text(State.id2Node[Number(id.replace("node", ""))].label);
                     }
 
                     console.log("YOOO")
 
                 }
 
-                Tree.update(Globals.s.id2Node[Globals.s.rootId]);
+                Tree.update(State.id2Node[State.rootId]);
             });
 
         d3.select("#check")
             .on("change", () => {
                 $("#pane").empty();
-                Globals.s.pretty = !Globals.s.pretty;
+                State.pretty = !State.pretty;
 
-                if (Globals.s.pretty) {
+                if (State.pretty) {
                     Globals.lv.createUL();
                     // let r = Globals.lv.getRootNode();
                     // console.log(r);
@@ -63,16 +64,16 @@ export default class Buttons {
                 }
                 else {
 
-                    if (!Globals.s.simpleDomainsAtRoot) {
+                    if (!State.simpleDomainsAtRoot) {
                         Globals.loadDomains();
                     }
                     else {
                         Globals.tabulate();
-                        Globals.appendRows(Globals.s.simpleDomainsAtRoot);
+                        Globals.appendRows(State.simpleDomainsAtRoot);
                     }
                 }
 
-                Tree.selectNode(Globals.s.selectedId);
+                Tree.selectNode(State.selectedId);
             });
 
             d3.select('#saveButton').on('click', function() {

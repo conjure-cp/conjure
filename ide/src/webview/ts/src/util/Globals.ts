@@ -1,5 +1,5 @@
 import Node from '../testable/Node';
-import State from './State';
+import State from '../testable/State';
 import Tree from './Tree';
 import Listview from './Listview';
 
@@ -7,7 +7,7 @@ declare var acquireVsCodeApi: any;
 declare var d3: any;
 
 export default class Globals {
-    public static s = new State();
+    // public static s = new State();
     public static lv = new Listview();
     public static vscode = acquireVsCodeApi();
     public static columns = ["Name", "Domain"];
@@ -59,38 +59,38 @@ export default class Globals {
 
     public static previousSolutionNode(){
 
-        if (Globals.s.solNodIds.length === 0){
+        if (State.solNodIds.length === 0){
             return;
         }
 
-        if (!Globals.s.solNodIds.includes(Globals.s.selectedId)){
-            Globals.s.selectedId = Globals.s.solNodIds[Globals.s.solNodIds.length - 1];
+        if (!State.solNodIds.includes(State.selectedId)){
+            State.selectedId = State.solNodIds[State.solNodIds.length - 1];
             return;
         }
 
-        let currentSolId = Globals.s.solNodIds.indexOf(Globals.s.selectedId);
+        let currentSolId = State.solNodIds.indexOf(State.selectedId);
 
         if (currentSolId - 1 >= 0){
-            Globals.s.selectedId = Globals.s.solNodIds[currentSolId - 1];
+            State.selectedId = State.solNodIds[currentSolId - 1];
         }
     }
 
 
     public static nextSolutionNode(){
 
-        if (Globals.s.solNodIds.length === 0){
+        if (State.solNodIds.length === 0){
             return;
         }
 
-        if (!Globals.s.solNodIds.includes(Globals.s.selectedId)){
-            Globals.s.selectedId = Globals.s.solNodIds[0];
+        if (!State.solNodIds.includes(State.selectedId)){
+            State.selectedId = State.solNodIds[0];
             return;
         }
 
-        let currentSolId = Globals.s.solNodIds.indexOf(Globals.s.selectedId);
+        let currentSolId = State.solNodIds.indexOf(State.selectedId);
 
-        if (currentSolId + 1 < Globals.s.solNodIds.length){
-            Globals.s.selectedId = Globals.s.solNodIds[currentSolId + 1];
+        if (currentSolId + 1 < State.solNodIds.length){
+            State.selectedId = State.solNodIds[currentSolId + 1];
         }
     }
 
@@ -100,7 +100,7 @@ export default class Globals {
         // let stepSize = Number($("#stepSize").val());
         let stepSize = 1;
 
-        let node = Globals.s.id2Node[Globals.s.selectedId];
+        let node = State.id2Node[State.selectedId];
 
         // console.log("current");
         // console.log(node);
@@ -110,76 +110,76 @@ export default class Globals {
             return;
         }
 
-        if (!Globals.s.id2Node[Globals.s.selectedId + stepSize]) {
+        if (!State.id2Node[State.selectedId + stepSize]) {
             Globals.loadNNodes();
         }
         else {
-            Globals.s.selectedId += stepSize;
-            Tree.selectNode(Globals.s.selectedId);
+            State.selectedId += stepSize;
+            Tree.selectNode(State.selectedId);
         }
     }
 
     public static previousNode() {
 
-        let prevId = Globals.s.selectedId - 1;
+        let prevId = State.selectedId - 1;
 
-        if (Globals.s.id2Node[prevId]) {
-            Globals.s.selectedId--;
-            Tree.selectNode(Globals.s.selectedId);
+        if (State.id2Node[prevId]) {
+            State.selectedId--;
+            Tree.selectNode(State.selectedId);
         }
     }
 
     public static rightNode() {
-        if (Globals.s.id2Node[Globals.s.selectedId].children) {
-            let childCount = Globals.s.id2Node[Globals.s.selectedId].children!.length;
+        if (State.id2Node[State.selectedId].children) {
+            let childCount = State.id2Node[State.selectedId].children!.length;
             if (childCount > 1) {
-                Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].children![childCount - 1].id;
+                State.selectedId = State.id2Node[State.selectedId].children![childCount - 1].id;
             }
-            Tree.selectNode(Globals.s.selectedId);
+            Tree.selectNode(State.selectedId);
         }
     }
 
     public static upNode() {
-        if (Globals.s.selectedId > Globals.s.rootId) {
-            Globals.s.selectedId = Globals.s.id2Node[Globals.s.selectedId].parent!.id;
+        if (State.selectedId > State.rootId) {
+            State.selectedId = State.id2Node[State.selectedId].parent!.id;
         }
-        Tree.selectNode(Globals.s.selectedId);
+        Tree.selectNode(State.selectedId);
     }
 
     public static loadNNodes() {
 
-        if (!Globals.s.waiting) {
+        if (!State.waiting) {
 
             Globals.vscode.postMessage({
                 command: 'loadNodes',
                 // amount: Number($("#stepSize").val()),
                 amount: 1,
-                start: Globals.s.selectedId
+                start: State.selectedId
             });
 
-            Globals.s.waiting = true;
+            State.waiting = true;
         }
     }
 
     public static loadDomains() {
 
-        if (!Globals.s.waiting) {
+        if (!State.waiting) {
 
-            if (Globals.s.pretty) {
+            if (State.pretty) {
                 Globals.sendPrettyRequest();
             }
             else {
                 Globals.sendSimpleRequest();
             }
 
-            Globals.s.waiting = true;
+            State.waiting = true;
         }
     }
 
     public static sendSimpleRequest() {
         Globals.vscode.postMessage({
             command: "simpleDomains",
-            nodeId: Globals.s.selectedId,
+            nodeId: State.selectedId,
             wantExpressions: !$("#expressions").prop("checked"),
         });
     }
@@ -187,9 +187,9 @@ export default class Globals {
     public static sendPrettyRequest() {
         Globals.vscode.postMessage({
             command: "prettyDomains",
-            nodeId: Globals.s.selectedId,
+            nodeId: State.selectedId,
             wantExpressions: !$("#expressions").prop("checked"),
-            paths: Globals.s.pathList.join(":")
+            paths: State.pathList.join(":")
         });
     }
 

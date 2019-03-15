@@ -1,5 +1,6 @@
 declare var d3: any;
 import Globals from './Globals';
+import State from '../testable/State';
 import Node from '../testable/Node';
 
 export default class Tree {
@@ -48,17 +49,17 @@ export default class Tree {
     }
 
     public static selectNode = (nodeId: number) => {
-        Globals.s.selectedId = nodeId;
+        State.selectedId = nodeId;
 
         let allCircles = ".node circle";
         d3.selectAll(allCircles).classed("selected", false);
         let s = "#node" + nodeId + " circle";
         // console.log("selecting " + nodeId);
         d3.select(s).classed("selected", true);
-        Tree.focusNode(Globals.s.id2Node[nodeId]);
+        Tree.focusNode(State.id2Node[nodeId]);
 
 
-        if (!Globals.s.frozen) {
+        if (!State.frozen) {
             Globals.loadDomains();
         }
 
@@ -75,14 +76,14 @@ export default class Tree {
         let domElement = d3.select(s);
         domElement.classed("hasOthers red", false);
 
-        // if (Globals.s.solNodIds.includes(node.id)) {
+        // if (State.solNodIds.includes(node.id)) {
         if (node.isSolution) {
             domElement.classed("solution", true);
         }
 
         if (Node.hasMoreChildren(node)) {
 
-            if (Globals.s.solAncestorIds.includes(node.id) && Globals.s.solNodIds.length > 0) {
+            if (State.solAncestorIds.includes(node.id) && State.solNodIds.length > 0) {
                 domElement.classed("hasOthers", true);
             }
 
@@ -101,8 +102,8 @@ export default class Tree {
 
     public static update(source: Node) {
 
-        // let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]).reverse(),
-        let nodes = Tree.tree.nodes(Globals.s.id2Node[Globals.s.rootId]),
+        // let nodes = Tree.tree.nodes(State.id2Node[State.rootId]).reverse(),
+        let nodes = Tree.tree.nodes(State.id2Node[State.rootId]),
             links = Tree.tree.links(nodes);
 
         // console.log(nodes);
@@ -128,11 +129,11 @@ export default class Tree {
                 Tree.selectNode(node.id);
             })
             .each((d: Node) => {
-                if (!Globals.s.id2Node[d.id]) {
-                    Globals.s.id2Node[d.id] = d;
+                if (!State.id2Node[d.id]) {
+                    State.id2Node[d.id] = d;
                 }
                 if (d.isSolution) {
-                    Globals.s.solNodIds.push(d.id);
+                    State.solNodIds.push(d.id);
                 }
             });
 
@@ -219,7 +220,7 @@ export default class Tree {
 
         link.enter().insert("path", "g")
             .attr("class", (link: any) => {
-                if (Globals.s.solAncestorIds.includes(link.target.id) && Globals.s.solNodIds.length > 0) {
+                if (State.solAncestorIds.includes(link.target.id) && State.solNodIds.length > 0) {
                     return "link";
                 }
                 return "link red";
