@@ -1,5 +1,5 @@
-import Globals from "../src/testable/Globals";
-import State from "../src/testable/State";
+import Globals from "../src/modules/Globals";
+import State from "../src/modules/State";
 import * as sinon from "sinon";
 
 declare var d3: any;

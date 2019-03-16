@@ -1,5 +1,5 @@
 
-import Node from '../src/testable/Node';
+import Node from '../src/modules/Node';
 
 
 describe('Test Node Class ', function () {

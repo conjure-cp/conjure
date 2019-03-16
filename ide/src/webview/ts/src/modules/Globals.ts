@@ -1,5 +1,5 @@
 import State from './State';
-import Listview from '../util/Listview';
+import Listview from './Listview';
 
 declare var acquireVsCodeApi: any;
 

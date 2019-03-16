@@ -1,7 +1,7 @@
-import "./treelist";
-import Globals from '../testable/Globals';
-import State from '../testable/State';
-import Node from '../testable/Node';
+import "../util/treelist";
+import Globals from './Globals';
+import State from './State';
+import Node from './Node';
 
 declare var jsPanel: any;
 declare var d3: any;
@@ -84,12 +84,6 @@ export default class Listview {
 
 
     constructor() {
-        // console.log("bg colour: ");
-        let col = $("body").css("background-colour")
-        // console.log(col);
-        // console.log(getComputedStyle(document.body).getPropertyValue('--background-color'));
-
-
         this.createUL();
         this.tree = d3.layout.treelist()
             .childIndent(this.childIdent)
@@ -121,7 +115,7 @@ export default class Listview {
                 }
                 recurse(node.parent);
             }
-        }
+        };
 
         recurse(node);
         return path.reverse().join(".");
@@ -131,7 +125,7 @@ export default class Listview {
         this.update(this.id2Node["Items"]);
     }
 
-    private getVarName(node: Node): string {
+    public static getVarName(node: Node): string {
         let name = node.name;
         if (node.parent && node.parent.children) {
             node.parent.children!.forEach((element: Node) => {
@@ -168,7 +162,7 @@ export default class Listview {
                 //     });
                 // }
                 // node["domIdentifier"] = name;
-                return this.getVarName(node);
+                return Listview.getVarName(node);
             })
             // .style("margin-bottom", "200px")
             .style("top", () => {
@@ -211,7 +205,7 @@ export default class Listview {
             })
             .each((node: Node) => {
                 // this.id2Node[d.name] = d;
-                this.id2Node[this.getVarName(node)] = node;
+                this.id2Node[Listview.getVarName(node)] = node;
                 if (node.name === "Expressions" && node.children && $("#expressions").prop("checked")) {
                     Node.toggleNode(node);
                 }

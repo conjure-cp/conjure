@@ -1,6 +1,6 @@
-import Tree from '../src/testable/Tree';
-import State from '../src/testable/State';
-import Node from '../src/testable/Node';
+import Tree from '../src/modules/Tree';
+import State from '../src/modules/State';
+import Node from '../src/modules/Node';
 
 declare var d3: any;
 
@@ -121,43 +121,6 @@ describe('Test the Tree class', function () {
 
         });
     });
-
-    // describe('append label text ', function () {
-
-    //     it('Should append the pretty label text', function () {
-
-    //         var svg = d3.select("body")
-    //             .append("svg")
-    //             .append("g");
-
-    //         d3.select("body")
-    //             .append("input")
-    //             .attr("type", "checkbox")
-    //             .attr("checked", true)
-    //             .attr("id", "labels");
-
-    //         let parent = new Node(0, "simple", "pretty", null, 2, true, 2, false);
-    //         let child = new Node(1, "simple", "pretty", parent, 0, true, 0, false);
-
-    //         parent.children = [child];
-
-    //         let nodeList = Tree.getNodeList(parent);
-
-    //         let domObjects = svg.selectAll("g.node")
-    //             .data(nodeList, (node: Node) => { return node.id; });
-
-    //         let nodeEnter = Tree.enterNodes(domObjects);
-
-    //         Tree.appendLabel(nodeEnter);
-
-    //         expect($("#node0 text")).not.toBeNull();
-    //         expect($("#node0 text").text()).toBe("pretty");
-
-    //         expect($("#node1 text")).not.toBeNull();
-    //         expect($("#node1 text").text()).toBe("pretty");
-
-    //     });
-    // });
 
     describe('append label text ', function () {
         it('Should append the pretty label text', function () {

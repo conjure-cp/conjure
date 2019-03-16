@@ -1,6 +1,6 @@
-import Listener from '../src/testable/Listener';
-import State from '../src/testable/State';
-import Tree from '../src/testable/Tree';
+import Listener from '../src/modules/Listener';
+import State from '../src/modules/State';
+import Tree from '../src/modules/Tree';
 
 declare var d3: any;
 

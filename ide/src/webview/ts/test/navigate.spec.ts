@@ -1,8 +1,8 @@
-import State from '../src/testable/State';
-import Node from '../src/testable/Node';
+import State from '../src/modules/State';
+import Node from '../src/modules/Node';
 
 import * as sinon from "sinon";
-import Navigate from '../src/testable/Navigate';
+import Navigate from '../src/modules/Navigate';
 
 declare var d3: any;
 
