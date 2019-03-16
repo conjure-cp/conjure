@@ -1,6 +1,6 @@
 declare var Mousetrap: any;
 import Globals from '../testable/Globals';
-import Tree from './Tree';
+import Tree from '../testable/Tree';
 import Node from '../testable/Node';
 import State from '../testable/State';
 import Navigate from '../testable/Navigate';

@@ -84,9 +84,9 @@ export default class Listview {
 
 
     constructor() {
-        console.log("bg colour: ");
+        // console.log("bg colour: ");
         let col = $("body").css("background-colour")
-        console.log(col);
+        // console.log(col);
         // console.log(getComputedStyle(document.body).getPropertyValue('--background-color'));
 
 
@@ -249,7 +249,7 @@ export default class Listview {
 
 
     public setChangedExpressions(expressions: any) {
-        console.log(this.id2Node);
+        // console.log(this.id2Node);
         // console.log(expressions);
         this.id2Node["Changed Expressions"]["children"] = expressions;
     }
@@ -317,14 +317,14 @@ export default class Listview {
 
             // console.log("here");
 
-            console.log(name);
-            console.log(this.id2Node);
+            // console.log(name);
+            // console.log(this.id2Node);
 
             if (this.id2Node[name]) {
 
                 var obj = this.id2Node[name].parent;
 
-                console.log(obj);
+                // console.log(obj);
 
 
                 while (obj) {

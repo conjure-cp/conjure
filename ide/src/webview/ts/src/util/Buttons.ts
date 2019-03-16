@@ -1,5 +1,5 @@
 import Globals from '../testable/Globals';
-import Tree from './Tree';
+import Tree from '../testable/Tree';
 import State from '../testable/State';
 // import Node from './Node';
 // import d3_save_svg from '../../node_modules/d3-save-svg';

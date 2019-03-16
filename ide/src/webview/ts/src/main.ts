@@ -1,6 +1,6 @@
 import Globals from './testable/Globals';
 import Keyboard from './util/Keyboard';
-import Listener from './util/Listener';
+import Listener from './testable/Listener';
 import Buttons  from './util/Buttons';
 
 Listener.bindListener();

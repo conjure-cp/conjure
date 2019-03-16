@@ -74,27 +74,27 @@ describe('Test the State class ', function () {
         });
     });
 
-    describe('Collapse failed branches', function () {
-        it('Failed branches should be collapsed', function () {
-            let parent = new Node(0, "simple", "pretty", null, 3, true, 2, false);
-            let solutionChild = new Node(1, "s", "p", parent, 0, true, 0, true);
+    // describe('Collapse failed branches', function () {
+    //     it('Failed branches should be collapsed', function () {
+    //         let parent = new Node(0, "simple", "pretty", null, 3, true, 2, false);
+    //         let solutionChild = new Node(1, "s", "p", parent, 0, true, 0, true);
 
-            let failedChild = new Node(2, "s", "p", parent, 1, false, 1, false);
-            let failedGrandChild = new Node(3, "s", "p", failedChild, 0, false, 0, false);
+    //         let failedChild = new Node(2, "s", "p", parent, 1, false, 1, false);
+    //         let failedGrandChild = new Node(3, "s", "p", failedChild, 0, false, 0, false);
 
-            State.solAncestorIds = [parent.id, solutionChild.id];
+    //         State.solAncestorIds = [parent.id, solutionChild.id];
 
-            State.addNode(-1, parent);
-            State.addNode(0, solutionChild);
-            State.addNode(0, failedChild);
-            State.addNode(2, failedGrandChild);
+    //         State.addNode(-1, parent);
+    //         State.addNode(0, solutionChild);
+    //         State.addNode(0, failedChild);
+    //         State.addNode(2, failedGrandChild);
 
-            State.collapseFailed();
+    //         State.collapseFailed();
 
-            expect(State.id2Node[2].children).toBeNull();
+    //         expect(State.id2Node[2].children).toBeNull();
 
-        });
-    });
+    //     });
+    // });
 
     describe('Fill circle', function () {
         it('Should append the solution class to solution nodes', function () {
