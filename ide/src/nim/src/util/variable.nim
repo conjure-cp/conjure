@@ -1,9 +1,12 @@
 type Variable* = ref object of RootObj
-  name*: string
-  rng*: string
+    ## Represents a domain variable
+    name*: string
+    rng*: string
 
 proc newVariable*(name, rng: string = "UNDEFINED"): Variable =
-  return Variable(name: name, rng: rng)
+    ## Constructor
+    return Variable(name: name, rng: rng)
 
 proc `$`*(v: Variable): string =
-  result = "<Variable> " & v.name & " " & v.rng
+    ## toString method
+    result = "<Variable> " & v.name & " " & v.rng

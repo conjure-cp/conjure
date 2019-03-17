@@ -4,37 +4,61 @@ import Tree from './Tree';
 import Node from './Node';
 import State from './State';
 
+/**
+ * Class that handles incoming messages from the vscode extension
+ */
 export default class Listener {
 
+    /**
+     * Set the total number of nodes loaded.
+     */
     public static setLoadedCount() {
-        $("#total").text(State.totalLoaded + "/" + Number(State.id2Node[State.rootId].decCount + 1));
+        $("#total").text(State.totalLoaded + "/" + Number(State.id2Node[State.rootId].descCount + 1));
     }
 
+    /**
+     * Handles the init message
+     * @param data the init response
+     */
     public static initHandler(data: any) {
+        // Loads the tree list at the root.
         Globals.lv.update(data.prettyAtRoot);
-
+        // Stores the simple domains at the root
         State.simpleDomainsAtRoot = data.simpleAtRoot.vars;
+        // Stores the ids of solution ancestors
         State.solAncestorIds = data.core.solAncestorIds;
+        // Increases the number of totalLoaded
         State.totalLoaded += data.core.nodes.length;
 
+        // Add each node from the core to the tree.
         for (let i = 0; i < data.core.nodes.length; i++) {
             let element = data.core.nodes[i];
             State.addNode(element.parentId, element);
         }
-
+        
+        // Collapse all the nodes so that only the root node appears on startup.
         Node.collapseNode(State.id2Node[State.rootId]);
         Tree.update(State.id2Node[State.rootId]);
         Tree.selectNode(State.rootId);
         Listener.setLoadedCount();
     }
 
-    public static longestBranchingVariableHandler(data: any) {
-        Tree.tree.nodeSize([Number(data) * 13, Tree.nodeHeight]);
+    /**
+     * Sets the width of the node corresponding to the longest label.
+     * @param length The length of the largest branching variable
+     */
+    public static longestBranchingVariableHandler(length: number) {
+        Tree.tree.nodeSize([Number(length) * 13, Tree.nodeHeight]);
     }
 
+    /**
+     * Handles incoming new nodes.
+     * @param data List of new nodes
+     */
     public static loadNodesHandler(data: any) {
-        data.forEach((element: any) => {
 
+        data.forEach((element: any) => {
+            // If we don't already have this node then add it to the tree
             if (!State.id2Node[element.id]) {
                 State.addNode(element.parentId, element);
                 State.totalLoaded++;
@@ -42,46 +66,61 @@ export default class Listener {
         });
 
         Tree.update(State.id2Node[State.rootId]);
-
         Tree.selectNode(State.selectedId);
-
         Listener.setLoadedCount();
     }
 
+    /**
+     * Handles incoming set
+     * @param data the set
+     */
     public static loadSetHandler(data: any) {
+        // Add the child set to the parent
         Globals.lv.id2Node[data.structure.name].children = data.structure.children;
+        // Update the tree list
         Globals.lv.updateFromRoot();
-        Globals.lv.updateNodes([data.update]);
+        // Update the values of the domains
+        Globals.lv.updateDomains([data.update]);
+        // Send a pretty request to get changes 
         Globals.sendPrettyRequest(Globals.vscode);
     }
 
+    /**
+     * Handles incoming simple domains.
+     * @param data List of simple domains.
+     */
     public static simpleDomainsHandler(data: any) {
         data.vars.forEach((variable: any) => {
-
+            // Reset changed status for all simple domains.
             $("#" + $.escapeSelector(variable.name)).removeClass("changed");
-
             let li = $("#" + $.escapeSelector(variable.name) + " > :last-child");
+            // Update the range for each domain.
             li.text(variable.rng);
-
+            // Update which domains have changed.
             if (data.changedNames.includes(variable.name)) {
                 d3.select('[id="' + $.escapeSelector(variable.name) + '"]').classed("changed", true);
             }
         });
     }
 
+    /**
+     * Handle incoming pretty domains
+     * @param data list of pretty domains
+     */
     public static prettyDomainsHandler(data: any){
         Globals.lv.setChangedExpressions(data.changedExpressions);
-        Globals.lv.updateNodes(data.vars);
+        Globals.lv.updateDomains(data.vars);
         Globals.lv.setChanged(data.changed);
+        Globals.lv.updateFromRoot();
     }
 
+    /**
+     * Bind handlers to listeners
+     */
     public static bindListener() {
-
         window.addEventListener('message', event => {
             const message = event.data;
-
             switch (message.command) {
-
                 case 'loadSet':
                     Listener.loadSetHandler(message.data);
                     break;

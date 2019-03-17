@@ -28,7 +28,7 @@ suite "setToJson":
         "name": "s",
         "children": [
           {
-            "name": "Type",
+            "name": "Representation",
             "children": [
               {
                 "name": "Flags",
@@ -56,7 +56,7 @@ suite "setToJson":
         
     test "domainsToJson":
         let prettyDomains = getPrettyDomainsOfNode(db, "15")
-        let json = domainsToJson(prettyDomains)
+        let json = prettyDomainsToTreeView(prettyDomains)
         let expected = """{
         "name": "Items",
         "children": [
@@ -76,7 +76,7 @@ suite "setToJson":
                 "name": "s",
                 "children": [
                   {
-                    "name": "Type",
+                    "name": "Representation",
                     "children": [
                       {
                         "name": "Flags",
@@ -139,5 +139,4 @@ suite "testGolomb":
 
     test "domainsToJson":
         let prettyDomains = getPrettyDomainsOfNode(db, "0", true)
-        let skeleton = domainsToJson(prettyDomains)
-        # echo (%skeleton).pretty()
+        let skeleton = prettyDomainsToTreeView(prettyDomains)

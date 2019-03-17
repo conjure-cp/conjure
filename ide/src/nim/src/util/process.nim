@@ -2,25 +2,22 @@ import types, util, parser, parseSets
 import re, strutils, os, tables, json, db_sqlite, parseutils, sequtils
 
 var prettyLookup* = initTable[string, Table[string, Variable]]()
-var eprimeLookup = initTable[string, Variable]()
-var auxLookup = initTable[string, Expression]()
+var eprimeLookup  = initTable[string, Variable]()
+var auxLookup     = initTable[string, Expression]()
 
 proc getInitialVariables*() : seq[Variable] =
+    ## Gets list of pretty variables at initial node
     return toSeq(eprimeLookup.values())
 
 proc initParser*(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
-    try:
-        eprimeLookup.clear()
-        auxLookup.clear()
-        eprimeLookup = parseEprime(db, eprimeFilePath)
-        auxLookup = parseAux(minionFilePath)
-    except:
-        discard
-        
-    # echo auxLookup.len()
+    ## Parses eprime and minion files
+    eprimeLookup.clear()
+    auxLookup.clear()
+    eprimeLookup = parseEprime(db, eprimeFilePath)
+    auxLookup = parseAux(minionFilePath)
 
 proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): seq[Variable] =
-
+    ## Returns a list of simple domains
     var query = "select name, lower, upper from domain where"
     if (not wantExpressions):
         query &= " name not like 'aux%' and "
@@ -38,6 +35,7 @@ proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool =
             result.add(v)
 
 proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): (seq[Variable]) =
+    # Returns list of pretty domains
 
     prettyLookup[nodeId] = initTable[string, Variable]()
     prettyLookup[nodeId].deepCopy(eprimeLookup)
@@ -58,6 +56,3 @@ proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool =
             let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & expression.auxName & "' and nodeId = ?;")
             var res = db.getRow(query0, nodeId)
             expression.rng = getPrettyRange(res[0], res[1])
-
-    # echo result
-

@@ -2,7 +2,18 @@ import State from './State';
 import Node from './Node';
 import Globals from './Globals';
 
+/**
+ * This class handles navigation through the tree
+ */
+
+
 export default class Navigate {
+
+
+    /**
+     * Move to the next node (search order)
+     * @param vscodeApi Vscode api object
+     */
 
     public static nextNode(vscodeApi: any) {
 
@@ -22,6 +33,10 @@ export default class Navigate {
         }
     }
 
+    /**
+     * Move to the previous node (search order)
+     */
+
     public static previousNode() {
 
         let prevId = State.selectedId - 1;
@@ -30,6 +45,10 @@ export default class Navigate {
             State.selectedId--;
         }
     }
+
+    /**
+     * Take the right branch at a node with a left and a right child.
+     */
 
     public static rightNode() {
         let node = State.id2Node[State.selectedId];
@@ -40,6 +59,10 @@ export default class Navigate {
         }
     }
 
+    /**
+     * Take the left branch at a node with a left and a right child.
+     */
+
     public static leftNode() {
         let node = State.id2Node[State.selectedId];
         if (node.children) {
@@ -49,11 +72,19 @@ export default class Navigate {
         }
     }
 
+    /**
+     * Move to the parent of the currently selected node.
+     */
+
     public static upNode() {
         if (State.selectedId > State.rootId) {
             State.selectedId = State.id2Node[State.selectedId].parent!.id;
         }
     }
+
+    /**
+     * Cycle to the next solution node (search order).
+     */
 
     public static nextSolutionNode() {
 
@@ -72,6 +103,10 @@ export default class Navigate {
             State.selectedId = State.solNodIds[currentSolId + 1];
         }
     }
+
+    /**
+     * Cycle to the previous solution node (search order)
+     */
 
     public static previousSolutionNode() {
 

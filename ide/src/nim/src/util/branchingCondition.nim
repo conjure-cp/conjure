@@ -1,10 +1,9 @@
 import util, strutils, intsets, sequtils, algorithm, system, types, parseutils
 
-
-proc getPrettyBranchingCondition*(vars: seq[Variable], branchName: string, isLeft: string, val: string): string 
-
+proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft, val: string): string 
 
 proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPretty: bool = false): string =
+    ## Returns the label for a node
 
     if branchName == "":
         return ""
@@ -27,9 +26,8 @@ proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPrett
 
     result &= value
 
-proc getPrettyBranchingCondition*(vars: seq[Variable], branchName: string, isLeft: string, val: string): string =
-
-    # echo isLeft
+proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft, val: string): string =
+    ## Returns a prettified label
 
     let splitted = branchName.split("_")
 

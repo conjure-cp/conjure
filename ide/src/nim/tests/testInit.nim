@@ -36,11 +36,11 @@ suite "findFiles":
             let path = testDataPath & "extension/multipleMinionFiles"
             discard findFiles(path)
 
-suite "decendants":
+suite "descendants":
     test "calculationIsCorrect":
         let path = testDataPath & "golomb"
         let db = findFiles(path)
-        let t = getDecendants(db)
+        let t = getDescendants(db)
         let totalNodes = db.getValue(sql"select count(nodeId) from Node")
         check($(t[0]+1) == totalNodes)
 

@@ -3,9 +3,11 @@ import Keyboard from './controls/Keyboard';
 import Listener from './modules/Listener';
 import Buttons  from './controls/Buttons';
 
+/**
+ * Main entry point for the webview
+ */
+
 Listener.bindListener();
 Globals.initialize(Globals.vscode);
-// Globals.loadNNodes();
 Keyboard.bindKeys();
 Buttons.bindButtons();
-console.log("HELLO");

@@ -21,20 +21,6 @@ describe('Test the Buttons class', function () {
 
     });
 
-    // describe('Pretty checkbox handler ', function () {
-
-    //     it('Should set pretty to false', function () {
-    //         Buttons.handlePrettyCheckBox();
-    //         expect(State.pretty).toBeFalsy();
-    //     });
-
-    //     it('Should set pretty to true', function () {
-    //         State.pretty = false;
-    //         Buttons.handlePrettyCheckBox();
-    //         expect(State.pretty).toBeTruthy();
-    //     });
-    // });
-
     describe('Label handler ', function () {
 
         it('Should set the label to pretty', function () {
@@ -76,8 +62,6 @@ describe('Test the Buttons class', function () {
                 .attr("class", "node")
                 .attr("id", "node1")
                 .append("text");
-
-            // expect(fail);
 
             let node1 = new Node(1, "simple", "pretty", null, 100, true, 2, false);
 

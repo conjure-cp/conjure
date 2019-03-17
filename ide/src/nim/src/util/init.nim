@@ -4,6 +4,7 @@ import process
 import branchingCondition
 
 proc findFiles*(dirPath: string): DbConn =
+    ## Locate files in directory pointed to by path
 
     let current = getCurrentDir()
     setCurrentDir(dirPath)
@@ -43,8 +44,8 @@ proc findFiles*(dirPath: string): DbConn =
     return db
 
 
-proc getDecendants*(db: DbConn): CountTable[int] =
-
+proc getDescendants*(db: DbConn): CountTable[int] =
+    ## Calculate the number of descendants for each node in the tree
     let query = "select nodeId, parentId from Node where parentId >= 0;"
 
     var countTable = initCountTable[int]()
@@ -106,7 +107,9 @@ let noSolutionFailedQuery = sql("""with recursive
     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId not in correctPath and parentId in correctPath;""")
 
 
-proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: CountTable[int]): seq[int] =
+proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], descTable: CountTable[int]): seq[int] =
+    ## Sets a list of nodes retrieved from database by executing sql query.
+    ## Returns a list of node ids for ancestors of solution nodes.
 
     var nId, pId: int
     var l, pL: string
@@ -130,16 +133,24 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], decTable: 
             l = getLabel(getInitialVariables(), row2[0], row1[3], row2[1])
             pL = getLabel(getInitialVariables(), row2[0], row1[3], row2[1], true)
 
-        var decCount = 0
-        if (decTable.hasKey(nId)):
-            decCount = decTable[nId]
+        var descCount = 0
+        if (descTable.hasKey(nId)):
+            descCount = descTable[nId]
         if (nId != rootNodeId):
-            decCount.dec()
+            descCount.dec()
 
-        list.add(Node(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decCount, isSolution: parseBool(row1[5])))
+        list.add(Node(parentId: pId,
+                        id: nId,
+                        label:l,
+                        prettyLabel: pL,
+                        isLeftChild: parsebool(row1[3]),
+                        childCount: childCount,
+                        descCount: descCount,
+                        isSolution: parseBool(row1[5])))
 
 
 proc makeCore*(db: DbConn, decTable: CountTable[int]): Core =
+    ## Returns data required for building the core of the tree
     var coreQuery : SqlQuery
     var failedQuery : SqlQuery
     var solAncestorIds : seq[int]

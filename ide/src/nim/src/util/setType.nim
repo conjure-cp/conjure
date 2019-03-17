@@ -1,7 +1,7 @@
-
 import variable, util, strutils, intsets, sequtils, algorithm, system
 
 type Set* = ref object of Variable
+    ## Represents a set
     notExcludedCount*: int
     markerLower*: int
     markerUpper*: int
@@ -24,8 +24,8 @@ type FlagSet* = ref object of Set
 type ExplicitSet* = ref object of Set
     cardinality*: int
 
-
 proc initSet(name: string, s: Set, inner: Set = nil) =
+    ## Initialises members in set
     s.name = name
     s.inner = inner
     s.notExcludedCount = -1
@@ -57,6 +57,7 @@ proc newESet*(name: string, cardinality: int, inner: Set = nil): ExplicitSet =
     initSet(name, result, inner)
 
 proc getCardinality*(s: Set): string =
+    ## Returns the cardinality of a set
     if s of OccurrenceSet:
         return getPrettyRange($s.included.len(), $s.notExcluded.len())
 
@@ -77,7 +78,6 @@ proc getCardinality*(s: Set): string =
         return getPrettyRange($eS.cardinality, $eS.cardinality)
 
     return "SET TYPE NOT SUPPORTED"
-
 
 proc includeInSet*(s: Set, num: int) =
     s.included.incl(num)
@@ -108,7 +108,7 @@ proc getSetType*(s: Set): string =
         return "<DSet>  dummy " & $d.dummyVal & " "
 
 proc `$`*(s: Set): string =
-
+    ## toString procedure
     result = getSetType(s)
     result &= s.name
     result &= " cardinality " & getCardinality(s)

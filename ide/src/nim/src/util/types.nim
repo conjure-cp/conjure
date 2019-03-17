@@ -2,8 +2,7 @@ import variable, setType, expression, json
 export variable, setType, expression
 
 # Constants
-
-let maxIndex* = 4
+let maxIndex* = 9
 let rootNodeId* = 0
 
 # Exceptions
@@ -39,12 +38,11 @@ type Node* = ref object of RootObj
     childCount*: int
     isSolution*: bool
     isLeftChild*: bool
-    decCount*: int
+    descCount*: int
 
 type Core* = ref object of RootObj
     nodes*: seq[Node]
     solAncestorIds*: seq[int]
-
 
 type TreeViewNode* = ref object of RootObj
     name*: string

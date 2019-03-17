@@ -4,7 +4,7 @@ import re, strutils, os, tables, json, db_sqlite, parseutils
 proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set
 
 proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
-
+    ## Initialises a table for all domains in the eprime file
     var varLookup = initTable[string, Variable]()
     var clean = ""
 
@@ -29,7 +29,7 @@ proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
     return varLookup
 
 proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
-
+    # Parses a set in the eprime file
     let arr = s.getElems()
 
     if arr[^1].hasKey("DomainSet"):
@@ -51,7 +51,6 @@ proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
             let query = "select upper from Domain where nodeId = 0 and name like '" & name & "\\_%Dummy%' escape '\\' limit 1;" 
-            # echo query
             var dummyVal : int
             discard db.getValue(sql(query)).parseInt(dummyVal)
             return newDset(name, dummyVal)
@@ -66,7 +65,7 @@ proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
             return newFset(name)
 
 proc parseAux*(minionFilePath: string): Table[string, Expression] =
-
+    ## Parse aux file to expanc nested aux expressions
     var lookup = initTable[string, Expression]()
     let auxDef = re"aux\d* #(.*)"
     let minionFile = readFile(minionFilePath)

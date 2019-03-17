@@ -1,28 +1,27 @@
-# Hello Nim!
 import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json
 import jsonify
 import init
 import process
 import branchingCondition
-# include process
 
 var db: DbConn
 var decTable: CountTable[int]
 
 proc init*(dirPath: string): Core =
+    ## Initialises data structures 
     db = findFiles(dirPath)
-    decTable = getDecendants(db)
+    decTable = getDescendants(db)
     return makeCore(db, decTable)
 
 proc loadNodes*(start: string): seq[Node] =
+    ## Loads the children of a node
 
     let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
                     start & "  order by nodeId asc")
     discard processQuery(db, query, result, decTable)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
-
-    # echo prettyLookup[nodeId]
+    ## Finds the set belonging to a path
 
     result = Set(prettyLookup[nodeId][path.split(".")[0]])
 
@@ -37,12 +36,14 @@ proc getExpandedSetChild*(nodeId, path: string): Set =
 
 
 proc getChildSets(paths, nodeId: string): seq[Set] =
+    ## Returns all child sets belonging to paths
     if paths != "":
         for path in paths.split(":"):
             result.add(getExpandedSetChild(nodeId, path))
 
 
 proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
+    ## Returns a json list of variables 
     result = %*[]
 
     for v in domainsAtNode:
@@ -53,12 +54,15 @@ proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
                 result.add(%v)
 
 proc loadSetChild*(nodeId, path: string): JsonNode =
+    ## Returns a nested set response
     let s = getExpandedSetChild(nodeId, path)
     let update = setToJson(s, nodeId, true)
     return %*{"structure": %setToTreeView(s), "update": update, "path": path}
 
 
 proc prettifyDomains(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): PrettyDomainResponse =
+    ## Returns the pretty domains for the given node
+
     new result
     var domainsAtNode: seq[Variable]
     var domainsAtPrev: seq[Variable]
@@ -86,12 +90,15 @@ proc prettifyDomains(db: DbConn, nodeId, paths: string, wantExpressions: bool = 
     return PrettyDomainResponse(vars: getJsonVarList(domainsAtNode, nodeId), changed: changedList, changedExpressions: expressionsToJson(changedExpressions))
 
 proc getSkeleton*(): TreeViewNode =
-    return domainsToJson(getPrettyDomainsOfNode(db, "0", true))
+    ## Returns the skeleton for the treeview
+    return prettyDomainsToTreeView(getPrettyDomainsOfNode(db, "0", true))
 
 proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): PrettyDomainResponse =
+    ## Wrapper for prettifyDomains
     prettifyDomains(db, nodeId, paths, wantExpressions)
 
 proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
+    ## Returns the simple domains for a given node
 
     var list: seq[string]
     var id: int
@@ -111,9 +118,11 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDo
 
 
 proc getLongestBranchingVarName*(): JsonNode =
+    ## Returns the length of longest branching variable name
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
 
 proc getSet*(nodeId: string): Set =
+    ## Returns the first set found in the pretty domains of a node
     for d in getPrettyDomainsOfNode(db, nodeId):
         if d of Set:
             return Set(d)

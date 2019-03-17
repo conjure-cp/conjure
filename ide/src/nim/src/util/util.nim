@@ -2,11 +2,13 @@ import intsets, algorithm, sequtils
 
 
 proc getPrettyRange*(lowerBound: string, upperBound: string): string =
+    ## Returns a range in the same format as essence
     if lowerBound == upperBound:
        return "int(" & $lowerBound & ")" 
     return "int(" & $lowerBound & ".." & $upperBound & ")"
 
 proc prettifyIntSet*(i: IntSet): string =
+    ## Returns a set as a range in the same format as essence
 
     result = "int("
 
@@ -39,6 +41,5 @@ proc prettifyIntSet*(i: IntSet): string =
             result &= ","
             result &= list[index]
             prevNum = $list[index]
-        
     
     result &= ")"

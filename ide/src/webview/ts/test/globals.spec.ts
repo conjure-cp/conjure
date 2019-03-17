@@ -129,5 +129,3 @@ describe('Test the Globals class', function () {
     });
 
 });
-
-// spy.restore();

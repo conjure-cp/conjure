@@ -1,6 +1,7 @@
 import variable
 
 type Expression* = ref object of Variable
+    ## Represents an aux variable
     auxName* : string
 
 proc newExpression*(name, auxName: string): Expression =

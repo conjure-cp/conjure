@@ -3,7 +3,7 @@ import types, process
 
 
 proc setToTreeView*(s: Set): TreeViewNode =
-
+    ## Converts a set to its representation as a tree view node
     var representation: string
 
     if (s of OccurrenceSet):
@@ -32,8 +32,8 @@ proc setToTreeView*(s: Set): TreeViewNode =
     return (TreeViewNode(name: s.name, children: @[rep, cardinality, kids]))
 
 
-proc domainsToJson*(domains: seq[Variable]): TreeViewNode =
-
+proc prettyDomainsToTreeView*(domains: seq[Variable]): TreeViewNode =
+    ## Converts list of pretty domains to a tree view node
     let root = TreeViewNode(name: "Items")
     let variables = TreeViewNode(name: "Domain Variables")
     let expressions = TreeViewNode(name: "Expressions")
@@ -42,7 +42,6 @@ proc domainsToJson*(domains: seq[Variable]): TreeViewNode =
     root.children = @[variables, expressions, changedExpressions]
 
     for d in domains:
-        # echo ">>>", d.rng
         if d of Expression:
             expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
@@ -57,9 +56,9 @@ proc domainsToJson*(domains: seq[Variable]): TreeViewNode =
     return root
 
 proc getCollapsedSetChildren*(s: Set): JsonNode =
+    ## Return json list of collapsed child sets
     let json = %*{}
     if s.children.len() > 0:
-        discard
         json["children"] = %*[]
 
         for kid in s.children:
@@ -68,16 +67,15 @@ proc getCollapsedSetChildren*(s: Set): JsonNode =
     return json
 
 proc expressionsToJson*(expressions: seq[Expression]): JsonNode =
+    ## Converts a list of Expressions to their tree view representaion 
     var list: seq[TreeViewNode]
     for exp in expressions:
-        list.add(TreeViewNode(name: exp.name,
-                children: @[TreeViewNode(name: exp.rng)]))
+        list.add(TreeViewNode(name: exp.name, children: @[TreeViewNode(name: exp.rng)]))
     return %list
 
 proc setToJson*(s: Set, nodeId: string, wantCollapsedChildren: bool): JsonNode =
-
+    ## Returns the JSON representation of a set
     let json = %*{}
-
     json["name"] = %s.name
     json["Cardinality"] = %s.getCardinality()
     if (s.inner == nil):
@@ -86,11 +84,10 @@ proc setToJson*(s: Set, nodeId: string, wantCollapsedChildren: bool): JsonNode =
     else:
         if wantCollapsedChildren:
             json["Children"] = getCollapsedSetChildren(s)
-
     return json
 
 proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
-
+    ## Return a list of strings representing the changed properties of a set
     let prefix = newSet.name
 
     if (newSet.getCardinality() != oldSet.getCardinality()):
@@ -109,7 +106,9 @@ proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
             return @[]
 
 proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): (seq[string], seq[Expression]) =
-
+    ## Returns a tuple 
+    ## First element contains a list of variable names that have changed
+    ## Second element contains a list of expressions that have changed
     var changedExpressions : seq[Expression]
     var changedVariableNames: seq[string]
 
@@ -126,7 +125,6 @@ proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): (seq[string
                 for i in countUp(0, newSet.children.len() - 1):
                     changedVariableNames = changedVariableNames.concat(getSetChanges(newSet.children[i], oldSet.children[i], true))
 
-            # let changed = getExpressionChanges(Expression(newVar), Expression(oldVar))
         elif newVar.rng != oldVar.rng:
             if (newVar of Expression):
                     changedExpressions.add(Expression(newVar))

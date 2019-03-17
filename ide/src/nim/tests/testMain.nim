@@ -126,7 +126,7 @@ suite "loadPrettyDomains":
           "name": "s-1",
           "children": [
             {
-              "name": "Type",
+              "name": "Representation",
               "children": [
                 {
                   "name": "Marker",

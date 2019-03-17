@@ -69,3 +69,12 @@ File -> Open Folder... -> MyFolder
 
 Press ctrl+shift+p and type "Conjure"  
 You should see a list of commands from which to choose from. 
+
+
+# Generating documentation
+
+## Generate webview documentation
+
+cd src/webview/ts
+./node_modules/typedoc/bin/typedoc --out ./docs --mode file --target ES6 ./src/
+firefox docs/index.html

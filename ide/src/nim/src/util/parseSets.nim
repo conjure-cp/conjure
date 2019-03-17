@@ -1,19 +1,14 @@
 import types, setUtils/marker, setUtils/flags, setUtils/common
 import re, strutils, os, tables, json, db_sqlite, parseutils, intsets
 
-proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int])
-proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int])
-func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int])
-func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int])
-proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int])
+proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
+proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
+func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
+func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
+proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int])
 
-proc decideSet*(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int]) =
+proc decideSet*(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+    ## Calls the appropriate function to parse the set
     if s of FlagSet:
         parseFlags(db, s, parent, outerSetName, nodeId, ancestors)
     if s of MarkerSet:
@@ -26,8 +21,8 @@ proc decideSet*(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
         parseExplicit(db, s, parent, outerSetName, nodeId, ancestors)
 
 
-func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int]) =
+func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+    ## Parses a set represented using the explicit var size with dummy method
     let d = DummySet(s)
     var query = getInnerSetQuery(d, parent, ancestors, outerSetName)
 
@@ -48,6 +43,7 @@ func parseDummy(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
             d.excludedCount.inc()
 
 func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+    ## Parses a set represented using the occurrence method
     var query = getInnerSetQuery(s, parent, ancestors, outerSetName)
 
     for res in db.fastRows(sql(query), nodeId):
@@ -61,8 +57,8 @@ func parseOccurrence(db: DbConn, s, parent: Set, outerSetName, nodeId: string, a
         if (res[2] != "0"):
             s.dontExclude(lower)
 
-proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
-        ancestors: seq[int]) =
+proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+    ## Parses a set represented using the explicit method
     let e = ExplicitSet(s)
 
     for setId in countUp(1, e.cardinality):
@@ -88,6 +84,7 @@ proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string,
             break
 
 proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+    ## Parses a set using the flags method
 
     var lowerQuery = getTrueFlagCountQuery(ancestors, outerSetName)
     var lowerBound = db.getValue(sql(lowerQuery), nodeId)
@@ -112,8 +109,6 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
         else:
             let valuesQuery = getFlagValuesIncludedQuery(s, ancestors, outerSetName)
             includeValues(db, s, valuesQuery, nodeId)
-            
-            # s.dontExclude(s.included)
 
             var falseQuery = getFalseFlagCountQuery(ancestors, outerSetName)
             var falseFlagCount = db.getValue(sql(falseQuery), nodeId)
@@ -126,6 +121,7 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
             break;
 
 proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
+    ## Parses a set using the Marker method
 
     let markerQuery = getMarkerQuery(ancestors, outerSetName)
     var res = db.getRow(sql(markerQuery), nodeId)

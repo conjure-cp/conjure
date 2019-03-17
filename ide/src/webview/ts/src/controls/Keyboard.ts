@@ -1,10 +1,14 @@
 declare var Mousetrap: any;
+
 import Globals from '../modules/Globals';
 import Tree from '../modules/Tree';
 import Node from '../modules/Node';
 import State from '../modules/State';
 import Navigate from '../modules/Navigate';
 
+/**
+ * This class binds key presses to actions
+ */
 export default class Keyboard {
 
     public static bindKeys() {

@@ -2,7 +2,7 @@
 
 version       = "0.1.0"
 author        = "Tom"
-description   = "A new awesome nimble package"
+description   = "Server for minion search tree visualiser"
 license       = "MIT"
 srcDir        = "src"
 bin           = @["nim"]

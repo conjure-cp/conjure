@@ -1,4 +1,4 @@
-import Listview from '../src/modules/Listview';
+import Panel from '../src/modules/Listview';
 import State from '../src/modules/State';
 import { lstat } from 'fs';
 
@@ -6,10 +6,10 @@ declare var d3: any;
 
 describe('Test the Listview class', function () {
 
-    let ls: Listview;
+    let ls: Panel;
 
     beforeEach(function () {
-        ls = new Listview();
+        ls = new Panel();
 
         State.id2Node = {};
         State.solAncestorIds = [];
@@ -35,7 +35,6 @@ describe('Test the Listview class', function () {
 
             ls.tabulate();
 
-            // console.log($("#pane table thead tr th").text());
             expect($("#pane table thead tr th").text()).toBe("NameDomain");
         });
     });
@@ -47,14 +46,11 @@ describe('Test the Listview class', function () {
                 .append("div")
                 .attr("id", "pane");
 
-
-
             ls.tabulate();
 
             let data = [{ name: "x", rng: "int(1..5)" }, { name: "y", rng: "int(0..1)" }];
             ls.appendRows(data);
 
-            // console.log($("#pane table tbody").text());
             expect($("#pane table tbody").text()).toBe("xint(1..5)yint(0..1)");
         });
     });
@@ -102,7 +98,6 @@ describe('Test the Listview class', function () {
 
         it('Should just return the variable name', function () {
 
-            // let parent = new Node(0, "simple", "pretty", null, 100, true, 2, false);
             let container: any = {
                 name: "Domain Variables",
             };
@@ -120,7 +115,7 @@ describe('Test the Listview class', function () {
             innerSet["children"] = [{name: "Cardinality"}];
             outerSet["children"] = [{innerSet}, {name:"Cardinality"}];
 
-            expect(Listview.getVarName(innerSet)).toBe("schild");
+            expect(Panel.getVarName(innerSet)).toBe("schild");
         });
     });
 

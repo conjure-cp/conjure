@@ -1,22 +1,16 @@
 import os, db_sqlite, strutils, json
 
+## Program to check that a minion sql dump matches a minion json dump
+
 proc verifyDomains(obj: JsonNode, db: DbConn) =
     for row in db.fastRows(sql("select name, lower, upper from Domain where nodeId = ? "), obj["Node"]):
         let name = row[0]
         let lower = row[1]
         let upper = row[2]
-
-        # echo name
-        # echo row
-        # echo upper
-
         let bounds = obj["Domains"][name].getElems()
-
-        # echo bounds
 
         var jsonLower: string
         var jsonUpper: string
-
 
         if (bounds.len() > 1):
             var min = high(int)
@@ -37,8 +31,6 @@ proc verifyDomains(obj: JsonNode, db: DbConn) =
         else:
             jsonLower = $bounds[0].getElems()[0].getInt()
             jsonUpper = $bounds[0].getElems()[1].getInt()
-
-        # echo jsonLower
 
         assert(lower == jsonLower)
         assert(upper == jsonUpper)
@@ -76,17 +68,11 @@ proc walkTree(obj: JsonNode, db: DbConn, wentLeft: bool, pId: string) =
         else:
             assert(isSolution == "0")
             
-
-
-            
-    # echo obj
     if (obj.hasKey("left")):
         walkTree(obj["left"], db, true, $obj["Node"].getInt())
 
     if (obj.hasKey("right")):
         walkTree(obj["right"], db, false, $obj["Node"].getInt())
-
-
 
 
 if paramCount() != 2:

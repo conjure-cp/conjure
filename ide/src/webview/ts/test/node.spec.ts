@@ -13,7 +13,7 @@ describe('Test Node Class ', function () {
             expect(root._children).toBeNull();
             expect(root.label).toBe("simple");
             expect(root.prettyLabel).toBe("pretty");
-            expect(root.decCount).toBe(2);
+            expect(root.descCount).toBe(2);
             expect(root.isLeftChild).toBe(true);
             expect(root.isSolution).toBe(false);
         });
@@ -108,7 +108,7 @@ describe('Test Node Class ', function () {
     describe('Calculate Descendant count label y poistion', function () {
         it('The label height should be 23', function () {
             let node = new Node(0, "simple", "pretty", null, 0, true, 2, false);
-            expect(Node.getDecLabelHeight(node)).toBe(23);
+            expect(Node.getDescLabelHeight(node)).toBe(23);
         });
     });
 });

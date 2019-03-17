@@ -1,14 +1,19 @@
 import State from './State';
-import Listview from './Listview';
+import Panel from './Listview';
 
 declare var acquireVsCodeApi: any;
 
+/**
+ * This class is used to interact with the vscode api to send messages to the extension
+ */
 export default class Globals {
-    public static lv = new Listview();
+    public static lv = new Panel();
     public static vscode = acquireVsCodeApi();
-    public static columns = ["Name", "Domain"];
 
-
+    /**
+     * Requests to load the child nodes of the selected node.
+     * @param vscodeApi  
+     */
     public static loadNodes(vscodeApi: any) {
         if (!State.waiting) {
             vscodeApi.postMessage({
@@ -21,6 +26,10 @@ export default class Globals {
         }
     }
 
+    /**
+     * Sends the appropriate request to load the domains`
+     * @param vscodeApi 
+     */
     public static loadDomains(vscodeApi: any) {
         if (State.pretty) {
             Globals.sendPrettyRequest(vscodeApi);
@@ -30,6 +39,10 @@ export default class Globals {
         }
     }
 
+    /**
+     * Sends a request for simple domains.
+     * @param vscodeApi 
+     */
     public static sendSimpleRequest(vscodeApi: any) {
         vscodeApi.postMessage({
             command: "simpleDomains",
@@ -38,6 +51,10 @@ export default class Globals {
         });
     }
 
+    /**
+     * Sends a request for pretty domains.
+     * @param vscodeApi 
+     */
     public static sendPrettyRequest(vscodeApi: any) {
         vscodeApi.postMessage({
             command: "prettyDomains",
@@ -47,6 +64,10 @@ export default class Globals {
         });
     }
 
+    /**
+     * Sends requests on initialisation
+     * @param vscodeApi 
+     */
     public static initialize(vscodeApi: any) {
         vscodeApi.postMessage({
             command: 'init',

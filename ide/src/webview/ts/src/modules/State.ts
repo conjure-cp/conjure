@@ -1,6 +1,8 @@
-declare var d3: any;
 import Node from './Node';
-import Globals from './Globals';
+
+/**
+ * This class is used to keep track of the state of the webview.
+ */
 
 export default class State {
     public static totalLoaded = 0;
@@ -17,15 +19,21 @@ export default class State {
     public static frozen = false;
     public static waiting = false;
 
-    public static collapseFailed() {
-        this.solAncestorIds.forEach((nodeId: number) => {
+    /**
+     * Collapse all failed branches
+     */
 
+    public static collapseFailed() {
+
+
+        // Collapse the failed branches
+
+        this.solAncestorIds.forEach((nodeId: number) => {
             let current = this.id2Node[nodeId];
 
             if (!current.children) {
                 return;
             }
-            // let childIds = this.id2ChildIds[nodeId];
             current.children.forEach((child: Node) => {
                 if (!this.solAncestorIds.includes(child.id)) {
                     Node.collapseNode(child);
@@ -33,12 +41,12 @@ export default class State {
             });
         });
 
-        // let correctAncestor: Node;
+        // Move the selected node to one that is not within a failed branch.
 
         let recurse = (node: Node) => {
+
             if (this.solAncestorIds.includes(node.id)) {
                 this.selectedId = node.id;
-                // correctAncestor = node;
                 return;
             }
 
@@ -53,21 +61,20 @@ export default class State {
 
     }
 
-    // public static addNode(nodeId: number, parentId: number, label: string, prettyLabel: string, decCount: number, isLeftChild: boolean, childCount: number, isSolution: boolean) {
+    /**
+     * Add a node into the tree.
+     * @param parentId The parent node's ID.
+     * @param newNode The node to add.
+     */
+
     public static addNode(parentId: number, newNode: Node) {
 
-        // console.log(parentId);
-        // console.log(this.id2Node[parentId]);
-
-        // let newNode = new Node(nodeId, label, prettyLabel, this.id2Node[parentId], decCount, isLeftChild, childCount, isSolution);
         if (newNode.isSolution) {
             State.solNodIds.push(newNode.id);
         }
 
         if (parentId === -1) {
-            // console.log("nodeId is")
             this.id2Node[newNode.id] = newNode;
-            // console.log(this.id2Node);
             return;
         }
 
@@ -81,37 +88,8 @@ export default class State {
         else {
             this.id2Node[parentId].children!.push(newNode);
         }
-        // this.id2Node[parentId].children.push(newNode);
 
         this.id2Node[newNode.id] = newNode;
-        // console.log(this.id2Node);
-
-
-        // console.log("adding");
-        // console.log(nodeId);
-        // console.log(this.id2Node[1]);
     }
 
-    public static fillCircle(node: Node) {
-
-        let s = "#node" + node.id + " circle";
-
-        let domElement = d3.select(s);
-        domElement.classed("hasOthers red", false);
-
-        if (node.isSolution) {
-            domElement.classed("solution", true);
-        }
-
-        if (Node.hasMoreChildren(node)) {
-
-            if (State.solAncestorIds.includes(node.id) && State.solNodIds.length > 0) {
-                domElement.classed("hasOthers", true);
-            }
-
-            else {
-                domElement.classed("hasOthers red", true);
-            }
-        }
-    }
 }
