@@ -71,16 +71,16 @@ This is the root node of a fully collapsed tree.
 ### Questions
 
 Use the visualisation to find the answers to the following questions: 
-* Did the domains change after Root Propagation?
+* Did the domains change after Root Propagation?  
+□ Yes 
+□ No 
 * How many solution nodes were found? 
 * What were the domains at the first solution?
 * Which failed branch contains the most nodes? 
-* Were there any repeated sub trees?
 * At which node did the lowerbound on the cardinality of the set first become greater than zero? 
-* At which node was x first excluded from the set?
+* At which node was x first excluded from the set? 
 
 
+### PartB
 
 
- 
- 

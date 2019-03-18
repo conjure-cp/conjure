@@ -38,13 +38,14 @@ suite "findFiles":
 
 suite "descendants":
     test "calculationIsCorrect":
+        # let path = "/cs/home/to26/EssenceCatalog/problems/csplib-prob006/GolombRuler-04-conjure-output"
         let path = testDataPath & "golomb"
         let db = findFiles(path)
         let t = getDescendants(db)
-        let totalNodes = db.getValue(sql"select count(nodeId) from Node")
+        let totalNodes = db.getValue(sql"select count(nodeId) from Node where nodeId > 0")
         check($(t[0]+1) == totalNodes)
 
         var leafId: int
         for leaf in db.fastRows(sql"select nodeId from Node where nodeId not in (select parentId from Node) "):
             discard leaf[0].parseInt(leafId)
-            check(t[leafId] == 1)
+            check(t[leafId] == 0)

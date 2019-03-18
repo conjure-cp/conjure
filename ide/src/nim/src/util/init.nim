@@ -44,30 +44,56 @@ proc findFiles*(dirPath: string): DbConn =
     return db
 
 
-proc getDescendants*(db: DbConn): CountTable[int] =
+proc getDescendants*(db: DbConn): Table[int, int] =
     ## Calculate the number of descendants for each node in the tree
-    let query = "select nodeId, parentId from Node where parentId >= 0;"
+    let query = "select nodeId, parentId from Node ;"
 
-    var countTable = initCountTable[int]()
+    var descTable = initTable[int, int]()
     var id2Parent = initTable[int, int]()
+    var leafList : seq[int]
+
     var nodeId, parentId: int
 
     for res in db.fastRows(sql(query)):
         discard res[0].parseInt(nodeId)
         discard res[1].parseInt(parentId)
         id2Parent[nodeId] = parentId
+       
+    let leafQuery = "select nodeId from Node where nodeId not in (select parentId from Node);"
 
-    for n in id2Parent.keys():
-        var current = n
+    for res in db.fastRows(sql(leafQuery)):
+        discard res[0].parseInt(nodeId)
+        leafList.add(nodeId)
 
-        while true:
-            countTable.inc(current)
-            if id2Parent.hasKey(current):
-                current = id2Parent[current]
+    for leaf in leafList:
+
+        var currentNode = leaf
+        var currentParent = id2Parent[leaf]
+
+        descTable[currentNode] = 0
+
+        var first = true
+        var diff : int
+
+        while id2Parent.hasKey(currentParent):
+
+            if not descTable.hasKey(currentParent):
+                descTable[currentParent] = descTable[currentNode] + 1
+                first = true
             else:
-                break
+                if first:
+                    diff = descTable[currentNode] + 1
+                    descTable[currentParent] += descTable[currentNode]
+                    first = false
+                else:
+                    descTable[currentParent] += diff
 
-    return countTable
+            currentNode = currentParent
+            currentParent = id2Parent[currentParent]
+
+    descTable[0] = descTable[1] + 1
+
+    return descTable
 
 
 let solutionQuery = sql("""with recursive
@@ -107,7 +133,7 @@ let noSolutionFailedQuery = sql("""with recursive
     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId not in correctPath and parentId in correctPath;""")
 
 
-proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], descTable: CountTable[int]): seq[int] =
+proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], descTable: Table[int, int]): seq[int] =
     ## Sets a list of nodes retrieved from database by executing sql query.
     ## Returns a list of node ids for ancestors of solution nodes.
 
@@ -133,23 +159,17 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], descTable:
             l = getLabel(getInitialVariables(), row2[0], row1[3], row2[1])
             pL = getLabel(getInitialVariables(), row2[0], row1[3], row2[1], true)
 
-        var descCount = 0
-        if (descTable.hasKey(nId)):
-            descCount = descTable[nId]
-        if (nId != rootNodeId):
-            descCount.dec()
-
         list.add(Node(parentId: pId,
                         id: nId,
                         label:l,
                         prettyLabel: pL,
                         isLeftChild: parsebool(row1[3]),
                         childCount: childCount,
-                        descCount: descCount,
+                        descCount: descTable[nId],
                         isSolution: parseBool(row1[5])))
 
 
-proc makeCore*(db: DbConn, decTable: CountTable[int]): Core =
+proc makeCore*(db: DbConn, decTable: Table[int, int]): Core =
     ## Returns data required for building the core of the tree
     var coreQuery : SqlQuery
     var failedQuery : SqlQuery

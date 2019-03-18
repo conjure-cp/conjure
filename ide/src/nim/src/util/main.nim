@@ -5,7 +5,7 @@ import process
 import branchingCondition
 
 var db: DbConn
-var decTable: CountTable[int]
+var decTable: Table[int, int]
 
 proc init*(dirPath: string): Core =
     ## Initialises data structures 
