@@ -138,11 +138,11 @@ Use the visualisation to find the answers to the following questions:
 	</pre>
 
 
-6. At which node was 10 first excluded from the set?   
+6. At which node was 10 first excluded from set A?   
 □ 41  
 □ 22743  
 □ 500  
-□ 11  
+□ 19  
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
