@@ -42,7 +42,7 @@ suite "descendants":
         let path = testDataPath & "golomb"
         let db = findFiles(path)
         let t = getDescendants(db)
-        let totalNodes = db.getValue(sql"select count(nodeId) from Node where nodeId > 0")
+        let totalNodes = db.getValue(sql"select count(nodeId) from Node")
         check($(t[0]+1) == totalNodes)
 
         var leafId: int

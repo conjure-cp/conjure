@@ -75,6 +75,9 @@ Use the visualisation to find the answers to the following questions:
 □ Yes 
 □ No 
 * How many solution nodes were found? 
+□ 0 
+□ 1 
+□ 2 
 * What were the domains at the first solution?
 * Which failed branch contains the most nodes? 
 * At which node did the lowerbound on the cardinality of the set first become greater than zero? 

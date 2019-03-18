@@ -50,6 +50,7 @@ proc getDescendants*(db: DbConn): Table[int, int] =
 
     var descTable = initTable[int, int]()
     var id2Parent = initTable[int, int]()
+    var id2Children = initTable[int, seq[int]]()
     var leafList : seq[int]
 
     var nodeId, parentId: int
@@ -57,41 +58,27 @@ proc getDescendants*(db: DbConn): Table[int, int] =
     for res in db.fastRows(sql(query)):
         discard res[0].parseInt(nodeId)
         discard res[1].parseInt(parentId)
-        id2Parent[nodeId] = parentId
-       
-    let leafQuery = "select nodeId from Node where nodeId not in (select parentId from Node);"
 
-    for res in db.fastRows(sql(leafQuery)):
-        discard res[0].parseInt(nodeId)
-        leafList.add(nodeId)
+        if (not id2Children.haskey(parentId)):
+            id2Children[parentId] = @[]
 
-    for leaf in leafList:
+        id2Children[parentId].add(nodeId)
 
-        var currentNode = leaf
-        var currentParent = id2Parent[leaf]
+    proc recursive(id: int): int = 
+        if (not id2Children.hasKey(id)):
+            descTable[id] = 0
+            return 1
+        
+        var sum: int
 
-        descTable[currentNode] = 0
+        for childId in id2Children[id]:
+            sum += recursive(childId)
 
-        var first = true
-        var diff : int
+        descTable[id] = sum
 
-        while id2Parent.hasKey(currentParent):
+        return sum + 1
 
-            if not descTable.hasKey(currentParent):
-                descTable[currentParent] = descTable[currentNode] + 1
-                first = true
-            else:
-                if first:
-                    diff = descTable[currentNode] + 1
-                    descTable[currentParent] += descTable[currentNode]
-                    first = false
-                else:
-                    descTable[currentParent] += diff
-
-            currentNode = currentParent
-            currentParent = id2Parent[currentParent]
-
-    descTable[0] = descTable[1] + 1
+    discard recursive(0)
 
     return descTable
 
