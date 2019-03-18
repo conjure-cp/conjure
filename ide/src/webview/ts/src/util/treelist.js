@@ -1,3 +1,5 @@
+// This d3 plugin was taken from http://bl.ocks.org/thehogfather/0e48ec486abbd5be17d7
+
 (function (d3) {
     d3.layout.treelist = function () {
         "use strict";

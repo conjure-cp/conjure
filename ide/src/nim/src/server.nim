@@ -26,11 +26,11 @@ routes:
     get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
         resp %loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))
 
-    get "/loadNodes/@start":
-        resp %loadNodes(@"start")
+    get "/loadNodes/@nodeId":
+        resp %loadNodes(@"nodeId")
 
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
 
-    get "/loadSet/@nodeId/@path":
+    get "/loadSet/@nodeId/@path" :
         resp loadSetChild(@"nodeId",@"path")

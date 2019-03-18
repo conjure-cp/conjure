@@ -13,11 +13,11 @@ proc init*(dirPath: string): Core =
     decTable = getDescendants(db)
     return makeCore(db, decTable)
 
-proc loadNodes*(start: string): seq[Node] =
+proc loadNodes*(nodeId: string): seq[Node] =
     ## Loads the children of a node
 
     let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
-                    start & "  order by nodeId asc")
+                    nodeId & "  order by nodeId asc")
     discard processQuery(db, query, result, decTable)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
