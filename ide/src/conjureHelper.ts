@@ -1,25 +1,21 @@
 'use strict';
 import fs = require('fs');
 import * as path from 'path';
-// var glob = require('glob');
-
-// Case insensitive
-
-// import * as path from 'path';
-// import * as cp from 'child_process';
-// import ChildProcess = cp.ChildProcess;
-
-const { exec } = require('child_process');
-const { spawn } = require('child_process');
 import * as vscode from 'vscode';
 import WebviewHelper from './webviewHelper';
-// import { fstat } from 'fs';
+const { exec } = require('child_process');
+const { spawn } = require('child_process');
 
 const ESSENCE = "essence";
 
 export default class ConjureHelper {
 
     private static diagnosticCollection: vscode.DiagnosticCollection;
+
+    /**
+     * Bind helper methods to events
+     * @param context  The vscode state
+     */
 
     public static activate(context: vscode.ExtensionContext) {
         ConjureHelper.diagnosticCollection = vscode.languages.createDiagnosticCollection();
@@ -43,8 +39,6 @@ export default class ConjureHelper {
             }
         });
 
-
-
         context.subscriptions.push(vscode.languages.registerHoverProvider(ESSENCE, {
             provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
                 console.log(document.getText(document.getWordRangeAtPosition(position)));
@@ -57,13 +51,17 @@ export default class ConjureHelper {
 
             provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
 
-                let item = new vscode.CompletionItem("A completeion suggestion", vscode.CompletionItemKind.Keyword);
+                let item = new vscode.CompletionItem("A completion suggestion", vscode.CompletionItemKind.Keyword);
                 let list = new vscode.CompletionList([item]);
                 return list;
             }
         }));
     }
 
+    /**
+     * Calls conjure to check if essence file is valid and able to be parsed
+     * @param document  The document currently focussed on in the editor
+     */
     private static lint(document: vscode.TextDocument) {
         if (document.languageId !== ESSENCE) {
             return;
@@ -80,15 +78,6 @@ export default class ConjureHelper {
 
         process.stderr.on('data', (data: string) => {
             console.log(`stderr: ${data}`);
-            // var str = `${data}`;
-            // var splitted = str.split("essence:", 2);
-            // var splitAgain = splitted[1].split(":", 2);
-            // let severity = vscode.DiagnosticSeverity.Error;
-            // var range = new vscode.Range(Number(splitAgain[0]), Number(splitAgain[1]), Number(splitAgain[0]), 1000);
-            // let diagnostic = new vscode.Diagnostic(range, "ASDA", severity);
-            // diagnostics.push(diagnostic);
-            // vscode.window.showInformationMessage("ADASDAS");
-
         });
 
         process.on('close', (code: string) => {
@@ -98,10 +87,14 @@ export default class ConjureHelper {
     }
 
 
+    /**
+     * This method is called when the "model command is invoked"
+     */
     public static model() {
 
         vscode.window.showInformationMessage('Modelling..');
-        console.log("MODEL------------------------!!!!!");
+
+        // Ensure that a text editor is active
 
         let current = vscode.window.activeTextEditor;
         if (!current) {
@@ -109,19 +102,22 @@ export default class ConjureHelper {
             return;
         }
 
+        // Ensure that the file to be modelled is a .essence file.
+
         let doc = current.document;
         let extension = path.extname(doc.fileName);
-        console.log(extension);
+
         if (extension !== ".essence") {
             vscode.window.showErrorMessage("This is not a model file, the extension should be .essence");
             return;
         }
 
-        // console.log(element);
+
         let dir = path.dirname(doc.uri.path);
-        console.log(dir);
 
         let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
+
+        // Execute conjure modelling
 
         exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
@@ -129,19 +125,13 @@ export default class ConjureHelper {
 
                 console.error(e);
                 vscode.window.showErrorMessage(e.message);
-
                 return;
-                // throw e;
             }
-
 
             fs.readdir(dir, function (err, files) {
                 const eprimeFiles = files.filter(el => /\.eprime$/.test(el));
-
                 let uri = vscode.Uri.file(path.join(dir, eprimeFiles[0]));
                 vscode.commands.executeCommand('vscode.open', uri);
-
-
             });
 
         });
@@ -149,30 +139,39 @@ export default class ConjureHelper {
     }
 
 
-    public static async visualisePath() {
+    public static async launchVisualiserWithPath() {
         let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
         if (folder) {
             WebviewHelper.launch(folder[0].path);
         }
     }
 
+    /**
+     * Solves the currently active param file and optionally visualises it.
+     * @param wantVisualisation Whether the caller wants the visualiser to launched or not. 
+     */
 
     public static solveAndVisualise(wantVisualisation: boolean) {
-        console.log("SOLVE------------------------");
-        // vscode.workspace.textDocuments[0].
+
+        // Checks that a text editor is active
+
         let current = vscode.window.activeTextEditor;
         if (!current) {
             vscode.window.showErrorMessage("No active text editor!");
             return;
         }
 
+        // Checks that currently active text editor is a param file.
+
         let paramFile = current.document;
         let extension = path.extname(paramFile.fileName);
-        // console.log(extension);
+
         if (extension !== ".param") {
             vscode.window.showErrorMessage("This is not a param file");
             return;
         }
+
+        // Look for essence files in the same directory as the param file
 
         let dir = path.dirname(paramFile.uri.path);
 
@@ -180,15 +179,21 @@ export default class ConjureHelper {
 
         if (essenceFiles.length === 0) {
 
+            // If there are no files in this directory we try the parent directory
+
             dir = path.join(dir, "../");
 
             essenceFiles = this.findEssenceFiles(dir);
 
+            // Give up if no essence files are found 
+
             if (essenceFiles.length === 0) {
-                vscode.window.showErrorMessage("No essence files found in parent directory");
+                vscode.window.showErrorMessage("No essence files found in this or the parent directory");
                 return;
             }
         }
+
+        // Abort if there are multiple essence files
 
         if (essenceFiles.length > 1) {
             vscode.window.showErrorMessage("More than one essence file was found, aborting.");
@@ -197,172 +202,254 @@ export default class ConjureHelper {
 
         let modelPath = path.join(dir, essenceFiles[0]);
 
+        // Create name for conjure output directory
+
         let conjureOutName = this.makeDirName(path.parse(modelPath).name, path.parse(paramFile.fileName).name);
+
+        // Delete any old solutions so we dont confuse them with ones from this run
 
         this.deleteSolutions(dir, conjureOutName);
 
-        // console.log(conjureOutName)
+        // Command line arguments needed by conjure so solve a problem
 
         let args = ['solve', modelPath, paramFile.uri.path, '-o', conjureOutName];
 
-        this.parseArgs(dir, conjureOutName, args, wantVisualisation);
+        // Parse any arguments in the config file if there is one
 
-        console.log(args. join(" "));
+        this.parseArgs(dir, conjureOutName, args, wantVisualisation);
 
         vscode.window.showInformationMessage('Solving..');
 
+        // Call conjure
+
         exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+
+            // Show error message if conjure threw an error
 
             if (e instanceof Error) {
                 vscode.window.showErrorMessage(e.message);
                 return;
             }
 
+            // If the caller wants the visualisation then launch it
+
             if (wantVisualisation) {
                 WebviewHelper.launch(path.join(dir, conjureOutName));
             }
 
             else {
-                let solutions = this.findSolutionFiles(path.join(dir, conjureOutName));
-             
-                console.log(solutions);
 
-                if (solutions.length === 0){
+                // Find the solution files
+
+                let solutions = this.findSolutionFiles(path.join(dir, conjureOutName));
+
+                // If there are no solutions then say so
+
+                if (solutions.length === 0) {
                     vscode.window.showInformationMessage("No solution.");
                     return;
                 }
+
+                // Open up the solution files
 
                 solutions.forEach(fileName => {
                     let paramFileName = (path.parse(paramFile.fileName).name);
 
                     if (fileName.includes(paramFileName)) {
-
                         let uri = vscode.Uri.file(path.join(dir, conjureOutName, fileName));
-                        console.log(uri);
                         vscode.commands.executeCommand('vscode.open', uri);
-                        vscode.window.showInformationMessage("Done!");
                     }
                 });
+
+                vscode.window.showInformationMessage("Done!");
             }
         });
     }
-    private static parseArgs(dir: string, conjureOutName: string, args: string[], wantVisualisation: boolean){
-        // let args: string[] = []
+
+
+    /**
+     * Tries to parse command line options from a config.json file if one can be found.
+     * @param dir The directory the essence file was found in.
+     * @param conjureOutName The conjure output directory.
+     * @param args  The list of command line arguments to append to.
+     * @param wantVisualisation Does the caller want us to parse the normal solve args or the ones for the vis..
+     */
+    private static parseArgs(dir: string, conjureOutName: string, args: string[], wantVisualisation: boolean) {
+
         let files = fs.readdirSync(dir);
         let configFiles = files.filter(el => /config.json$/.test(el));
 
-        if (configFiles.length === 0){
-            vscode.window.showErrorMessage("No config files found");
-            args.push(this.parseSavileRowArgs({}, wantVisualisation));
+        if (configFiles.length === 0) {
+            vscode.window.showInformationMessage("No config files found");
+
+            // If no config file is found then just use default settings.
+
+            args.push(this.parseSavileRowArgs({}));
             args.push(this.parseMinionArgs(conjureOutName, {}, wantVisualisation));
             return;
         }
 
-        if (configFiles.length > 1){
+        // Abort if multiple config files are found.
+
+        if (configFiles.length > 1) {
             vscode.window.showErrorMessage("More than one config file was found, aborting.");
             return;
         }
 
-        let f : string;
+        // Contents of the file
+        let fileContents: string;
+
+        // the parsed json
         let json: any;
 
-        try{
-            f = fs.readFileSync(path.join(dir, configFiles[0] ), { encoding: 'utf8' });
-            json = JSON.parse(f);
+        // Try to parse the config file
+        try {
+            fileContents = fs.readFileSync(path.join(dir, configFiles[0]), { encoding: 'utf8' });
+            json = JSON.parse(fileContents);
         }
-        catch(e){
+        catch (e) {
             vscode.window.showErrorMessage("Something went wrong parsing the config file, is it valid json?");
             vscode.window.showErrorMessage(e);
             return;
         }
 
+        // Choose the correct object depending on the command
 
-        let obj: any = {};
+        let settings: any = {};
 
-        if (wantVisualisation){
-            if (json.solveAndVisualise){
-                obj = json.solveAndVisualise;
+        if (wantVisualisation) {
+            if (json.solveAndVisualise) {
+                settings = json.solveAndVisualise;
             }
         }
-        else{
-            if (json.solve){
-                obj = json.solve;
+        else {
+            if (json.solve) {
+                settings = json.solve;
             }
         }
 
-        var minionOptions = {};
-        if (obj.minionOptions){
-            minionOptions = obj.minionOptions;
+        var minionArgs = {};
+        if (settings.minionArgs) {
+            minionArgs = settings.minionArgs;
         }
 
-        var savileRowOptions = {};
-        if (obj.savileRowOptions){
-            savileRowOptions = obj.savileRowOptions;
+        var savileRowArgs = {};
+        if (settings.savileRowArgs) {
+            savileRowArgs = settings.savileRowArgs;
         }
-        
-        args.push(this.parseSavileRowArgs(savileRowOptions, wantVisualisation));
-        args.push(this.parseMinionArgs(conjureOutName, minionOptions, wantVisualisation));
+
+        // Append the user specified args
+
+        args.push(this.parseSavileRowArgs(savileRowArgs));
+        args.push(this.parseMinionArgs(conjureOutName, minionArgs, wantVisualisation));
 
     }
-    private static parseSavileRowArgs(savilerowOptions: any, wantVisualisation: boolean){
+
+    /**
+     * Converts the savile row args into a string that will be understood by conjure
+     * @param userArgs Args to give to savile row
+     */
+
+    private static parseSavileRowArgs(userArgs: any) {
+
+        // No defaults for saville row
+        
         let defaultSavileRowArgs: any = {};
         let mandatorySavileRowArgs: string[] = [];
-        return "--savilerow-options \"" + this.getArgString(savilerowOptions, defaultSavileRowArgs, mandatorySavileRowArgs) + "\"";
+        return "--savilerow-options \"" + this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs) + "\"";
     }
 
-    private static parseMinionArgs(conjureOutName: string, minionOptions: any, wantVisualisation: boolean){
+    /**
+     * @param conjureOutName Name of the conjure output directory
+     * @param userArgs Args to give to minion
+     * @param wantVisualisation Does the caller want to launch the tree visualiser
+     */
+    private static parseMinionArgs(conjureOutName: string, userArgs: any, wantVisualisation: boolean) {
+
+        // Default node limit to make sure we dont let minion go on searching for too long.
+        
         let defaultMinionArgs: any = { "nodelimit": 1000 };
         let mandatoryMinionArgs = [];
 
-        if (wantVisualisation){
+        // If the caller wants a visualisation then give minion the dumptreesql flag.
+
+        if (wantVisualisation) {
             defaultMinionArgs["dumptreesql"] = conjureOutName + "/out.db";
             mandatoryMinionArgs.push("dumptreejson", "dumptreesql");
         }
 
-        return "--solver-options \"" + this.getArgString(minionOptions, defaultMinionArgs, mandatoryMinionArgs) + "\"";
+        return "--solver-options \"" + this.getArgString(userArgs, defaultMinionArgs, mandatoryMinionArgs) + "\"";
     }
 
-    private static getArgString(obj: any, defaultSettings: any, mandatoryArgs: string[]){
+    /**
+     * Converts the list of arguments into a list
+     * @param userArgs  Args specified by the user
+     * @param defaultArgs Overridable defaults
+     * @param mandatoryArgs Args that cannot be overrided
+     */
+    private static getArgString(userArgs: any, defaultArgs: any, mandatoryArgs: string[]) {
         let argList: string[] = [];
-        // minionArgs.push('--solver-options')
 
-        Object.keys(defaultSettings).forEach(function(key) {
-            if (mandatoryArgs.includes(key)){
-                argList.push("-" + key + " " + defaultSettings[key]);
+        // Add the defaults
+
+        Object.keys(defaultArgs).forEach(function (key) {
+            if (mandatoryArgs.includes(key)) {
+                argList.push("-" + key + " " + defaultArgs[key]);
                 return;
             }
 
-            if (!obj[key]){
-                argList.push("-" + key + " " + defaultSettings[key]);
+            if (!userArgs[key]) {
+                argList.push("-" + key + " " + defaultArgs[key]);
             }
         });
 
-        Object.keys(obj).forEach(function(key) {
-            if (mandatoryArgs.includes(key)){
+        // Add the user args
+
+        Object.keys(userArgs).forEach(function (key) {
+            if (mandatoryArgs.includes(key)) {
                 return;
             }
-            argList.push("-" + key + " " + obj[key]);
+            argList.push("-" + key + " " + userArgs[key]);
         });
 
         return argList.join(" ");
 
     }
-    private static deleteSolutions(dir: string, conjureOutName: string){
+
+    /**
+     * Deletes solution files from the conjure output directory
+     * @param dir The path to the directory of the essence file
+     * @param conjureOutName The name of the conjure output directory
+     */
+
+    private static deleteSolutions(dir: string, conjureOutName: string) {
         var rimraf = require("rimraf");
-        // let glob = path.join(dir, conjureOutName, "*.solution");
-        // console.log(glob);
         rimraf.sync(path.join(dir, conjureOutName, "*.solution"));
     }
 
+    /**
+     * Returns a list of essence files that reside in a directory.
+     * @param dir The path to the directory to look in.
+     */
     private static findEssenceFiles(dir: string): string[] {
         let files = fs.readdirSync(dir);
         return files.filter(el => /\.essence$/.test(el));
     }
 
+    /**
+     * Returns a list of solution files that reside in a directory.
+     * @param dir The path to the dir to look in
+     */
     private static findSolutionFiles(dir: string): string[] {
         let files = fs.readdirSync(dir);
         return files.filter(el => /\.solution$/.test(el));
     }
+
+    /**
+     * Returns name of the conjure output directory
+     * @param modelName Name of the model file
+     * @param paramName Name of the param file
+     */
 
     private static makeDirName(modelName: string, paramName: string) {
         return modelName + "-" + paramName + "-conjure-output";

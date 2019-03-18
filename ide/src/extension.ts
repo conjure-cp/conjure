@@ -1,19 +1,16 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-// import ConjureHelper from './conjureHelper';
 import WebviewHelper from './webviewHelper';
 import ConjureHelper from './conjureHelper';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-
 export const LANGID = "essence";
 
+/**
+ * Activates extension and registers commands
+ * @param context The VSCode state
+ */
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Congratulations, your extension "conjure" is now active!');
-    // ConjureHelper.activate(context);
+    console.log('Conjure extension activated.');
 
     context.subscriptions.push(vscode.commands.registerCommand('conjure.model', () => {
         ConjureHelper.model();
@@ -25,18 +22,12 @@ export function activate(context: vscode.ExtensionContext) {
         WebviewHelper.activate(context);
         ConjureHelper.solveAndVisualise(true);
     }));
-    // ConjureHelper.solve();
 
     context.subscriptions.push(vscode.commands.registerCommand('conjure.vis', () => {
         WebviewHelper.activate(context);
-        ConjureHelper.visualisePath();
+        ConjureHelper.launchVisualiserWithPath();
     }));
-
-
-    // WebviewHelper.activate(context);
 }
 
-
-// this method is called when your extension is deactivated
 export function deactivate() {
 }
