@@ -96,6 +96,7 @@ export default class ConjureHelper {
 
         // Ensure that a text editor is active
 
+        
         let current = vscode.window.activeTextEditor;
         if (!current) {
             vscode.window.showErrorMessage("No active text editor!");
@@ -115,15 +116,18 @@ export default class ConjureHelper {
 
         let dir = path.dirname(doc.uri.path);
 
-        let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
+        let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1,1,1,1,1,1,1', "-o", dir];
 
         // Execute conjure modelling
 
-        exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+        let command = (' conjure ' + args.join(" "))
+
+        exec(command, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
             if (e instanceof Error) {
 
                 console.error(e);
+                console.log(e);
                 vscode.window.showErrorMessage(e.message);
                 return;
             }

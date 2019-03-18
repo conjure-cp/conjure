@@ -1,4 +1,4 @@
-import json, tables, strutils, parseutils, sequtils, db_sqlite, intsets
+import json, tables, strutils, parseutils, sequtils, db_sqlite, intsets, algorithm
 import types, process
 
 
@@ -41,7 +41,13 @@ proc prettyDomainsToTreeView*(domains: seq[Variable]): TreeViewNode =
 
     root.children = @[variables, expressions, changedExpressions]
 
-    for d in domains:
+    func compare(var1, var2: Variable): int =
+        return cmp(var1.name, var2.name)
+    
+    var copy = domains
+    copy.sort(compare)
+
+    for d in copy:
         if d of Expression:
             expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 

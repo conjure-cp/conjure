@@ -18,7 +18,7 @@ export default class Panel {
     public ul: any;
     public childIdent = 15;
     public nodeHeight = 30;
-    public duration = 250;
+    public duration = 0;
     public columns = ["Name", "Domain"];
 
     // The panel to house the data on domains.
@@ -29,7 +29,7 @@ export default class Panel {
         position: 'right-top 0 58',
         contentSize: {
             width: () => {
-                return $(document).width()! / 3;
+                return $(document).width()! / 2.5;
             },
             height: () => {
                 return $(document).height()! * 0.9;
@@ -193,12 +193,15 @@ export default class Panel {
                 return Panel.getVarName(node);
             })
             // Work out the y coordinate of the node by using its parent
-            .style("top", () => {
+            .style("top", (node: Node) => {
                 let suffix = "px";
                 if (source.parent) {
                     return source.parent.y + suffix;
                 }
-                return source.y + suffix;
+
+                return node.y + suffix;
+                
+                // return source.y + suffix;
             })
             
             .style("opacity", 0)

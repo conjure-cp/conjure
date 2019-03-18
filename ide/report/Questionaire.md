@@ -1,6 +1,19 @@
+# The Problem
+This problem consists in finding a partition of numbers 1..N into two sets A and B such that:
+
+* A and B have the same cardinality.  
+* sum of numbers in A = sum of numbers in B  
+* sum of squares of numbers in A = sum of squares of numbers in B  
+
+There is no solution for N<8.  
+
+Here is an example forN=8:A=(1,4,6,7) and B=(2,3,5,8)  
+Then from N>=8, there is no solution if N is not a multiple of 4.  
+
+
 # Tasks
 
-Please follow the instructions below for each of the problems given.
+Please follow the instructions below for each of the tasks given.
 
 To open the command prompt in visual studio code please press Ctrl+shift+p.  
 Once this is open typing "Conjure" will cause the relevant commands to appear. 
@@ -70,20 +83,120 @@ This is the root node of a fully collapsed tree.
 
 ### Questions
 
+### Part A
+
 Use the visualisation to find the answers to the following questions: 
-* Did the domains change after Root Propagation?  
-□ Yes 
-□ No 
-* How many solution nodes were found? 
-□ 0 
-□ 1 
-□ 2 
-* What were the domains at the first solution?
-* Which failed branch contains the most nodes? 
-* At which node did the lowerbound on the cardinality of the set first become greater than zero? 
-* At which node was x first excluded from the set? 
+
+1. Did the domains change after Root Propagation?  
+□ Yes  
+□ No  
+	How easy was it to find the answer?  
+	<pre>
+	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
+	</pre>
 
 
-### PartB
 
 
+
+2. How many solution nodes were found?   
+□ 0   
+□ 1   
+□ 2   
+	How easy was it to find the answer?  
+	<pre>
+	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
+	</pre>
+
+3. Which set was 3 included in at the first solution?  
+□ Set A  
+□ Set B  
+	How easy was it to find the answer?  
+	<pre>
+	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
+	</pre>
+
+
+4. Which failed branch contains the most nodes?   
+□ First branch  
+□ Second branch   
+□ Third branch   
+□ Fourth branch   
+	How easy was it to find the answer?  
+	<pre>
+	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
+	</pre>
+
+5. At which node did the upperbound on the cardinality of setB become less than 20?  
+□ 1  
+□ 11  
+□ 14853  
+□ 6  
+	How easy was it to find the answer?  
+	<pre>
+	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
+	</pre>
+
+
+6. At which node was 10 first excluded from the set?   
+□ 41  
+□ 22743  
+□ 500  
+□ 11  
+	How easy was it to find the answer?  
+	<pre>
+	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
+	</pre>
+
+
+### Part B (optional)
+Within the root directory of the problem you will find a config.json file.  
+This file contains command line arguments that will be passed to minion and savilerow when executing commands from within vscode.  
+Experiment with different command line arguments and see how the tree changes.
+
+### Part C 
+
+<pre>
+
+What did you like about the extension?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+What aspects would you like to be improved?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
