@@ -32,5 +32,5 @@ routes:
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
 
-    get "/loadSet/@nodeId/@path" :
+    get "/loadSet/@nodeId/@path":
         resp loadSetChild(@"nodeId",@"path")
