@@ -1,5 +1,5 @@
 # The Problem
-This problem consists in finding a partition of numbers 1..N into two sets A and B such that:
+This problem consists in finding a partition of numbers int(1..N) into two sets A and B such that:
 
 * A and B have the same cardinality.  
 * sum of numbers in A = sum of numbers in B  
@@ -7,7 +7,7 @@ This problem consists in finding a partition of numbers 1..N into two sets A and
 
 There is no solution for N<8.  
 
-Here is an example forN=8:A=(1,4,6,7) and B=(2,3,5,8)  
+Here is an example for N=8: A={1,4,6,7} and B={2,3,5,8}  
 Then from N>=8, there is no solution if N is not a multiple of 4.  
 
 
