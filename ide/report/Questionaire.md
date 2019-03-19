@@ -33,7 +33,7 @@ The generated eprime file should automatically open in a new tab.
 
 As you may have noticed, the model requires a parameter before it can be executed.
 
-Open up a parameter file from the params directory.
+Choose one from the 16, 20 and 24.param files.
 
 Try running the "Solve essence" command on the parameter. 
 
@@ -43,13 +43,13 @@ Try running the "Solve essence" command on the parameter.
 
 ## Using the solve and visualise command
 
-Try running the "Solve and visualise" command on the parameter file. 
+Try running the "Solve and visualise" command on 20.param. 
 
-After the conjure has been run a new tab called "Tree Visualiser" should open automatically. 
+After conjure has been run a new tab called "Tree Visualiser" should open automatically. 
 
 You will see a single node in the middle of the screen.  
 
-This is the root node of a fully collapsed tree. 
+This is the root node of a fully collapsed search tree. 
 
  ### Tree visualiser controls
 
@@ -87,9 +87,11 @@ This is the root node of a fully collapsed tree.
 
 Use the visualisation to find the answers to the following questions: 
 
-1. Did the domains change after Root Propagation?  
+1. Some inference can be performed before the search starts, this is known as root propagation.   
+   Did the domains change after Root Propagation?  
 □ Yes  
 □ No  
+\
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
@@ -103,6 +105,7 @@ Use the visualisation to find the answers to the following questions:
 □ 0   
 □ 1   
 □ 2   
+\
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
@@ -111,6 +114,7 @@ Use the visualisation to find the answers to the following questions:
 3. Which set was 3 included in at the first solution?  
 □ Set A  
 □ Set B  
+\
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
@@ -121,28 +125,26 @@ Use the visualisation to find the answers to the following questions:
 □ First branch  
 □ Second branch   
 □ Third branch   
-□ Fourth branch   
+□ Fourth branch 
+\  
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
 	</pre>
 
-5. At which node did the upperbound on the cardinality of setB become less than 20?  
-□ 1  
-□ 11  
-□ 14853  
-□ 6  
+5. At which node did the upperbound on the cardinality of setB first become less than 20?  \
+\
+\
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
 	</pre>
 
 
-6. At which node was 10 first excluded from set A?   
-□ 41  
-□ 22743  
-□ 500  
-□ 19  
+
+6. At which node was 10 first excluded from set A?  \
+\
+\
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
@@ -152,7 +154,7 @@ Use the visualisation to find the answers to the following questions:
 ### Part B (optional)
 Within the root directory of the problem you will find a config.json file.  
 This file contains command line arguments that will be passed to minion and savilerow when executing commands from within vscode.  
-Experiment with different command line arguments and see how the tree changes.
+Experiment with different command line arguments and see how the tree changes, e.g "findallsols".
 
 ### Part C 
 
