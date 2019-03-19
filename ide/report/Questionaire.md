@@ -121,12 +121,10 @@ Use the visualisation to find the answers to the following questions:
 	</pre>
 
 
-4. Which failed branch contains the most nodes?   
-□ First branch  
-□ Second branch   
-□ Third branch   
-□ Fourth branch 
-\  
+4. Which failed branch contains the most nodes?  
+\
+\
+\
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
