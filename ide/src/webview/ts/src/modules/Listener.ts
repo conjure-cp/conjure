@@ -16,6 +16,10 @@ export default class Listener {
         $("#total").text(State.totalLoaded + "/" + Number(State.id2Node[State.rootId].descCount + 1));
     }
 
+    public static setSolCount() {
+        $("#solutions").text(State.solNodIds.length);
+    }
+
     /**
      * Handles the init message
      * @param data the init response
@@ -41,6 +45,8 @@ export default class Listener {
         Tree.update(State.id2Node[State.rootId]);
         Tree.selectNode(State.rootId);
         Listener.setLoadedCount();
+        Listener.setSolCount();
+
     }
 
     /**

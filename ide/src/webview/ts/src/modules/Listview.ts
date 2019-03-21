@@ -24,7 +24,7 @@ export default class Panel {
     // The panel to house the data on domains.
     public panel = jsPanel.create({
         // theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
-        theme: 'black filled',
+        theme: 'white filled',
         headerTitle: 'my panel #1',
         position: 'right-top 0 58',
         contentSize: {

@@ -102,16 +102,16 @@ Use the visualisation to find the answers to the following questions:
 
 
 2. How many solution nodes were found?   
-□ 0   
 □ 1   
 □ 2   
+□ 4   
 \
 	How easy was it to find the answer?  
 	<pre>
 	□ Very Easy     □ Easy     □ Neutral 	□ Hard	   □ Very Hard
 	</pre>
 
-3. Which set was 3 included in at the first solution?  
+3. Which set was 3 included in at the first solution node?  
 □ Set A  
 □ Set B  
 \

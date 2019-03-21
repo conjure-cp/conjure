@@ -35,7 +35,7 @@ proc getNonExcludedMarkerValuesQuery*(s: Set, ancestors: seq[int], outerSetName:
     ## Returns query to get non diactivated values from the marker set
     let parentIndexes = getParentIdIndexes(ancestors)
     let index = " index" & $ancestors.len() 
-    let bound = " and " & index &  " <= " & $s.markerUpper 
+    let bound = " and " & index & " <= " & $s.markerUpper 
 
     let nullIndexes = getNullIndexes(ancestors.len() + 1)
 

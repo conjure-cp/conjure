@@ -96,7 +96,6 @@ export default class ConjureHelper {
 
         // Ensure that a text editor is active
 
-        
         let current = vscode.window.activeTextEditor;
         if (!current) {
             vscode.window.showErrorMessage("No active text editor!");
