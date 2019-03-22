@@ -52,7 +52,10 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
-    pretty TypeInt{} = "int"
+    pretty (TypeInt TagInt        ) = "int"
+    pretty (TypeInt (TaggedInt t) ) = stringToDoc ("int:"     ++ textToString t)
+    pretty (TypeInt (TagEnum t)   ) = stringToDoc ("enum:"    ++ textToString t)
+    pretty (TypeInt (TagUnnamed t)) = stringToDoc ("unnamed:" ++ textToString t)
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
@@ -79,6 +82,7 @@ instance Pretty Type where
 
 
 data IntTag = TagInt                    -- was an integer in the input
+            | TaggedInt Text            -- was an integer in the input with user specified tag
             | TagEnum Text              -- was an enum in the input
             | TagUnnamed Text           -- was an unnamed in the input
     deriving (Eq, Ord, Show, Data, Typeable, Generic)

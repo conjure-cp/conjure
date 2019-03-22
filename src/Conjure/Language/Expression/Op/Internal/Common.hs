@@ -16,6 +16,7 @@ module Conjure.Language.Expression.Op.Internal.Common
 
     , intToInt
     , intToIntToInt
+    , intToIntToIntStrict
     , boolToBoolToBool
     , sameToSameToBool
     , sameToSameToSame
@@ -112,6 +113,35 @@ intToIntToInt p a b = do
             [ "When type checking:" <+> pretty p
             , "Second argument expected to be an int, but it is:" <++> pretty tyb
             ]
+
+intToIntToIntStrict :: (MonadFail m, TypeOf a, Pretty p, ?typeCheckerMode :: TypeCheckerMode) => p -> a -> a -> m Type
+intToIntToIntStrict p a b = do
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        (TypeInt TagInt, TypeInt TagInt) ->
+            if typeUnify tya tyb
+                then return $ mostDefined [tya, tyb]
+                else fail $ vcat
+                        [ "When type checking:" <+> pretty p
+                        , "Types do not unify:" <++> pretty tya 
+                        ]
+        (TypeInt TaggedInt{}, TypeInt TaggedInt{}) ->
+            if typeUnify tya tyb
+                then return $ mostDefined [tya, tyb]
+                else fail $ vcat
+                        [ "When type checking:" <+> pretty p
+                        , "Types do not unify:" <++> pretty tya 
+                        ]
+        (_, TypeInt{})         -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            ,  "First argument expected to be an int, but it is:" <++> pretty tya
+            ]
+        _                      -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Second argument expected to be an int, but it is:" <++> pretty tyb
+            ]
+
 
 
 boolToBoolToBool :: (MonadFail m, TypeOf a, Pretty p, ?typeCheckerMode :: TypeCheckerMode) => p -> a -> a -> m Type

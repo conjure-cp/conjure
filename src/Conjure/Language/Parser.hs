@@ -243,7 +243,7 @@ parseDomainWithRepr = pDomainAtom
     where
 
         pDomainAtom = msum
-            [ pBool, try pIntFromExpr, pInt, try pEnum, try pReference
+            [ pBool, try pIntFromExpr, try pIntTagged, pInt, try pEnum, try pReference
             , pMatrix, try pTupleWithout, pTupleWith
             , pRecord, pVariant
             , pSet
@@ -281,6 +281,7 @@ parseDomainWithRepr = pDomainAtom
             x <- parens parseExpr
             case (let ?typeCheckerMode = StronglyTyped in typeOf x) of
                 Just (TypeInt TagInt) -> return $ DomainInt TagInt [RangeSingle x]
+                Just (TypeInt t@(TaggedInt _)) -> return $ DomainInt t [RangeSingle x]
                 _ -> return $ DomainIntE x
 
         pInt = do
@@ -288,6 +289,15 @@ parseDomainWithRepr = pDomainAtom
             mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             let xs = fromMaybe [] mxs
             return $ DomainInt TagInt xs
+
+        pIntTagged = do
+            lexeme L_int
+            lexeme L_Colon
+            t <- identifierText
+            mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
+            let xs = fromMaybe [] mxs
+            return $ DomainInt (TaggedInt t) xs
+
 
         pReference = do
             r  <- identifierText
@@ -901,6 +911,7 @@ parseAbstractPattern = label "pattern" $ msum
 parseLiteral :: Parser Expression
 parseLiteral = label "value" $ msum
     [ Constant <$> pBool
+    , Constant <$> try pIntTagged
     , Constant <$> pInt
     , mkAbstractLiteral <$> pMatrix
     , mkAbstractLiteral <$> pTupleWith
@@ -931,6 +942,13 @@ parseLiteral = label "value" $ msum
             return (ConstantBool x)
 
         pInt = ConstantInt TagInt . fromInteger <$> integer
+
+        pIntTagged = do
+          i <- integer
+          lexeme L_Colon
+          t <- identifierText
+          return $ ConstantInt (TaggedInt t) $ fromInteger i
+          
 
         pMatrix = do
             lexeme L_OpenBracket
