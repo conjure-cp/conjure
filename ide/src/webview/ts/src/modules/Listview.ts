@@ -21,10 +21,11 @@ export default class Panel {
     public duration = 0;
     public columns = ["Name", "Domain"];
 
+
     // The panel to house the data on domains.
     public panel = jsPanel.create({
-        // theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
-        theme: 'white filled',
+        theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
+        // theme: 'white filled',
         headerTitle: 'my panel #1',
         position: 'right-top 0 58',
         contentSize: {

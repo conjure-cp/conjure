@@ -1,6 +1,12 @@
 body{
     background-color: var(--background-color);
+    overflow: hidden;
+    position: fixed;
     /* background-color: #fff */
+}
+
+text{
+    color: var(--vscode-editor-foreground) 
 }
 
 #pane{
@@ -48,9 +54,6 @@ circle.selected {
 .node text {
     font: 18px sans-serif;
     fill:var(--vscode-editor-foreground) 
-    
-    /* #fff; */
-    /* fill: black */
 }
 
 .node--internal text {
