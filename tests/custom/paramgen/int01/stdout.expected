@@ -1,0 +1,28 @@
+language Essence 1.3
+
+given MININT: int
+given MAXINT: int
+given a_middle: int(MININT..MAXINT)
+given a_delta: int(MININT..MAXINT)
+find a: int(MININT..MAXINT)
+such that
+    a >= a_middle - a_delta,
+    a <= a_middle + a_delta
+given b_middle: int(10..MAXINT)
+given b_delta: int(10..MAXINT)
+find b: int(10..MAXINT)
+such that
+    b >= b_middle - b_delta,
+    b <= b_middle + b_delta
+given c_middle: int(MININT..20)
+given c_delta: int(MININT..20)
+find c: int(MININT..20)
+such that
+    c >= c_middle - c_delta,
+    c <= c_middle + c_delta
+given d_middle: int(10..20)
+given d_delta: int(10..20)
+find d: int(10..20)
+such that
+    d >= d_middle - d_delta,
+    d <= d_middle + d_delta
