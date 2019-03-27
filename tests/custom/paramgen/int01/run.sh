@@ -4,7 +4,9 @@ conjure parameter-generator int.essence --essence-out int-gen.essence
 for file in int-gen.*; do
     echo "File: $file"
     cat $file
+    echo ""
     echo "--------------------"
+    echo ""
     echo ""
 done
 
@@ -13,7 +15,9 @@ conjure parameter-generator int.essence --essence-out int-gen.essence --MININT -
 for file in int-gen.*; do
     echo "File: $file"
     cat $file
+    echo ""
     echo "--------------------"
+    echo ""
     echo ""
 done
 
