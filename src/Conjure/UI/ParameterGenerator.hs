@@ -46,7 +46,12 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
             let eval = instantiateDomain [("MININT", fromInt minIntValue), ("MAXINT", fromInt maxIntValue)]
             stmtsEvaluated <- forM (mStatements m) $ \ case
                 Declaration (FindOrGiven forg nm dom) -> do
+                    -- traceM $ show $ "nm :" <+> pretty nm
+                    -- traceM $ show $ "bef:" <+> pretty dom
                     dom' <- eval dom
+                    -- traceM $ show $ "aft:" <+> pretty dom'
+                    -- traceM $ show $ "aft:" <+> pretty (show dom')
+                    -- traceM ""
                     return $ Declaration (FindOrGiven forg nm (fmap Constant dom'))
                 st -> return st
             return m { mStatements = stmtsEvaluated }
@@ -60,8 +65,10 @@ pgOnDomain ::
 pgOnDomain nm dom =
     case dom of
         DomainInt t _ -> do
-            lb <- minOfIntDomain dom
-            ub <- maxOfIntDomain dom
+            lbX <- minOfIntDomain dom
+            ubX <- maxOfIntDomain dom
+            lb  <- lowerBoundOfIntExpr lbX
+            ub  <- upperBoundOfIntExpr ubX
             let nmMiddle = nm `mappend` "_middle"
             let nmDelta  = nm `mappend` "_delta"
             let x = Reference nm Nothing
@@ -71,9 +78,15 @@ pgOnDomain nm dom =
                 [ Declaration (FindOrGiven Given nmMiddle (DomainInt t [RangeBounded lb ub]))
                 , Declaration (FindOrGiven Given nmDelta  (DomainInt t [RangeBounded 0 [essence| (&ub - &lb) / 2 |]]))
                 , Declaration (FindOrGiven Find  nm       (DomainInt t [RangeBounded lb ub]))
-                , SuchThat [ [essence| &x >= &middle - &delta |]
-                           , [essence| &x <= &middle + &delta |]
-                           ]
+                , SuchThat $ [ [essence| &x >= &middle - &delta |]
+                             , [essence| &x <= &middle + &delta |]
+                             ] ++
+                             [ [essence| &x >= &lbX |]
+                             | lb /= lbX
+                             ] ++
+                             [ [essence| &x <= &ubX |]
+                             | ub /= ubX
+                             ]
                 ]
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
@@ -90,12 +103,13 @@ maxInt = Reference "MAXINT" Nothing
 
 
 minOfIntDomain :: MonadUserError m => Domain () Expression -> m Expression
-minOfIntDomain (DomainInt _ []) = return minInt
-minOfIntDomain (DomainInt _ [r]) = minOfIntRange r
 minOfIntDomain (DomainInt _ rs) = do
-    xs <- mapM minOfIntRange rs
-    return $ make opMax $ fromList xs
-minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <+> pretty d
+    xs <- sortNub <$> mapM minOfIntRange rs
+    case xs of
+        []  -> return minInt
+        [x] -> return x
+        _   -> return $ make opMax $ fromList xs
+minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> pretty d
 
 minOfIntRange :: Monad m => Range Expression -> m Expression
 minOfIntRange (RangeSingle lb) = return lb
@@ -103,14 +117,22 @@ minOfIntRange (RangeLowerBounded lb) = return lb
 minOfIntRange (RangeBounded lb _) = return lb
 minOfIntRange _ = return minInt
 
+lowerBoundOfIntExpr :: MonadUserError m => Expression -> m Expression
+lowerBoundOfIntExpr x@Constant{} = return x
+lowerBoundOfIntExpr x | x == minInt = return minInt
+lowerBoundOfIntExpr x | x == maxInt = return maxInt
+lowerBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = minOfIntDomain dom
+lowerBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
+
 
 maxOfIntDomain :: MonadUserError m => Domain () Expression -> m Expression
-maxOfIntDomain (DomainInt _ []) = return maxInt
-maxOfIntDomain (DomainInt _ [r]) = maxOfIntRange r
 maxOfIntDomain (DomainInt _ rs) = do
-    xs <- mapM maxOfIntRange rs
-    return $ make opMin $ fromList xs
-maxOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <+> pretty d
+    xs <- sortNub <$> mapM maxOfIntRange rs
+    case xs of
+        []  -> return maxInt
+        [x] -> return x
+        _   -> return $ make opMin $ fromList xs
+maxOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> pretty d
 
 maxOfIntRange :: Monad m => Range Expression -> m Expression
 maxOfIntRange (RangeSingle ub) = return ub
@@ -118,3 +140,9 @@ maxOfIntRange (RangeUpperBounded ub) = return ub
 maxOfIntRange (RangeBounded _ ub) = return ub
 maxOfIntRange _ = return maxInt
 
+upperBoundOfIntExpr :: MonadUserError m => Expression -> m Expression
+upperBoundOfIntExpr x@Constant{} = return x
+upperBoundOfIntExpr x | x == minInt = return minInt
+upperBoundOfIntExpr x | x == maxInt = return maxInt
+upperBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = maxOfIntDomain dom
+upperBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]

@@ -26,6 +26,22 @@ find d: int(10..20)
 such that
     d >= d_middle - d_delta,
     d <= d_middle + d_delta
+given e_middle: int(10..20)
+given e_delta: int(0..5)
+find e: int(10..20)
+such that
+    e >= e_middle - e_delta,
+    e <= e_middle + e_delta,
+    e >= b,
+    e <= c
+given f_middle: int(0..20)
+given f_delta: int(0..10)
+find f: int(0..20)
+such that
+    f >= f_middle - f_delta,
+    f <= f_middle + f_delta,
+    f >= a,
+    f <= d
 
 --------------------
 
@@ -39,6 +55,10 @@ c_middle "-c_middle " i (0, 20)
 c_delta "-c_delta " i (0, 10)
 d_middle "-d_middle " i (10, 20)
 d_delta "-d_delta " i (0, 5)
+e_middle "-e_middle " i (10, 20)
+e_delta "-e_delta " i (0, 5)
+f_middle "-f_middle " i (0, 20)
+f_delta "-f_delta " i (0, 10)
 --------------------
 
 
@@ -70,6 +90,22 @@ find d: int(10..20)
 such that
     d >= d_middle - d_delta,
     d <= d_middle + d_delta
+given e_middle: int(10..20)
+given e_delta: int(0..5)
+find e: int(10..20)
+such that
+    e >= e_middle - e_delta,
+    e <= e_middle + e_delta,
+    e >= b,
+    e <= c
+given f_middle: int(-10..20)
+given f_delta: int(0..15)
+find f: int(-10..20)
+such that
+    f >= f_middle - f_delta,
+    f <= f_middle + f_delta,
+    f >= a,
+    f <= d
 
 --------------------
 
@@ -83,6 +119,10 @@ c_middle "-c_middle " i (-10, 20)
 c_delta "-c_delta " i (0, 15)
 d_middle "-d_middle " i (10, 20)
 d_delta "-d_delta " i (0, 5)
+e_middle "-e_middle " i (10, 20)
+e_delta "-e_delta " i (0, 5)
+f_middle "-f_middle " i (-10, 20)
+f_delta "-f_delta " i (0, 15)
 --------------------
 
 
