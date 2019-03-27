@@ -24,6 +24,7 @@ parameterGenerator ::
     MonadFail m =>
     MonadUserError m =>
     EnumerateDomain m =>
+    NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Integer ->      -- MININT
     Integer ->      -- MAXINT
@@ -32,7 +33,9 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
     where
         core m = do
             outStatements <- forM (mStatements m) $ \ st -> case st of
-                Declaration (FindOrGiven Given nm dom) -> pgOnDomain nm dom
+                Declaration (FindOrGiven Given nm dom) -> do
+                    (dom', decls, cons) <- pgOnDomain (Reference nm Nothing) nm dom
+                    return $ decls ++ [Declaration (FindOrGiven Find nm dom'), SuchThat cons]
                 Declaration (FindOrGiven Find  _  _  ) -> return []
                 Declaration       {}                   -> return [st]
                 SearchOrder       {}                   -> return []
@@ -59,10 +62,15 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
 
 pgOnDomain ::
     MonadUserError m =>
-    Name ->
-    Domain () Expression ->
-    m [Statement]
-pgOnDomain nm dom =
+    NameGen m =>
+    Expression ->                       -- how do we refer to this top level variable
+    Name ->                             -- its name
+    Domain () Expression ->             -- its domain
+    m ( Domain () Expression            -- its modified domain for the find version
+      , [Statement]                     -- statements that define the necessary givens
+      , [Expression]                    -- constraints
+      )
+pgOnDomain x nm dom =
     case dom of
         DomainInt t _ -> do
             lbX <- minOfIntDomain dom
@@ -71,29 +79,40 @@ pgOnDomain nm dom =
             ub  <- upperBoundOfIntExpr ubX
             let nmMiddle = nm `mappend` "_middle"
             let nmDelta  = nm `mappend` "_delta"
-            let x = Reference nm Nothing
             let middle = Reference nmMiddle Nothing
             let delta = Reference nmDelta Nothing
-            return
+            return3
+                (DomainInt t [RangeBounded lb ub])
                 [ Declaration (FindOrGiven Given nmMiddle (DomainInt t [RangeBounded lb ub]))
                 , Declaration (FindOrGiven Given nmDelta  (DomainInt t [RangeBounded 0 [essence| (&ub - &lb) / 2 |]]))
-                , Declaration (FindOrGiven Find  nm       (DomainInt t [RangeBounded lb ub]))
-                , SuchThat $ [ [essence| &x >= &middle - &delta |]
-                             , [essence| &x <= &middle + &delta |]
-                             ] ++
-                             [ [essence| &x >= &lbX |]
-                             | lb /= lbX
-                             ] ++
-                             [ [essence| &x <= &ubX |]
-                             | ub /= ubX
-                             ]
                 ]
+                $ [ [essence| &x >= &middle - &delta |]
+                  , [essence| &x <= &middle + &delta |]
+                  ] ++
+                  [ [essence| &x >= &lbX |]
+                  | lb /= lbX
+                  ] ++
+                  [ [essence| &x <= &ubX |]
+                  | ub /= ubX
+                  ]
+        DomainFunction r attr innerDomainFr innerDomainTo -> do
+            (iPat, i) <- quantifiedVar
+            let liftCons c = [essence| forAll &iPat in &x . &c |]
+            (domFr, declFr, consFr) <- pgOnDomain [essence| &i[1] |] (nm `mappend` "_1") innerDomainFr
+            (domTo, declTo, consTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_2") innerDomainTo
+            return3
+                (DomainFunction r attr domFr domTo)
+                (declFr ++ declTo)
+                (map liftCons (consFr ++ consTo))
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
                                                       ]
 
 
 -- helper functions
+
+return3 :: Monad m => a -> b -> c -> m (a,b,c)
+return3 x y z = return (x,y,z)
 
 minInt :: Expression
 minInt = Reference "MININT" Nothing

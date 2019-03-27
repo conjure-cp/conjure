@@ -185,7 +185,7 @@ mainWithArgs SymmetryDetection{..} = do
 mainWithArgs ParameterGenerator{..} = do
     when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
     model  <- readModelFromFile essence
-    output <- parameterGenerator minInt maxInt model
+    output <- runNameGen () $ parameterGenerator minInt maxInt model
     writeModel lineWidth outputFormat (Just essenceOut) output
     liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
         [ pretty nm <+>
