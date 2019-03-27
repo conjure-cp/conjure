@@ -5,6 +5,8 @@ module Conjure.UI.ParameterGenerator where
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.NameResolution ( resolveNames )
+import Conjure.Language.Instantiate ( instantiateDomain )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 -- import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 
 
@@ -21,9 +23,12 @@ parameterGenerator ::
     MonadLog m =>
     MonadFail m =>
     MonadUserError m =>
+    EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer ->      -- MININT
+    Integer ->      -- MAXINT
     Model -> m Model
-parameterGenerator model = runNameGen () (resolveNames model) >>= core
+parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames model) >>= core >>= evaluateBounds
     where
         core m = do
             outStatements <- forM (mStatements m) $ \ st -> case st of
@@ -35,14 +40,16 @@ parameterGenerator model = runNameGen () (resolveNames model) >>= core
                 Where             xs                   -> return [SuchThat xs]
                 Objective         {}                   -> return []
                 SuchThat          {}                   -> return []
-            let
-                usesMININT = not $ null [ () | Reference "MININT" _ <- universeBi outStatements ]
-                usesMAXINT = not $ null [ () | Reference "MAXINT" _ <- universeBi outStatements ]
-                addMinMaxInt stmts =
-                    [ Declaration (FindOrGiven Given "MININT" (DomainInt TagInt [])) | usesMININT ] ++
-                    [ Declaration (FindOrGiven Given "MAXINT" (DomainInt TagInt [])) | usesMAXINT ] ++
-                    stmts
-            return m { mStatements = addMinMaxInt (concat outStatements) }
+            return m { mStatements = concat outStatements }
+
+        evaluateBounds m = do
+            let eval = instantiateDomain [("MININT", fromInt minIntValue), ("MAXINT", fromInt maxIntValue)]
+            stmtsEvaluated <- forM (mStatements m) $ \ case
+                Declaration (FindOrGiven forg nm dom) -> do
+                    dom' <- eval dom
+                    return $ Declaration (FindOrGiven forg nm (fmap Constant dom'))
+                st -> return st
+            return m { mStatements = stmtsEvaluated }
 
 
 pgOnDomain ::

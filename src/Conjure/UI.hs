@@ -167,6 +167,8 @@ data UI
     | ParameterGenerator
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
+        , minInt                     :: Integer
+        , maxInt                     :: Integer
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
@@ -1081,6 +1083,20 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Output file path."
+        , minInt
+            = 0
+            &= typ "INT"
+            &= name "MININT"
+            &= groupname "Integer bounds"
+            &= explicit
+            &= help "The minimum integer value for the parameter values.\nDefault: 0"
+        , maxInt
+            = 100
+            &= typ "INT"
+            &= name "MAXINT"
+            &= groupname "Integer bounds"
+            &= explicit
+            &= help "The maximum integer value for the parameter values.\nDefault: 100"
         , logLevel
             = def
             &= name "log-level"
