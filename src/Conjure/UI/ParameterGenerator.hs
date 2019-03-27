@@ -62,7 +62,7 @@ pgOnDomain nm dom =
             let delta = Reference nmDelta Nothing
             return
                 [ Declaration (FindOrGiven Given nmMiddle (DomainInt t [RangeBounded lb ub]))
-                , Declaration (FindOrGiven Given nmDelta  (DomainInt t [RangeBounded lb ub]))
+                , Declaration (FindOrGiven Given nmDelta  (DomainInt t [RangeBounded 0 [essence| (&ub - &lb) / 2 |]]))
                 , Declaration (FindOrGiven Find  nm       (DomainInt t [RangeBounded lb ub]))
                 , SuchThat [ [essence| &x >= &middle - &delta |]
                            , [essence| &x <= &middle + &delta |]
