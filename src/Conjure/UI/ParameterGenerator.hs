@@ -49,11 +49,11 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
             let eval = instantiateDomain [("MININT", fromInt minIntValue), ("MAXINT", fromInt maxIntValue)]
             stmtsEvaluated <- forM (mStatements m) $ \ case
                 Declaration (FindOrGiven forg nm dom) -> do
-                    -- traceM $ show $ "nm :" <+> pretty nm
-                    -- traceM $ show $ "bef:" <+> pretty dom
+                    -- traceM $ show $ "EVAL nm :" <+> pretty nm
+                    -- traceM $ show $ "EVAL bef:" <+> pretty dom
                     dom' <- eval dom
-                    -- traceM $ show $ "aft:" <+> pretty dom'
-                    -- traceM $ show $ "aft:" <+> pretty (show dom')
+                    -- traceM $ show $ "EVAL aft:" <+> pretty dom'
+                    -- traceM $ show $ "EVAL aft:" <+> pretty (show dom')
                     -- traceM ""
                     return $ Declaration (FindOrGiven forg nm (fmap Constant dom'))
                 st -> return st
@@ -102,19 +102,28 @@ pgOnDomain x nm dom =
             (domTo, declTo, consTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_2") innerDomainTo
 
             -- drop total, post constraint instead
-            let attrOut =
+            (attrOut, sizeLb, sizeUb) <-
                     case attr of
-                        FunctionAttr size _totality jectivity ->
-                            let
-                                sizeOut =
-                                    case size of
-                                        SizeAttr_None -> SizeAttr_None
-                                        SizeAttr_Size a -> SizeAttr_MinMaxSize a a
-                                        SizeAttr_MinSize a -> SizeAttr_MinSize a
-                                        SizeAttr_MaxSize a -> SizeAttr_MaxSize a
-                                        SizeAttr_MinMaxSize a b -> SizeAttr_MinMaxSize a b
-                            in
-                                FunctionAttr sizeOut PartialityAttr_Partial jectivity
+                        FunctionAttr size _totality jectivity -> do
+                            (sizeOut, lb, ub) <-
+                                case size of
+                                    SizeAttr_None ->
+                                        return (SizeAttr_None, Nothing, Nothing)
+                                    SizeAttr_Size a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr a
+                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
+                                    SizeAttr_MinSize a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        return (SizeAttr_MinSize lb, Just a, Nothing)
+                                    SizeAttr_MaxSize a -> do
+                                        ub <- upperBoundOfIntExpr a
+                                        return (SizeAttr_MaxSize ub, Nothing, Just a)
+                                    SizeAttr_MinMaxSize a b -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr b
+                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just b)
+                            return (FunctionAttr sizeOut PartialityAttr_Partial jectivity, lb, ub)
 
             let
                 totalityCons =
@@ -130,11 +139,17 @@ pgOnDomain x nm dom =
                                 |]
                         _ -> return []
 
-                -- sizeCons =
-                --     case attrOut of
-                --         FunctionAttr
+                sizeLbCons =
+                    case sizeLb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| >= &bound |]
 
-            newCons <- totalityCons
+                sizeUbCons =
+                    case sizeUb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| <= &bound |]
+
+            newCons <- concat <$> sequence [totalityCons, sizeLbCons, sizeUbCons]
 
             return3
                 (DomainFunction r attrOut domFr domTo)
