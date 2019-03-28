@@ -1,7 +1,8 @@
 
 echo "$ conjure parameter-generator function.essence --essence-out function-gen.essence"
 conjure parameter-generator function.essence --essence-out function-gen.essence
-for file in function-gen.*; do
+conjure solve function-gen.essence test.param
+for file in function-gen.* function-gen-test.solution; do
     echo "File: $file"
     cat $file
     echo ""
@@ -12,7 +13,8 @@ done
 
 echo "$ conjure parameter-generator function.essence --essence-out function-gen.essence --MININT -10 --MAXINT 50"
 conjure parameter-generator function.essence --essence-out function-gen.essence --MININT -10 --MAXINT 50
-for file in function-gen.*; do
+conjure solve function-gen.essence test.param
+for file in function-gen.* function-gen-test.solution; do
     echo "File: $file"
     cat $file
     echo ""
@@ -21,4 +23,4 @@ for file in function-gen.*; do
     echo ""
 done
 
-rm -f function-gen.*
+rm -f function-gen.* function-gen-test.solution

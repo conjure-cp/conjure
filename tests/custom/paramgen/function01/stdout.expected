@@ -1,4 +1,9 @@
 $ conjure parameter-generator function.essence --essence-out function-gen.essence
+Generating models for function-gen.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime test.param
+Copying solution to: function-gen-test.solution
 File: function-gen.essence
 language Essence 1.3
 
@@ -30,8 +35,9 @@ given f_1_middle: int(1..10)
 given f_1_delta: int(0..4)
 given f_2_middle: int(1..100)
 given f_2_delta: int(0..49)
-find f: function (total, injective) int(1..10) --> int(1..100)
+find f: function (injective) int(1..10) --> int(1..100)
 such that
+    and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
     and([q1[1] >= f_1_middle - f_1_delta | q1 <- f]),
     and([q1[1] <= f_1_middle + f_1_delta | q1 <- f]),
     and([q1[1] >= a | q1 <- f]),
@@ -59,7 +65,24 @@ f_2_delta "-f_2_delta " i (0, 49)
 --------------------
 
 
+File: function-gen-test.solution
+language Essence 1.3
+
+letting a be 4
+letting b be 7
+letting c be 9
+letting f be function(4 --> 9, 5 --> 10, 6 --> 11, 7 --> 12)
+letting s be 2
+
+--------------------
+
+
 $ conjure parameter-generator function.essence --essence-out function-gen.essence --MININT -10 --MAXINT 50
+Generating models for function-gen.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime test.param
+Copying solution to: function-gen-test.solution
 File: function-gen.essence
 language Essence 1.3
 
@@ -91,8 +114,9 @@ given f_1_middle: int(1..10)
 given f_1_delta: int(0..4)
 given f_2_middle: int(1..50)
 given f_2_delta: int(0..24)
-find f: function (total, injective) int(1..10) --> int(1..50)
+find f: function (injective) int(1..10) --> int(1..50)
 such that
+    and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
     and([q1[1] >= f_1_middle - f_1_delta | q1 <- f]),
     and([q1[1] <= f_1_middle + f_1_delta | q1 <- f]),
     and([q1[1] >= a | q1 <- f]),
@@ -117,6 +141,18 @@ f_1_middle "-f_1_middle " i (1, 10)
 f_1_delta "-f_1_delta " i (0, 4)
 f_2_middle "-f_2_middle " i (1, 50)
 f_2_delta "-f_2_delta " i (0, 24)
+--------------------
+
+
+File: function-gen-test.solution
+language Essence 1.3
+
+letting a be 4
+letting b be 7
+letting c be 9
+letting f be function(4 --> 9, 5 --> 10, 6 --> 11, 7 --> 12)
+letting s be 2
+
 --------------------
 
 

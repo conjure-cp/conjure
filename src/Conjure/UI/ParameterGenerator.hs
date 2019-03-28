@@ -100,10 +100,46 @@ pgOnDomain x nm dom =
             let liftCons c = [essence| forAll &iPat in &x . &c |]
             (domFr, declFr, consFr) <- pgOnDomain [essence| &i[1] |] (nm `mappend` "_1") innerDomainFr
             (domTo, declTo, consTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_2") innerDomainTo
+
+            -- drop total, post constraint instead
+            let attrOut =
+                    case attr of
+                        FunctionAttr size _totality jectivity ->
+                            let
+                                sizeOut =
+                                    case size of
+                                        SizeAttr_None -> SizeAttr_None
+                                        SizeAttr_Size a -> SizeAttr_MinMaxSize a a
+                                        SizeAttr_MinSize a -> SizeAttr_MinSize a
+                                        SizeAttr_MaxSize a -> SizeAttr_MaxSize a
+                                        SizeAttr_MinMaxSize a b -> SizeAttr_MinMaxSize a b
+                            in
+                                FunctionAttr sizeOut PartialityAttr_Partial jectivity
+
+            let
+                totalityCons =
+                    case attr of
+                        FunctionAttr _ PartialityAttr_Total _ -> do
+                            innerDomainFrMin <- minOfIntDomain innerDomainFr
+                            innerDomainFrMax <- maxOfIntDomain innerDomainFr
+                            return $ return [essence|
+                                forAll &iPat : &domFr .
+                                    (&i >= &innerDomainFrMin /\ &i <= &innerDomainFrMax)
+                                    <->
+                                    &i in defined(&x)
+                                |]
+                        _ -> return []
+
+                -- sizeCons =
+                --     case attrOut of
+                --         FunctionAttr
+
+            newCons <- totalityCons
+
             return3
-                (DomainFunction r attr domFr domTo)
+                (DomainFunction r attrOut domFr domTo)
                 (declFr ++ declTo)
-                (map liftCons (consFr ++ consTo))
+                (newCons ++ map liftCons (consFr ++ consTo))
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
                                                       ]
