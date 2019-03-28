@@ -26,9 +26,9 @@ td, th {
 }
 
 .node circle {
-    fill: #fff;
+    fill: white;
     stroke: var(--vscode-terminal-ansiBlue);
-    stroke-width: 3px;
+    stroke-width: 5px;
     transition: stroke 500ms, fill 500ms;
 }
 
@@ -47,7 +47,10 @@ circle.hasOthers.red {
 }
 
 circle.selected {
-    stroke: salmon;
+    border-style: dotted;
+    border: 2px;
+    border-color: var(--vscode-terminal-ansiBlue);
+    stroke: coral;
     transition: stroke 500ms, fill 500ms;
 }
 
