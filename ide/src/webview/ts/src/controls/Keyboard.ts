@@ -51,7 +51,7 @@ export default class Keyboard {
         Mousetrap.bind('d', () => {
             Navigate.rightNode();
             Tree.selectNode(State.selectedId);
-        },  'keydown');
+        }, 'keydown');
 
         Mousetrap.bind('a', () => {
             Navigate.leftNode();

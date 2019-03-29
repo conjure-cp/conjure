@@ -1,43 +1,145 @@
 <body>
 
+    <style>
+        body {
+            background-color: var(--background-color);
+            overflow: hidden;
+            position: fixed;
+            /* background-color: #fff */
+        }
+
+        text {
+            color: var(--vscode-editor-foreground)
+        }
+
+        #pane {
+            font-size: 16px;
+        }
+
+        .jsPanel-titlebar .jsPanel-title {
+            font-size: 18px;
+        }
+
+        td,
+        th {
+            padding-left: 20px;
+        }
+
+        .changed * {
+            color: coral;
+        }
+
+        .node circle {
+            fill: white;
+            stroke: var(--vscode-terminal-ansiBlue);
+            stroke-width: 5px;
+            transition: stroke 500ms, fill 500ms;
+        }
+
+        circle.solution {
+            fill: gold;
+            transition: stroke 500ms, fill 500ms;
+        }
+
+        circle.hasOthers {
+            fill: var(--vscode-terminal-ansiGreen);
+            transition: stroke 500ms, fill 500ms;
+        }
+
+        circle.hasOthers.red {
+            fill: var(--vscode-terminal-ansiRed);
+            transition: stroke 500ms, fill 500ms;
+        }
+
+        circle.selected {
+            border-style: dotted;
+            border: 2px;
+            border-color: var(--vscode-terminal-ansiBlue);
+            stroke: coral;
+            transition: stroke 500ms, fill 500ms;
+        }
+
+        .node text {
+            font: 18px sans-serif;
+            fill: var(--vscode-editor-foreground)
+        }
+
+        .node--internal text {
+            text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
+        }
+
+        .link {
+            fill: none;
+            stroke: var(--vscode-terminal-ansiGreen);
+            stroke-width: 2px;
+        }
+
+        .link.red {
+            fill: none;
+            stroke: var(--vscode-terminal-ansiRed);
+            stroke-width: 2px;
+        }
+
+
+
+
+
+        /* treelist */
+
+        li.node {
+            position: absolute;
+            list-style: none;
+            cursor: default;
+        }
+
+        li.node span {
+            margin-right: 3px;
+            margin-left: 5px;
+        }
+
+        li.node .caret {
+            font-size: 10px;
+        }
+    </style>
+
     <form id="form" class="needs-validation" novalidate>
         <div class="form-row">
-            <!-- <div class="col-2"> -->
-            <!-- <button type="button" id="saveButton">Click Me!</button>  -->
-                <!-- <text for="saveButton">Step size</text>
-                <button id="saveButton" class="form-control" required> -->
-            <!-- </div> -->
-            <!-- <div class="col-2">
-                <text for="stepSize">Step size</text>
-                <input id="stepSize" class="form-control" type="number" value="1" required>
-            </div>
-            <div class="col-2">
-                <text for="domCount">Number of domains to show</text>
-                <input id="domCount" class="form-control" type="number" value="-1" required>
-            </div> -->
-            <div class="col-2">
+            <div class="col-3">
                 <input id="check" type="checkbox" class="form-check-input mousetrap" checked="true">
                 <text class="form-check-text" for="check">Pretty domains</text>
             </div>
-            <div class="col-2">
+            <div class="col-3">
                 <input id="labels" type="checkbox" class="form-check-input mousetrap" checked="true">
                 <text class="form-check-text" for="check">Pretty labels</text>
             </div>
-            <div class="col-2">
+            <div class="col-3">
                 <input id="expressions" type="checkbox" class="form-check-input mousetrap" checked="true">
                 <text class="form-check-text" for="check">Freeze expressions</text>
             </div>
-            <div class="col-2">
+            <div class="col-3">
                 <input id="freeze" type="checkbox" class="form-check-input mousetrap">
                 <text class="form-check-text" for="check">Freeze domains</text>
             </div>
-            <div class="col-2">
+        </div>
+        <div class="form-row">
+            <div class="col-3">
                 <text class="form-check-text">Solutions found:</text>
                 <text id="solutions" class="form-check-text"> </text>
             </div>
-            <div class="col-2">
+            <div class="col-3">
                 <text class="form-check-text">Total nodes loaded:</text>
                 <text id="total" class="form-check-text"> </text>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-2">
+                <button type="button" id="saveImg" >Save Image</button>
+            </div>
+            <div class="col-2">
+                <input type="radio" name="type" value="svg" id="wantSVG"> <text>SVG</text>
+            </div>
+            <div class="col-2">
+                <input type="radio" name="type" value="png" id="wantPNG"> <text>PNG</text>
             </div>
         </div>
     </form>

@@ -1,6 +1,8 @@
+import * as img from "../util/exportImage";
 import Globals from '../modules/Globals';
 import Tree from '../modules/Tree';
 import State from '../modules/State';
+// import State from '../modules/State';
 
 declare var d3: any;
 
@@ -66,6 +68,9 @@ export default class Buttons {
      * Binds buttons to their handlers
      */
     public static bindButtons() {
+
+        d3.select("#saveImg")
+            .on("click", img.writeImage);
 
         d3.select("#freeze")
             .on("change", () => {
