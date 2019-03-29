@@ -32,13 +32,13 @@ export default class Keyboard {
             Tree.selectNode(State.rootId);
         }, 'keydown');
 
-        Mousetrap.bind('s', () => {
+        Mousetrap.bind(['s', 'down'], () => {
             Navigate.nextNode(Globals.vscode);
             Tree.selectNode(State.selectedId);
             Tree.update(State.id2Node[State.selectedId]);
         }, 'keydown');
 
-        Mousetrap.bind('w', () => {
+        Mousetrap.bind(['w', 'up'], () => {
             Navigate.upNode();
             Tree.selectNode(State.selectedId);
         }, 'keydown');
@@ -48,12 +48,12 @@ export default class Keyboard {
             Tree.selectNode(State.selectedId);
         }, 'keydown');
 
-        Mousetrap.bind('d', () => {
+        Mousetrap.bind(['d', 'right'], () => {
             Navigate.rightNode();
             Tree.selectNode(State.selectedId);
         }, 'keydown');
 
-        Mousetrap.bind('a', () => {
+        Mousetrap.bind(['a', 'left'], () => {
             Navigate.leftNode();
             Tree.selectNode(State.selectedId);
         }, 'keydown');
