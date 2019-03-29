@@ -39,7 +39,7 @@ export default class WebviewHelper {
      * Launches the webview
      * @param path Path to the directory containing conjure output
      */
-    public static launch(path: string){
+    public static launch(path: string, conjureCommand?: string){
             const panel = vscode.window.createWebviewPanel(
                 'treeVis', // Identifies the type of the webview. Used internally
                 "Tree Visualiser", // Title of the panel displayed to the user
@@ -48,6 +48,7 @@ export default class WebviewHelper {
             );
 
             panel.webview.html = WebviewHelper.getWebContent();
+
 
             // Relay messages between the webview and the server.
             panel.webview.onDidReceiveMessage(message => {
@@ -65,7 +66,8 @@ export default class WebviewHelper {
                             }
 
                             else {
-                                panel.webview.postMessage({ command: "init", data: res.body });
+                                res.body["config"] = conjureCommand;
+                                panel.webview.postMessage({ command: "init", data: res.body});
                             }
                         });
                         break;

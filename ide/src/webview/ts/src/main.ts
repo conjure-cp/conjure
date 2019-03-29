@@ -7,6 +7,8 @@ import Buttons from './controls/Buttons';
  * Main entry point for the webview
  */
 
+$("#wantSVG").prop("checked",true);
+
 Listener.bindListener();
 Globals.initialize(Globals.vscode);
 Keyboard.bindKeys();

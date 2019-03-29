@@ -27,13 +27,13 @@ export default class Panel {
         theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
         // theme: 'white filled',
         headerTitle: 'my panel #1',
-        position: 'right-top 0 58',
+        position: '500 0 0 0',
         contentSize: {
             width: () => {
                 return $(document).width()! / 2.5;
             },
             height: () => {
-                return $(document).height()! * 0.9;
+                return $(document).height()! * 0.6;
             }
         },
         content: `

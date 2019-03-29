@@ -111,16 +111,6 @@
     <form id="form" class="needs-validation" novalidate>
         <div class="form-row">
             <div class="col-3">
-                <text class="form-check-text">Solutions found:</text>
-                <text id="solutions" class="form-check-text"> </text>
-            </div>
-            <div class="col-3">
-                <text class="form-check-text">Total nodes loaded:</text>
-                <text id="total" class="form-check-text"> </text>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="col-3">
                 <input id="check" type="checkbox" class="form-check-input mousetrap" checked="true">
                 <text class="form-check-text" for="check">Pretty domains</text>
             </div>
@@ -138,6 +128,19 @@
             </div>
         </div>
         <div class="form-row">
+            <div class="col-3">
+                <text class="form-check-text">Solutions found:</text>
+                <text id="solutions" class="form-check-text"> </text>
+            </div>
+            <div class="col-3">
+                <text class="form-check-text">Total nodes loaded:</text>
+                <text id="total" class="form-check-text"> </text>
+            </div>
+            <div class="col-2">
+                <button type="button" id="legend" >Show legend</button>
+            </div>
+        </div>
+        <div class="form-row">
             <div class="col-2">
                 <button type="button" id="saveImg" >Save Image</button>
             </div>
@@ -147,9 +150,9 @@
             <div class="col-2">
                 <input type="radio" name="type" value="png" id="wantPNG"> <text>PNG</text>
             </div>
-            <div class="col-2">
-                <button type="button" id="legend" >Show legend</button>
-            </div>
+        </div>
+        <div class="form-row">
+            <text id="configuration">(C)</text>
         </div>
     </form>
 

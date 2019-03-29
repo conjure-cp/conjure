@@ -84,7 +84,7 @@ export function showLegend() {
         .attr("r", (d: any) => d.r)
         .attr("cx", (d: any) => d.x)
         .attr("cy", (d: any) => d.y)
-        .style("stroke", (d:any) => {if (d.kind == "selected") return "coral"});
+        .style("stroke", (d:any) => {if (d.kind === "selected") return "coral"});
 
     nodeEnter.append("text")
         .attr("y", (d: any) => d.y)

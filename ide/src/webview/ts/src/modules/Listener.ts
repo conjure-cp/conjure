@@ -25,6 +25,9 @@ export default class Listener {
      * @param data the init response
      */
     public static initHandler(data: any) {
+
+        $("#configuration").text(data.config)
+
         // Loads the tree list at the root.
         Globals.lv.update(data.prettyAtRoot);
         // Stores the simple domains at the root

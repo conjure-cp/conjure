@@ -219,13 +219,19 @@ export default class ConjureHelper {
 
         // Parse any arguments in the config file if there is one
 
-        this.parseArgs(dir, conjureOutName, args, wantVisualisation);
+        let parsedArgs = this.parseArgs(dir, conjureOutName, wantVisualisation);
 
         vscode.window.showInformationMessage('Solving..');
 
         // Call conjure
 
-        exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+        let commandString = 'conjure ' + args.join(' ') + ' ' + parsedArgs.join(' ');
+
+        
+        // console.log(parsedArgs.join(" "));
+        // console.log(commandString)
+
+        exec(commandString, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
             // Show error message if conjure threw an error
 
@@ -237,7 +243,7 @@ export default class ConjureHelper {
             // If the caller wants the visualisation then launch it
 
             if (wantVisualisation) {
-                WebviewHelper.launch(path.join(dir, conjureOutName));
+                WebviewHelper.launch(path.join(dir, conjureOutName), parsedArgs.join(" "));
             }
 
             else {
@@ -277,7 +283,9 @@ export default class ConjureHelper {
      * @param args  The list of command line arguments to append to.
      * @param wantVisualisation Does the caller want us to parse the normal solve args or the ones for the vis..
      */
-    private static parseArgs(dir: string, conjureOutName: string, args: string[], wantVisualisation: boolean) {
+    private static parseArgs(dir: string, conjureOutName: string, wantVisualisation: boolean): string[] {
+
+        let args: string[] = [];
 
         let files = fs.readdirSync(dir);
         let configFiles = files.filter(el => /config.json$/.test(el));
@@ -289,14 +297,14 @@ export default class ConjureHelper {
 
             args.push(this.parseSavileRowArgs({}));
             args.push(this.parseMinionArgs(conjureOutName, {}, wantVisualisation));
-            return;
+            return args;
         }
 
         // Abort if multiple config files are found.
 
         if (configFiles.length > 1) {
             vscode.window.showErrorMessage("More than one config file was found, aborting.");
-            return;
+            return args;
         }
 
         // Contents of the file
@@ -313,7 +321,7 @@ export default class ConjureHelper {
         catch (e) {
             vscode.window.showErrorMessage("Something went wrong parsing the config file, is it valid json?");
             vscode.window.showErrorMessage(e);
-            return;
+            return args;
         }
 
         // Choose the correct object depending on the command
@@ -346,6 +354,8 @@ export default class ConjureHelper {
         args.push(this.parseSavileRowArgs(savileRowArgs));
         args.push(this.parseMinionArgs(conjureOutName, minionArgs, wantVisualisation));
 
+        return args;
+
     }
 
     /**
@@ -359,7 +369,14 @@ export default class ConjureHelper {
         
         let defaultSavileRowArgs: any = {};
         let mandatorySavileRowArgs: string[] = [];
-        return "--savilerow-options \"" + this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs) + "\"";
+
+        let savileRowArgs = this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs) 
+
+        if (savileRowArgs === ""){
+            return;
+        }
+
+        return "--savilerow-options \"" + savileRowArgs + "\"";
     }
 
     /**
