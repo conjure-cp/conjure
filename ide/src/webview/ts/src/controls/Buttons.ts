@@ -1,4 +1,5 @@
 import * as img from "../util/exportImage";
+import * as legend from "../modules/Legend";
 import Globals from '../modules/Globals';
 import Tree from '../modules/Tree';
 import State from '../modules/State';
@@ -68,6 +69,9 @@ export default class Buttons {
      * Binds buttons to their handlers
      */
     public static bindButtons() {
+
+        d3.select("#legend")
+            .on("click", legend.showLegend);
 
         d3.select("#saveImg")
             .on("click", img.writeImage);
