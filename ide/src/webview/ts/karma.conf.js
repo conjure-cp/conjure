@@ -4,8 +4,8 @@
 module.exports = function (config) {
 
     config.set({
-      // singleRun: true,
-      autoWatch: true,
+      singleRun: true,
+      // autoWatch: true,
 
 
       frameworks: ["jasmine", "karma-typescript"],

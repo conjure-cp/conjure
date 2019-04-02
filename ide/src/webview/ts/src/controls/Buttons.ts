@@ -1,4 +1,4 @@
-import * as img from "../util/exportImage";
+import Img from "../util/exportImage";
 import * as legend from "../modules/Legend";
 import Globals from '../modules/Globals';
 import Tree from '../modules/Tree';
@@ -74,7 +74,7 @@ export default class Buttons {
             .on("click", legend.showLegend);
 
         d3.select("#saveImg")
-            .on("click", img.writeImage);
+            .on("click", Img.writeImage);
 
         d3.select("#freeze")
             .on("change", () => {

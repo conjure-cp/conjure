@@ -1,0 +1,1 @@
+(cd src/webview/ts && npm test )
