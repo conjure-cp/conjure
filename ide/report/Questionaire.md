@@ -24,7 +24,7 @@ First open the problem in visual studio code.
 
 Open up the the model (.essence) file by selecting it from the file explorer in the left side panel. 
 
-Try Running the "Model essence" command on the model. 
+Try Running the "Model" command on the model. 
 
 The generated eprime file should automatically open in a new tab.
 
@@ -33,9 +33,9 @@ The generated eprime file should automatically open in a new tab.
 
 As you may have noticed, the model requires a parameter before it can be executed.
 
-Choose one from the 16, 20 and 24.param files.
+Choose one from the 16 and 20.param files.
 
-Try running the "Solve essence" command on the parameter. 
+Try running the "Solve" command on the parameter. 
 
 * In the bottom right corner of the screen you should see the "solving" message appear. 
 * In the case that no solution was found you should see a message confirming this. 

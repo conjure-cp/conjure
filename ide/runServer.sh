@@ -1,0 +1,1 @@
+(cd src/nim && nimble c -r src/server)

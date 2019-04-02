@@ -24,8 +24,8 @@ export default class Panel {
 
     // The panel to house the data on domains.
     public panel = jsPanel.create({
-        theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
-        // theme: 'white filled',
+        // theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
+        theme: 'black filled',
         headerTitle: 'my panel #1',
         position: '500 0 0 0',
         contentSize: {
@@ -298,11 +298,18 @@ export default class Panel {
                 if (this.id2Node[element.name].children) {
                     let setNode = this.id2Node[element.name].children;
                     // Update the cardinality
-                    setNode[1].children[0].name = element.Cardinality;
+                    if (setNode[1].children){
+                        setNode[1].children[0].name = element.Cardinality;
+                    }
                     // Update the included and Not excluded
                     if (element.Included) {
-                        setNode[2].children[0].name = element["Not excluded"];
-                        setNode[3].children[0].name = element.Included;
+                        if (setNode[2].children){
+                            setNode[2].children[0].name = element["Not excluded"];
+                        }
+
+                        if (setNode[3].children){
+                            setNode[3].children[0].name = element.Included;
+                        }
                     }
                     // Append child sets
                     if (element.Children && !setNode[2].children) {

@@ -6,15 +6,11 @@ import util/jsonify
 
 suite "setToJson":
     let validPath = testDataPath & "/sets/recursive/flagsFlagsFlags"
-    echo validPath
     let db = findFiles(validPath)
 
     test "1":
         let prettyDomains = getPrettyDomainsOfNode(db, "10")
-        
-        echo prettyDomains[1]
         let json = setToJson(Set(prettyDomains[1]), "10", true)
-        echo json
 
     test "getCollapsedSetChildren":
         let prettyDomains = getPrettyDomainsOfNode(db, "15")
@@ -64,15 +60,6 @@ suite "setToJson":
             "name": "Domain Variables",
             "children": [
               {
-                "name": "y",
-                "children": [
-                  {
-                    "name": "int(1)",
-                    "children": []
-                  }
-                ]
-              },
-              {
                 "name": "s",
                 "children": [
                   {
@@ -100,7 +87,7 @@ suite "setToJson":
                 ]
               },
               {
-                "name": "z",
+                "name": "x",
                 "children": [
                   {
                     "name": "int(1)",
@@ -109,7 +96,16 @@ suite "setToJson":
                 ]
               },
               {
-                "name": "x",
+                "name": "y",
+                "children": [
+                  {
+                    "name": "int(1)",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "z",
                 "children": [
                   {
                     "name": "int(1)",

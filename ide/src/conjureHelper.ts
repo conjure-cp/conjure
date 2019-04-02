@@ -227,9 +227,6 @@ export default class ConjureHelper {
 
         let commandString = 'conjure ' + args.join(' ') + ' ' + parsedArgs.join(' ');
 
-        
-        // console.log(parsedArgs.join(" "));
-        // console.log(commandString)
 
         exec(commandString, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
@@ -286,6 +283,8 @@ export default class ConjureHelper {
     private static parseArgs(dir: string, conjureOutName: string, wantVisualisation: boolean): string[] {
 
         let args: string[] = [];
+
+
 
         let files = fs.readdirSync(dir);
         let configFiles = files.filter(el => /config.json$/.test(el));
@@ -373,7 +372,7 @@ export default class ConjureHelper {
         let savileRowArgs = this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs) 
 
         if (savileRowArgs === ""){
-            return;
+            return "";
         }
 
         return "--savilerow-options \"" + savileRowArgs + "\"";
@@ -387,6 +386,8 @@ export default class ConjureHelper {
     private static parseMinionArgs(conjureOutName: string, userArgs: any, wantVisualisation: boolean) {
 
         // Default node limit to make sure we dont let minion go on searching for too long.
+
+
         
         let defaultMinionArgs: any = { "nodelimit": 1000 };
         let mandatoryMinionArgs = [];

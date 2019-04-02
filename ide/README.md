@@ -8,8 +8,6 @@ git checkout dumptreesql
 cd build
 mkdir build
 ../configure.py
-(sed '$s/$/ -l sqlite3/' Makefile)  >  temp
-mv temp Makefile
 make
 ```
 Now add ./minion to your path.
