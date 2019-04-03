@@ -199,6 +199,7 @@ mainWithArgs ModelStrengthening{..} =
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
     let executables = [ ( "minion"          , "minion" )
+                      , ( "sns"             , "minion" )
                       , ( "gecode"          , "fzn-gecode" )
                       , ( "chuffed"         , "fzn-chuffed" )
                       , ( "glucose"         , "glucose-syrup" )
@@ -492,6 +493,7 @@ srMkArgs Solve{..} outBase modelPath =
     ) ++
     ( case solver of
         "minion"            -> [ "-minion" ]
+        "sns"               -> [ "-sns" ]
         "gecode"            -> [ "-gecode" ]
         "chuffed"           -> [ "-chuffed"]
         "glucose"           -> [ "-sat"
