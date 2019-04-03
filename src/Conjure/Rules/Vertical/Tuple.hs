@@ -89,6 +89,21 @@ rule_Tuple_TildeLeq = "tuple-TildeLeq" `namedRule` theRule where
             )
 
 
+rule_Tuple_DotLt :: Rule
+rule_Tuple_DotLt = "tuple-DotLt" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opDotLt p
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        return
+            ( "Horizontal rule for tuple .<"
+            , return $ decomposeLexDotLt p xs ys
+            )
+
+
+
 decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
 decomposeLexLt p = unroll
     where

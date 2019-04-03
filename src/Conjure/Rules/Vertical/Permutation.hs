@@ -59,6 +59,7 @@ rule_Comprehension = "permutation-comprehension-tuples{AsFunction}" `namedRule` 
     theRule _ = na "rule_Comprehension"
 
 
+
 rule_Image :: Rule
 rule_Image = "permutation-image{AsFunction}" `namedRule` theRule where
   theRule [essence| image(&p, &i) |] = do

@@ -1181,7 +1181,7 @@ verticalRules =
     , Vertical.Permutation.rule_Cardinality
     , Vertical.Permutation.rule_Defined
     , Vertical.Permutation.rule_Comprehension
-    , Vertical.Permutation.rule_Permutation_DotLt
+--    , Vertical.Permutation.rule_Permutation_DotLt
 
 
     , Vertical.Tuple.rule_Tuple_Eq
@@ -1191,6 +1191,7 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
+--    , Vertical.Tuple.rule_Tuple_DotLt
 
     , Vertical.Record.rule_Record_Eq
     , Vertical.Record.rule_Record_Neq
@@ -1292,6 +1293,7 @@ horizontalRules =
     [ Horizontal.Permutation.rule_Cardinality_Literal
     , Horizontal.Permutation.rule_Equality
     , Horizontal.Permutation.rule_Comprehension
+--    , Horizontal.Permutation.rule_Image_DotLt
     , Horizontal.Permutation.rule_Compose_Image
     , Horizontal.Permutation.rule_Image_Matrix_Indexing
     , Horizontal.Permutation.rule_Image_Sequence_Literal

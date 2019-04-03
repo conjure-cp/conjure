@@ -138,6 +138,14 @@ symmetryOrdering inp =
     case inp of
         -- Constant x -> so_onConstant x
         -- AbstractLiteral x
+--        AbstractLiteral x -> do
+--          case x of
+--            AbsLitTuple xs -> do
+--              soVals <- sequence (symmetryOrdering <$> xs)
+--              return $ make opFlatten (fromList soVals)
+--            _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
+--
+
         Reference _ (Just refTo) -> do
             case refTo of
                 Alias x                        -> symmetryOrdering x
@@ -162,5 +170,5 @@ symmetryOrdering inp =
             xs <- symmetryOrdering body
             return $ make opFlatten $ Comprehension xs stmts
         -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
-        _ -> bug ("symmetryOrdering:" <++> pretty (show inp))
+        _ -> bug ("symmetryOrdering:" <++> pretty (show inp) <++> pretty (inp))
 
