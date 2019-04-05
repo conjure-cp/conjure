@@ -37,6 +37,7 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
                     (dom', decls, cons) <- pgOnDomain (Reference nm Nothing) nm dom
                     return $ decls ++ [Declaration (FindOrGiven Find nm dom'), SuchThat cons]
                 Declaration (FindOrGiven Find  _  _  ) -> return []
+                Declaration (Letting _ _)              -> return []
                 Declaration       {}                   -> return [st]
                 SearchOrder       {}                   -> return []
                 SearchHeuristic   {}                   -> return []
