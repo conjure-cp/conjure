@@ -72,38 +72,6 @@ rule_Record_Leq = "record-Leq" `namedRule` theRule where
             )
 
 
-rule_Record_DotLt :: Rule
-rule_Record_DotLt = "record-DotLt" `namedRule` theRule where
-    theRule p = do
-        (x,y)              <- match opDotLt p
-        TypeRecord xFields <- typeOf x
-        TypeRecord yFields <- typeOf y
-        xs                 <- downX1 x
-        ys                 <- sortByFields xFields yFields <$> downX1 y
-        let xsTuple = tupleLitIfNeeded xs
-        let ysTuple = tupleLitIfNeeded ys
-        return
-            ( "Horizontal rule for record .<"
-            , return [essence| &xsTuple .< &ysTuple |]
-            )
-
-
-rule_Record_DotLeq :: Rule
-rule_Record_DotLeq = "record-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (x,y)              <- match opDotLeq p
-        TypeRecord xFields <- typeOf x
-        TypeRecord yFields <- typeOf y
-        xs                 <- downX1 x
-        ys                 <- sortByFields xFields yFields <$> downX1 y
-        let xsTuple = tupleLitIfNeeded xs
-        let ysTuple = tupleLitIfNeeded ys
-        return
-            ( "Horizontal rule for record .<="
-            , return [essence| &xsTuple .<= &ysTuple |]
-            )
-
-
 rule_Record_Index :: Rule
 rule_Record_Index = "record-index" `namedRule` theRule where
     theRule p = do

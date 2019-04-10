@@ -41,6 +41,8 @@
       --responses=ITEM                        A comma separated list of integers.
                                               If provided, these will be used as the answers during interactive model
                                               generation instead of prompting the user.
+      --estimate-number-of-models             Calculate (a lower bound on) the number of models, instead of running
+                                              the usual modelling mode.
    -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
                                               first), i (for interactive), r (for random), x (for all). Prepend a (for
                                               auto) to automatically skip when there is only one option at any point.
@@ -321,6 +323,11 @@
                                                   json  : use to avoid parsing
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
+ Integer bounds:
+      --MININT=INT                            The minimum integer value for the parameter values.
+                                              Default: 0
+      --MAXINT=INT                            The maximum integer value for the parameter values.
+                                              Default: 100
  General:
       --limit-time=INT                        Limit in seconds of real time.
  

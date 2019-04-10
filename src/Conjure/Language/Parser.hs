@@ -828,7 +828,7 @@ parseReference = Reference <$> parseName <*> pure Nothing
 
 parseQuantifiedExpr :: Parser Expression
 parseQuantifiedExpr = do
-    Name qnName <- parseName
+    qnName      <- parseQuantifiedName
     qnPats      <- commaSeparated parseAbstractPattern
     qnOver      <- msum [ Left  <$> (colon *> parseDomain)
                         , Right <$> do
@@ -852,6 +852,17 @@ parseQuantifiedExpr = do
            $ Comprehension qnBody
            $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
              [ Condition g           | Just g <- [qnGuard] ]
+
+
+parseQuantifiedName :: Parser Text
+parseQuantifiedName = do
+    Name n <- parseName
+    let quans = ["forAll", "exists", "sum"]
+    if n `elem` quans
+        then return n
+        else fail $ vcat [ "Unrecognised quantifier:" <+> pretty n
+                         , "Expected one of:" <+> prettyList id "," quans
+                         ]
 
 
 parseAbstractPattern :: Parser AbstractPattern

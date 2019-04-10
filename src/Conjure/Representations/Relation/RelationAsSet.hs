@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ViewPatterns #-}
 
@@ -6,10 +7,7 @@ module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Constant
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
@@ -20,7 +18,7 @@ relationAsSet
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
     -> Representation m
-relationAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up
+relationAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -136,3 +134,9 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner innerDomain

@@ -106,6 +106,7 @@ data Config = Config
     , lineWidth                  :: Int
     , responses                  :: Maybe [Int]
     , generateStreamliners       :: Maybe [Int]
+    , estimateNumberOfModels     :: Bool
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -135,6 +136,7 @@ instance Default Config where
         , lineWidth                  = 120
         , responses                  = Nothing
         , generateStreamliners       = Nothing
+        , estimateNumberOfModels     = False
         }
 
 data RuleResult m = RuleResult

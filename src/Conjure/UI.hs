@@ -23,6 +23,9 @@ data UI
         , numberingStart             :: Int
         , smartFilenames             :: Bool
         , responses                  :: String
+        , estimateNumberOfModels     :: Bool                -- if set Conjure will calculate
+                                                            -- a lower bound on the number of models,
+                                                            -- instead of running the usual modelling mode
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -168,6 +171,8 @@ data UI
     | ParameterGenerator
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
+        , minInt                     :: Integer
+        , maxInt                     :: Integer
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
@@ -189,7 +194,12 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    deriving (Eq, Ord, Show, Data, Typeable)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize UI
+instance Hashable  UI
+instance ToJSON    UI where toJSON = genericToJSON jsonOptions
+instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
 data OutputFormat = Plain | Binary | JSON
@@ -243,6 +253,13 @@ ui = modes
             &= help "A comma separated list of integers.\n\
                     \If provided, these will be used as the answers during \
                     \interactive model generation instead of prompting the user."
+        , estimateNumberOfModels
+            = False
+            &= name "estimate-number-of-models"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Calculate (a lower bound on) the number of models, \
+                    \instead of running the usual modelling mode."
         , logLevel
             = def
             &= name "log-level"
@@ -1093,6 +1110,20 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Output file path."
+        , minInt
+            = 0
+            &= typ "INT"
+            &= name "MININT"
+            &= groupname "Integer bounds"
+            &= explicit
+            &= help "The minimum integer value for the parameter values.\nDefault: 0"
+        , maxInt
+            = 100
+            &= typ "INT"
+            &= name "MAXINT"
+            &= groupname "Integer bounds"
+            &= explicit
+            &= help "The maximum integer value for the parameter values.\nDefault: 100"
         , logLevel
             = def
             &= name "log-level"

@@ -13,7 +13,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 functionND :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
-functionND = Representation chck downD structuralCons downC up
+functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -149,7 +149,7 @@ functionND = Representation chck downD structuralCons downC up
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , value@(ConstantAbstract (AbsLitFunction vals))
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             let
@@ -171,8 +171,21 @@ functionND = Representation chck downD structuralCons downC up
                 unrollC [i] prevIndices = do
                     domVals <- domainValues i
                     let active val = check $ prevIndices ++ [val]
+
+                    missing <- concatForM domVals $ \ val ->
+                        case active val of
+                            Nothing -> return [ConstantAbstract $ AbsLitTuple $ prevIndices ++ [val]]
+                            Just {} -> return []
+
+                    unless (null missing) $
+                        fail $ vcat [ "Some points are undefined on a total function:" <++> prettyList id "," missing
+                                    , "    Function:" <+> pretty name
+                                    , "    Domain:" <++> pretty domain
+                                    , "    Value :" <++> pretty value
+                                    ]
+
                     return $ ConstantAbstract $ AbsLitMatrix i
-                                [ fromMaybe (bug "FunctionND downC") (active val)
+                                [ fromMaybe (bug $ "FunctionND downC" <+> pretty val) (active val)
                                 | val <- domVals ]
                 unrollC (i:is) prevIndices = do
                     domVals <- domainValues i
@@ -231,6 +244,28 @@ functionND = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionND"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            
+            -- setting up the quantification
+            let kRange = case innerDomainFr of
+                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                    DomainRecord rs -> map (fromName . fst) rs
+                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                    , "indexDomain:" <+> pretty innerDomainFr
+                                    ]
+                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
+                valuesIndexed = make opMatrixIndexing values toIndex
+
+            soValues <- innerSO downX1 valuesIndexed innerDomainTo
+
+            return $ make opFlatten $
+                Comprehension soValues
+                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
 
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
