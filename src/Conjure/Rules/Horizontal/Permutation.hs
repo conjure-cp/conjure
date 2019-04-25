@@ -21,7 +21,7 @@ rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule
 rule_Image_DotLt :: Rule
 rule_Image_DotLt = "permutation-image-dotlt{AsFunction}" `namedRule` theRule where
   theRule [essence| image(&p, &i) .< &q |] = do
-    TypePermutation inner <- typeOf p  
+    TypePermutation _ <- typeOf p  
     return ( "Horizontal rule for image of permutation DotLt" 
            , do
              (piPat, pi) <- quantifiedVar
@@ -181,14 +181,13 @@ rule_Image_Sequence_Literal :: Rule
 rule_Image_Sequence_Literal = "image-permutation-sequence-literal" `namedRule` theRule where
     theRule expr = do
         (perm,seq) <- match opImage expr
-        (TypeSequence t, elems) <- match sequenceLiteral seq
-        (TypePermutation inn) <- typeOf perm
+        (TypeSequence _, elems) <- match sequenceLiteral seq
+        (TypePermutation _) <- typeOf perm
         let outLiteral = AbstractLiteral $ AbsLitSequence [ [essence| image(&perm,&e) |] | e <- elems ]
         return
             ( "Comprehension on permutation image of sequence literals"
             , return [essence| &outLiteral |] 
             )
-    theRule _ = na "rule_Image_Sequence_Literal"
 
 
 
@@ -289,11 +288,19 @@ rule_Image_Incomprehendable = "comprehendable-image" `namedRule` theRule where
                tupleExpression = AbstractLiteral $ AbsLitTuple
                                $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
            return
-               ( "Horizontal rule for image of incomprehendable under permutation"
+               ( "Horizontal rule for image of tuple under permutation"
                , return tupleExpression 
                )
-         (TypeRecord _) ->
-           bug "rule_Image_Incomprehendable not implemented for Record"
+         (TypeRecord namet) -> do
+           let names = fst <$> namet
+               recordIndexImage indx = let indexexpr = patternToExpr $ Single indx
+                                       in (indx, [essence| image(&p, &i[&indexexpr]) |])
+               recordExpression = AbstractLiteral $ AbsLitRecord
+                                $ (recordIndexImage <$> names)
+           return
+               ( "Horizontal rule for image of record under permutation"
+               , return recordExpression
+               ) 
          (TypeVariant _) ->
            bug "rule_Image_Incomprehendable not implemented for Variant" 
          _ -> bug "rule_Image_Incomprehendable this is a bug"
