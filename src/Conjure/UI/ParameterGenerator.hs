@@ -103,6 +103,16 @@ pgOnDomain x nm dom =
                 (concatMap snd3 inners)
                 (concatMap thd3 inners)
 
+        DomainMatrix indexDomain innerDomain -> do
+            (iPat, i) <- quantifiedVar
+            let liftCons c = [essence| forAll &iPat : &indexDomain . &c |]
+            let ref = [essence| &x[&i] |]
+            (innerDomain', declInner, consInner) <- pgOnDomain ref (nm `mappend` "_inner") innerDomain
+            return3
+                (DomainMatrix indexDomain innerDomain')
+                declInner
+                (map liftCons consInner)
+
         DomainSet r attr innerDomain -> do
 
             let nmCardMiddle = nm `mappend` "_cardMiddle"
@@ -413,6 +423,7 @@ lowerBoundOfIntExpr x@Constant{} = return x
 lowerBoundOfIntExpr x | x == minInt = return minInt
 lowerBoundOfIntExpr x | x == maxInt = return maxInt
 lowerBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = minOfIntDomain dom
+lowerBoundOfIntExpr (Reference _ (Just (Alias x))) = lowerBoundOfIntExpr x
 lowerBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
 
 
@@ -436,4 +447,5 @@ upperBoundOfIntExpr x@Constant{} = return x
 upperBoundOfIntExpr x | x == minInt = return minInt
 upperBoundOfIntExpr x | x == maxInt = return maxInt
 upperBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = maxOfIntDomain dom
+upperBoundOfIntExpr (Reference _ (Just (Alias x))) = upperBoundOfIntExpr x
 upperBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
