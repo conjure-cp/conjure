@@ -1,10 +1,10 @@
-$ conjure parameter-generator function.essence --essence-out function-gen.essence
-Generating models for function-gen.essence
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence
+Generating models for problem-gen.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
 Savile Row: model000001.eprime test.param
-Copying solution to: function-gen-test.solution
-File: function-gen.essence
+Copying solution to: problem-gen-test.solution
+File: problem-gen.essence
 language Essence 1.3
 
 given a_middle: int(1..10)
@@ -73,7 +73,7 @@ such that g != h
 --------------------
 
 
-File: function-gen.essence.irace
+File: problem-gen.essence.irace
 a_middle "-a_middle " i (1, 10)
 a_delta "-a_delta " i (0, 4)
 b_middle "-b_middle " i (1, 10)
@@ -95,7 +95,7 @@ h_2_delta "-h_2_delta " i (0, 49)
 --------------------
 
 
-File: function-gen-test.solution
+File: problem-gen-test.solution
 language Essence 1.3
 
 letting a be 4
@@ -109,13 +109,13 @@ letting s be 3
 --------------------
 
 
-$ conjure parameter-generator function.essence --essence-out function-gen.essence --MININT -10 --MAXINT 50
-Generating models for function-gen.essence
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
+Generating models for problem-gen.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
 Savile Row: model000001.eprime test.param
-Copying solution to: function-gen-test.solution
-File: function-gen.essence
+Copying solution to: problem-gen-test.solution
+File: problem-gen.essence
 language Essence 1.3
 
 given a_middle: int(1..10)
@@ -184,7 +184,7 @@ such that g != h
 --------------------
 
 
-File: function-gen.essence.irace
+File: problem-gen.essence.irace
 a_middle "-a_middle " i (1, 10)
 a_delta "-a_delta " i (0, 4)
 b_middle "-b_middle " i (1, 10)
@@ -206,7 +206,7 @@ h_2_delta "-h_2_delta " i (0, 24)
 --------------------
 
 
-File: function-gen-test.solution
+File: problem-gen-test.solution
 language Essence 1.3
 
 letting a be 4

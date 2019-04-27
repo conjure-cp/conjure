@@ -1,7 +1,7 @@
 
-echo "$ conjure parameter-generator int.essence --essence-out int-gen.essence"
-conjure parameter-generator int.essence --essence-out int-gen.essence
-for file in int-gen.*; do
+echo "$ conjure parameter-generator problem.essence --essence-out problem-gen.essence"
+conjure parameter-generator problem.essence --essence-out problem-gen.essence
+for file in problem-gen.*; do
     echo "File: $file"
     cat $file
     echo ""
@@ -10,9 +10,9 @@ for file in int-gen.*; do
     echo ""
 done
 
-echo "$ conjure parameter-generator int.essence --essence-out int-gen.essence --MININT -10 --MAXINT 50"
-conjure parameter-generator int.essence --essence-out int-gen.essence --MININT -10 --MAXINT 50
-for file in int-gen.*; do
+echo "$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50"
+conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
+for file in problem-gen.*; do
     echo "File: $file"
     cat $file
     echo ""
@@ -21,4 +21,4 @@ for file in int-gen.*; do
     echo ""
 done
 
-rm -f int-gen.*
+rm -f problem-gen.*
