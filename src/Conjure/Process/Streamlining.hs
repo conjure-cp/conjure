@@ -55,7 +55,7 @@ streamlining model = do
                 let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
                 streamliners <- streamlinersForSingleVariable ref
                 -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
-                --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
+                --                      , vcat [ nest 4 (vcat (pretty x : map pretty gs)) | (x,gs) <- streamliners ]
                 --                      ]
                 return [ (nm, s) | s <- streamliners ]
             _ -> noStreamliner
@@ -91,11 +91,16 @@ streamlinersForSingleVariable ::
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
-streamlinersForSingleVariable x = concatMapM ($ x)
+streamlinersForSingleVariable x = trace (show ("streamlinersForSingleVariable" <+> pretty x)) $ concatMapM ($ x)
     [ intOdd
     , intEven
     , intLowerHalf
     , intUpperHalf
+
+    , onTuple 1 streamlinersForSingleVariable
+    , onTuple 2 streamlinersForSingleVariable
+    , onTuple 3 streamlinersForSingleVariable
+    , onTuple 4 streamlinersForSingleVariable
 
     , matrixAll streamlinersForSingleVariable
     , matrixHalf streamlinersForSingleVariable
@@ -553,6 +558,32 @@ associative x = do
                             &x((&x(&i,&j), &j)) = &x((&i, &x(&i, &j)))
                     |]
                 else noStreamliner
+        _ -> noStreamliner
+
+
+
+onTuple ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer -> StreamlinerGen m -> StreamlinerGen m
+onTuple n innerStreamliner x = do
+    dom <- domainOf x
+    case dom of
+        DomainTuple ds | n >= 1 && n <= genericLength ds -> do
+            nm <- nextName "q"
+            let ref = Reference nm (Just (DeclNoRepr Find nm (ds `genericIndex` (n-1)) NoRegion))
+            innerConstraints <- innerStreamliner ref
+
+            let
+                nE = fromInt n
+                replaceRef (Reference nm2 _) | nm2 == nm = [essence| &x[&nE] |]
+                replaceRef p = p
+
+            return [ (transform replaceRef cons, grps)
+                   | (cons, grps) <- innerConstraints
+                   ]
+
         _ -> noStreamliner
 
 
