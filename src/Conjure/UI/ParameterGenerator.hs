@@ -5,7 +5,7 @@ module Conjure.UI.ParameterGenerator where
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.NameResolution ( resolveNames )
-import Conjure.Language.Instantiate ( instantiateDomain )
+import Conjure.Language.Instantiate ( trySimplify )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 -- import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 
@@ -47,17 +47,9 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
             return m { mStatements = concat outStatements }
 
         evaluateBounds m = do
-            let eval = instantiateDomain [("MININT", fromInt minIntValue), ("MAXINT", fromInt maxIntValue)]
-            stmtsEvaluated <- forM (mStatements m) $ \ case
-                Declaration (FindOrGiven forg nm dom) -> do
-                    -- traceM $ show $ "EVAL nm :" <+> pretty nm
-                    -- traceM $ show $ "EVAL bef:" <+> pretty dom
-                    dom' <- eval dom
-                    -- traceM $ show $ "EVAL aft:" <+> pretty dom'
-                    -- traceM $ show $ "EVAL aft:" <+> pretty (show dom')
-                    -- traceM ""
-                    return $ Declaration (FindOrGiven forg nm (fmap Constant dom'))
-                st -> return st
+            let symbols = [("MININT", fromInt minIntValue), ("MAXINT", fromInt maxIntValue)]
+            let eval = transformBiM (trySimplify symbols)
+            stmtsEvaluated <- mapM eval (mStatements m)
             return m { mStatements = stmtsEvaluated }
 
 

@@ -792,7 +792,7 @@ updateDeclarations model = do
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
                 Right outs -> forM outs $ \ (n, d) -> do
-                    d' <- transformBiM trySimplify $ forgetRepr d
+                    d' <- transformBiM (trySimplify []) $ forgetRepr d
                     return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
