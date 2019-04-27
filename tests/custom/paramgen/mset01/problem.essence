@@ -1,0 +1,6 @@
+given a,b,c,s,t : int(1..10)
+given f : mset (maxOccur t) of int(a..b)
+given g : mset (size s) of int(a..b)
+given h : mset (minSize s) of int(a..c)
+where g != h
+where f = g intersect h

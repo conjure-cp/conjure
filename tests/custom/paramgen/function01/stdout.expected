@@ -58,7 +58,7 @@ given h_1_middle: int(1..10)
 given h_1_delta: int(0..4)
 given h_2_middle: int(1..100)
 given h_2_delta: int(0..49)
-find h: function (minSize 1, injective) int(1..10) --> int(1..100)
+find h: function (minSize 1, maxSize 100, injective) int(1..10) --> int(1..100)
 such that
     |h| >= s,
     and([q3[1] >= h_1_middle - h_1_delta | q3 <- h]),
@@ -169,7 +169,7 @@ given h_1_middle: int(1..10)
 given h_1_delta: int(0..4)
 given h_2_middle: int(1..50)
 given h_2_delta: int(0..24)
-find h: function (minSize 1, injective) int(1..10) --> int(1..50)
+find h: function (minSize 1, maxSize 50, injective) int(1..10) --> int(1..50)
 such that
     |h| >= s,
     and([q3[1] >= h_1_middle - h_1_delta | q3 <- h]),

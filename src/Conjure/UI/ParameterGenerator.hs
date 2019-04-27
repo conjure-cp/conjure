@@ -65,6 +65,7 @@ pgOnDomain ::
       )
 pgOnDomain x nm dom =
     case dom of
+
         DomainInt t _ -> do
             lbX <- minOfIntDomain dom
             ubX <- maxOfIntDomain dom
@@ -88,12 +89,12 @@ pgOnDomain x nm dom =
                   [ [essence| &x <= &ubX |]
                   | ub /= ubX
                   ]
+
         DomainSet r attr innerDomain -> do
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
             (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
 
-            -- drop total, post constraint instead
             (attrOut, sizeLb, sizeUb) <-
                     case attr of
                         SetAttr size -> do
@@ -107,7 +108,7 @@ pgOnDomain x nm dom =
                                         return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return (SizeAttr_MinSize lb, Just a, Nothing)
+                                        return (SizeAttr_MinMaxSize lb maxInt, Just a, Nothing)
                                     SizeAttr_MaxSize a -> do
                                         ub <- upperBoundOfIntExpr a
                                         return (SizeAttr_MaxSize ub, Nothing, Just a)
@@ -132,6 +133,76 @@ pgOnDomain x nm dom =
 
             return3
                 (DomainSet r attrOut domInner)
+                (newDecl ++ declInner)
+                (newCons ++ map liftCons consInner)
+
+        DomainMSet r attr innerDomain -> do
+            (iPat, i) <- quantifiedVar
+            let liftCons c = [essence| forAll &iPat in &x . &c |]
+            (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
+
+            (attrOut, sizeLb, sizeUb, occurLb, occurUb) <-
+                    case attr of
+                        MSetAttr sizeAttr occurAttr -> do
+                            (sizeAttrOut, sizeLb, sizeUb) <-
+                                case sizeAttr of
+                                    SizeAttr_None ->
+                                        return (SizeAttr_None, Nothing, Nothing)
+                                    SizeAttr_Size a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr a
+                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
+                                    SizeAttr_MinSize a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        return (SizeAttr_MinMaxSize lb maxInt, Just a, Nothing)
+                                    SizeAttr_MaxSize a -> do
+                                        ub <- upperBoundOfIntExpr a
+                                        return (SizeAttr_MaxSize ub, Nothing, Just a)
+                                    SizeAttr_MinMaxSize a b -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr b
+                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just b)
+                            (occurAttrOut, occurLb, occurUb) <-
+                                case occurAttr of
+                                    OccurAttr_None ->
+                                        return (OccurAttr_MaxOccur maxInt, Nothing, Nothing)
+                                    OccurAttr_MinOccur a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        return (OccurAttr_MinMaxOccur lb maxInt, Just a, Nothing)
+                                    OccurAttr_MaxOccur a -> do
+                                        ub <- upperBoundOfIntExpr a
+                                        return (OccurAttr_MaxOccur ub, Nothing, Just a)
+                                    OccurAttr_MinMaxOccur a b -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr b
+                                        return (OccurAttr_MinMaxOccur lb ub, Just a, Just b)
+                            return (MSetAttr sizeAttrOut occurAttrOut, sizeLb, sizeUb, occurLb, occurUb)
+
+            let
+                sizeLbCons =
+                    case sizeLb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| >= &bound |]
+
+                sizeUbCons =
+                    case sizeUb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| <= &bound |]
+
+                occurLbCons =
+                    case occurLb of
+                        Nothing -> return []
+                        Just bound -> return $ return $ liftCons [essence| freq(&x, &i) >= &bound |]
+
+                occurUbCons =
+                    case occurUb of
+                        Nothing -> return []
+                        Just bound -> return $ return $ liftCons [essence| freq(&x, &i) <= &bound |]
+
+            newCons <- concat <$> sequence [sizeLbCons, sizeUbCons, occurLbCons, occurUbCons]
+
+            return3
+                (DomainMSet r attrOut domInner)
                 declInner
                 (newCons ++ map liftCons consInner)
 
@@ -155,7 +226,7 @@ pgOnDomain x nm dom =
                                         return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return (SizeAttr_MinSize lb, Just a, Nothing)
+                                        return (SizeAttr_MinMaxSize lb maxInt, Just a, Nothing)
                                     SizeAttr_MaxSize a -> do
                                         ub <- upperBoundOfIntExpr a
                                         return (SizeAttr_MaxSize ub, Nothing, Just a)
@@ -203,6 +274,7 @@ pgOnDomain x nm dom =
                 (DomainFunction r attrOut domFr domTo)
                 (concat [ declFr | isPartial ] ++ declTo)
                 (newCons ++ map liftCons innerCons)
+
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
                                                       ]

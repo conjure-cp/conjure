@@ -31,17 +31,24 @@ find s: int(1..10)
 such that
     s >= s_middle - s_delta,
     s <= s_middle + s_delta
+given t_middle: int(1..10)
+given t_delta: int(0..4)
+find t: int(1..10)
+such that
+    t >= t_middle - t_delta,
+    t <= t_middle + t_delta
 given f_inner_middle: int(1..10)
 given f_inner_delta: int(0..4)
-find f: set of int(1..10)
+find f: mset (maxOccur 10) of int(1..10)
 such that
+    and([freq(f, q1) <= t | q1 <- f]),
     and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
     and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
     and([q1 >= a | q1 <- f]),
     and([q1 <= b | q1 <- f])
 given g_inner_middle: int(1..10)
 given g_inner_delta: int(0..4)
-find g: set (minSize 1, maxSize 10) of int(1..10)
+find g: mset (minSize 1, maxSize 10, maxOccur 100) of int(1..10)
 such that
     |g| >= s,
     |g| <= s,
@@ -51,7 +58,7 @@ such that
     and([q2 <= b | q2 <- g])
 given h_inner_middle: int(1..10)
 given h_inner_delta: int(0..4)
-find h: set (minSize 1, maxSize 100) of int(1..10)
+find h: mset (minSize 1, maxSize 100, maxOccur 100) of int(1..10)
 such that
     |h| >= s,
     and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
@@ -73,6 +80,8 @@ c_middle "-c_middle " i (1, 10)
 c_delta "-c_delta " i (0, 4)
 s_middle "-s_middle " i (1, 10)
 s_delta "-s_delta " i (0, 4)
+t_middle "-t_middle " i (1, 10)
+t_delta "-t_delta " i (0, 4)
 f_inner_middle "-f_inner_middle " i (1, 10)
 f_inner_delta "-f_inner_delta " i (0, 4)
 g_inner_middle "-g_inner_middle " i (1, 10)
@@ -88,10 +97,11 @@ language Essence 1.3
 letting a be 4
 letting b be 7
 letting c be 9
-letting f be {6, 7}
-letting g be {5, 6, 7}
-letting h be {4, 6, 7}
+letting f be mset()
+letting g be mset(4, 5, 6)
+letting h be mset(7, 7, 7)
 letting s be 3
+letting t be 3
 
 --------------------
 
@@ -129,17 +139,24 @@ find s: int(1..10)
 such that
     s >= s_middle - s_delta,
     s <= s_middle + s_delta
+given t_middle: int(1..10)
+given t_delta: int(0..4)
+find t: int(1..10)
+such that
+    t >= t_middle - t_delta,
+    t <= t_middle + t_delta
 given f_inner_middle: int(1..10)
 given f_inner_delta: int(0..4)
-find f: set of int(1..10)
+find f: mset (maxOccur 10) of int(1..10)
 such that
+    and([freq(f, q1) <= t | q1 <- f]),
     and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
     and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
     and([q1 >= a | q1 <- f]),
     and([q1 <= b | q1 <- f])
 given g_inner_middle: int(1..10)
 given g_inner_delta: int(0..4)
-find g: set (minSize 1, maxSize 10) of int(1..10)
+find g: mset (minSize 1, maxSize 10, maxOccur 50) of int(1..10)
 such that
     |g| >= s,
     |g| <= s,
@@ -149,7 +166,7 @@ such that
     and([q2 <= b | q2 <- g])
 given h_inner_middle: int(1..10)
 given h_inner_delta: int(0..4)
-find h: set (minSize 1, maxSize 50) of int(1..10)
+find h: mset (minSize 1, maxSize 50, maxOccur 50) of int(1..10)
 such that
     |h| >= s,
     and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
@@ -171,6 +188,8 @@ c_middle "-c_middle " i (1, 10)
 c_delta "-c_delta " i (0, 4)
 s_middle "-s_middle " i (1, 10)
 s_delta "-s_delta " i (0, 4)
+t_middle "-t_middle " i (1, 10)
+t_delta "-t_delta " i (0, 4)
 f_inner_middle "-f_inner_middle " i (1, 10)
 f_inner_delta "-f_inner_delta " i (0, 4)
 g_inner_middle "-g_inner_middle " i (1, 10)
@@ -186,10 +205,11 @@ language Essence 1.3
 letting a be 4
 letting b be 7
 letting c be 9
-letting f be {6, 7}
-letting g be {5, 6, 7}
-letting h be {4, 6, 7}
+letting f be mset()
+letting g be mset(4, 5, 6)
+letting h be mset(7, 7, 7)
 letting s be 3
+letting t be 3
 
 --------------------
 
