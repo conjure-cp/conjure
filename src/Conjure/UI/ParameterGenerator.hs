@@ -9,6 +9,9 @@ import Conjure.Language.Instantiate ( trySimplify )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 -- import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 
+-- text
+import Data.Text ( pack )
+
 
 -- | This doesn't do anything to do with correcting categories at the moment, it should.
 --   An example:
@@ -89,6 +92,16 @@ pgOnDomain x nm dom =
                   [ [essence| &x <= &ubX |]
                   | ub /= ubX
                   ]
+
+        DomainTuple ds -> do
+            inners <- forM (zip [1..] ds) $ \ (i, d) -> do
+                let iE = fromInt i
+                let ref = [essence| &x[&iE] |]
+                pgOnDomain ref (nm `mappend` (Name $ pack $ "_tuple" ++ show i)) d
+            return3
+                (DomainTuple (map fst3 inners))
+                (concatMap snd3 inners)
+                (concatMap thd3 inners)
 
         DomainSet r attr innerDomain -> do
 
