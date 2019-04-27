@@ -37,29 +37,38 @@ find t: int(1..10)
 such that
     t >= t_middle - t_delta,
     t <= t_middle + t_delta
+given f_cardMiddle: int(0..100)
+given f_cardDelta: int(0..3)
 given f_inner_middle: int(1..10)
 given f_inner_delta: int(0..4)
 find f: mset (maxOccur 10) of int(1..10)
 such that
+    |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
     and([freq(f, q1) <= t | q1 <- f]),
     and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
     and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
     and([q1 >= a | q1 <- f]),
     and([q1 <= b | q1 <- f])
+given g_cardMiddle: int(1..10)
+given g_cardDelta: int(0..3)
 given g_inner_middle: int(1..10)
 given g_inner_delta: int(0..4)
 find g: mset (minSize 1, maxSize 10, maxOccur 100) of int(1..10)
 such that
+    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
     |g| >= s,
     |g| <= s,
     and([q2 >= g_inner_middle - g_inner_delta | q2 <- g]),
     and([q2 <= g_inner_middle + g_inner_delta | q2 <- g]),
     and([q2 >= a | q2 <- g]),
     and([q2 <= b | q2 <- g])
+given h_cardMiddle: int(1..100)
+given h_cardDelta: int(0..3)
 given h_inner_middle: int(1..10)
 given h_inner_delta: int(0..4)
 find h: mset (minSize 1, maxSize 100, maxOccur 100) of int(1..10)
 such that
+    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
     |h| >= s,
     and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
     and([q3 <= h_inner_middle + h_inner_delta | q3 <- h]),
@@ -82,10 +91,16 @@ s_middle "-s_middle " i (1, 10)
 s_delta "-s_delta " i (0, 4)
 t_middle "-t_middle " i (1, 10)
 t_delta "-t_delta " i (0, 4)
+f_cardMiddle "-f_cardMiddle " i (0, 100)
+f_cardDelta "-f_cardDelta " i (0, 3)
 f_inner_middle "-f_inner_middle " i (1, 10)
 f_inner_delta "-f_inner_delta " i (0, 4)
+g_cardMiddle "-g_cardMiddle " i (1, 10)
+g_cardDelta "-g_cardDelta " i (0, 3)
 g_inner_middle "-g_inner_middle " i (1, 10)
 g_inner_delta "-g_inner_delta " i (0, 4)
+h_cardMiddle "-h_cardMiddle " i (1, 100)
+h_cardDelta "-h_cardDelta " i (0, 3)
 h_inner_middle "-h_inner_middle " i (1, 10)
 h_inner_delta "-h_inner_delta " i (0, 4)
 --------------------
@@ -145,29 +160,38 @@ find t: int(1..10)
 such that
     t >= t_middle - t_delta,
     t <= t_middle + t_delta
+given f_cardMiddle: int(-10..50)
+given f_cardDelta: int(0..3)
 given f_inner_middle: int(1..10)
 given f_inner_delta: int(0..4)
 find f: mset (maxOccur 10) of int(1..10)
 such that
+    |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
     and([freq(f, q1) <= t | q1 <- f]),
     and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
     and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
     and([q1 >= a | q1 <- f]),
     and([q1 <= b | q1 <- f])
+given g_cardMiddle: int(1..10)
+given g_cardDelta: int(0..3)
 given g_inner_middle: int(1..10)
 given g_inner_delta: int(0..4)
 find g: mset (minSize 1, maxSize 10, maxOccur 50) of int(1..10)
 such that
+    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
     |g| >= s,
     |g| <= s,
     and([q2 >= g_inner_middle - g_inner_delta | q2 <- g]),
     and([q2 <= g_inner_middle + g_inner_delta | q2 <- g]),
     and([q2 >= a | q2 <- g]),
     and([q2 <= b | q2 <- g])
+given h_cardMiddle: int(1..50)
+given h_cardDelta: int(0..3)
 given h_inner_middle: int(1..10)
 given h_inner_delta: int(0..4)
 find h: mset (minSize 1, maxSize 50, maxOccur 50) of int(1..10)
 such that
+    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
     |h| >= s,
     and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
     and([q3 <= h_inner_middle + h_inner_delta | q3 <- h]),
@@ -190,10 +214,16 @@ s_middle "-s_middle " i (1, 10)
 s_delta "-s_delta " i (0, 4)
 t_middle "-t_middle " i (1, 10)
 t_delta "-t_delta " i (0, 4)
+f_cardMiddle "-f_cardMiddle " i (-10, 50)
+f_cardDelta "-f_cardDelta " i (0, 3)
 f_inner_middle "-f_inner_middle " i (1, 10)
 f_inner_delta "-f_inner_delta " i (0, 4)
+g_cardMiddle "-g_cardMiddle " i (1, 10)
+g_cardDelta "-g_cardDelta " i (0, 3)
 g_inner_middle "-g_inner_middle " i (1, 10)
 g_inner_delta "-g_inner_delta " i (0, 4)
+h_cardMiddle "-h_cardMiddle " i (1, 50)
+h_cardDelta "-h_cardDelta " i (0, 3)
 h_inner_middle "-h_inner_middle " i (1, 10)
 h_inner_delta "-h_inner_delta " i (0, 4)
 --------------------

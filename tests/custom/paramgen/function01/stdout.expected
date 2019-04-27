@@ -31,43 +31,65 @@ find s: int(1..10)
 such that
     s >= s_middle - s_delta,
     s <= s_middle + s_delta
-given f_2_middle: int(1..100)
-given f_2_delta: int(0..49)
+given f_range_middle: int(1..100)
+given f_range_delta: int(0..49)
 find f: function (injective) int(1..10) --> int(1..100)
 such that
     and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
-    and([q1[2] >= f_2_middle - f_2_delta | q1 <- f]),
-    and([q1[2] <= f_2_middle + f_2_delta | q1 <- f]),
+    and([q1[2] >= f_range_middle - f_range_delta | q1 <- f]),
+    and([q1[2] <= f_range_middle + f_range_delta | q1 <- f]),
     and([q1[2] >= c | q1 <- f])
-given g_1_middle: int(1..10)
-given g_1_delta: int(0..4)
-given g_2_middle: int(1..100)
-given g_2_delta: int(0..49)
+given g_cardMiddle: int(1..10)
+given g_cardDelta: int(0..3)
+given g_defined_middle: int(1..10)
+given g_defined_delta: int(0..4)
+given g_range_middle: int(1..100)
+given g_range_delta: int(0..49)
 find g: function (minSize 1, maxSize 10, injective) int(1..10) --> int(1..100)
 such that
+    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
     |g| >= s,
     |g| <= s,
-    and([q2[1] >= g_1_middle - g_1_delta | q2 <- g]),
-    and([q2[1] <= g_1_middle + g_1_delta | q2 <- g]),
+    and([q2[1] >= g_defined_middle - g_defined_delta | q2 <- g]),
+    and([q2[1] <= g_defined_middle + g_defined_delta | q2 <- g]),
     and([q2[1] >= a | q2 <- g]),
     and([q2[1] <= b | q2 <- g]),
-    and([q2[2] >= g_2_middle - g_2_delta | q2 <- g]),
-    and([q2[2] <= g_2_middle + g_2_delta | q2 <- g]),
+    and([q2[2] >= g_range_middle - g_range_delta | q2 <- g]),
+    and([q2[2] <= g_range_middle + g_range_delta | q2 <- g]),
     and([q2[2] >= c | q2 <- g])
-given h_1_middle: int(1..10)
-given h_1_delta: int(0..4)
-given h_2_middle: int(1..100)
-given h_2_delta: int(0..49)
+given h_cardMiddle: int(1..100)
+given h_cardDelta: int(0..3)
+given h_defined_middle: int(1..10)
+given h_defined_delta: int(0..4)
+given h_range_middle: int(1..100)
+given h_range_delta: int(0..49)
 find h: function (minSize 1, maxSize 100, injective) int(1..10) --> int(1..100)
 such that
+    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
     |h| >= s,
-    and([q3[1] >= h_1_middle - h_1_delta | q3 <- h]),
-    and([q3[1] <= h_1_middle + h_1_delta | q3 <- h]),
+    and([q3[1] >= h_defined_middle - h_defined_delta | q3 <- h]),
+    and([q3[1] <= h_defined_middle + h_defined_delta | q3 <- h]),
     and([q3[1] >= a | q3 <- h]),
     and([q3[1] <= b | q3 <- h]),
-    and([q3[2] >= h_2_middle - h_2_delta | q3 <- h]),
-    and([q3[2] <= h_2_middle + h_2_delta | q3 <- h]),
+    and([q3[2] >= h_range_middle - h_range_delta | q3 <- h]),
+    and([q3[2] <= h_range_middle + h_range_delta | q3 <- h]),
     and([q3[2] >= c | q3 <- h])
+given k_cardMiddle: int(0..100)
+given k_cardDelta: int(0..3)
+given k_defined_middle: int(1..10)
+given k_defined_delta: int(0..4)
+given k_range_middle: int(1..100)
+given k_range_delta: int(0..49)
+find k: function int(1..10) --> int(1..100)
+such that
+    |k| >= k_cardMiddle - k_cardDelta /\ |k| <= k_cardMiddle + k_cardDelta,
+    and([q4[1] >= k_defined_middle - k_defined_delta | q4 <- k]),
+    and([q4[1] <= k_defined_middle + k_defined_delta | q4 <- k]),
+    and([q4[1] >= a | q4 <- k]),
+    and([q4[1] <= b | q4 <- k]),
+    and([q4[2] >= k_range_middle - k_range_delta | q4 <- k]),
+    and([q4[2] <= k_range_middle + k_range_delta | q4 <- k]),
+    and([q4[2] >= c | q4 <- k])
 such that g != h
 
 --------------------
@@ -82,16 +104,26 @@ c_middle "-c_middle " i (1, 10)
 c_delta "-c_delta " i (0, 4)
 s_middle "-s_middle " i (1, 10)
 s_delta "-s_delta " i (0, 4)
-f_2_middle "-f_2_middle " i (1, 100)
-f_2_delta "-f_2_delta " i (0, 49)
-g_1_middle "-g_1_middle " i (1, 10)
-g_1_delta "-g_1_delta " i (0, 4)
-g_2_middle "-g_2_middle " i (1, 100)
-g_2_delta "-g_2_delta " i (0, 49)
-h_1_middle "-h_1_middle " i (1, 10)
-h_1_delta "-h_1_delta " i (0, 4)
-h_2_middle "-h_2_middle " i (1, 100)
-h_2_delta "-h_2_delta " i (0, 49)
+f_range_middle "-f_range_middle " i (1, 100)
+f_range_delta "-f_range_delta " i (0, 49)
+g_cardMiddle "-g_cardMiddle " i (1, 10)
+g_cardDelta "-g_cardDelta " i (0, 3)
+g_defined_middle "-g_defined_middle " i (1, 10)
+g_defined_delta "-g_defined_delta " i (0, 4)
+g_range_middle "-g_range_middle " i (1, 100)
+g_range_delta "-g_range_delta " i (0, 49)
+h_cardMiddle "-h_cardMiddle " i (1, 100)
+h_cardDelta "-h_cardDelta " i (0, 3)
+h_defined_middle "-h_defined_middle " i (1, 10)
+h_defined_delta "-h_defined_delta " i (0, 4)
+h_range_middle "-h_range_middle " i (1, 100)
+h_range_delta "-h_range_delta " i (0, 49)
+k_cardMiddle "-k_cardMiddle " i (0, 100)
+k_cardDelta "-k_cardDelta " i (0, 3)
+k_defined_middle "-k_defined_middle " i (1, 10)
+k_defined_delta "-k_defined_delta " i (0, 4)
+k_range_middle "-k_range_middle " i (1, 100)
+k_range_delta "-k_range_delta " i (0, 49)
 --------------------
 
 
@@ -104,6 +136,7 @@ letting c be 9
 letting f be function(4 --> 9, 5 --> 10, 6 --> 11, 7 --> 12)
 letting g be function(5 --> 9, 6 --> 10, 7 --> 11)
 letting h be function(5 --> 9, 6 --> 10, 7 --> 12)
+letting k be function(6 --> 13, 7 --> 13)
 letting s be 3
 
 --------------------
@@ -142,43 +175,65 @@ find s: int(1..10)
 such that
     s >= s_middle - s_delta,
     s <= s_middle + s_delta
-given f_2_middle: int(1..50)
-given f_2_delta: int(0..24)
+given f_range_middle: int(1..50)
+given f_range_delta: int(0..24)
 find f: function (injective) int(1..10) --> int(1..50)
 such that
     and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
-    and([q1[2] >= f_2_middle - f_2_delta | q1 <- f]),
-    and([q1[2] <= f_2_middle + f_2_delta | q1 <- f]),
+    and([q1[2] >= f_range_middle - f_range_delta | q1 <- f]),
+    and([q1[2] <= f_range_middle + f_range_delta | q1 <- f]),
     and([q1[2] >= c | q1 <- f])
-given g_1_middle: int(1..10)
-given g_1_delta: int(0..4)
-given g_2_middle: int(1..50)
-given g_2_delta: int(0..24)
+given g_cardMiddle: int(1..10)
+given g_cardDelta: int(0..3)
+given g_defined_middle: int(1..10)
+given g_defined_delta: int(0..4)
+given g_range_middle: int(1..50)
+given g_range_delta: int(0..24)
 find g: function (minSize 1, maxSize 10, injective) int(1..10) --> int(1..50)
 such that
+    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
     |g| >= s,
     |g| <= s,
-    and([q2[1] >= g_1_middle - g_1_delta | q2 <- g]),
-    and([q2[1] <= g_1_middle + g_1_delta | q2 <- g]),
+    and([q2[1] >= g_defined_middle - g_defined_delta | q2 <- g]),
+    and([q2[1] <= g_defined_middle + g_defined_delta | q2 <- g]),
     and([q2[1] >= a | q2 <- g]),
     and([q2[1] <= b | q2 <- g]),
-    and([q2[2] >= g_2_middle - g_2_delta | q2 <- g]),
-    and([q2[2] <= g_2_middle + g_2_delta | q2 <- g]),
+    and([q2[2] >= g_range_middle - g_range_delta | q2 <- g]),
+    and([q2[2] <= g_range_middle + g_range_delta | q2 <- g]),
     and([q2[2] >= c | q2 <- g])
-given h_1_middle: int(1..10)
-given h_1_delta: int(0..4)
-given h_2_middle: int(1..50)
-given h_2_delta: int(0..24)
+given h_cardMiddle: int(1..50)
+given h_cardDelta: int(0..3)
+given h_defined_middle: int(1..10)
+given h_defined_delta: int(0..4)
+given h_range_middle: int(1..50)
+given h_range_delta: int(0..24)
 find h: function (minSize 1, maxSize 50, injective) int(1..10) --> int(1..50)
 such that
+    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
     |h| >= s,
-    and([q3[1] >= h_1_middle - h_1_delta | q3 <- h]),
-    and([q3[1] <= h_1_middle + h_1_delta | q3 <- h]),
+    and([q3[1] >= h_defined_middle - h_defined_delta | q3 <- h]),
+    and([q3[1] <= h_defined_middle + h_defined_delta | q3 <- h]),
     and([q3[1] >= a | q3 <- h]),
     and([q3[1] <= b | q3 <- h]),
-    and([q3[2] >= h_2_middle - h_2_delta | q3 <- h]),
-    and([q3[2] <= h_2_middle + h_2_delta | q3 <- h]),
+    and([q3[2] >= h_range_middle - h_range_delta | q3 <- h]),
+    and([q3[2] <= h_range_middle + h_range_delta | q3 <- h]),
     and([q3[2] >= c | q3 <- h])
+given k_cardMiddle: int(-10..50)
+given k_cardDelta: int(0..3)
+given k_defined_middle: int(1..10)
+given k_defined_delta: int(0..4)
+given k_range_middle: int(1..50)
+given k_range_delta: int(0..24)
+find k: function int(1..10) --> int(1..50)
+such that
+    |k| >= k_cardMiddle - k_cardDelta /\ |k| <= k_cardMiddle + k_cardDelta,
+    and([q4[1] >= k_defined_middle - k_defined_delta | q4 <- k]),
+    and([q4[1] <= k_defined_middle + k_defined_delta | q4 <- k]),
+    and([q4[1] >= a | q4 <- k]),
+    and([q4[1] <= b | q4 <- k]),
+    and([q4[2] >= k_range_middle - k_range_delta | q4 <- k]),
+    and([q4[2] <= k_range_middle + k_range_delta | q4 <- k]),
+    and([q4[2] >= c | q4 <- k])
 such that g != h
 
 --------------------
@@ -193,16 +248,26 @@ c_middle "-c_middle " i (1, 10)
 c_delta "-c_delta " i (0, 4)
 s_middle "-s_middle " i (1, 10)
 s_delta "-s_delta " i (0, 4)
-f_2_middle "-f_2_middle " i (1, 50)
-f_2_delta "-f_2_delta " i (0, 24)
-g_1_middle "-g_1_middle " i (1, 10)
-g_1_delta "-g_1_delta " i (0, 4)
-g_2_middle "-g_2_middle " i (1, 50)
-g_2_delta "-g_2_delta " i (0, 24)
-h_1_middle "-h_1_middle " i (1, 10)
-h_1_delta "-h_1_delta " i (0, 4)
-h_2_middle "-h_2_middle " i (1, 50)
-h_2_delta "-h_2_delta " i (0, 24)
+f_range_middle "-f_range_middle " i (1, 50)
+f_range_delta "-f_range_delta " i (0, 24)
+g_cardMiddle "-g_cardMiddle " i (1, 10)
+g_cardDelta "-g_cardDelta " i (0, 3)
+g_defined_middle "-g_defined_middle " i (1, 10)
+g_defined_delta "-g_defined_delta " i (0, 4)
+g_range_middle "-g_range_middle " i (1, 50)
+g_range_delta "-g_range_delta " i (0, 24)
+h_cardMiddle "-h_cardMiddle " i (1, 50)
+h_cardDelta "-h_cardDelta " i (0, 3)
+h_defined_middle "-h_defined_middle " i (1, 10)
+h_defined_delta "-h_defined_delta " i (0, 4)
+h_range_middle "-h_range_middle " i (1, 50)
+h_range_delta "-h_range_delta " i (0, 24)
+k_cardMiddle "-k_cardMiddle " i (-10, 50)
+k_cardDelta "-k_cardDelta " i (0, 3)
+k_defined_middle "-k_defined_middle " i (1, 10)
+k_defined_delta "-k_defined_delta " i (0, 4)
+k_range_middle "-k_range_middle " i (1, 50)
+k_range_delta "-k_range_delta " i (0, 24)
 --------------------
 
 
@@ -215,6 +280,7 @@ letting c be 9
 letting f be function(4 --> 9, 5 --> 10, 6 --> 11, 7 --> 12)
 letting g be function(5 --> 9, 6 --> 10, 7 --> 11)
 letting h be function(5 --> 9, 6 --> 10, 7 --> 12)
+letting k be function(6 --> 13, 7 --> 13)
 letting s be 3
 
 --------------------

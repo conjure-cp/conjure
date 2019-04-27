@@ -91,34 +91,63 @@ pgOnDomain x nm dom =
                   ]
 
         DomainSet r attr innerDomain -> do
+
+            let nmCardMiddle = nm `mappend` "_cardMiddle"
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            let cardMiddle = Reference nmCardMiddle Nothing
+            let cardDelta = Reference nmCardDelta Nothing
+
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
             (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
 
-            (attrOut, sizeLb, sizeUb) <-
+            (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
                         SetAttr size -> do
-                            (sizeOut, lb, ub) <-
+                            (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return (SizeAttr_None, Nothing, Nothing)
+                                        return ( SizeAttr_None, Nothing, Nothing
+                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                               )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr a
-                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just a
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return (SizeAttr_MinMaxSize lb maxInt, Just a, Nothing)
+                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
+                                               , DomainInt TagInt [RangeBounded lb maxInt]
+                                               )
                                     SizeAttr_MaxSize a -> do
                                         ub <- upperBoundOfIntExpr a
-                                        return (SizeAttr_MaxSize ub, Nothing, Just a)
+                                        return ( SizeAttr_MaxSize ub, Nothing, Just a
+                                               , DomainInt TagInt [RangeBounded 0 ub]
+                                               )
                                     SizeAttr_MinMaxSize a b -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr b
-                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just b)
-                            return (SetAttr sizeOut, lb, ub)
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just b
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
+                            return (SetAttr sizeOut, lb, ub, cardDomain)
 
             let
+                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                newDecl =
+                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
+                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    ]
+
+            let
+                cardinalityCons = return $ return
+                    [essence|
+                        |&x| >= &cardMiddle - &cardDelta /\
+                        |&x| <= &cardMiddle + &cardDelta
+                    |]
+
                 sizeLbCons =
                     case sizeLb of
                         Nothing -> return []
@@ -129,7 +158,7 @@ pgOnDomain x nm dom =
                         Nothing -> return []
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
-            newCons <- concat <$> sequence [sizeLbCons, sizeUbCons]
+            newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons]
 
             return3
                 (DomainSet r attrOut domInner)
@@ -137,31 +166,47 @@ pgOnDomain x nm dom =
                 (newCons ++ map liftCons consInner)
 
         DomainMSet r attr innerDomain -> do
+
+            let nmCardMiddle = nm `mappend` "_cardMiddle"
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            let cardMiddle = Reference nmCardMiddle Nothing
+            let cardDelta = Reference nmCardDelta Nothing
+
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
             (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
 
-            (attrOut, sizeLb, sizeUb, occurLb, occurUb) <-
+            (attrOut, sizeLb, sizeUb, cardDomain, occurLb, occurUb) <-
                     case attr of
                         MSetAttr sizeAttr occurAttr -> do
-                            (sizeAttrOut, sizeLb, sizeUb) <-
+                            (sizeAttrOut, sizeLb, sizeUb, cardDomain) <-
                                 case sizeAttr of
                                     SizeAttr_None ->
-                                        return (SizeAttr_None, Nothing, Nothing)
+                                        return ( SizeAttr_None, Nothing, Nothing
+                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                               )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr a
-                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just a
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return (SizeAttr_MinMaxSize lb maxInt, Just a, Nothing)
+                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
+                                               , DomainInt TagInt [RangeBounded lb maxInt]
+                                               )
                                     SizeAttr_MaxSize a -> do
                                         ub <- upperBoundOfIntExpr a
-                                        return (SizeAttr_MaxSize ub, Nothing, Just a)
+                                        return ( SizeAttr_MaxSize ub, Nothing, Just a
+                                               , DomainInt TagInt [RangeBounded 0 ub]
+                                               )
                                     SizeAttr_MinMaxSize a b -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr b
-                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just b)
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just b
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
                             (occurAttrOut, occurLb, occurUb) <-
                                 case occurAttr of
                                     OccurAttr_None ->
@@ -176,9 +221,22 @@ pgOnDomain x nm dom =
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr b
                                         return (OccurAttr_MinMaxOccur lb ub, Just a, Just b)
-                            return (MSetAttr sizeAttrOut occurAttrOut, sizeLb, sizeUb, occurLb, occurUb)
+                            return (MSetAttr sizeAttrOut occurAttrOut, sizeLb, sizeUb, cardDomain, occurLb, occurUb)
 
             let
+                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                newDecl =
+                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
+                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    ]
+
+            let
+                cardinalityCons = return $ return
+                    [essence|
+                        |&x| >= &cardMiddle - &cardDelta /\
+                        |&x| <= &cardMiddle + &cardDelta
+                    |]
+
                 sizeLbCons =
                     case sizeLb of
                         Nothing -> return []
@@ -199,56 +257,90 @@ pgOnDomain x nm dom =
                         Nothing -> return []
                         Just bound -> return $ return $ liftCons [essence| freq(&x, &i) <= &bound |]
 
-            newCons <- concat <$> sequence [sizeLbCons, sizeUbCons, occurLbCons, occurUbCons]
+            newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons, occurLbCons, occurUbCons]
 
             return3
                 (DomainMSet r attrOut domInner)
-                declInner
+                (newDecl ++ declInner)
                 (newCons ++ map liftCons consInner)
 
         DomainFunction r attr innerDomainFr innerDomainTo -> do
+
+            let nmCardMiddle = nm `mappend` "_cardMiddle"
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            let cardMiddle = Reference nmCardMiddle Nothing
+            let cardDelta = Reference nmCardDelta Nothing
+
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
-            (domFr, declFr, consFr) <- pgOnDomain [essence| &i[1] |] (nm `mappend` "_1") innerDomainFr
-            (domTo, declTo, consTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_2") innerDomainTo
+            (domFr, declFr, consFr) <- pgOnDomain [essence| &i[1] |] (nm `mappend` "_defined") innerDomainFr
+            (domTo, declTo, consTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_range") innerDomainTo
 
             -- drop total, post constraint instead
-            (attrOut, sizeLb, sizeUb) <-
+            (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
                         FunctionAttr size _totality jectivity -> do
-                            (sizeOut, lb, ub) <-
+                            (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return (SizeAttr_None, Nothing, Nothing)
+                                        return ( SizeAttr_None, Nothing, Nothing
+                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                               )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr a
-                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just a
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return (SizeAttr_MinMaxSize lb maxInt, Just a, Nothing)
+                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
+                                               , DomainInt TagInt [RangeBounded lb maxInt]
+                                               )
                                     SizeAttr_MaxSize a -> do
                                         ub <- upperBoundOfIntExpr a
-                                        return (SizeAttr_MaxSize ub, Nothing, Just a)
+                                        return ( SizeAttr_MaxSize ub, Nothing, Just a
+                                               , DomainInt TagInt [RangeBounded 0 ub]
+                                               )
                                     SizeAttr_MinMaxSize a b -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr b
-                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just b)
-                            return (FunctionAttr sizeOut PartialityAttr_Partial jectivity, lb, ub)
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just b
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
+                            return (FunctionAttr sizeOut PartialityAttr_Partial jectivity, lb, ub, cardDomain)
+
+            let isTotal = case attr of
+                                FunctionAttr _ PartialityAttr_Total _ -> True
+                                _ -> False
+                isPartial = not isTotal
 
             let
-                totalityCons =
-                    case attr of
-                        FunctionAttr _ PartialityAttr_Total _ -> do
-                            innerDomainFrMin <- minOfIntDomain innerDomainFr
-                            innerDomainFrMax <- maxOfIntDomain innerDomainFr
-                            return $ return [essence|
-                                forAll &iPat : &domFr .
-                                    (&i >= &innerDomainFrMin /\ &i <= &innerDomainFrMax)
-                                    <->
-                                    &i in defined(&x)
-                                |]
-                        _ -> return []
+                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                newDecl | isTotal = []
+                        | otherwise =
+                            [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
+                            , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                            ]
+
+            let
+                cardinalityCons | isTotal = return []
+                                | otherwise = return $ return
+                    [essence|
+                        |&x| >= &cardMiddle - &cardDelta /\
+                        |&x| <= &cardMiddle + &cardDelta
+                    |]
+
+                totalityCons | isPartial = return []
+                             | otherwise = do
+                    innerDomainFrMin <- minOfIntDomain innerDomainFr
+                    innerDomainFrMax <- maxOfIntDomain innerDomainFr
+                    return $ return [essence|
+                        forAll &iPat : &domFr .
+                            (&i >= &innerDomainFrMin /\ &i <= &innerDomainFrMax)
+                            <->
+                            &i in defined(&x)
+                        |]
 
                 sizeLbCons =
                     case sizeLb of
@@ -260,11 +352,7 @@ pgOnDomain x nm dom =
                         Nothing -> return []
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
-            let isPartial = case attr of
-                                FunctionAttr _ PartialityAttr_Total _ -> False
-                                _ -> True
-
-            newCons <- concat <$> sequence [totalityCons, sizeLbCons, sizeUbCons]
+            newCons <- concat <$> sequence [cardinalityCons, totalityCons, sizeLbCons, sizeUbCons]
             let innerCons = concat $ concat
                     [ [consFr | isPartial ] -- only if the function is not total
                     , [consTo]
@@ -272,7 +360,7 @@ pgOnDomain x nm dom =
 
             return3
                 (DomainFunction r attrOut domFr domTo)
-                (concat [ declFr | isPartial ] ++ declTo)
+                (newDecl ++ concat [ declFr | isPartial ] ++ declTo)
                 (newCons ++ map liftCons innerCons)
 
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
