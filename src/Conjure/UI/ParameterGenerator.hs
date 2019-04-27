@@ -88,6 +88,53 @@ pgOnDomain x nm dom =
                   [ [essence| &x <= &ubX |]
                   | ub /= ubX
                   ]
+        DomainSet r attr innerDomain -> do
+            (iPat, i) <- quantifiedVar
+            let liftCons c = [essence| forAll &iPat in &x . &c |]
+            (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
+
+            -- drop total, post constraint instead
+            (attrOut, sizeLb, sizeUb) <-
+                    case attr of
+                        SetAttr size -> do
+                            (sizeOut, lb, ub) <-
+                                case size of
+                                    SizeAttr_None ->
+                                        return (SizeAttr_None, Nothing, Nothing)
+                                    SizeAttr_Size a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr a
+                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just a)
+                                    SizeAttr_MinSize a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        return (SizeAttr_MinSize lb, Just a, Nothing)
+                                    SizeAttr_MaxSize a -> do
+                                        ub <- upperBoundOfIntExpr a
+                                        return (SizeAttr_MaxSize ub, Nothing, Just a)
+                                    SizeAttr_MinMaxSize a b -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr b
+                                        return (SizeAttr_MinMaxSize lb ub, Just a, Just b)
+                            return (SetAttr sizeOut, lb, ub)
+
+            let
+                sizeLbCons =
+                    case sizeLb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| >= &bound |]
+
+                sizeUbCons =
+                    case sizeUb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| <= &bound |]
+
+            newCons <- concat <$> sequence [sizeLbCons, sizeUbCons]
+
+            return3
+                (DomainSet r attrOut domInner)
+                declInner
+                (newCons ++ map liftCons consInner)
+
         DomainFunction r attr innerDomainFr innerDomainTo -> do
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
