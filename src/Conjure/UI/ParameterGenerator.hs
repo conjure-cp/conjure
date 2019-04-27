@@ -151,11 +151,19 @@ pgOnDomain x nm dom =
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
             newCons <- concat <$> sequence [totalityCons, sizeLbCons, sizeUbCons]
+            let innerCons = concat $ concat
+                    [ [consFr | case attr of
+                                    -- only if the function is not total
+                                    FunctionAttr _ PartialityAttr_Total _ -> False
+                                    _ -> True
+                      ]
+                    , [consTo]
+                    ]
 
             return3
                 (DomainFunction r attrOut domFr domTo)
                 (declFr ++ declTo)
-                (newCons ++ map liftCons (consFr ++ consTo))
+                (newCons ++ map liftCons innerCons)
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
                                                       ]
