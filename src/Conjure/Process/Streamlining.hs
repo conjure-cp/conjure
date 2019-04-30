@@ -91,7 +91,7 @@ streamlinersForSingleVariable ::
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
-streamlinersForSingleVariable x = trace (show ("streamlinersForSingleVariable" <+> pretty x)) $ concatMapM ($ x)
+streamlinersForSingleVariable x = concatMapM ($ x)
     [ intOdd
     , intEven
     , intLowerHalf
