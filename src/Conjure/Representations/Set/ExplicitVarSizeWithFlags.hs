@@ -193,9 +193,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
-                    flatten([ flatten([ [-toInt(&flags[&i])]
-                                      , &soValues
-                                      ])
-                            | &iPat : &index
-                            ])
+                    (&flags
+                    ,[&soValues | &iPat : &index]
+                    )
                 |]
