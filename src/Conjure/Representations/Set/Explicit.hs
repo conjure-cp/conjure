@@ -114,7 +114,7 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
-                    flatten([ &soValues
-                            | &iPat : &index
-                            ])
+                    [ &soValues
+                    | &iPat : &index
+                    ]
                 |]
