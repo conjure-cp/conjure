@@ -1296,6 +1296,7 @@ horizontalRules =
     , Horizontal.Permutation.rule_Comprehension
     , Horizontal.Permutation.rule_Compose_Image
     , Horizontal.Permutation.rule_Image_Matrix_Indexing
+    , Horizontal.Permutation.rule_Image_Comprehension
 --    , Horizontal.Permutation.rule_Image_Matrix_Indexing_Comprehension
 --    , Horizontal.Permutation.rule_Compose
     , Horizontal.Permutation.rule_Image_Literal

@@ -3,7 +3,6 @@ module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Data.Permutation (size, fromCycles, toFunction)
 
-
 rule_Cardinality_Literal :: Rule
 rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule where
   theRule p' = do
@@ -148,6 +147,45 @@ rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
             )
        else na "rule_Compose_Image"
   theRule _ = na "rule_Compose_Image"
+
+rule_Image_Comprehension :: Rule
+rule_Image_Comprehension = "comprehension-image" `namedRule` theRule where
+  theRule x = do
+    (perm, Comprehension body gensOrConds) <- match opImage x
+    TypePermutation{} <- typeOf perm
+    return ( "Horizontal rule for image of comprehension"
+           , do
+               gox <- sequence (permutationOverGenOrCond perm <$> gensOrConds)        
+               return $ Comprehension [essence| image(&perm, &body) |] (join gox) 
+           )
+ -- permutationOverGenOrCond :: Expression
+ --                          -> GeneratorOrCondition 
+ --                          -> m [GeneratorOrCondition]
+  permutationOverGenOrCond p (Generator g) = permutationOverGenerator p g
+  permutationOverGenOrCond p (Condition e) = return [Condition [essence| image(&p,&e) |]]
+  permutationOverGenOrCond p (ComprehensionLetting n e) =
+    return [ComprehensionLetting n [essence| image(&p,&e) |]]
+--  permutationOverGenerator :: Expression
+--                           -> Generator
+--                           -> m [GeneratorOrCondition]
+  permutationOverGenerator p (GenDomainNoRepr (Single a) d) = do
+    (nPat, n) <- quantifiedVar
+    return [Generator (GenDomainNoRepr nPat d)
+           ,ComprehensionLetting a [essence| image(&p, &n) |]
+           ]
+  permutationOverGenerator _ (GenDomainNoRepr _ _) = do
+    na "permutationOverGenerator: absPat"
+    --TODO not sure what to do with the other absPats
+  permutationOverGenerator p (GenDomainHasRepr a d) = do
+    (Single nm, n) <- quantifiedVar
+    return [Generator (GenDomainHasRepr nm d)
+           ,ComprehensionLetting a [essence| image(&p, &n) |]
+           ]
+  permutationOverGenerator p (GenInExpr a e) =
+    return [Generator (GenInExpr a [essence| image(&p,&e) |])]
+
+
+ 
 
 
 rule_Image_Comprehendable :: Rule
