@@ -103,6 +103,67 @@ rule_Tuple_DotLt = "tuple-DotLt" `namedRule` theRule where
             )
 
 
+rule_Tuple_DotLeq :: Rule
+rule_Tuple_DotLeq = "tuple-DotLeq" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opDotLeq p
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        return
+            ( "Horizontal rule for tuple .<="
+            , return $ decomposeLexDotLeq p xs ys
+            )
+
+
+rule_Tuple_LexLt :: Rule
+rule_Tuple_LexLt = "tuple-LexLt" `namedRule` theRule where
+    theRule [essence| &x <lex &y |] = do
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        return
+            ( "Horizontal rule for tuple <lex"
+            , return $ decomposeLexLexLt [essence| &x <lex &y |] xs ys
+            )
+    theRule _ = na "rule_Tuple_LexLt"
+
+
+rule_Tuple_LexLeq :: Rule
+rule_Tuple_LexLeq = "tuple-DotLeq" `namedRule` theRule where
+    theRule [essence| &x <=lex &y |] = do
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        return
+            ( "Horizontal rule for tuple <=lex"
+            , return $ decomposeLexLexLeq [essence| &x <=lex &y |] xs ys
+            )
+    theRule _ = na "rule_Tuple_LexLeq"
+
+
+
+
+decomposeLexLexLt :: Expression -> [Expression] -> [Expression] -> Expression
+decomposeLexLexLt p = unroll
+    where
+        unroll [a]    [b]    = [essence| &a <lex &b |]
+        unroll (a:as) (b:bs) = let rest = unroll as bs
+                               in  [essence| (&a <lex &b) /\ &rest |]
+        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+
+decomposeLexLexLeq :: Expression -> [Expression] -> [Expression] -> Expression
+decomposeLexLexLeq p = unroll
+    where
+        unroll [a]    [b]    = [essence| &a <=lex &b |]
+        unroll (a:as) (b:bs) = let rest = unroll as bs
+                               in  [essence| (&a <=lex &b) /\ &rest |]
+        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+
+
 
 decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
 decomposeLexLt p = unroll

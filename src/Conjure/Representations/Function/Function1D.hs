@@ -186,9 +186,9 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
             soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
             return
                 [essence|
-                    flatten([ &soValues
-                            | &iPat : &innerDomainFr
-                            ])
+                    [ &soValues
+                    | &iPat : &innerDomainFr
+                    ]
                 |]
 
 

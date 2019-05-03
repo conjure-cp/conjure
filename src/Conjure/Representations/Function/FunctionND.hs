@@ -250,7 +250,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
             soValues <- innerSO downX1 valuesIndexed innerDomainTo
 
-            return $ make opFlatten $
+            return $ 
                 Comprehension soValues
                     [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
 

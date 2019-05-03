@@ -25,7 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLeq x) where
     typeOf p@(OpLexLeq a b) = do
         tyA <- typeOf a
         tyB <- typeOf b
-        if typesUnify [TypeList TypeAny, tyA, tyB]
+        if typesUnify [tyA, tyB]
             then return TypeBool
             else raiseTypeError $ vcat [ pretty p
                                        , "LHS has type:" <+> pretty tyA

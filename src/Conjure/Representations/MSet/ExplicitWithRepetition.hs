@@ -228,9 +228,9 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
-                    flatten([ [ &marker ]
-                            , flatten([ &soValues
-                                      | &iPat : &index
-                                      ])
-                            ])
+                    ( &marker
+                    , [ &soValues
+                      | &iPat : &index
+                      ]
+                    )
                 |]

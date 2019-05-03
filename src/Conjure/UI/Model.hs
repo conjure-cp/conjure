@@ -1191,7 +1191,12 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
---    , Vertical.Tuple.rule_Tuple_DotLt
+    , Vertical.Tuple.rule_Tuple_DotLt
+    , Vertical.Tuple.rule_Tuple_DotLeq
+    , Vertical.Tuple.rule_Tuple_LexLt
+    , Vertical.Tuple.rule_Tuple_LexLeq
+
+
 
     , Vertical.Record.rule_Record_Eq
     , Vertical.Record.rule_Record_Neq
@@ -1497,6 +1502,7 @@ delayedRules =
     ,   [ rule_ReducerToComprehension
         ]
     ,   [ rule_DotLtLeq
+        , rule_DotLtLeqLexPrim 
         ]
     ]
 
@@ -1847,6 +1853,22 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             ( "Generic vertical rule for identical-domain equality"
             , return $ make opOr $ fromList $ zipWith (\ i j -> [essence| &i != &j |] ) xs ys
             )
+
+rule_DotLtLeqLexPrim :: Rule
+rule_DotLtLeqLexPrim = "int-DotLtLeq" `namedRule` theRule where
+  theRule p = do
+    (a,b,mk) <- case p of
+                [essence| &a <lex &b |]  -> return (a,b,\i j -> [essence| [&i] <lex [&j] |] )
+                [essence| &a <=lex &b |] -> return (a,b,\i j -> [essence| [&i] <=lex [&j] |])
+                _ -> na "rule_DotLtLeqLexPrim"               
+    t <- typeOf a
+    case t of
+      TypeInt{} -> return ()
+      TypeBool  -> return ()
+      _ -> na "rule_DotLtLeqLexPrim"
+    return ( "Rule for dotLt and dotLeq on primitives:" <+> pretty p
+           , return $ mk a b 
+           )
 
 
 rule_DotLtLeq :: Rule
