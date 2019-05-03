@@ -3,6 +3,7 @@
 module Conjure.UI.ParameterGenerator where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Language.Instantiate ( trySimplify )
@@ -356,11 +357,29 @@ pgOnDomain x nm dom =
 
                 totalityCons | isPartial = return []
                              | otherwise = do
-                    innerDomainFrMin <- minOfIntDomain innerDomainFr
-                    innerDomainFrMax <- maxOfIntDomain innerDomainFr
+
+                    let
+                        go d = case d of
+                            DomainInt{} -> do
+                                dMin <- minOfIntDomain d
+                                dMax <- maxOfIntDomain d
+                                return (\ k -> [essence| (&k >= &dMin /\ &k <= &dMax) |] )
+                            DomainTuple ds -> do
+                                makers <- mapM go ds
+                                return $ \ k -> make opAnd $ fromList
+                                    [ mk [essence| &k[&nExpr] |]
+                                    | (mk, n) <- zip makers [1..]
+                                    , let nExpr = fromInt n
+                                    ]
+                            _ -> bug $ "Unhandled domain:" <+> pretty d
+
+                    mkCondition <- go innerDomainFr
+
+                    let iCondition = mkCondition i
+
                     return $ return [essence|
                         forAll &iPat : &domFr .
-                            (&i >= &innerDomainFrMin /\ &i <= &innerDomainFrMax)
+                            &iCondition
                             <->
                             &i in defined(&x)
                         |]
@@ -410,7 +429,7 @@ minOfIntDomain (DomainInt _ rs) = do
         []  -> return minInt
         [x] -> return x
         _   -> return $ make opMax $ fromList xs
-minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> pretty d
+minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> vcat [pretty x, pretty (show x)]
 
 minOfIntRange :: Monad m => Range Expression -> m Expression
 minOfIntRange (RangeSingle lb) = return lb
