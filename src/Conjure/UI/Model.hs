@@ -1181,7 +1181,7 @@ verticalRules =
     , Vertical.Permutation.rule_Cardinality
     , Vertical.Permutation.rule_Defined
     , Vertical.Permutation.rule_Comprehension
---    , Vertical.Permutation.rule_Permutation_DotLt
+    -- , Vertical.Permutation.rule_Permutation_DotLt
 
 
     , Vertical.Tuple.rule_Tuple_Eq
@@ -1191,10 +1191,6 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
-    , Vertical.Tuple.rule_Tuple_DotLt
-    , Vertical.Tuple.rule_Tuple_DotLeq
-    , Vertical.Tuple.rule_Tuple_LexLt
-    , Vertical.Tuple.rule_Tuple_LexLeq
 
 
 
@@ -1298,10 +1294,8 @@ horizontalRules =
     [ Horizontal.Permutation.rule_Cardinality_Literal
     , Horizontal.Permutation.rule_Equality
     , Horizontal.Permutation.rule_Comprehension
---    , Horizontal.Permutation.rule_Image_DotLt
     , Horizontal.Permutation.rule_Compose_Image
     , Horizontal.Permutation.rule_Image_Matrix_Indexing
-    , Horizontal.Permutation.rule_Image_Sequence_Literal
 --    , Horizontal.Permutation.rule_Image_Matrix_Indexing_Comprehension
 --    , Horizontal.Permutation.rule_Compose
     , Horizontal.Permutation.rule_Image_Literal
@@ -1502,7 +1496,6 @@ delayedRules =
     ,   [ rule_ReducerToComprehension
         ]
     ,   [ rule_DotLtLeq
-        , rule_DotLtLeqLexPrim 
         ]
     ]
 
@@ -1853,22 +1846,6 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             ( "Generic vertical rule for identical-domain equality"
             , return $ make opOr $ fromList $ zipWith (\ i j -> [essence| &i != &j |] ) xs ys
             )
-
-rule_DotLtLeqLexPrim :: Rule
-rule_DotLtLeqLexPrim = "int-DotLtLeq" `namedRule` theRule where
-  theRule p = do
-    (a,b,mk) <- case p of
-                [essence| &a <lex &b |]  -> return (a,b,\i j -> [essence| [&i] <lex [&j] |] )
-                [essence| &a <=lex &b |] -> return (a,b,\i j -> [essence| [&i] <=lex [&j] |])
-                _ -> na "rule_DotLtLeqLexPrim"               
-    t <- typeOf a
-    case t of
-      TypeInt{} -> return ()
-      TypeBool  -> return ()
-      _ -> na "rule_DotLtLeqLexPrim"
-    return ( "Rule for dotLt and dotLeq on primitives:" <+> pretty p
-           , return $ mk a b 
-           )
 
 
 rule_DotLtLeq :: Rule

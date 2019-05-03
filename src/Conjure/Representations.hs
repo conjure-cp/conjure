@@ -165,6 +165,9 @@ symmetryOrdering inp =
                 case mDom of
                     DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
                     _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
+            MkOpImage (OpImage p x) -> do
+                so <- symmetryOrdering x
+                return [essence| image(&p, &so) |]
             _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
         Comprehension body stmts -> do
             xs <- symmetryOrdering body
