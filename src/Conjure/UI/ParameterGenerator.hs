@@ -405,6 +405,86 @@ pgOnDomain x nm dom =
                 (newDecl ++ concat [ declFr | isPartial ] ++ declTo)
                 (newCons ++ map liftCons innerCons)
 
+        DomainRelation r attr innerDomains -> do
+
+            let nmCardMiddle = nm `mappend` "_cardMiddle"
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            let cardMiddle = Reference nmCardMiddle Nothing
+            let cardDelta = Reference nmCardDelta Nothing
+
+            (iPat, i) <- quantifiedVar
+            let liftCons c = [essence| forAll &iPat in &x . &c |]
+
+            inners <- forM (zip [1..] innerDomains) $ \ (n, d) -> do
+                let nE = fromInt n
+                let ref = [essence| &i[&nE] |]
+                (dom, decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show i)) d
+                return (dom, decl, map liftCons cons)
+
+            (attrOut, sizeLb, sizeUb, cardDomain) <-
+                    case attr of
+                        RelationAttr size binRelAttr -> do
+                            (sizeOut, lb, ub, cardDomain) <-
+                                case size of
+                                    SizeAttr_None ->
+                                        return ( SizeAttr_None, Nothing, Nothing
+                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                               )
+                                    SizeAttr_Size a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr a
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just a
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
+                                    SizeAttr_MinSize a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
+                                               , DomainInt TagInt [RangeBounded lb maxInt]
+                                               )
+                                    SizeAttr_MaxSize a -> do
+                                        ub <- upperBoundOfIntExpr a
+                                        return ( SizeAttr_MaxSize ub, Nothing, Just a
+                                               , DomainInt TagInt [RangeBounded 0 ub]
+                                               )
+                                    SizeAttr_MinMaxSize a b -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr b
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just b
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
+                            return (RelationAttr sizeOut binRelAttr, lb, ub, cardDomain)
+
+            let
+                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                newDecl =
+                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
+                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    ]
+
+            let
+                cardinalityCons = return $ return
+                    [essence|
+                        |&x| >= &cardMiddle - &cardDelta /\
+                        |&x| <= &cardMiddle + &cardDelta
+                    |]
+
+                sizeLbCons =
+                    case sizeLb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| >= &bound |]
+
+                sizeUbCons =
+                    case sizeUb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| <= &bound |]
+
+            newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons]
+
+            return3
+                (DomainRelation r attrOut (map fst3 inners))
+                (newDecl ++ concatMap snd3 inners)
+                (newCons ++ concatMap thd3 inners)
+
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
                                                       ]
