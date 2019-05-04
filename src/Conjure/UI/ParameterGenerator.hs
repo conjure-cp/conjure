@@ -126,7 +126,7 @@ pgOnDomain x nm dom =
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
-            (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
+            (domInner, declInner, consInner) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_inner") innerDomain
 
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
