@@ -506,7 +506,7 @@ pgOnDomain x nm dom =
             inners <- forM (zip [1..] innerDomains) $ \ (n, d) -> do
                 let nE = fromInt n
                 let ref = [essence| &i[&nE] |]
-                (d', decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show i)) d
+                (d', decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show n)) d
                 return (d', decl, map liftCons cons)
 
             (attrOut, sizeLb, sizeUb, cardDomain) <-
