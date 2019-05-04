@@ -158,6 +158,7 @@ rule_Image_Comprehension = "comprehension-image" `namedRule` theRule where
                gox <- sequence (permutationOverGenOrCond perm <$> gensOrConds)        
                return $ Comprehension [essence| image(&perm, &body) |] (join gox) 
            )
+
  -- permutationOverGenOrCond :: Expression
  --                          -> GeneratorOrCondition 
  --                          -> m [GeneratorOrCondition]
@@ -165,17 +166,10 @@ rule_Image_Comprehension = "comprehension-image" `namedRule` theRule where
   permutationOverGenOrCond p (Condition e) = return [Condition [essence| image(&p,&e) |]]
   permutationOverGenOrCond p (ComprehensionLetting n e) =
     return [ComprehensionLetting n [essence| image(&p,&e) |]]
+
 --  permutationOverGenerator :: Expression
 --                           -> Generator
 --                           -> m [GeneratorOrCondition]
-  permutationOverGenerator p (GenDomainNoRepr (Single a) d) = do
-    (nPat, n) <- quantifiedVar
-    return [Generator (GenDomainNoRepr nPat d)
-           ,ComprehensionLetting a [essence| image(&p, &n) |]
-           ]
-  permutationOverGenerator _ (GenDomainNoRepr _ _) = do
-    na "permutationOverGenerator: absPat"
-    --TODO not sure what to do with the other absPats
   permutationOverGenerator p (GenDomainHasRepr a d) = do
     (Single nm, n) <- quantifiedVar
     return [Generator (GenDomainHasRepr nm d)
@@ -183,6 +177,35 @@ rule_Image_Comprehension = "comprehension-image" `namedRule` theRule where
            ]
   permutationOverGenerator p (GenInExpr a e) =
     return [Generator (GenInExpr a [essence| image(&p,&e) |])]
+  permutationOverGenerator p (GenDomainNoRepr absPat d) = do
+    (rPat, ns) <- clonePattern absPat
+    return $ [Generator (GenDomainNoRepr rPat d)]
+           ++ ((\(pat,exp) ->
+                  ComprehensionLetting pat [essence| image(&p,&exp) |]
+               ) <$> ns)
+
+--  clonePattern :: AbstractPattern
+--               -> m (AbstractPattern, [(Namr, Expression)])
+  clonePattern (Single name) = do
+    (nPat, n) <- quantifiedVar
+    return (nPat,[(name, n)])
+  clonePattern (AbsPatTuple pats) = do
+    rec <- sequence (clonePattern <$> pats)
+    return ( AbsPatTuple $ fst <$> rec
+           , join $ snd <$> rec)
+  clonePattern (AbsPatMatrix pats) = do
+    rec <- sequence (clonePattern <$> pats)
+    return ( AbsPatMatrix $ fst <$> rec
+           , join $ snd <$> rec)
+  clonePattern (AbsPatSet pats) = do
+    rec <- sequence (clonePattern <$> pats)
+    return ( AbsPatSet $ fst <$> rec
+           , join $ snd <$> rec)
+  clonePattern _ =
+    bug "rule_Image_Comprehension: clonePattern: unsupported Abstract Pattern"
+    
+
+   
 
 
  
