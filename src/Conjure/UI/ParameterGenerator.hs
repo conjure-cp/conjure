@@ -68,7 +68,10 @@ pgOnDomain ::
       , [Expression]                    -- constraints
       )
 pgOnDomain x nm dom =
+
     case dom of
+
+        DomainBool -> return3 DomainBool [] []
 
         DomainInt t _ -> do
             lbX <- minOfIntDomain dom
@@ -113,6 +116,81 @@ pgOnDomain x nm dom =
                 (DomainMatrix indexDomain innerDomain')
                 declInner
                 (map liftCons consInner)
+
+        DomainSequence r attr innerDomain -> do
+
+            let nmCardMiddle = nm `mappend` "_cardMiddle"
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            let cardMiddle = Reference nmCardMiddle Nothing
+            let cardDelta = Reference nmCardDelta Nothing
+
+            (iPat, i) <- quantifiedVar
+            let liftCons c = [essence| forAll &iPat in &x . &c |]
+            (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
+
+            (attrOut, sizeLb, sizeUb, cardDomain) <-
+                    case attr of
+                        SequenceAttr size jectivity -> do
+                            (sizeOut, lb, ub, cardDomain) <-
+                                case size of
+                                    SizeAttr_None ->
+                                        return ( SizeAttr_None, Nothing, Nothing
+                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                               )
+                                    SizeAttr_Size a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr a
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just a
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
+                                    SizeAttr_MinSize a -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
+                                               , DomainInt TagInt [RangeBounded lb maxInt]
+                                               )
+                                    SizeAttr_MaxSize a -> do
+                                        ub <- upperBoundOfIntExpr a
+                                        return ( SizeAttr_MaxSize ub, Nothing, Just a
+                                               , DomainInt TagInt [RangeBounded 0 ub]
+                                               )
+                                    SizeAttr_MinMaxSize a b -> do
+                                        lb <- lowerBoundOfIntExpr a
+                                        ub <- upperBoundOfIntExpr b
+                                        return ( SizeAttr_MinMaxSize lb ub, Just a, Just b
+                                               , DomainInt TagInt [RangeBounded lb ub]
+                                               )
+                            return (SequenceAttr sizeOut jectivity, lb, ub, cardDomain)
+
+            let
+                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                newDecl =
+                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
+                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    ]
+
+            let
+                cardinalityCons = return $ return
+                    [essence|
+                        |&x| >= &cardMiddle - &cardDelta /\
+                        |&x| <= &cardMiddle + &cardDelta
+                    |]
+
+                sizeLbCons =
+                    case sizeLb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| >= &bound |]
+
+                sizeUbCons =
+                    case sizeUb of
+                        Nothing -> return []
+                        Just bound -> return $ return [essence| |&x| <= &bound |]
+
+            newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons]
+
+            return3
+                (DomainSequence r attrOut domInner)
+                (newDecl ++ declInner)
+                (newCons ++ map liftCons consInner)
 
         DomainSet r attr innerDomain -> do
 
@@ -371,7 +449,7 @@ pgOnDomain x nm dom =
                                     | (mk, n) <- zip makers [1..]
                                     , let nExpr = fromInt n
                                     ]
-                            _ -> bug $ "Unhandled domain:" <+> pretty d
+                            _ -> bug $ "Unhandled domain (in function defined):" <+> vcat [pretty d, pretty (show d)]
 
                     mkCondition <- go innerDomainFr
 
@@ -418,8 +496,8 @@ pgOnDomain x nm dom =
             inners <- forM (zip [1..] innerDomains) $ \ (n, d) -> do
                 let nE = fromInt n
                 let ref = [essence| &i[&nE] |]
-                (dom, decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show i)) d
-                return (dom, decl, map liftCons cons)
+                (d', decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show i)) d
+                return (d', decl, map liftCons cons)
 
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
@@ -523,6 +601,16 @@ lowerBoundOfIntExpr x | x == minInt = return minInt
 lowerBoundOfIntExpr x | x == maxInt = return maxInt
 lowerBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = minOfIntDomain dom
 lowerBoundOfIntExpr (Reference _ (Just (Alias x))) = lowerBoundOfIntExpr x
+lowerBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
+    bounds <- mapM lowerBoundOfIntExpr xs
+    return $ make opSum $ fromList bounds
+-- TODO: check for negatives
+lowerBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
+    bounds <- mapM lowerBoundOfIntExpr xs
+    return $ make opProduct $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
+    bound <- upperBoundOfIntExpr x
+    return (make opNegate bound)
 lowerBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
 
 
@@ -547,4 +635,14 @@ upperBoundOfIntExpr x | x == minInt = return minInt
 upperBoundOfIntExpr x | x == maxInt = return maxInt
 upperBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = maxOfIntDomain dom
 upperBoundOfIntExpr (Reference _ (Just (Alias x))) = upperBoundOfIntExpr x
+upperBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
+    bounds <- mapM upperBoundOfIntExpr xs
+    return $ make opSum $ fromList bounds
+-- TODO: check for negatives
+upperBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
+    bounds <- mapM upperBoundOfIntExpr xs
+    return $ make opProduct $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
+    bound <- lowerBoundOfIntExpr x
+    return (make opNegate bound)
 upperBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
