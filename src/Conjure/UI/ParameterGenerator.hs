@@ -71,7 +71,7 @@ pgOnDomain x nm dom =
 
     case dom of
 
-        DomainBool -> return3 DomainBool [] []
+        DomainBool -> return3 dom [] []
 
         DomainInt t _ -> do
             lbX <- minOfIntDomain dom
@@ -449,6 +449,16 @@ pgOnDomain x nm dom =
                                     | (mk, n) <- zip makers [1..]
                                     , let nExpr = fromInt n
                                     ]
+                            DomainSet _ _ inner -> do
+                                (jPat, j) <- quantifiedVar
+                                maker <- go inner
+                                let innerCons = maker j
+                                return $ \ k -> [essence| forAll &jPat in &k . &innerCons |]
+                            DomainMSet _ _ inner -> do
+                                (jPat, j) <- quantifiedVar
+                                maker <- go inner
+                                let innerCons = maker j
+                                return $ \ k -> [essence| forAll &jPat in &k . &innerCons |]
                             _ -> bug $ "Unhandled domain (in function defined):" <+> vcat [pretty d, pretty (show d)]
 
                     mkCondition <- go innerDomainFr
