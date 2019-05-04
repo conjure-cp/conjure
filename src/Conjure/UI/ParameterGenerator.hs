@@ -46,7 +46,9 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
                 Declaration       {}                   -> return [st]
                 SearchOrder       {}                   -> return []
                 SearchHeuristic   {}                   -> return []
-                Where             xs                   -> return [SuchThat xs]
+                Where             xs                   -> do
+                    xs' <- mapM (transformM fixQuantified) xs
+                    return [SuchThat xs']
                 Objective         {}                   -> return []
                 SuchThat          {}                   -> return []
             return m { mStatements = concat outStatements }
@@ -56,6 +58,34 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
             let eval = transformBiM (trySimplify symbols)
             stmtsEvaluated <- mapM eval (mStatements m)
             return m { mStatements = stmtsEvaluated }
+
+
+fixQuantified ::
+    MonadUserError m =>
+    Expression ->
+    m Expression
+fixQuantified (Comprehension body gocs) = do
+    gocs' <- forM gocs $ \ goc -> case goc of
+        Generator (GenDomainNoRepr (Single pat) (DomainInt t [RangeBounded fr to])) -> do
+            let patX = Reference pat Nothing
+            (fr', frCons) <-
+                if categoryOf fr < CatParameter
+                    then return (fr, [])
+                    else do
+                        bound <- lowerBoundOfIntExpr fr
+                        return (bound, return [essence| &patX >= &fr |])
+            (to', toCons) <-
+                if categoryOf to < CatParameter
+                    then return (to, [])
+                    else do
+                        bound <- upperBoundOfIntExpr to
+                        return (bound, return [essence| &patX <= &to |])
+            return $ [Generator (GenDomainNoRepr (Single pat) (DomainInt t [RangeBounded fr' to']))]
+                   ++ map Condition frCons
+                   ++ map Condition toCons
+        _ -> return [goc]
+    return (Comprehension body (concat gocs'))
+fixQuantified x = return x
 
 
 pgOnDomain ::
