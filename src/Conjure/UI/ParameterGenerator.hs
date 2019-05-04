@@ -5,6 +5,7 @@ module Conjure.UI.ParameterGenerator where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
+import Conjure.Language.CategoryOf ( categoryOf, Category(..) )
 import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Language.Instantiate ( trySimplify )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -107,7 +108,7 @@ pgOnDomain x nm dom =
                 (concatMap snd3 inners)
                 (concatMap thd3 inners)
 
-        DomainMatrix indexDomain innerDomain -> do
+        DomainMatrix indexDomain innerDomain | categoryOf indexDomain <= CatConstant -> do
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat : &indexDomain . &c |]
             let ref = [essence| &x[&i] |]
