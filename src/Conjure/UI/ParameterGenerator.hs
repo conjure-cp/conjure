@@ -429,7 +429,7 @@ minOfIntDomain (DomainInt _ rs) = do
         []  -> return minInt
         [x] -> return x
         _   -> return $ make opMax $ fromList xs
-minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> vcat [pretty x, pretty (show x)]
+minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> vcat [pretty d, pretty (show d)]
 
 minOfIntRange :: Monad m => Range Expression -> m Expression
 minOfIntRange (RangeSingle lb) = return lb
