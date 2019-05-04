@@ -81,13 +81,13 @@ categoryChecking m = do
                         , "In the definition of:" <+> pretty name
                         , ""
                         ]
-                      | (domain, (name, cat)) <- errors1
+                      | (domain, (name, cat)) <- sortNub errors1
                       ]
             ++ concat [ [ "The domain   :" <+> pretty domain
                         , "Its category :" <+> pretty cat
                         , ""
                         ]
-                      | (domain, cat) <- errors2
+                      | (domain, cat) <- sortNub errors2
                       ]
 
 initInfo_Lettings :: Model -> Model
