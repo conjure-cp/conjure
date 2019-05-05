@@ -66,23 +66,27 @@ fixQuantified ::
     m Expression
 fixQuantified (Comprehension body gocs) = do
     gocs' <- forM gocs $ \ goc -> case goc of
-        Generator (GenDomainNoRepr (Single pat) (DomainInt t [RangeBounded fr to])) -> do
+        Generator (GenDomainNoRepr (Single pat) domain) -> do
             let patX = Reference pat Nothing
-            (fr', frCons) <-
-                if categoryOf fr < CatParameter
-                    then return (fr, [])
-                    else do
-                        bound <- lowerBoundOfIntExpr fr
-                        return (bound, return [essence| &patX >= &fr |])
-            (to', toCons) <-
-                if categoryOf to < CatParameter
-                    then return (to, [])
-                    else do
-                        bound <- upperBoundOfIntExpr to
-                        return (bound, return [essence| &patX <= &to |])
-            return $ [Generator (GenDomainNoRepr (Single pat) (DomainInt t [RangeBounded fr' to']))]
-                   ++ map Condition frCons
-                   ++ map Condition toCons
+            (dom', cons) <- case domain of
+                DomainInt t [RangeBounded fr to] -> do
+                    (fr', frCons) <-
+                        if categoryOf fr < CatParameter
+                            then return (fr, [])
+                            else do
+                                bound <- lowerBoundOfIntExpr fr
+                                return (bound, return [essence| &patX >= &fr |])
+                    (to', toCons) <-
+                        if categoryOf to < CatParameter
+                            then return (to, [])
+                            else do
+                                bound <- upperBoundOfIntExpr to
+                                return (bound, return [essence| &patX <= &to |])
+                    return (DomainInt t [RangeBounded fr' to'], frCons ++ toCons)
+                -- DomainSet r attr inner
+                d -> return (d, [])
+            return $ [Generator (GenDomainNoRepr (Single pat) dom')]
+                   ++ map Condition cons
         _ -> return [goc]
     return (Comprehension body (concat gocs'))
 fixQuantified x = return x
