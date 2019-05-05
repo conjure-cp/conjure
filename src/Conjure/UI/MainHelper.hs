@@ -187,10 +187,17 @@ mainWithArgs ParameterGenerator{..} = do
     model  <- readModelFromFile essence
     output <- runNameGen () $ parameterGenerator minInt maxInt model
     writeModel lineWidth outputFormat (Just essenceOut) output
+    let
+        toIrace nm lb ub | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            pretty lb
+        toIrace nm lb ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" i" <+>
+            prettyList prParens "," [lb, ub]
     liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
-        [ pretty nm <+>
-          "\"-" <> pretty nm <> " \" i" <+>
-          prettyList prParens "," [lb, ub]
+        [ toIrace nm lb ub
         | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
         ]
 mainWithArgs ModelStrengthening{..} =
