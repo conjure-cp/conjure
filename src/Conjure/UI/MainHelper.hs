@@ -191,7 +191,7 @@ mainWithArgs ParameterGenerator{..} = do
         toIrace nm lb ub | lb == ub =
             pretty nm <+>
             "\"-" <> pretty nm <> " \" c" <+>
-            pretty lb
+            prParens (pretty lb)
         toIrace nm lb ub =
             pretty nm <+>
             "\"-" <> pretty nm <> " \" i" <+>
