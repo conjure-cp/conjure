@@ -705,6 +705,31 @@ inlineDecVarLettings model =
     in
         model { mStatements = statements }
 
+flattenLex :: MonadFail m
+           => NameGen m
+           => (?typeCheckerMode :: TypeCheckerMode)
+           => Model -> m Model
+flattenLex m = do
+  let
+    flatten a = do
+      ta <- typeOf a
+      case ta of
+        TypeList (TypeList{}) -> do
+          flatten [essence| flatten(&a) |]
+        TypeList (TypeInt{}) -> return [essence| &a |]
+        _ -> bug "flattenLex: hasn't been defined for this structure yet..." 
+    flattener [essence| &a <lex &b |] = do
+      fa <- flatten a
+      fb <- flatten b
+      return [essence| &fa <lex &fb |] 
+    flattener [essence| &a <=lex &b |] = do
+      fa <- flatten a
+      fb <- flatten b
+      return [essence| &fa <=lex &fb |] 
+    flattener x = return x
+  st <- transformBiM flattener (mStatements m)
+  return m { mStatements = st }
+
 
 dropTagForSR ::
     MonadFail m =>
@@ -1058,6 +1083,7 @@ epilogue ::
     Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= flattenLex                    >>= logDebugIdModel "[flattenLex]"
     >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
