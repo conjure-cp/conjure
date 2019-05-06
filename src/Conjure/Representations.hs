@@ -134,17 +134,17 @@ symmetryOrdering ::
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Expression -> m Expression
-symmetryOrdering inp =
+symmetryOrdering inp = do
     case inp of
         -- Constant x -> so_onConstant x
-        -- AbstractLiteral x
---        AbstractLiteral x -> do
---          case x of
---            AbsLitTuple xs -> do
---              soVals <- sequence (symmetryOrdering <$> xs)
---              return $ make opFlatten (fromList soVals)
---            _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
---
+--        AbstractLiteral _ -> return inp
+        AbstractLiteral x -> do
+          case x of
+            AbsLitTuple xs -> do
+              soVals <- sequence (symmetryOrdering <$> xs)
+              return $ AbstractLiteral $ AbsLitTuple soVals --make opFlatten (fromList soVals)
+            _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
+
 
         Reference _ (Just refTo) -> do
             case refTo of

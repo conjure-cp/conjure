@@ -108,13 +108,7 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            [values] <- downX1 inp
-            Just [(_, DomainMatrix index inner)] <- downD ("SO", domain)
-            (iPat, i) <- quantifiedVar
-            soValues <- innerSO downX1 [essence| &values[&i] |] inner
-            return
-                [essence|
-                    [ &soValues
-                    | &iPat : &index
-                    ]
-                |]
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner innerDomain
+

@@ -714,10 +714,17 @@ flattenLex m = do
     flatten a = do
       ta <- typeOf a
       case ta of
-        TypeList (TypeList{}) -> do
-          flatten [essence| flatten(&a) |]
-        TypeList (TypeInt{}) -> return [essence| &a |]
-        _ -> bug "flattenLex: hasn't been defined for this structure yet..." 
+        TypeList (TypeInt{})  -> return  [essence| &a |]
+        TypeInt{}             -> return  [essence| [&a] |]
+        TypeList{}            -> flatten [essence| flatten(&a) |]
+        TypeMatrix{}          -> flatten [essence| flatten(&a) |]
+        TypeTuple{}       -> do
+          case a of
+            AbstractLiteral (AbsLitTuple exprs) -> do
+              is <- sequence (flatten <$> exprs) 
+              flatten $ fromList is
+            _ -> bug $ "epilogue: flattenLex: expected AbsLitTuple..." <+> vcat [pretty ta, pretty a]
+        _ -> bug $ "epilogue: flattenLex: isn't defined for this structure..." <+> vcat [pretty ta, pretty a]
     flattener [essence| &a <lex &b |] = do
       fa <- flatten a
       fb <- flatten b
