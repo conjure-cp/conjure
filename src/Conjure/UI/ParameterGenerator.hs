@@ -122,7 +122,8 @@ pgOnDomain x nm dom =
                 [ Declaration (FindOrGiven Given nmMiddle
                         (DomainInt t [RangeBounded lb ub]))
                 , Declaration (FindOrGiven Given nmDelta
-                        (DomainInt t [RangeBounded 0 [essence| min([5, (&ub - &lb) / 2]) |]]))
+                        -- (DomainInt t [RangeBounded 0 [essence| min([5, (&ub - &lb) / 2]) |]]))
+                        (DomainInt t [RangeBounded 0 [essence| (&ub - &lb) / 2 |]]))
                 ]
                 $ [ [essence| &x >= &middle - &delta |]
                   , [essence| &x <= &middle + &delta |]
