@@ -711,13 +711,25 @@ flattenLex :: MonadFail m
            => Model -> m Model
 flattenLex m = do
   let
+    deshell (Op (MkOpFlatten (OpFlatten Nothing crab))) = do
+      (reshell, hermit) <-  deshell crab
+      return (\r -> (Op (MkOpFlatten (OpFlatten Nothing (reshell r)))), hermit)
+    deshell e = return (id, e)
     flatten a = do
       ta <- typeOf a
       case ta of
-        TypeList (TypeInt{})  -> return  [essence| &a |]
-        TypeInt{}             -> return  [essence| [&a] |]
-        TypeList{}            -> flatten [essence| flatten(&a) |]
-        TypeMatrix{}          -> flatten [essence| flatten(&a) |]
+        TypeList (TypeInt{})    -> return  [essence| &a |]
+        TypeInt{}               -> return  [essence| [&a] |]
+        TypeList (TypeList{})   -> flatten [essence| flatten(&a) |]
+        TypeList (TypeMatrix{}) -> flatten [essence| flatten(&a) |]
+        TypeList{} -> do 
+          (resh, desh) <- deshell a
+          case desh of
+            Comprehension exp goc -> do
+              nexp <- flatten exp
+              flatten $ resh $ Comprehension nexp goc 
+            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure...." <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
+        TypeMatrix{}           -> flatten [essence| flatten(&a) |]
         TypeTuple{}       -> do
           case a of
             AbstractLiteral (AbsLitTuple exprs) -> do
@@ -1332,7 +1344,6 @@ horizontalRules =
     , Horizontal.Permutation.rule_Image_Comprehension
 --    , Horizontal.Permutation.rule_Image_Matrix_Indexing_Comprehension
 --    , Horizontal.Permutation.rule_Compose
-    , Horizontal.Permutation.rule_Image_Literal
     , Horizontal.Permutation.rule_Image_Partition
     , Horizontal.Permutation.rule_Image_Sequence
     , Horizontal.Permutation.rule_Image_Sequence_Defined
@@ -1340,7 +1351,7 @@ horizontalRules =
     , Horizontal.Permutation.rule_Permutation_Inverse 
     , Horizontal.Permutation.rule_Image_Comprehendable
     , Horizontal.Permutation.rule_Image_Incomprehendable
-
+    , Horizontal.Permutation.rule_Image_Literal
 
 
     , Horizontal.Set.rule_Comprehension_Literal
@@ -1901,7 +1912,6 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
         --     TypePartition{} -> return ()
         --     _ -> na "rule_DotLtLeq"
         -- sameRepresentationTree a b
-
         ma <- symmetryOrdering a
         mb <- symmetryOrdering b
         return

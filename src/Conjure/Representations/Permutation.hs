@@ -133,5 +133,4 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
    symmetryOrdering innerSO downX1 inp domain = do
        [x] <- downX1 inp
        Just [(_, xDomain)] <- downD ("SO", domain)
-       soValues <- innerSO downX1 x xDomain
-       return soValues
+       innerSO downX1 x xDomain
