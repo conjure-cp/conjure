@@ -74,11 +74,12 @@ rule_Image_Literal :: Rule
 rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
   theRule [essence| image(&p, &i) |] = do
     (TypePermutation inner, elems) <- match permutationLiteral p
+    typeI <- typeOf i
+    case typeI of TypeList{} -> na "list is a special case" ; _ -> return ()
     let f' = toFunction <$> fromCycles elems 
     case f' of
       Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right f -> do 
-        typeI <- typeOf i
         if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
           then do
             let srtdel = sortBy compare (join elems) 
@@ -221,6 +222,7 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
     ty <- typeOf y
     case ty of TypeSequence{} -> na "sequence is a special case" ; _ -> return ()
     case ty of TypePartition{} -> na "partition is a special case" ; _ -> return ()
+    case ty of TypeList{} -> na "list is a special case" ; _ -> return ()
     (TypePermutation inn) <- typeOf perm
     if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
        then do
