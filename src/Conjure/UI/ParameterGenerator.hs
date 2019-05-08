@@ -62,29 +62,40 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
 
 fixQuantified ::
     MonadUserError m =>
+    NameGen m => 
     Expression ->
     m Expression
 fixQuantified (Comprehension body gocs) = do
     gocs' <- forM gocs $ \ goc -> case goc of
         Generator (GenDomainNoRepr (Single pat) domain) -> do
+            let go x d =
+                    case d of
+                        DomainInt t [RangeBounded fr to] -> do
+                            (fr', frCons) <-
+                                if categoryOf fr < CatParameter
+                                    then return (fr, [])
+                                    else do
+                                        bound <- lowerBoundOfIntExpr fr
+                                        return (bound, return [essence| &x >= &fr |])
+                            (to', toCons) <-
+                                if categoryOf to < CatParameter
+                                    then return (to, [])
+                                    else do
+                                        bound <- upperBoundOfIntExpr to
+                                        return (bound, return [essence| &x <= &to |])
+                            return (DomainInt t [RangeBounded fr' to'], frCons ++ toCons)
+                        DomainFunction r attr innerFr innerTo -> do
+                            (jPat, j) <- quantifiedVar
+                            (innerFr', consFr) <- go [essence| &j[1] |] innerFr
+                            (innerTo', consTo) <- go [essence| &j[2] |] innerTo
+                            let innerCons = make opAnd $ fromList $ consFr ++ consTo
+                            return ( DomainFunction r attr innerFr' innerTo'
+                                   , return [essence| forAll &jPat in &x . &innerCons |]
+                                   )
+                        _ -> return (d, [])
+
             let patX = Reference pat Nothing
-            (dom', cons) <- case domain of
-                DomainInt t [RangeBounded fr to] -> do
-                    (fr', frCons) <-
-                        if categoryOf fr < CatParameter
-                            then return (fr, [])
-                            else do
-                                bound <- lowerBoundOfIntExpr fr
-                                return (bound, return [essence| &patX >= &fr |])
-                    (to', toCons) <-
-                        if categoryOf to < CatParameter
-                            then return (to, [])
-                            else do
-                                bound <- upperBoundOfIntExpr to
-                                return (bound, return [essence| &patX <= &to |])
-                    return (DomainInt t [RangeBounded fr' to'], frCons ++ toCons)
-                -- DomainSet r attr inner
-                d -> return (d, [])
+            (dom', cons) <- go patX domain
             return $ [Generator (GenDomainNoRepr (Single pat) dom')]
                    ++ map Condition cons
         _ -> return [goc]
