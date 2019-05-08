@@ -722,21 +722,40 @@ flattenLex m = do
         TypeInt{}               -> return  [essence| [&a] |]
         TypeList (TypeList{})   -> flatten [essence| flatten(&a) |]
         TypeList (TypeMatrix{}) -> flatten [essence| flatten(&a) |]
+        TypeMatrix{} -> do -- flatten [essence| flatten(&a) |]
+          case a of
+            AbstractLiteral (AbsLitMatrix indxDom _) -> do 
+              (iPat,i) <- quantifiedVarOverDomain indxDom
+              flatten $ Comprehension [essence| &a[&i] |]
+                                      [Generator (GenDomainNoRepr iPat indxDom)]
+            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure.."
+                    <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
         TypeList{} -> do 
           (resh, desh) <- deshell a
           case desh of
             Comprehension exp goc -> do
               nexp <- flatten exp
               flatten $ resh $ Comprehension nexp goc 
-            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure...." <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
-        TypeMatrix{}           -> flatten [essence| flatten(&a) |]
+            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure..."
+                    <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
+--        TypeMatrix{}          -> do
+--          (resh, desh) <- deshell a
+--          deshd <- domainOf desh
+--          case deshd of
+--            DomainMatrix indxDom _ -> do 
+--              (iPat,i) <- quantifiedVarOverDomain indxDom
+--              flatten $ resh [essence| [ &desh[&i] | &iPat : &indxDom ] |]
+--            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure...."
+--                    <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
         TypeTuple{}       -> do
           case a of
             AbstractLiteral (AbsLitTuple exprs) -> do
               is <- sequence (flatten <$> exprs) 
               flatten $ fromList is
-            _ -> bug $ "epilogue: flattenLex: expected AbsLitTuple..." <+> vcat [pretty ta, pretty a]
-        _ -> bug $ "epilogue: flattenLex: isn't defined for this structure..." <+> vcat [pretty ta, pretty a]
+            _ -> bug $ "epilogue: flattenLex: expected AbsLitTuple...."
+                    <+> vcat [pretty ta, pretty a]
+        _ -> bug $ "epilogue: flattenLex: isn't defined for this structure....."
+                <+> vcat [pretty ta, pretty a]
     flattener [essence| &a <lex &b |] = do
       fa <- flatten a
       fb <- flatten b

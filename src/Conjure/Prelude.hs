@@ -7,6 +7,7 @@
 module Conjure.Prelude
     ( module X
     , stringToDoc
+    , textToDoc
     , padRight, padLeft, padCenter
     , pairWithContents
     , withRest, withAfter, withBefore
@@ -219,6 +220,9 @@ textToString = T.unpack
 
 stringToDoc :: String -> Doc
 stringToDoc = Pr.text
+
+textToDoc :: T.Text -> Doc
+textToDoc = stringToDoc . textToString
 
 padRight :: Int -> Char -> String -> String
 padRight n ch s = s ++ replicate (n - length s) ch
