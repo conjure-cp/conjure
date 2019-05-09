@@ -258,7 +258,7 @@ pgOnDomain x nm dom =
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return ( SizeAttr_None, Nothing, Nothing
+                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
                                                , DomainInt TagInt [RangeBounded minInt maxInt]
                                                )
                                     SizeAttr_Size a -> do
@@ -333,7 +333,7 @@ pgOnDomain x nm dom =
                             (sizeAttrOut, sizeLb, sizeUb, cardDomain) <-
                                 case sizeAttr of
                                     SizeAttr_None ->
-                                        return ( SizeAttr_None, Nothing, Nothing
+                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
                                                , DomainInt TagInt [RangeBounded minInt maxInt]
                                                )
                                     SizeAttr_Size a -> do
@@ -434,7 +434,7 @@ pgOnDomain x nm dom =
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return ( SizeAttr_None, Nothing, Nothing
+                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
                                                , DomainInt TagInt [RangeBounded minInt maxInt]
                                                )
                                     SizeAttr_Size a -> do
@@ -564,7 +564,7 @@ pgOnDomain x nm dom =
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return ( SizeAttr_None, Nothing, Nothing
+                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
                                                , DomainInt TagInt [RangeBounded minInt maxInt]
                                                )
                                     SizeAttr_Size a -> do
