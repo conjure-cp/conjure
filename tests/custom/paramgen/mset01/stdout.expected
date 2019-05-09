@@ -41,7 +41,7 @@ given f_cardMiddle: int(0..100)
 given f_cardDelta: int(0..3)
 given f_inner_middle: int(1..10)
 given f_inner_delta: int(0..4)
-find f: mset (maxOccur 10) of int(1..10)
+find f: mset (maxSize 100, maxOccur 10) of int(1..10)
 such that
     |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
     and([freq(f, q1) <= t | q1 <- f]),
@@ -164,7 +164,7 @@ given f_cardMiddle: int(-10..50)
 given f_cardDelta: int(0..3)
 given f_inner_middle: int(1..10)
 given f_inner_delta: int(0..4)
-find f: mset (maxOccur 10) of int(1..10)
+find f: mset (maxSize 50, maxOccur 10) of int(1..10)
 such that
     |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
     and([freq(f, q1) <= t | q1 <- f]),
