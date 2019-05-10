@@ -169,6 +169,7 @@ import Data.Generics.Uniplate.Data as X
     , transformM, transformBiM
     , descend, descendM
     , descendBi, descendBiM
+    , rewriteBi
     , universe, universeBi
     , children, childrenBi
     , uniplate

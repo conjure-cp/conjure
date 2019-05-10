@@ -23,6 +23,8 @@ import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
+import Conjure.Language.Expression ( reDomExp )
+import Conjure.Language.Constant   ( reDomConst )
 import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )
@@ -1091,6 +1093,7 @@ prologue ::
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
+    >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
     >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
     >>= inferAttributes               >>= logDebugIdModel "[inferAttributes]"
@@ -1110,7 +1113,12 @@ prologue model = do
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
+    >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
 
+enforceTagConsistency :: MonadFail m => Model -> m Model
+enforceTagConsistency model = do
+  let statements' = transformBi reDomExp $ transformBi reDomConst (mStatements model)
+  return model { mStatements = statements' }
 
 epilogue ::
     MonadFail m =>
@@ -1931,8 +1939,8 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
         --     TypePartition{} -> return ()
         --     _ -> na "rule_DotLtLeq"
         -- sameRepresentationTree a b
-        ma <- symmetryOrdering a
-        mb <- symmetryOrdering b
+        ma <- symmetryOrdering $ transformBi reDomExp $ transformBi reDomConst a 
+        mb <- symmetryOrdering $ transformBi reDomExp $ transformBi reDomConst b
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb

@@ -16,6 +16,7 @@ module Conjure.Language.Expression
     , patternToExpr
     , emptyCollectionX
     , nbUses
+    , reDomExp
     ) where
 
 -- conjure
@@ -857,3 +858,10 @@ emptyCollectionX (Constant x) = emptyCollection x
 emptyCollectionX (AbstractLiteral x) = emptyCollectionAbsLit x
 emptyCollectionX (Typed x _) = emptyCollectionX x
 emptyCollectionX _ = False
+
+
+reDomExp :: Domain () Expression -> Domain () Expression 
+reDomExp exp = case exp of
+                 DomainInt t _ -> reTag t exp
+                 _ -> exp
+

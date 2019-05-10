@@ -15,6 +15,8 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.Expression ( reDomExp )
+import Conjure.Language.Constant   ( reDomConst )
 
 
 resolveNamesMulti
@@ -115,11 +117,11 @@ resolveStatement st =
                 Letting nm x                  -> do
                     x' <- resolveX x
                     modify ((nm, Alias x') :)
-                    return (Declaration (Letting nm x'))
+                    return  (Declaration (Letting nm x'))
                 LettingDomainDefnUnnamed nm x -> do
                     x' <- resolveX x
                     modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
-                    return (Declaration (LettingDomainDefnUnnamed nm x'))
+                    return  (Declaration (LettingDomainDefnUnnamed nm x'))
                 LettingDomainDefnEnum (Name ename) nms -> do
                     modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
                              | (nm, i) <- zip nms [1..]
@@ -138,6 +140,7 @@ resolveStatement st =
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
+
 
 
 resolveSearchOrder

@@ -76,27 +76,38 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
     (TypePermutation inner, elems) <- match permutationLiteral p
     typeI <- typeOf i
     case typeI of TypeList{} -> na "list is a special case" ; _ -> return ()
-    let f' = toFunction <$> fromCycles elems 
-    case f' of
-      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
-      Right f -> do 
-        if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
-          then do
-            let srtdel = sortBy compare (join elems) 
-                domIndx = mkDomainInt (RangeSingle <$> srtdel) 
-                matLit = make matrixLiteral (TypeMatrix inner inner) domIndx ( f <$> srtdel)
-            return
-               ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
-               , do
-                 return [essence| [&i, catchUndef(&matLit[&i],0)][toInt(&i in toSet(&matLit))+1] |]
-
-               )
-          else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
-                 then na "rule_Image_Literal"
-                 else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
-                             , do
-                               return [essence| &i |]
-                             )
+    case typeI of
+      TypeTuple tint -> do
+        let tupleIndexImage indx = let indexexpr = Constant (ConstantInt TagInt indx)
+                                   in [essence| image(&p, &i[&indexexpr]) |]
+            tupleExpression = AbstractLiteral $ AbsLitTuple
+                            $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
+        return
+            ( "Horizontal rule for image of tuple under permutation"
+            , return tupleExpression 
+            )
+      _ -> do
+        let f' = toFunction <$> fromCycles elems 
+        case f' of
+          Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+          Right f -> do 
+            if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
+              then do
+                let srtdel = sortBy compare (join elems) 
+                    domIndx = mkDomainInt (RangeSingle <$> srtdel) 
+                    matLit = make matrixLiteral (TypeMatrix inner inner) domIndx ( f <$> srtdel)
+                return
+                   ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
+                   , do
+                     return [essence| [&i, catchUndef(&matLit[&i],0)][toInt(&i in toSet(&matLit))+1] |]
+    
+                   )
+              else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
+                     then na "rule_Image_Literal"
+                     else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
+                                 , do
+                                   return [essence| &i |]
+                                 )
   theRule _ = na "rule_Image_Literal"
 
 
@@ -172,7 +183,7 @@ rule_Image_Comprehension = "comprehension-image" `namedRule` theRule where
 --                           -> Generator
 --                           -> m [GeneratorOrCondition]
   permutationOverGenerator p (GenDomainHasRepr a d) = do
-    (Single nm, n) <- quantifiedVar
+    (Single nm, n) <- quantifiedVarOverDomain $ forgetRepr d
     return [Generator (GenDomainHasRepr nm d)
            ,ComprehensionLetting a [essence| image(&p, &n) |]
            ]

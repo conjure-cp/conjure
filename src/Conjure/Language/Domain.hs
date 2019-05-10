@@ -1041,3 +1041,4 @@ singletonDomainInt _ = Nothing
 matrixNumDimsD :: Domain r x -> Int
 matrixNumDimsD (DomainMatrix _ t) = 1 + matrixNumDimsD t
 matrixNumDimsD _ = 0
+

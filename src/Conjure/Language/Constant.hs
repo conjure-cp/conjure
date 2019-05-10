@@ -21,6 +21,7 @@ module Conjure.Language.Constant
     , viewConstantRelation
     , viewConstantPartition
     , viewConstantPermutation
+    , reDomConst
     ) where
 
 -- conjure
@@ -524,3 +525,10 @@ viewConstantPermutation :: MonadFail m => Constant -> m [[Constant]]
 viewConstantPermutation (ConstantAbstract (AbsLitPermutation xs)) = return xs
 viewConstantPermutation (TypedConstant c _) = viewConstantPermutation c
 viewConstantPermutation constant = fail ("Expecting a permutation, but got:" <++> pretty constant)
+
+
+reDomConst :: Domain () Constant -> Domain () Constant 
+reDomConst cns = case cns of
+                   DomainInt t _ -> reTag t cns
+                   _ -> cns
+
