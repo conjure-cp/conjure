@@ -94,12 +94,20 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
             if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
               then do
                 let srtdel = sortBy compare (join elems) 
-                    domIndx = mkDomainInt (RangeSingle <$> srtdel) 
-                    matLit = make matrixLiteral (TypeMatrix inner inner) domIndx ( f <$> srtdel)
+                    inperm = (\x -> [essence| toInt(&x) + 1 |])
+                             ((\o -> [essence| or(&o) |])
+                             ((fromList ((\q -> [essence| &q = &i |]) <$> srtdel))))
+                    indexr = (\x -> [essence| sum(&x) |]) 
+                             (fromList ((\(n,q) -> [essence| toInt(&q = &i) * &n |])
+                              <$> (zip [1..] srtdel)))
+                    matIdx = mkDomainIntB (fromInt 1)
+                                          (fromInt (fromIntegral (length srtdel)))
+                    matLit = make matrixLiteral (TypeMatrix (TypeInt TagInt) inner)
+                                                 matIdx (f <$> srtdel)
                 return
                    ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                    , do
-                     return [essence| [&i, catchUndef(&matLit[&i],0)][toInt(&i in toSet(&matLit))+1] |]
+                     return [essence| [&i, catchUndef(&matLit[&indexr],0)][&inperm] |]
     
                    )
               else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
