@@ -219,7 +219,7 @@ toCompletion :: forall m .
     Model ->
     Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue config m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
@@ -1089,8 +1089,10 @@ prologue ::
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m Model
-prologue model = do
+    Config ->
+    Model ->
+    m Model
+prologue config model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
     >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
@@ -1101,13 +1103,16 @@ prologue model = do
     >>= lettingsForComplexInDoms      >>= logDebugIdModel "[lettingsForComplexInDoms]"
     >>= distinctQuantifiedVars        >>= logDebugIdModel "[distinctQuantifiedVars]"
     >>= return . initInfo             >>= logDebugIdModel "[initInfo]"
+    >>= addUnnamedSymmetryBreaking (unnamedSymmetryBreaking config )
+                                      >>= logDebugIdModel "[addUnnamedSymmetryBreaking]"
     >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugIdModel "[finiteGivens]"
     >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= return . initInfo_Lettings    >>= logDebugIdModel "[initInfo_Lettings]"
     >>= removeDomainLettings          >>= logDebugIdModel "[removeDomainLettings]"
-    >>= typeCheckModel                >>= logDebugIdModel "[typeCheckModel]"
+    >>= (let ?typeCheckerMode = RelaxedIntegerTags in typeCheckModel)
+                                      >>= logDebugIdModel "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugIdModel "[categoryChecking]"
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
@@ -1115,10 +1120,6 @@ prologue model = do
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
     >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
 
-enforceTagConsistency :: MonadFail m => Model -> m Model
-enforceTagConsistency model = do
-  let statements' = transformBi reDomExp $ transformBi reDomConst (mStatements model)
-  return model { mStatements = statements' }
 
 epilogue ::
     MonadFail m =>
@@ -2439,3 +2440,88 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
+
+
+enforceTagConsistency :: MonadFail m => Model -> m Model
+enforceTagConsistency model = do
+  let statements' = transformBi reDomExp $ transformBi reDomConst (mStatements model)
+  return model { mStatements = statements' }
+
+
+addUnnamedSymmetryBreaking ::
+    NameGen m =>
+    UnnamedSymmetryBreaking ->
+    Model ->
+    m Model
+addUnnamedSymmetryBreaking mode model = do
+
+    let
+        allUnnamedTypes :: [(Domain () Expression, Expression)]
+        allUnnamedTypes =
+            [ (DomainReference nm Nothing, x)
+            | Declaration (LettingDomainDefnUnnamed nm x) <- mStatements model
+            ]
+
+        allDecVars =
+            [ Reference nm Nothing
+            | Declaration (FindOrGiven Find nm _ ) <- mStatements model
+            ]
+
+        varsTuple = AbstractLiteral $ AbsLitTuple allDecVars
+
+    traceM $ show $ "Unnamed types in this model:" <+> prettyList id "," allUnnamedTypes
+    traceM $ show $ "Unnamed decision variables in this model:" <+> prettyList id "," allDecVars
+
+    case mode of
+        None -> return model
+        FastConsecutive -> do
+            -- independently for each unnamed type
+            -- for pairs of (i, i+1) : U
+            -- add a .<= on a tuple of all decision variables
+            stmts <- sequence
+                [ do
+                    (iPat, i) <- quantifiedVar
+                    return [essence|
+                                and([ &varsTuple .<= image(permutation((&i, &i+1)), &varsTuple)
+                                    | &iPat : &u
+                                    , &i < &uSize
+                                    ])
+                            |]
+                | (u, uSize) <- allUnnamedTypes
+                ]
+            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
+                                 : map (nest 4 . pretty) stmts
+            return model { mStatements = mStatements model ++ [SuchThat stmts] }
+        FastAllpairs -> do
+            -- independently for each unnamed type
+            -- for pairs of (i, j) : U i < j
+            -- add a .<=
+            stmts <- sequence
+                [ do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return [essence|
+                                and([ &varsTuple .<= image(permutation((&i, &j)), &varsTuple)
+                                    | &iPat : &u
+                                    , &jPat : &u
+                                    , &i < &j
+                                    ])
+                            |]
+                | (u, _uSize) <- allUnnamedTypes
+                ]
+            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
+                                 : map (nest 4 . pretty) stmts
+            return model { mStatements = mStatements model ++ [SuchThat stmts] }
+        CompleteIndependently -> do
+            -- independently for each unnamed type
+            -- introduce an aux for each top level decision variable
+            -- aux_x = image(perm, x)
+            -- add a .<= on x and aux_x
+            return model
+        Complete -> do
+            -- introduce an aux for each top level decision variable
+            -- aux_x = image(perm_U, image(perm_T, x))
+            -- add a .<= on x and aux_x
+            return model
+
+
