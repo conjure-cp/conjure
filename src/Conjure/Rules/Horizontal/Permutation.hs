@@ -17,19 +17,6 @@ rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule
            return [essence| &i |]
         )
 
-rule_Image_DotLt :: Rule
-rule_Image_DotLt = "permutation-image-dotlt{AsFunction}" `namedRule` theRule where
-  theRule [essence| image(&p, &i) .< &q |] = do
-    TypePermutation _ <- typeOf p  
-    return ( "Horizontal rule for image of permutation DotLt" 
-           , do
-             (piPat, pi) <- quantifiedVar
-             (qiPat, qi) <- quantifiedVar
-             return [essence| [&pi | &piPat <- image(&p, &i)] .< [&qi | &qiPat <- &q] |]
-           )
-  theRule _ = na "rule_Image_DotLt"
-
-
 rule_Equality :: Rule
 rule_Equality = "permutation-equality" `namedRule` theRule where
   theRule e = do

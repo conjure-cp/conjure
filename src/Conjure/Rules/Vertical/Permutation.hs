@@ -83,22 +83,6 @@ rule_Image = "permutation-image{AsFunction}" `namedRule` theRule where
       _ -> na "rule_Image"
   theRule _ = na "rule_Image"
 
-
-rule_Permutation_DotLt :: Rule
-rule_Permutation_DotLt = "permuation-dotlt" `namedRule` theRule where
-  theRule [essence| &lhs .< &rhs |] = do
-    TypePermutation _ <- typeOf lhs
-    TypePermutation _ <- typeOf rhs
-    [fl] <- downX1 lhs
-    [fr] <- downX1 rhs
-    return
-      ( "Vertical rule for permutation dot less."
-      , return [essence| &fl .< &fr |]
-      )
-  theRule _ = na "rule_Permutation_DotLt"
-
-
-
 rule_Matrix_Image :: Rule
 rule_Matrix_Image = "matrix-image" `namedRule` theRule where
     theRule [essence| image(&perm, &y) |]  = do
