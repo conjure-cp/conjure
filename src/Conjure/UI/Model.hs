@@ -2463,22 +2463,30 @@ addUnnamedSymmetryBreaking mode model = do
             ]
 
         allDecVars =
-            [ Reference nm Nothing
-            | Declaration (FindOrGiven Find nm _ ) <- mStatements model
+            [ (Reference nm Nothing, domain)
+            | Declaration (FindOrGiven Find nm domain) <- mStatements model
             ]
 
-        varsTuple = AbstractLiteral $ AbsLitTuple allDecVars
+        varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
 
     traceM $ show $ "Unnamed types in this model:" <+> prettyList id "," allUnnamedTypes
     traceM $ show $ "Unnamed decision variables in this model:" <+> prettyList id "," allDecVars
 
-    case mode of
+    -- 3 axis of doom
+    -- 1. quick/complete. quick is x .<= p(x)
+    --                    complete is x .<= y /\ y = p(x)
+    -- 2. scope.          consecutive
+    --                    all-pairs
+    --                    all-permutations
+    -- 3. independently/altogether
+
+    stmts <- case mode of
         None -> return model
         FastConsecutive -> do
             -- independently for each unnamed type
             -- for pairs of (i, i+1) : U
             -- add a .<= on a tuple of all decision variables
-            stmts <- sequence
+            sequence
                 [ do
                     (iPat, i) <- quantifiedVar
                     return [essence|
@@ -2489,14 +2497,11 @@ addUnnamedSymmetryBreaking mode model = do
                             |]
                 | (u, uSize) <- allUnnamedTypes
                 ]
-            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
-                                 : map (nest 4 . pretty) stmts
-            return model { mStatements = mStatements model ++ [SuchThat stmts] }
         FastAllpairs -> do
             -- independently for each unnamed type
             -- for pairs of (i, j) : U i < j
             -- add a .<=
-            stmts <- sequence
+            sequence
                 [ do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
@@ -2509,19 +2514,36 @@ addUnnamedSymmetryBreaking mode model = do
                             |]
                 | (u, _uSize) <- allUnnamedTypes
                 ]
-            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
-                                 : map (nest 4 . pretty) stmts
-            return model { mStatements = mStatements model ++ [SuchThat stmts] }
+        FastAllPermutations -> do
+            -- independently for each unnamed type
+            -- for all p : permutation of U
+            -- add a .<=
+            sequence
+                [ do
+                    (iPat, i) <- quantifiedVar
+                    return [essence|
+                                and([ &varsTuple .<= image(&i, &varsTuple)
+                                    | &iPat : permutation of &u
+                                    ])
+                            |]
+                | (u, _uSize) <- allUnnamedTypes
+                ]
         CompleteIndependently -> do
             -- independently for each unnamed type
             -- introduce an aux for each top level decision variable
             -- aux_x = image(perm, x)
             -- add a .<= on x and aux_x
-            return model
+            return []
         Complete -> do
             -- introduce an aux for each top level decision variable
             -- aux_x = image(perm_U, image(perm_T, x))
             -- add a .<= on x and aux_x
-            return model
+            return []
+
+    traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
+                         : map (nest 4 . pretty) stmts
+    return model { mStatements = mStatements model ++ [SuchThat stmts] }
+
+
 
 

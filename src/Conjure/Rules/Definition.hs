@@ -144,6 +144,7 @@ data UnnamedSymmetryBreaking
     = None
     | FastConsecutive
     | FastAllpairs
+    | FastAllPermutations
     | CompleteIndependently
     | Complete
     deriving (Eq, Ord, Show, Read, Data, Typeable)

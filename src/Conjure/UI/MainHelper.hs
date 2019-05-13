@@ -107,8 +107,9 @@ mainWithArgs Modelling{..} = do
         unnamedSymmetryBreakingParsed <-
             case unnamedSymmetryBreaking of
                 "none"                      -> return None
-                "fast-consecutive"          -> return FastConsecutive
-                "fast-allpairs"             -> return FastAllpairs
+                "fast-consecutive"          -> return FastConsecutive           -- quick, consecutive, independently
+                "fast-allpairs"             -> return FastAllpairs              -- quick, allpairs, independently
+                "fast-allpermutations"      -> return FastAllPermutations       -- quick, allperms, independently
                 "complete-independently"    -> return CompleteIndependently
                 "complete"                  -> return Complete
                 _ -> userErr1 $ vcat
