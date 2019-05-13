@@ -26,7 +26,7 @@ import Conjure.Language.NameGen ( NameGenM, runNameGen )
 import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
-import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
+import Conjure.Rules.Definition ( viewAuto, Strategy(..), UnnamedSymmetryBreaking(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
@@ -104,6 +104,19 @@ mainWithArgs Modelling{..} = do
                                              , "But got:" <+> pretty responses
                                              ]
 
+        unnamedSymmetryBreakingParsed <-
+            case unnamedSymmetryBreaking of
+                "none"                      -> return None
+                "fast-consecutive"          -> return FastConsecutive
+                "fast-allpairs"             -> return FastAllpairs
+                "complete-independently"    -> return CompleteIndependently
+                "complete"                  -> return Complete
+                _ -> userErr1 $ vcat
+                    [ "Unrecognised value for --unnamed-symmetry-breaking"
+                    , "Expected one of: none/fast-consecutive/fast-allpairs/complete-independently/complete"
+                    , "But got:" <+> pretty unnamedSymmetryBreaking
+                    ]
+
         return Config.Config
             { Config.outputDirectory            = outputDirectory
             , Config.logLevel                   = logLevel
@@ -123,6 +136,7 @@ mainWithArgs Modelling{..} = do
             , Config.representationsCuts        = representationsCuts'
             , Config.channelling                = channelling
             , Config.representationLevels       = representationLevels
+            , Config.unnamedSymmetryBreaking    = unnamedSymmetryBreakingParsed
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames

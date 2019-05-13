@@ -7,6 +7,7 @@ module Conjure.Rules.Definition
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
+    , UnnamedSymmetryBreaking(..)
     , ModelZipper, mkModelZipper, fromModelZipper
     , ModelWIP(..), modelWIPOut, updateModelWIPInfo
     , isAtomic
@@ -100,6 +101,7 @@ data Config = Config
     , outputDirectory            :: FilePath
     , channelling                :: Bool
     , representationLevels       :: Bool
+    , unnamedSymmetryBreaking    :: UnnamedSymmetryBreaking
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -129,6 +131,7 @@ instance Default Config where
         , outputDirectory            = "conjure-output"
         , channelling                = True
         , representationLevels       = True
+        , unnamedSymmetryBreaking    = None
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False
@@ -136,6 +139,14 @@ instance Default Config where
         , responses                  = Nothing
         , estimateNumberOfModels     = False
         }
+
+data UnnamedSymmetryBreaking
+    = None
+    | FastConsecutive
+    | FastAllpairs
+    | CompleteIndependently
+    | Complete
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 data RuleResult m = RuleResult
     { ruleResultDescr :: Doc                        -- describe this transformation

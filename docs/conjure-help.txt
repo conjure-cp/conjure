@@ -69,6 +69,10 @@
       --representation-levels                 Whether to use built-in precedence levels when choosing representations.
                                               Used to cut down the number of generated models.
                                               Default: true
+      --unnamed-symmetry-breaking=ITEM        Level to use for breaking symmetries arising from unnamed types.
+                                              Options: none / fast-consecutive / fast-allpairs / complete-independently
+                                              / complete.
+                                              Default: none
       --seed=INT                              Random number generator seed.
       --limit-models=INT                      Maximum number of models to generate.
       --choices=FILE                          Choices to use for -al, either an eprime file (created by
@@ -204,6 +208,10 @@
       --representation-levels                 Whether to use built-in precedence levels when choosing representations.
                                               Used to cut down the number of generated models.
                                               Default: true
+      --unnamed-symmetry-breaking=ITEM        Level to use for breaking symmetries arising from unnamed types.
+                                              Options: none / fast-consecutive / fast-allpairs / complete-independently
+                                              / complete.
+                                              Default: none
       --seed=INT                              Random number generator seed.
       --limit-models=INT                      Maximum number of models to generate.
       --use-existing-models=FILE              File names of Essence' models generated beforehand.
