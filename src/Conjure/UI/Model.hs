@@ -2502,8 +2502,8 @@ addUnnamedSymmetryBreaking mode model = do
                             let applied = buildPermutationChain perms varsTuple
                             in  [essence| &varsTuple .<= &applied |]
                         USBComplete ->
-                            let applied = buildPermutationChain perms auxsTuple
-                            in  [essence| &varsTuple .<= &applied |]
+                            let applied = buildPermutationChain perms varsTuple
+                            in  [essence| &varsTuple .<= &auxsTuple /\ &auxsTuple = &applied |]
 
 
                 mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
