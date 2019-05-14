@@ -2474,8 +2474,8 @@ addUnnamedSymmetryBreaking mode model = do
         varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
         auxsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVarsAux
 
-    traceM $ show $ "Unnamed types in this model:" <+> prettyList id "," allUnnamedTypes
-    traceM $ show $ "Unnamed decision variables in this model:" <+> prettyList id "," allDecVars
+    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
+    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
 
     -- 3 axis of doom
     -- 1. Quick/Complete. Quick is x .<= p(x)
