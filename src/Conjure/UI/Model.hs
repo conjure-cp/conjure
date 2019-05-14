@@ -2466,13 +2466,13 @@ addUnnamedSymmetryBreaking mode model = do
             | Declaration (FindOrGiven Find nm domain) <- mStatements model
             ]
 
-        allDecVarsAux =
-            [ (Reference (mconcat [nm, "_aux"]) Nothing, domain)
+        allDecVarsAux auxSuffix =
+            [ (Reference (mconcat [nm, "_auxFor_", auxSuffix]) Nothing, domain)
             | Declaration (FindOrGiven Find nm domain) <- mStatements model
             ]
 
         varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
-        auxsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVarsAux
+        mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
 
     traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
     traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
@@ -2496,31 +2496,32 @@ addUnnamedSymmetryBreaking mode model = do
                         let applied = buildPermutationChain ps vars
                         in  [essence| image(&p, &applied) |]
 
-                combinedPermApply perms =
+                combinedPermApply auxSuffix perms =
                     case quickOrComplete of
                         USBQuick ->
                             let applied = buildPermutationChain perms varsTuple
                             in  [essence| &varsTuple .<= &applied |]
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
-                            in  [essence| &varsTuple .<= &auxsTuple /\ &auxsTuple = &applied |]
+                                thisAuxTuple = mkAuxTuple auxSuffix
+                            in  [essence| &varsTuple .<= &thisAuxTuple /\ &thisAuxTuple = &applied |]
 
 
-                mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
-                mkGenerator_Consecutive perms [(u, uSize)] = do
+                mkGenerator_Consecutive _ _ [] = bug "must have at least one unnamed type"
+                mkGenerator_Consecutive auxSuffix perms [(u, uSize)] = do
                     (iPat, i) <- quantifiedVar
                     let perm = [essence| permutation((&i, &i+1)) |]
-                    let applied = combinedPermApply (perm:perms)
+                    let applied = combinedPermApply auxSuffix (perm:perms)
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
                                     , &i < &uSize
                                     ])
                            |]
-                mkGenerator_Consecutive perms ((u, uSize):us) = do
+                mkGenerator_Consecutive auxSuffix perms ((u, uSize):us) = do
                     (iPat, i) <- quantifiedVar
                     let perm = [essence| permutation((&i, &i+1)) |]
-                    applied <- mkGenerator_Consecutive (perm:perms) us
+                    applied <- mkGenerator_Consecutive auxSuffix (perm:perms) us
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
@@ -2529,12 +2530,12 @@ addUnnamedSymmetryBreaking mode model = do
                            |]
 
 
-                mkGenerator_AllPairs _ [] = bug "must have at least one unnamed type"
-                mkGenerator_AllPairs perms [(u, _uSize)] = do
+                mkGenerator_AllPairs _ _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPairs auxSuffix perms [(u, _uSize)] = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let perm = [essence| permutation((&i, &j)) |]
-                    let applied = combinedPermApply (perm:perms)
+                    let applied = combinedPermApply auxSuffix (perm:perms)
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
@@ -2542,11 +2543,11 @@ addUnnamedSymmetryBreaking mode model = do
                                     , &i < &j
                                     ])
                            |]
-                mkGenerator_AllPairs perms ((u, _uSize):us) = do
+                mkGenerator_AllPairs auxSuffix perms ((u, _uSize):us) = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let perm = [essence| permutation((&i, &j)) |]
-                    applied <- mkGenerator_AllPairs (perm:perms) us
+                    applied <- mkGenerator_AllPairs auxSuffix (perm:perms) us
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
@@ -2555,51 +2556,59 @@ addUnnamedSymmetryBreaking mode model = do
                                     ])
                            |]
 
-                mkGenerator_AllPermutations _ [] = bug "must have at least one unnamed type"
-                mkGenerator_AllPermutations perms [(u, _uSize)] = do
+                mkGenerator_AllPermutations _ _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPermutations auxSuffix perms [(u, _uSize)] = do
                     (iPat, i) <- quantifiedVar
                     let perm = i
-                    let applied = combinedPermApply (perm:perms)
+                    let applied = combinedPermApply auxSuffix (perm:perms)
                     return [essence|
                                 and([ &applied
                                     | &iPat : permutation of &u
                                     ])
                            |]
-                mkGenerator_AllPermutations perms ((u, _uSize):us) = do
+                mkGenerator_AllPermutations auxSuffix perms ((u, _uSize):us) = do
                     (iPat, i) <- quantifiedVar
                     let perm = i
-                    applied <- mkGenerator_AllPermutations (perm:perms) us
+                    applied <- mkGenerator_AllPermutations auxSuffix (perm:perms) us
                     return [essence|
                                 and([ &applied
                                     | &iPat : permutation of &u
                                     ])
                            |]
 
-                mkGenerator perms us =
+                mkGenerator auxSuffix perms us =
                     case usbScope of
-                        USBConsecutive -> mkGenerator_Consecutive perms us
-                        USBAllPairs -> mkGenerator_AllPairs perms us
-                        USBAllPermutations -> mkGenerator_AllPermutations perms us
+                        USBConsecutive -> mkGenerator_Consecutive auxSuffix perms us
+                        USBAllPairs -> mkGenerator_AllPairs auxSuffix perms us
+                        USBAllPermutations -> mkGenerator_AllPermutations auxSuffix perms us
 
             newCons <-
                 case independentlyOrAltogether of
                     USBIndependently ->
                         sequence
-                            [ mkGenerator [] [(u, uSize)]
-                            | (u, uSize) <- allUnnamedTypes
+                            [ mkGenerator uName [] [(u, uSize)]
+                            | (u@(DomainReference uName _), uSize) <- allUnnamedTypes
                             ]
                     USBAltogether -> do
-                        cons <- mkGenerator [] allUnnamedTypes
+                        cons <- mkGenerator "all" [] allUnnamedTypes
                         return [cons]
 
             let newDecls =
                     case quickOrComplete of
                         USBQuick -> []
                         USBComplete ->
-                            [ Declaration (FindOrGiven Find nm' domain)
-                            | Declaration (FindOrGiven Find nm  domain) <- mStatements model
-                            , let nm' = mconcat [nm, "_aux"]
-                            ]
+                            case independentlyOrAltogether of
+                                USBIndependently ->
+                                    [ Declaration (FindOrGiven Find nm' domain)
+                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                                    , (DomainReference uName _, _) <- allUnnamedTypes
+                                    , let nm' = mconcat [nm, "_auxFor_", uName]
+                                    ]
+                                USBAltogether ->
+                                    [ Declaration (FindOrGiven Find nm' domain)
+                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                                    , let nm' = mconcat [nm, "_auxFor_all"]
+                                    ]
 
             let stmts = newDecls ++ [SuchThat newCons]
 
