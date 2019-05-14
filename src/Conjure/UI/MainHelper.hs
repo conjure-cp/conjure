@@ -26,7 +26,10 @@ import Conjure.Language.NameGen ( NameGenM, runNameGen )
 import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
-import Conjure.Rules.Definition ( viewAuto, Strategy(..), UnnamedSymmetryBreaking(..) )
+import Conjure.Rules.Definition ( viewAuto, Strategy(..)
+                                , UnnamedSymmetryBreaking(..)
+                                , USBQuickOrComplete(..), USBScope(..), USBIndependentlyOrAltogether(..)
+                                )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
@@ -105,18 +108,52 @@ mainWithArgs Modelling{..} = do
                                              ]
 
         unnamedSymmetryBreakingParsed <-
-            case unnamedSymmetryBreaking of
-                "none"                      -> return None
-                "fast-consecutive"          -> return FastConsecutive           -- quick, consecutive, independently
-                "fast-allpairs"             -> return FastAllpairs              -- quick, allpairs, independently
-                "fast-allpermutations"      -> return FastAllPermutations       -- quick, allperms, independently
-                "complete-independently"    -> return CompleteIndependently
-                "complete"                  -> return Complete
+        -- 1. Quick/Complete. Quick is x .<= p(x)
+        --                    Complete is x .<= y /\ y = p(x)
+        -- 2. Scope.          Consecutive
+        --                    AllPairs
+        --                    AllPermutations
+        -- 3. Independently/Altogether
+        -- in addition, we have
+        --      none
+        --      fast: Quick-Consecutive-Independently
+        --      full: Complete-AllPermutations-Altogether
+            case (unnamedSymmetryBreaking, splitOn "-" unnamedSymmetryBreaking) of
+                ("none", _)  -> return Nothing
+                ("fast", _)  -> return $ Just $ UnnamedSymmetryBreaking USBQuick USBConsecutive USBIndependently
+                ("full", _)  -> return $ Just $ UnnamedSymmetryBreaking USBComplete USBAllPermutations USBAltogether
+                (_, [a,b,c]) -> do
+                    a' <- case a of
+                        "Quick" -> return USBQuick
+                        "Complete" -> return USBComplete
+                        _ -> userErr1 $ vcat
+                            [ "Unrecognised value for the first component of --unnamed-symmetry-breaking"
+                            , "Expected one of: Quick / Complete"
+                            , "But got:" <+> pretty a
+                            ]
+                    b' <- case b of
+                        "Consecutive" -> return USBConsecutive
+                        "AllPairs" -> return USBAllPairs
+                        "AllPermutations" -> return USBAllPermutations
+                        _ -> userErr1 $ vcat
+                            [ "Unrecognised value for the second component of --unnamed-symmetry-breaking"
+                            , "Expected one of: Consecutive / AllPairs / AllPermutations"
+                            , "But got:" <+> pretty b
+                            ]
+                    c' <- case c of
+                        "Independently" -> return USBIndependently
+                        "Altogether" -> return USBAltogether
+                        _ -> userErr1 $ vcat
+                            [ "Unrecognised value for the third component of --unnamed-symmetry-breaking"
+                            , "Expected one of: Independently / Altogether"
+                            , "But got:" <+> pretty c
+                            ]
+                    return $ Just $ UnnamedSymmetryBreaking a' b' c'
                 _ -> userErr1 $ vcat
-                    [ "Unrecognised value for --unnamed-symmetry-breaking"
-                    , "Expected one of: none/fast-consecutive/fast-allpairs/complete-independently/complete"
-                    , "But got:" <+> pretty unnamedSymmetryBreaking
-                    ]
+                            [ "Unrecognised value for --unnamed-symmetry-breaking"
+                            , "Maybe try one of: none / fast / full"
+                            , "Got:" <+> pretty unnamedSymmetryBreaking
+                            ]
 
         return Config.Config
             { Config.outputDirectory            = outputDirectory

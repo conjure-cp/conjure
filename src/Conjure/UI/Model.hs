@@ -1103,7 +1103,7 @@ prologue config model = do
     >>= lettingsForComplexInDoms      >>= logDebugIdModel "[lettingsForComplexInDoms]"
     >>= distinctQuantifiedVars        >>= logDebugIdModel "[distinctQuantifiedVars]"
     >>= return . initInfo             >>= logDebugIdModel "[initInfo]"
-    >>= addUnnamedSymmetryBreaking (unnamedSymmetryBreaking config )
+    >>= addUnnamedSymmetryBreaking (unnamedSymmetryBreaking config)
                                       >>= logDebugIdModel "[addUnnamedSymmetryBreaking]"
     >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
@@ -2450,7 +2450,7 @@ enforceTagConsistency model = do
 
 addUnnamedSymmetryBreaking ::
     NameGen m =>
-    UnnamedSymmetryBreaking ->
+    Maybe UnnamedSymmetryBreaking ->
     Model ->
     m Model
 addUnnamedSymmetryBreaking mode model = do
@@ -2467,83 +2467,144 @@ addUnnamedSymmetryBreaking mode model = do
             | Declaration (FindOrGiven Find nm domain) <- mStatements model
             ]
 
+        allDecVarsAux =
+            [ (Reference (mconcat [nm, "_aux"]) Nothing, domain)
+            | Declaration (FindOrGiven Find nm domain) <- mStatements model
+            ]
+
         varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
+        auxsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVarsAux
 
     traceM $ show $ "Unnamed types in this model:" <+> prettyList id "," allUnnamedTypes
     traceM $ show $ "Unnamed decision variables in this model:" <+> prettyList id "," allDecVars
 
     -- 3 axis of doom
-    -- 1. quick/complete. quick is x .<= p(x)
-    --                    complete is x .<= y /\ y = p(x)
-    -- 2. scope.          consecutive
-    --                    all-pairs
-    --                    all-permutations
-    -- 3. independently/altogether
+    -- 1. Quick/Complete. Quick is x .<= p(x)
+    --                    Complete is x .<= y /\ y = p(x)
+    -- 2. Scope.          Consecutive
+    --                    AllPairs
+    --                    AllPermutations
+    -- 3. Independently/Altogether
 
-    stmts <- case mode of
-        None -> return model
-        FastConsecutive -> do
-            -- independently for each unnamed type
-            -- for pairs of (i, i+1) : U
-            -- add a .<= on a tuple of all decision variables
-            sequence
-                [ do
+    case mode of
+        Nothing -> return model
+        Just (UnnamedSymmetryBreaking quickOrComplete usbScope independentlyOrAltogether) -> do
+
+            let
+
+                buildPermutationChain [] vars = vars
+                buildPermutationChain (p:ps) vars =
+                        let applied = buildPermutationChain ps vars
+                        in  [essence| image(&p, &applied) |]
+
+                combinedPermApply perms =
+                    case quickOrComplete of
+                        USBQuick ->
+                            let applied = buildPermutationChain perms varsTuple
+                            in  [essence| &varsTuple .<= &applied |]
+                        USBComplete ->
+                            let applied = buildPermutationChain perms auxsTuple
+                            in  [essence| &varsTuple .<= &applied |]
+
+
+                mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
+                mkGenerator_Consecutive perms [(u, uSize)] = do
                     (iPat, i) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &i+1)) |]
+                    let applied = combinedPermApply (perm:perms)
                     return [essence|
-                                and([ &varsTuple .<= image(permutation((&i, &i+1)), &varsTuple)
+                                and([ &applied
                                     | &iPat : &u
                                     , &i < &uSize
                                     ])
-                            |]
-                | (u, uSize) <- allUnnamedTypes
-                ]
-        FastAllpairs -> do
-            -- independently for each unnamed type
-            -- for pairs of (i, j) : U i < j
-            -- add a .<=
-            sequence
-                [ do
+                           |]
+                mkGenerator_Consecutive perms ((u, uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &i+1)) |]
+                    applied <- mkGenerator_Consecutive (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &i < &uSize
+                                    ])
+                           |]
+
+
+                mkGenerator_AllPairs _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPairs perms [(u, _uSize)] = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &j)) |]
+                    let applied = combinedPermApply (perm:perms)
                     return [essence|
-                                and([ &varsTuple .<= image(permutation((&i, &j)), &varsTuple)
+                                and([ &applied
                                     | &iPat : &u
                                     , &jPat : &u
                                     , &i < &j
                                     ])
-                            |]
-                | (u, _uSize) <- allUnnamedTypes
-                ]
-        FastAllPermutations -> do
-            -- independently for each unnamed type
-            -- for all p : permutation of U
-            -- add a .<=
-            sequence
-                [ do
+                           |]
+                mkGenerator_AllPairs perms ((u, _uSize):us) = do
                     (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &j)) |]
+                    applied <- mkGenerator_AllPairs (perm:perms) us
                     return [essence|
-                                and([ &varsTuple .<= image(&i, &varsTuple)
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &jPat : &u
+                                    , &i < &j
+                                    ])
+                           |]
+
+                mkGenerator_AllPermutations _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPermutations perms [(u, _uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = i
+                    let applied = combinedPermApply (perm:perms)
+                    return [essence|
+                                and([ &applied
                                     | &iPat : permutation of &u
                                     ])
-                            |]
-                | (u, _uSize) <- allUnnamedTypes
-                ]
-        CompleteIndependently -> do
-            -- independently for each unnamed type
-            -- introduce an aux for each top level decision variable
-            -- aux_x = image(perm, x)
-            -- add a .<= on x and aux_x
-            return []
-        Complete -> do
-            -- introduce an aux for each top level decision variable
-            -- aux_x = image(perm_U, image(perm_T, x))
-            -- add a .<= on x and aux_x
-            return []
+                           |]
+                mkGenerator_AllPermutations perms ((u, _uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = i
+                    applied <- mkGenerator_AllPermutations (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : permutation of &u
+                                    ])
+                           |]
 
-    traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
-                         : map (nest 4 . pretty) stmts
-    return model { mStatements = mStatements model ++ [SuchThat stmts] }
+                mkGenerator perms us =
+                    case usbScope of
+                        USBConsecutive -> mkGenerator_Consecutive perms us
+                        USBAllPairs -> mkGenerator_AllPairs perms us
+                        USBAllPermutations -> mkGenerator_AllPermutations perms us
 
+            newCons <-
+                case independentlyOrAltogether of
+                    USBIndependently ->
+                        sequence
+                            [ mkGenerator [] [(u, uSize)]
+                            | (u, uSize) <- allUnnamedTypes
+                            ]
+                    USBAltogether -> do
+                        cons <- mkGenerator [] allUnnamedTypes
+                        return [cons]
 
+            let newDecls =
+                    case quickOrComplete of
+                        USBQuick -> []
+                        USBComplete ->
+                            [ Declaration (FindOrGiven Find nm' domain)
+                            | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                            , let nm' = mconcat [nm, "_aux"]
+                            ]
 
+            let stmts = newDecls ++ [SuchThat newCons]
+
+            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
+                                 : map (nest 4 . pretty) stmts
+            return model { mStatements = mStatements model ++ stmts }
 
