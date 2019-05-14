@@ -1254,7 +1254,6 @@ verticalRules =
     , Vertical.Permutation.rule_Cardinality
     , Vertical.Permutation.rule_Defined
     , Vertical.Permutation.rule_Comprehension
-    -- , Vertical.Permutation.rule_Permutation_DotLt
 
 
     , Vertical.Tuple.rule_Tuple_Eq
