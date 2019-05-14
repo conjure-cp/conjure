@@ -143,6 +143,9 @@ symmetryOrdering inp = do
             AbsLitTuple xs -> do
               soVals <- sequence (symmetryOrdering <$> xs)
               return $ AbstractLiteral $ AbsLitTuple soVals --make opFlatten (fromList soVals)
+            AbsLitMatrix d xs -> do
+              soVals <- sequence (symmetryOrdering <$> xs)
+              return $ AbstractLiteral $ AbsLitMatrix d soVals
             _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
 
 

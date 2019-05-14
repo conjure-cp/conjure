@@ -713,51 +713,50 @@ flattenLex :: MonadFail m
            => Model -> m Model
 flattenLex m = do
   let
-    deshell (Op (MkOpFlatten (OpFlatten Nothing crab))) = do
-      (reshell, hermit) <-  deshell crab
-      return (\r -> (Op (MkOpFlatten (OpFlatten Nothing (reshell r)))), hermit)
-    deshell e = return (id, e)
     flatten a = do
       ta <- typeOf a
       case ta of
-        TypeList (TypeInt{})    -> return  [essence| &a |]
-        TypeInt{}               -> return  [essence| [&a] |]
-        TypeList (TypeList{})   -> flatten [essence| flatten(&a) |]
-        TypeList (TypeMatrix{}) -> flatten [essence| flatten(&a) |]
-        TypeMatrix{} -> do -- flatten [essence| flatten(&a) |]
+        TypeBool -> return [essence| [-toInt(&a)] |]
+        TypeInt{} -> return [essence| [&a] |]
+        TypeList TypeInt{} -> return a
+        TypeMatrix TypeInt{} TypeInt{} -> return a
+        _ ->
           case a of
-            AbstractLiteral (AbsLitMatrix indxDom _) -> do 
-              (iPat,i) <- quantifiedVarOverDomain indxDom
-              flatten $ Comprehension [essence| &a[&i] |]
-                                      [Generator (GenDomainNoRepr iPat indxDom)]
-            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure.."
-                    <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
-        TypeList{} -> do 
-          (resh, desh) <- deshell a
-          case desh of
-            Comprehension exp goc -> do
-              nexp <- flatten exp
-              flatten $ resh $ Comprehension nexp goc 
-            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure..."
-                    <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
---        TypeMatrix{}          -> do
---          (resh, desh) <- deshell a
---          deshd <- domainOf desh
---          case deshd of
---            DomainMatrix indxDom _ -> do 
---              (iPat,i) <- quantifiedVarOverDomain indxDom
---              flatten $ resh [essence| [ &desh[&i] | &iPat : &indxDom ] |]
---            _ -> bug $ "epilogue: flattenLex: isn't defined for this structure...."
---                    <+> vcat [pretty ta, pretty a, stringToDoc $ show a]
-        TypeTuple{}       -> do
-          case a of
-            AbstractLiteral (AbsLitTuple exprs) -> do
-              is <- sequence (flatten <$> exprs) 
-              flatten $ fromList is
-            _ -> bug $ "epilogue: flattenLex: expected AbsLitTuple...."
-                    <+> vcat [pretty ta, pretty a]
-        _ -> bug $ "epilogue: flattenLex: isn't defined for this structure....."
-                <+> vcat [pretty ta, pretty a]
+            AbstractLiteral x -> do
+              case x of
+                AbsLitTuple xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                AbsLitMatrix _ xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                _ -> bug $ "epilogue: flattenLex: isn't defined for this abslit fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a] 
+            Constant c ->
+              case c of
+                ConstantAbstract ca -> 
+                  case ca of
+                    AbsLitTuple xs -> do
+                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      let flatxs = fromList fxs
+                      return [essence| flatten(&flatxs) |]
+                    AbsLitMatrix _ xs -> do
+                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      let flatxs = fromList fxs
+                      return [essence| flatten(&flatxs) |]
+                    _ -> bug $ "epilogue: flattenLex: isn't defined for this fellow..."
+                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+                TypedConstant tc _ -> flatten (Constant tc)
+                _ -> bug $ "epilogue: flattenLex: isn't defined for this constant fellow."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a] 
+            Comprehension body gocs -> do
+              fbody <- flatten body
+              let comp = Comprehension fbody gocs
+              return [essence| flatten(&comp) |]
+            _ -> bug $ "epilogue: flattenLex: isn't defined for this expression fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
     flattener [essence| &a <lex &b |] = do
       fa <- flatten a
       fb <- flatten b
@@ -2474,8 +2473,8 @@ addUnnamedSymmetryBreaking mode model = do
         varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
         mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
 
-    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
-    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
+--    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
+--    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
 
     -- 3 axis of doom
     -- 1. Quick/Complete. Quick is x .<= p(x)

@@ -8,7 +8,7 @@ branching on [a_Function1DPartial_Flags, a_Function1DPartial_Values]
 such that
     and([a_Function1DPartial_Flags[q1] /\ a_Function1DPartial_Flags[q2] ->
          a_Function1DPartial_Values[q1] != a_Function1DPartial_Values[q2]
-             | q1 : int(0..let1), q2 : int(0..let1), q1 < q2]),
+             | q1 : int(0..let1), q2 : int(0..let1), [q1; int(1)] <lex [q2; int(1)]]),
     and([or([a_Function1DPartial_Flags[q4] /\ a_Function1DPartial_Values[q4] = q3 | q4 : int(0..let1)])
              | q3 : int(1..3)]),
     and([a_Function1DPartial_Flags[q5] = false -> a_Function1DPartial_Values[q5] = 1 | q5 : int(0..let1)])

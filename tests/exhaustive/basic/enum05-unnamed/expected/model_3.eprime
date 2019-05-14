@@ -5,6 +5,6 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1.
 branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
     2 <= x_ExplicitVarSizeWithMarker_Marker ->
-    x_ExplicitVarSizeWithMarker_Values[1] < x_ExplicitVarSizeWithMarker_Values[2],
+    [x_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[2]; int(1)],
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)])
 

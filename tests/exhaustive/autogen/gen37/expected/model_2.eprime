@@ -13,9 +13,8 @@ branching on
      var1_RelationAsSetR5R9_ExplicitR5R9_2_ExplicitWithRepetition_Values]
 such that
     flatten([flatten([[var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-                      flatten([[-toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[1, q11]);
-                                    int(1)]
-                                   | q11 : int(1..2)]);
+                      [-toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[1, q11])
+                           | q11 : int(1..2)];
                           int(1..2)]),
              flatten([[var1_RelationAsSetR5R9_ExplicitR5R9_2_ExplicitWithRepetition_Flag[1]; int(1)],
                       ([] : `matrix indexed by [int()] of int`);
@@ -23,17 +22,16 @@ such that
                  int(1..2)])
     <lex
     flatten([flatten([[var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-                      flatten([[-toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[2, q13]);
-                                    int(1)]
-                                   | q13 : int(1..2)]);
+                      [-toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[2, q13])
+                           | q13 : int(1..2)];
                           int(1..2)]),
              flatten([[var1_RelationAsSetR5R9_ExplicitR5R9_2_ExplicitWithRepetition_Flag[2]; int(1)],
                       ([] : `matrix indexed by [int()] of int`);
                           int(1..2)]);
                  int(1..2)]),
     and([2 <= var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Marker[q2] ->
-         -toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[q2, 1]) <
-         -toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[q2, 2])
+         [-toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[q2, 1]); int(1)] <lex
+         [-toInt(var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[q2, 2]); int(1)]
              | q2 : int(1..2)]),
     and([and([q4 > var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Marker[q2] ->
               var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[q2, q4] = false

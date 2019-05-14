@@ -5,7 +5,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 branching on [s_Occurrence, s_Explicit]
 such that
     or([s_Explicit[q10] = 2 | q10 : int(1..2)]),
-    s_Explicit[1] < s_Explicit[2],
+    [s_Explicit[1]; int(1)] <lex [s_Explicit[2]; int(1)],
     2 = sum([toInt(s_Occurrence[q3]) | q3 : int(1..2)]),
     and([s_Occurrence[q4] -> or([s_Explicit[q6] = q4 | q6 : int(1..2)]) | q4 : int(1..2)]),
     and([s_Occurrence[s_Explicit[q8]] | q8 : int(1..2)])

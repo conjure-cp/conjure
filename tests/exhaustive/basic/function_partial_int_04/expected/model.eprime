@@ -6,6 +6,6 @@ branching on [x_Function1DPartial_Flags, x_Function1DPartial_Values]
 such that
     and([x_Function1DPartial_Flags[q1] /\ x_Function1DPartial_Flags[q2] ->
          x_Function1DPartial_Values[q1] != x_Function1DPartial_Values[q2]
-             | q1 : int(1..3), q2 : int(1..3), q1 < q2]),
+             | q1 : int(1..3), q2 : int(1..3), [q1; int(1)] <lex [q2; int(1)]]),
     and([x_Function1DPartial_Flags[q3] = false -> x_Function1DPartial_Values[q3] = 13 | q3 : int(1..3)])
 
