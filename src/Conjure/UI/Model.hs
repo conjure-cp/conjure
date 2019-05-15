@@ -751,12 +751,27 @@ flattenLex m = do
                 TypedConstant tc _ -> flatten (Constant tc)
                 _ -> bug $ "epilogue: flattenLex: isn't defined for this constant fellow."
                     <+> vcat [pretty a, pretty ta, stringToDoc $ show a] 
+--            Op op -> do
+--              case op of
+--                MkOpIndexing (OpIndexing m i) -> 
+--                  bug $ "epilogue: flattenLex: flatten not defined for this indexed fellow."
+--                     <+> vcat [stringToDoc (show a)
+--                              ,"fellow:" <+> stringToDoc (show m)
+--                              ,"index:" <+> stringToDoc (show i)]
+            Reference nm ex -> 
+                  bug $ "epilogue: flattenLex: flatten not defined for this referenced fellow."
+                     <+> vcat [stringToDoc (show a)
+                              ,"reference:" <+> stringToDoc (show nm)
+                              ,"fellow:" <+> stringToDoc (show ex)]          
             Comprehension body gocs -> do
               fbody <- flatten body
               let comp = Comprehension fbody gocs
-              return [essence| flatten(&comp) |]
+--              return [essence| flatten(&comp) |]
+              return [essence| &comp |]
             _ -> bug $ "epilogue: flattenLex: isn't defined for this expression fellow..."
                     <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+    
+
     flattener [essence| &a <lex &b |] = do
       fa <- flatten a
       fb <- flatten b
@@ -1938,8 +1953,8 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
         --     TypePartition{} -> return ()
         --     _ -> na "rule_DotLtLeq"
         -- sameRepresentationTree a b
-        ma <- symmetryOrdering $ transformBi reDomExp $ transformBi reDomConst a 
-        mb <- symmetryOrdering $ transformBi reDomExp $ transformBi reDomConst b
+        ma <- symmetryOrdering a 
+        mb <- symmetryOrdering b
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb

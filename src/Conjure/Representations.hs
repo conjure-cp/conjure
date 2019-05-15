@@ -134,47 +134,69 @@ symmetryOrdering ::
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Expression -> m Expression
-symmetryOrdering inp = do
-    case inp of
-        -- Constant x -> so_onConstant x
---        AbstractLiteral _ -> return inp
-        AbstractLiteral x -> do
-          case x of
-            AbsLitTuple xs -> do
-              soVals <- sequence (symmetryOrdering <$> xs)
-              return $ AbstractLiteral $ AbsLitTuple soVals --make opFlatten (fromList soVals)
-            AbsLitMatrix d xs -> do
-              soVals <- sequence (symmetryOrdering <$> xs)
-              return $ AbstractLiteral $ AbsLitMatrix d soVals
-            _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
-
-
-        Reference _ (Just refTo) -> do
-            case refTo of
-                Alias x                        -> symmetryOrdering x
-                InComprehension{}              -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
-                DeclNoRepr{}                   -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
-                DeclHasRepr _forg _name domain -> symmetryOrderingDispatch downX1 inp domain
-                RecordField{}                  -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
-                VariantField{}                 -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
-        Op op -> case op of
-            MkOpIndexing (OpIndexing m _) -> do
-                ty <- typeOf m
-                case ty of
-                    TypeMatrix{} -> return ()
-                    TypeList{}   -> return ()
-                    _ -> bug $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
-                mDom <- domainOfR m
-                case mDom of
-                    DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
-                    _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
-            MkOpImage (OpImage p x) -> do
-                so <- symmetryOrdering x
-                return [essence| image(&p, &so) |]
-            _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
-        Comprehension body stmts -> do
-            xs <- symmetryOrdering body
-            return $ make opFlatten $ Comprehension xs stmts
-        -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
-        _ -> bug ("symmetryOrdering:" <++> pretty (show inp) <++> pretty (inp))
+symmetryOrdering inp' = do
+    let constBool (ConstantBool True) = ConstantInt TagInt 1
+        constBool (ConstantBool False) = ConstantInt TagInt 0
+        constBool x = x
+        inp = transformBi constBool inp'
+    ta <- typeOf inp 
+    case ta of
+      TypeBool -> return [essence| [-toInt(&inp)] |]
+      TypeInt{} -> return [essence| [&inp] |]
+      TypeList TypeInt{} -> return inp
+      TypeMatrix TypeInt{} TypeInt{} -> return inp
+      _ -> do 
+        case inp of
+            -- Constant x -> so_onConstant x
+    --        AbstractLiteral _ -> return inp
+            Constant (ConstantAbstract x) -> do
+              case x of
+                AbsLitTuple xs -> do
+                  soVals <- sequence (symmetryOrdering <$> (Constant <$> xs))
+                  return $ fromList soVals 
+                AbsLitMatrix _ xs -> do
+                  soVals <- sequence (symmetryOrdering <$> (Constant <$> xs))
+                  return $ fromList soVals 
+                _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
+            Constant (ConstantBool b) -> return [essence| -toInt(&inp) |]
+            AbstractLiteral x -> do
+              case x of
+                AbsLitTuple xs -> do
+                  soVals <- sequence (symmetryOrdering <$> xs)
+                  return $ AbstractLiteral $ AbsLitTuple soVals
+                AbsLitMatrix d xs -> do
+                  soVals <- sequence (symmetryOrdering <$> xs)
+                  return $ AbstractLiteral $ AbsLitMatrix d soVals
+                _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty (inp))
+    
+    
+            Reference _ (Just refTo) -> do
+                case refTo of
+                    Alias x                        -> symmetryOrdering x
+                    InComprehension{}              -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
+                    DeclNoRepr{}                   -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
+                    DeclHasRepr _forg _name domain -> symmetryOrderingDispatch downX1 inp domain
+                    RecordField{}                  -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
+                    VariantField{}                 -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
+            Op op -> case op of
+                MkOpIndexing (OpIndexing m _) -> do
+    
+                    ty <- typeOf m
+                    case ty of
+                        TypeMatrix{} -> return ()
+                        TypeList{}   -> return ()
+                        _ -> bug $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
+                    mDom <- domainOfR m
+                    case mDom of
+                        DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
+                        _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
+                MkOpImage (OpImage p x) -> do
+                    so <- symmetryOrdering x
+                    return [essence| image(&p, &so) |]
+                _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
+            Comprehension body stmts -> do
+                xs <- symmetryOrdering body
+                return $ make opFlatten $ Comprehension xs stmts
+            -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
+            _ -> bug ("symmetryOrdering:" <++> pretty (show inp) <++> pretty (inp))
 
