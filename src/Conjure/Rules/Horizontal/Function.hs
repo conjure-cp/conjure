@@ -47,6 +47,7 @@ rule_Eq = "function-eq" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 return [essence|
+                            |&x| = |&y| /\
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
@@ -87,6 +88,7 @@ rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 return [essence|
+                            |&x| <= |&y| /\
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                        |]
             )
@@ -102,7 +104,11 @@ rule_Subset = "function-subset" `namedRule` theRule where
         TypeFunction{} <- typeOf y
         return
             ( "Horizontal rule for function subset"
-            , return [essence| &x subsetEq &y /\ &x != &y |]
+            , return [essence|
+                        |&x| < |&y| /\
+                        &x subsetEq &y /\
+                        &x != &y
+                     |]
             )
     theRule _ = na "rule_Subset"
 
@@ -148,6 +154,8 @@ rule_Inverse = "function-inverse" `namedRule` theRule where
                 (iPat, i) <- quantifiedVar
                 return
                     [essence|
+                        |&a| = |&b|
+                            /\
                         (forAll &iPat in &a . &b(&i[2]) = &i[1])
                             /\
                         (forAll &iPat in &b . &a(&i[2]) = &i[1])
@@ -186,18 +194,19 @@ rule_Card :: Rule
 rule_Card = "function-cardinality" `namedRule` theRule where
     theRule [essence| |&f| |] = do
         TypeFunction{} <- typeOf f
-        dom <- domainOf f
         return
             ( "Function cardinality"
-            , case dom of
-                DomainFunction _ (FunctionAttr (SizeAttr_Size n) _ _) _ _
-                    -> return n
-                DomainFunction _ (FunctionAttr _ _ jectivity) _ innerTo
-                    | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
-                    -> domainSizeOf innerTo
-                DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr _
-                    -> domainSizeOf innerFr
-                _ -> return [essence| |toSet(&f)| |]
+            , do
+                dom <- runMaybeT $ domainOf f
+                case dom of
+                    Just (DomainFunction _ (FunctionAttr (SizeAttr_Size n) _ _) _ _)
+                        -> return n
+                    Just (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr _)
+                        -> domainSizeOf innerFr
+                    Just (DomainFunction _ (FunctionAttr _ _ jectivity) _ innerTo)
+                        | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
+                        -> domainSizeOf innerTo
+                    _ -> return [essence| |toSet(&f)| |]
             )
     theRule _ = na "rule_Card"
 
