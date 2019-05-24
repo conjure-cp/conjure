@@ -7,8 +7,14 @@ find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 branching on
     [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, y_ExplicitVarSizeWithDummy, y_Occurrence]
 such that
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]) = 0,
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]) <= 0,
     x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]] -> false,
+    0 <= toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]),
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    toInt(y_ExplicitVarSizeWithDummy[1] != 2) = toInt(y_Occurrence[1]),
+    toInt(y_ExplicitVarSizeWithDummy[1] != 2) <= toInt(y_Occurrence[1]),
     y_ExplicitVarSizeWithDummy[1] != 2 -> y_Occurrence[y_ExplicitVarSizeWithDummy[1]],
+    toInt(y_Occurrence[1]) <= toInt(y_ExplicitVarSizeWithDummy[1] != 2),
     y_Occurrence[1] -> y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = 1
 

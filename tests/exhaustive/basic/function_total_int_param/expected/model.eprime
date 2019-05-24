@@ -5,6 +5,7 @@ given fin1: int
 given p_Function1D: matrix indexed by [int(1..3)] of int(13..15)
 branching on [x_Function1D]
 such that
+    fin1 = 3,
     and([x_Function1D[q5] = p_Function1D[q5] | q5 : int(1..3)]),
     and([p_Function1D[q6] = x_Function1D[q6] | q6 : int(1..3)]),
     allDiff(x_Function1D),

@@ -10,17 +10,35 @@ branching on
     [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithDummy,
      y_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values]
 such that
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
+          (1 <= y_ExplicitVarSizeWithMarker_Marker /\
+           y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1]))
+    = 0,
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
+          (1 <= y_ExplicitVarSizeWithMarker_Marker /\
+           y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1]))
+    <= 0,
     x_ExplicitVarSizeWithDummy[1] != 2 /\
     (1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1])
     -> false,
+    0 <=
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
+          (1 <= y_ExplicitVarSizeWithMarker_Marker /\
+           y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1])),
     1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
     1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    x_ExplicitVarSizeWithMarker_Marker = toInt(x_ExplicitVarSizeWithDummy[1] != 2),
+    x_ExplicitVarSizeWithMarker_Marker <= toInt(x_ExplicitVarSizeWithDummy[1] != 2),
     1 <= x_ExplicitVarSizeWithMarker_Marker ->
     x_ExplicitVarSizeWithDummy[1] != 2 /\ x_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithMarker_Values[1],
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2) <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithDummy[1] != 2 ->
     1 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1],
+    toInt(y_ExplicitVarSizeWithDummy[1] != 2) = y_ExplicitVarSizeWithMarker_Marker,
+    toInt(y_ExplicitVarSizeWithDummy[1] != 2) <= y_ExplicitVarSizeWithMarker_Marker,
     y_ExplicitVarSizeWithDummy[1] != 2 ->
     1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = y_ExplicitVarSizeWithDummy[1],
+    y_ExplicitVarSizeWithMarker_Marker <= toInt(y_ExplicitVarSizeWithDummy[1] != 2),
     1 <= y_ExplicitVarSizeWithMarker_Marker ->
     y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = y_ExplicitVarSizeWithMarker_Values[1]
 

@@ -5,6 +5,7 @@ given fin1: int
 given p_FunctionND: matrix indexed by [int(7..8), bool] of int(13, 17)
 branching on [x_FunctionND]
 such that
+    fin1 = 4,
     and([sum([x_FunctionND[q6_fst, q6_snd] | q6_fst : int(7..8), q6_snd : bool, q6_fst = q4_fst /\ q6_snd = q4_snd]) =
          p_FunctionND[q4_fst, q4_snd]
          /\ or([q8_fst = q4_fst /\ q8_snd = q4_snd | q8_fst : int(7..8), q8_snd : bool])

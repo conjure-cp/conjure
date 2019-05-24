@@ -5,22 +5,25 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
 branching on [s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, s_ExplicitVarSizeWithDummy]
 such that
-    or([s_ExplicitVarSizeWithDummy[q17] != 3 /\
-        s_ExplicitVarSizeWithDummy[q17] = sum([toInt(s_ExplicitVarSizeWithDummy[q19] != 3) | q19 : int(1..2)])
-            | q17 : int(1..2)]),
+    or([s_ExplicitVarSizeWithDummy[q23] != 3 /\
+        s_ExplicitVarSizeWithDummy[q23] = sum([toInt(s_ExplicitVarSizeWithDummy[q25] != 3) | q25 : int(1..2)])
+            | q23 : int(1..2)]),
     s_ExplicitVarSizeWithDummy[1] < s_ExplicitVarSizeWithDummy[2] \/ s_ExplicitVarSizeWithDummy[1] = 3,
     s_ExplicitVarSizeWithDummy[1] = 3 -> s_ExplicitVarSizeWithDummy[2] = 3,
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
     s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
     and([q6 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q6] = 1 | q6 : int(1..2)]),
-    and([q9 <= s_ExplicitVarSizeWithMarker_Marker ->
-         or([s_ExplicitVarSizeWithDummy[q11] != 3 /\
-             s_ExplicitVarSizeWithDummy[q11] = s_ExplicitVarSizeWithMarker_Values[q9]
-                 | q11 : int(1..2)])
-             | q9 : int(1..2)]),
-    and([s_ExplicitVarSizeWithDummy[q13] != 3 ->
-         or([q15 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q15] = s_ExplicitVarSizeWithDummy[q13]
+    s_ExplicitVarSizeWithMarker_Marker = sum([toInt(s_ExplicitVarSizeWithDummy[q9] != 3) | q9 : int(1..2)]),
+    s_ExplicitVarSizeWithMarker_Marker <= sum([toInt(s_ExplicitVarSizeWithDummy[q12] != 3) | q12 : int(1..2)]),
+    and([q13 <= s_ExplicitVarSizeWithMarker_Marker ->
+         or([s_ExplicitVarSizeWithDummy[q15] != 3 /\
+             s_ExplicitVarSizeWithDummy[q15] = s_ExplicitVarSizeWithMarker_Values[q13]
                  | q15 : int(1..2)])
-             | q13 : int(1..2)])
+             | q13 : int(1..2)]),
+    sum([toInt(s_ExplicitVarSizeWithDummy[q21] != 3) | q21 : int(1..2)]) <= s_ExplicitVarSizeWithMarker_Marker,
+    and([s_ExplicitVarSizeWithDummy[q17] != 3 ->
+         or([q19 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q19] = s_ExplicitVarSizeWithDummy[q17]
+                 | q19 : int(1..2)])
+             | q17 : int(1..2)])
 

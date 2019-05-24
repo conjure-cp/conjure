@@ -9,18 +9,28 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..6)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..6)] of int(0..5)
 branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence]
 such that
-    and([x_Occurrence[q10] ->
-         or([a_Explicit[q12] = q10 | q12 : int(1..fin1), or([b_Explicit[q14] = a_Explicit[q12] | q14 : int(1..fin2)])])
-             | q10 : int(0..5)]),
-    and([x_Occurrence[a_Explicit[q16]]
-             | q16 : int(1..fin1), or([b_Explicit[q18] = a_Explicit[q16] | q18 : int(1..fin2)])]),
+    sum([toInt(x_Occurrence[q13]) | q13 : int(0..5)]) =
+    sum([1 | q15 : int(1..fin1), or([b_Explicit[q17] = a_Explicit[q15] | q17 : int(1..fin2)])]),
+    sum([toInt(x_Occurrence[q23]) | q23 : int(0..5)]) <=
+    sum([1 | q25 : int(1..fin1), or([b_Explicit[q27] = a_Explicit[q25] | q27 : int(1..fin2)])]),
+    and([x_Occurrence[q18] ->
+         or([a_Explicit[q20] = q18 | q20 : int(1..fin1), or([b_Explicit[q22] = a_Explicit[q20] | q22 : int(1..fin2)])])
+             | q18 : int(0..5)]),
+    sum([1 | q33 : int(1..fin1), or([b_Explicit[q35] = a_Explicit[q33] | q35 : int(1..fin2)])]) <=
+    sum([toInt(x_Occurrence[q36]) | q36 : int(0..5)]),
+    and([x_Occurrence[a_Explicit[q29]]
+             | q29 : int(1..fin1), or([b_Explicit[q31] = a_Explicit[q29] | q31 : int(1..fin2)])]),
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..5)]),
     and([q3 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q3] = 0 | q3 : int(1..6)]),
-    and([q6 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q6]]
-             | q6 : int(1..6)]),
-    and([x_Occurrence[q7] ->
-         or([q9 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q9] = q7 | q9 : int(1..6)])
-             | q7 : int(0..5)])
+    x_ExplicitVarSizeWithMarker_Marker = sum([toInt(x_Occurrence[q5]) | q5 : int(0..5)]),
+    x_ExplicitVarSizeWithMarker_Marker <= sum([toInt(x_Occurrence[q7]) | q7 : int(0..5)]),
+    and([q8 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q8]]
+             | q8 : int(1..6)]),
+    sum([toInt(x_Occurrence[q12]) | q12 : int(0..5)]) <= x_ExplicitVarSizeWithMarker_Marker,
+    and([x_Occurrence[q9] ->
+         or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q11] = q9
+                 | q11 : int(1..6)])
+             | q9 : int(0..5)])
 

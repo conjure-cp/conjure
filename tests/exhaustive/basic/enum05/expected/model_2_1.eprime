@@ -7,8 +7,14 @@ such that
     or([x_ExplicitVarSizeWithDummy[q7] != 3 /\ x_ExplicitVarSizeWithDummy[q7] = 1 | q7 : int(1..2)]),
     x_ExplicitVarSizeWithDummy[1] < x_ExplicitVarSizeWithDummy[2] \/ x_ExplicitVarSizeWithDummy[1] = 3,
     x_ExplicitVarSizeWithDummy[1] = 3 -> x_ExplicitVarSizeWithDummy[2] = 3,
-    and([x_Occurrence[q8] ->
-         or([x_ExplicitVarSizeWithDummy[q10] != 3 /\ x_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..2)])
-             | q8 : int(1..2)]),
-    and([x_ExplicitVarSizeWithDummy[q12] != 3 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q12]] | q12 : int(1..2)])
+    sum([toInt(x_Occurrence[q8]) | q8 : int(1..2)]) =
+    sum([toInt(x_ExplicitVarSizeWithDummy[q10] != 3) | q10 : int(1..2)]),
+    sum([toInt(x_Occurrence[q14]) | q14 : int(1..2)]) <=
+    sum([toInt(x_ExplicitVarSizeWithDummy[q16] != 3) | q16 : int(1..2)]),
+    and([x_Occurrence[q11] ->
+         or([x_ExplicitVarSizeWithDummy[q13] != 3 /\ x_ExplicitVarSizeWithDummy[q13] = q11 | q13 : int(1..2)])
+             | q11 : int(1..2)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q20] != 3) | q20 : int(1..2)]) <=
+    sum([toInt(x_Occurrence[q21]) | q21 : int(1..2)]),
+    and([x_ExplicitVarSizeWithDummy[q18] != 3 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q18]] | q18 : int(1..2)])
 

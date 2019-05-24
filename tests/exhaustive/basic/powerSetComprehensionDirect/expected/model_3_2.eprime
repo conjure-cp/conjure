@@ -8,18 +8,21 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (b - a))]
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
 branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
-    and([and([or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\
-                  x_ExplicitVarSizeWithMarker_Values[q23] = t_ExplicitVarSizeWithDummy[q21]
-                      | q23 : int(1..1 + (b - a))])
-                  | q21 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q21] != b + 1])
+    and([sum([1 | q31 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q31] != b + 1]) <=
+         x_ExplicitVarSizeWithMarker_Marker
+         /\
+         and([or([q29 <= x_ExplicitVarSizeWithMarker_Marker /\
+                  x_ExplicitVarSizeWithMarker_Values[q29] = t_ExplicitVarSizeWithDummy[q27]
+                      | q29 : int(1..1 + (b - a))])
+                  | q27 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q27] != b + 1])
          ->
-         sum([t_ExplicitVarSizeWithDummy[q24] | q24 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q24] != b + 1]) <=
+         sum([t_ExplicitVarSizeWithDummy[q32] | q32 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q32] != b + 1]) <=
          6   | t_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1),
-               and([t_ExplicitVarSizeWithDummy[q16] < t_ExplicitVarSizeWithDummy[q16 + 1] \/
-                    t_ExplicitVarSizeWithDummy[q16] = b + 1
-                        | q16 : int(1..1 + (b - a) - 1)]),
-               and([t_ExplicitVarSizeWithDummy[q17] = b + 1 -> t_ExplicitVarSizeWithDummy[q17 + 1] = b + 1
-                        | q17 : int(1..1 + (b - a) - 1)])]),
+               and([t_ExplicitVarSizeWithDummy[q22] < t_ExplicitVarSizeWithDummy[q22 + 1] \/
+                    t_ExplicitVarSizeWithDummy[q22] = b + 1
+                        | q22 : int(1..1 + (b - a) - 1)]),
+               and([t_ExplicitVarSizeWithDummy[q23] = b + 1 -> t_ExplicitVarSizeWithDummy[q23 + 1] = b + 1
+                        | q23 : int(1..1 + (b - a) - 1)])]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..1 + (b - a) - 1)]),
@@ -31,14 +34,20 @@ such that
     and([x_ExplicitVarSizeWithDummy[q5] = b + 1 -> x_ExplicitVarSizeWithDummy[q5 + 1] = b + 1
              | q5 : int(1..1 + (b - a) - 1)]),
     n <= sum([toInt(x_ExplicitVarSizeWithDummy[q6] != b + 1) | q6 : int(1..1 + (b - a))]),
-    and([x_ExplicitVarSizeWithDummy[q9] != b + 1 ->
-         or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q11] = x_ExplicitVarSizeWithDummy[q9]
-                 | q11 : int(1..1 + (b - a))])
-             | q9 : int(1..1 + (b - a))]),
-    and([q13 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithDummy[q15] != b + 1 /\
-             x_ExplicitVarSizeWithDummy[q15] = x_ExplicitVarSizeWithMarker_Values[q13]
-                 | q15 : int(1..1 + (b - a))])
-             | q13 : int(1..1 + (b - a))])
+    sum([toInt(x_ExplicitVarSizeWithDummy[q9] != b + 1) | q9 : int(1..1 + (b - a))]) =
+    x_ExplicitVarSizeWithMarker_Marker,
+    sum([toInt(x_ExplicitVarSizeWithDummy[q15] != b + 1) | q15 : int(1..1 + (b - a))]) <=
+    x_ExplicitVarSizeWithMarker_Marker,
+    and([x_ExplicitVarSizeWithDummy[q11] != b + 1 ->
+         or([q13 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q13] = x_ExplicitVarSizeWithDummy[q11]
+                 | q13 : int(1..1 + (b - a))])
+             | q11 : int(1..1 + (b - a))]),
+    x_ExplicitVarSizeWithMarker_Marker <=
+    sum([toInt(x_ExplicitVarSizeWithDummy[q18] != b + 1) | q18 : int(1..1 + (b - a))]),
+    and([q19 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithDummy[q21] != b + 1 /\
+             x_ExplicitVarSizeWithDummy[q21] = x_ExplicitVarSizeWithMarker_Values[q19]
+                 | q21 : int(1..1 + (b - a))])
+             | q19 : int(1..1 + (b - a))])
 

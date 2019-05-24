@@ -11,22 +11,23 @@ branching on
     [x_ExplicitWithFlags_Flags, x_ExplicitWithFlags_Values, x_ExplicitWithRepetition_Flag,
      x_ExplicitWithRepetition_Values]
 such that
-    and([sum([g_ExplicitWithFlags_Flags[q25]
-                  | q25 : int(1..fin1), g_ExplicitWithFlags_Values[q25] = g_ExplicitWithFlags_Values[q24]])
-         =
-         sum([toInt(q27 <= x_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(x_ExplicitWithRepetition_Values[q27] = g_ExplicitWithFlags_Values[q24]), 0)
-                  | q27 : int(1..4)])
-             | q24 : int(1..fin1), g_ExplicitWithFlags_Flags[q24] > 0]),
-    and([q28 <= x_ExplicitWithRepetition_Flag ->
-         sum([toInt(g_ExplicitWithFlags_Values[q29] = x_ExplicitWithRepetition_Values[q28]) *
-              catchUndef(g_ExplicitWithFlags_Flags[q29], 0)
-                  | q29 : int(1..fin1)])
+    fin1 = sum([toInt(q33 <= x_ExplicitWithRepetition_Flag) | q33 : int(1..4)]),
+    and([sum([g_ExplicitWithFlags_Flags[q29]
+                  | q29 : int(1..fin1), g_ExplicitWithFlags_Values[q29] = g_ExplicitWithFlags_Values[q28]])
          =
          sum([toInt(q31 <= x_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(x_ExplicitWithRepetition_Values[q31] = x_ExplicitWithRepetition_Values[q28]), 0)
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q31] = g_ExplicitWithFlags_Values[q28]), 0)
                   | q31 : int(1..4)])
-             | q28 : int(1..4)]),
+             | q28 : int(1..fin1), g_ExplicitWithFlags_Flags[q28] > 0]),
+    and([q34 <= x_ExplicitWithRepetition_Flag ->
+         sum([toInt(g_ExplicitWithFlags_Values[q35] = x_ExplicitWithRepetition_Values[q34]) *
+              catchUndef(g_ExplicitWithFlags_Flags[q35], 0)
+                  | q35 : int(1..fin1)])
+         =
+         sum([toInt(q37 <= x_ExplicitWithRepetition_Flag) *
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q37] = x_ExplicitWithRepetition_Values[q34]), 0)
+                  | q37 : int(1..4)])
+             | q34 : int(1..4)]),
     and([q1 + 1 <= x_ExplicitWithRepetition_Flag ->
          x_ExplicitWithRepetition_Values[q1] <= x_ExplicitWithRepetition_Values[q1 + 1]
              | q1 : int(1..3)]),
@@ -43,6 +44,8 @@ such that
     and([x_ExplicitWithFlags_Flags[q9] = 0 -> x_ExplicitWithFlags_Values[q9] = 1 | q9 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q10 + 1] > 0 -> x_ExplicitWithFlags_Flags[q10] > 0 | q10 : int(1..3)]),
     sum([x_ExplicitWithFlags_Flags[q12] | q12 : int(1..4)]) <= 4,
+    sum([toInt(x_ExplicitWithFlags_Flags[q20] > 0) * catchUndef(x_ExplicitWithFlags_Flags[q20], 0) | q20 : int(1..4)]) =
+    sum([toInt(q22 <= x_ExplicitWithRepetition_Flag) | q22 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q15] > 0 ->
          sum([toInt(x_ExplicitWithFlags_Values[q16] = x_ExplicitWithFlags_Values[q15]) *
               catchUndef(x_ExplicitWithFlags_Flags[q16], 0)
@@ -52,13 +55,13 @@ such that
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q18] = x_ExplicitWithFlags_Values[q15]), 0)
                   | q18 : int(1..4)])
              | q15 : int(1..4)]),
-    and([q19 <= x_ExplicitWithRepetition_Flag ->
-         sum([toInt(x_ExplicitWithFlags_Values[q20] = x_ExplicitWithRepetition_Values[q19]) *
-              catchUndef(x_ExplicitWithFlags_Flags[q20], 0)
-                  | q20 : int(1..4)])
+    and([q23 <= x_ExplicitWithRepetition_Flag ->
+         sum([toInt(x_ExplicitWithFlags_Values[q24] = x_ExplicitWithRepetition_Values[q23]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q24], 0)
+                  | q24 : int(1..4)])
          =
-         sum([toInt(q22 <= x_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(x_ExplicitWithRepetition_Values[q22] = x_ExplicitWithRepetition_Values[q19]), 0)
-                  | q22 : int(1..4)])
-             | q19 : int(1..4)])
+         sum([toInt(q26 <= x_ExplicitWithRepetition_Flag) *
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q26] = x_ExplicitWithRepetition_Values[q23]), 0)
+                  | q26 : int(1..4)])
+             | q23 : int(1..4)])
 

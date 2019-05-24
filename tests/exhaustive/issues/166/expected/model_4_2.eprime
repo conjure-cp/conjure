@@ -10,106 +10,198 @@ branching on
     [y_1_1, y_1_2_Function1DR6_ExplicitVarSizeWithDummy, y_1_3, y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags,
      y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values]
 such that
-    and([and([y_1_1[q35] = [10, 11; int(1..2)][q35],
-              and([and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q46] /\
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q46] = 1
-                                | q46 : int(1..2)])
-                            | 1 = q35, 1 = q38])
-                   /\
-                   and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q48] /\
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q48] = 2
-                                | q48 : int(1..2)])
-                            | 1 = q35, 1 = q38])
-                   /\
-                   and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q51] /\
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q51] = 1
-                                | q51 : int(1..2)])
-                            | 1 = q35, 2 = q38])
-                   /\
-                   (and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q56] /\
-                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q56] = 1
-                                 | q56 : int(1..2)])
-                             | 2 = q35, 1 = q38])
-                    /\
-                    and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q58] /\
-                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q58] = 2
-                                 | q58 : int(1..2)])
-                             | 2 = q35, 1 = q38])
-                    /\
-                    and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q61] /\
-                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q61] = 1
-                                 | q61 : int(1..2)])
-                             | 2 = q35, 2 = q38]))
-                   /\
-                   and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q63] ->
-                        or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q63] | 1 = q35, 1 = q38])
-                        \/
-                        or([2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q63] | 1 = q35, 1 = q38])
-                        \/
-                        or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q63] | 1 = q35, 2 = q38])
-                        \/
-                        (or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q63] | 2 = q35, 1 = q38])
-                         \/
-                         or([2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q63] | 2 = q35, 1 = q38])
-                         \/
-                         or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, q38, q63] | 2 = q35, 2 = q38]))
-                            | q63 : int(1..2)])
-                       | q38 : int(1..3)])
+    and([and([y_1_1[q59] = [10, 11; int(1..2)][q59],
+              3 =
+              sum([sum([1 | 1 = q59]), sum([1 | 1 = q59]), sum([1 | 1 = q59]); int(1..3)]) +
+              sum([sum([1 | 2 = q59]), sum([1 | 2 = q59]), sum([1 | 2 = q59]); int(1..3)])
               /\
-              (and([and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 1, q76] ->
-                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q76] \/
-                              2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q76]
-                                  | q76 : int(1..2)])
+              and([sum([1 | 1 = q59, 1 = q62]) + sum([1 | 1 = q59, 1 = q62]) + sum([1 | 1 = q59, 2 = q62]) +
+                   (sum([1 | 2 = q59, 1 = q62]) + sum([1 | 2 = q59, 1 = q62]) + sum([1 | 2 = q59, 2 = q62]))
+                   = sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q75]) | q75 : int(1..2)])
+                   /\
+                   (sum([1 | 1 = q59, 1 = q62]) + sum([1 | 1 = q59, 1 = q62]) + sum([1 | 1 = q59, 2 = q62]) +
+                    (sum([1 | 2 = q59, 1 = q62]) + sum([1 | 2 = q59, 1 = q62]) + sum([1 | 2 = q59, 2 = q62]))
+                    <= sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q89]) | q89 : int(1..2)])
+                    /\
+                    (and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q96] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q96] = 1
+                                  | q96 : int(1..2)])
+                              | 1 = q59, 1 = q62])
+                     /\
+                     and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q98] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q98] = 2
+                                  | q98 : int(1..2)])
+                              | 1 = q59, 1 = q62])
+                     /\
+                     and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q101] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q101] = 1
+                                  | q101 : int(1..2)])
+                              | 1 = q59, 2 = q62])
+                     /\
+                     (and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q106] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q106] = 1
+                                   | q106 : int(1..2)])
+                               | 2 = q59, 1 = q62])
+                      /\
+                      and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q108] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q108] = 2
+                                   | q108 : int(1..2)])
+                               | 2 = q59, 1 = q62])
+                      /\
+                      and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q111] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q111] = 1
+                                   | q111 : int(1..2)])
+                               | 2 = q59, 2 = q62]))))
+                   /\
+                   (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q126]) | q126 : int(1..2)])
+                    <=
+                    sum([1 | 1 = q59, 1 = q62]) + sum([1 | 1 = q59, 1 = q62]) + sum([1 | 1 = q59, 2 = q62]) +
+                    (sum([1 | 2 = q59, 1 = q62]) + sum([1 | 2 = q59, 1 = q62]) + sum([1 | 2 = q59, 2 = q62]))
+                    /\
+                    and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, q62, q113] ->
+                         or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q113] | 1 = q59, 1 = q62])
+                         \/
+                         or([2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q113] | 1 = q59, 1 = q62])
+                         \/
+                         or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q113] | 1 = q59, 2 = q62])
+                         \/
+                         (or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q113]
+                                  | 2 = q59, 1 = q62])
+                          \/
+                          or([2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q113]
+                                  | 2 = q59, 1 = q62])
+                          \/
+                          or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, q62, q113]
+                                  | 2 = q59, 2 = q62]))
+                             | q113 : int(1..2)]))
+                       | q62 : int(1..3)])
+              /\
+              (and([and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q142])
+                                  | q142 : int(1..2)])
+                         = 2
                          /\
-                         (or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 1, q79] /\
-                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q79] = 1
-                                  | q79 : int(1..2)])
+                         (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q147])
+                                   | q147 : int(1..2)])
+                          <= 2
                           /\
-                          or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 1, q79] /\
-                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q79] = 2
-                                  | q79 : int(1..2)]))
-                             | 1 = q35]),
-                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 2, q76] ->
-                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 2, q76]
-                                  | q76 : int(1..2)])
+                          and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q145] ->
+                               1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q145] \/
+                               2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q145]
+                                   | q145 : int(1..2)]))
                          /\
-                         or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 2, q79] /\
-                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 2, q79] = 1
-                                 | q79 : int(1..2)])
-                             | 1 = q35]),
-                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 3, q76] -> false
-                                  | q76 : int(1..2)])
-                             | 1 = q35]);
+                         (2 <=
+                          sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q152])
+                                   | q152 : int(1..2)])
+                          /\
+                          (or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q154] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q154] = 1
+                                   | q154 : int(1..2)])
+                           /\
+                           or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q154] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q154] = 2
+                                   | q154 : int(1..2)])))
+                             | 1 = q59]),
+                    and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q142])
+                                  | q142 : int(1..2)])
+                         = 1
+                         /\
+                         (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q147])
+                                   | q147 : int(1..2)])
+                          <= 1
+                          /\
+                          and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q145] ->
+                               1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 2, q145]
+                                   | q145 : int(1..2)]))
+                         /\
+                         (1 <=
+                          sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q152])
+                                   | q152 : int(1..2)])
+                          /\
+                          or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q154] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 2, q154] = 1
+                                  | q154 : int(1..2)]))
+                             | 1 = q59]),
+                    and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q142])
+                                  | q142 : int(1..2)])
+                         = 0
+                         /\
+                         (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q147])
+                                   | q147 : int(1..2)])
+                          <= 0
+                          /\
+                          and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q145] -> false
+                                   | q145 : int(1..2)]))
+                         /\
+                         0 <=
+                         sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q152])
+                                  | q152 : int(1..2)])
+                             | 1 = q59]);
                         int(1..3)])
                /\
-               and([and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 1, q81] ->
-                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q81] \/
-                              2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q81]
-                                  | q81 : int(1..2)])
+               and([and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q156])
+                                  | q156 : int(1..2)])
+                         = 2
                          /\
-                         (or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 1, q84] /\
-                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q84] = 1
-                                  | q84 : int(1..2)])
+                         (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q161])
+                                   | q161 : int(1..2)])
+                          <= 2
                           /\
-                          or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 1, q84] /\
-                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 1, q84] = 2
-                                  | q84 : int(1..2)]))
-                             | 2 = q35]),
-                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 2, q81] ->
-                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 2, q81]
-                                  | q81 : int(1..2)])
+                          and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q159] ->
+                               1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q159] \/
+                               2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q159]
+                                   | q159 : int(1..2)]))
                          /\
-                         or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 2, q84] /\
-                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q35, 2, q84] = 1
-                                 | q84 : int(1..2)])
-                             | 2 = q35]),
-                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, 3, q81] -> false
-                                  | q81 : int(1..2)])
-                             | 2 = q35]);
+                         (2 <=
+                          sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q166])
+                                   | q166 : int(1..2)])
+                          /\
+                          (or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q168] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q168] = 1
+                                   | q168 : int(1..2)])
+                           /\
+                           or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 1, q168] /\
+                               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 1, q168] = 2
+                                   | q168 : int(1..2)])))
+                             | 2 = q59]),
+                    and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q156])
+                                  | q156 : int(1..2)])
+                         = 1
+                         /\
+                         (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q161])
+                                   | q161 : int(1..2)])
+                          <= 1
+                          /\
+                          and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q159] ->
+                               1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 2, q159]
+                                   | q159 : int(1..2)]))
+                         /\
+                         (1 <=
+                          sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q166])
+                                   | q166 : int(1..2)])
+                          /\
+                          or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 2, q168] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q59, 2, q168] = 1
+                                  | q168 : int(1..2)]))
+                             | 2 = q59]),
+                    and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q156])
+                                  | q156 : int(1..2)])
+                         = 0
+                         /\
+                         (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q161])
+                                   | q161 : int(1..2)])
+                          <= 0
+                          /\
+                          and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q159] -> false
+                                   | q159 : int(1..2)]))
+                         /\
+                         0 <=
+                         sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q59, 3, q166])
+                                  | q166 : int(1..2)])
+                             | 2 = q59]);
                         int(1..3)])),
-              y_1_3[q35] = [33, 55; int(1..2)][q35];
+              y_1_3[q59] = [33, 55; int(1..2)][q59];
                   int(1..3)])
-             | q35 : int(1, 2)]),
+             | q59 : int(1, 2)]),
     and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q1, q2, 2] ->
               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q1, q2, 1] <
               y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q1, q2, 2]
@@ -134,35 +226,53 @@ such that
                   | q9 : int(1..3)])
              | q8 : int(1, 2)]),
     and([and([y_1_1[q14] = y_1_1[q14],
-              and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q19] ->
-                        or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q21] != 3 /\
-                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q21] =
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q17, q19]
-                                | q21 : int(1..2)])
-                            | q19 : int(1..2)])
+              and([sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q19]) | q19 : int(1..2)]) =
+                   sum([toInt(y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q21] != 3) | q21 : int(1..2)])
                    /\
-                   and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q23] != 3 ->
-                        or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q25] /\
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q17, q25] =
-                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q23]
-                                | q25 : int(1..2)])
-                            | q23 : int(1..2)])
+                   (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q27]) | q27 : int(1..2)]) <=
+                    sum([toInt(y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q29] != 3) | q29 : int(1..2)])
+                    /\
+                    and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q23] ->
+                         or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q25] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q25] =
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q17, q23]
+                                 | q25 : int(1..2)])
+                             | q23 : int(1..2)]))
+                   /\
+                   (sum([toInt(y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q35] != 3) | q35 : int(1..2)]) <=
+                    sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q37]) | q37 : int(1..2)])
+                    /\
+                    and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q31] != 3 ->
+                         or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q17, q33] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q17, q33] =
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q17, q31]
+                                 | q33 : int(1..2)])
+                             | q31 : int(1..2)]))
                        | q17 : int(1..3)])
               /\
-              and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q26, q28] != 3 ->
-                        or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q26, q30] /\
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q26, q30] =
-                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q26, q28]
-                                | q30 : int(1..2)])
-                            | q28 : int(1..2)])
+              and([sum([toInt(y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q40] != 3) | q40 : int(1..2)]) =
+                   sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q38, q42]) | q42 : int(1..2)])
                    /\
-                   and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q26, q32] ->
-                        or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q26, q34] != 3 /\
-                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q26, q34] =
-                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q26, q32]
-                                | q34 : int(1..2)])
-                            | q32 : int(1..2)])
-                       | q26 : int(1..3)]),
+                   (sum([toInt(y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q48] != 3) | q48 : int(1..2)]) <=
+                    sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q38, q50]) | q50 : int(1..2)])
+                    /\
+                    and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q44] != 3 ->
+                         or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q38, q46] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q38, q46] =
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q44]
+                                 | q46 : int(1..2)])
+                             | q44 : int(1..2)]))
+                   /\
+                   (sum([toInt(y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q38, q56]) | q56 : int(1..2)]) <=
+                    sum([toInt(y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q58] != 3) | q58 : int(1..2)])
+                    /\
+                    and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q14, q38, q52] ->
+                         or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q54] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q14, q38, q54] =
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q14, q38, q52]
+                                 | q54 : int(1..2)])
+                             | q52 : int(1..2)]))
+                       | q38 : int(1..3)]),
               y_1_3[q14] = y_1_3[q14];
                   int(1..3)])
              | q14 : int(1, 2)])

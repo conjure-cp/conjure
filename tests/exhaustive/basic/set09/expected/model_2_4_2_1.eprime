@@ -7,9 +7,9 @@ find y_Occurrence: matrix indexed by [int(2..5)] of bool
 branching on
     [x_ExplicitVarSizeWithDummy, y_Occurrence, y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values]
 such that
-    and([x_ExplicitVarSizeWithDummy[q16] != 6 /\ y_ExplicitVarSizeWithFlags_Flags[q17] ->
-         x_ExplicitVarSizeWithDummy[q16] + 2 = y_ExplicitVarSizeWithFlags_Values[q17]
-             | q16 : int(1..4), q17 : int(1..4)]),
+    and([x_ExplicitVarSizeWithDummy[q25] != 6 /\ y_ExplicitVarSizeWithFlags_Flags[q26] ->
+         x_ExplicitVarSizeWithDummy[q25] + 2 = y_ExplicitVarSizeWithFlags_Values[q26]
+             | q25 : int(1..4), q26 : int(1..4)]),
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 6
              | q1 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 6 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..3)]),
@@ -21,9 +21,15 @@ such that
     and([y_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> y_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..3)]),
     1 <= sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q8]) | q8 : int(1..4)]),
     1 <= sum([toInt(y_Occurrence[q10]) | q10 : int(2..5)]),
-    and([y_Occurrence[q11] ->
-         or([y_ExplicitVarSizeWithFlags_Flags[q13] /\ y_ExplicitVarSizeWithFlags_Values[q13] = q11 | q13 : int(1..4)])
-             | q11 : int(2..5)]),
-    and([y_ExplicitVarSizeWithFlags_Flags[q15] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[q15]]
-             | q15 : int(1..4)])
+    sum([toInt(y_Occurrence[q11]) | q11 : int(2..5)]) =
+    sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q13]) | q13 : int(1..4)]),
+    sum([toInt(y_Occurrence[q17]) | q17 : int(2..5)]) <=
+    sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q19]) | q19 : int(1..4)]),
+    and([y_Occurrence[q14] ->
+         or([y_ExplicitVarSizeWithFlags_Flags[q16] /\ y_ExplicitVarSizeWithFlags_Values[q16] = q14 | q16 : int(1..4)])
+             | q14 : int(2..5)]),
+    sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q23]) | q23 : int(1..4)]) <=
+    sum([toInt(y_Occurrence[q24]) | q24 : int(2..5)]),
+    and([y_ExplicitVarSizeWithFlags_Flags[q21] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[q21]]
+             | q21 : int(1..4)])
 

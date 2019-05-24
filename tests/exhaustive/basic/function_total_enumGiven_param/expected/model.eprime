@@ -6,6 +6,7 @@ given fin1: int
 given p_Function1D: matrix indexed by [int(1..E_EnumSize)] of int(13..15)
 branching on [x_Function1D]
 such that
+    fin1 = E_EnumSize,
     and([x_Function1D[q5] = p_Function1D[q5] | q5 : int(1..E_EnumSize)]),
     and([p_Function1D[q6] = x_Function1D[q6] | q6 : int(1..E_EnumSize)]),
     allDiff(x_Function1D),

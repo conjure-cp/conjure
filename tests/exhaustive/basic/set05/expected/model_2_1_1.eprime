@@ -4,15 +4,21 @@ find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..3)] of int(1..5)
 find x_Occurrence: matrix indexed by [int(1..4)] of bool
 branching on [x_Occurrence, x_ExplicitVarSizeWithDummy]
 such that
-    or([x_ExplicitVarSizeWithDummy[q12] != 5 /\ x_ExplicitVarSizeWithDummy[q12] = 1 | q12 : int(1..3)]),
+    or([x_ExplicitVarSizeWithDummy[q21] != 5 /\ x_ExplicitVarSizeWithDummy[q21] = 1 | q21 : int(1..3)]),
     x_Occurrence[2],
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 5
              | q1 : int(1..2)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 5 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 5 | q2 : int(1..2)]),
     sum([toInt(x_ExplicitVarSizeWithDummy[q3] != 5) | q3 : int(1..3)]) <= 3,
     sum([toInt(x_Occurrence[q5]) | q5 : int(1..4)]) <= 3,
-    and([x_Occurrence[q6] ->
-         or([x_ExplicitVarSizeWithDummy[q8] != 5 /\ x_ExplicitVarSizeWithDummy[q8] = q6 | q8 : int(1..3)])
-             | q6 : int(1..4)]),
-    and([x_ExplicitVarSizeWithDummy[q10] != 5 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q10]] | q10 : int(1..3)])
+    sum([toInt(x_Occurrence[q6]) | q6 : int(1..4)]) =
+    sum([toInt(x_ExplicitVarSizeWithDummy[q8] != 5) | q8 : int(1..3)]),
+    sum([toInt(x_Occurrence[q12]) | q12 : int(1..4)]) <=
+    sum([toInt(x_ExplicitVarSizeWithDummy[q14] != 5) | q14 : int(1..3)]),
+    and([x_Occurrence[q9] ->
+         or([x_ExplicitVarSizeWithDummy[q11] != 5 /\ x_ExplicitVarSizeWithDummy[q11] = q9 | q11 : int(1..3)])
+             | q9 : int(1..4)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q18] != 5) | q18 : int(1..3)]) <=
+    sum([toInt(x_Occurrence[q19]) | q19 : int(1..4)]),
+    and([x_ExplicitVarSizeWithDummy[q16] != 5 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q16]] | q16 : int(1..3)])
 

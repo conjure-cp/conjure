@@ -16,10 +16,10 @@ branching on
      var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags,
      var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Values]
 such that
-    or([var2_ExplicitVarSizeWithFlagsR4_Flags[q44] /\
-        sum([toInt(var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q44, q45]) | q45 : int(1..2)])
+    or([var2_ExplicitVarSizeWithFlagsR4_Flags[q50] /\
+        sum([toInt(var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q50, q51]) | q51 : int(1..2)])
         >= -7
-            | q44 : int(1..4)]),
+            | q50 : int(1..4)]),
     and([var2_ExplicitVarSizeWithFlagsR4_Flags[q2 + 1] ->
          flatten([flatten([[-toInt(var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q2, q12]);
                                 int(1)],
@@ -94,26 +94,32 @@ such that
          (var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q18, 2] ->
           var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q18, 1])
              | q18 : int(1..4)]),
-    and([q29 <= var2_ExplicitVarSizeWithMarkerR4_Marker ->
-         or([var2_ExplicitVarSizeWithFlagsR4_Flags[q31] /\
-             (and([var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q31, q32] =
-                   var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q29, q32]
-                       | q32 : int(1..2)])
+    var2_ExplicitVarSizeWithMarkerR4_Marker =
+    sum([toInt(var2_ExplicitVarSizeWithFlagsR4_Flags[q29]) | q29 : int(1..4)]),
+    var2_ExplicitVarSizeWithMarkerR4_Marker <=
+    sum([toInt(var2_ExplicitVarSizeWithFlagsR4_Flags[q32]) | q32 : int(1..4)]),
+    and([q33 <= var2_ExplicitVarSizeWithMarkerR4_Marker ->
+         or([var2_ExplicitVarSizeWithFlagsR4_Flags[q35] /\
+             (and([var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q35, q36] =
+                   var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q33, q36]
+                       | q36 : int(1..2)])
               /\
-              and([var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Values[q31, q34] =
-                   var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q29, q34]
-                       | q34 : int(1..2)]))
-                 | q31 : int(1..4)])
-             | q29 : int(1..4)]),
-    and([var2_ExplicitVarSizeWithFlagsR4_Flags[q37] ->
-         or([q39 <= var2_ExplicitVarSizeWithMarkerR4_Marker /\
-             (and([var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q39, q40] =
-                   var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q37, q40]
-                       | q40 : int(1..2)])
+              and([var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Values[q35, q38] =
+                   var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q33, q38]
+                       | q38 : int(1..2)]))
+                 | q35 : int(1..4)])
+             | q33 : int(1..4)]),
+    sum([toInt(var2_ExplicitVarSizeWithFlagsR4_Flags[q49]) | q49 : int(1..4)]) <=
+    var2_ExplicitVarSizeWithMarkerR4_Marker,
+    and([var2_ExplicitVarSizeWithFlagsR4_Flags[q41] ->
+         or([q43 <= var2_ExplicitVarSizeWithMarkerR4_Marker /\
+             (and([var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q43, q44] =
+                   var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags[q41, q44]
+                       | q44 : int(1..2)])
               /\
-              and([var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q39, q42] =
-                   var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Values[q37, q42]
-                       | q42 : int(1..2)]))
-                 | q39 : int(1..4)])
-             | q37 : int(1..4)])
+              and([var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q43, q46] =
+                   var2_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Values[q41, q46]
+                       | q46 : int(1..2)]))
+                 | q43 : int(1..4)])
+             | q41 : int(1..4)])
 

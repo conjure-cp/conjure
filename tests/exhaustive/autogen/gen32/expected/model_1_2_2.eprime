@@ -5,19 +5,25 @@ find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
 find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 branching on [var2_ExplicitVarSizeWithDummy, var2_Occurrence]
 such that
-    or([var2_Occurrence[q11] /\
-        !or([var2_ExplicitVarSizeWithDummy[q13] != 6 /\ var2_ExplicitVarSizeWithDummy[q13] = q11 | q13 : int(1..11)])
-            | q11 : int(-4..5, 2)])
+    or([var2_Occurrence[q20] /\
+        !or([var2_ExplicitVarSizeWithDummy[q22] != 6 /\ var2_ExplicitVarSizeWithDummy[q22] = q20 | q22 : int(1..11)])
+            | q20 : int(-4..5, 2)])
     \/
-    or([var2_ExplicitVarSizeWithDummy[q14] != 6 /\ !var2_Occurrence[var2_ExplicitVarSizeWithDummy[q14]]
-            | q14 : int(1..11)]),
+    or([var2_ExplicitVarSizeWithDummy[q23] != 6 /\ !var2_Occurrence[var2_ExplicitVarSizeWithDummy[q23]]
+            | q23 : int(1..11)]),
     and([var2_ExplicitVarSizeWithDummy[q2] < var2_ExplicitVarSizeWithDummy[q2 + 1] \/
          var2_ExplicitVarSizeWithDummy[q2] = 6
              | q2 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q3] = 6 -> var2_ExplicitVarSizeWithDummy[q3 + 1] = 6 | q3 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithDummy[q7] != 6 -> var2_Occurrence[var2_ExplicitVarSizeWithDummy[q7]]
-             | q7 : int(1..11)]),
-    and([var2_Occurrence[q8] ->
-         or([var2_ExplicitVarSizeWithDummy[q10] != 6 /\ var2_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..11)])
-             | q8 : int(-4..5, 2)])
+    sum([toInt(var2_ExplicitVarSizeWithDummy[q7] != 6) | q7 : int(1..11)]) =
+    sum([toInt(var2_Occurrence[q8]) | q8 : int(-4..5, 2)]),
+    sum([toInt(var2_ExplicitVarSizeWithDummy[q12] != 6) | q12 : int(1..11)]) <=
+    sum([toInt(var2_Occurrence[q13]) | q13 : int(-4..5, 2)]),
+    and([var2_ExplicitVarSizeWithDummy[q10] != 6 -> var2_Occurrence[var2_ExplicitVarSizeWithDummy[q10]]
+             | q10 : int(1..11)]),
+    sum([toInt(var2_Occurrence[q17]) | q17 : int(-4..5, 2)]) <=
+    sum([toInt(var2_ExplicitVarSizeWithDummy[q19] != 6) | q19 : int(1..11)]),
+    and([var2_Occurrence[q14] ->
+         or([var2_ExplicitVarSizeWithDummy[q16] != 6 /\ var2_ExplicitVarSizeWithDummy[q16] = q14 | q16 : int(1..11)])
+             | q14 : int(-4..5, 2)])
 

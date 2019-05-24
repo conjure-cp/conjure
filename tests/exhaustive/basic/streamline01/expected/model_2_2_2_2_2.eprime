@@ -6,6 +6,7 @@ letting let1 be 1
 find s_Explicit: matrix indexed by [int(1)] of int(1..2)
 branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Explicit]
 such that
+    1 <= sum([toInt(f_Function1DPartial_Flags[q10]) | q10 : int(1..2)]),
     f_Function1DPartial_Flags[s_Explicit[1]],
     s_Explicit[1] != s_Explicit[1] ->
     and([f_Function1DPartial_Values[s_Explicit[1]] > f_Function1DPartial_Values[s_Explicit[1]],

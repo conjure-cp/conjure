@@ -11,22 +11,24 @@ branching on
     [x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values, x_ExplicitWithFlags_Flags,
      x_ExplicitWithFlags_Values]
 such that
-    and([sum([g_ExplicitWithFlags_Flags[q25]
-                  | q25 : int(1..fin1), g_ExplicitWithFlags_Values[q25] = g_ExplicitWithFlags_Values[q24]])
+    fin1 =
+    sum([toInt(x_ExplicitWithFlags_Flags[q32] > 0) * catchUndef(x_ExplicitWithFlags_Flags[q32], 0) | q32 : int(1..4)]),
+    and([sum([g_ExplicitWithFlags_Flags[q29]
+                  | q29 : int(1..fin1), g_ExplicitWithFlags_Values[q29] = g_ExplicitWithFlags_Values[q28]])
          =
-         sum([toInt(x_ExplicitWithFlags_Values[q26] = g_ExplicitWithFlags_Values[q24]) *
-              catchUndef(x_ExplicitWithFlags_Flags[q26], 0)
-                  | q26 : int(1..4)])
-             | q24 : int(1..fin1), g_ExplicitWithFlags_Flags[q24] > 0]),
-    and([x_ExplicitWithFlags_Flags[q27] > 0 ->
-         sum([toInt(g_ExplicitWithFlags_Values[q28] = x_ExplicitWithFlags_Values[q27]) *
-              catchUndef(g_ExplicitWithFlags_Flags[q28], 0)
-                  | q28 : int(1..fin1)])
+         sum([toInt(x_ExplicitWithFlags_Values[q30] = g_ExplicitWithFlags_Values[q28]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q30], 0)
+                  | q30 : int(1..4)])
+             | q28 : int(1..fin1), g_ExplicitWithFlags_Flags[q28] > 0]),
+    and([x_ExplicitWithFlags_Flags[q33] > 0 ->
+         sum([toInt(g_ExplicitWithFlags_Values[q34] = x_ExplicitWithFlags_Values[q33]) *
+              catchUndef(g_ExplicitWithFlags_Flags[q34], 0)
+                  | q34 : int(1..fin1)])
          =
-         sum([toInt(x_ExplicitWithFlags_Values[q29] = x_ExplicitWithFlags_Values[q27]) *
-              catchUndef(x_ExplicitWithFlags_Flags[q29], 0)
-                  | q29 : int(1..4)])
-             | q27 : int(1..4)]),
+         sum([toInt(x_ExplicitWithFlags_Values[q35] = x_ExplicitWithFlags_Values[q33]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q35], 0)
+                  | q35 : int(1..4)])
+             | q33 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q1 + 1] > 0 -> x_ExplicitWithFlags_Values[q1] < x_ExplicitWithFlags_Values[q1 + 1]
              | q1 : int(1..3)]),
     and([x_ExplicitWithFlags_Flags[q2] = 0 -> x_ExplicitWithFlags_Values[q2] = 1 | q2 : int(1..4)]),
@@ -43,6 +45,8 @@ such that
          <= 2
              | q10 : int(1..4)]),
     x_ExplicitWithRepetition_Flag <= 4,
+    sum([toInt(q20 <= x_ExplicitWithRepetition_Flag) | q20 : int(1..4)]) =
+    sum([toInt(x_ExplicitWithFlags_Flags[q22] > 0) * catchUndef(x_ExplicitWithFlags_Flags[q22], 0) | q22 : int(1..4)]),
     and([q15 <= x_ExplicitWithRepetition_Flag ->
          sum([toInt(q18 <= x_ExplicitWithRepetition_Flag) *
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q18] = x_ExplicitWithRepetition_Values[q15]), 0)
@@ -52,13 +56,13 @@ such that
               catchUndef(x_ExplicitWithFlags_Flags[q16], 0)
                   | q16 : int(1..4)])
              | q15 : int(1..4)]),
-    and([x_ExplicitWithFlags_Flags[q19] > 0 ->
-         sum([toInt(q22 <= x_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(x_ExplicitWithRepetition_Values[q22] = x_ExplicitWithFlags_Values[q19]), 0)
-                  | q22 : int(1..4)])
+    and([x_ExplicitWithFlags_Flags[q23] > 0 ->
+         sum([toInt(q26 <= x_ExplicitWithRepetition_Flag) *
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q26] = x_ExplicitWithFlags_Values[q23]), 0)
+                  | q26 : int(1..4)])
          =
-         sum([toInt(x_ExplicitWithFlags_Values[q20] = x_ExplicitWithFlags_Values[q19]) *
-              catchUndef(x_ExplicitWithFlags_Flags[q20], 0)
-                  | q20 : int(1..4)])
-             | q19 : int(1..4)])
+         sum([toInt(x_ExplicitWithFlags_Values[q24] = x_ExplicitWithFlags_Values[q23]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q24], 0)
+                  | q24 : int(1..4)])
+             | q23 : int(1..4)])
 

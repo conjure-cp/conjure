@@ -24,48 +24,86 @@ branching on
      r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy,
      r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3]
 such that
-    and([q36 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker ->
-         or([and([a_RelationAsSetR6_ExplicitR6_1[q38] = r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q36],
-                  and([or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q42] !=
-                           4
-                           /\
-                           r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q42] =
-                           a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q38, q40]
-                               | q42 : int(1..2)])
-                           | q40 : int(1..fin2),
-                             a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q38, q40] != 4])
+    and([q54 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker ->
+         or([and([a_RelationAsSetR6_ExplicitR6_1[q56] = r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q54],
+                  sum([1 | q58 : int(1..fin2), a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q58] != 4])
+                  =
+                  sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q60]
+                             != 4)
+                           | q60 : int(1..2)])
                   /\
-                  and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q44] != 4 ->
-                       or([a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q38, q46] =
-                           r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q44]
-                               | q46 : int(1..fin2),
-                                 a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q38, q46] != 4])
-                           | q44 : int(1..2)]),
-                  a_RelationAsSetR6_ExplicitR6_3[q38] = r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q36];
-                      int(1..3)])
-                 | q38 : int(1..fin1)])
-             | q36 : int(1..84)]),
-    and([or([q49 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker /\
-             and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q49] = a_RelationAsSetR6_ExplicitR6_1[q47],
-                  and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q49, q51] != 4 ->
-                       or([a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q47, q53] =
-                           r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q49, q51]
-                               | q53 : int(1..fin2),
-                                 a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q47, q53] != 4])
-                           | q51 : int(1..2)])
+                  (sum([1 | q66 : int(1..fin2), a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q66] != 4])
+                   <=
+                   sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q68]
+                              != 4)
+                            | q68 : int(1..2)])
+                   /\
+                   and([or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q64] !=
+                            4
+                            /\
+                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q64] =
+                            a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q62]
+                                | q64 : int(1..2)])
+                            | q62 : int(1..fin2),
+                              a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q62] != 4]))
                   /\
-                  and([or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q49, q57] !=
-                           4
-                           /\
-                           r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q49, q57] =
-                           a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q47, q55]
-                               | q57 : int(1..2)])
-                           | q55 : int(1..fin2),
-                             a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q47, q55] != 4]),
-                  r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q49] = a_RelationAsSetR6_ExplicitR6_3[q47];
+                  (sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q74]
+                              != 4)
+                            | q74 : int(1..2)])
+                   <=
+                   sum([1 | q76 : int(1..fin2), a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q76] != 4])
+                   /\
+                   and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q70] != 4
+                        ->
+                        or([a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q72] =
+                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q54, q70]
+                                | q72 : int(1..fin2),
+                                  a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q56, q72] != 4])
+                            | q70 : int(1..2)])),
+                  a_RelationAsSetR6_ExplicitR6_3[q56] = r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q54];
                       int(1..3)])
-                 | q49 : int(1..84)])
-             | q47 : int(1..fin1)]),
+                 | q56 : int(1..fin1)])
+             | q54 : int(1..84)]),
+    and([or([q79 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker /\
+             and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q79] = a_RelationAsSetR6_ExplicitR6_1[q77],
+                  sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q81]
+                             != 4)
+                           | q81 : int(1..2)])
+                  =
+                  sum([1 | q83 : int(1..fin2), a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q83] != 4])
+                  /\
+                  (sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q89]
+                              != 4)
+                            | q89 : int(1..2)])
+                   <=
+                   sum([1 | q91 : int(1..fin2), a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q91] != 4])
+                   /\
+                   and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q85] != 4
+                        ->
+                        or([a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q87] =
+                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q85]
+                                | q87 : int(1..fin2),
+                                  a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q87] != 4])
+                            | q85 : int(1..2)]))
+                  /\
+                  (sum([1 | q97 : int(1..fin2), a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q97] != 4])
+                   <=
+                   sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q99]
+                              != 4)
+                            | q99 : int(1..2)])
+                   /\
+                   and([or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q95] !=
+                            4
+                            /\
+                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q79, q95] =
+                            a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q93]
+                                | q95 : int(1..2)])
+                            | q93 : int(1..fin2),
+                              a_RelationAsSetR6_ExplicitR6_2_ExplicitVarSizeWithDummy[q77, q93] != 4])),
+                  r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q79] = a_RelationAsSetR6_ExplicitR6_3[q77];
+                      int(1..3)])
+                 | q79 : int(1..84)])
+             | q77 : int(1..fin1)]),
     r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker = fin1,
     and([q1 + 1 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker ->
          flatten([[r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q1]; int(1)],
@@ -120,45 +158,89 @@ such that
          or([q21 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker /\
              and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q21] =
                   r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q19],
-                  and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q23] != 4 ->
-                       r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence
-                           [q19,
-                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q23]]
+                  sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q23]
+                             != 4)
                            | q23 : int(1..2)])
+                  =
+                  sum([toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q19, q24])
+                           | q24 : int(2..3)])
                   /\
-                  and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q19, q24] ->
-                       or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q26] !=
-                           4
-                           /\
-                           r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q26] =
-                           q24 | q26 : int(1..2)])
-                           | q24 : int(2..3)]),
+                  (sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q28]
+                              != 4)
+                            | q28 : int(1..2)])
+                   <=
+                   sum([toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q19, q29])
+                            | q29 : int(2..3)])
+                   /\
+                   and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q26] != 4
+                        ->
+                        r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence
+                            [q19,
+                             r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q26]]
+                            | q26 : int(1..2)]))
+                  /\
+                  (sum([toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q19, q33])
+                            | q33 : int(2..3)])
+                   <=
+                   sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q35]
+                              != 4)
+                            | q35 : int(1..2)])
+                   /\
+                   and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q19, q30] ->
+                        or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q32] !=
+                            4
+                            /\
+                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q21, q32] =
+                            q30 | q32 : int(1..2)])
+                            | q30 : int(2..3)])),
                   r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q21] =
                   r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q19];
                       int(1..3)])
                  | q21 : int(1..84)])
              | q19 : int(1..84)]),
-    and([q27 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker ->
-         or([q29 <= r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker /\
-             and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q29] =
-                  r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q27],
-                  and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q29, q30] ->
-                       or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q27, q32] !=
-                           4
-                           /\
-                           r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q27, q32] =
-                           q30 | q32 : int(1..2)])
-                           | q30 : int(2..3)])
+    and([q36 <= r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker ->
+         or([q38 <= r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker /\
+             and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q38] =
+                  r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_1[q36],
+                  sum([toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q38, q39])
+                           | q39 : int(2..3)])
+                  =
+                  sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q41]
+                             != 4)
+                           | q41 : int(1..2)])
                   /\
-                  and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q27, q34] != 4 ->
-                       r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence
-                           [q29,
-                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q27, q34]]
-                           | q34 : int(1..2)]),
-                  r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q29] =
-                  r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q27];
+                  (sum([toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q38, q45])
+                            | q45 : int(2..3)])
+                   <=
+                   sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q47]
+                              != 4)
+                            | q47 : int(1..2)])
+                   /\
+                   and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q38, q42] ->
+                        or([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q44] !=
+                            4
+                            /\
+                            r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q44] =
+                            q42 | q44 : int(1..2)])
+                            | q42 : int(2..3)]))
+                  /\
+                  (sum([toInt(r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q51]
+                              != 4)
+                            | q51 : int(1..2)])
+                   <=
+                   sum([toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q38, q52])
+                            | q52 : int(2..3)])
+                   /\
+                   and([r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q49] != 4
+                        ->
+                        r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence
+                            [q38,
+                             r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_2_ExplicitVarSizeWithDummy[q36, q49]]
+                            | q49 : int(1..2)])),
+                  r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q38] =
+                  r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Values_3[q36];
                       int(1..3)])
-                 | q29 : int(1..84)])
-             | q27 : int(1..84)]),
+                 | q38 : int(1..84)])
+             | q36 : int(1..84)]),
     r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker = r_RelationAsSetR6_ExplicitVarSizeWithMarkerR6_Marker
 

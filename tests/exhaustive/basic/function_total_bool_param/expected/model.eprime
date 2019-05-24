@@ -5,6 +5,7 @@ given fin1: int
 given p_Function1D: matrix indexed by [bool] of int(13, 17)
 branching on [x_Function1D]
 such that
+    fin1 = 2,
     and([x_Function1D[q3] = p_Function1D[q3] | q3 : bool]),
     and([p_Function1D[q4] = x_Function1D[q4] | q4 : bool])
 

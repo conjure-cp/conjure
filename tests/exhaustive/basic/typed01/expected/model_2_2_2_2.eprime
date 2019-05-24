@@ -4,7 +4,16 @@ find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 branching on [x_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithDummy]
 such that
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
+          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1]))
+    = 0,
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
+          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1]))
+    <= 0,
     x_ExplicitVarSizeWithDummy[1] != 2 /\
     (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1])
-    -> false
+    -> false,
+    0 <=
+    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
+          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1]))
 

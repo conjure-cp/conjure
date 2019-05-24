@@ -23,10 +23,16 @@ such that
     and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false -> var2_ExplicitVarSizeWithFlags_Values[q2] = -4
              | q2 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> var2_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..10)]),
-    and([var2_Occurrence[q14] ->
-         or([var2_ExplicitVarSizeWithFlags_Flags[q16] /\ var2_ExplicitVarSizeWithFlags_Values[q16] = q14
-                 | q16 : int(1..11)])
-             | q14 : int(-4..5, 2)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q18] -> var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q18]]
-             | q18 : int(1..11)])
+    sum([toInt(var2_Occurrence[q14]) | q14 : int(-4..5, 2)]) =
+    sum([toInt(var2_ExplicitVarSizeWithFlags_Flags[q16]) | q16 : int(1..11)]),
+    sum([toInt(var2_Occurrence[q20]) | q20 : int(-4..5, 2)]) <=
+    sum([toInt(var2_ExplicitVarSizeWithFlags_Flags[q22]) | q22 : int(1..11)]),
+    and([var2_Occurrence[q17] ->
+         or([var2_ExplicitVarSizeWithFlags_Flags[q19] /\ var2_ExplicitVarSizeWithFlags_Values[q19] = q17
+                 | q19 : int(1..11)])
+             | q17 : int(-4..5, 2)]),
+    sum([toInt(var2_ExplicitVarSizeWithFlags_Flags[q26]) | q26 : int(1..11)]) <=
+    sum([toInt(var2_Occurrence[q27]) | q27 : int(-4..5, 2)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q24] -> var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q24]]
+             | q24 : int(1..11)])
 

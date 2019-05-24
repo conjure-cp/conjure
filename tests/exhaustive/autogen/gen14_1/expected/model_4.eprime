@@ -8,73 +8,169 @@ branching on
     [var1_PartitionOccurrence_NumParts, var1_PartitionOccurrence_WhichPart, var1_PartitionOccurrence_PartSizes,
      var1_PartitionOccurrence_FirstIndex]
 such that
-    !(and([q51 <= var1_PartitionOccurrence_NumParts ->
-           or([q61 <= var1_PartitionOccurrence_NumParts /\
-               (and([var1_PartitionOccurrence_WhichPart[q63] = q61 ->
-                     or([var1_PartitionOccurrence_WhichPart[q54] = q51 /\ q54 = q63 | q54 : int(1..2)])
-                         | q63 : int(1..2)])
-                /\
-                and([var1_PartitionOccurrence_WhichPart[q55] = q51 ->
-                     or([var1_PartitionOccurrence_WhichPart[q65] = q61 /\ q65 = q55 | q65 : int(1..2)])
-                         | q55 : int(1..2)]))
-                   | q61 : int(1..2)])
-               | q51 : int(1..2)])
+    !(sum([toInt(q102 <= var1_PartitionOccurrence_NumParts /\ var1_PartitionOccurrence_WhichPart[q104] = q102)
+               | q102 : int(1..2), q104 : int(1..2)])
+      =
+      sum([toInt(q127 <= var1_PartitionOccurrence_NumParts /\ var1_PartitionOccurrence_WhichPart[q129] = q127)
+               | q127 : int(1..2), q129 : int(1..2)])
       /\
-      and([q66 <= var1_PartitionOccurrence_NumParts ->
-           or([q56 <= var1_PartitionOccurrence_NumParts /\
-               (and([var1_PartitionOccurrence_WhichPart[q58] = q56 ->
-                     or([var1_PartitionOccurrence_WhichPart[q69] = q66 /\ q69 = q58 | q69 : int(1..2)])
-                         | q58 : int(1..2)])
-                /\
-                and([var1_PartitionOccurrence_WhichPart[q70] = q66 ->
-                     or([var1_PartitionOccurrence_WhichPart[q60] = q56 /\ q60 = q70 | q60 : int(1..2)])
-                         | q70 : int(1..2)]))
-                   | q56 : int(1..2)])
-               | q66 : int(1..2)]))
+      (sum([toInt(q105 <= var1_PartitionOccurrence_NumParts) | q105 : int(1..2)]) =
+       sum([toInt(q130 <= var1_PartitionOccurrence_NumParts) | q130 : int(1..2)])
+       /\
+       (sum([toInt(q107 <= var1_PartitionOccurrence_NumParts) | q107 : int(1..2)]) <=
+        sum([toInt(q132 <= var1_PartitionOccurrence_NumParts) | q132 : int(1..2)])
+        /\
+        and([q109 <= var1_PartitionOccurrence_NumParts ->
+             or([q134 <= var1_PartitionOccurrence_NumParts /\
+                 (sum([toInt(var1_PartitionOccurrence_WhichPart[q136] = q134) | q136 : int(1..2)]) =
+                  sum([toInt(var1_PartitionOccurrence_WhichPart[q111] = q109) | q111 : int(1..2)])
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q137] = q134) | q137 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q112] = q109) | q112 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q138] = q134 ->
+                        or([var1_PartitionOccurrence_WhichPart[q114] = q109 /\ q114 = q138 | q114 : int(1..2)])
+                            | q138 : int(1..2)]))
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q115] = q109) | q115 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q139] = q134) | q139 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q116] = q109 ->
+                        or([var1_PartitionOccurrence_WhichPart[q141] = q134 /\ q141 = q116 | q141 : int(1..2)])
+                            | q116 : int(1..2)])))
+                     | q134 : int(1..2)])
+                 | q109 : int(1..2)]))
+       /\
+       (sum([toInt(q142 <= var1_PartitionOccurrence_NumParts) | q142 : int(1..2)]) <=
+        sum([toInt(q117 <= var1_PartitionOccurrence_NumParts) | q117 : int(1..2)])
+        /\
+        and([q144 <= var1_PartitionOccurrence_NumParts ->
+             or([q119 <= var1_PartitionOccurrence_NumParts /\
+                 (sum([toInt(var1_PartitionOccurrence_WhichPart[q121] = q119) | q121 : int(1..2)]) =
+                  sum([toInt(var1_PartitionOccurrence_WhichPart[q146] = q144) | q146 : int(1..2)])
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q122] = q119) | q122 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q147] = q144) | q147 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q123] = q119 ->
+                        or([var1_PartitionOccurrence_WhichPart[q149] = q144 /\ q149 = q123 | q149 : int(1..2)])
+                            | q123 : int(1..2)]))
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q150] = q144) | q150 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q124] = q119) | q124 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q151] = q144 ->
+                        or([var1_PartitionOccurrence_WhichPart[q126] = q119 /\ q126 = q151 | q126 : int(1..2)])
+                            | q151 : int(1..2)])))
+                     | q119 : int(1..2)])
+                 | q144 : int(1..2)]))))
     \/
-    !(and([q31 <= var1_PartitionOccurrence_NumParts ->
-           or([var1_PartitionOccurrence_WhichPart[q35] = q31 /\ q35 = 1 | q35 : int(1..2)]) /\
-           and([var1_PartitionOccurrence_WhichPart[q33] = q31 -> 1 = q33 | q33 : int(1..2)])
-               | q31 : int(1..2)])
+    !(sum([toInt(q43 <= var1_PartitionOccurrence_NumParts /\ var1_PartitionOccurrence_WhichPart[q45] = q43)
+               | q43 : int(1..2), q45 : int(1..2)])
+      = 1
       /\
-      or([q36 <= var1_PartitionOccurrence_NumParts /\
-          (and([var1_PartitionOccurrence_WhichPart[q38] = q36 -> 1 = q38 | q38 : int(1..2)]) /\
-           or([var1_PartitionOccurrence_WhichPart[q40] = q36 /\ q40 = 1 | q40 : int(1..2)]))
-              | q36 : int(1..2)]))
+      (sum([toInt(q46 <= var1_PartitionOccurrence_NumParts) | q46 : int(1..2)]) = 1 /\
+       (sum([toInt(q48 <= var1_PartitionOccurrence_NumParts) | q48 : int(1..2)]) <= 1 /\
+        and([q50 <= var1_PartitionOccurrence_NumParts ->
+             1 = sum([toInt(var1_PartitionOccurrence_WhichPart[q52] = q50) | q52 : int(1..2)]) /\
+             (1 <= sum([toInt(var1_PartitionOccurrence_WhichPart[q53] = q50) | q53 : int(1..2)]) /\
+              or([var1_PartitionOccurrence_WhichPart[q55] = q50 /\ q55 = 1 | q55 : int(1..2)]))
+             /\
+             (sum([toInt(var1_PartitionOccurrence_WhichPart[q56] = q50) | q56 : int(1..2)]) <= 1 /\
+              and([var1_PartitionOccurrence_WhichPart[q57] = q50 -> 1 = q57 | q57 : int(1..2)]))
+                 | q50 : int(1..2)]))
+       /\
+       (1 <= sum([toInt(q58 <= var1_PartitionOccurrence_NumParts) | q58 : int(1..2)]) /\
+        or([q60 <= var1_PartitionOccurrence_NumParts /\
+            (sum([toInt(var1_PartitionOccurrence_WhichPart[q62] = q60) | q62 : int(1..2)]) = 1 /\
+             (sum([toInt(var1_PartitionOccurrence_WhichPart[q63] = q60) | q63 : int(1..2)]) <= 1 /\
+              and([var1_PartitionOccurrence_WhichPart[q64] = q60 -> 1 = q64 | q64 : int(1..2)]))
+             /\
+             (1 <= sum([toInt(var1_PartitionOccurrence_WhichPart[q65] = q60) | q65 : int(1..2)]) /\
+              or([var1_PartitionOccurrence_WhichPart[q67] = q60 /\ q67 = 1 | q67 : int(1..2)])))
+                | q60 : int(1..2)]))))
     \/
-    !(and([q98 <= var1_PartitionOccurrence_NumParts ->
-           or([q108 <= var1_PartitionOccurrence_NumParts /\
-               (and([var1_PartitionOccurrence_WhichPart[q110] = q108 ->
-                     or([var1_PartitionOccurrence_WhichPart[q101] = q98 /\ q101 = q110 | q101 : int(1..2)])
-                         | q110 : int(1..2)])
-                /\
-                and([var1_PartitionOccurrence_WhichPart[q102] = q98 ->
-                     or([var1_PartitionOccurrence_WhichPart[q112] = q108 /\ q112 = q102 | q112 : int(1..2)])
-                         | q102 : int(1..2)]))
-                   | q108 : int(1..2)])
-               | q98 : int(1..2)])
+    !(sum([toInt(q215 <= var1_PartitionOccurrence_NumParts /\ var1_PartitionOccurrence_WhichPart[q217] = q215)
+               | q215 : int(1..2), q217 : int(1..2)])
+      =
+      sum([toInt(q240 <= var1_PartitionOccurrence_NumParts /\ var1_PartitionOccurrence_WhichPart[q242] = q240)
+               | q240 : int(1..2), q242 : int(1..2)])
       /\
-      and([q113 <= var1_PartitionOccurrence_NumParts ->
-           or([q103 <= var1_PartitionOccurrence_NumParts /\
-               (and([var1_PartitionOccurrence_WhichPart[q105] = q103 ->
-                     or([var1_PartitionOccurrence_WhichPart[q116] = q113 /\ q116 = q105 | q116 : int(1..2)])
-                         | q105 : int(1..2)])
-                /\
-                and([var1_PartitionOccurrence_WhichPart[q117] = q113 ->
-                     or([var1_PartitionOccurrence_WhichPart[q107] = q103 /\ q107 = q117 | q107 : int(1..2)])
-                         | q117 : int(1..2)]))
-                   | q103 : int(1..2)])
-               | q113 : int(1..2)])
+      (sum([toInt(q218 <= var1_PartitionOccurrence_NumParts) | q218 : int(1..2)]) =
+       sum([toInt(q243 <= var1_PartitionOccurrence_NumParts) | q243 : int(1..2)])
+       /\
+       (sum([toInt(q220 <= var1_PartitionOccurrence_NumParts) | q220 : int(1..2)]) <=
+        sum([toInt(q245 <= var1_PartitionOccurrence_NumParts) | q245 : int(1..2)])
+        /\
+        and([q222 <= var1_PartitionOccurrence_NumParts ->
+             or([q247 <= var1_PartitionOccurrence_NumParts /\
+                 (sum([toInt(var1_PartitionOccurrence_WhichPart[q249] = q247) | q249 : int(1..2)]) =
+                  sum([toInt(var1_PartitionOccurrence_WhichPart[q224] = q222) | q224 : int(1..2)])
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q250] = q247) | q250 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q225] = q222) | q225 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q251] = q247 ->
+                        or([var1_PartitionOccurrence_WhichPart[q227] = q222 /\ q227 = q251 | q227 : int(1..2)])
+                            | q251 : int(1..2)]))
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q228] = q222) | q228 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q252] = q247) | q252 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q229] = q222 ->
+                        or([var1_PartitionOccurrence_WhichPart[q254] = q247 /\ q254 = q229 | q254 : int(1..2)])
+                            | q229 : int(1..2)])))
+                     | q247 : int(1..2)])
+                 | q222 : int(1..2)]))
+       /\
+       (sum([toInt(q255 <= var1_PartitionOccurrence_NumParts) | q255 : int(1..2)]) <=
+        sum([toInt(q230 <= var1_PartitionOccurrence_NumParts) | q230 : int(1..2)])
+        /\
+        and([q257 <= var1_PartitionOccurrence_NumParts ->
+             or([q232 <= var1_PartitionOccurrence_NumParts /\
+                 (sum([toInt(var1_PartitionOccurrence_WhichPart[q234] = q232) | q234 : int(1..2)]) =
+                  sum([toInt(var1_PartitionOccurrence_WhichPart[q259] = q257) | q259 : int(1..2)])
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q235] = q232) | q235 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q260] = q257) | q260 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q236] = q232 ->
+                        or([var1_PartitionOccurrence_WhichPart[q262] = q257 /\ q262 = q236 | q262 : int(1..2)])
+                            | q236 : int(1..2)]))
+                  /\
+                  (sum([toInt(var1_PartitionOccurrence_WhichPart[q263] = q257) | q263 : int(1..2)]) <=
+                   sum([toInt(var1_PartitionOccurrence_WhichPart[q237] = q232) | q237 : int(1..2)])
+                   /\
+                   and([var1_PartitionOccurrence_WhichPart[q264] = q257 ->
+                        or([var1_PartitionOccurrence_WhichPart[q239] = q232 /\ q239 = q264 | q239 : int(1..2)])
+                            | q264 : int(1..2)])))
+                     | q232 : int(1..2)])
+                 | q257 : int(1..2)])))
       \/
-      or([q118 <= var1_PartitionOccurrence_NumParts /\
-          (and([var1_PartitionOccurrence_WhichPart[q120] = q118 -> 1 = q120 | q120 : int(1..2)]) /\
-           or([var1_PartitionOccurrence_WhichPart[q122] = q118 /\ q122 = 1 | q122 : int(1..2)]))
-              | q118 : int(1..2)])
+      1 =
+      sum([toInt(q265 <= var1_PartitionOccurrence_NumParts /\ var1_PartitionOccurrence_WhichPart[q267] = q265)
+               | q265 : int(1..2), q267 : int(1..2)])
       /\
-      and([q123 <= var1_PartitionOccurrence_NumParts ->
-           or([var1_PartitionOccurrence_WhichPart[q127] = q123 /\ q127 = 1 | q127 : int(1..2)]) /\
-           and([var1_PartitionOccurrence_WhichPart[q125] = q123 -> 1 = q125 | q125 : int(1..2)])
-               | q123 : int(1..2)])),
+      (1 = sum([toInt(q268 <= var1_PartitionOccurrence_NumParts) | q268 : int(1..2)]) /\
+       (1 <= sum([toInt(q270 <= var1_PartitionOccurrence_NumParts) | q270 : int(1..2)]) /\
+        or([q272 <= var1_PartitionOccurrence_NumParts /\
+            (sum([toInt(var1_PartitionOccurrence_WhichPart[q274] = q272) | q274 : int(1..2)]) = 1 /\
+             (sum([toInt(var1_PartitionOccurrence_WhichPart[q275] = q272) | q275 : int(1..2)]) <= 1 /\
+              and([var1_PartitionOccurrence_WhichPart[q276] = q272 -> 1 = q276 | q276 : int(1..2)]))
+             /\
+             (1 <= sum([toInt(var1_PartitionOccurrence_WhichPart[q277] = q272) | q277 : int(1..2)]) /\
+              or([var1_PartitionOccurrence_WhichPart[q279] = q272 /\ q279 = 1 | q279 : int(1..2)])))
+                | q272 : int(1..2)]))
+       /\
+       (sum([toInt(q280 <= var1_PartitionOccurrence_NumParts) | q280 : int(1..2)]) <= 1 /\
+        and([q282 <= var1_PartitionOccurrence_NumParts ->
+             1 = sum([toInt(var1_PartitionOccurrence_WhichPart[q284] = q282) | q284 : int(1..2)]) /\
+             (1 <= sum([toInt(var1_PartitionOccurrence_WhichPart[q285] = q282) | q285 : int(1..2)]) /\
+              or([var1_PartitionOccurrence_WhichPart[q287] = q282 /\ q287 = 1 | q287 : int(1..2)]))
+             /\
+             (sum([toInt(var1_PartitionOccurrence_WhichPart[q288] = q282) | q288 : int(1..2)]) <= 1 /\
+              and([var1_PartitionOccurrence_WhichPart[q289] = q282 -> 1 = q289 | q289 : int(1..2)]))
+                 | q282 : int(1..2)])))),
     and([q1 <= var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] <= 2 | q1 : int(1..2)]),
     and([q1 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
     var1_PartitionOccurrence_NumParts <= 2,

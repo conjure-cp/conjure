@@ -6,8 +6,14 @@ find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
 branching on [x_Occurrence, y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values, y_Occurrence]
 such that
+    toInt(x_Occurrence[1] /\ y_Occurrence[1]) = 0,
+    toInt(x_Occurrence[1] /\ y_Occurrence[1]) <= 0,
     x_Occurrence[1] /\ y_Occurrence[1] -> false,
+    0 <= toInt(x_Occurrence[1] /\ y_Occurrence[1]),
     1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    y_ExplicitVarSizeWithMarker_Marker = toInt(y_Occurrence[1]),
+    y_ExplicitVarSizeWithMarker_Marker <= toInt(y_Occurrence[1]),
     1 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[1]],
+    toInt(y_Occurrence[1]) <= y_ExplicitVarSizeWithMarker_Marker,
     y_Occurrence[1] -> 1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = 1
 

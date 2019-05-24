@@ -8,6 +8,7 @@ find conjure_aux1: matrix indexed by [int(1..2)] of int(1..2)
 find conjure_aux2: matrix indexed by [int(1..2)] of int(1..2)
 branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Explicit, s_Occurrence]
 such that
+    1 <= sum([toInt(f_Function1DPartial_Flags[q18]) | q18 : int(1..2)]),
     and([s_Occurrence[q15] -> f_Function1DPartial_Flags[q15] | q15 : int(1..2)]),
     and([and([s_Occurrence[q12] -> q12 >= conjure_aux1[i] | q12 : int(1..2)]) | i : int(1..2)]),
     and([(sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)]) > 0 ->

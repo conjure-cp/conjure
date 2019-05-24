@@ -1,0 +1,65 @@
+language ESSENCE' 1.0
+
+find x_Function1DPartial_Flags: matrix indexed by [int(1..3)] of bool
+find x_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..3)
+find conjure_aux1_ExplicitVarSizeWithMarker_Marker: int(0..3)
+find conjure_aux1_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1..3)
+find conjure_aux2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..3)] of int(1..4)
+find conjure_aux3_ExplicitVarSizeWithMarker_Marker: int(0..3)
+find conjure_aux3_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1..3)
+branching on [x_Function1DPartial_Flags, x_Function1DPartial_Values]
+such that
+    and([q8 + 1 <= conjure_aux1_ExplicitVarSizeWithMarker_Marker ->
+         conjure_aux1_ExplicitVarSizeWithMarker_Values[q8] < conjure_aux1_ExplicitVarSizeWithMarker_Values[q8 + 1]
+             | q8 : int(1..2)]),
+    and([q9 > conjure_aux1_ExplicitVarSizeWithMarker_Marker -> conjure_aux1_ExplicitVarSizeWithMarker_Values[q9] = 1
+             | q9 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q11] ->
+         or([q13 <= conjure_aux1_ExplicitVarSizeWithMarker_Marker /\
+             conjure_aux1_ExplicitVarSizeWithMarker_Values[q13] = x_Function1DPartial_Values[q11]
+                 | q13 : int(1..3)])
+             | q11 : int(1..3)]),
+    and([q14 <= conjure_aux1_ExplicitVarSizeWithMarker_Marker ->
+         or([x_Function1DPartial_Flags[q15] /\
+             x_Function1DPartial_Values[q15] = conjure_aux1_ExplicitVarSizeWithMarker_Values[q14]
+                 | q15 : int(1..3)])
+             | q14 : int(1..3)]),
+    and([conjure_aux2_ExplicitVarSizeWithDummy[q22] < conjure_aux2_ExplicitVarSizeWithDummy[q22 + 1] \/
+         conjure_aux2_ExplicitVarSizeWithDummy[q22] = 4
+             | q22 : int(1..2)]),
+    and([conjure_aux2_ExplicitVarSizeWithDummy[q23] = 4 -> conjure_aux2_ExplicitVarSizeWithDummy[q23 + 1] = 4
+             | q23 : int(1..2)]),
+    and([x_Function1DPartial_Flags[q26] ->
+         or([conjure_aux2_ExplicitVarSizeWithDummy[q28] != 4 /\
+             conjure_aux2_ExplicitVarSizeWithDummy[q28] = x_Function1DPartial_Values[q26]
+                 | q28 : int(1..3)])
+             | q26 : int(1..3)]),
+    and([conjure_aux2_ExplicitVarSizeWithDummy[q29] != 4 ->
+         or([x_Function1DPartial_Flags[q30] /\
+             x_Function1DPartial_Values[q30] = conjure_aux2_ExplicitVarSizeWithDummy[q29]
+                 | q30 : int(1..3)])
+             | q29 : int(1..3)]),
+    and([q44 + 1 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker ->
+         conjure_aux3_ExplicitVarSizeWithMarker_Values[q44] < conjure_aux3_ExplicitVarSizeWithMarker_Values[q44 + 1]
+             | q44 : int(1..2)]),
+    and([q45 > conjure_aux3_ExplicitVarSizeWithMarker_Marker -> conjure_aux3_ExplicitVarSizeWithMarker_Values[q45] = 1
+             | q45 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q47] ->
+         or([q49 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker /\
+             conjure_aux3_ExplicitVarSizeWithMarker_Values[q49] = x_Function1DPartial_Values[q47]
+                 | q49 : int(1..3)])
+             | q47 : int(1..3)]),
+    and([q50 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker ->
+         or([x_Function1DPartial_Flags[q51] /\
+             x_Function1DPartial_Values[q51] = conjure_aux3_ExplicitVarSizeWithMarker_Values[q50]
+                 | q51 : int(1..3)])
+             | q50 : int(1..3)]),
+    2 = sum([toInt(q16 <= conjure_aux1_ExplicitVarSizeWithMarker_Marker) | q16 : int(1..3)]),
+    2 <= sum([toInt(conjure_aux2_ExplicitVarSizeWithDummy[q31] != 4) | q31 : int(1..3)]),
+    or([x_Function1DPartial_Flags[q35] /\ x_Function1DPartial_Values[q35] = 1 | q35 : int(1..3)]),
+    or([x_Function1DPartial_Flags[q38] /\ x_Function1DPartial_Values[q38] = 2 | q38 : int(1..3)]),
+    sum([toInt(q52 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker) | q52 : int(1..3)]) <= 2,
+    and([x_Function1DPartial_Flags[q54] -> 1 = x_Function1DPartial_Values[q54] \/ 2 = x_Function1DPartial_Values[q54]
+             | q54 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q1] = false -> x_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)])
+

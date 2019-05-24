@@ -5,9 +5,9 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
-    or([x_ExplicitVarSizeWithFlags_Flags[q19] /\ x_ExplicitVarSizeWithFlags_Values[q19] = 1 | q19 : int(1..4)]),
-    or([x_ExplicitVarSizeWithDummy[q21] != 5 /\ x_ExplicitVarSizeWithDummy[q21] = 2 | q21 : int(1..4)]),
-    or([x_ExplicitVarSizeWithDummy[q23] != 5 /\ x_ExplicitVarSizeWithDummy[q23] = 3 | q23 : int(1..4)]),
+    or([x_ExplicitVarSizeWithFlags_Flags[q31] /\ x_ExplicitVarSizeWithFlags_Values[q31] = 1 | q31 : int(1..4)]),
+    or([x_ExplicitVarSizeWithDummy[q33] != 5 /\ x_ExplicitVarSizeWithDummy[q33] = 2 | q33 : int(1..4)]),
+    or([x_ExplicitVarSizeWithDummy[q35] != 5 /\ x_ExplicitVarSizeWithDummy[q35] = 3 | q35 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..3)]),
@@ -18,14 +18,20 @@ such that
              | q6 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q7] = 5 -> x_ExplicitVarSizeWithDummy[q7 + 1] = 5 | q7 : int(1..3)]),
     sum([toInt(x_ExplicitVarSizeWithDummy[q8] != 5) | q8 : int(1..4)]) <= 4,
-    and([x_ExplicitVarSizeWithDummy[q11] != 5 ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q13] /\
-             x_ExplicitVarSizeWithFlags_Values[q13] = x_ExplicitVarSizeWithDummy[q11]
-                 | q13 : int(1..4)])
-             | q11 : int(1..4)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q15] ->
-         or([x_ExplicitVarSizeWithDummy[q17] != 5 /\
-             x_ExplicitVarSizeWithDummy[q17] = x_ExplicitVarSizeWithFlags_Values[q15]
+    sum([toInt(x_ExplicitVarSizeWithDummy[q11] != 5) | q11 : int(1..4)]) =
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q13]) | q13 : int(1..4)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q19] != 5) | q19 : int(1..4)]) <=
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q21]) | q21 : int(1..4)]),
+    and([x_ExplicitVarSizeWithDummy[q15] != 5 ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q17] /\
+             x_ExplicitVarSizeWithFlags_Values[q17] = x_ExplicitVarSizeWithDummy[q15]
                  | q17 : int(1..4)])
-             | q15 : int(1..4)])
+             | q15 : int(1..4)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q27]) | q27 : int(1..4)]) <=
+    sum([toInt(x_ExplicitVarSizeWithDummy[q29] != 5) | q29 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q23] ->
+         or([x_ExplicitVarSizeWithDummy[q25] != 5 /\
+             x_ExplicitVarSizeWithDummy[q25] = x_ExplicitVarSizeWithFlags_Values[q23]
+                 | q25 : int(1..4)])
+             | q23 : int(1..4)])
 

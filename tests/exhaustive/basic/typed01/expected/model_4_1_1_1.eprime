@@ -6,8 +6,14 @@ find x_Occurrence: matrix indexed by [int(1)] of bool
 find y_Occurrence: matrix indexed by [int(1)] of bool
 branching on [x_Occurrence, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, y_Occurrence]
 such that
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]) = 0,
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]) <= 0,
     x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]] -> false,
+    0 <= toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]),
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    toInt(x_Occurrence[1]) = toInt(x_ExplicitVarSizeWithFlags_Flags[1]),
+    toInt(x_Occurrence[1]) <= toInt(x_ExplicitVarSizeWithFlags_Flags[1]),
     x_Occurrence[1] -> x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1]) <= toInt(x_Occurrence[1]),
     x_ExplicitVarSizeWithFlags_Flags[1] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]]
 

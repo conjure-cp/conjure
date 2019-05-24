@@ -8,35 +8,62 @@ branching on
     [x_PartitionOccurrence_NumParts, x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes,
      x_PartitionOccurrence_FirstIndex]
 such that
-    and([and([q15 <= x_PartitionOccurrence_NumParts,
-              or([x_PartitionOccurrence_WhichPart[q21] = q15 /\ q21 = 2 | q21 : int(1..4)]),
-              x_PartitionOccurrence_WhichPart[q17] = q15;
+    sum([toInt(and([q15 <= x_PartitionOccurrence_NumParts,
+                    or([x_PartitionOccurrence_WhichPart[q19] = q15 /\ q19 = 2 | q19 : int(1..4)]),
+                    x_PartitionOccurrence_WhichPart[q17] = q15;
+                        int(1..3)]))
+             | q15 : int(1..4), q17 : int(1..4)])
+    = 2,
+    sum([toInt(and([q24 <= x_PartitionOccurrence_NumParts,
+                    or([x_PartitionOccurrence_WhichPart[q28] = q24 /\ q28 = 2 | q28 : int(1..4)]),
+                    x_PartitionOccurrence_WhichPart[q26] = q24;
+                        int(1..3)]))
+             | q24 : int(1..4), q26 : int(1..4)])
+    <= 2,
+    and([and([q31 <= x_PartitionOccurrence_NumParts,
+              or([x_PartitionOccurrence_WhichPart[q37] = q31 /\ q37 = 2 | q37 : int(1..4)]),
+              x_PartitionOccurrence_WhichPart[q33] = q31;
                   int(1..3)])
-         -> 4 = q17 \/ 2 = q17
-             | q15 : int(1..4), q17 : int(1..4)]),
-    or([and([q27 <= x_PartitionOccurrence_NumParts,
-             or([x_PartitionOccurrence_WhichPart[q31] = q27 /\ q31 = 2 | q31 : int(1..4)]),
-             x_PartitionOccurrence_WhichPart[q29] = q27;
+         -> 4 = q33 \/ 2 = q33
+             | q31 : int(1..4), q33 : int(1..4)]),
+    2 <=
+    sum([toInt(and([q42 <= x_PartitionOccurrence_NumParts,
+                    or([x_PartitionOccurrence_WhichPart[q46] = q42 /\ q46 = 2 | q46 : int(1..4)]),
+                    x_PartitionOccurrence_WhichPart[q44] = q42;
+                        int(1..3)]))
+             | q42 : int(1..4), q44 : int(1..4)]),
+    or([and([q51 <= x_PartitionOccurrence_NumParts,
+             or([x_PartitionOccurrence_WhichPart[q55] = q51 /\ q55 = 2 | q55 : int(1..4)]),
+             x_PartitionOccurrence_WhichPart[q53] = q51;
                  int(1..3)])
-        /\ q29 = 4
-            | q27 : int(1..4), q29 : int(1..4)]),
-    or([and([q35 <= x_PartitionOccurrence_NumParts,
-             or([x_PartitionOccurrence_WhichPart[q39] = q35 /\ q39 = 2 | q39 : int(1..4)]),
-             x_PartitionOccurrence_WhichPart[q37] = q35;
+        /\ q53 = 4
+            | q51 : int(1..4), q53 : int(1..4)]),
+    or([and([q59 <= x_PartitionOccurrence_NumParts,
+             or([x_PartitionOccurrence_WhichPart[q63] = q59 /\ q63 = 2 | q63 : int(1..4)]),
+             x_PartitionOccurrence_WhichPart[q61] = q59;
                  int(1..3)])
-        /\ q37 = 2
-            | q35 : int(1..4), q37 : int(1..4)]),
-    and([q43 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q45] = q43 ->
-         or([1 = q45, 2 = q45, 3 = q45, 4 = q45; int(1..4)])
-             | q43 : int(1..4), q45 : int(1..4)]),
-    or([q53 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q55] = q53 /\ q55 = 1
-            | q53 : int(1..4), q55 : int(1..4)]),
-    or([q59 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q61] = q59 /\ q61 = 2
+        /\ q61 = 2
             | q59 : int(1..4), q61 : int(1..4)]),
-    or([q65 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q67] = q65 /\ q67 = 3
-            | q65 : int(1..4), q67 : int(1..4)]),
-    or([q71 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q73] = q71 /\ q73 = 4
-            | q71 : int(1..4), q73 : int(1..4)]),
+    sum([toInt(q67 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q69] = q67)
+             | q67 : int(1..4), q69 : int(1..4)])
+    = 4,
+    sum([toInt(q74 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q76] = q74)
+             | q74 : int(1..4), q76 : int(1..4)])
+    <= 4,
+    and([q79 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q81] = q79 ->
+         or([1 = q81, 2 = q81, 3 = q81, 4 = q81; int(1..4)])
+             | q79 : int(1..4), q81 : int(1..4)]),
+    4 <=
+    sum([toInt(q88 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q90] = q88)
+             | q88 : int(1..4), q90 : int(1..4)]),
+    or([q95 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q97] = q95 /\ q97 = 1
+            | q95 : int(1..4), q97 : int(1..4)]),
+    or([q101 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q103] = q101 /\ q103 = 2
+            | q101 : int(1..4), q103 : int(1..4)]),
+    or([q107 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q109] = q107 /\ q109 = 3
+            | q107 : int(1..4), q109 : int(1..4)]),
+    or([q113 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q115] = q113 /\ q115 = 4
+            | q113 : int(1..4), q115 : int(1..4)]),
     and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,

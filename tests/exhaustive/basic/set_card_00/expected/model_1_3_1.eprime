@@ -5,15 +5,19 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
 branching on [s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, s_Occurrence]
 such that
-    or([q11 <= s_ExplicitVarSizeWithMarker_Marker /\
-        s_ExplicitVarSizeWithMarker_Values[q11] = sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)])
-            | q11 : int(1..2)]),
+    or([q14 <= s_ExplicitVarSizeWithMarker_Marker /\
+        s_ExplicitVarSizeWithMarker_Values[q14] = sum([toInt(s_Occurrence[q15]) | q15 : int(1..2)])
+            | q14 : int(1..2)]),
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
     s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
     and([q3 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q3] = 1 | q3 : int(1..2)]),
-    and([q6 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q6]]
-             | q6 : int(1..2)]),
-    and([s_Occurrence[q7] ->
-         or([q9 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q9] = q7 | q9 : int(1..2)])
-             | q7 : int(1..2)])
+    s_ExplicitVarSizeWithMarker_Marker = sum([toInt(s_Occurrence[q5]) | q5 : int(1..2)]),
+    s_ExplicitVarSizeWithMarker_Marker <= sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]),
+    and([q8 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q8]]
+             | q8 : int(1..2)]),
+    sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)]) <= s_ExplicitVarSizeWithMarker_Marker,
+    and([s_Occurrence[q9] ->
+         or([q11 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q11] = q9
+                 | q11 : int(1..2)])
+             | q9 : int(1..2)])
 

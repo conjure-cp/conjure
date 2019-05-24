@@ -11,18 +11,21 @@ branching on
     [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
      x_ExplicitVarSizeWithMarker_Values]
 such that
-    and([and([or([q24 <= x_ExplicitVarSizeWithMarker_Marker /\
-                  x_ExplicitVarSizeWithMarker_Values[q24] = t_ExplicitVarSizeWithDummy[q22]
-                      | q24 : int(1..1 + (b - a))])
-                  | q22 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q22] != b + 1])
+    and([sum([1 | q32 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q32] != b + 1]) <=
+         x_ExplicitVarSizeWithMarker_Marker
+         /\
+         and([or([q30 <= x_ExplicitVarSizeWithMarker_Marker /\
+                  x_ExplicitVarSizeWithMarker_Values[q30] = t_ExplicitVarSizeWithDummy[q28]
+                      | q30 : int(1..1 + (b - a))])
+                  | q28 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q28] != b + 1])
          ->
-         sum([t_ExplicitVarSizeWithDummy[q25] | q25 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q25] != b + 1]) <=
+         sum([t_ExplicitVarSizeWithDummy[q33] | q33 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q33] != b + 1]) <=
          6   | t_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1),
-               and([t_ExplicitVarSizeWithDummy[q17] < t_ExplicitVarSizeWithDummy[q17 + 1] \/
-                    t_ExplicitVarSizeWithDummy[q17] = b + 1
-                        | q17 : int(1..1 + (b - a) - 1)]),
-               and([t_ExplicitVarSizeWithDummy[q18] = b + 1 -> t_ExplicitVarSizeWithDummy[q18 + 1] = b + 1
-                        | q18 : int(1..1 + (b - a) - 1)])]),
+               and([t_ExplicitVarSizeWithDummy[q23] < t_ExplicitVarSizeWithDummy[q23 + 1] \/
+                    t_ExplicitVarSizeWithDummy[q23] = b + 1
+                        | q23 : int(1..1 + (b - a) - 1)]),
+               and([t_ExplicitVarSizeWithDummy[q24] = b + 1 -> t_ExplicitVarSizeWithDummy[q24 + 1] = b + 1
+                        | q24 : int(1..1 + (b - a) - 1)])]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..1 + (b - a) - 1)]),
@@ -37,14 +40,20 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q6]
              | q6 : int(1..1 + (b - a) - 1)]),
     n <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..1 + (b - a))]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q10] ->
-         or([q12 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q12] = x_ExplicitVarSizeWithFlags_Values[q10]
-                 | q12 : int(1..1 + (b - a))])
-             | q10 : int(1..1 + (b - a))]),
-    and([q14 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q16] /\
-             x_ExplicitVarSizeWithFlags_Values[q16] = x_ExplicitVarSizeWithMarker_Values[q14]
-                 | q16 : int(1..1 + (b - a))])
-             | q14 : int(1..1 + (b - a))])
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q10]) | q10 : int(1..1 + (b - a))]) =
+    x_ExplicitVarSizeWithMarker_Marker,
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q16]) | q16 : int(1..1 + (b - a))]) <=
+    x_ExplicitVarSizeWithMarker_Marker,
+    and([x_ExplicitVarSizeWithFlags_Flags[q12] ->
+         or([q14 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q14] = x_ExplicitVarSizeWithFlags_Values[q12]
+                 | q14 : int(1..1 + (b - a))])
+             | q12 : int(1..1 + (b - a))]),
+    x_ExplicitVarSizeWithMarker_Marker <=
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q19]) | q19 : int(1..1 + (b - a))]),
+    and([q20 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q22] /\
+             x_ExplicitVarSizeWithFlags_Values[q22] = x_ExplicitVarSizeWithMarker_Values[q20]
+                 | q22 : int(1..1 + (b - a))])
+             | q20 : int(1..1 + (b - a))])
 

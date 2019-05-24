@@ -6,12 +6,15 @@ given b: int
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
 branching on [x_ExplicitVarSizeWithDummy]
 such that
-    and([and([or([x_ExplicitVarSizeWithDummy[q12] != b + 1 /\
+    and([sum([1 | q14 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q14] != b + 1]) <=
+         sum([toInt(x_ExplicitVarSizeWithDummy[q16] != b + 1) | q16 : int(1..1 + (b - a))])
+         /\
+         and([or([x_ExplicitVarSizeWithDummy[q12] != b + 1 /\
                   x_ExplicitVarSizeWithDummy[q12] = t_ExplicitVarSizeWithDummy[q10]
                       | q12 : int(1..1 + (b - a))])
                   | q10 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q10] != b + 1])
          ->
-         sum([t_ExplicitVarSizeWithDummy[q13] | q13 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q13] != b + 1]) <=
+         sum([t_ExplicitVarSizeWithDummy[q17] | q17 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q17] != b + 1]) <=
          6   | t_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1),
                and([t_ExplicitVarSizeWithDummy[q5] < t_ExplicitVarSizeWithDummy[q5 + 1] \/
                     t_ExplicitVarSizeWithDummy[q5] = b + 1

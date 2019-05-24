@@ -8,29 +8,32 @@ find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..2)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
 branching on [x_ExplicitWithFlags_Flags, x_ExplicitWithFlags_Values, x_MOccurrence]
 such that
-    and([sum([g_ExplicitWithFlags_Flags[q15]
-                  | q15 : int(1..fin1), g_ExplicitWithFlags_Values[q15] = g_ExplicitWithFlags_Values[q14]])
-         = x_MOccurrence[g_ExplicitWithFlags_Values[q14]]
-             | q14 : int(1..fin1), g_ExplicitWithFlags_Flags[q14] > 0]),
-    and([x_MOccurrence[q16] > 0 ->
-         sum([g_ExplicitWithFlags_Flags[q17] | q17 : int(1..fin1), g_ExplicitWithFlags_Values[q17] = q16]) =
-         x_MOccurrence[q16]
-             | q16 : int(1..2)]),
+    fin1 = sum([toInt(x_MOccurrence[q21] > 0) * catchUndef(x_MOccurrence[q21], 0) | q21 : int(1..2)]),
+    and([sum([g_ExplicitWithFlags_Flags[q19]
+                  | q19 : int(1..fin1), g_ExplicitWithFlags_Values[q19] = g_ExplicitWithFlags_Values[q18]])
+         = x_MOccurrence[g_ExplicitWithFlags_Values[q18]]
+             | q18 : int(1..fin1), g_ExplicitWithFlags_Flags[q18] > 0]),
+    and([x_MOccurrence[q22] > 0 ->
+         sum([g_ExplicitWithFlags_Flags[q23] | q23 : int(1..fin1), g_ExplicitWithFlags_Values[q23] = q22]) =
+         x_MOccurrence[q22]
+             | q22 : int(1..2)]),
     sum([x_MOccurrence[q1] | q1 : int(1..2)]) <= 4,
     and([x_ExplicitWithFlags_Flags[q2 + 1] > 0 -> x_ExplicitWithFlags_Values[q2] < x_ExplicitWithFlags_Values[q2 + 1]
              | q2 : int(1..3)]),
     and([x_ExplicitWithFlags_Flags[q3] = 0 -> x_ExplicitWithFlags_Values[q3] = 1 | q3 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q4 + 1] > 0 -> x_ExplicitWithFlags_Flags[q4] > 0 | q4 : int(1..3)]),
     sum([x_ExplicitWithFlags_Flags[q6] | q6 : int(1..4)]) <= 4,
+    sum([toInt(x_ExplicitWithFlags_Flags[q12] > 0) * catchUndef(x_ExplicitWithFlags_Flags[q12], 0) | q12 : int(1..4)]) =
+    sum([toInt(x_MOccurrence[q14] > 0) * catchUndef(x_MOccurrence[q14], 0) | q14 : int(1..2)]),
     and([x_ExplicitWithFlags_Flags[q9] > 0 ->
          sum([toInt(x_ExplicitWithFlags_Values[q10] = x_ExplicitWithFlags_Values[q9]) *
               catchUndef(x_ExplicitWithFlags_Flags[q10], 0)
                   | q10 : int(1..4)])
          = x_MOccurrence[x_ExplicitWithFlags_Values[q9]]
              | q9 : int(1..4)]),
-    and([x_MOccurrence[q11] > 0 ->
-         sum([toInt(x_ExplicitWithFlags_Values[q12] = q11) * catchUndef(x_ExplicitWithFlags_Flags[q12], 0)
-                  | q12 : int(1..4)])
-         = x_MOccurrence[q11]
-             | q11 : int(1..2)])
+    and([x_MOccurrence[q15] > 0 ->
+         sum([toInt(x_ExplicitWithFlags_Values[q16] = q15) * catchUndef(x_ExplicitWithFlags_Flags[q16], 0)
+                  | q16 : int(1..4)])
+         = x_MOccurrence[q15]
+             | q15 : int(1..2)])
 

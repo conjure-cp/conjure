@@ -5,9 +5,9 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..7)] of int(1.
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..7)] of int(1..8)
 branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
-    and([q16 <= x_ExplicitVarSizeWithMarker_Marker /\ q17 <= x_ExplicitVarSizeWithMarker_Marker ->
-         |x_ExplicitVarSizeWithMarker_Values[q16] - x_ExplicitVarSizeWithMarker_Values[q17]| >= 3
-             | q16 : int(1..7), q17 : int(1..7), q17 > q16]),
+    and([q22 <= x_ExplicitVarSizeWithMarker_Marker /\ q23 <= x_ExplicitVarSizeWithMarker_Marker ->
+         |x_ExplicitVarSizeWithMarker_Values[q22] - x_ExplicitVarSizeWithMarker_Values[q23]| >= 3
+             | q22 : int(1..7), q23 : int(1..7), q23 > q22]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..6)]),
@@ -17,14 +17,17 @@ such that
              | q4 : int(1..6)]),
     and([x_ExplicitVarSizeWithDummy[q5] = 8 -> x_ExplicitVarSizeWithDummy[q5 + 1] = 8 | q5 : int(1..6)]),
     3 <= sum([toInt(x_ExplicitVarSizeWithDummy[q6] != 8) | q6 : int(1..7)]),
-    and([x_ExplicitVarSizeWithDummy[q9] != 8 ->
-         or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q11] = x_ExplicitVarSizeWithDummy[q9]
-                 | q11 : int(1..7)])
-             | q9 : int(1..7)]),
-    and([q13 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithDummy[q15] != 8 /\
-             x_ExplicitVarSizeWithDummy[q15] = x_ExplicitVarSizeWithMarker_Values[q13]
-                 | q15 : int(1..7)])
-             | q13 : int(1..7)])
+    sum([toInt(x_ExplicitVarSizeWithDummy[q9] != 8) | q9 : int(1..7)]) = x_ExplicitVarSizeWithMarker_Marker,
+    sum([toInt(x_ExplicitVarSizeWithDummy[q15] != 8) | q15 : int(1..7)]) <= x_ExplicitVarSizeWithMarker_Marker,
+    and([x_ExplicitVarSizeWithDummy[q11] != 8 ->
+         or([q13 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q13] = x_ExplicitVarSizeWithDummy[q11]
+                 | q13 : int(1..7)])
+             | q11 : int(1..7)]),
+    x_ExplicitVarSizeWithMarker_Marker <= sum([toInt(x_ExplicitVarSizeWithDummy[q18] != 8) | q18 : int(1..7)]),
+    and([q19 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithDummy[q21] != 8 /\
+             x_ExplicitVarSizeWithDummy[q21] = x_ExplicitVarSizeWithMarker_Values[q19]
+                 | q21 : int(1..7)])
+             | q19 : int(1..7)])
 

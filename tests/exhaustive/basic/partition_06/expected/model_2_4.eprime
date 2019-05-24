@@ -12,24 +12,24 @@ branching on
      x_PartitionOccurrence_FirstIndex, x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
      x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
 such that
-    and([q57 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q57, q59] != 5)
-                  | q59 : int(1..4)])
-         = 2 | q57 : int(1..4)]),
-    alldifferent_except([toInt(q60 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
-                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q60, q61] !=
-                               5)
+    and([q111 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q111, q113] != 5)
+                  | q113 : int(1..4)])
+         = 2 | q111 : int(1..4)]),
+    alldifferent_except([toInt(q114 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q114, q115]
+                               != 5)
                          *
                          catchUndef(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy
-                                        [q60, q61],
+                                        [q114, q115],
                                     0)
-                             | q60 : int(1..4), q61 : int(1..4)],
+                             | q114 : int(1..4), q115 : int(1..4)],
                         0),
-    and([q62 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q62, q64] != 5)
-                  | q64 : int(1..4)])
+    and([q116 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q116, q118] != 5)
+                  | q118 : int(1..4)])
          >= 1
-             | q62 : int(1..4)]),
+             | q116 : int(1..4)]),
     and([q4 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
          [x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q4, q12] | q12 : int(1..4)] <lex
          [x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q4 + 1, q13] | q13 : int(1..4)]
@@ -83,34 +83,70 @@ such that
     and([q25 <= x_PartitionOccurrence_NumParts /\ q26 <= x_PartitionOccurrence_NumParts ->
          (q25 < q26 <-> x_PartitionOccurrence_FirstIndex[q25] < x_PartitionOccurrence_FirstIndex[q26])
              | q25 : int(1..4), q26 : int(1..4)]),
-    and([q29 <= x_PartitionOccurrence_NumParts ->
-         or([q33 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
-             (and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q35] != 5 ->
-                   or([x_PartitionOccurrence_WhichPart[q37] = q29 /\
-                       q37 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q35]
-                           | q37 : int(1..4)])
-                       | q35 : int(1..4)])
+    sum([toInt(q31 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q33] = q31)
+             | q31 : int(1..4), q33 : int(1..4)])
+    =
+    sum([toInt(q38 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+               x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q38, q39] != 5)
+             | q38 : int(1..4), q39 : int(1..4)]),
+    sum([toInt(q41 <= x_PartitionOccurrence_NumParts) | q41 : int(1..4)]) =
+    sum([toInt(q45 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) | q45 : int(1..4)]),
+    sum([toInt(q73 <= x_PartitionOccurrence_NumParts) | q73 : int(1..4)]) <=
+    sum([toInt(q77 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) | q77 : int(1..4)]),
+    and([q47 <= x_PartitionOccurrence_NumParts ->
+         or([q51 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+             (sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q53] != 5)
+                       | q53 : int(1..4)])
+              = sum([toInt(x_PartitionOccurrence_WhichPart[q55] = q47) | q55 : int(1..4)])
               /\
-              and([x_PartitionOccurrence_WhichPart[q39] = q29 ->
-                   or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q41] != 5 /\
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q41] = q39
-                           | q41 : int(1..4)])
-                       | q39 : int(1..4)]))
-                 | q33 : int(1..4)])
-             | q29 : int(1..4)]),
-    and([q44 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         or([q46 <= x_PartitionOccurrence_NumParts /\
-             (and([x_PartitionOccurrence_WhichPart[q49] = q46 ->
-                   or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q51] != 5 /\
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q51] = q49
-                           | q51 : int(1..4)])
-                       | q49 : int(1..4)])
+              (sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q61] != 5)
+                        | q61 : int(1..4)])
+               <= sum([toInt(x_PartitionOccurrence_WhichPart[q63] = q47) | q63 : int(1..4)])
+               /\
+               and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q57] != 5 ->
+                    or([x_PartitionOccurrence_WhichPart[q59] = q47 /\
+                        q59 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q57]
+                            | q59 : int(1..4)])
+                        | q57 : int(1..4)]))
               /\
-              and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q53] != 5 ->
-                   or([x_PartitionOccurrence_WhichPart[q55] = q46 /\
-                       q55 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q53]
-                           | q55 : int(1..4)])
-                       | q53 : int(1..4)]))
-                 | q46 : int(1..4)])
-             | q44 : int(1..4)])
+              (sum([toInt(x_PartitionOccurrence_WhichPart[q69] = q47) | q69 : int(1..4)]) <=
+               sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q71] != 5)
+                        | q71 : int(1..4)])
+               /\
+               and([x_PartitionOccurrence_WhichPart[q65] = q47 ->
+                    or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q67] != 5 /\
+                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q51, q67] = q65
+                            | q67 : int(1..4)])
+                        | q65 : int(1..4)])))
+                 | q51 : int(1..4)])
+             | q47 : int(1..4)]),
+    sum([toInt(q106 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) | q106 : int(1..4)]) <=
+    sum([toInt(q108 <= x_PartitionOccurrence_NumParts) | q108 : int(1..4)]),
+    and([q80 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         or([q82 <= x_PartitionOccurrence_NumParts /\
+             (sum([toInt(x_PartitionOccurrence_WhichPart[q85] = q82) | q85 : int(1..4)]) =
+              sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q87] != 5)
+                       | q87 : int(1..4)])
+              /\
+              (sum([toInt(x_PartitionOccurrence_WhichPart[q93] = q82) | q93 : int(1..4)]) <=
+               sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q95] != 5)
+                        | q95 : int(1..4)])
+               /\
+               and([x_PartitionOccurrence_WhichPart[q89] = q82 ->
+                    or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q91] != 5 /\
+                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q91] = q89
+                            | q91 : int(1..4)])
+                        | q89 : int(1..4)]))
+              /\
+              (sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q101] != 5)
+                        | q101 : int(1..4)])
+               <= sum([toInt(x_PartitionOccurrence_WhichPart[q103] = q82) | q103 : int(1..4)])
+               /\
+               and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q97] != 5 ->
+                    or([x_PartitionOccurrence_WhichPart[q99] = q82 /\
+                        q99 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q80, q97]
+                            | q99 : int(1..4)])
+                        | q97 : int(1..4)])))
+                 | q82 : int(1..4)])
+             | q80 : int(1..4)])
 

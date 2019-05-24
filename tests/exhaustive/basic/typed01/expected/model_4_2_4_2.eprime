@@ -5,8 +5,17 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1)] of int(1)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, y_ExplicitVarSizeWithDummy]
 such that
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\
+          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1]))
+    = 0,
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\
+          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1]))
+    <= 0,
     x_ExplicitVarSizeWithFlags_Flags[1] /\
     (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1])
     -> false,
+    0 <=
+    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\
+          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1])),
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1
 

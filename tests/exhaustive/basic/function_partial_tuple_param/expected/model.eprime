@@ -8,6 +8,7 @@ given p_FunctionAsRelation_RelationAsSet_Explicit_1_2: matrix indexed by [int(1.
 given p_FunctionAsRelation_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of int(13, 17)
 branching on [x_FunctionNDPartial_Flags, x_FunctionNDPartial_Values]
 such that
+    fin1 = sum([toInt(x_FunctionNDPartial_Flags[q7_1, q7_2]) | q7_1 : int(7..8), q7_2 : bool]),
     and([x_FunctionNDPartial_Values
              [p_FunctionAsRelation_RelationAsSet_Explicit_1_1[q5], p_FunctionAsRelation_RelationAsSet_Explicit_1_2[q5]]
          = p_FunctionAsRelation_RelationAsSet_Explicit_2[q5]
@@ -15,12 +16,12 @@ such that
          x_FunctionNDPartial_Flags
              [p_FunctionAsRelation_RelationAsSet_Explicit_1_1[q5], p_FunctionAsRelation_RelationAsSet_Explicit_1_2[q5]]
              | q5 : int(1..fin1)]),
-    and([x_FunctionNDPartial_Flags[q6_1, q6_2] ->
-         or([p_FunctionAsRelation_RelationAsSet_Explicit_1_1[q8] = q6_1 /\
-             p_FunctionAsRelation_RelationAsSet_Explicit_1_2[q8] = q6_2
-             /\ p_FunctionAsRelation_RelationAsSet_Explicit_2[q8] = x_FunctionNDPartial_Values[q6_1, q6_2]
-                 | q8 : int(1..fin1)])
-             | q6_1 : int(7..8), q6_2 : bool]),
+    and([x_FunctionNDPartial_Flags[q8_1, q8_2] ->
+         or([p_FunctionAsRelation_RelationAsSet_Explicit_1_1[q10] = q8_1 /\
+             p_FunctionAsRelation_RelationAsSet_Explicit_1_2[q10] = q8_2
+             /\ p_FunctionAsRelation_RelationAsSet_Explicit_2[q10] = x_FunctionNDPartial_Values[q8_1, q8_2]
+                 | q10 : int(1..fin1)])
+             | q8_1 : int(7..8), q8_2 : bool]),
     and([x_FunctionNDPartial_Flags[q1_1, q1_2] = false -> x_FunctionNDPartial_Values[q1_1, q1_2] = 13
              | q1_1 : int(7..8), q1_2 : bool])
 
