@@ -487,6 +487,11 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                     case mrecorded of
                         Just recorded -> do
                             putStrLn ("Response: " ++ show recorded)
+                            unless (recorded >= 1 && recorded <= length options) $
+                                userErr1 $ vcat [ "Recorded response out of range."
+                                                , nest 4 $ "Expected a value between 1 and" <+> pretty (length options)
+                                                , nest 4 $ "But got: " <+> pretty recorded
+                                                ]
                             return recorded
                         Nothing -> do
                             putStr "Pick option: "
