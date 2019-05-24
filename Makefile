@@ -20,7 +20,7 @@ install:
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
-	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
+	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; rm -rf .stack-work/*/*/*/*/*/conjure-testing; fi
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
