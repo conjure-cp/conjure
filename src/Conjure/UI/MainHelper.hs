@@ -22,8 +22,9 @@ import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
+import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGenM, runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
+import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render, prParens )
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
@@ -128,6 +129,7 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             , Config.responses                  = responsesList
+            , Config.estimateNumberOfModels     = estimateNumberOfModels
             }
     runNameGen model $ outputModels config model
 mainWithArgs TranslateParameter{..} = do
@@ -183,8 +185,21 @@ mainWithArgs SymmetryDetection{..} = do
 mainWithArgs ParameterGenerator{..} = do
     when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
     model  <- readModelFromFile essence
-    output <- parameterGenerator model
+    output <- runNameGen () $ parameterGenerator minInt maxInt model
     writeModel lineWidth outputFormat (Just essenceOut) output
+    let
+        toIrace nm lb ub | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            prParens (pretty lb)
+        toIrace nm lb ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" i" <+>
+            prettyList prParens "," [lb, ub]
+    liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
+        [ toIrace nm lb ub
+        | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
+        ]
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
@@ -339,6 +354,7 @@ mainWithArgs config@Solve{..} = do
             pp logLevel $ "Generating models for" <+> pretty essence
             liftIO $ removeDirectoryIfExists outputDirectory
             let modelling = let savedChoices = def
+                                estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
             mainWithArgs modelling

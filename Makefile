@@ -2,8 +2,8 @@
 SHELL := /bin/bash
 
 # these are default values
-# override by calling the makefile like so: "GHC_VERSION=8.2 make"
-export GHC_VERSION?=8.4
+# override by calling the makefile like so: "GHC_VERSION=8.6 make"
+export GHC_VERSION?=8.6
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
@@ -13,14 +13,14 @@ install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this"
 	@echo "For example: \"GHC_VERSION=8.4 make install\""
-	@echo "Supported versions: 8.0, 8.2, 8.4"
+	@echo "Supported versions: 8.0, 8.2, 8.4, 8.6"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Set the environment variable BIN_DIR to change this"
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
-	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
+	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; rm -rf .stack-work/*/*/*/*/*/conjure-testing; fi
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
@@ -49,8 +49,9 @@ install:
 	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
 		stack install --local-bin-path ${BIN_DIR};\
 	fi
-	@echo Copying Savile Row to ${BIN_DIR}
+	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
+	@echo - savilerow
 
 .PHONY: install-using-cabal
 install-using-cabal:

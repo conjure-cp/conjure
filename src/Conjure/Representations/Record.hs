@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Representations.Record
     ( record
     ) where
@@ -5,14 +7,12 @@ module Conjure.Representations.Record
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 
 
 record :: forall m . (MonadFail m, NameGen m) => Representation m
-record = Representation chck downD structuralCons downC up
+record = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -76,3 +76,11 @@ record = Representation chck downD structuralCons downC up
             -- TODO: check if (length ds == length vals)
             return (name, ConstantAbstract (AbsLitRecord vals))
         up _ _ = na "{up}"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            xs <- downX1 inp
+            Just xsDoms' <- downD ("SO", domain)
+            let xsDoms = map snd xsDoms'
+            soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
+            return $ make opFlatten (fromList soValues)

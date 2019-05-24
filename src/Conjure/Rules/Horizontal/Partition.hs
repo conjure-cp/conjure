@@ -33,14 +33,14 @@ rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRu
 
 rule_Eq :: Rule
 rule_Eq = "partition-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)           <- match opEq p
+    theRule [essence| &x = &y |] = do
         TypePartition{} <- typeOf x
         TypePartition{} <- typeOf y
         return
             ( "Horizontal rule for partition equality"
-            , return $ make opEq (make opParts x) (make opParts y)
+            , return [essence| |&x| = |&y| /\ parts(&x) = parts(&y) |]
             )
+    theRule _ = na "rule_Eq"
 
 
 rule_Neq :: Rule
@@ -165,8 +165,13 @@ rule_Card = "partition-card" `namedRule` theRule where
         partition_      <- match opTwoBars p
         TypePartition{} <- typeOf partition_
         return
-            ( "Cardinality of a partition"
-            , return $ make opTwoBars $ make opParticipants partition_
+            ( "Partition cardinality"
+            , do
+                dom <- runMaybeT $ domainOf partition_
+                case dom of
+                    Just (DomainPartition _ (PartitionAttr (SizeAttr_Size nbParts) (SizeAttr_Size partSize) _) _)
+                        -> return [essence| &nbParts * &partSize |]
+                    _ -> return [essence| |participants(&partition_)| |]
             )
 
 

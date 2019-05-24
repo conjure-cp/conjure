@@ -47,6 +47,7 @@ import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
+    , symmetryOrdering
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     )
 
@@ -102,11 +103,12 @@ import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
 import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
-import Pipes ( Producer, await, yield, (>->), cat )
+import Pipes ( Pipe, Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels ::
+    forall m .
     MonadIO m =>
     MonadFail m =>
     MonadLog m =>
@@ -138,10 +140,21 @@ outputModels config model = do
         ["Identifiers cannot contain a quotation mark character in them:" <+> prettyList id "," primeyIdentifiers]
 
     let dir = outputDirectory config
-    liftIO $ createDirectoryIfMissing True dir
+
+    unless (estimateNumberOfModels config) $
+        liftIO $ createDirectoryIfMissing True dir
 
     let
+        limitModelsIfEstimating :: Pipe LogOrModel LogOrModel m ()
+        limitModelsIfEstimating =
+            if estimateNumberOfModels config
+                then limitModelsNeeded 1
+                else Pipes.cat
+
+        limitModelsIfNeeded :: Pipe LogOrModel LogOrModel m ()
         limitModelsIfNeeded = maybe Pipes.cat limitModelsNeeded (limitModels config)
+
+        limitModelsNeeded :: Int -> Pipe LogOrModel LogOrModel m ()
         limitModelsNeeded 0 = return ()
         limitModelsNeeded n = do
             x <- Pipes.await
@@ -166,7 +179,19 @@ outputModels config model = do
                                        |> concat
                                 else padLeft 6 '0' (show i)
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    writeModel (lineWidth config) Plain (Just filename) eprime
+                    if estimateNumberOfModels config
+                        then do
+                            let
+                                estimate :: Integer
+                                estimate = product $ 1 : [ toInteger numOptions
+                                                         | (_question, _choice, numOptions) <-
+                                                             eprime |> mInfo |> miTrailCompact
+                                                         ]
+                            liftIO $ print
+                                        $ "These options would generate at least"
+                                        <+> pretty estimate
+                                        <+> (if estimate == 1 then "model" else "models") <> "."
+                        else writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
 
     let ?typeCheckerMode = RelaxedIntegerTags
@@ -175,7 +200,8 @@ outputModels config model = do
                 (return (numberingStart config))
                 (const $ return ())
                 (toCompletion config model
-                    >-> limitModelsIfNeeded)
+                    >-> limitModelsIfNeeded
+                    >-> limitModelsIfEstimating)
 
 
 toCompletion :: forall m .
@@ -461,6 +487,11 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                     case mrecorded of
                         Just recorded -> do
                             putStrLn ("Response: " ++ show recorded)
+                            unless (recorded >= 1 && recorded <= length options) $
+                                userErr1 $ vcat [ "Recorded response out of range."
+                                                , nest 4 $ "Expected a value between 1 and" <+> pretty (length options)
+                                                , nest 4 $ "But got: " <+> pretty recorded
+                                                ]
                             return recorded
                         Nothing -> do
                             putStr "Pick option: "
@@ -706,8 +737,8 @@ dropTagForSR m = do
                     let xTagInt = reTag TagInt x
                     return [essence| &xTagInt + 1 |]
                 _          -> bug "predSucc"
-        replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
-        replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
+        -- replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
+        -- replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
         replacePredSucc x = return x
 
     st <- transformBiM replacePredSucc (mStatements m)
@@ -768,7 +799,7 @@ updateDeclarations model = do
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
                 Right outs -> forM outs $ \ (n, d) -> do
-                    d' <- transformBiM trySimplify $ forgetRepr d
+                    d' <- transformBiM (trySimplify []) $ forgetRepr d
                     return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
@@ -792,7 +823,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
-    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+    fails <- fmap (nub . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
@@ -837,6 +868,10 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                         ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                            | (i, c) <- zip allNats (tail (ascendants x))
                                            ]
+                    [essence| &_ .< &_ |] ->
+                        return ["", ("Not refined:" <+> pretty (hole x))]
+                    [essence| &_ .<= &_ |] ->
+                        return ["", ("Not refined:" <+> pretty (hole x))]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -1158,16 +1193,12 @@ verticalRules =
     , Vertical.Record.rule_Record_Neq
     , Vertical.Record.rule_Record_Leq
     , Vertical.Record.rule_Record_Lt
-    , Vertical.Record.rule_Record_DotLeq
-    , Vertical.Record.rule_Record_DotLt
     , Vertical.Record.rule_Record_Index
 
     , Vertical.Variant.rule_Variant_Eq
     , Vertical.Variant.rule_Variant_Neq
     , Vertical.Variant.rule_Variant_Leq
     , Vertical.Variant.rule_Variant_Lt
-    , Vertical.Variant.rule_Variant_DotLeq
-    , Vertical.Variant.rule_Variant_DotLt
     , Vertical.Variant.rule_Variant_Index
     , Vertical.Variant.rule_Variant_Active
 
@@ -1403,8 +1434,9 @@ otherRules =
         , rule_Decompose_AllDiff
 
         , rule_GeneratorsFirst
-
-        , rule_DomainCardinality
+        ]
+    ,
+        [ rule_DomainCardinality
         , rule_DomainMinMax
 
         , rule_ComplexAbsPat
@@ -1797,58 +1829,21 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        aType <- typeOf a
-        case aType of
-            TypeTuple{}     -> return ()
-            TypeMatrix{}    -> return ()
-            TypeSet{}       -> return ()
-            TypeMSet{}      -> return ()
-            TypeFunction{}  -> return ()
-            TypeSequence{}  -> return ()
-            TypeRelation{}  -> return ()
-            TypePartition{} -> return ()
-            _ -> na "rule_DotLtLeq"
+        -- aType <- typeOf a
+        -- case aType of
+        --     TypeTuple{}     -> return ()
+        --     TypeMatrix{}    -> return ()
+        --     TypeSet{}       -> return ()
+        --     TypeMSet{}      -> return ()
+        --     TypeFunction{}  -> return ()
+        --     TypeSequence{}  -> return ()
+        --     TypeRelation{}  -> return ()
+        --     TypePartition{} -> return ()
+        --     _ -> na "rule_DotLtLeq"
         -- sameRepresentationTree a b
-        let
-            nestingLevel (TypeMatrix _ t) = 1 + nestingLevel t
-            nestingLevel (TypeList     t) = 1 + nestingLevel t
-            nestingLevel _ = 0 :: Int
 
-            innerMostTy (TypeMatrix _ t) = innerMostTy t
-            innerMostTy (TypeList     t) = innerMostTy t
-            innerMostTy t = t
-
-            matrixForAll [] x = return (x, [])
-            matrixForAll (dom:doms) x = do
-                (iPat, i) <- quantifiedVar
-                (xIndexed, gens) <- matrixForAll doms [essence| &x[&i] |]
-                let gen = Generator (GenDomainNoRepr iPat dom)
-                return (xIndexed, gen : gens)
-
-            mk1D x = do
-                ty <- typeOf x
-                case nestingLevel ty of
-                    0 -> case ty of
-                            TypeBool  -> return [essence| [toInt(&x)] |]
-                            TypeInt{} -> return [essence| [&x] |]
-                            _         -> bug ("What type? [0]" <+> pretty ty)
-                    nl -> do
-                        xInt <- case innerMostTy ty of
-                            TypeBool -> do
-                                doms <- indexDomainsOf x
-                                (xIndexed, gens) <- matrixForAll doms x
-                                return $ Comprehension [essence| toInt(&xIndexed) |] gens
-                            TypeInt{} -> return x
-                            _ -> bug ("What type? [1]" <+> pretty ty)
-                        if nl == 1
-                            then return xInt
-                            else return [essence| flatten(&xInt) |]
-
-            wrap [x] = x
-            wrap xs = make opFlatten (fromList xs)
-
-        ma <- downX a >>= mapM mk1D >>= return . reTag TagInt . wrap
-        mb <- downX b >>= mapM mk1D >>= return . reTag TagInt . wrap
+        ma <- symmetryOrdering a
+        mb <- symmetryOrdering b
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
@@ -1901,17 +1896,35 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
+    theRule [essence| &xs <lex &ys |] =
+        case (listOut xs, listOut ys) of
+            (Just [x], Just [y]) -> return
+                ( "<lex on singleton matrices"
+                , return [essence| &x < &y |]
+                )
+            _ -> na "rule_FlattenOf1D"
+    theRule [essence| &xs <=lex &ys |] =
+        case (listOut xs, listOut ys) of
+            (Just [x], Just [y]) -> return
+                ( "<=lex on singleton matrices"
+                , return [essence| &x <= &y |]
+                )
+            _ -> na "rule_FlattenOf1D"
     theRule p = do
         x   <- match opFlatten p
         tyx <- typeOf x
-        case tyx of
-            TypeList     TypeBool{} -> return ()
-            TypeList     TypeInt{}  -> return ()
-            TypeMatrix _ TypeBool{} -> return ()
-            TypeMatrix _ TypeInt{}  -> return ()
+        out <- case tyx of
+            TypeList     TypeBool{} -> return x
+            TypeList     TypeInt{}  -> return x
+            TypeMatrix _ TypeBool{} -> return x
+            TypeMatrix _ TypeInt{}  -> return x
+            TypeMatrix{}            -> -- more than 1D
+                case listOut x of
+                    Just [y] -> return (make opFlatten y)
+                    _        -> na "rule_FlattenOf1D"
             _ -> na "rule_FlattenOf1D"
         return ( "1D matrices do not need a flatten."
-               , return x
+               , return out
                )
 
 
@@ -2063,13 +2076,14 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             Just z -> do
                 let h = hole z
                 case ( match opAnd h, match opOr h, match opSum h
-                     , match opMin h, match opMax h ) of
-                    (Just{}, _, _, _, _) -> return ("and", opAndSkip)
-                    (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
-                    (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
-                    (_, _, _, Just{}, _) -> na "rule_InlineConditions (min)"
-                    (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
-                    _                    -> na "rule_InlineConditions (meh-2)"
+                     , match opMin h, match opMax h, match opOrdering h ) of
+                    (Just{}, _, _, _, _, _) -> return ("and", opAndSkip)
+                    (_, Just{}, _, _, _, _) -> return ("or" , opOrSkip )
+                    (_, _, Just{}, _, _, _) -> return ("sum", opSumSkip)
+                    (_, _, _, Just{}, _, _) -> na "rule_InlineConditions (min)"
+                    (_, _, _, _, Just{}, _) -> na "rule_InlineConditions (max)"
+                    (_, _, _, _, _, Just{}) -> return ("ordering", opSumSkip)
+                    _                       -> na "rule_InlineConditions (meh-2)"
                                             -- case Zipper.up z of
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
@@ -2263,16 +2277,13 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
             TypeMatrix{} -> return ()           -- the matrix literal should contain further matrix/list stuff.
             TypeList{}   -> return ()
             _            -> na "rule_QuantifierShift2"
-        let flattenIfNeeded = if matrixNumDims ty > 1
-                                then make opFlatten
-                                else id
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
                             ty
                             index
-                            (map (mkQuan . flattenIfNeeded) elems))
+                            (map (mkQuan . flattenIfNeeded (matrixNumDims ty)) elems))
             )
 
 

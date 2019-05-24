@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 
 module Conjure.Prelude
     ( module X
@@ -464,7 +464,12 @@ data LogLevel
     | LogWarn
     | LogDebug
     | LogDebugVerbose
-    deriving (Eq, Ord, Show, Read, Data, Typeable)
+    deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+
+instance Serialize LogLevel
+instance Hashable  LogLevel
+instance ToJSON    LogLevel where toJSON = genericToJSON jsonOptions
+instance FromJSON  LogLevel where parseJSON = genericParseJSON jsonOptions
 
 instance Default LogLevel where def = LogInfo
 

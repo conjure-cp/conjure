@@ -9,7 +9,7 @@ import Conjure.Representations.Internal
 
 
 setExplicit :: forall m . (MonadFail m, NameGen m) => Representation m
-setExplicit = Representation chck downD structuralCons downC up
+setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -97,3 +97,16 @@ setExplicit = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = na "{up} Explicit"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix index inner)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] inner
+            return
+                [essence|
+                    flatten([ &soValues
+                            | &iPat : &index
+                            ])
+                |]

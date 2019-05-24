@@ -102,8 +102,7 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
 
 rule_Eq :: Rule
 rule_Eq = "relation-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opEq p
+    theRule [essence| &x = &y |] = do
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return
@@ -119,6 +118,7 @@ rule_Eq = "relation-eq" `namedRule` theRule where
                          (|&x| = |&y|)
                      |]
             )
+    theRule _ = na "rule_Eq"
 
 
 rule_Neq :: Rule
@@ -149,43 +149,43 @@ rule_SubsetEq = "relation-subsetEq" `namedRule` theRule where
             ( "Horizontal rule for relation subsetEq"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| forAll &iPat in (&x) . &i in &y |]
+                 return [essence| |&x| <= |&y| /\ forAll &iPat in (&x) . &i in &y |]
             )
     theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule
 rule_Subset = "relation-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] = do
-        TypeRelation{} <- typeOf a
-        TypeRelation{} <- typeOf b
+    theRule [essence| &x subset &y |] = do
+        TypeRelation{} <- typeOf x
+        TypeRelation{} <- typeOf y
         return
             ( "Horizontal rule for relation subset"
-            , return [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| |&x| < |&y| /\ &x subsetEq &y /\ &x != &y |]
             )
     theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
 rule_Supset = "relation-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] = do
-        TypeRelation{} <- typeOf a
-        TypeRelation{} <- typeOf b
+    theRule [essence| &x supset &y |] = do
+        TypeRelation{} <- typeOf x
+        TypeRelation{} <- typeOf y
         return
             ( "Horizontal rule for relation supset"
-            , return [essence| &b subset &a |]
+            , return [essence| &y subset &x |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "relation-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] = do
-        TypeRelation{} <- typeOf a
-        TypeRelation{} <- typeOf b
+    theRule [essence| &x supsetEq &y |] = do
+        TypeRelation{} <- typeOf x
+        TypeRelation{} <- typeOf y
         return
             ( "Horizontal rule for relation supsetEq"
-            , return [essence| &b subsetEq &a |]
+            , return [essence| &y subsetEq &x |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -221,7 +221,12 @@ rule_Card = "relation-cardinality" `namedRule` theRule where
         TypeRelation{} <- typeOf x
         return
             ( "Relation cardinality"
-            , return [essence| |toSet(&x)| |]
+            , do
+                dom <- runMaybeT $ domainOf x
+                case dom of
+                    Just (DomainRelation _ (RelationAttr (SizeAttr_Size n) _) _)
+                        -> return n
+                    _ -> return [essence| |toSet(&x)| |]
             )
     theRule _ = na "rule_Card"
 

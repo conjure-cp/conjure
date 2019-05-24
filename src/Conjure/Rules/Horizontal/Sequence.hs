@@ -96,8 +96,7 @@ rule_Eq_Empty = "sequence-eq-empty" `namedRule` theRule where
 
 rule_Eq :: Rule
 rule_Eq = "sequence-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opEq p
+    theRule [essence| &x = &y |] = do
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
         case (match sequenceLiteral x, match sequenceLiteral y) of
@@ -110,6 +109,8 @@ rule_Eq = "sequence-eq" `namedRule` theRule where
                  (iPat, i) <- quantifiedVar
                  return
                      [essence|
+                         |&x| = |&y|
+                             /\
                          (forAll &iPat in &x . &y(&i[1]) = &i[2])
                              /\
                          (forAll &iPat in &y . &x(&i[1]) = &i[2])
@@ -117,6 +118,7 @@ rule_Eq = "sequence-eq" `namedRule` theRule where
                          defined(&x) = defined(&y)
                      |]
             )
+    theRule _ = na "rule_Eq"
 
 
 rule_Eq_Comprehension :: Rule
@@ -164,8 +166,7 @@ rule_Neq = "sequence-neq" `namedRule` theRule where
 
 rule_SubsetEq :: Rule
 rule_SubsetEq = "sequence-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opSubsetEq p
+    theRule [essence| &x subsetEq &y |] = do
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
         return
@@ -174,45 +175,48 @@ rule_SubsetEq = "sequence-subsetEq" `namedRule` theRule where
                  (iPat, i) <- quantifiedVar
                  return
                      [essence|
+                         |&x| <= |&y|
+                             /\
                          (forAll &iPat in &x . &y(&i[1]) = &i[2])
                              /\
                          defined(&x) subsetEq defined(&y)
                      |]
             )
+    theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule
 rule_Subset = "sequence-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] = do
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
+    theRule [essence| &x subset &y |] = do
+        TypeSequence{} <- typeOf x
+        TypeSequence{} <- typeOf y
         return
             ( "Horizontal rule for sequence subset"
-            , return [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| |&x| < |&y| /\ &x subsetEq &y /\ &x != &y |]
             )
     theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
 rule_Supset = "sequence-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] = do
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
+    theRule [essence| &x supset &y |] = do
+        TypeSequence{} <- typeOf x
+        TypeSequence{} <- typeOf y
         return
             ( "Horizontal rule for sequence supset"
-            , return [essence| &b subset &a |]
+            , return [essence| &y subset &x |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "sequence-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] = do
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
+    theRule [essence| &x supsetEq &y |] = do
+        TypeSequence{} <- typeOf x
+        TypeSequence{} <- typeOf y
         return
             ( "Horizontal rule for sequence supsetEq"
-            , return [essence| &b subsetEq &a |]
+            , return [essence| &y subsetEq &x |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -246,18 +250,19 @@ rule_Card :: Rule
 rule_Card = "sequence-cardinality" `namedRule` theRule where
     theRule [essence| |&s| |] = do
         TypeSequence{} <- typeOf s
-        dom <- domainOf s
         return
             ( "Horizontal rule for sequence cardinality."
-            , case dom of
-                DomainSequence _ (SequenceAttr (SizeAttr_Size n) _) _
-                    -> return n
-                DomainSequence _ (SequenceAttr _ jectivity) inner
-                    | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
-                    -> domainSizeOf inner
-                _ -> do
-                    (iPat, _) <- quantifiedVar
-                    return [essence| sum &iPat in &s . 1 |]
+            , do
+                dom <- runMaybeT $ domainOf s
+                case dom of
+                    Just (DomainSequence _ (SequenceAttr (SizeAttr_Size n) _) _)
+                        -> return n
+                    Just (DomainSequence _ (SequenceAttr _ jectivity) inner)
+                        | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
+                        -> domainSizeOf inner
+                    _ -> do
+                        (iPat, _) <- quantifiedVar
+                        return [essence| sum &iPat in &s . 1 |]
             )
     theRule _ = na "rule_Card"
 

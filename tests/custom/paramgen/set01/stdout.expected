@@ -1,0 +1,226 @@
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence
+Generating models for problem-gen.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime test.param
+Copying solution to: problem-gen-test.solution
+File: problem-gen.essence
+language Essence 1.3
+
+given a_middle: int(1..10)
+given a_delta: int(0..4)
+find a: int(1..10)
+such that
+    a >= a_middle - a_delta,
+    a <= a_middle + a_delta
+given b_middle: int(1..10)
+given b_delta: int(0..4)
+find b: int(1..10)
+such that
+    b >= b_middle - b_delta,
+    b <= b_middle + b_delta
+given c_middle: int(1..10)
+given c_delta: int(0..4)
+find c: int(1..10)
+such that
+    c >= c_middle - c_delta,
+    c <= c_middle + c_delta
+given s_middle: int(1..10)
+given s_delta: int(0..4)
+find s: int(1..10)
+such that
+    s >= s_middle - s_delta,
+    s <= s_middle + s_delta
+given f_cardMiddle: int(0..100)
+given f_cardDelta: int(0..3)
+given f_inner_middle: int(1..10)
+given f_inner_delta: int(0..4)
+find f: set (maxSize 100) of int(1..10)
+such that
+    |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
+    and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
+    and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
+    and([q1 >= a | q1 <- f]),
+    and([q1 <= b | q1 <- f])
+given g_cardMiddle: int(1..10)
+given g_cardDelta: int(0..3)
+given g_inner_middle: int(1..10)
+given g_inner_delta: int(0..4)
+find g: set (minSize 1, maxSize 10) of int(1..10)
+such that
+    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
+    |g| >= s,
+    |g| <= s,
+    and([q2 >= g_inner_middle - g_inner_delta | q2 <- g]),
+    and([q2 <= g_inner_middle + g_inner_delta | q2 <- g]),
+    and([q2 >= a | q2 <- g]),
+    and([q2 <= b | q2 <- g])
+given h_cardMiddle: int(1..100)
+given h_cardDelta: int(0..3)
+given h_inner_middle: int(1..10)
+given h_inner_delta: int(0..4)
+find h: set (minSize 1, maxSize 100) of int(1..10)
+such that
+    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
+    |h| >= s,
+    and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
+    and([q3 <= h_inner_middle + h_inner_delta | q3 <- h]),
+    and([q3 >= a | q3 <- h]),
+    and([q3 <= c | q3 <- h])
+such that g != h
+such that f = g intersect h
+
+--------------------
+
+
+File: problem-gen.essence.irace
+a_middle "-a_middle " i (1, 10)
+a_delta "-a_delta " i (0, 4)
+b_middle "-b_middle " i (1, 10)
+b_delta "-b_delta " i (0, 4)
+c_middle "-c_middle " i (1, 10)
+c_delta "-c_delta " i (0, 4)
+s_middle "-s_middle " i (1, 10)
+s_delta "-s_delta " i (0, 4)
+f_cardMiddle "-f_cardMiddle " i (0, 100)
+f_cardDelta "-f_cardDelta " i (0, 3)
+f_inner_middle "-f_inner_middle " i (1, 10)
+f_inner_delta "-f_inner_delta " i (0, 4)
+g_cardMiddle "-g_cardMiddle " i (1, 10)
+g_cardDelta "-g_cardDelta " i (0, 3)
+g_inner_middle "-g_inner_middle " i (1, 10)
+g_inner_delta "-g_inner_delta " i (0, 4)
+h_cardMiddle "-h_cardMiddle " i (1, 100)
+h_cardDelta "-h_cardDelta " i (0, 3)
+h_inner_middle "-h_inner_middle " i (1, 10)
+h_inner_delta "-h_inner_delta " i (0, 4)
+--------------------
+
+
+File: problem-gen-test.solution
+language Essence 1.3
+
+letting a be 4
+letting b be 7
+letting c be 9
+letting f be {5, 6, 7}
+letting g be {5, 6, 7}
+letting h be {4, 5, 6, 7}
+letting s be 3
+
+--------------------
+
+
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
+Generating models for problem-gen.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime test.param
+Copying solution to: problem-gen-test.solution
+File: problem-gen.essence
+language Essence 1.3
+
+given a_middle: int(1..10)
+given a_delta: int(0..4)
+find a: int(1..10)
+such that
+    a >= a_middle - a_delta,
+    a <= a_middle + a_delta
+given b_middle: int(1..10)
+given b_delta: int(0..4)
+find b: int(1..10)
+such that
+    b >= b_middle - b_delta,
+    b <= b_middle + b_delta
+given c_middle: int(1..10)
+given c_delta: int(0..4)
+find c: int(1..10)
+such that
+    c >= c_middle - c_delta,
+    c <= c_middle + c_delta
+given s_middle: int(1..10)
+given s_delta: int(0..4)
+find s: int(1..10)
+such that
+    s >= s_middle - s_delta,
+    s <= s_middle + s_delta
+given f_cardMiddle: int(-10..50)
+given f_cardDelta: int(0..3)
+given f_inner_middle: int(1..10)
+given f_inner_delta: int(0..4)
+find f: set (maxSize 50) of int(1..10)
+such that
+    |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
+    and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
+    and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
+    and([q1 >= a | q1 <- f]),
+    and([q1 <= b | q1 <- f])
+given g_cardMiddle: int(1..10)
+given g_cardDelta: int(0..3)
+given g_inner_middle: int(1..10)
+given g_inner_delta: int(0..4)
+find g: set (minSize 1, maxSize 10) of int(1..10)
+such that
+    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
+    |g| >= s,
+    |g| <= s,
+    and([q2 >= g_inner_middle - g_inner_delta | q2 <- g]),
+    and([q2 <= g_inner_middle + g_inner_delta | q2 <- g]),
+    and([q2 >= a | q2 <- g]),
+    and([q2 <= b | q2 <- g])
+given h_cardMiddle: int(1..50)
+given h_cardDelta: int(0..3)
+given h_inner_middle: int(1..10)
+given h_inner_delta: int(0..4)
+find h: set (minSize 1, maxSize 50) of int(1..10)
+such that
+    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
+    |h| >= s,
+    and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
+    and([q3 <= h_inner_middle + h_inner_delta | q3 <- h]),
+    and([q3 >= a | q3 <- h]),
+    and([q3 <= c | q3 <- h])
+such that g != h
+such that f = g intersect h
+
+--------------------
+
+
+File: problem-gen.essence.irace
+a_middle "-a_middle " i (1, 10)
+a_delta "-a_delta " i (0, 4)
+b_middle "-b_middle " i (1, 10)
+b_delta "-b_delta " i (0, 4)
+c_middle "-c_middle " i (1, 10)
+c_delta "-c_delta " i (0, 4)
+s_middle "-s_middle " i (1, 10)
+s_delta "-s_delta " i (0, 4)
+f_cardMiddle "-f_cardMiddle " i (-10, 50)
+f_cardDelta "-f_cardDelta " i (0, 3)
+f_inner_middle "-f_inner_middle " i (1, 10)
+f_inner_delta "-f_inner_delta " i (0, 4)
+g_cardMiddle "-g_cardMiddle " i (1, 10)
+g_cardDelta "-g_cardDelta " i (0, 3)
+g_inner_middle "-g_inner_middle " i (1, 10)
+g_inner_delta "-g_inner_delta " i (0, 4)
+h_cardMiddle "-h_cardMiddle " i (1, 50)
+h_cardDelta "-h_cardDelta " i (0, 3)
+h_inner_middle "-h_inner_middle " i (1, 10)
+h_inner_delta "-h_inner_delta " i (0, 4)
+--------------------
+
+
+File: problem-gen-test.solution
+language Essence 1.3
+
+letting a be 4
+letting b be 7
+letting c be 9
+letting f be {5, 6, 7}
+letting g be {5, 6, 7}
+letting h be {4, 5, 6, 7}
+letting s be 3
+
+--------------------
+
+

@@ -31,17 +31,14 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
 
 rule_Eq :: Rule
 rule_Eq = "set-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)     <- match opEq p
+    theRule [essence| &x = &y |] = do
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set equality"
-            , return $ make opAnd $ fromList
-                [ make opSubsetEq x y
-                , make opSubsetEq y x
-                ]
+            , return [essence| |&x| = |&y| /\ &x subsetEq &y /\ &y subsetEq &x |]
             )
+    theRule _ = na "rule_Eq"
 
 
 rule_Neq :: Rule
@@ -64,50 +61,50 @@ rule_Neq = "set-neq" `namedRule` theRule where
 
 rule_SubsetEq :: Rule
 rule_SubsetEq = "set-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)     <- match opSubsetEq p
+    theRule [essence| &x subsetEq &y |] = do
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set subsetEq"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| forAll &iPat in &x . &i in &y |]
+                 return [essence| |&x| <= |&y| /\ forAll &iPat in &x . &i in &y |]
             )
+    theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule
 rule_Subset = "set-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] = do
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
+    theRule [essence| &x subset &y |] = do
+        TypeSet{} <- typeOf x
+        TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set subset"
-            , return [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| |&x| < |&y| /\ &x subsetEq &y /\ &x != &y |]
             )
     theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
 rule_Supset = "set-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] = do
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
+    theRule [essence| &x supset &y |] = do
+        TypeSet{} <- typeOf x
+        TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set supset"
-            , return [essence| &b subset &a |]
+            , return [essence| &y subset &x |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] = do
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
+    theRule [essence| &x supsetEq &y |] = do
+        TypeSet{} <- typeOf x
+        TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set supsetEq"
-            , return [essence| &b subsetEq &a |]
+            , return [essence| &y subsetEq &x |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -317,8 +314,8 @@ rule_Card = "set-card" `namedRule` theRule where
         return
             ( "Horizontal rule for set cardinality."
             , do
-                mdom <- runMaybeT $ domainOf s
-                case mdom of
+                dom <- runMaybeT $ domainOf s
+                case dom of
                     Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) -> return n
                     _ -> do
                         (iPat, _) <- quantifiedVar

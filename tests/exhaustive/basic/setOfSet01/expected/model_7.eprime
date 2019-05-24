@@ -10,16 +10,18 @@ branching on
 such that
     and([x_ExplicitVarSizeWithFlagsR5_Flags[q1 + 1] ->
          flatten([[x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q1]; int(1)],
-                  x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q1, ..];
+                  flatten([[x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q1, q9]; int(1)]
+                               | q9 : int(1..2)]);
                       int(1..2)])
          <lex
          flatten([[x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1]; int(1)],
-                  x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q1 + 1, ..];
+                  flatten([[x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q1 + 1, q10]; int(1)]
+                               | q10 : int(1..2)]);
                       int(1..2)])
              | q1 : int(1..3)]),
     and([x_ExplicitVarSizeWithFlagsR5_Flags[q2] = false ->
          x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q2] = 0 /\
-         and([x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q2, q9] = 1 | q9 : int(1..2)])
+         and([x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q2, q11] = 1 | q11 : int(1..2)])
              | q2 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlagsR5_Flags[q3 + 1] -> x_ExplicitVarSizeWithFlagsR5_Flags[q3] | q3 : int(1..3)]),
     and([x_ExplicitVarSizeWithFlagsR5_Flags[q5] ->

@@ -62,8 +62,7 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
 
 rule_Eq :: Rule
 rule_Eq = "mset-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)      <- match opEq p
+    theRule [essence| &x = &y |] = do
         TypeMSet{} <- typeOf x
         TypeMSet{} <- typeOf y
         return
@@ -72,10 +71,12 @@ rule_Eq = "mset-eq" `namedRule` theRule where
                  (iPat, i) <- quantifiedVar
                  return
                      [essence|
+                         |&x| = |&y| /\
                          (forAll &iPat in &x . freq(&x,&i) = freq(&y,&i)) /\
                          (forAll &iPat in &y . freq(&x,&i) = freq(&y,&i))
                      |]
             )
+    theRule _ = na "rule_Eq"
 
 
 rule_Neq :: Rule
@@ -98,16 +99,16 @@ rule_Neq = "mset-neq" `namedRule` theRule where
 
 rule_SubsetEq :: Rule
 rule_SubsetEq = "mset-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)      <- match opSubsetEq p
+    theRule [essence| &x subsetEq &y |] = do
         TypeMSet{} <- typeOf x
         TypeMSet{} <- typeOf y
         return
             ( "Horizontal rule for mset subsetEq"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| forAll &iPat in &x . freq(&x,&i) <= freq(&y,&i) |]
+                 return [essence| |&x| <= |&y| /\ forAll &iPat in &x . freq(&x,&i) <= freq(&y,&i) |]
             )
+    theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule
@@ -121,6 +122,7 @@ rule_Subset = "mset-subset" `namedRule` theRule where
                     (iPat, i) <- quantifiedVar
                     return
                         [essence|
+                            |&x| < |&y| /\
                             (forAll &iPat in &x . freq(&x,&i) <= freq(&y,&i)) /\
                             (exists &iPat in &x . freq(&x,&i) <  freq(&y,&i))
                         |]
@@ -130,24 +132,24 @@ rule_Subset = "mset-subset" `namedRule` theRule where
 
 rule_Supset :: Rule
 rule_Supset = "mset-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] = do
-        TypeMSet{} <- typeOf a
-        TypeMSet{} <- typeOf b
+    theRule [essence| &x supset &y |] = do
+        TypeMSet{} <- typeOf x
+        TypeMSet{} <- typeOf y
         return
             ( "Horizontal rule for mset supset"
-            , return [essence| &b subset &a |]
+            , return [essence| &y subset &x |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "mset-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] = do
-        TypeMSet{} <- typeOf a
-        TypeMSet{} <- typeOf b
+    theRule [essence| &x supsetEq &y |] = do
+        TypeMSet{} <- typeOf x
+        TypeMSet{} <- typeOf y
         return
             ( "Horizontal rule for mset supsetEq"
-            , return [essence| &b subsetEq &a |]
+            , return [essence| &y subsetEq &x |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -217,6 +219,10 @@ rule_Card = "mset-card" `namedRule` theRule where
         return
             ( "Horizontal rule for mset cardinality."
             , do
-                (iPat, _) <- quantifiedVar
-                return [essence| sum &iPat in &s . 1 |]
+                mdom <- runMaybeT $ domainOf s
+                case mdom of
+                    Just (DomainMSet _ (MSetAttr (SizeAttr_Size n) _) _) -> return n
+                    _ -> do
+                        (iPat, _) <- quantifiedVar
+                        return [essence| sum &iPat in &s . 1 |]
             )

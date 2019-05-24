@@ -27,7 +27,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLt x) where
         tyB <- typeOf b
         if typesUnify [TypeList TypeAny, tyA, tyB]
             then return TypeBool
-            else raiseTypeError p
+            else raiseTypeError $ vcat [ pretty p
+                                       , "LHS has type:" <+> pretty tyA
+                                       , "RHS has type:" <+> pretty tyB
+                                       ]
 
 instance EvaluateOp OpLexLt where
     evaluateOp (OpLexLt (viewConstantMatrix -> Just (_, xs)) (viewConstantMatrix -> Just (_, ys))) =

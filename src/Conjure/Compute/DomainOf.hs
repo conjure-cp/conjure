@@ -1,13 +1,15 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Conjure.Compute.DomainOf ( DomainOf(..) ) where
+module Conjure.Compute.DomainOf ( DomainOf(..), domainOfR ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
 
 import Conjure.Language
+import Conjure.Language.Domain ( HasRepresentation(..) )
+import Conjure.Language.RepresentationOf ( RepresentationOf(..) )
 import Conjure.Compute.DomainUnion
 
 
@@ -34,6 +36,20 @@ class DomainOf a where
         (?typeCheckerMode :: TypeCheckerMode) =>
         a -> m [Dom]
     indexDomainsOf = defIndexDomainsOf
+
+
+domainOfR ::
+    DomainOf a =>
+    RepresentationOf a =>
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    a -> m (Domain HasRepresentation Expression)
+domainOfR inp = do
+    dom <- domainOf inp
+    rTree <- representationTreeOf inp
+    applyReprTree dom rTree
+
 
 defIndexDomainsOf ::
     MonadFail m =>

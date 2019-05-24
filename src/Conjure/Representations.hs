@@ -1,8 +1,11 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Representations
     ( downD, downC, up
     , downD1, downC1, up1
     , downToX1
     , reprOptions, getStructurals
+    , symmetryOrdering
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     , downX1
     , downX
@@ -11,12 +14,9 @@ module Conjure.Representations
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Type
-import Conjure.Language.Expression.Op
-import Conjure.Language.TypeOf
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Process.Enumerate
+import Conjure.Compute.DomainOf
 import Conjure.Representations.Combined
 
 
@@ -129,3 +129,42 @@ onOp (MkOpFromSolution (OpFromSolution x)) = do
     let wrap y = Op (MkOpFromSolution (OpFromSolution y))
     return (map wrap ys)
 onOp op = fail ("downX1.onOp:" <++> pretty op)
+
+
+
+symmetryOrdering ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
+symmetryOrdering inp =
+    case inp of
+        -- Constant x -> so_onConstant x
+        -- AbstractLiteral x
+        Reference _ (Just refTo) -> do
+            case refTo of
+                Alias x                        -> symmetryOrdering x
+                InComprehension{}              -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
+                DeclNoRepr{}                   -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
+                DeclHasRepr _forg _name domain -> symmetryOrderingDispatch downX1 inp domain
+                RecordField{}                  -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
+                VariantField{}                 -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
+        Op op -> case op of
+            MkOpIndexing (OpIndexing m _) -> do
+                ty <- typeOf m
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{}   -> return ()
+                    _ -> bug $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
+                mDom <- domainOfR m
+                case mDom of
+                    DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
+                    _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
+            _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
+        -- Comprehension body stmts -> do
+        --     xs <- downX1 body
+        --     return [Comprehension x stmts | x <- xs]
+        -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
+        _ -> bug ("symmetryOrdering:" <++> pretty (show inp))
+
