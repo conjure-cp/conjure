@@ -174,7 +174,7 @@ rule_Comprehension_ToSet_List = "matrix-toSet-listInside" `namedRule` theRule wh
         return
             ( "Vertical rule for comprehension over matrix-toSet, list inside"
             , do
-                (auxName, aux) <- auxiliaryVar
+                (auxName, aux) <- auxiliaryVar p
                 (iPat, i) <- quantifiedVar
                 return $ WithLocals aux $
                     AuxiliaryVars

@@ -265,7 +265,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
 
-    theRule_shouldRemoveDuplicates (Comprehension body gensOrConds) = do
+    theRule_shouldRemoveDuplicates p@(Comprehension body gensOrConds) = do
 
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
@@ -293,7 +293,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
 
             -- this is the expensive case: introduce an aux set for the range to make it alldiff
             caseNonInjective = do
-                (auxName, aux) <- auxiliaryVar
+                (auxName, aux) <- auxiliaryVar p
                 (jPat, j) <- quantifiedVar
                 (kPat, k) <- quantifiedVar
                 (lPat, l) <- quantifiedVar
@@ -378,12 +378,12 @@ rule_Param_DefinedRange = "param-DefinedRange-of-function" `namedRule` theRule w
 
 rule_Comprehension_Defined_Size :: Rule
 rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule where
-    theRule [essence| size(defined(&func), &n) |] = do
+    theRule p@[essence| size(defined(&func), &n) |] = do
         DomainFunction _ _ domFr _domTo <- domainOf func
         return
             ( "size(defined(func), n)"
             , do
-                (auxName, aux) <- auxiliaryVar
+                (auxName, aux) <- auxiliaryVar p
                 (kPat, k) <- quantifiedVar
                 (lPat, l) <- quantifiedVar
                 let k1 = [essence| &k[1] |]
@@ -412,12 +412,12 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
 
 rule_Comprehension_Range_Size :: Rule
 rule_Comprehension_Range_Size = "function-range-size" `namedRule` theRule where
-    theRule [essence| size(range(&func), &n) |] = do
+    theRule p@[essence| size(range(&func), &n) |] = do
         DomainFunction _ _ _domFr domTo <- domainOf func
         return
             ( "size(range(func), n)"
             , do
-                (auxName, aux) <- auxiliaryVar
+                (auxName, aux) <- auxiliaryVar p
                 (kPat, k) <- quantifiedVar
                 (lPat, l) <- quantifiedVar
                 let k2 = [essence| &k[2] |]

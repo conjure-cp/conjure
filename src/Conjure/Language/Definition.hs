@@ -171,7 +171,9 @@ data ModelInfo = ModelInfo
     , miTrailVerbose :: [Decision]
     , miTrailRewrites :: [TrailRewrites]
     , miQuestionAnswered :: [QuestionAnswered]
-    , miNameGenState :: [(Text, Int)]
+    , miNameGenState :: ( [(Text, Int)]         -- (kind, last number)
+                        , [(Int, Name)]         -- (hash, aux name)
+                        )
     , miNbExtraGivens :: Int -- number of extra givens Conjure added to make the domains of original givens finite
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)

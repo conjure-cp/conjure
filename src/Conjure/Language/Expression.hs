@@ -601,12 +601,25 @@ quantifiedVarOverDomain domain = do
 -- | generate a fresh name for an auxiliary variable.
 --   fst: the name to be used when declaring the variable
 --   snd: the expression to be used everywhere else
-auxiliaryVar :: NameGen m => m (Name, Expression)
-auxiliaryVar = do
-    -- Savile Row has a bug which is triggered when there are variables with names of the form aux*
-    nm <- nextName "conjure_aux"
-    let ref = Reference nm Nothing
-    return (nm, ref)
+auxiliaryVar ::
+    NameGen m =>
+    Hashable token =>
+    Eq token =>
+    token ->
+    m (Name, Expression)
+auxiliaryVar token = do
+    let hashedToken = hash token
+    mold <- auxTableLookup hashedToken
+    case mold of
+        Nothing -> do
+            -- Savile Row has a bug which is triggered when there are variables with names of the form aux*
+            nm <- nextName "conjure_aux"
+            auxTableInsert hashedToken nm
+            let ref = Reference nm Nothing
+            return (nm, ref)
+        Just nm -> do
+            let ref = Reference nm Nothing
+            return (nm, ref)
 
 
 lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression

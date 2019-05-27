@@ -38,7 +38,7 @@ finiteGivens m = flip evalStateT 1 $ do
     namegenst <- exportNameGenState
     return m { mStatements = concat statements
              , mInfo = (mInfo m) { miNameGenState = namegenst
-                                 , miNbExtraGivens = maybe 0 (\ n -> n - 1 ) (lookup "fin" namegenst)
+                                 , miNbExtraGivens = maybe 0 (\ n -> n - 1 ) (lookup "fin" (fst namegenst))
                                  }
              }
 

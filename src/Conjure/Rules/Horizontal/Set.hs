@@ -311,6 +311,7 @@ rule_Card = "set-card" `namedRule` theRule where
             Domain{} -> na "rule_Card"
             _        -> return ()
         TypeSet{} <- typeOf s
+        DomainSet _ _ inner <- domainOf s
         return
             ( "Horizontal rule for set cardinality."
             , do
@@ -318,8 +319,17 @@ rule_Card = "set-card" `namedRule` theRule where
                 case dom of
                     Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) -> return n
                     _ -> do
+                        (auxName, aux) <- auxiliaryVar ("set-card" :: String, p)
                         (iPat, _) <- quantifiedVar
-                        return [essence| sum &iPat in &s . 1 |]
+                        return $ WithLocals
+                            [essence| &aux |]
+                            (AuxiliaryVars
+                                [ Declaration (FindOrGiven LocalFind auxName
+                                        (mkDomainIntB 0 [essence| sum &iPat : &inner . 1 |]))
+                                , SuchThat
+                                    [ [essence| &aux = sum &iPat in &s . 1 |]
+                                    ]
+                                ])
             )
 
 

@@ -69,6 +69,9 @@ instance MonadUserError EnumerateDomainNoIO where
 
 instance NameGen EnumerateDomainNoIO where
     nextName _ = fail "nextName{EnumerateDomainNoIO}"
+    auxTableReset = fail "auxTableReset{EnumerateDomainNoIO}"
+    auxTableLookup _ = fail "auxTableLookup{EnumerateDomainNoIO}"
+    auxTableInsert _ _ = fail "auxTableInsert{EnumerateDomainNoIO}"
     exportNameGenState = fail "exportNameGenState{EnumerateDomainNoIO}"
     importNameGenState _ = fail "importNameGenState{EnumerateDomainNoIO}"
 

@@ -541,7 +541,7 @@ rule_Substring = "substring" `namedRule` theRule where
 
 rule_Subsequence :: Rule
 rule_Subsequence = "subsequence" `namedRule` theRule where
-    theRule [essence| &a subsequence &b |] = do
+    theRule p@[essence| &a subsequence &b |] = do
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
 
@@ -565,7 +565,7 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
         return
             ( "Horizontal rule for subsequence on 2 sequences"
             , do
-                (auxName, aux) <- auxiliaryVar
+                (auxName, aux) <- auxiliaryVar p
                 (iPat, i) <- quantifiedVar
                 return $ WithLocals
                         [essence|

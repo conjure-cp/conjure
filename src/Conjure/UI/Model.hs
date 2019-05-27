@@ -2149,7 +2149,7 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
         return
             ( "Creating auxiliary variable for a" <+> nameQ
             , do
-                (auxName, aux) <- auxiliaryVar
+                (auxName, aux) <- auxiliaryVar p
                 let auxDefinedLHS = make opSum (Comprehension 1 gensOrConds)
                 let auxDefined = [essence| &auxDefinedLHS > 0 |]
                 let auxUndefined = [essence| &auxDefinedLHS = 0 |]
