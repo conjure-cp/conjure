@@ -20,7 +20,7 @@ install:
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
-	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; rm -rf .stack-work/*/*/*/*/*/conjure-testing; fi
+	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
@@ -52,6 +52,8 @@ install:
 	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
 	@echo - savilerow
+# delete any old conjure-testing executables
+	@if ${BUILD_TESTS} ; then find .stack-work -type f -name conjure-testing -mmin +10 -delete; fi
 
 .PHONY: install-using-cabal
 install-using-cabal:
