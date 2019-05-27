@@ -43,7 +43,11 @@ import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
-import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars
+                                      , normaliseQuantifiedVariablesS
+                                      , normaliseQuantifiedVariablesE
+                                      )
+
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
@@ -626,7 +630,8 @@ reverseTrails m =
 
 
 oneSuchThat :: Model -> Model
-oneSuchThat m = m { mStatements = onStatements (mStatements m) }
+oneSuchThat m = m { mStatements = onStatements (mStatements m)
+                                    |> nubBy ((==) `on` normaliseQuantifiedVariablesS) }
 
     where
 
@@ -635,10 +640,10 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
             let
                 (suchThats0, objectives, others) = xs |> map collect |> mconcat
                 suchThats = suchThats0
-                      |> map breakConjunctions                         -- break top level /\'s
+                      |> map breakConjunctions                              -- break top level /\'s
                       |> mconcat
-                      |> filter (/= Constant (ConstantBool True))      -- remove top level true's
-                      |> nub                                           -- uniq
+                      |> filter (/= Constant (ConstantBool True))           -- remove top level true's
+                      |> nubBy ((==) `on` normaliseQuantifiedVariablesE)    -- uniq
             in
                 others ++ objectives ++ [SuchThat (combine suchThats)]
 
@@ -955,15 +960,7 @@ topLevelBubbles m = do
         onStmts = concatMapM onStmt
         onExprs = concatMapM onExpr
 
-        keepFirstAuxDecl _ [] = []
-        keepFirstAuxDecl seen (st:rest) =
-            case st of
-                Declaration (FindOrGiven _ nm _)
-                    | nm `elem` seen -> keepFirstAuxDecl seen rest
-                    | otherwise      -> st : keepFirstAuxDecl (nm:seen) rest
-                _ -> st : keepFirstAuxDecl seen rest
-
-    statements' <- keepFirstAuxDecl [] <$> onStmts (mStatements m)
+    statements' <- onStmts (mStatements m)
     return m { mStatements = statements' }
 
 
