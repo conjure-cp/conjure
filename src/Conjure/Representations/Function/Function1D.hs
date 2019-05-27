@@ -15,6 +15,7 @@ import Conjure.Language.Constant
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.TH
 import Conjure.Language.Pretty
+import Conjure.Language.Lenses
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
@@ -116,7 +117,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     [m] ->
                         concat <$> sequence
                             [ jectivityCons m
-                            , return $ mkSizeCons sizeAttr [essence| |&func| |]
+                            , return $ mkSizeCons sizeAttr $ make opTwoBars func False
                             , innerStructuralCons m
                             ]
                     _ -> na "{structuralCons} Function1D"

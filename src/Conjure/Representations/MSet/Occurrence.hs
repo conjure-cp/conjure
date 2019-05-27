@@ -58,9 +58,7 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
                             minOccurCons =
                                 [ [essence| forAll &iPat : &innerDomain . &m[&i] = 0 \/ &m[&i] >= &minOccur |]
                                 | minOccur /= 0 ]
-                        let
-                            cardinality = [essence| |&mset| |]
-                            cardinalityCons = mkSizeCons sizeAttr cardinality
+                        let cardinalityCons = mkSizeCons sizeAttr $ make opTwoBars mset False
                         return (minOccurCons ++ cardinalityCons)
                     _ -> na "{structuralCons} Occurrence"
         structuralCons _ _ _ = na "{structuralCons} Occurrence"

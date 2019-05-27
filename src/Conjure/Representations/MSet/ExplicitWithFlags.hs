@@ -115,7 +115,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                             , dontCareWhenNotFlagged flags values
                             , flagsToTheLeft         flags
                             , minOccurrenceCons      flags
-                            , return $ mkSizeCons sizeAttrs [essence| |&mset| |]
+                            , return $ mkSizeCons sizeAttrs $ make opTwoBars mset False
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithFlags"

@@ -145,7 +145,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                         concat <$> sequence
                             [ jectivityCons flags values
                             , dontCareInactives flags values
-                            , return $ mkSizeCons sizeAttr [essence| |&rel| |]
+                            , return $ mkSizeCons sizeAttr $ make opTwoBars rel False
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} FunctionNDPartial"

@@ -162,7 +162,7 @@ rule_Participants = "partition-participants" `namedRule` theRule where
 rule_Card :: Rule
 rule_Card = "partition-card" `namedRule` theRule where
     theRule p = do
-        partition_      <- match opTwoBars p
+        (partition_, takeShortcuts) <- match opTwoBars p
         TypePartition{} <- typeOf partition_
         return
             ( "Partition cardinality"
@@ -170,8 +170,8 @@ rule_Card = "partition-card" `namedRule` theRule where
                 dom <- runMaybeT $ domainOf partition_
                 case dom of
                     Just (DomainPartition _ (PartitionAttr (SizeAttr_Size nbParts) (SizeAttr_Size partSize) _) _)
-                        -> return [essence| &nbParts * &partSize |]
-                    _ -> return [essence| |participants(&partition_)| |]
+                        | takeShortcuts -> return [essence| &nbParts * &partSize |]
+                    _ -> return $ make opTwoBars [essence| participants(&partition_) |] takeShortcuts
             )
 
 

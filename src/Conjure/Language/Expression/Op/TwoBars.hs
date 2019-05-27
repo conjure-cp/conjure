@@ -12,7 +12,10 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
 
-data OpTwoBars x = OpTwoBars x
+data OpTwoBars x = OpTwoBars
+                        x
+                        Bool -- take shortcut if possible, see rules for how it's used
+                             -- only generated with a False value from within representation rules
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize x => Serialize (OpTwoBars x)
@@ -21,7 +24,7 @@ instance ToJSON    x => ToJSON    (OpTwoBars x) where toJSON = genericToJSON jso
 instance FromJSON  x => FromJSON  (OpTwoBars x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
-    typeOf p@(OpTwoBars a) = do
+    typeOf p@(OpTwoBars a _) = do
         ty <- typeOf a
         case ty of
             TypeInt _       -> return ()
@@ -39,7 +42,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
         return $ TypeInt TagInt
 
 instance EvaluateOp OpTwoBars where
-    evaluateOp (OpTwoBars x) =
+    evaluateOp (OpTwoBars x _) =
         case x of
             -- absolute value
             ConstantInt _ y                         -> return $ ConstantInt TagInt $ abs y
@@ -62,10 +65,10 @@ instance SimplifyOp OpTwoBars x where
     simplifyOp _ = na "simplifyOp{OpTwoBars}"
 
 instance Pretty x => Pretty (OpTwoBars x) where
-    prettyPrec _ (OpTwoBars a) = "|" <> pretty a <> "|"
+    prettyPrec _ (OpTwoBars a _) = "|" <> pretty a <> "|"
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpTwoBars x) where
-    varSymBreakingDescription (OpTwoBars a) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpTwoBars a _) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpTwoBars")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

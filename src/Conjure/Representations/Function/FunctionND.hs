@@ -131,7 +131,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     [values] ->
                         concat <$> sequence
                             [ jectivityCons values
-                            , return $ mkSizeCons sizeAttr [essence| |&func| |]
+                            , return $ mkSizeCons sizeAttr $ make opTwoBars func False
                             , innerStructuralCons values
                             ]
                     _ -> na "{structuralCons} FunctionND"

@@ -526,7 +526,7 @@ instance Num Expression where
     x + y = Op $ MkOpSum     $ OpSum     $ fromList [x,y]
     x - y = Op $ MkOpMinus   $ OpMinus x y
     x * y = Op $ MkOpProduct $ OpProduct $ fromList [x,y]
-    abs x = Op $ MkOpTwoBars $ OpTwoBars x
+    abs x = Op $ MkOpTwoBars $ OpTwoBars x True
     signum _ = bug "signum {Expression}"
     fromInteger = fromInt . fromInteger
 

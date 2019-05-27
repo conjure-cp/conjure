@@ -77,7 +77,7 @@ mkOp op xs =
             "product"   -> inject $ MkOpProduct   $ OpProduct (arg xs 0 "product")
             "not"       -> inject $ MkOpNot       $ OpNot     (arg xs 0 "not")
             "negate"    -> inject $ MkOpNegate    $ OpNegate  (arg xs 0 "negate")
-            "twoBars"   -> inject $ MkOpTwoBars   $ OpTwoBars (arg xs 0 "twoBars")
+            "twoBars"   -> inject $ MkOpTwoBars   $ OpTwoBars (arg xs 0 "twoBars") True
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opImage (fromName (Name op)) xs
         Just l -> case l of

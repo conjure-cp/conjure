@@ -27,11 +27,11 @@ rule_Comprehension = "relation-map_in_expr{RelationAsSet}" `namedRule` theRule w
 rule_Card :: Rule
 rule_Card = "relation-card{RelationAsSet}" `namedRule` theRule where
     theRule p = do
-        rel              <- match opTwoBars p
-        TypeRelation{}   <- typeOf rel
-        Relation_AsSet{} <- representationOf rel
-        [set]            <- downX1 rel
+        (rel, takeShortcuts) <- match opTwoBars p
+        TypeRelation{}       <- typeOf rel
+        Relation_AsSet{}     <- representationOf rel
+        [set]                <- downX1 rel
         return
             ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
-            , return [essence| |&set| |]
+            , return $ make opTwoBars set takeShortcuts
             )

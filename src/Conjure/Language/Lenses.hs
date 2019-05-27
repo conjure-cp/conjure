@@ -1379,15 +1379,15 @@ opTwoBars
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( x -> x
-       , x -> m x
+    -> ( x -> Bool -> x
+       , x -> m (x, Bool)
        )
 opTwoBars _ =
-    ( inject . MkOpTwoBars . OpTwoBars
+    ( \ x takeShortcuts -> inject $ MkOpTwoBars $ OpTwoBars x takeShortcuts
     , \ p -> do
             op <- project p
             case op of
-                MkOpTwoBars (OpTwoBars x) -> return x
+                MkOpTwoBars (OpTwoBars x takeShortcuts) -> return (x, takeShortcuts)
                 _ -> na ("Lenses.opTwoBars:" <++> pretty p)
     )
 

@@ -73,7 +73,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
 rule_Card :: Rule
 rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule p = do
-        s                             <- match opTwoBars p
+        (s, _takeShortcuts)           <- match opTwoBars p
         TypeSet{}                     <- typeOf s
         Set_ExplicitVarSizeWithMarker <- representationOf s
         [marker, _values]             <- downX1 s

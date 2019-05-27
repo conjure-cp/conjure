@@ -1960,7 +1960,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
 rule_DomainCardinality :: Rule
 rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
     theRule p = do
-        maybeDomain <- match opTwoBars p
+        (maybeDomain, _takeShortcuts) <- match opTwoBars p
         d <- case maybeDomain of
             Domain d -> return d
             Reference _ (Just (Alias (Domain d))) -> return d

@@ -67,7 +67,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
 rule_Card :: Rule
 rule_Card = "set-card{Explicit}" `namedRule` theRule where
     theRule p = do
-        s                                         <- match opTwoBars p
+        (s, _takeShortcuts)                       <- match opTwoBars p
         TypeSet{}                                 <- typeOf s
         Set_Explicit                              <- representationOf s
         DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s

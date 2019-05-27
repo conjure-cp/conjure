@@ -214,14 +214,14 @@ rule_In = "mset-in" `namedRule` theRule where
 rule_Card :: Rule
 rule_Card = "mset-card" `namedRule` theRule where
     theRule p = do
-        s          <- match opTwoBars p
+        (s, takeShortcuts) <- match opTwoBars p
         TypeMSet{} <- typeOf s
         return
             ( "Horizontal rule for mset cardinality."
             , do
                 mdom <- runMaybeT $ domainOf s
                 case mdom of
-                    Just (DomainMSet _ (MSetAttr (SizeAttr_Size n) _) _) -> return n
+                    Just (DomainMSet _ (MSetAttr (SizeAttr_Size n) _) _) | takeShortcuts -> return n
                     _ -> do
                         (iPat, _) <- quantifiedVar
                         return [essence| sum &iPat in &s . 1 |]

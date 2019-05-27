@@ -306,7 +306,7 @@ rule_In = "set-in" `namedRule` theRule where
 rule_Card :: Rule
 rule_Card = "set-card" `namedRule` theRule where
     theRule p = do
-        s         <- match opTwoBars p
+        (s, takeShortcuts) <- match opTwoBars p
         case s of
             Domain{} -> na "rule_Card"
             _        -> return ()
@@ -317,7 +317,7 @@ rule_Card = "set-card" `namedRule` theRule where
             , do
                 dom <- runMaybeT $ domainOf s
                 case dom of
-                    Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) -> return n
+                    Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) | takeShortcuts -> return n
                     _ -> do
                         (auxName, aux) <- auxiliaryVar ("set-card" :: String, p)
                         (iPat, _) <- quantifiedVar

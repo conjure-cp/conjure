@@ -114,7 +114,7 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                         concat <$> sequence
                             [ jectivityCons     flags values
                             , dontCareInactives flags values
-                            , return $ mkSizeCons sizeAttr [essence| |&func| |]
+                            , return $ mkSizeCons sizeAttr $ make opTwoBars func False
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} Function1DPartial"
