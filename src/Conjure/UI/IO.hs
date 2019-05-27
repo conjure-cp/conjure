@@ -101,7 +101,10 @@ readModel modelParser preprocess (fp, con) = do
         then return model
         else
             case infoJson of
-                Nothing -> fail "Malformed JSON"
+                Nothing -> userErr1 $ vcat
+                    [ "Malformed JSON in a cached Essence Prime model."
+                    , "It could be created by a different version of Conjure or modified by hand."
+                    ]
                 Just i  -> return model { mInfo = i }
 
 
