@@ -189,7 +189,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
                     [marker,values] ->
                         concat <$> sequence
                             [ dontCareAfterMarker marker values
-                            , return (mkSizeCons sizeAttr marker)
+                            , return $ mkSizeCons sizeAttr marker
                             , jectivityCons       marker values
                             , innerStructuralCons marker values
                             ]

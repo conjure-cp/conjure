@@ -30,15 +30,9 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
         downD _ = na "{downD} Occurrence"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons _ downX1 (DomainSet Set_Occurrence (SetAttr attrs) innerDomain@DomainInt{}) =
-            return $ \ set -> do
-                refs <- downX1 set
-                case refs of
-                    [m] -> do
-                        (iPat, i) <- quantifiedVar
-                        let cardinality = [essence| sum &iPat : &innerDomain . toInt(&m[&i]) |]
-                        return (mkSizeCons attrs cardinality)
-                    _ -> na "{structuralCons} Occurrence"
+        structuralCons _ _ (DomainSet Set_Occurrence (SetAttr attrs) _) =
+            return $ \ set ->
+                return $ mkSizeCons attrs [essence| |&set| |]
         structuralCons _ _ _ = na "{structuralCons} Occurrence"
 
         downC :: TypeOf_DownC m

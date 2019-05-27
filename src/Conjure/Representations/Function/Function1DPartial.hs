@@ -88,10 +88,6 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons  flags values
                                                      <*> surjectiveCons flags values
 
-            let cardinality flags = do
-                    (iPat, i) <- quantifiedVar
-                    return [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
-
             let dontCareInactives flags values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
@@ -118,7 +114,7 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                         concat <$> sequence
                             [ jectivityCons     flags values
                             , dontCareInactives flags values
-                            , mkSizeCons sizeAttr <$> cardinality flags
+                            , return $ mkSizeCons sizeAttr [essence| |&func| |]
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} Function1DPartial"

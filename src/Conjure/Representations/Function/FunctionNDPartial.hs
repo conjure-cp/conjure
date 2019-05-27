@@ -114,12 +114,6 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons  flags values
                                                      <*> surjectiveCons flags values
 
-                cardinality :: Expression -> m Expression
-                cardinality flags = do
-                    (iPat, i) <- quantifiedVar
-                    let flagsIndexed  = index i flags
-                    return [essence| sum &iPat : &innerDomainFr . toInt(&flagsIndexed) |]
-
                 dontCareInactives :: Expression -> Expression -> m [Expression]
                 dontCareInactives flags values = do
                     (iPat, i) <- quantifiedVar
@@ -151,7 +145,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                         concat <$> sequence
                             [ jectivityCons flags values
                             , dontCareInactives flags values
-                            , mkSizeCons sizeAttr <$> cardinality flags
+                            , return $ mkSizeCons sizeAttr [essence| |&rel| |]
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} FunctionNDPartial"

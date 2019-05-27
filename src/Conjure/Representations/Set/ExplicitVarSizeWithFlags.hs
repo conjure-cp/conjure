@@ -71,10 +71,6 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
                             forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &flags[&i]
                         |]
 
-                cardinality flags = do
-                    (iPat, i) <- quantifiedVar
-                    return [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
-
                 innerStructuralCons flags values = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxSize) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] -> &b |]
@@ -94,7 +90,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
                             [ orderingWhenFlagged    flags values
                             , dontCareWhenNotFlagged flags values
                             , flagsToTheLeft         flags
-                            , mkSizeCons attrs <$> cardinality flags
+                            , return $ mkSizeCons attrs [essence| |&set| |]
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithFlags"

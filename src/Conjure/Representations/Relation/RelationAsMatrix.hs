@@ -38,39 +38,25 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                                          ]
 
         structuralCons :: TypeOf_Structural m
-        structuralCons _ downX1
+        structuralCons _ _
             (DomainRelation Relation_AsMatrix (RelationAttr sizeAttr binRelAttr) innerDomains)
-                | all domainCanIndexMatrix innerDomains = do
-            let cardinality m = do
-                    let unroll _ [] = fail "RelationAsMatrix.cardinality.unroll []"
-                        unroll n [dom] = do
-                            (iPat, i) <- quantifiedVar
-                            return [essence| sum &iPat : &dom . toInt(&n[&i]) |]
-                        unroll n (dom : rest) = do
-                            (iPat, i) <- quantifiedVar
-                            r <- unroll [essence| &n[&i] |] rest
-                            return [essence| sum &iPat : &dom . &r |]
-                    unroll m innerDomains
+                | all domainCanIndexMatrix innerDomains =
             return $ \ rel -> do
-                refs <- downX1 rel
-                case refs of
-                    [m] -> do
-                        binRelCons <- if binRelAttr == def then return [] else
-                            case innerDomains of
-                                [innerDomain1, innerDomain2]
-                                    | forgetRepr innerDomain1 == forgetRepr innerDomain2 ->
-                                        mkBinRelCons binRelAttr innerDomain1 rel
-                                    | otherwise ->
-                                          bug $ vcat [ "Binary relation between different domains. (RelationAsMatrix)"
-                                                     , "innerDomain1:" <+> pretty innerDomain1
-                                                     , "innerDomain2:" <+> pretty innerDomain2
-                                                     ]
-                                _      -> bug "Non-binary relation."
-                        concat <$> sequence
-                            [ mkSizeCons sizeAttr <$> cardinality m
-                            , return binRelCons
-                            ]
-                    _ -> na "{structuralCons} RelationAsMatrix"
+                binRelCons <- if binRelAttr == def then return [] else
+                    case innerDomains of
+                        [innerDomain1, innerDomain2]
+                            | forgetRepr innerDomain1 == forgetRepr innerDomain2 ->
+                                mkBinRelCons binRelAttr innerDomain1 rel
+                            | otherwise ->
+                                  bug $ vcat [ "Binary relation between different domains. (RelationAsMatrix)"
+                                             , "innerDomain1:" <+> pretty innerDomain1
+                                             , "innerDomain2:" <+> pretty innerDomain2
+                                             ]
+                        _      -> bug "Non-binary relation."
+                concat <$> sequence
+                    [ return $ mkSizeCons sizeAttr [essence| |&rel| |]
+                    , return binRelCons
+                    ]
         structuralCons _ _ _ = na "{structuralCons} RelationAsMatrix"
 
         downC :: TypeOf_DownC m

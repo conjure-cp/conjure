@@ -12,7 +12,6 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Constant
-import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.TH
 import Conjure.Language.Pretty
@@ -100,8 +99,6 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     JectivityAttr_Surjective -> surjectiveCons m
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons m <*> surjectiveCons m
 
-            cardinality <- domainSizeOf innerDomainFr
-
             let innerStructuralCons m = do
                     (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomainFr)
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
@@ -119,7 +116,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     [m] ->
                         concat <$> sequence
                             [ jectivityCons m
-                            , return (mkSizeCons sizeAttr cardinality)
+                            , return $ mkSizeCons sizeAttr [essence| |&func| |]
                             , innerStructuralCons m
                             ]
                     _ -> na "{structuralCons} Function1D"

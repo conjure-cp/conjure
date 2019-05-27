@@ -125,7 +125,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                             , dontCareAfterFlag flag values
                             , minOccurrenceCons mset flag values
                             , maxOccurrenceCons mset flag values
-                            , return (mkSizeCons sizeAttrs flag)
+                            , return $ mkSizeCons sizeAttrs flag
                             , innerStructuralCons flag values
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithRepetition"

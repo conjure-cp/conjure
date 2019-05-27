@@ -113,11 +113,6 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons  values
                                                      <*> surjectiveCons values
 
-                cardinality :: m Expression
-                cardinality = do
-                    (iPat, _) <- quantifiedVar
-                    return [essence| sum &iPat : &innerDomainFr . 1 |]
-
             let innerStructuralCons values = do
                     (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomainFr)
                     let valuesIndexedI = index i values
@@ -136,7 +131,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     [values] ->
                         concat <$> sequence
                             [ jectivityCons values
-                            , mkSizeCons sizeAttr <$> cardinality
+                            , return $ mkSizeCons sizeAttr [essence| |&func| |]
                             , innerStructuralCons values
                             ]
                     _ -> na "{structuralCons} FunctionND"

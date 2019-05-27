@@ -90,10 +90,6 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
                                 (&m[&i] = &dummyElem) -> (&m[&i+1] = &dummyElem)
                         |]
 
-                cardinality m = do
-                    (iPat, i) <- quantifiedVar
-                    return [essence| sum &iPat : int(1..&maxSize) . toInt(&m[&i] != &dummyElem) |]
-
                 innerStructuralCons m = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxSize) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &m[&i] != &dummyElem -> &b |]
@@ -112,7 +108,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
                         concat <$> sequence
                             [ ordering m
                             , dummyToTheRight m
-                            , mkSizeCons attrs <$> cardinality m
+                            , return $ mkSizeCons attrs [essence| |&ref| |]
                             , innerStructuralCons m
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithDummy"

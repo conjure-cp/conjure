@@ -59,7 +59,7 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
                                 [ [essence| forAll &iPat : &innerDomain . &m[&i] = 0 \/ &m[&i] >= &minOccur |]
                                 | minOccur /= 0 ]
                         let
-                            cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
+                            cardinality = [essence| |&mset| |]
                             cardinalityCons = mkSizeCons sizeAttr cardinality
                         return (minOccurCons ++ cardinalityCons)
                     _ -> na "{structuralCons} Occurrence"

@@ -83,7 +83,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                         concat <$> sequence
                             [ orderingUpToMarker  marker values
                             , dontCareAfterMarker marker values
-                            , return (mkSizeCons attrs marker)
+                            , return $ mkSizeCons attrs marker
                             , innerStructuralCons marker values
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithMarker"

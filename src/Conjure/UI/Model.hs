@@ -741,7 +741,6 @@ dropTagForSR m = do
 
     st <- transformBiM replacePredSucc (mStatements m)
     return m { mStatements = st }
-    where
 
 
 updateDeclarations ::
@@ -956,7 +955,15 @@ topLevelBubbles m = do
         onStmts = concatMapM onStmt
         onExprs = concatMapM onExpr
 
-    statements' <- onStmts (mStatements m)
+        keepFirstAuxDecl _ [] = []
+        keepFirstAuxDecl seen (st:rest) =
+            case st of
+                Declaration (FindOrGiven _ nm _)
+                    | nm `elem` seen -> keepFirstAuxDecl seen rest
+                    | otherwise      -> st : keepFirstAuxDecl (nm:seen) rest
+                _ -> st : keepFirstAuxDecl seen rest
+
+    statements' <- keepFirstAuxDecl [] <$> onStmts (mStatements m)
     return m { mStatements = statements' }
 
 
