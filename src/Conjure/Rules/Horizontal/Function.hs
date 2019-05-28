@@ -47,7 +47,7 @@ rule_Eq = "function-eq" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 return [essence|
-                            |&x| = |&y| /\
+                            $ |&x| = |&y| /\
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
@@ -88,7 +88,7 @@ rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 return [essence|
-                            |&x| <= |&y| /\
+                            $ |&x| <= |&y| /\
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                        |]
             )
@@ -105,7 +105,7 @@ rule_Subset = "function-subset" `namedRule` theRule where
         return
             ( "Horizontal rule for function subset"
             , return [essence|
-                        |&x| < |&y| /\
+                        $ |&x| < |&y| /\
                         &x subsetEq &y /\
                         &x != &y
                      |]
