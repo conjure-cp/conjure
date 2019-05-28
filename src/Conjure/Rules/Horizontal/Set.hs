@@ -311,14 +311,13 @@ rule_Card = "set-card" `namedRule` theRule where
             Domain{} -> na "rule_Card"
             _        -> return ()
         TypeSet{} <- typeOf s
-        DomainSet _ _ inner <- domainOf s
         return
             ( "Horizontal rule for set cardinality."
             , do
                 dom <- runMaybeT $ domainOf s
                 case dom of
                     Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) | takeShortcuts -> return n
-                    _ -> do
+                    Just (DomainSet _ _ inner) -> do
                         (auxName, aux) <- auxiliaryVar ("set-card" :: String, p)
                         (iPat, _) <- quantifiedVar
                         return $ WithLocals
@@ -330,6 +329,9 @@ rule_Card = "set-card" `namedRule` theRule where
                                     [ [essence| &aux = sum &iPat in &s . 1 |]
                                     ]
                                 ])
+                    _ -> do
+                        (iPat, _) <- quantifiedVar
+                        return [essence| sum &iPat in &s . 1 |]
             )
 
 
