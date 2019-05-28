@@ -314,13 +314,16 @@ rule_Card = "set-card" `namedRule` theRule where
         return
             ( "Horizontal rule for set cardinality."
             , do
-                dom <- runMaybeT $ domainOf s
-                case dom of
+                mdom <- runMaybeT $ domainOf s
+                case mdom of
                     Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) | takeShortcuts -> return n
-                    Just (DomainSet _ _ inner) -> do
+                    Just dom@(DomainSet _ _ inner) -> do
                         -- Hash the set and not p
                         -- p is of the form (OpTwoBars s Bool) and the Bool effects what hash valeu we get
-                        (auxName, aux) <- auxiliaryVar ("set-card" :: String, s)
+                        (auxName, aux) <- auxiliaryVar ("set-card" :: String
+                                                       , show (pretty s)
+                                                       , forgetRepr dom         -- shared between representations
+                                                       )
                         (iPat, _) <- quantifiedVar
                         return $ WithLocals
                             [essence| &aux |]
