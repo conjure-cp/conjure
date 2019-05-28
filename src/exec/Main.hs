@@ -39,6 +39,11 @@ main = do
                 then ["--help"]
                 else args
 
+        verbosity = map (\case
+                                "-v" -> "--log-level=LogDebug"
+                                "-vv" -> "--log-level=LogDebugVerbose"
+                                arg -> arg)
+
         -- if a width is not specified, we try to find out their terminal width automatically
         -- and use the full width.
         helpAutoWidth args = do
@@ -60,6 +65,7 @@ main = do
 
     args  <- getArgs >>= return . compatRefineParam
                      >>= return . noArgPrintsHelp
+                     >>= return . verbosity
                      >>= helpAutoWidth
     input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do

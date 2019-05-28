@@ -233,7 +233,7 @@ toCompletion config m = do
 
         loopy :: ModelWIP -> Producer LogOrModel m ()
         loopy modelWIP = do
-            logDebug $ "[loopy]" <+> pretty ((modelWIPOut modelWIP) {mInfo = def})
+            logDebug $ "[loop]" <+> pretty ((modelWIPOut modelWIP) {mInfo = def})
             qs <- remainingWIP config modelWIP
             if null qs
                 then do
@@ -419,6 +419,8 @@ strategyToDriver config questions = do
                     vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
                          : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                            | (i,c) <- zip allNats (qAscendants q)
+                           -- if logLevel < LogDebugVerbose, only show a select few levels
+                           , logLevel config == LogDebugVerbose || i `elem` [1,3,5,10,25]
                            ]
             ]
     pickedQs <- executeStrategy optionsQ (strategyQ config)
@@ -426,9 +428,10 @@ strategyToDriver config questions = do
         let optionsA =
                 [ (doc, a)
                 | (n, a) <- zip allNats (qAnswers pickedQ)
-                , let doc =
-                        nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
-                                                                       , pretty (aAnswer a) ]
+                , let doc = nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat
+                                [ pretty (aText a)
+                                , sep [pretty (qHole pickedQ),  "~~>", pretty (aAnswer a)]
+                                ]
                 ]
         let strategyA' = case qType pickedQ of
                 ChooseRepr            -> representations
@@ -474,7 +477,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
-            print (vcat (map fst options))
+            putStrLn $ renderWide $ vcat (map fst options)
             let
                 nextRecordedResponse :: IO (Maybe Int)
                 nextRecordedResponse = do
