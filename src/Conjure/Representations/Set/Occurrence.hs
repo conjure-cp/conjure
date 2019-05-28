@@ -32,7 +32,7 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
         structuralCons :: TypeOf_Structural m
         structuralCons _ _ (DomainSet Set_Occurrence (SetAttr attrs) _) =
             return $ \ set ->
-                return $ mkSizeCons attrs [essence| |&set| |]
+                return $ mkSizeCons attrs $ make opTwoBars set False
         structuralCons _ _ _ = na "{structuralCons} Occurrence"
 
         downC :: TypeOf_DownC m

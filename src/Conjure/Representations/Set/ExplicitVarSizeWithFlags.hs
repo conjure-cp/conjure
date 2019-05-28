@@ -90,7 +90,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
                             [ orderingWhenFlagged    flags values
                             , dontCareWhenNotFlagged flags values
                             , flagsToTheLeft         flags
-                            , return $ mkSizeCons attrs [essence| |&set| |]
+                            , return $ mkSizeCons attrs $ make opTwoBars set False
                             , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithFlags"

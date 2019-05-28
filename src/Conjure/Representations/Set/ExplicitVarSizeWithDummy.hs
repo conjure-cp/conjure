@@ -108,7 +108,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
                         concat <$> sequence
                             [ ordering m
                             , dummyToTheRight m
-                            , return $ mkSizeCons attrs [essence| |&ref| |]
+                            , return $ mkSizeCons attrs $ make opTwoBars ref False
                             , innerStructuralCons m
                             ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithDummy"

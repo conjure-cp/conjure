@@ -54,7 +54,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                                              ]
                         _      -> bug "Non-binary relation."
                 concat <$> sequence
-                    [ return $ mkSizeCons sizeAttr [essence| |&rel| |]
+                    [ return $ mkSizeCons sizeAttr $ make opTwoBars rel False
                     , return binRelCons
                     ]
         structuralCons _ _ _ = na "{structuralCons} RelationAsMatrix"
