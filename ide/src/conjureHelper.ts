@@ -42,7 +42,7 @@ export default class ConjureHelper {
         context.subscriptions.push(vscode.languages.registerHoverProvider(ESSENCE, {
             provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
                 console.log(document.getText(document.getWordRangeAtPosition(position)));
-                return new vscode.Hover('Iam a hover');
+                return new vscode.Hover(new vscode.MarkdownString('# Iam a hover \n ## sadasd'));
             }
         }));
 
