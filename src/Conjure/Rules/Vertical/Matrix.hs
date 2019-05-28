@@ -167,7 +167,7 @@ rule_Comprehension_ToSet_Matrix = "matrix-toSet-matrixInside" `namedRule` theRul
 rule_Comprehension_ToSet_List :: Rule
 rule_Comprehension_ToSet_List = "matrix-toSet-listInside" `namedRule` theRule where
     theRule p = do
-        -- we cannot assume that the list is duplciate-free
+        -- we cannot assume that the list is duplicate-free
         (False, Comprehension body gensOrConds) <- match opToSetWithFlag p
         bodyDomain <- domainOf body
         let auxDomain = DomainSet () (SetAttr SizeAttr_None) bodyDomain
