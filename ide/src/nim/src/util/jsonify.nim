@@ -110,7 +110,7 @@ proc getSetChanges*(newSet, oldSet: Set, isNested: bool = false): seq[string] =
             return @[prefix]
         else:
             return @[]
-
+    
 proc getPrettyChanges*(domainsAtnode, domainsAtPrev: seq[Variable]): (seq[string], seq[Expression]) =
     ## Returns a tuple 
     ## First element contains a list of variable names that have changed

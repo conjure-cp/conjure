@@ -9,10 +9,9 @@ export function showLegend() {
     let h = 50;
     let w = 50;
     let panel = jsPanel.create({
-        theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
-        // theme: 'white filled',
+        theme: getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background') + ' filled',
         headerTitle: 'Legend',
-        position: 'right-top 0 58',
+        position: 'left-top 0 58',
         contentSize: {
             width: () => {
                 return 550;

@@ -117,6 +117,7 @@ export default class Listener {
      * @param data list of pretty domains
      */
     public static prettyDomainsHandler(data: any){
+        // console.log(data)
         Globals.lv.setChangedExpressions(data.changedExpressions);
         Globals.lv.updateDomains(data.vars);
         Globals.lv.setChanged(data.changed);

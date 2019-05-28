@@ -6,6 +6,7 @@ import util/jsonify
 
 suite "setToJson":
     let validPath = testDataPath & "/sets/recursive/flagsFlagsFlags"
+
     let db = findFiles(validPath)
 
     test "1":

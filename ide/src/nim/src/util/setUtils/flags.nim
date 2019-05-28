@@ -75,6 +75,7 @@ proc getNonExcludedFlagValuesQuery*(s: Set, ancestors: seq[int], outerSetName: s
     let f = s.markerLower + s.markerUpper + 1
 
     let parentIndexes = getParentIdIndexes(ancestors)
+
     let index = " index" & $ancestors.len() 
     let bound = " and " & index & " >= " & $f
     let nullIndexes = getNullIndexes(ancestors.len() + 1)

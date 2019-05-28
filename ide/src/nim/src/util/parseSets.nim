@@ -61,27 +61,25 @@ proc parseExplicit(db: DbConn, s, parent: Set, outerSetName, nodeId: string, anc
     ## Parses a set represented using the explicit method
     let e = ExplicitSet(s)
 
-    for setId in countUp(1, e.cardinality):
-
-        if (e.inner != nil):
+    if (e.inner != nil):
+        for setId in countUp(1, e.cardinality):
             let childSet = makeChildSet(e, setID)
             var copy = ancestors
             copy.add(setId)
             decideSet(db, childSet, e, outerSetName, nodeId, copy)
-        else:
-            var query = getInnerSetQuery(e, parent, ancestors, outerSetName)
-            for res in db.rows(sql(query), nodeId):
-                var lower: int
-                var upper: int
-                discard res[1].parseInt(lower)
-                discard res[2].parseInt(upper)
+    else:
+        var query = getInnerSetQuery(e, parent, ancestors, outerSetName)
+        for res in db.rows(sql(query), nodeId):
+            var lower: int
+            var upper: int
+            discard res[1].parseInt(lower)
+            discard res[2].parseInt(upper)
 
-                if (lower == upper):
-                    e.includeInSet(lower)
+            if (lower == upper):
+                e.includeInSet(lower)
 
-                for i in countUp(lower, upper):
-                    e.dontExclude(i)
-            break
+            for i in countUp(lower, upper):
+                e.dontExclude(i)
 
 proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
     ## Parses a set using the flags method
@@ -99,26 +97,27 @@ proc parseFlags(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancest
 
     discard nonExcludedCount.parseInt(s.notExcludedCount)
 
-    for setId in countUp(1, s.markerLower):
-
-        if (s.inner != nil):
+    if (s.inner != nil):
+        for setId in countUp(1, s.markerLower):
             let childSet = makeChildSet(s, setID)
             var copy = ancestors
             copy.add(setId)
             decideSet(db, childSet, s, outerSetName, nodeId, copy)
+    else:
+        let valuesQuery = getFlagValuesIncludedQuery(s, ancestors, outerSetName)
+        includeValues(db, s, valuesQuery, nodeId)
+
+        var falseQuery = getFalseFlagCountQuery(ancestors, outerSetName)
+        var falseFlagCount = db.getValue(sql(falseQuery), nodeId)
+
+        discard falseFlagCount.parseInt(s.markerUpper)
+
+        if (nonExcludedCount == $s.markerLower):
+            for i in s.getIncluded():
+                s.dontExclude(i)
         else:
-            let valuesQuery = getFlagValuesIncludedQuery(s, ancestors, outerSetName)
-            includeValues(db, s, valuesQuery, nodeId)
-
-            var falseQuery = getFalseFlagCountQuery(ancestors, outerSetName)
-            var falseFlagCount = db.getValue(sql(falseQuery), nodeId)
-
-            discard falseFlagCount.parseInt(s.markerUpper)
-
             let nonExcludedValuesQuery = getNonExcludedFlagValuesQuery(s, ancestors, outerSetName)
-
             dontExcludeValues(db, s, nonExcludedValuesQuery, nodeId)
-            break;
 
 proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ancestors: seq[int]) =
     ## Parses a set using the Marker method
@@ -129,19 +128,17 @@ proc parseMarker(db: DbConn, s, parent: Set, outerSetName, nodeId: string, ances
     discard res[0].parseInt(s.markerLower)
     discard res[1].parseInt(s.markerUpper)
 
-    for setId in countUp(1, s.markerLower):
-
-        if (s.inner != nil):
+    if (s.inner != nil):
+        for setId in countUp(1, s.markerLower):
             let childSet = makeChildSet(s, setId)
             var copy = ancestors
             copy.add(setId)
             decideSet(db, childSet, s, outerSetName, nodeId, copy)
-        else:
-            let valuesQuery = getMarkerValuesQuery(ancestors, s.markerLower,
-                    outerSetName)
-            includeValues(db, s, valuesQuery, nodeId)
-            
-            let nonExcludedValuesQuery = getNonExcludedMarkerValuesQuery(s, ancestors, outerSetName)
+    else:
+        let valuesQuery = getMarkerValuesQuery(ancestors, s.markerLower,
+                outerSetName)
+        includeValues(db, s, valuesQuery, nodeId)
+        
+        let nonExcludedValuesQuery = getNonExcludedMarkerValuesQuery(s, ancestors, outerSetName)
 
-            dontExcludeValues(db, s, nonExcludedValuesQuery, nodeId)
-            break;
+        dontExcludeValues(db, s, nonExcludedValuesQuery, nodeId)

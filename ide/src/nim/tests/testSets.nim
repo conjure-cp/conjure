@@ -202,6 +202,24 @@ suite "core":
         check(s.getNotExcluded() == @[1,2,3,4,5,6,7,8,9])
         for included in s.getIncluded():
             check(s.getNotExcluded().contains(included))
+
+    test "FNotExcluded2":
+        discard init(pathPrefix & "flags")
+        let d = getSet("6")
+        let s = FlagSet(d)
+        check(s.getCardinality() == "int(3)")
+        check(s.getNotExcluded() == @[1,2,3])
+        for included in s.getIncluded():
+            check(s.getNotExcluded().contains(included))
+
+    test "FNotExcluded3":
+        discard init(pathPrefix & "flags")
+        let d = getSet("0")
+        let s = FlagSet(d)
+        check(s.getCardinality() == "int(0..9)")
+        check(s.getNotExcluded() == @[1,2,3,4,5,6,7,8,9])
+        for included in s.getIncluded():
+            check(s.getNotExcluded().contains(included))
                 
     test "M":
         discard init(pathPrefix & "marker")

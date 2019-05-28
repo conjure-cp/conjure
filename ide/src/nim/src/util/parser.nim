@@ -1,7 +1,7 @@
 import types
 import re, strutils, os, tables, json, db_sqlite, parseutils
 
-proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set
+proc parseSetEprime(db: DbConn, s: JsonNode, name: string, depth: int): Set
 
 proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
     ## Initialises a table for all domains in the eprime file
@@ -24,33 +24,50 @@ proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
             varLookup[name] = newVariable(name)
 
         if key[1].hasKey("DomainSet"):
-            varLookup[name] = parseSetEprime(db, key[1]["DomainSet"], name)
+            varLookup[name] = parseSetEprime(db, key[1]["DomainSet"], name, 0)
 
     return varLookup
 
-proc parseSetEprime(db: DbConn, s: JsonNode, name: string): Set =
+proc getExplicitCard(db: DBConn, name: string, depth: int): int =
+    # Gets the cardinality for explicit sets
+    let query1 = "select count(*) from (select count(*) from Domain where nodeId = 0 and name like '" & name & "\\_%Explicit\\_%' escape '\\'" & "group by index" & $depth & ")"
+    let query2 = "select count(*) from (select count(*) from Domain where nodeId = 0 and name like '" & name & "\\_%Explicit%' escape '\\'" & "group by index" & $depth & ")"
+    discard db.getValue(sql(query1)).parseInt(result)
+
+    if (result == 0):
+        let q = "select name from Domain where nodeId = 0 and name like '" & name & "\\_%Explicit%' escape '\\'" & "group by index" & $depth & " limit 1"
+        let name = db.getValue(sql(q))
+        let splitted = name.split("_")
+        let valid = re"Explicit(R\d)*"
+        if (splitted[1].match(valid)):
+            discard db.getValue(sql(query2)).parseInt(result)
+
+
+
+
+proc parseSetEprime(db: DbConn, s: JsonNode, name: string, depth: int): Set =
     # Parses a set in the eprime file
     let arr = s.getElems()
 
     if arr[^1].hasKey("DomainSet"):
+
         let innerArr = arr[^1]["DomainSet"]
         if (arr[0].hasKey("Set_ExplicitVarSizeWithMarker")):
-            return newMSet(name, inner = parseSetEprime(db, innerArr, name))
+            return newMSet(name, inner = parseSetEprime(db, innerArr, name, depth+1))
 
         if (arr[0].hasKey("Set_ExplicitVarSizeWithFlags")):
-            return newFSet(name, inner = parseSetEprime(db, innerArr, name))
+            return newFSet(name, inner = parseSetEprime(db, innerArr, name, depth+1))
 
         if (arr[0].hasKey("Set_Explicit")):
-            let card = arr[1]["SizeAttr_Size"]["Constant"][ "ConstantInt"].getInt(-1)
-            return newEset(name, card, inner = parseSetEprime(db, innerArr, name))
+            return newEset(name, getExplicitCard(db, name, depth), inner = parseSetEprime(db, innerArr, name, depth+1))
 
     elif arr[^1].hasKey("DomainInt"):
 
         if arr[0].hasKey("Set_Explicit"):
-            return newEset(name, cardinality = arr[1]["SizeAttr_Size"][ "Constant"]["ConstantInt"].getInt(-1))
+            return newEset(name, cardinality = getExplicitCard(db, name, depth))
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-            let query = "select upper from Domain where nodeId = 0 and name like '" & name & "\\_%Dummy%' escape '\\' limit 1;" 
+            let query = "select upper from Domain where nodeId = 0 and name like '" & name & "\\_%Dummy%' escape '\\' order by name desc limit 1;" 
             var dummyVal : int
             discard db.getValue(sql(query)).parseInt(dummyVal)
             return newDset(name, dummyVal)

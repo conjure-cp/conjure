@@ -24,8 +24,10 @@ export default class Panel {
 
     // The panel to house the data on domains.
     public panel = jsPanel.create({
-        // theme: getComputedStyle(document.body).getPropertyValue('--background-color') + ' filled',
-        theme: 'black filled',
+        onbeforeclose: function (panel: any, status: any) {
+            return false;
+        },
+        theme: getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background') + ' filled',
         headerTitle: 'my panel #1',
         position: '500 0 0 0',
         contentSize: {
@@ -33,7 +35,7 @@ export default class Panel {
                 return $(document).width()! / 2.5;
             },
             height: () => {
-                return $(document).height()! * 0.6;
+                return $(document).height()! * 0.8;
             }
         },
         content: `
@@ -201,10 +203,10 @@ export default class Panel {
                 }
 
                 return node.y + suffix;
-                
+
                 // return source.y + suffix;
             })
-            
+
             .style("opacity", 0)
             .style("height", this.tree.nodeHeight() + "px")
 
@@ -221,7 +223,9 @@ export default class Panel {
                         let path = this.getSetPath(node);
 
                         // Add the path to the list of paths wanted.
-                        State.pathList.push(path);
+                        if(!State.pathList.includes(path)){
+                            State.pathList.push(path);
+                        }
 
                         // Load the set with that path
                         Globals.vscode.postMessage({
@@ -247,9 +251,9 @@ export default class Panel {
         // Add chevrons 
         entered.append("span").attr("class", (node: Node) => {
             // If the node has expanded children then add down chevrons
-            var icon = node.children ? "fas fa-chevron-down" 
-            // If the node has collapsed children then add right chevrons
-            : node._children ? "fas fa-chevron-right" : "";
+            var icon = node.children ? "fas fa-chevron-down"
+                // If the node has collapsed children then add right chevrons
+                : node._children ? "fas fa-chevron-right" : "";
             return "caret " + icon;
         });
 
@@ -285,36 +289,100 @@ export default class Panel {
         this.id2Node["Changed Expressions"]["children"] = expressions;
     }
 
+
+    public updateSet(old: any, n: any){
+        old.Cardinality = n.Cardinality;
+        old.Children = n.Children;
+        old.Included = n.Included;
+        old["Not excluded"] = n["not excluded"];
+    }
+
     /**
      * Update the domains of variables
      * @param data The list of domains
      */
     public updateDomains(data: any[]) {
 
+        // let names: string[] = [];
+
+        // data.forEach((item:any) => {
+        //     names.push(item.name);
+        // });
+
+        // Object.keys(this.id2Node).forEach((name: string)=> {
+        //     if (!names.includes(name) && this.id2Node[name].Cardinality){
+        //         console.log("remove " + name);
+        //     }
+        // })
+
+
         data.forEach((element: any) => {
+
+        
 
             // Check if the domain is a set
             if (element.hasOwnProperty("Cardinality")) {
                 if (this.id2Node[element.name].children) {
                     let setNode = this.id2Node[element.name].children;
                     // Update the cardinality
-                    if (setNode[1].children){
+                    if (setNode[1].children) {
                         setNode[1].children[0].name = element.Cardinality;
                     }
                     // Update the included and Not excluded
                     if (element.Included) {
-                        if (setNode[2].children){
+                        if (setNode[2].children) {
                             setNode[2].children[0].name = element["Not excluded"];
                         }
 
-                        if (setNode[3].children){
+                        if (setNode[3].children) {
                             setNode[3].children[0].name = element.Included;
                         }
                     }
-                    // Append child sets
-                    if (element.Children && !setNode[2].children) {
-                        setNode[2] = { name: "Children", children: element.Children.children }
+                    else {
+
+                        if (!setNode[2].children){
+                            setNode[2].children = [];
+                        //     setNode[2] = { name: "Children", children: [] };
+                        }
+                        // }
+                        let updatedNames : string[] = [];
+
+                        if (element.Children.children) {
+
+                            let currentNames: string[] = [];
+
+                            setNode[2].children.forEach((child: any) => {
+                                currentNames.push(child.name);
+                            });
+
+
+                            element.Children.children.forEach((child : any) => {
+
+                                updatedNames.push(child.name)
+
+                                if (!currentNames.includes(child.name)){
+                                    setNode[2].children.push(child);
+                                }
+                            });
+
+                        }
+
+                        for(let i = 0; i < setNode[2].children.length; i++){
+
+                            let child = setNode[2].children[i];
+
+                            if(!updatedNames.includes(child.name)){
+                                
+                                setNode[2].children.splice(i, 1);
+                            }
+                        };
+
+
                     }
+                    // Append child sets
+                    // if (element.Children && !setNode[2].children) {
+                    // if (element.Children) {
+                    // }
                 }
             }
             // If not set then just update the range

@@ -152,14 +152,11 @@ export default class WebviewHelper {
         const htmlUri = html.with({ scheme: 'vscode-resource' });
         let htmlContent = fs.readFileSync(htmlUri.path);
 
-        console.log("here1")
 
         // const css = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview', 'main.css'));
         // const cssUri = css.with({ scheme: 'vscode-resource' });
         const scriptPath = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/ts/dist/', 'bundle.js'));
         const scriptUri = scriptPath.with({ scheme: 'vscode-resource' });
-
-        console.log("here2")
 
         // External scripts
         const jspanelCSS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.css";

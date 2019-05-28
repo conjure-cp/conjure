@@ -10,17 +10,17 @@ export default class Img {
             appendCSS(cssStyleText, svgNode);
             var serializer = new XMLSerializer();
             var svgString = serializer.serializeToString(svgNode);
-            svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink='); // Fix root xlink without namespace
-            svgString = svgString.replace(/NS\d+:href/g, 'xlink:href'); // Safari NS namespace fix
+            svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink='); 
+            svgString = svgString.replace(/NS\d+:href/g, 'xlink:href'); 
             return svgString;
             function getCSSStyles(parentElement: any) {
                 var selectorTextArr = [];
-                // Add Parent element Id and Classes to the list
+                
                 selectorTextArr.push('#' + parentElement.id);
                 for (var c = 0; c < parentElement.classList.length; c++)
                     if (!contains('.' + parentElement.classList[c], selectorTextArr))
                         selectorTextArr.push('.' + parentElement.classList[c]);
-                // Add Children element Ids and Classes to the list
+               
                 var nodes = parentElement.getElementsByTagName("*");
                 for (var i = 0; i < nodes.length; i++) {
                     var id = nodes[i].id;
@@ -31,7 +31,7 @@ export default class Img {
                         if (!contains('.' + classes[c], selectorTextArr))
                             selectorTextArr.push('.' + classes[c]);
                 }
-                // Extract CSS Rules
+            s
                 var extractedCSSText = "";
                 for (var i = 0; i < document.styleSheets.length; i++) {
                     var s = document.styleSheets[i];
@@ -41,7 +41,7 @@ export default class Img {
                     try {
                         if (!s.cssRules) continue;
                     } catch (e) {
-                        if (e.name !== 'SecurityError') throw e; // for Firefox
+                        if (e.name !== 'SecurityError') throw e; 
                         continue;
                     }
                     var cssRules = s.cssRules;
@@ -49,7 +49,6 @@ export default class Img {
 
                         console.log(cssRules[r]);
 
-                        // if (contains(cssRules[r].selectorText, selectorTextArr))
                         extractedCSSText += cssRules[r].cssText;
                     }
                 }
@@ -70,7 +69,7 @@ export default class Img {
 
         function svgString2Image(svgString: string, width: number, height: number, format: string, callback: any) {
             var format = format ? format : 'png';
-            var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))); // Convert SVG string to data URL
+            var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))); 
             var canvas = document.createElement("canvas");
             var context = canvas.getContext("2d");
             canvas.width = width;
@@ -98,7 +97,7 @@ export default class Img {
         else {
             svgString2Image(svgString, 4 * 1920, 4 * 1080, 'png',
                 function save(dataBlob: any) {
-                    saveAs(dataBlob, 'tree.png'); // FileSaver.js function
+                    saveAs(dataBlob, 'tree.png'); 
                 })
         }
     }

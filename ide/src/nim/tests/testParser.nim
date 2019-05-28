@@ -3,7 +3,7 @@ import util/types, util/parser
 
 suite "parser":
 
-    var db = open("", "", "", "")
+    var db : DbConn
 
     test "aux":
         let path = testDataPath & "golomb/model000001-05.eprime-minion"
@@ -17,6 +17,7 @@ suite "parser":
 
     test "eprimeFFF":
         let path = testDataPath & "/sets/recursive/flagsFlagsFlags/model000001.eprime"
+        db = open(testDataPath & "/sets/recursive/flagsFlagsFlags/test.db", "", "", "")
         let varList = @["x", "y", "z", "s"]
 
         for variable in parseEprime(db, path).values():
@@ -32,9 +33,10 @@ suite "parser":
 
     test "eprimeEMF":
         let path = testDataPath & "/sets/recursive/explicitMarkerFlags/model000001.eprime"
+        db = open(testDataPath & "/sets/recursive/explicitMarkerFlags/test.db", "", "", "")
         let varList = @["x", "y", "z", "s"]
 
-        for variable in parseEprime(db,path).values():
+        for variable in parseEprime(db, path).values():
 
             # echo variable
             check(variable.name in varList)
@@ -52,6 +54,7 @@ suite "parser":
 
     test "eprimeFFO":
         let path = testDataPath & "/sets/recursive/flagsFlagsOccurrence/model000001.eprime"
+        db = open(testDataPath & "/sets/recursive/flagsFlagsOccurrence/test.db", "", "", "")
         let varList = @["x", "y", "z", "s"]
 
         for variable in parseEprime(db,path).values():

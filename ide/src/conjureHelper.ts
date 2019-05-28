@@ -59,7 +59,8 @@ export default class ConjureHelper {
     }
 
     /**
-     * Calls conjure to check if essence file is valid and able to be parsed
+     * Not Fully Implemented.
+     * Check if essence file is valid and able to be parsed
      * @param document  The document currently focussed on in the editor
      */
     private static lint(document: vscode.TextDocument) {
@@ -366,6 +367,7 @@ export default class ConjureHelper {
 
         // No defaults for saville row
         
+        // let defaultSavileRowArgs: any = {"O0":""};
         let defaultSavileRowArgs: any = {};
         let mandatorySavileRowArgs: string[] = [];
 
