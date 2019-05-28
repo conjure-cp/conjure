@@ -11,6 +11,7 @@ export const LANGID = "essence";
  */
 export function activate(context: vscode.ExtensionContext) {
     console.log('Conjure extension activated.');
+    ConjureHelper.activate(context);
 
     context.subscriptions.push(vscode.commands.registerCommand('conjure.model', () => {
         ConjureHelper.model();

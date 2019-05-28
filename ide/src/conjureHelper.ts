@@ -4,7 +4,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import WebviewHelper from './webviewHelper';
 const { exec } = require('child_process');
-const { spawn } = require('child_process');
 
 const ESSENCE = "essence";
 
@@ -18,6 +17,7 @@ export default class ConjureHelper {
      */
 
     public static activate(context: vscode.ExtensionContext) {
+
         ConjureHelper.diagnosticCollection = vscode.languages.createDiagnosticCollection();
         vscode.workspace.onDidOpenTextDocument(ConjureHelper.lint);
         vscode.workspace.onDidSaveTextDocument(ConjureHelper.lint);
@@ -63,27 +63,37 @@ export default class ConjureHelper {
      * Check if essence file is valid and able to be parsed
      * @param document  The document currently focussed on in the editor
      */
-    private static lint(document: vscode.TextDocument) {
-        if (document.languageId !== ESSENCE) {
+    private static lint(doc: vscode.TextDocument) {
+
+        if (doc.languageId !== ESSENCE) {
             return;
         }
 
         let diagnostics: vscode.Diagnostic[] = [];
+        let dir = path.dirname(doc.uri.path);
+        let args: string[] = [];
 
-        const process = spawn('conjure', ['type-check', document.fileName]);
+        // Execute conjure linting
 
-        if (!process.pid) {
-            vscode.window.showInformationMessage('Conjure could not be found please make sure its in your path.');
-            return;
-        }
+        let command = ('conjure' + args.join(" "));
 
-        process.stderr.on('data', (data: string) => {
-            console.log(`stderr: ${data}`);
-        });
+        exec(command, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
-        process.on('close', (code: string) => {
-            console.log(`child process exited with code ${code}`);
-            this.diagnosticCollection.set(document.uri, diagnostics);
+            if (e instanceof Error) {
+                console.error(e);
+                vscode.window.showErrorMessage(e.message);
+                return;
+            }
+
+            // Call conjure and get the errors
+
+            let range = new vscode.Range(0, 0, 5, 5);
+            let diagnostic = new vscode.Diagnostic(range, "This is a test", vscode.DiagnosticSeverity.Error);
+            diagnostics.push(diagnostic);
+
+            this.diagnosticCollection.set(doc.uri, diagnostics);
+
+            console.log("linted!");
         });
     }
 
@@ -120,7 +130,7 @@ export default class ConjureHelper {
 
         // Execute conjure modelling
 
-        let command = (' conjure ' + args.join(" "))
+        let command = (' conjure ' + args.join(" "));
 
         exec(command, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
