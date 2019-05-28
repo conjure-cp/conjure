@@ -54,9 +54,9 @@ suite("Error cases", function () {
 suite("Error cases", function () {
     test("golomb", async () => {
         let res = (init.findFiles(testDataPath + "golomb"));
-        chai.expect(res.db).to.eq("out.db");
-        chai.expect(res.eprime).to.eq("model000001.eprime");
-        chai.expect(res.minion).to.eq("model000001-05.eprime-minion");
+        chai.expect(res.db).to.contain("out.db");
+        chai.expect(res.eprime).to.contain("model000001.eprime");
+        chai.expect(res.minion).to.contain("model000001-05.eprime-minion");
     });
 
 });

@@ -9,7 +9,6 @@ interface InitFiles {
 
 function makeMessage(extension: string, count: number): string {
     return "Expected 1 " + extension + " file, got: " + count;  
-
 }
 
 export function findFiles(path: string): InitFiles {
@@ -34,6 +33,8 @@ export function findFiles(path: string): InitFiles {
         throw new Error(makeMessage("minion", minionFiles.length));
     }
 
-    return {db: dbFiles[0], eprime: eprimeFiles[0], minion: minionFiles[0]};
-
+    return {db: path + "/" + dbFiles[0], eprime: path + "/" + eprimeFiles[0], minion: path + "/" + minionFiles[0]};
 }
+
+// export function parseEprime(path: string){
+// }
