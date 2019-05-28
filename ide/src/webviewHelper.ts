@@ -56,7 +56,7 @@ export default class WebviewHelper {
                 switch (message.command) {
 
                     case 'init':
-                        request(this.serverURL + '/init/' + path, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/init/' + path, { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }
@@ -73,7 +73,7 @@ export default class WebviewHelper {
                         break;
 
                     case 'loadNodes':
-                        request(this.serverURL + '/loadNodes/' +  message.start, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/loadNodes/' +  message.start, { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }
@@ -84,7 +84,7 @@ export default class WebviewHelper {
                         break;
 
                     case 'simpleDomains':
-                        request(this.serverURL + '/simpleDomains/' + message.nodeId + '/' + message.wantExpressions, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/simpleDomains/' + message.nodeId + '/' + message.wantExpressions, { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }
@@ -95,7 +95,7 @@ export default class WebviewHelper {
                         break;
 
                     case 'prettyDomains':
-                        request(this.serverURL + '/prettyDomains/' + message.nodeId + '/' + message.wantExpressions + '/' + message.paths, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/prettyDomains/' + message.nodeId + '/' + message.wantExpressions + '/' + message.paths, { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }
@@ -106,7 +106,7 @@ export default class WebviewHelper {
                         break;
 
                     case 'longestBranchingVariable':
-                        request(this.serverURL + '/longestBranchingVariable', { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/longestBranchingVariable', { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }
@@ -117,7 +117,7 @@ export default class WebviewHelper {
                         break;
 
                     case 'loadCore':
-                        request(this.serverURL + '/loadCore', { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/loadCore', { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }
@@ -128,7 +128,7 @@ export default class WebviewHelper {
                         break;
 
                     case 'loadSet':
-                        request(this.serverURL + '/loadSet/' + message.nodeId + "/" + message.path , { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/loadSet/' + message.nodeId + "/" + message.path , { json: true }, (err: any, res: any) => {
                             if (err) {
                                 this.handleConnectionError(err);
                             }

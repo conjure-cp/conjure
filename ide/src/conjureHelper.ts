@@ -40,7 +40,7 @@ export default class ConjureHelper {
         });
 
         context.subscriptions.push(vscode.languages.registerHoverProvider(ESSENCE, {
-            provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+            provideHover(document: vscode.TextDocument, position: vscode.Position) {
                 console.log(document.getText(document.getWordRangeAtPosition(position)));
                 return new vscode.Hover(new vscode.MarkdownString('# Iam a hover \n ## sadasd'));
             }
@@ -49,7 +49,7 @@ export default class ConjureHelper {
 
         context.subscriptions.push(vscode.languages.registerCompletionItemProvider(ESSENCE, {
 
-            provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
+            provideCompletionItems() {
 
                 let item = new vscode.CompletionItem("A completion suggestion", vscode.CompletionItemKind.Keyword);
                 let list = new vscode.CompletionList([item]);
@@ -77,7 +77,7 @@ export default class ConjureHelper {
 
         let command = ('conjure' + args.join(" "));
 
-        exec(command, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+        exec(command, { cwd: dir }, (e: any) => {
 
             if (e instanceof Error) {
                 console.error(e);
@@ -132,7 +132,7 @@ export default class ConjureHelper {
 
         let command = (' conjure ' + args.join(" "));
 
-        exec(command, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+        exec(command, { cwd: dir }, (e: any) => {
 
             if (e instanceof Error) {
 
@@ -142,7 +142,11 @@ export default class ConjureHelper {
                 return;
             }
 
-            fs.readdir(dir, function (err, files) {
+            fs.readdir(dir, (err, files) => {
+                if (err){
+                    console.error(err);
+                }
+
                 const eprimeFiles = files.filter(el => /\.eprime$/.test(el));
                 let uri = vscode.Uri.file(path.join(dir, eprimeFiles[0]));
                 vscode.commands.executeCommand('vscode.open', uri);
@@ -239,7 +243,7 @@ export default class ConjureHelper {
         let commandString = 'conjure ' + args.join(' ') + ' ' + parsedArgs.join(' ');
 
 
-        exec(commandString, { cwd: dir }, (e: any, stdout: string, stderr: string) => {
+        exec(commandString, { cwd: dir }, (e: any) => {
 
             // Show error message if conjure threw an error
 
@@ -381,7 +385,7 @@ export default class ConjureHelper {
         let defaultSavileRowArgs: any = {};
         let mandatorySavileRowArgs: string[] = [];
 
-        let savileRowArgs = this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs) 
+        let savileRowArgs = this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs);
 
         if (savileRowArgs === ""){
             return "";

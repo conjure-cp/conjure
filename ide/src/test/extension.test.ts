@@ -4,82 +4,59 @@
 //
 
 // The module 'assert' provides assertion methods from node
-// import * as assert from 'assert';
-// import fs = require('fs');
-// import * as Parser from '../parser';
-// import { parse } from 'url';
+import * as assert from 'assert';
+import * as chai from 'chai';
+import fs = require('fs');
+import { parse } from 'url';
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
-// import * as vscode from 'vscode';
-// import * as myExtension from '../extension';
+import * as vscode from 'vscode';
+import * as request from "request-promise-native";
 
-// import Node from '../webview/ts/src/util/Node';
+import * as init from '../server/init';
 
-// Defines a Mocha test suite to group tests of similar kind together
-// suite("Extension Tests", function () {
+let serverURL = "http://localhost:3000/";
+let testDataPath = "/home/tom/SearchTreeVisualisationTests/testData/";
 
-        // let testDir = "/home/tom/Documents/sh/essence/conjure-output";
+suite("Error cases", function () {
 
-        // let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
-        // let minion = (fs.readFileSync(testDir + "/model000001.eprime-minion", 'utf8'));
-        // let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
-        // let path = "/test.db";
+    test("Non-existant path", async () => {
+        chai.expect(() => init.findFiles("/sad/ad/as/")).to.throw("ENOENT");
+    });
 
-    // test("Parse DB", () => {
-        // console.log("DSADASDASDAS");
-        // console.log(Node.blah());
-        // const sqlite3 = require('sqlite3').verbose();
+    test("No DB file", async () => {
+        chai.expect(() => init.findFiles(testDataPath + "extension/noDBFile")).to.throw("db");
+    });
 
-        // let db = new sqlite3.Database(path, (err: any) => {
-        //     if (err) {
-        //         console.error(err.message);
-        //     }
-        //     console.log('Connected to the database.');
+    test("No eprime file", async () => {
+        chai.expect(() => init.findFiles(testDataPath + "extension/noEprimeFile")).to.throw("eprime");
+    });
 
-        // });
-        // console.log(db);
+    test("No minion file", async () => {
+        chai.expect(() => init.findFiles(testDataPath + "extension/noMinionFile")).to.throw("minion");
+    });
 
-        // async function recursive(node: TreeNode) {
-        //     const sql = 'select * from Nodes where ParentID=' + node.name;
+    test("multiple db file", async () => {
+        chai.expect(() => init.findFiles(testDataPath + "extension/multipleDBFiles")).to.throw("db");
+    });
 
-        //     let rows = await new Promise<any>((res, rej) => {
-        //         db.all(sql, [], (err: any, rows: any) => {
-        //             if (err) {
-        //                 rej(err);
-        //             } else {
-        //                 res(rows);
-        //             }
-        //         });
-        //     });
+    test("multiple eprime file", async () => {
+        chai.expect(() => init.findFiles(testDataPath + "extension/multipleEprimeFiles")).to.throw("eprime");
+    });
 
-        //     rows.forEach((row: any) => {
-        //         node.children.push(new TreeNode(String(row.NodeID)));
-        //     });
+    test("multiple minion file", async () => {
+        chai.expect(() => init.findFiles(testDataPath + "extension/multipleMinionFiles")).to.throw("minion");
+    });
 
-        //     await Promise.all(node.children.map((child) => recursive(child)));
-        // }
+});
 
-        // let root = new TreeNode("0");
-        // await recursive(root);
-        // let parser = new Parser.DBParser(json, eprime, minion);
-        // parser.parseDB(db);
-        // console.log('        parser.parseDB();: ',         parser.parseDB(db));
-        // let contents = parser;
-        // console.log(contents);
+suite("Error cases", function () {
+    test("golomb", async () => {
+        let res = (init.findFiles(testDataPath + "golomb"));
+        chai.expect(res.db).to.eq("out.db");
+        chai.expect(res.eprime).to.eq("model000001.eprime");
+        chai.expect(res.minion).to.eq("model000001-05.eprime-minion");
+    });
 
-    // });
-
-    // test("Parse JSON", () => {
-    //     let parser = new Parser.JSONParser(json, eprime, minion);
-    //     let contents = parser.parseJson();
-    //     console.log(contents);
-
-    // });
-
-    // Defines a Mocha unit test
-    // test("Something 1", function() {
-        //     assert.equal(-1, [1, 2, 3].indexOf(0));
-        //     assert.equal(-1, [1, 2, 3].indexOf(5));
-    // });
-// });
+});
