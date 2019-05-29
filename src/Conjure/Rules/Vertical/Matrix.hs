@@ -303,8 +303,10 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         (x,y)                 <- match opEq p
         TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}          <- typeOf y
+        traceM "matrix-eq"
         indexX:_              <- indexDomainsOf x
         indexY:_              <- indexDomainsOf y
+        traceM "matrix-eq-indexed"
         return
             ( "Horizontal rule for matrix ="
             , do

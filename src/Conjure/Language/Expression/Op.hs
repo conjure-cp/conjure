@@ -100,6 +100,9 @@ mkOp op xs =
             L_min          -> inject $ MkOpMin          $ OpMin          (arg xs 0 "min")
             L_image        -> inject $ MkOpImage        $ OpImage        (arg xs 0 "image")
                                                                          (arg xs 1 "image")
+            L_transform    -> inject $ MkOpTransform    $ OpTransform    (arg xs 0 "transform")
+                                                                         (arg xs 1 "transform")
+
             L_imageSet     -> inject $ MkOpImageSet     $ OpImageSet     (arg xs 0 "imageSet")
                                                                          (arg xs 1 "imageSet")
             L_preImage     -> inject $ MkOpPreImage     $ OpPreImage     (arg xs 0 "preImage")

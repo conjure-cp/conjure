@@ -87,6 +87,7 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
+import qualified Conjure.Rules.Horizontal.Transform as Horizontal.Transform
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1388,6 +1389,14 @@ horizontalRules =
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
 
+
+    , Horizontal.Transform.rule_Transform_Functorially
+    , Horizontal.Transform.rule_Transform_Comprehension
+    , Horizontal.Transform.rule_Lift_Transformed_Matrix_Indexing
+    , Horizontal.Transform.rule_Transformed_Matrix_Indexing
+    , Horizontal.Transform.rule_Transform_Matrix_Indexing
+    , Horizontal.Transform.rule_Transform_Matrix
+    , Horizontal.Transform.rule_Transform_Unifying
     ]
 
 

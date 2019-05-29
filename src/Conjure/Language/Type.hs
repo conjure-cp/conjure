@@ -12,6 +12,10 @@ module Conjure.Language.Type
     , innerTypeOf
     , isPrimitiveType
     , typeCanIndexMatrix
+    , morphing
+    , containsTypeFunctorially
+    , containsTypeIncomprehendable
+    , containsType
     ) where
 
 -- conjure
@@ -239,3 +243,49 @@ typeCanIndexMatrix TypeBool{} = True
 typeCanIndexMatrix TypeInt {} = True
 typeCanIndexMatrix TypeEnum{} = True
 typeCanIndexMatrix _          = False
+
+morphing :: (?typeCheckerMode :: TypeCheckerMode)
+         => (MonadFail m)
+         => Type -> m Type
+morphing (TypeFunction a _) = return a
+morphing t = fail ("morphing:" <+> pretty (show t))
+
+
+-- ||| Traversals that tell us if a type (of a certain form) is contained in a Type
+-- This allows us to abort transform early if we can see it will have no effect
+
+typeComplex :: Type -> Bool
+typeComplex TypeSequence{}  = True
+typeComplex TypePartition{} = True
+typeComplex TypeList{}      = True
+typeComplex TypeMatrix{}    = True
+typeComplex _ = False
+
+containsTypeFunctorially :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool 
+containsTypeFunctorially container containee =
+  if typesUnify [container, containee] || typeComplex containee
+    then False 
+    else case innerTypeOf container of
+           Nothing -> False
+           Just so -> unifiesOrContains so containee 
+
+-- | Types do not unify && type cannot be a generator in a comprehension
+containsTypeIncomprehendable :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
+containsTypeIncomprehendable ot@(TypeTuple ts) t =
+  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains x t) <$> ts))
+containsTypeIncomprehendable ot@(TypeRecord ts) t =
+  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
+containsTypeIncomprehendable ot@(TypeVariant ts) t =  
+  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
+containsTypeIncomprehendable _ _ = False
+
+-- Is the type 
+containsType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
+containsType container containee = containee `elem` universeBi container
+
+
+unifiesOrContains :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
+unifiesOrContains container containee =
+  typesUnify [container, containee] || containsType container containee
+
+-- |||
