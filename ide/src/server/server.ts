@@ -10,7 +10,6 @@ class HelloService {
     sayHello(@PathParam('name') name: string): string {
         return "Hello " + name;
     }
-
 }
 
 @Path("/init")

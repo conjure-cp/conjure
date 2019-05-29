@@ -1,5 +1,4 @@
 import fs = require('fs');
-import { FilesParam } from 'typescript-rest';
 
 interface InitFiles {
     db : string;
@@ -36,5 +35,22 @@ export function findFiles(path: string): InitFiles {
     return {db: path + "/" + dbFiles[0], eprime: path + "/" + eprimeFiles[0], minion: path + "/" + minionFiles[0]};
 }
 
-// export function parseEprime(path: string){
-// }
+export function parseEprime(path: string){
+    let eprime = fs.readFileSync(path).toString();
+    let conjures = (eprime.split("Conjure's")[1]);
+
+    let clean = conjures.replace(/\$/g, '');
+    let json = JSON.parse(clean);
+    let representations = json.representations;
+
+    representations.forEach((rep: any) => {
+        if (!("Name" in rep)){
+            return;
+        }
+
+        
+        console.log(rep);
+    });
+
+
+}
