@@ -143,7 +143,7 @@ export default class ConjureHelper {
             }
 
             fs.readdir(dir, (err, files) => {
-                if (err){
+                if (err) {
                     console.error(err);
                 }
 
@@ -193,22 +193,11 @@ export default class ConjureHelper {
 
         let dir = path.dirname(paramFile.uri.path);
 
-        let essenceFiles = this.findEssenceFiles(dir);
+        let essenceFiles = this.findEssenceFilePathsCheckParentDirToo(dir);
 
         if (essenceFiles.length === 0) {
-
-            // If there are no files in this directory we try the parent directory
-
-            dir = path.join(dir, "../");
-
-            essenceFiles = this.findEssenceFiles(dir);
-
-            // Give up if no essence files are found 
-
-            if (essenceFiles.length === 0) {
-                vscode.window.showErrorMessage("No essence files found in this or the parent directory");
-                return;
-            }
+            vscode.window.showErrorMessage("No essence files found in this or the parent directory");
+            return;
         }
 
         // Abort if there are multiple essence files
@@ -218,7 +207,7 @@ export default class ConjureHelper {
             return;
         }
 
-        let modelPath = path.join(dir, essenceFiles[0]);
+        let modelPath = essenceFiles[0];
 
         // Create name for conjure output directory
 
@@ -380,14 +369,14 @@ export default class ConjureHelper {
     private static parseSavileRowArgs(userArgs: any) {
 
         // No defaults for saville row
-        
+
         // let defaultSavileRowArgs: any = {"O0":""};
         let defaultSavileRowArgs: any = {};
         let mandatorySavileRowArgs: string[] = [];
 
         let savileRowArgs = this.getArgString(userArgs, defaultSavileRowArgs, mandatorySavileRowArgs);
 
-        if (savileRowArgs === ""){
+        if (savileRowArgs === "") {
             return "";
         }
 
@@ -404,7 +393,7 @@ export default class ConjureHelper {
         // Default node limit to make sure we dont let minion go on searching for too long.
 
 
-        
+
         let defaultMinionArgs: any = { "nodelimit": 1000 };
         let mandatoryMinionArgs = [];
 
@@ -468,16 +457,33 @@ export default class ConjureHelper {
      * Returns a list of essence files that reside in a directory.
      * @param dir The path to the directory to look in.
      */
-    private static findEssenceFiles(dir: string): string[] {
+    public static findEssenceFiles(dir: string): string[] {
         let files = fs.readdirSync(dir);
         return files.filter(el => /\.essence$/.test(el));
+    }
+
+
+    public static findEssenceFilePathsCheckParentDirToo(dir: string): string[] {
+        let paths: string[] = [];
+        let essenceFiles = this.findEssenceFiles(dir);
+        if (essenceFiles.length === 0) {
+            dir = path.join(dir, "../");
+
+            essenceFiles = this.findEssenceFiles(dir);
+        }
+
+        essenceFiles.forEach((filename: string) => {
+            paths.push(path.join(dir, filename));
+        });
+
+        return paths;
     }
 
     /**
      * Returns a list of solution files that reside in a directory.
      * @param dir The path to the dir to look in
      */
-    private static findSolutionFiles(dir: string): string[] {
+    public static findSolutionFiles(dir: string): string[] {
         let files = fs.readdirSync(dir);
         return files.filter(el => /\.solution$/.test(el));
     }

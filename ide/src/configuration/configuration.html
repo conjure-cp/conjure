@@ -1,0 +1,70 @@
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.js"
+        integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <form class="border border-light p-5">
+
+        <p class="h4 mb-4 text-center">Configuration</p>
+
+        <div class="row">
+
+            <div class="col">
+                <label for="defaultSelect">Model</label>
+                <select id="modelFiles" class="browser-default custom-select mb-4"></select>
+                </select>
+            </div>
+
+            <div class="col">
+                <label for="defaultSelect">Parameter</label>
+                <select id="paramFiles" class="browser-default custom-select mb-4">
+                </select>
+            </div>
+
+        </div>
+
+        <div class="card mb-4">
+            <h5 class="card-header">Savilerow Options</h5>
+            <div class="card-body">
+                <label for="defaultSelect">Optimisation</label>
+                <select id="optimisation" class="browser-default custom-select mb-4">
+                    <option value="0">O0</option>
+                    <option value="1">O1</option>
+                    <option value="2" selected="">O2</option>
+                    <option value="3">O3</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <h5 class="card-header">Minion Options</h5>
+            <div class="card-body">
+                <div class="row">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="checkbox" id="findallsols">
+                            </div>
+                        </div>
+                        <label for="findallsols" class="form-control">findallsols</label>
+                        <!-- <input type="text" class="form-control" aria-label="Text input with checkbox"> -->
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="inputPassword">Nodelimit</label>
+                    </div>
+                    <div class="col">
+                        <input id="nodelimit" placeholder="None">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="solve" class="btn btn-info btn-block" type="submit">Solve</button>
+    </form>
+
+</body>
