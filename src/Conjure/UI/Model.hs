@@ -87,7 +87,7 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
-import qualified Conjure.Rules.Horizontal.Transform as Horizontal.Transform
+import qualified Conjure.Rules.Functional.Transform as Horizontal.Transform
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare

@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
-module Conjure.Rules.Horizontal.Transform where
+module Conjure.Rules.Functional.Transform where
 import Conjure.Rules.Import
 
 rule_Transform_Unifying :: Rule
