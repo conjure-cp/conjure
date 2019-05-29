@@ -212,7 +212,7 @@ rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
   theRule _ = na "rule_Transform_Matrix"
 
 rule_Transform_Sum_Product :: Rule
-rule_Transform_Sum_Product = "comprehendable-image" `namedRule` theRule where
+rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
   theRule [essence| transform(&morphism, &i) |] = do
     inn <- morphing =<< typeOf morphism 
     ti <- typeOf i
@@ -224,7 +224,7 @@ rule_Transform_Sum_Product = "comprehendable-image" `namedRule` theRule where
                tupleExpression = AbstractLiteral $ AbsLitTuple
                                $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
            return
-               ( "Horizontal rule for image of tuple under permutation"
+               ( "Horizontal rule for transform of tuple"
                , return tupleExpression
                )
          (TypeRecord namet) -> do
@@ -235,11 +235,11 @@ rule_Transform_Sum_Product = "comprehendable-image" `namedRule` theRule where
                recordExpression = AbstractLiteral $ AbsLitRecord
                                 $ (recordIndexImage <$> namet)
            return
-               ( "Horizontal rule for image of record under permutation"
+               ( "Horizontal rule for transform of record"
                , return recordExpression
                )
-         (TypeVariant _) ->
-           bug "rule_Image_Incomprehendable not implemented for Variant"
-         _ -> bug "rule_Image_Incomprehendable this is a bug"
-       else na "rule_Image_Comprehendable"
-  theRule _ = na "rule_Image_Comprehendable"
+         (TypeVariant namet) -> 
+           bug  "rule_Transform_Sum_Product not implemented"
+         _ -> bug "rule_Transform_Sum_Product this is a bug"
+       else na "rule_Transform_Sum_Product"
+  theRule _ = na "rule_Transform_Sum_Product"
