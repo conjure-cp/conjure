@@ -121,18 +121,17 @@ rule_Transformed_Matrix_Indexing = "transformed-matrix-indexing" `namedRule` the
   theRule _ = na "rule_Transformed_Matrix_Indexing"
 
 
-rule_Lift_Transformed_Matrix_Indexing :: Rule
-rule_Lift_Transformed_Matrix_Indexing = "lift-transformed-matrix-indexing" `namedRule` theRule where
-  matchMatrixIndexing :: (?typeCheckerMode::TypeCheckerMode)
+rule_Lift_Transformed_Indexing :: Rule
+rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule where
+  matchIndexing :: (?typeCheckerMode::TypeCheckerMode)
                       => Expression
                       -> Maybe (Expression, Expression, Expression, Expression) 
-  matchMatrixIndexing exp = do
+  matchIndexing exp = do
     (matexp, indexer)     <- match opIndexing exp 
     (morphism, mat) <- match opTransform matexp
-    TypeMatrix{} <- typeOf mat
     return (exp, morphism, mat, indexer)
 
-  liftMatrixIndexing (exp, morphism, mat, indexer) = do
+  liftIndexing (exp, morphism, mat, indexer) = do
     (Single nm, m) <- quantifiedVar
     return ( (exp, [essence| transform(&morphism, &m) |])
            , ComprehensionLetting nm [essence| &mat[&indexer] |])
@@ -145,16 +144,16 @@ rule_Lift_Transformed_Matrix_Indexing = "lift-transformed-matrix-indexing" `name
     in transformBody nbdy rest
 
   theRule (Comprehension body gensOrConds) = do
-    let matched = catMaybes [matchMatrixIndexing exp | exp <- universeBi body]
+    let matched = catMaybes [matchIndexing exp | exp <- universeBi body]
     case matched of
-      [] -> na "rule_Lift_Transformed_Matrix_Indexing: nothing to lift"
+      [] -> na "rule_Lift_Transformed_Indexing: nothing to lift"
       _ -> do 
-        replacements <- sequence (liftMatrixIndexing <$> matched)
-        return ( "Horizontal rule for lift transformed matrix indexing"
+        replacements <- sequence (liftIndexing <$> matched)
+        return ( "Horizontal rule for lift transformed indexing"
                , return (Comprehension (transformBody body (fst <$> replacements)) $
                          gensOrConds ++ (snd <$> replacements))
                )
-  theRule _ = na "rule_Lift_Transformed_Matrix_Indexing"
+  theRule _ = na "rule_Lift_Transformed_Indexing"
 
 rule_Transform_Matrix_Indexing :: Rule
 rule_Transform_Matrix_Indexing = "transform-matrix-indexing" `namedRule` theRule where
@@ -193,9 +192,9 @@ rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
          Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
          _ -> na "rule_Transform_Matrix"
     (morphism, matexp) <- match opTransform exp
-    ty <- typeOf matexp
+--    ty <- typeOf matexp
     DomainMatrix domIndx _ <- domainOf matexp
-    inn <- morphing =<< typeOf morphism 
+--    inn <- morphing =<< typeOf morphism 
     return
         ( "Horizontal rule for transform matrix in comprehension generator"
         , do
@@ -212,3 +211,35 @@ rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
         )
   theRule _ = na "rule_Transform_Matrix"
 
+rule_Transform_Sum_Product :: Rule
+rule_Transform_Sum_Product = "comprehendable-image" `namedRule` theRule where
+  theRule [essence| transform(&morphism, &i) |] = do
+    inn <- morphing =<< typeOf morphism 
+    ti <- typeOf i
+    if let ?typeCheckerMode = StronglyTyped in ti `containsSumProductType` inn
+       then case ti of
+         (TypeTuple tint) -> do
+           let tupleIndexImage indx = let indexexpr = Constant (ConstantInt TagInt indx)
+                                      in [essence| transform(&morphism, &i[&indexexpr]) |]
+               tupleExpression = AbstractLiteral $ AbsLitTuple
+                               $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
+           return
+               ( "Horizontal rule for image of tuple under permutation"
+               , return tupleExpression
+               )
+         (TypeRecord namet) -> do
+           let recordIndexImage indx =
+                 let indexexpr = Reference (fst indx)
+                               $ Just $ RecordField (fst indx) (snd indx) 
+                 in (fst indx, [essence| transform(&morphism, &i[&indexexpr]) |])
+               recordExpression = AbstractLiteral $ AbsLitRecord
+                                $ (recordIndexImage <$> namet)
+           return
+               ( "Horizontal rule for image of record under permutation"
+               , return recordExpression
+               )
+         (TypeVariant _) ->
+           bug "rule_Image_Incomprehendable not implemented for Variant"
+         _ -> bug "rule_Image_Incomprehendable this is a bug"
+       else na "rule_Image_Comprehendable"
+  theRule _ = na "rule_Image_Comprehendable"

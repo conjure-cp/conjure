@@ -14,7 +14,7 @@ module Conjure.Language.Type
     , typeCanIndexMatrix
     , morphing
     , containsTypeFunctorially
-    , containsTypeIncomprehendable
+    , containsSumProductType
     , containsType
     ) where
 
@@ -269,15 +269,15 @@ containsTypeFunctorially container containee =
            Nothing -> False
            Just so -> unifiesOrContains so containee 
 
--- | Types do not unify && type cannot be a generator in a comprehension
-containsTypeIncomprehendable :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
-containsTypeIncomprehendable ot@(TypeTuple ts) t =
+
+containsSumProductType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
+containsSumProductType ot@(TypeTuple ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains x t) <$> ts))
-containsTypeIncomprehendable ot@(TypeRecord ts) t =
+containsSumProductType ot@(TypeRecord ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
-containsTypeIncomprehendable ot@(TypeVariant ts) t =  
+containsSumProductType ot@(TypeVariant ts) t =  
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
-containsTypeIncomprehendable _ _ = False
+containsSumProductType _ _ = False
 
 -- Is the type 
 containsType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
