@@ -1397,6 +1397,8 @@ horizontalRules =
     , Horizontal.Transform.rule_Transform_Matrix_Indexing
     , Horizontal.Transform.rule_Transform_Sum_Product
     , Horizontal.Transform.rule_Transform_Matrix
+    , Horizontal.Transform.rule_Transform_Sequence
+    , Horizontal.Transform.rule_Transform_Sequence_Defined
     , Horizontal.Transform.rule_Transform_Unifying
     ]
 

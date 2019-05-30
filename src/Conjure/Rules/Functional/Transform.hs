@@ -12,7 +12,7 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule where
                   , return [essence| image(&morphism, &i) |]
                   )
       else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
-             then na "rule_Image"
+             then na "rule_Transform_Unifying"
              else return ( "Horizontal rule for transform abort"
                          , do
                            return [essence| &i |]
@@ -92,7 +92,7 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule whe
     return ( AbsPatSet $ fst <$> rec
            , join $ snd <$> rec)
   clonePattern _ =
-    bug "rule_Image_Comprehension: clonePattern: unsupported Abstract Pattern"
+    bug "rule_Transform_Comprehension: clonePattern: unsupported Abstract Pattern"
 
 rule_Transformed_Matrix_Indexing :: Rule
 rule_Transformed_Matrix_Indexing = "transformed-matrix-indexing" `namedRule` theRule where
@@ -219,27 +219,90 @@ rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
     if let ?typeCheckerMode = StronglyTyped in ti `containsSumProductType` inn
        then case ti of
          (TypeTuple tint) -> do
-           let tupleIndexImage indx = let indexexpr = Constant (ConstantInt TagInt indx)
-                                      in [essence| transform(&morphism, &i[&indexexpr]) |]
-               tupleExpression = AbstractLiteral $ AbsLitTuple
-                               $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
+           let tupleIndexTransform indx =
+                 let indexexpr = Constant (ConstantInt TagInt indx)
+                 in [essence| transform(&morphism, &i[&indexexpr]) |]
+               tupleExpression =
+                 AbstractLiteral $ AbsLitTuple
+                 $ (tupleIndexTransform <$> [1..(fromIntegral $ length tint)])
            return
                ( "Horizontal rule for transform of tuple"
                , return tupleExpression
                )
          (TypeRecord namet) -> do
-           let recordIndexImage indx =
+           let recordIndexTransform indx =
                  let indexexpr = Reference (fst indx)
                                $ Just $ RecordField (fst indx) (snd indx) 
                  in (fst indx, [essence| transform(&morphism, &i[&indexexpr]) |])
                recordExpression = AbstractLiteral $ AbsLitRecord
-                                $ (recordIndexImage <$> namet)
+                                $ (recordIndexTransform <$> namet)
            return
                ( "Horizontal rule for transform of record"
                , return recordExpression
                )
-         (TypeVariant namet) -> 
+         (TypeVariant namet) -> do
+           marker:vars <- downX1 i 
+           
            bug  "rule_Transform_Sum_Product not implemented"
          _ -> bug "rule_Transform_Sum_Product this is a bug"
        else na "rule_Transform_Sum_Product"
   theRule _ = na "rule_Transform_Sum_Product"
+
+
+
+
+rule_Transform_Sequence :: Rule
+rule_Transform_Sequence = "transform-sequence" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) ->
+           return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Transform_Sequence"
+    (morphism, y) <- match opTransform x
+    ty <- typeOf y
+    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences"
+    inn <- morphing =<< typeOf morphism 
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+       then do
+         return
+             ( "Horizontal rule for transform of sequence"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| &y |])]
+                 ++ ((ComprehensionLetting pat [essence|
+                   (&d[1], transform(&morphism, &d[2])) |] ):gocAfter)
+                      )
+
+             )
+       else na "rule_Transform_Sequence"
+  theRule _ = na "rule_Transform_Sequence"
+
+
+
+rule_Transform_Sequence_Defined :: Rule
+rule_Transform_Sequence_Defined = "transform-sequence-defined" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr pat@Single{} expr) ->
+           return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Transform_Sequence_Defined"
+    defi <- match opDefined x
+    (morphism, y) <- match opTransform defi
+    ty <- typeOf y
+    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences"
+    inn <- morphing =<< typeOf morphism
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+       then do
+         return
+             ( "Horizontal rule for transform of sequence defined"
+             , do
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr pat [essence| defined(&y) |])]
+                 ++ gocAfter
+                      )
+             )
+       else na "rule_Transform_Sequence_Defined"
+  theRule _ = na "rule_Transform_Sequence_Defined"
