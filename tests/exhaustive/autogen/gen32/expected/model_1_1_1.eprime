@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-letting let1 be -4
-find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
-branching on [var2_Occurrence]
-such that
-    or([var2_Occurrence[q2] /\ !var2_Occurrence[q2] | q2 : int(-4..5, 2)]) \/
-    or([var2_Occurrence[q2] /\ !var2_Occurrence[q2] | q2 : int(-4..5, 2)])
-
