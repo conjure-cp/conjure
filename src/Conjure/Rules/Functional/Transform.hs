@@ -159,11 +159,12 @@ rule_Transform_Matrix_Indexing :: Rule
 rule_Transform_Matrix_Indexing = "transform-matrix-indexing" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
     (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
-         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+         Generator (GenInExpr pat expr) -> return (pat, expr)
          _ -> na "rule_Transform_Matrix_Indexing"
     (morphism, matexp) <- match opTransform exp
     (mat, indexer)     <- match opIndexing matexp
     ty <- typeOf mat
+--    ty@TypeMatrix{} <- typeOf mat
     inn <- morphing =<< typeOf morphism 
     if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
        then do
@@ -175,9 +176,9 @@ rule_Transform_Matrix_Indexing = "transform-matrix-indexing" `namedRule` theRule
                return (Comprehension body $
                      gocBefore
                  ++ [ComprehensionLetting iName [essence| transform(&morphism, &indexer) |]]
-                 ++ [ComprehensionLetting mName [essence| &matexp[&i] |]]
+                 ++ [ComprehensionLetting mName [essence| &mat[&i] |]]
 
-                 ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
+                 ++ [Generator (GenInExpr pat [essence| transform(&morphism, &m) |])]
                  ++ gocAfter)
              )
        else na "rule_Transform_Matrix_Indexing"
@@ -306,3 +307,32 @@ rule_Transform_Sequence_Defined = "transform-sequence-defined" `namedRule` theRu
              )
        else na "rule_Transform_Sequence_Defined"
   theRule _ = na "rule_Transform_Sequence_Defined"
+
+
+
+rule_Transform_Partition :: Rule
+rule_Transform_Partition = "transform-partition" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+         _ -> na "rule_Transform_Partition"
+    z <- match opParts x
+    (morphism, y) <- match opTransform z
+    ty <- typeOf y
+    case ty of TypePartition{} -> return () ; _ -> na "only applies to partitions"
+    inn <- morphing =<< typeOf morphism
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+       then do
+         return
+             ( "Horizontal rule for transform of partition"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
+                 ++ ((ComprehensionLetting pat [essence| transform(&morphism, &d) |] ):gocAfter)
+                      )
+
+             )
+       else na "rule_Transform_Partition"
+  theRule _ = na "rule_Transform_Partition"
