@@ -87,7 +87,7 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
-import qualified Conjure.Rules.Functional.Transform as Horizontal.Transform
+import qualified Conjure.Rules.Horizontal.Functional.Transform as Horizontal.Functional.Transform
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1390,17 +1390,17 @@ horizontalRules =
     , Horizontal.Partition.rule_In
 
 
-    , Horizontal.Transform.rule_Transform_Functorially
-    , Horizontal.Transform.rule_Transform_Comprehension
-    , Horizontal.Transform.rule_Transform_Sum_Product
-    , Horizontal.Transform.rule_Transform_Matrix
-    , Horizontal.Transform.rule_Transform_Partition
-    , Horizontal.Transform.rule_Transform_Sequence
-    , Horizontal.Transform.rule_Transform_Sequence_Defined
-    , Horizontal.Transform.rule_Transformed_Indexing
-    , Horizontal.Transform.rule_Lift_Transformed_Indexing
-    , Horizontal.Transform.rule_Transform_Indexing
-    , Horizontal.Transform.rule_Transform_Unifying
+    , Horizontal.Functional.Transform.rule_Transform_Functorially
+    , Horizontal.Functional.Transform.rule_Transform_Comprehension
+    , Horizontal.Functional.Transform.rule_Transform_Sum_Product
+    , Horizontal.Functional.Transform.rule_Transform_Matrix
+    , Horizontal.Functional.Transform.rule_Transform_Partition
+    , Horizontal.Functional.Transform.rule_Transform_Sequence
+    , Horizontal.Functional.Transform.rule_Transform_Sequence_Defined
+    , Horizontal.Functional.Transform.rule_Transformed_Indexing
+    , Horizontal.Functional.Transform.rule_Lift_Transformed_Indexing
+    , Horizontal.Functional.Transform.rule_Transform_Indexing
+    , Horizontal.Functional.Transform.rule_Transform_Unifying
     ]
 
 

@@ -1,23 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
-module Conjure.Rules.Functional.Transform where
+module Conjure.Rules.Horizontal.Functional.Transform where
 import Conjure.Rules.Import
-
-rule_Transform_Unifying :: Rule
-rule_Transform_Unifying = "transform-unifying" `namedRule` theRule where
-  theRule [essence| transform(&morphism, &i) |] = do
-    inner <- morphing =<< typeOf morphism
-    typeI <- typeOf i
-    if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI]
-      then return ( "Horizontal rule for transform unifying"
-                  , return [essence| image(&morphism, &i) |]
-                  )
-      else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
-             then na "rule_Transform_Unifying"
-             else return ( "Horizontal rule for transform abort"
-                         , do
-                           return [essence| &i |]
-                         )
-  theRule _ = na "rule_Transform_Unifying"
 
 
 rule_Transform_Functorially :: Rule
@@ -100,6 +83,155 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule whe
            , join $ snd <$> rec)
   clonePattern _ =
     bug "rule_Transform_Comprehension: clonePattern: unsupported Abstract Pattern"
+
+
+rule_Transform_Sum_Product :: Rule
+rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
+  theRule [essence| transform(&morphism, &i) |] = do
+    inn <- morphing =<< typeOf morphism 
+    ti <- typeOf i
+    if let ?typeCheckerMode = StronglyTyped in ti `containsSumProductType` inn
+       then case ti of
+         (TypeTuple tint) -> do
+           let tupleIndexTransform indx =
+                 let indexexpr = Constant (ConstantInt TagInt indx)
+                 in [essence| transform(&morphism, &i[&indexexpr]) |]
+               tupleExpression =
+                 AbstractLiteral $ AbsLitTuple
+                 $ (tupleIndexTransform <$> [1..(fromIntegral $ length tint)])
+           return
+               ( "Horizontal rule for transform of tuple"
+               , return tupleExpression
+               )
+         (TypeRecord namet) -> do
+           let recordIndexTransform indx =
+                 let indexexpr = Reference (fst indx)
+                               $ Just $ RecordField (fst indx) (snd indx) 
+                 in (fst indx, [essence| transform(&morphism, &i[&indexexpr]) |])
+               recordExpression = AbstractLiteral $ AbsLitRecord
+                                $ (recordIndexTransform <$> namet)
+           return
+               ( "Horizontal rule for transform of record"
+               , return recordExpression
+               )
+         (TypeVariant _) ->           
+           bug  "rule_Transform_Sum_Product not implemented"
+         _ -> bug "rule_Transform_Sum_Product this is a bug"
+       else na "rule_Transform_Sum_Product"
+  theRule _ = na "rule_Transform_Sum_Product"
+
+
+rule_Transform_Matrix :: Rule
+rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+         _ -> na "rule_Transform_Matrix"
+    (morphism, matexp) <- match opTransform exp
+    DomainMatrix domIndx _ <- domainOf matexp
+    ty <- typeOf matexp
+    inn <- morphing =<< typeOf morphism 
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+      then return
+        ( "Horizontal rule for transform matrix in comprehension generator"
+        , do
+          (dPat, d) <- quantifiedVar
+          (Single mName, m) <- quantifiedVar
+          (Single iName, i) <- quantifiedVar
+          return (Comprehension body $
+                gocBefore
+            ++ [Generator (GenDomainNoRepr dPat (forgetRepr domIndx))]
+            ++ [ComprehensionLetting iName [essence| transform(&morphism, &d) |]]
+            ++ [ComprehensionLetting mName [essence| &matexp[&i] |]]
+            ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
+            ++ gocAfter)
+        )
+      else na "rule_Transform_Matrix"
+  theRule _ = na "rule_Transform_Matrix"
+
+
+rule_Transform_Partition :: Rule
+rule_Transform_Partition = "transform-partition" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+         _ -> na "rule_Transform_Partition"
+    z <- match opParts x
+    (morphism, y) <- match opTransform z
+    ty <- typeOf y
+    case ty of TypePartition{} -> return () ; _ -> na "only applies to partitions"
+    inn <- morphing =<< typeOf morphism
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+       then do
+         return
+             ( "Horizontal rule for transform of partition"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
+                 ++ ((ComprehensionLetting pat [essence| transform(&morphism, &d) |] ):gocAfter)
+                      )
+             )
+       else na "rule_Transform_Partition"
+  theRule _ = na "rule_Transform_Partition"
+
+
+rule_Transform_Sequence :: Rule
+rule_Transform_Sequence = "transform-sequence" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) ->
+           return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Transform_Sequence"
+    (morphism, y) <- match opTransform x
+    ty <- typeOf y
+    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences"
+    inn <- morphing =<< typeOf morphism 
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+       then do
+         return
+             ( "Horizontal rule for transform of sequence"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| &y |])]
+                 ++ ((ComprehensionLetting pat [essence|
+                   (&d[1], transform(&morphism, &d[2])) |] ):gocAfter)
+                      )
+
+             )
+       else na "rule_Transform_Sequence"
+  theRule _ = na "rule_Transform_Sequence"
+
+
+rule_Transform_Sequence_Defined :: Rule
+rule_Transform_Sequence_Defined = "transform-sequence-defined" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr pat@Single{} expr) ->
+           return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Transform_Sequence_Defined"
+    defi <- match opDefined x
+    (morphism, y) <- match opTransform defi
+    ty <- typeOf y
+    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences"
+    inn <- morphing =<< typeOf morphism
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+       then do
+         return
+             ( "Horizontal rule for transform of sequence defined"
+             , do
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr pat [essence| defined(&y) |])]
+                 ++ gocAfter
+                      )
+             )
+       else na "rule_Transform_Sequence_Defined"
+  theRule _ = na "rule_Transform_Sequence_Defined"
+
 
 rule_Transformed_Indexing :: Rule
 rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule where
@@ -192,152 +324,21 @@ rule_Transform_Indexing = "transform-indexing" `namedRule` theRule where
   theRule _ = na "rule_Transform_Indexing"
 
 
-rule_Transform_Matrix :: Rule
-rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
-  theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
-         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
-         _ -> na "rule_Transform_Matrix"
-    (morphism, matexp) <- match opTransform exp
-    DomainMatrix domIndx _ <- domainOf matexp
-    ty <- typeOf matexp
-    inn <- morphing =<< typeOf morphism 
-    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
-      then return
-        ( "Horizontal rule for transform matrix in comprehension generator"
-        , do
-          (dPat, d) <- quantifiedVar
-          (Single mName, m) <- quantifiedVar
-          (Single iName, i) <- quantifiedVar
-          return (Comprehension body $
-                gocBefore
-            ++ [Generator (GenDomainNoRepr dPat (forgetRepr domIndx))]
-            ++ [ComprehensionLetting iName [essence| transform(&morphism, &d) |]]
-            ++ [ComprehensionLetting mName [essence| &matexp[&i] |]]
-            ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
-            ++ gocAfter)
-        )
-      else na "rule_Transform_Matrix"
-  theRule _ = na "rule_Transform_Matrix"
-
-rule_Transform_Sum_Product :: Rule
-rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
+rule_Transform_Unifying :: Rule
+rule_Transform_Unifying = "transform-unifying" `namedRule` theRule where
   theRule [essence| transform(&morphism, &i) |] = do
-    inn <- morphing =<< typeOf morphism 
-    ti <- typeOf i
-    if let ?typeCheckerMode = StronglyTyped in ti `containsSumProductType` inn
-       then case ti of
-         (TypeTuple tint) -> do
-           let tupleIndexTransform indx =
-                 let indexexpr = Constant (ConstantInt TagInt indx)
-                 in [essence| transform(&morphism, &i[&indexexpr]) |]
-               tupleExpression =
-                 AbstractLiteral $ AbsLitTuple
-                 $ (tupleIndexTransform <$> [1..(fromIntegral $ length tint)])
-           return
-               ( "Horizontal rule for transform of tuple"
-               , return tupleExpression
-               )
-         (TypeRecord namet) -> do
-           let recordIndexTransform indx =
-                 let indexexpr = Reference (fst indx)
-                               $ Just $ RecordField (fst indx) (snd indx) 
-                 in (fst indx, [essence| transform(&morphism, &i[&indexexpr]) |])
-               recordExpression = AbstractLiteral $ AbsLitRecord
-                                $ (recordIndexTransform <$> namet)
-           return
-               ( "Horizontal rule for transform of record"
-               , return recordExpression
-               )
-         (TypeVariant _) ->           
-           bug  "rule_Transform_Sum_Product not implemented"
-         _ -> bug "rule_Transform_Sum_Product this is a bug"
-       else na "rule_Transform_Sum_Product"
-  theRule _ = na "rule_Transform_Sum_Product"
+    inner <- morphing =<< typeOf morphism
+    typeI <- typeOf i
+    if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI]
+      then return ( "Horizontal rule for transform unifying"
+                  , return [essence| image(&morphism, &i) |]
+                  )
+      else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
+             then na "rule_Transform_Unifying"
+             else return ( "Horizontal rule for transform abort"
+                         , do
+                           return [essence| &i |]
+                         )
+  theRule _ = na "rule_Transform_Unifying"
 
 
-
-
-rule_Transform_Sequence :: Rule
-rule_Transform_Sequence = "transform-sequence" `namedRule` theRule where
-  theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
-         Generator (GenInExpr (Single pat) expr) ->
-           return (pat, matchDefs [opToSet, opToMSet] expr)
-         _ -> na "rule_Transform_Sequence"
-    (morphism, y) <- match opTransform x
-    ty <- typeOf y
-    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences"
-    inn <- morphing =<< typeOf morphism 
-    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
-       then do
-         return
-             ( "Horizontal rule for transform of sequence"
-             , do
-               (dPat, d) <- quantifiedVar
-               return (Comprehension body $
-                     gocBefore
-                 ++ [Generator (GenInExpr dPat [essence| &y |])]
-                 ++ ((ComprehensionLetting pat [essence|
-                   (&d[1], transform(&morphism, &d[2])) |] ):gocAfter)
-                      )
-
-             )
-       else na "rule_Transform_Sequence"
-  theRule _ = na "rule_Transform_Sequence"
-
-
-
-rule_Transform_Sequence_Defined :: Rule
-rule_Transform_Sequence_Defined = "transform-sequence-defined" `namedRule` theRule where
-  theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
-         Generator (GenInExpr pat@Single{} expr) ->
-           return (pat, matchDefs [opToSet, opToMSet] expr)
-         _ -> na "rule_Transform_Sequence_Defined"
-    defi <- match opDefined x
-    (morphism, y) <- match opTransform defi
-    ty <- typeOf y
-    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences"
-    inn <- morphing =<< typeOf morphism
-    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
-       then do
-         return
-             ( "Horizontal rule for transform of sequence defined"
-             , do
-               return (Comprehension body $
-                     gocBefore
-                 ++ [Generator (GenInExpr pat [essence| defined(&y) |])]
-                 ++ gocAfter
-                      )
-             )
-       else na "rule_Transform_Sequence_Defined"
-  theRule _ = na "rule_Transform_Sequence_Defined"
-
-
-
-rule_Transform_Partition :: Rule
-rule_Transform_Partition = "transform-partition" `namedRule` theRule where
-  theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
-         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
-         _ -> na "rule_Transform_Partition"
-    z <- match opParts x
-    (morphism, y) <- match opTransform z
-    ty <- typeOf y
-    case ty of TypePartition{} -> return () ; _ -> na "only applies to partitions"
-    inn <- morphing =<< typeOf morphism
-    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
-       then do
-         return
-             ( "Horizontal rule for transform of partition"
-             , do
-               (dPat, d) <- quantifiedVar
-               return (Comprehension body $
-                     gocBefore
-                 ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
-                 ++ ((ComprehensionLetting pat [essence| transform(&morphism, &d) |] ):gocAfter)
-                      )
-             )
-       else na "rule_Transform_Partition"
-  theRule _ = na "rule_Transform_Partition"
