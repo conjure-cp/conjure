@@ -35,6 +35,9 @@ export default class ConfigureHelper {
         ConfigureHelper.context = context;
     }
 
+    private static configToArgList(config: Configuration): string[] {
+        return ["solve", config.modelFile, config.paramFile];
+    }
 
     private static configurationToCommand(config: Configuration): string {
         let command = "conjure solve " + config.modelFile + " " + config.paramFile;
@@ -90,35 +93,38 @@ export default class ConfigureHelper {
                         // }, (progress: Progress<{increment: number, message:string}, token:vscode.CancellationToken) => {
                     }, async (progress, token) => {
 
-                        let commandString = this.configurationToCommand(message.data);
-
-                        var p = new Promise(resolve => {
+                        var p = new Promise((resolve, reject) => {
 
                             // const proc = spawn("conjure solve", ["set_partition_full-models/set_partition_full.essence", "set_partition_full-params/36-3.param"], {
-                            const proc = spawn("conjure", ["solve", "set_partition_full-models/set_partition_full.essence", "set_partition_full-params/36-3.param"], {
+                            const args = this.configToArgList(message.data);
+                            
+                            const proc = spawn("conjure", args, {
                                 cwd: vscode.workspace.rootPath,
                                 detached: true
                             });
 
-                            proc.stdout.on('data', (data) => {
-                                console.log(`stdout: ${data}`);
-                            });
+                            let errorMessage = "";
 
                             proc.stderr.on('data', (data) => {
-                                console.log(`stderr: ${data}`);
+                                errorMessage += `${data}`;
                             });
 
                             proc.on('close', (code) => {
                                 console.log(`child process exited with code ${code}`);
+                                vscode.window.showErrorMessage(errorMessage);
                                 resolve();
                             });
 
                             proc.on('error', (err) => {
                                 console.log('Failed to start subprocess.');
                                 console.error(err);
+                                reject();
                             });
 
-                            console.log(proc.pid);
+                            token.onCancellationRequested(() => {
+                                process.kill(-proc.pid);
+                                vscode.window.showInformationMessage("Task Cancelled");
+                            });
 
                             // let proc = exec(commandString,
                             //     {
@@ -134,17 +140,6 @@ export default class ConfigureHelper {
                             //         resolve();
                             //     });
 
-
-                            token.onCancellationRequested(() => {
-                                vscode.window.showInformationMessage("Task Cancelled");
-                                process.kill(-proc.pid);
-                                // proc.kill();
-                                // proc.kill();
-                                // proc.kill("SIGINT");
-                                // proc.kill("SIGINT");
-                                // proc.kill("SIGINT");
-                                // console.log(proc.killed);
-                            });
                         });
 
                         return p;
