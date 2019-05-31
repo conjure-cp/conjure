@@ -2,8 +2,12 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import fs = require('fs');
 import { spawn } from 'child_process';
+import { UnsupportedMediaTypeError } from 'typescript-rest/dist/server/model/errors';
+import WebviewHelper from './webviewHelper';
 const { exec } = require('child_process');
 const createHTML = require('create-html');
+const apiConstructor = require('node-object-hash');
+const hasher = apiConstructor({ sort: true, coerce: true }).hash;
 
 const collator = new Intl.Collator(undefined, { numeric: true });
 
@@ -17,13 +21,25 @@ export interface SavileRowOptions {
 }
 
 export interface Configuration {
-    modelFile: string;
-    paramFile: string;
+    modelFileName: string;
+    paramFileName: string;
     savileRowOptions: SavileRowOptions;
     minionOptions: MinionOptions;
 }
 
+function getConfigHash(config: Configuration, essenceFiles: string[], paramFiles: string[]): string {
+
+    config.modelFileName = essenceFiles.find((p) => p.includes(config.modelFileName))!;
+    config.paramFileName = paramFiles.find((p) => p.includes(config.paramFileName))!;
+
+    let obj: any = config;
+    obj.modelFileContents = fs.readFileSync(config.modelFileName).toString();
+    obj.paramFileContents = fs.readFileSync(config.paramFileName).toString();
+    return hasher(obj);
+}
+
 export default class ConfigureHelper {
+
 
     private static context: vscode.ExtensionContext;
 
@@ -35,13 +51,8 @@ export default class ConfigureHelper {
         ConfigureHelper.context = context;
     }
 
-    private static configToArgList(config: Configuration): string[] {
-        return ["solve", config.modelFile, config.paramFile];
-    }
-
-    private static configurationToCommand(config: Configuration): string {
-        let command = "conjure solve " + config.modelFile + " " + config.paramFile;
-        return command;
+    private static configToArgList(config: Configuration, hash: string): string[] {
+        return ["solve", config.modelFileName, config.paramFileName, "-o", hash, "--solver-options", "\"-dumptreesql", hash + "/out.db\""];
     }
 
     /**
@@ -52,7 +63,7 @@ export default class ConfigureHelper {
 
         console.log(vscode.workspace.name);
 
-        if (!vscode.workspace.name) {
+        if (!vscode.workspace.name || !vscode.workspace.rootPath) {
             vscode.window.showErrorMessage("No workspace!");
             return;
         }
@@ -69,7 +80,7 @@ export default class ConfigureHelper {
 
         panel.webview.html = this.getWebContent();
 
-        panel.webview.onDidReceiveMessage(message => {
+        panel.webview.onDidReceiveMessage(async (message) => {
 
             switch (message.command) {
 
@@ -82,23 +93,35 @@ export default class ConfigureHelper {
                     break;
 
                 case 'solve':
-                    // console.log(message.data);
 
-                    // panel.dispose();
+                    const hash = getConfigHash(message.data, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
+                    // const hash = "blah";
+
+                    let checkSums = await vscode.workspace.findFiles("**/*.conjure-checksum");
+                    let matching = checkSums.filter((file) => file.path.split("/").includes(hash));
+
+                    if (matching.length > 0) {
+                        vscode.window.showInformationMessage("Already done this one!");
+                        WebviewHelper.launch(path.dirname(matching[0].path));
+                        return;
+                    }
 
                     vscode.window.withProgress({
                         cancellable: true,
                         location: vscode.ProgressLocation.Notification,
                         title: 'Solving CSP ...'
-                        // }, (progress: Progress<{increment: number, message:string}, token:vscode.CancellationToken) => {
+
                     }, async (progress, token) => {
 
                         var p = new Promise((resolve, reject) => {
 
-                            // const proc = spawn("conjure solve", ["set_partition_full-models/set_partition_full.essence", "set_partition_full-params/36-3.param"], {
-                            const args = this.configToArgList(message.data);
-                            
+                            const args = this.configToArgList(message.data, hash);
+
+                            console.log(vscode.workspace.rootPath);
+                            console.log("conjure " + args.join(" "));
+
                             const proc = spawn("conjure", args, {
+                                shell: true,
                                 cwd: vscode.workspace.rootPath,
                                 detached: true
                             });
@@ -111,13 +134,19 @@ export default class ConfigureHelper {
 
                             proc.on('close', (code) => {
                                 console.log(`child process exited with code ${code}`);
+                                console.error(errorMessage);
                                 vscode.window.showErrorMessage(errorMessage);
+                                if (errorMessage === "") {
+                                    vscode.window.showInformationMessage("Done!");
+                                    WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash));
+                                }
                                 resolve();
                             });
 
                             proc.on('error', (err) => {
                                 console.log('Failed to start subprocess.');
                                 console.error(err);
+                                vscode.window.showErrorMessage("Failed to start conjure ;_;");
                                 reject();
                             });
 
@@ -125,21 +154,6 @@ export default class ConfigureHelper {
                                 process.kill(-proc.pid);
                                 vscode.window.showInformationMessage("Task Cancelled");
                             });
-
-                            // let proc = exec(commandString,
-                            //     {
-                            //         cwd: vscode.workspace.rootPath, detached: true
-                            //     }, 
-                            //     (error: any, stdout: any, sterr: any) => {
-                            //         if (error) {
-                            //             console.error(error);
-                            //             vscode.window.showErrorMessage(error.message);
-                            //             resolve();
-                            //         }
-                            //         vscode.window.showInformationMessage("DONE!");
-                            //         resolve();
-                            //     });
-
                         });
 
                         return p;

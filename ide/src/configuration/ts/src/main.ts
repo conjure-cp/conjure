@@ -38,8 +38,8 @@ $("#solve").click(() => {
     savileRowOptions = { optimisation: $('#optimisation').find(":selected").text() };
 
     let payload: ConfigureHelper.Configuration = {
-        modelFile: selectedModel,
-        paramFile: selectedParam,
+        modelFileName: selectedModel,
+        paramFileName: selectedParam,
         minionOptions: minionOptions,
         savileRowOptions: savileRowOptions
     };

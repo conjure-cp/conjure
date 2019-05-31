@@ -18,6 +18,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     ConjureHelper.activate(context);
+    WebviewHelper.activate(context);
+    ConfigureHelper.activate(context);
 
     context.subscriptions.push(vscode.commands.registerCommand('conjure.model', () => {
         ConjureHelper.model();
@@ -26,15 +28,12 @@ export function activate(context: vscode.ExtensionContext) {
         ConjureHelper.solveAndVisualise(false);
     }));
     context.subscriptions.push(vscode.commands.registerCommand('conjure.solveAndVis', () => {
-        WebviewHelper.activate(context);
         ConjureHelper.solveAndVisualise(true);
     }));
     context.subscriptions.push(vscode.commands.registerCommand('conjure.vis', () => {
-        WebviewHelper.activate(context);
         ConjureHelper.launchVisualiserWithPath();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('conjure.configure', () => {
-        ConfigureHelper.activate(context);
         ConfigureHelper.launch();
     }));
 }

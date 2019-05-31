@@ -43,12 +43,11 @@ export default class WebviewHelper {
             const panel = vscode.window.createWebviewPanel(
                 'treeVis', // Identifies the type of the webview. Used internally
                 "Tree Visualiser", // Title of the panel displayed to the user
-                vscode.ViewColumn.One, // Editor column to show the new webview panel in.
+                vscode.ViewColumn.Two, // Editor column to show the new webview panel in.
                 { "enableScripts": true } // Allow scripts for the webview
             );
 
             panel.webview.html = WebviewHelper.getWebContent();
-
 
             // Relay messages between the webview and the server.
             panel.webview.onDidReceiveMessage(message => {
