@@ -14,7 +14,7 @@ module Conjure.Language.Type
     , typeCanIndexMatrix
     , morphing
     , containsTypeFunctorially
-    , containsSumProductType
+    , containsProductType
     , containsType
     ) where
 
@@ -270,14 +270,12 @@ containsTypeFunctorially container containee =
            Just so -> unifiesOrContains so containee 
 
 
-containsSumProductType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
-containsSumProductType ot@(TypeTuple ts) t =
+containsProductType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
+containsProductType ot@(TypeTuple ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains x t) <$> ts))
-containsSumProductType ot@(TypeRecord ts) t =
+containsProductType ot@(TypeRecord ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
-containsSumProductType ot@(TypeVariant ts) t =  
-  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
-containsSumProductType _ _ = False
+containsProductType _ _ = False
 
 -- Is the type 
 containsType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool

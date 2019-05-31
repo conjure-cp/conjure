@@ -88,6 +88,8 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 import qualified Conjure.Rules.Horizontal.Functional.Transform as Horizontal.Functional.Transform
+import qualified Conjure.Rules.Vertical.Functional.Transform as Vertical.Functional.Transform
+
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1276,6 +1278,9 @@ verticalRules =
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
 
+    , Vertical.Functional.Transform.rule_Transform_Variant_Eq_Right
+    , Vertical.Functional.Transform.rule_Transform_Variant_Eq_Left
+
     ]
 
 horizontalRules :: [Rule]
@@ -1392,7 +1397,7 @@ horizontalRules =
 
     , Horizontal.Functional.Transform.rule_Transform_Functorially
     , Horizontal.Functional.Transform.rule_Transform_Comprehension
-    , Horizontal.Functional.Transform.rule_Transform_Sum_Product
+    , Horizontal.Functional.Transform.rule_Transform_Product_Types
     , Horizontal.Functional.Transform.rule_Transform_Matrix
     , Horizontal.Functional.Transform.rule_Transform_Partition
     , Horizontal.Functional.Transform.rule_Transform_Sequence

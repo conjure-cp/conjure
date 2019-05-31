@@ -85,12 +85,12 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule whe
     bug "rule_Transform_Comprehension: clonePattern: unsupported Abstract Pattern"
 
 
-rule_Transform_Sum_Product :: Rule
-rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
+rule_Transform_Product_Types :: Rule
+rule_Transform_Product_Types = "transform-product-types" `namedRule` theRule where
   theRule [essence| transform(&morphism, &i) |] = do
     inn <- morphing =<< typeOf morphism 
     ti <- typeOf i
-    if let ?typeCheckerMode = StronglyTyped in ti `containsSumProductType` inn
+    if let ?typeCheckerMode = StronglyTyped in ti `containsProductType` inn
        then case ti of
          (TypeTuple tint) -> do
            let tupleIndexTransform indx =
@@ -114,11 +114,9 @@ rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
                ( "Horizontal rule for transform of record"
                , return recordExpression
                )
-         (TypeVariant _) ->           
-           bug  "rule_Transform_Sum_Product not implemented"
-         _ -> bug "rule_Transform_Sum_Product this is a bug"
-       else na "rule_Transform_Sum_Product"
-  theRule _ = na "rule_Transform_Sum_Product"
+         _ -> bug "rule_Transform_Product_Types this is a bug"
+       else na "rule_Transform_Product_Types"
+  theRule _ = na "rule_Transform_Product_Types"
 
 
 rule_Transform_Matrix :: Rule
