@@ -3,6 +3,11 @@ module Conjure.Rules.Vertical.Functional.Transform where
 import Conjure.Rules.Vertical.Variant (onTagged)
 import Conjure.Rules.Import
 
+atLeastOneTransform :: MonadFail m => (Expression, Expression) -> m ()
+atLeastOneTransform (l,r) = do
+  case (match opTransform l, match opTransform r) of
+    (Nothing, Nothing) -> na "no transforms on either side"
+    _ -> return () 
 
 matchManyTransforms :: Expression
                     -> (Expression, Expression -> Expression)
@@ -18,6 +23,7 @@ rule_Transform_Variant_Eq :: Rule
 rule_Transform_Variant_Eq = "transform-variant-eq" `namedRule` theRule where
   theRule p = do
     (l,r) <- match opEq p
+    atLeastOneTransform (l,r)
     let (x, rx) = matchManyTransforms l
     let (y, ry) = matchManyTransforms r
     TypeVariant{} <- typeOf x
@@ -36,6 +42,7 @@ rule_Transform_Variant_Neq :: Rule
 rule_Transform_Variant_Neq = "transform-variant-neq" `namedRule` theRule where
   theRule p = do
     (l,r) <- match opNeq p
+    atLeastOneTransform (l,r)
     let (x, rx) = matchManyTransforms l
     let (y, ry) = matchManyTransforms r
     TypeVariant{} <- typeOf x
@@ -57,6 +64,7 @@ rule_Transform_Variant_Lt :: Rule
 rule_Transform_Variant_Lt = "transform-variant-lt" `namedRule` theRule where
   theRule p = do
     (l,r) <- match opLt p
+    atLeastOneTransform (l,r)
     let (x, rx) = matchManyTransforms l
     let (y, ry) = matchManyTransforms r
     TypeVariant{} <- typeOf x
@@ -77,6 +85,7 @@ rule_Transform_Variant_Leq :: Rule
 rule_Transform_Variant_Leq = "transform-variant-leq" `namedRule` theRule where
   theRule p = do
     (l,r) <- match opLeq p
+    atLeastOneTransform (l,r)
     let (x, rx) = matchManyTransforms l
     let (y, ry) = matchManyTransforms r
     TypeVariant{} <- typeOf x
@@ -97,6 +106,7 @@ rule_Transformed_Variant_Index :: Rule
 rule_Transformed_Variant_Index = "transformed-variant-index" `namedRule` theRule where
     theRule p = do
         (l,arg)        <- match opIndexing p
+        atLeastOneTransform (l,l)
         let (x, rx)    = matchManyTransforms l
         TypeVariant ds <- typeOf x
         (xWhich:xs)    <- downX1 x
@@ -120,6 +130,7 @@ rule_Transformed_Variant_Active :: Rule
 rule_Transformed_Variant_Active = "transformed-variant-active" `namedRule` theRule where
     theRule p = do
         (l,name)       <- match opActive p
+        atLeastOneTransform (l,l)
         let (x, _)    = matchManyTransforms l
         TypeVariant ds <- typeOf x
         (xWhich:_)     <- downX1 x
@@ -130,4 +141,5 @@ rule_Transformed_Variant_Active = "transformed-variant-active" `namedRule` theRu
             ( "Variant active on:" <+> pretty p
             , return $ [essence| &xWhich = &argInt |]
             )
+
 
