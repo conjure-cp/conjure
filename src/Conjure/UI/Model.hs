@@ -1392,14 +1392,14 @@ horizontalRules =
 
     , Horizontal.Transform.rule_Transform_Functorially
     , Horizontal.Transform.rule_Transform_Comprehension
-    , Horizontal.Transform.rule_Lift_Transformed_Indexing
     , Horizontal.Transform.rule_Transform_Sum_Product
     , Horizontal.Transform.rule_Transform_Matrix
     , Horizontal.Transform.rule_Transform_Partition
     , Horizontal.Transform.rule_Transform_Sequence
     , Horizontal.Transform.rule_Transform_Sequence_Defined
-    , Horizontal.Transform.rule_Transformed_Matrix_Indexing
-    , Horizontal.Transform.rule_Transform_Matrix_Indexing
+    , Horizontal.Transform.rule_Transformed_Indexing
+    , Horizontal.Transform.rule_Lift_Transformed_Indexing
+    , Horizontal.Transform.rule_Transform_Indexing
     , Horizontal.Transform.rule_Transform_Unifying
     ]
 

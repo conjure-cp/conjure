@@ -46,16 +46,23 @@ rule_Transform_Functorially = "transform-functorially" `namedRule` theRule where
        else na "rule_Transform_Functorially"
   theRule _ = na "rule_Transform_Functorially"
 
---TODO early abort via traversal
+
 rule_Transform_Comprehension :: Rule
 rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule where
   theRule x = do
-    (morphism, Comprehension body gensOrConds) <- match opTransform x
-    return ( "Horizontal rule for transform comprehension"
-           , do
-               gox <- sequence (transformOverGenOrCond morphism <$> gensOrConds)
-               return $ Comprehension [essence| transform(&morphism, &body) |] (join gox)
-           )
+    (morphism, cmp@(Comprehension body gensOrConds)) <- match opTransform x
+    ty  <- typeOf cmp
+    inn <- morphing =<< typeOf morphism 
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+      then
+        return ( "Horizontal rule for transform comprehension"
+               , do
+                   gox <- sequence (transformOverGenOrCond morphism <$> gensOrConds)
+                   return $ Comprehension [essence|
+                                        transform(&morphism, &body)
+                                                  |] (join gox)
+               )
+      else na "rule_Transform_Comprehension" 
   transformOverGenOrCond m (Generator g) = transformOverGenerator m g
   transformOverGenOrCond m (Condition e) =
     return [Condition [essence| transform(&m,&e) |]]
@@ -94,12 +101,12 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule whe
   clonePattern _ =
     bug "rule_Transform_Comprehension: clonePattern: unsupported Abstract Pattern"
 
-rule_Transformed_Matrix_Indexing :: Rule
-rule_Transformed_Matrix_Indexing = "transformed-matrix-indexing" `namedRule` theRule where
+rule_Transformed_Indexing :: Rule
+rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
     (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
          Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
-         _ -> na "rule_Transformed_Matrix_Indexing"
+         _ -> na "rule_Transformed_Indexing"
     (matexp, indexer)     <- match opIndexing exp 
     (morphism, mat) <- match opTransform matexp
     ty <- typeOf mat
@@ -107,7 +114,7 @@ rule_Transformed_Matrix_Indexing = "transformed-matrix-indexing" `namedRule` the
     if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
        then do
          return
-             ( "Horizontal rule for transformed matrix indexing"
+             ( "Horizontal rule for transformed indexing"
              , do
                (Single mName, m) <- quantifiedVar
                return (Comprehension body $
@@ -117,8 +124,8 @@ rule_Transformed_Matrix_Indexing = "transformed-matrix-indexing" `namedRule` the
                  ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
                  ++ gocAfter)
              )
-       else na "rule_Transformed_Matrix_Indexing"
-  theRule _ = na "rule_Transformed_Matrix_Indexing"
+       else na "rule_Transformed_Indexing"
+  theRule _ = na "rule_Transformed_Indexing"
 
 
 rule_Lift_Transformed_Indexing :: Rule
@@ -155,21 +162,21 @@ rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule
                )
   theRule _ = na "rule_Lift_Transformed_Indexing"
 
-rule_Transform_Matrix_Indexing :: Rule
-rule_Transform_Matrix_Indexing = "transform-matrix-indexing" `namedRule` theRule where
+
+rule_Transform_Indexing :: Rule
+rule_Transform_Indexing = "transform-indexing" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
     (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
          Generator (GenInExpr pat expr) -> return (pat, expr)
-         _ -> na "rule_Transform_Matrix_Indexing"
+         _ -> na "rule_Transform_Indexing"
     (morphism, matexp) <- match opTransform exp
     (mat, indexer)     <- match opIndexing matexp
     ty <- typeOf mat
---    ty@TypeMatrix{} <- typeOf mat
     inn <- morphing =<< typeOf morphism 
     if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
        then do
          return
-             ( "Horizontal rule for transform matrix indexing"
+             ( "Horizontal rule for transform indexing"
              , do
                (Single mName, m) <- quantifiedVar
                (Single iName, i) <- quantifiedVar
@@ -181,11 +188,10 @@ rule_Transform_Matrix_Indexing = "transform-matrix-indexing" `namedRule` theRule
                  ++ [Generator (GenInExpr pat [essence| transform(&morphism, &m) |])]
                  ++ gocAfter)
              )
-       else na "rule_Transform_Matrix_Indexing"
-  theRule _ = na "rule_Transform_Matrix_Indexing"
+       else na "rule_Transform_Indexing"
+  theRule _ = na "rule_Transform_Indexing"
 
 
---TODO early abort via traversal
 rule_Transform_Matrix :: Rule
 rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
@@ -193,10 +199,11 @@ rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
          Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
          _ -> na "rule_Transform_Matrix"
     (morphism, matexp) <- match opTransform exp
---    ty <- typeOf matexp
     DomainMatrix domIndx _ <- domainOf matexp
---    inn <- morphing =<< typeOf morphism 
-    return
+    ty <- typeOf matexp
+    inn <- morphing =<< typeOf morphism 
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
+      then return
         ( "Horizontal rule for transform matrix in comprehension generator"
         , do
           (dPat, d) <- quantifiedVar
@@ -210,6 +217,7 @@ rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
             ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
             ++ gocAfter)
         )
+      else na "rule_Transform_Matrix"
   theRule _ = na "rule_Transform_Matrix"
 
 rule_Transform_Sum_Product :: Rule
@@ -241,9 +249,7 @@ rule_Transform_Sum_Product = "transform-sum-product" `namedRule` theRule where
                ( "Horizontal rule for transform of record"
                , return recordExpression
                )
-         (TypeVariant namet) -> do
-           marker:vars <- downX1 i 
-           
+         (TypeVariant _) ->           
            bug  "rule_Transform_Sum_Product not implemented"
          _ -> bug "rule_Transform_Sum_Product this is a bug"
        else na "rule_Transform_Sum_Product"
@@ -332,7 +338,6 @@ rule_Transform_Partition = "transform-partition" `namedRule` theRule where
                  ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
                  ++ ((ComprehensionLetting pat [essence| transform(&morphism, &d) |] ):gocAfter)
                       )
-
              )
        else na "rule_Transform_Partition"
   theRule _ = na "rule_Transform_Partition"
