@@ -14,7 +14,7 @@ rule_Transform_Functorially = "transform-functorially" `namedRule` theRule where
     ty <- typeOf y
     inn <- morphing =<< typeOf morphism 
     if let ?typeCheckerMode = StronglyTyped in ty `containsTypeFunctorially` inn
-       then do
+       then
          return
              ( "Horizontal rule for transform of functorially"
              , do
@@ -333,7 +333,7 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule where
                   )
       else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
              then na "rule_Transform_Unifying"
-             else return ( "Horizontal rule for transform abort"
+             else return ( "Horizontal rule for transform shortcut"
                          , do
                            return [essence| &i |]
                          )

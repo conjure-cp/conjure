@@ -1277,9 +1277,13 @@ verticalRules =
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
+    , Vertical.Functional.Transform.rule_Transform_Variant_Eq
+    , Vertical.Functional.Transform.rule_Transform_Variant_Neq
+    , Vertical.Functional.Transform.rule_Transform_Variant_Lt
+    , Vertical.Functional.Transform.rule_Transform_Variant_Leq
+    , Vertical.Functional.Transform.rule_Transformed_Variant_Index
+    , Vertical.Functional.Transform.rule_Transformed_Variant_Active
 
-    , Vertical.Functional.Transform.rule_Transform_Variant_Eq_Right
-    , Vertical.Functional.Transform.rule_Transform_Variant_Eq_Left
 
     ]
 

@@ -1,0 +1,16 @@
+Generating models for function.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Copying solution to: function.solution
+language Essence 1.3
+
+letting f be function(1 --> 2, 2 --> 1)
+letting m be
+        partition({record {hello = 1, world = false}},
+                  {record {hello = 1, world = true}, record {hello = 2, world = false},
+                   record {hello = 2, world = true}})
+letting n be
+        partition({record {hello = 1, world = false}, record {hello = 1, world = true},
+                   record {hello = 2, world = true}},
+                  {record {hello = 2, world = false}})
