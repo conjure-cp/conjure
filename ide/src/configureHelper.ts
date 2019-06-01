@@ -2,22 +2,30 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import fs = require('fs');
 import { spawn } from 'child_process';
-import { UnsupportedMediaTypeError } from 'typescript-rest/dist/server/model/errors';
 import WebviewHelper from './webviewHelper';
-const { exec } = require('child_process');
 const createHTML = require('create-html');
 const apiConstructor = require('node-object-hash');
-const hasher = apiConstructor({ sort: true, coerce: true }).hash;
+const rimraf = require("rimraf");
 
+const hasher = apiConstructor({ sort: true, coerce: true }).hash;
 const collator = new Intl.Collator(undefined, { numeric: true });
 
 export interface MinionOptions {
+    consistency: string;
+    preprocessing: string;
     findallsols: boolean;
+    randomiseorder: boolean;
     nodelimit: number;
+    sollimit: number;
+    cpulimit: number;
 }
 
 export interface SavileRowOptions {
     optimisation: string;
+    symmetryBreaking: string;
+    translation: string;
+    timelimit: number;
+    cnflimit: number;
 }
 
 export interface Configuration {
@@ -38,6 +46,15 @@ function getConfigHash(config: Configuration, essenceFiles: string[], paramFiles
     return hasher(obj);
 }
 
+function getConfigPreview(config: Configuration): string {
+    let res = "";
+    res += "model: {" + vscode.workspace.asRelativePath(config.modelFileName) + "} ";
+    res += "param: {" + vscode.workspace.asRelativePath(config.paramFileName) + "} ";
+    res += "Savilerow Options: " + JSON.stringify(config.savileRowOptions) + "  ";
+    res += "Minion Options: " + JSON.stringify(config.minionOptions) + "    ";
+    return res;
+}
+
 export default class ConfigureHelper {
 
 
@@ -52,7 +69,67 @@ export default class ConfigureHelper {
     }
 
     private static configToArgList(config: Configuration, hash: string): string[] {
-        return ["solve", config.modelFileName, config.paramFileName, "-o", hash, "--solver-options", "\"-dumptreesql", hash + "/out.db\""];
+        let savileRowOptions = [
+            "--savilerow-options",
+             "\"-" + config.savileRowOptions.optimisation,
+             "-" + config.savileRowOptions.symmetryBreaking,
+            ];
+
+        if (config.savileRowOptions.translation !== "default"){
+            savileRowOptions.push("-" + config.savileRowOptions.translation);
+        }
+
+        if (config.savileRowOptions.cnflimit > 0){
+            savileRowOptions.push("-cnflimit");
+            savileRowOptions.push(String(config.savileRowOptions.cnflimit));
+        }
+
+        if (config.savileRowOptions.timelimit > 0){
+            savileRowOptions.push("-timelimit");
+            savileRowOptions.push(String(config.savileRowOptions.timelimit));
+        }
+
+        savileRowOptions.push("\"");
+
+        let minionOptions = ["--solver-options", "\"-dumptreesql", hash + "/out.db"];
+
+        if (config.minionOptions.findallsols) {
+            minionOptions.push("-findallsols");
+        }
+        if (config.minionOptions.randomiseorder) {
+            minionOptions.push("-randomiseorder");
+        }
+        if (config.minionOptions.nodelimit > 0) {
+            minionOptions.push("-nodelimit");
+            minionOptions.push(String(config.minionOptions.nodelimit));
+        }
+        if (config.minionOptions.sollimit > 0) {
+            minionOptions.push("-sollimit");
+            minionOptions.push(String(config.minionOptions.sollimit));
+        }
+        if (config.minionOptions.cpulimit > 0) {
+            minionOptions.push("-cpulimit");
+            minionOptions.push(String(config.minionOptions.cpulimit));
+        }
+
+        if (config.minionOptions.preprocessing !== "default") {
+            minionOptions.push("-preprocess");
+            minionOptions.push(config.minionOptions.preprocessing);
+        }
+
+        if (config.minionOptions.consistency !== "default") {
+            minionOptions.push("-prop-node");
+            minionOptions.push(config.minionOptions.consistency);
+        }
+
+        minionOptions.push("\"");
+        return ["solve", config.modelFileName, config.paramFileName, "-o", hash].concat(savileRowOptions).concat(minionOptions);
+    }
+
+    public static async invalidateCaches() {
+        let caches = await vscode.workspace.findFiles("**/*.extensionCache");
+        caches.map((file) => rimraf.sync(path.dirname(file.path)));
+        vscode.window.showInformationMessage("Caches invalidated");
     }
 
     /**
@@ -61,15 +138,8 @@ export default class ConfigureHelper {
      */
     public static async launch() {
 
-        console.log(vscode.workspace.name);
-
-        if (!vscode.workspace.name || !vscode.workspace.rootPath) {
-            vscode.window.showErrorMessage("No workspace!");
-            return;
-        }
-
-        let essenceFiles = (await vscode.workspace.findFiles("**/*.essence"));
-        let paramFiles = (await vscode.workspace.findFiles("**/*.param"));
+        let essenceFiles: vscode.Uri[];
+        let paramFiles: vscode.Uri[];
 
         const panel = vscode.window.createWebviewPanel(
             'configure', // Identifies the type of the webview. Used internally
@@ -85,6 +155,15 @@ export default class ConfigureHelper {
             switch (message.command) {
 
                 case 'init':
+
+                    if (!vscode.workspace.name || !vscode.workspace.rootPath) {
+                        vscode.window.showErrorMessage("No workspace!");
+                        return;
+                    }
+
+                    essenceFiles = (await vscode.workspace.findFiles("**/*.essence"));
+                    paramFiles = (await vscode.workspace.findFiles("**/*.param"));
+
                     let payload = {
                         essenceFiles: essenceFiles.map((f) => vscode.workspace.asRelativePath(f.path)).sort(collator.compare),
                         paramFiles: paramFiles.map((f) => vscode.workspace.asRelativePath(f.path)).sort(collator.compare)
@@ -97,8 +176,8 @@ export default class ConfigureHelper {
                     const hash = getConfigHash(message.data, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
                     // const hash = "blah";
 
-                    let checkSums = await vscode.workspace.findFiles("**/*.conjure-checksum");
-                    let matching = checkSums.filter((file) => file.path.split("/").includes(hash));
+                    let caches = await vscode.workspace.findFiles("**/*.extensionCache");
+                    let matching = caches.filter((file) => file.path.split("/").includes(hash));
 
                     if (matching.length > 0) {
                         vscode.window.showInformationMessage("Already done this one!");
@@ -106,16 +185,16 @@ export default class ConfigureHelper {
                         return;
                     }
 
+                    const args = this.configToArgList(message.data, hash);
+
                     vscode.window.withProgress({
                         cancellable: true,
                         location: vscode.ProgressLocation.Notification,
-                        title: 'Solving CSP ...'
+                        title: 'Solving CSP ...\n' + getConfigPreview(message.data)
 
-                    }, async (progress, token) => {
+                    }, async (_progress, token) => {
 
                         var p = new Promise((resolve, reject) => {
-
-                            const args = this.configToArgList(message.data, hash);
 
                             console.log(vscode.workspace.rootPath);
                             console.log("conjure " + args.join(" "));
@@ -133,6 +212,8 @@ export default class ConfigureHelper {
                             });
 
                             proc.on('close', (code) => {
+                                fs.writeFileSync(path.join(vscode.workspace.rootPath!, hash, "vscode.extensionCache"), "blank");
+
                                 console.log(`child process exited with code ${code}`);
                                 console.error(errorMessage);
                                 vscode.window.showErrorMessage(errorMessage);
@@ -140,6 +221,10 @@ export default class ConfigureHelper {
                                     vscode.window.showInformationMessage("Done!");
                                     WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash));
                                 }
+                                else {
+                                    rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
+                                }
+
                                 resolve();
                             });
 
@@ -152,7 +237,8 @@ export default class ConfigureHelper {
 
                             token.onCancellationRequested(() => {
                                 process.kill(-proc.pid);
-                                vscode.window.showInformationMessage("Task Cancelled");
+                                errorMessage = "Search Cancelled!";
+                                rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
                             });
                         });
 

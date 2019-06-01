@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import WebviewHelper from './webviewHelper';
 import ConjureHelper from './conjureHelper';
 import ConfigureHelper from './configureHelper';
-import * as server from './server/server';
 
 export const LANGID = "essence";
 
@@ -35,6 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
     }));
     context.subscriptions.push(vscode.commands.registerCommand('conjure.configure', () => {
         ConfigureHelper.launch();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('conjure.invalidateCaches', () => {
+        ConfigureHelper.invalidateCaches();
     }));
 }
 

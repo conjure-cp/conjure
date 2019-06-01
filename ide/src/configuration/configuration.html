@@ -6,7 +6,7 @@
 </head>
 
 <body>
-    <form class="border border-light p-5">
+    <form class="border border-light p-5" onsubmit="return false">
 
         <p class="h4 mb-4 text-center">Configuration</p>
 
@@ -36,31 +36,111 @@
                     <option value="2" selected="">O2</option>
                     <option value="3">O3</option>
                 </select>
+                <label for="defaultSelect">Symmetry breaking</label>
+                <select id="symmetryBreaking" class="browser-default custom-select mb-4">
+                    <option value="0">S0</option>
+                    <option value="1" selected="">S1</option>
+                    <option value="2">S2</option>
+                </select>
+                <label for="defaultSelect">Translation</label>
+                <select id="translation" class="browser-default custom-select mb-4">
+                    <option value="1" selected="">default</option>
+                    <option value="0">no-cse</option>
+                    <option value="1">indentical-cse</option>
+                    <option value="1">ac-cse</option>
+                    <option value="1">active-cse</option>
+                    <option value="1">active-ac-cse</option>
+                    <option value="1">deletevars</option>
+                    <option value="1">reduce-domains</option>
+                    <option value="1">reduce-domains-extend</option>
+                    <option value="1">aggregate</option>
+                    <option value="1">tabulate</option>
+                    <option value="1">nomappers</option>
+                    <option value="1">minionmappers</option>
+                    <option value="1">no-bound-vars</option>
+                    <option value="1">remove-redundant-vars</option>
+                    <option value="1">var-sym-breaking</option>
+                </select>
+                <div class="row">
+                    <div class="col">
+                        <label for="inputPassword">Time limit</label>
+                    </div>
+                    <div class="col">
+                        <input id="timeLimit" class="input-group mb-3" placeholder="None">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="inputPassword">CNF clause limit</label>
+                    </div>
+                    <div class="col">
+                        <input id="cnfLimit" class="input-group mb-3" placeholder="None">
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="card mb-4">
             <h5 class="card-header">Minion Options</h5>
             <div class="card-body">
-                <div class="row">
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                <input type="checkbox" id="findallsols">
-                            </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="findallsols">
                         </div>
-                        <label for="findallsols" class="form-control">findallsols</label>
-                        <!-- <input type="text" class="form-control" aria-label="Text input with checkbox"> -->
                     </div>
+                    <label for="findallsols" class="form-control">Find all solutions</label>
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="randomiseorder">
+                        </div>
+                    </div>
+                    <label for="findallsols" class="form-control">Randomise the order of decision variables</label>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <label for="inputPassword">Nodelimit</label>
+                        <label for="inputPassword">Node limit</label>
                     </div>
                     <div class="col">
                         <input id="nodelimit" class="input-group mb-3" placeholder="None">
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="inputPassword">Solution limit</label>
+                    </div>
+                    <div class="col">
+                        <input id="sollimit" class="input-group mb-3" placeholder="None">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="inputPassword">CPU limit</label>
+                    </div>
+                    <div class="col">
+                        <input id="cpulimit" class="input-group mb-3" placeholder="None">
+                    </div>
+                </div>
+                <label for="defaultSelect">Preprocessing</label>
+                <select id="preprocessing" class="browser-default custom-select mb-4">
+                    <option value="2" selected="">default</option>
+                    <option value="2" >GAC</option>
+                    <option value="0">SACBounds</option>
+                    <option value="1">SAC</option>
+                    <option value="3">SSACBounds</option>
+                    <option value="3">SSAC</option>
+                </select>
+                <label for="defaultSelect">Consistency</label>
+                <select id="consistency" class="browser-default custom-select mb-4">
+                    <option value="2" selected="">default</option>
+                    <option value="2" >GAC</option>
+                    <option value="0">SACBounds</option>
+                    <option value="1">SAC</option>
+                    <option value="3">SSACBounds</option>
+                    <option value="3">SSAC</option>
+                </select>
             </div>
         </div>
 

@@ -26,20 +26,43 @@ window.addEventListener('message', event => {
     }
 });
 
+function getNumberOrZero(id: string) {
+    let nl = Number($("#" + id).val());
+    if (isNaN(nl)) {
+        nl = 0;
+    }
+    return nl;
+}
+
 $("#solve").click(() => {
 
-    let selectedModel = $('#modelFiles').find(":selected").text();
-    let selectedParam = $('#paramFiles').find(":selected").text();
 
     let minionOptions: ConfigureHelper.MinionOptions;
-    minionOptions = { findallsols: $("#findallsols").is(":checked"), nodelimit: Number($("#nodelimit")) };
+
+    minionOptions = {
+        findallsols: $("#findallsols").is(":checked"),
+        randomiseorder: $("#randomiseorder").is(":checked"),
+        nodelimit: getNumberOrZero("nodelimit"),
+        sollimit: getNumberOrZero("sollimit"),
+        cpulimit: getNumberOrZero("cpulimit"),
+        preprocessing: $("#preprocessing").find(":selected").text(),
+        consistency: $("#consistency").find(":selected").text()
+    };
+
+    console.log(minionOptions);
 
     let savileRowOptions: ConfigureHelper.SavileRowOptions;
-    savileRowOptions = { optimisation: $('#optimisation').find(":selected").text() };
+    savileRowOptions = { 
+        optimisation: $('#optimisation').find(":selected").text(),
+        symmetryBreaking: $('#symmetryBreaking').find(":selected").text(),
+        translation: $('#translation').find(":selected").text(),
+        timelimit: getNumberOrZero("timeLimit"),
+        cnflimit: getNumberOrZero("cnfLimit")
+    };
 
     let payload: ConfigureHelper.Configuration = {
-        modelFileName: selectedModel,
-        paramFileName: selectedParam,
+        modelFileName: $('#modelFiles').find(":selected").text(),
+        paramFileName: $('#paramFiles').find(":selected").text(),
         minionOptions: minionOptions,
         savileRowOptions: savileRowOptions
     };
@@ -49,7 +72,7 @@ $("#solve").click(() => {
         data: payload
     });
 
-})
+});
 
 
 
