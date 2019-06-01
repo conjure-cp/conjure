@@ -1,7 +1,6 @@
 declare var acquireVsCodeApi: any;
 
 import * as ConfigureHelper from "../../../configureHelper";
-import ConjureHelper from "../../../conjureHelper";
 
 const vscode = acquireVsCodeApi();
 
@@ -34,8 +33,7 @@ function getNumberOrZero(id: string) {
     return nl;
 }
 
-$("#solve").click(() => {
-
+function collectFields(): ConfigureHelper.Configuration {
 
     let minionOptions: ConfigureHelper.MinionOptions;
 
@@ -48,8 +46,6 @@ $("#solve").click(() => {
         preprocessing: $("#preprocessing").find(":selected").text(),
         consistency: $("#consistency").find(":selected").text()
     };
-
-    console.log(minionOptions);
 
     let savileRowOptions: ConfigureHelper.SavileRowOptions;
     savileRowOptions = {
@@ -65,9 +61,9 @@ $("#solve").click(() => {
     conjureOptions = {
         timelimit: getNumberOrZero("conjureTimeLimit"),
         strategy: String($('#strategy').find(":selected").val())
-    }
+    };
 
-    let payload: ConfigureHelper.Configuration = {
+    let config: ConfigureHelper.Configuration = {
         modelFileName: $('#modelFiles').find(":selected").text(),
         paramFileName: $('#paramFiles').find(":selected").text(),
         minionOptions: minionOptions,
@@ -75,13 +71,42 @@ $("#solve").click(() => {
         conjureOptions: conjureOptions
     };
 
+    return config;
+
+
+}
+
+function toPlaceHolder(id: string) {
+    if ($("#" + id).val()) {
+        $("#" + id).attr("placeholder", $("#" + id).val() + "");
+    }
+    else {
+        $("#" + id).attr("placeholder", "None");
+    }
+    $("#" + id).val("");
+
+    console.log("fired");
+}
+
+$("#solve").click(() => {
+
     vscode.postMessage({
         command: "solve",
-        data: payload
+        data: collectFields()
     });
 
 });
 
+
+$("#diff").click(() => {
+    let config1 = collectFields();
+    toPlaceHolder("nodelimit");
+    toPlaceHolder("sollimit");
+    toPlaceHolder("cpuLimit");
+    toPlaceHolder("timeLimit");
+    toPlaceHolder("cnfLimit");
+    toPlaceHolder("conjureTimeLimit");
+});
 
 
 vscode.postMessage({

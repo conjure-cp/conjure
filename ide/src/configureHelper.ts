@@ -211,7 +211,7 @@ export default class ConfigureHelper {
                         location: vscode.ProgressLocation.Notification,
                         title: 'Solving CSP ...\n' + preview
 
-                    }, async (_progress, token) => {
+                    }, async (progress, token) => {
 
                         var p = new Promise((resolve, reject) => {
 
@@ -224,7 +224,16 @@ export default class ConfigureHelper {
                                 detached: true
                             });
 
+                            progress.report({message: "Running Conjure...", increment: 10});
+
                             let errorMessage = "";
+
+                            proc.stdout.on('data', (data) => {
+                                //  console.log(`stdout:      ${data}`);
+                                if (data.includes("Saved under")){
+                                    progress.report({message: "Running Savilerow...", increment: 10});
+                                }
+                            });
 
                             proc.stderr.on('data', (data) => {
                                 errorMessage += `${data}`;
