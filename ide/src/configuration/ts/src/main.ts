@@ -52,7 +52,7 @@ $("#solve").click(() => {
     console.log(minionOptions);
 
     let savileRowOptions: ConfigureHelper.SavileRowOptions;
-    savileRowOptions = { 
+    savileRowOptions = {
         optimisation: $('#optimisation').find(":selected").text(),
         symmetryBreaking: $('#symmetryBreaking').find(":selected").text(),
         translation: $('#translation').find(":selected").text(),
@@ -60,11 +60,19 @@ $("#solve").click(() => {
         cnflimit: getNumberOrZero("cnfLimit")
     };
 
+    let conjureOptions: ConfigureHelper.ConjureOptions;
+
+    conjureOptions = {
+        timelimit: getNumberOrZero("conjureTimeLimit"),
+        strategy: String($('#strategy').find(":selected").val())
+    }
+
     let payload: ConfigureHelper.Configuration = {
         modelFileName: $('#modelFiles').find(":selected").text(),
         paramFileName: $('#paramFiles').find(":selected").text(),
         minionOptions: minionOptions,
-        savileRowOptions: savileRowOptions
+        savileRowOptions: savileRowOptions,
+        conjureOptions: conjureOptions
     };
 
     vscode.postMessage({

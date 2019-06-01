@@ -3,12 +3,17 @@ import * as vscode from 'vscode';
 import fs = require('fs');
 import { spawn } from 'child_process';
 import WebviewHelper from './webviewHelper';
+import apiConstructor = require('node-object-hash');
+import rimraf = require("rimraf");
 const createHTML = require('create-html');
-const apiConstructor = require('node-object-hash');
-const rimraf = require("rimraf");
 
 const hasher = apiConstructor({ sort: true, coerce: true }).hash;
 const collator = new Intl.Collator(undefined, { numeric: true });
+
+export interface ConjureOptions {
+    timelimit: number;
+    strategy: string;
+}
 
 export interface MinionOptions {
     consistency: string;
@@ -31,6 +36,7 @@ export interface SavileRowOptions {
 export interface Configuration {
     modelFileName: string;
     paramFileName: string;
+    conjureOptions: ConjureOptions;
     savileRowOptions: SavileRowOptions;
     minionOptions: MinionOptions;
 }
@@ -50,6 +56,7 @@ function getConfigPreview(config: Configuration): string {
     let res = "";
     res += "model: {" + vscode.workspace.asRelativePath(config.modelFileName) + "} ";
     res += "param: {" + vscode.workspace.asRelativePath(config.paramFileName) + "} ";
+    res += "Conjure Options: " + JSON.stringify(config.conjureOptions) + "  ";
     res += "Savilerow Options: " + JSON.stringify(config.savileRowOptions) + "  ";
     res += "Minion Options: " + JSON.stringify(config.minionOptions) + "    ";
     return res;
@@ -69,6 +76,16 @@ export default class ConfigureHelper {
     }
 
     private static configToArgList(config: Configuration, hash: string): string[] {
+
+        let conjureOptions = ["solve", config.modelFileName, config.paramFileName, "-o", hash];
+
+        if (config.conjureOptions.timelimit > 0){
+            conjureOptions.push("--limit-time=" + String(config.conjureOptions.timelimit));
+        }
+
+        conjureOptions.push("-a");
+        conjureOptions.push(config.conjureOptions.strategy);
+
         let savileRowOptions = [
             "--savilerow-options",
              "\"-" + config.savileRowOptions.optimisation,
@@ -123,7 +140,8 @@ export default class ConfigureHelper {
         }
 
         minionOptions.push("\"");
-        return ["solve", config.modelFileName, config.paramFileName, "-o", hash].concat(savileRowOptions).concat(minionOptions);
+
+        return conjureOptions.concat(savileRowOptions).concat(minionOptions);
     }
 
     public static async invalidateCaches() {
@@ -186,18 +204,19 @@ export default class ConfigureHelper {
                     }
 
                     const args = this.configToArgList(message.data, hash);
+                    const preview = getConfigPreview(message.data);
 
                     vscode.window.withProgress({
                         cancellable: true,
                         location: vscode.ProgressLocation.Notification,
-                        title: 'Solving CSP ...\n' + getConfigPreview(message.data)
+                        title: 'Solving CSP ...\n' + preview
 
                     }, async (_progress, token) => {
 
                         var p = new Promise((resolve, reject) => {
 
-                            console.log(vscode.workspace.rootPath);
-                            console.log("conjure " + args.join(" "));
+                            let command = "conjure " + args.join(" "); 
+                            console.log(command);
 
                             const proc = spawn("conjure", args, {
                                 shell: true,
@@ -219,7 +238,7 @@ export default class ConfigureHelper {
                                 vscode.window.showErrorMessage(errorMessage);
                                 if (errorMessage === "") {
                                     vscode.window.showInformationMessage("Done!");
-                                    WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash));
+                                    WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash), command);
                                 }
                                 else {
                                     rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
@@ -241,7 +260,6 @@ export default class ConfigureHelper {
                                 rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
                             });
                         });
-
                         return p;
                     }); // vscode.window.withProgress
                     break;

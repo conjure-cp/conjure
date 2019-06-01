@@ -27,6 +27,25 @@
         </div>
 
         <div class="card mb-4">
+            <h5 class="card-header">Conjure Options</h5>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <label for="inputPassword">Time limit</label>
+                    </div>
+                    <div class="col">
+                        <input id="conjureTimeLimit" class="input-group mb-3" placeholder="None">
+                    </div>
+                </div>
+                <label for="defaultSelect">Model generation strategy</label>
+                <select id="strategy" class="browser-default custom-select mb-4">
+                    <option value="c" selected="">compact</option>
+                    <option value="s">sparse</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card mb-4">
             <h5 class="card-header">Savilerow Options</h5>
             <div class="card-body">
                 <label for="defaultSelect">Optimisation</label>
@@ -126,7 +145,7 @@
                 <label for="defaultSelect">Preprocessing</label>
                 <select id="preprocessing" class="browser-default custom-select mb-4">
                     <option value="2" selected="">default</option>
-                    <option value="2" >GAC</option>
+                    <option value="2">GAC</option>
                     <option value="0">SACBounds</option>
                     <option value="1">SAC</option>
                     <option value="3">SSACBounds</option>
@@ -135,7 +154,7 @@
                 <label for="defaultSelect">Consistency</label>
                 <select id="consistency" class="browser-default custom-select mb-4">
                     <option value="2" selected="">default</option>
-                    <option value="2" >GAC</option>
+                    <option value="2">GAC</option>
                     <option value="0">SACBounds</option>
                     <option value="1">SAC</option>
                     <option value="3">SSACBounds</option>
