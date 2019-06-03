@@ -120,6 +120,7 @@ data UI
         , savilerowOptions           :: [String]
         , solverOptions              :: [String]
         , solver                     :: String
+        , cgroups                    :: Bool
         , nbSolutions                :: String              -- a number, or "all". by default 1
         , copySolutions              :: Bool
         -- output
@@ -842,6 +843,12 @@ ui = modes
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
                     \Default: minion"
+        , cgroups
+            = False
+            &= name "cgroups"
+            &= groupname "General"
+            &= explicit
+            &= help "Setup and use cgroups when solving with Savile Row."
         , nbSolutions
             = "1"
             &= name "number-of-solutions"

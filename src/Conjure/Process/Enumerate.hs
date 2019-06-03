@@ -130,6 +130,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                 [ "-cpulimit"      , show minionTimelimit
                 ]
             , solver                        = "minion"
+            , cgroups                       = False
             , nbSolutions                   = show enumerateDomainMax
             , copySolutions                 = False
             , solutionsInOneFile            = False
