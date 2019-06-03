@@ -482,6 +482,7 @@ srMkArgs Solve{..} outBase modelPath =
     , "-S0"
     , "-solutions-to-stdout-one-line"
     ] ++
+    [ "-cgroups" | cgroups ] ++
     ( if nbSolutions == "all"
         then ["-all-solutions"]
         else ["-num-solutions", stringToText nbSolutions]

@@ -21,6 +21,32 @@ else
     GECODE_ARG=""
 fi
 
-#  May add -XX:+UseCompressedOops -- allegedly reduces size of object references. May be default anyway.
+if [ -f "$DIR/bin/glucose" ]; then
+    SATSOLVER_ARG="-glucose-bin $DIR/bin/glucose"
+else
+    SATSOLVER_ARG=""
+fi
 
-java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} "$@"
+if [ -f "$DIR/bin/symmetry_detect" ]; then
+    SYMDETECT_ARG="-symdetect-bin $DIR/bin/symmetry_detect"
+else
+    SYMDETECT_ARG=""
+fi
+
+case "$@" in
+    *"-cgroups"*)
+        TIMESTAMP=$(date +%s)
+        GROUP_NAME="savilerow_${TIMESTAMP}_$$"
+
+        echo "Using cgroups, group name: $GROUP_NAME"
+
+        cgcreate -g cpu:/$GROUP_NAME
+        cgset -r cpu.cfs_quota_us=1000000 $GROUP_NAME
+        cgset -r cpu.cfs_period_us=1000000 $GROUP_NAME
+        cgexec -g cpu:$GROUP_NAME java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
+        cgdelete -g cpu:/$GROUP_NAME
+    ;;
+    *)
+        java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
+    ;;
+esac
