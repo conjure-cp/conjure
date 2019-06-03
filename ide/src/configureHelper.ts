@@ -73,8 +73,8 @@ function getConfigPreview(config: Configuration): string {
     return res;
 }
 
-function getProgressMessage(doneCount: number, jobCount: number): string {
-    return `${doneCount}/${jobCount} completed... `;
+function getProgressMessage(doneCount: number, jobCount: number, proc: ChildProcess, pid2JobId: any): string {
+    return `[${doneCount+1}/${jobCount}] - Config` + pid2JobId[proc.pid] + ' - ';
 }
 
 async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], paramFiles: vscode.Uri[]) {
@@ -87,15 +87,20 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
         const config = configs[i];
 
         const hash = getConfigHash(config, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
-        const args = configToArgList(config, hash);
 
+        if (jobs.map((job)=>job.hash).includes(hash) || cached.map((c)=>c.hash).includes(hash)){
+            vscode.window.showErrorMessage("Configs are the same! aborting..");
+            return;
+        }
+
+        const args = configToArgList(config, hash);
 
         let caches = await vscode.workspace.findFiles("**/*.extensionCache");
         let matching = caches.filter((file) => file.path.split("/").includes(hash));
 
         if (matching.length > 0) {
             cached.push({ hash: hash, args: args });
-            vscode.window.showInformationMessage(`Loading tree ${i} from cache...`);
+            vscode.window.showInformationMessage(`Loading config${i+1} from cache...`);
             continue;
         }
 
@@ -106,19 +111,19 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
     vscode.window.withProgress({
         cancellable: true,
         location: vscode.ProgressLocation.Notification,
-        title: 'Solving CSPs ...\n'
+        title: 'Solving '
 
     }, (progress, token) => {
 
         var p = new Promise((resolve, reject) => {
 
             let doneCount = 0;
-            let jobCount = 0;
-
             let procs: ChildProcess[] = [];
+            let pid2JobId: any = {};
 
-            jobs.forEach((job) => {
-                jobCount++;
+            for (let i = 0; i < jobs.length; i++){
+
+                const job = jobs[i];
 
                 const proc = spawn("conjure", job.args, {
                     shell: true,
@@ -126,17 +131,36 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
                     detached: true
                 });
 
-                procs.push(proc);
+                pid2JobId[proc.pid] = i + 1;
 
-                progress.report({ message: getProgressMessage(doneCount, jobCount) + "running conjure..", increment: 0 });
+                progress.report({ message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + "Generating models..", increment: 0 });
 
                 let errorMessage = "";
 
                 proc.stdout.on('data', (data) => {
-                    if (data.includes("Saved under")) {
+                    console.log(data.toString());
+
+                    if (data.includes("Generating")) {
+
                         progress.report(
                             {
-                                message: getProgressMessage(doneCount, jobCount) + " running savilerow..",
+                                message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Running Savilerow..",
+                                increment: 10
+                            }
+                        );
+                    }
+                    if (data.includes("domain")) {
+                        progress.report(
+                            {
+                                message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Domain Filtering..",
+                                increment: 10
+                            }
+                        );
+                    }
+                    if (data.includes("solver")) {
+                        progress.report(
+                            {
+                                message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Running Minion..",
                                 increment: 10
                             }
                         );
@@ -151,24 +175,23 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
 
                     doneCount++;
 
-                    progress.report({ message: `${doneCount}/${jobCount} completed...` + " running savilerow..", increment: 20 });
+                    progress.report({ message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Running Minion.." , increment: 20 });
 
                     fs.writeFileSync(path.join(vscode.workspace.rootPath!, job.hash, "vscode.extensionCache"), "blank");
 
                     console.log(`child process exited with code ${code}`);
                     console.error(errorMessage);
-                    vscode.window.showErrorMessage(errorMessage);
                     if (errorMessage === "") {
                         let command = "conjure " + job.args.join(" ");
                         WebviewHelper.launch(path.join(vscode.workspace.rootPath!, job.hash), command);
                     }
                     else {
+                        vscode.window.showErrorMessage("Config " + pid2JobId[proc.pid] + " | " + errorMessage);
                         rimraf.sync(path.join(vscode.workspace.rootPath!, job.hash));
                     }
 
                     if (doneCount === jobs.length) {
                         resolve();
-                        vscode.window.showInformationMessage("Done!");
                     }
 
                 });
@@ -182,9 +205,10 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
                 token.onCancellationRequested(() => {
                     procs.map((proc: ChildProcess) => process.kill(-proc.pid));
                     errorMessage = "Search Cancelled!";
-                    rimraf.sync(path.join(vscode.workspace.rootPath!, job.hash));
+                    jobs.map((j) => rimraf.sync(path.join(vscode.workspace.rootPath!, j.hash)));
+                    cached.map((c) => rimraf.sync(path.join(vscode.workspace.rootPath!, c.hash)));
                 });
-            });
+            }
 
             cached.forEach(search => {
                 let command = "conjure " + search.args.join(" ");
@@ -194,89 +218,6 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
             if (jobs.length === 0) {
                 resolve();
             }
-        });
-        return p;
-    }); // vscode.window.withProgress
-}
-
-async function solveSingle(config: Configuration, essenceFiles: vscode.Uri[], paramFiles: vscode.Uri[]) {
-
-    const hash = getConfigHash(config, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
-
-    let caches = await vscode.workspace.findFiles("**/*.extensionCache");
-    let matching = caches.filter((file) => file.path.split("/").includes(hash));
-
-    if (matching.length > 0) {
-        vscode.window.showInformationMessage("Already done this one!");
-        WebviewHelper.launch(path.dirname(matching[0].path));
-        return;
-    }
-
-    const args = configToArgList(config, hash);
-    const preview = getConfigPreview(config);
-
-    vscode.window.withProgress({
-        cancellable: true,
-        location: vscode.ProgressLocation.Notification,
-        title: 'Solving CSP ...\n' + preview
-
-    }, async (progress, token) => {
-
-        var p = new Promise((resolve, reject) => {
-
-            let command = "conjure " + args.join(" ");
-            console.log(command);
-
-            const proc = spawn("conjure", args, {
-                shell: true,
-                cwd: vscode.workspace.rootPath,
-                detached: true
-            });
-
-            progress.report({ message: "Running Conjure...", increment: 10 });
-
-            let errorMessage = "";
-
-            proc.stdout.on('data', (data) => {
-                //  console.log(`stdout:      ${data}`);
-                if (data.includes("Saved under")) {
-                    progress.report({ message: "Running Savilerow...", increment: 10 });
-                }
-            });
-
-            proc.stderr.on('data', (data) => {
-                errorMessage += `${data}`;
-            });
-
-            proc.on('close', (code) => {
-                fs.writeFileSync(path.join(vscode.workspace.rootPath!, hash, "vscode.extensionCache"), "blank");
-
-                console.log(`child process exited with code ${code}`);
-                console.error(errorMessage);
-                vscode.window.showErrorMessage(errorMessage);
-                if (errorMessage === "") {
-                    vscode.window.showInformationMessage("Done!");
-                    WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash), command);
-                }
-                else {
-                    rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
-                }
-
-                resolve();
-            });
-
-            proc.on('error', (err) => {
-                console.log('Failed to start subprocess.');
-                console.error(err);
-                vscode.window.showErrorMessage("Failed to start conjure ;_;");
-                reject();
-            });
-
-            token.onCancellationRequested(() => {
-                process.kill(-proc.pid);
-                errorMessage = "Search Cancelled!";
-                rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
-            });
         });
         return p;
     }); // vscode.window.withProgress
@@ -411,20 +352,12 @@ export default class ConfigureHelper {
                     break;
 
                 case 'solve':
-                    if (message.diff) {
-                        solveAny([message.data.config1, message.data.config2], essenceFiles, paramFiles);
-                    }
-                    else {
-                        solveSingle(message.data.config1, essenceFiles, paramFiles);
-                    }
+                    solveAny(message.data.configs, essenceFiles, paramFiles);
                     break;
             }
         }, undefined, this.context.subscriptions);
     }
 
-    /**
-     * Returns a single html file containing all the scripts and css from internal and external resources.
-     */
     private static getWebContent(): string {
 
         // Internal resources

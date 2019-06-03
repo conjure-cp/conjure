@@ -118,16 +118,17 @@ function resetPlaceHolders() {
 }
 
 
-
 let config1: ConfigureHelper.Configuration;
 let config2: ConfigureHelper.Configuration;
 
 $("#solve").click(() => {
 
+    let configs: ConfigureHelper.Configuration[] = [];
+
     let diffing = $("#diff").is(":checked");
 
     if(!diffing){
-        config1 = collectFields();
+        configs = [collectFields()];
     }
     else{
         if ($("#2Label").hasClass("active")){
@@ -136,11 +137,14 @@ $("#solve").click(() => {
         else{
             config1 = collectFields();
         }
+        configs = [config1, config2];
     }
+
+    
 
     vscode.postMessage({
         command: "solve",
-        data: {config1: config1, config2: config2},
+        data: {configs: configs},
         diff: diffing
     });
 
