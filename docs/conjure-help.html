@@ -130,6 +130,17 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver-options=ITEM</td><td style='padding-left:2ex;'>Options passed to the backend solver.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver=ITEM</td><td style='padding-left:2ex;'>Backend solver. Possible values:<br /> - minion (CP solver)<br /> - gecode (CP solver)<br /> - chuffed (CP solver)<br /> - glucose (SAT solver)<br /> - lingeling (SAT solver)<br /> - minisat (SAT solver)<br /> - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)<br /> - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)<br /> - open-wbo (MaxSAT solver, only works with optimisation problems)<br />Default: minion</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
+<tr><td colspan='3'>conjure ide [OPTIONS] ESSENCE_FILE</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>IDE support features for Conjure.<br />Not intended for direct use.</td></tr>
+<tr><td colspan='3'>&nbsp;</tr>
+<tr><td colspan='3'>Logging &amp; Output:</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
+<tr><td colspan='3'>General:</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
+<tr><td colspan='3'>IDE Features:</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--dump-domains</td><td style='padding-left:2ex;'>Print the domains of decision variables and parameters.</td></tr>
+<tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure pretty [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Pretty print as Essence file to stdout.<br />This mode can be used to view a binary Essence file in textual form.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>

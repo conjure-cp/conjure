@@ -228,20 +228,20 @@
                                                - open-wbo (MaxSAT solver, only works with optimisation problems)
                                               Default: minion
  
- conjure ide [OPTIONS]
+ conjure ide [OPTIONS] ESSENCE_FILE
    IDE support features for Conjure.
    Not intended for direct use.
  
- Flags:
-      --essence=FILE                          Problem specification in Essence.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
       --limit-time=INT                        Limit in seconds of real time.
+ IDE Features:
+      --dump-domains                          Print the domains of decision variables and parameters.
  
- conjure pretty [OPTIONS] FILE
+ conjure pretty [OPTIONS] ESSENCE_FILE
    Pretty print as Essence file to stdout.
    This mode can be used to view a binary Essence file in textual form.
  
