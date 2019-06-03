@@ -402,7 +402,7 @@ savilerowScriptName :: Sys.FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"
-    | otherwise = "Cannot detect operating system."
+    | otherwise = bug "Cannot detect operating system."
 
 
 savileRowNoParam ::
@@ -430,6 +430,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                                     , modelPath, "<no param file>"
                                     , lineWidth
                                     , outputFormat
+                                    , logLevel
                                     )
                                     tr
                                     (1::Int))
@@ -476,6 +477,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                                             , modelPath, paramPath
                                             , lineWidth
                                             , outputFormat
+                                            , logLevel
                                             )
                                             tr
                                             (1::Int))
@@ -526,7 +528,7 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 srStdoutHandler
     :: Bool
-    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
+    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat, LogLevel)
     -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
@@ -536,6 +538,7 @@ srStdoutHandler
         args@( outputDirectory, outBase
              , modelPath, paramPath
              , lineWidth, outputFormat
+             , logLevel
              )
         tr
         solutionNumber h = do
@@ -547,7 +550,12 @@ srStdoutHandler
         else do
             line <- hGetLine h
             case stripPrefix "Solution: " line of
-                Nothing ->
+                Nothing -> do
+                    if isPrefixOf "Created output file for domain filtering" line
+                        then pp logLevel $ hsep ["Running minion for domain filtering."]
+                        else if isPrefixOf "Created output file" line
+                            then pp logLevel $ hsep ["Running solver."]
+                            else return ()
                     fmap (Left line :)
                          (srStdoutHandler solutionsInOneFile args tr solutionNumber h)
                 Just solutionText -> do
