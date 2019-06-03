@@ -1,178 +1,120 @@
 # Hello Nim!
-import  jester, typetraits 
-include process
+import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json
+import jsonify
+import init
+import process
+import branchingCondition
+# include process
 
-var db : DbConn
+var db: DbConn
+var decTable: CountTable[int]
 
-type SimpleDomainResponse = ref object of RootObj
-    changedIds : seq[int]
-    vars : seq[Variable]
+proc init*(dirPath: string): JsonNode =
+    db = findFiles(dirPath)
+    decTable = getDecendants(db)
+    return getCore(db, decTable)
 
-type PrettyDomainResponse = ref object of RootObj
-    changedIds : seq[string]
-    vars : seq[Variable]
+proc loadNodes*(start: string): seq[ParentChild] =
 
-type ParentChild = ref object of RootObj
-    parentId: int
-    label: string
-    children: seq[int]
+    var nId, pId: int
 
-proc `$`(r: ParentChild): string =
-    return $r.parentId & " : " & $r.children
+    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = ? order by nodeId asc"
 
-proc init*(dirPath: string) =
-
-    let current = getCurrentDir()
-    setCurrentDir(dirPath)
-
-    var minionFilePath : string
-    var eprimeFilePath : string
-    var dbFilePath : string
-
-    for f in walkFiles("*.eprime-minion"):
-        minionFilePath =  absolutePath(f)
-        break;
-
-    for f in walkFiles("*.eprime"):
-        eprimeFilePath =  absolutePath(f)
-        break;
-
-    for f in walkFiles("*.db"):
-        dbFilePath =  absolutePath(f)
-        break;
-        
-    setCurrentDir(current)
-
-    initParser(minionFilePath, eprimeFilePath)
-
-    db = open(dbFilePath, "", "", "") 
-
-proc loadNodes*(amount, start: string): JsonNode =
-
-    var list :seq[ParentChild]
-    var pId, childId : int
-    
-    for row1 in db.fastRows(sql"select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?", start, amount):
-        var kids : seq[int]
-        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
-            discard parseInt(row2[0], childId)
-            kids.add(childId)
+    for row1 in db.fastRows(sql(query), start):
+        discard parseInt(row1[0], nId)
 
         discard parseInt(row1[1], pId)
 
-        var equality: string
-
-        if (row1[4] == "1"):
-            equality = " = "
-        else:
-            equality = " != "
-
-
-        list.add(ParentChild(parentId: pId, label: row1[2] & equality & row1[3], children: kids))
-
-    # echo nodes
-    # echo list
-    
-    return %list
+        var childCount : int
+        discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
+        
+        let l = getLabel(getInitialVariables(), row1[2], row1[3], row1[4])
+        let pL = getLabel(getInitialVariables(), row1[2], row1[3], row1[4], true)
 
 
+        result.add(ParentChild(parentId: pId, id: nId, label:l, prettyLabel: pL, isLeftChild: parsebool(row1[3]), childCount: childCount, decCount: decTable[nId] - 1))
 
-proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
+proc getExpandedSetChild*(nodeId, path: string): Set =
 
-    var list : seq[int]
-    var id : int
-    var domainsAtPrev : seq[Variable]
+    result = Set(prettyLookup[nodeId][path.split(".")[0]])
+
+    for name in path.split(".")[1..^1]:
+        for kid in result.children:
+            if kid.name == name:
+                result = kid
+                break;
+
+    if result.name != path.split(".")[^1]:
+        return nil
+
+
+proc getChildSets(paths, nodeId: string): seq[Set] =
+    if paths != "":
+        for path in paths.split(":"):
+            result.add(getExpandedSetChild(nodeId, path))
+
+
+proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
+    result = %*[]
+
+    for v in domainsAtNode:
+        if (v != nil):
+            if (v of Set):
+                result.add(setToJson(Set(v), nodeId, true))
+            else:
+                result.add(%v)
+
+proc loadSetChild*(nodeId, path: string): JsonNode =
+    let s = getExpandedSetChild(nodeId, path)
+    let update = setToJson(s, nodeId, true)
+    return %*{"structure": %setToTreeView(s), "update": update, "path": path}
+
+
+proc temp(db: DbConn, nodeId, paths: string): JsonNode =
+    var domainsAtNode: seq[Variable]
+    var id: int
+    var changeList: seq[string]
+    discard parseInt(nodeId, id)
+    domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
+    for kid in getChildSets(paths, nodeId):
+        if kid != nil:
+            domainsAtNode.add(kid)
+
+    if (id != rootNodeId):
+        var domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
+        for kid in getChildSets(paths, $(id - 1)):
+            if kid != nil:
+                domainsAtPrev.add(kid)
+        changeList = getPrettyChanges(domainsAtNode, domainsAtPrev)
+
+    return %*{"vars": getJsonVarList(domainsAtNode, nodeId), "changed": changeList, "changedExpressions": %[]}
+
+proc getSkeleton*(): JsonNode =
+    return domainsToJson(getPrettyDomainsOfNode(db, "0"))
+    # return domainsToJson(domainsAtNode)
+
+
+proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): JsonNode =
+    temp(db, nodeId, paths)
+
+proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = true): SimpleDomainResponse =
+
+    var list: seq[string]
+    var id: int
+    var domainsAtPrev: seq[Variable]
     discard parseInt(nodeId, id)
 
-    let domainsAtNode = getSimpleDomainsOfNode(db, amount, start, nodeId)
-    # echo start
-    # echo domainsAtNode
+    let domainsAtNode = getSimpleDomainsOfNode(db, nodeId, wantExpressions)
 
-    if (id != 1):
-        domainsAtPrev = getSimpleDomainsOfNode(db, amount, start, $(id - 1))
-        
+    if (id != rootNodeId):
+        domainsAtPrev = getSimpleDomainsOfNode(db, $(id - 1), wantExpressions)
+
         for i in 0..<domainsAtNode.len():
             if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                list.add(i)
+                list.add(domainsAtNode[i].name)
 
-    # echo "3"
-
-    return  %SimpleDomainResponse(changedIds: list, vars: domainsAtNode)
+    return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
 
-proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
-    var list : seq[string]
-    var id : int
-    var domainsAtPrev : seq[Variable]
-    
-    discard parseInt(nodeId, id)
-
-    var domainsAtNode : seq[Variable]
-    domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
-
-    let jsonList = %domainsAtNode
-
-
-    for i in 0..<domainsAtNode.len():
-        if domainsAtNode[i] of Set:
-            let s = cast[Set](domainsAtNode[i])
-
-            jsonList[i]["Cardinality"] = %s.getCardinality()
-            jsonList[i]["Included"] = %s.included
-            jsonList[i]["Excluded"] = %s.excluded
-
-
-    if (id != 1):
-        domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
-
-        for i in 0..<domainsAtNode.len():
-
-            # echo domainsAtNode[i]
-            # echo domainsAtPrev[i]
-
-            if domainsAtNode[i] of Set:
-                let s1 = cast[Set](domainsAtNode[i])
-                let s2 = cast[Set](domainsAtPrev[i])
-
-                if (s1.getCardinality() != s2.getCardinality()):
-                    list.add("li" & s1.name & "Cardinality")
-
-                if (s1.included != s2.included):
-                    list.add("li" & s1.name & "Included")
-
-                if (s1.excluded != s2.excluded):
-                    list.add("li" & s1.name & "Excluded")
-
-            elif domainsAtNode[i] of Expression:
-                if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                    list.add("liExpressions" & domainsAtNode[i].name) 
-            else:
-                if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                    list.add("liVariables" & domainsAtNode[i].name )
-
-    
-    if id == 1:
-        return domainsToJson(domainsAtNode)
-
-    return %*{"vars" : jsonList, "changed" : list }
-
-proc getCorrectPath*(): JsonNode =
-
-    var ids : seq[int]
-    var id : int
-
-    for row in db.fastRows(sql("""with recursive
-	correctPath(n) as (
-	select max(nodeId) from Node
-	union 
-	select parentId  from Node, correctPath
-		where nodeId=correctPath.n  and parentId > 0
-    )
-    select * from correctPath;""")):
-        discard parseInt(row[0], id)
-        ids.add(id)
-
-    return % ids
-
-proc getLongestBranchingVarName*() : JsonNode =
+proc getLongestBranchingVarName*(): JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]

@@ -1,63 +1,53 @@
-type TreeViewNode = ref object of RootObj
-  name: string
-  children: seq[TreeViewNode]
+import variable, setType, expression
+export variable, setType, expression
 
-type Variable = ref object of RootObj
-  name: string
-  rng: string
+# Constants
 
-type Expression = ref object of Variable
+let maxIndex* = 4
+let rootNodeId* = 0
 
-type Set = ref object of Variable
-    lower: int
-    upper: int
-    included: seq[int]
-    excluded: seq[int]
+# Exceptions
 
-type OccurrenceSet = ref object of Set
+type
+    CannotOpenEprimeException* = object of Exception
+type
+    CannotOpenMinionException* = object of Exception
+type
+    CannotOpenDatabaseException* = object of Exception
+type
+    EprimeParseException* = object of Exception
+type
+    MinionParseException* = object of Exception
 
 
-type DummySet = ref object of Set
-    dummyVal : int
+# Responses
 
-type MarkerSet = ref object of Set
-    cardinality : string
+type SimpleDomainResponse* = ref object of RootObj
+    changedNames*: seq[string]
+    vars*: seq[Variable]
 
-type FlagSet = ref object of Set
-    list : seq[string]
+type ParentChild* = ref object of RootObj
+    id*: int
+    parentId*: int
+    label*: string
+    prettyLabel*: string
+    childCount*: int
+    isSolution*: bool
+    isLeftChild*: bool
+    decCount*: int
 
-proc getPrettyRange(lower: string, upper: string): string =
-    if lower == upper:
-       return "int(" & $lower & ")" 
-    return "int(" & $lower & ".." & $upper & ")"
+# type ChildResponse* = ref object of RootObj
+#     nodeId*: int
+#     children*: seq[int]
+#     decendantCount*: int
 
-proc getCardinality(s: Set): string =
-    if s of DummySet or s of OccurrenceSet:
-        return getPrettyRange($len(s.included), $(s.upper - len(s.excluded))) 
+type Node* = ref object of RootObj
+    id*: int
+    name*: string
+    children*: seq[Node]
 
-    if s of MarkerSet:
-        let mS = cast[MarkerSet](s)
-        return mS.cardinality
+# Json
 
-    if s of FlagSet:
-        let fS = cast[FlagSet](s)
-        return getPrettyRange($fS.list.len())
-    
-    return "ERROR"
-
-proc `$`*(v:Variable): string =
-    if v of Expression:
-        return "<Expr> " & v.name & " " & v.rng
-    if v of FlagSet:
-        let s = cast[MarkerSet](v)
-        return "<FSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded  &  " cardinality " & getCardinality(s)
-    if v of MarkerSet:
-        let s = cast[MarkerSet](v)
-        return "<MSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    if v of OccurrenceSet:
-        let s = cast[OccurrenceSet](v)
-        return "<OSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    if v of DummySet:
-        let s = cast[DummySet](v)
-        return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " dummy " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    return "<Variable> " & v.name & " " & v.rng 
+type TreeViewNode* = ref object of RootObj
+    name*: string
+    children*: seq[TreeViewNode]

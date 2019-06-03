@@ -1,0 +1,1 @@
+module.exports.bgColour = getComputedStyle(document.body).getPropertyValue('--background-color');

@@ -1,5 +1,6 @@
 body{
     background-color: var(--background-color);
+    /* background-color: #fff */
 }
 
 #pane{
@@ -25,6 +26,12 @@ td, th {
     transition: stroke 500ms, fill 500ms;
 }
 
+circle.solution {
+    fill: yellow ;
+    stroke: gold;
+    transition: stroke 500ms, fill 500ms;
+}
+
 circle.hasOthers {
     fill: var(--vscode-terminal-ansiGreen) ;
     transition: stroke 500ms, fill 500ms;
@@ -42,6 +49,7 @@ circle.selected {
 .node text {
     font: 18px sans-serif;
     fill: #fff;
+    /* fill: black */
 }
 
 label{

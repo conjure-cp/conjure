@@ -28,6 +28,11 @@
                 "category": "Conjure"
             },
             {
+                "command": "conjure.solveAndVis",
+                "title": "Visualise search tree in current directory",
+                "category": "Conjure"
+            },
+            {
                 "command": "conjure.vis",
                 "title": "Visualise a search tree",
                 "category": "Conjure"
@@ -69,6 +74,7 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
+        "@types/jquery": "^3.3.29",
         "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.36",
         "tslint": "^5.8.0",
