@@ -389,8 +389,8 @@ equalNumberOfSolutions :: HasCallStack => Step -> TestDirFiles -> Assertion
 equalNumberOfSolutions step TestDirFiles{..} = do
     step "Checking number of solutions"
     dirShouldExist outputsDir
-    models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
-    params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+    models    <- sort . filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+    params    <- sort . filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
     solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
     let
         grouped :: [ ( Maybe String             -- the parameter
@@ -440,8 +440,8 @@ noDuplicateSolutions :: HasCallStack => Step -> TestDirFiles -> Assertion
 noDuplicateSolutions step TestDirFiles{..} = do
     step "Checking duplicate solutions"
     dirShouldExist outputsDir
-    models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
-    params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+    models    <- sort . filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+    params    <- sort . filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
     solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
     solutionContents <- forM solutions $ \ s -> do m <- readModelFromFile (outputsDir </> s)
                                                    return (s, m)

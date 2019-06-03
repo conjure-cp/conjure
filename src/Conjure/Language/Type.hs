@@ -231,6 +231,7 @@ isPrimitiveType :: Type -> Bool
 isPrimitiveType TypeBool{} = True
 isPrimitiveType TypeInt{} = True
 isPrimitiveType (TypeMatrix index inner) = and [isPrimitiveType index, isPrimitiveType inner]
+isPrimitiveType (TypeList inner) = isPrimitiveType inner
 isPrimitiveType _ = False
 
 typeCanIndexMatrix :: Type -> Bool

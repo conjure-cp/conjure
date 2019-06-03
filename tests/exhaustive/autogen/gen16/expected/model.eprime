@@ -17,6 +17,6 @@ such that
         or([x_ExplicitR16_RelationAsMatrix[q37, q46_1, 3] /\ q46_1 = 2 | q46_1 : int(1..2)])
         /\ sum([toInt(x_ExplicitR16_RelationAsMatrix[q37, q40_1, 3]) | q40_1 : int(1..2)]) = 1
             | q37 : int(1..2)]),
-    [toInt(x_ExplicitR16_RelationAsMatrix[1, q5, 3]) | q5 : int(1..2)] <lex
-    [toInt(x_ExplicitR16_RelationAsMatrix[2, q7, 3]) | q7 : int(1..2)]
+    flatten([[-toInt(x_ExplicitR16_RelationAsMatrix[1, q5, 3]); int(1)] | q5 : int(1..2)]) <lex
+    flatten([[-toInt(x_ExplicitR16_RelationAsMatrix[2, q7, 3]); int(1)] | q7 : int(1..2)])
 

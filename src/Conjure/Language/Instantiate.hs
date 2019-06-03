@@ -26,14 +26,14 @@ trySimplify ::
     MonadUserError m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Expression -> m Expression
-trySimplify x = do
-    res <- runMaybeT $ instantiateExpression [] x
+    [(Name, Expression)] -> Expression -> m Expression
+trySimplify ctxt x = do
+    res <- runMaybeT $ instantiateExpression ctxt x
     case res of
         Just c                                                  -- if the expression can be evaluated into a Constant
             | null [() | ConstantUndefined{} <- universe c]     -- and if it doesn't contain undefined's in it
             -> return (Constant c)                              -- evaluate to the constant
-        _   -> descendM trySimplify x                           -- otherwise, try the same on its children
+        _   -> descendM (trySimplify ctxt) x                    -- otherwise, try the same on its children
 
 
 instantiateExpression ::
@@ -403,7 +403,7 @@ entailed ::
     Expression -> m Bool
 entailed x = do
     -- traceM $ show $ "entailed x:" <+> pretty x
-    c <- trySimplify x
+    c <- trySimplify [] x
     -- traceM $ show $ "entailed c:" <+> pretty c
     case c of
         Constant (ConstantBool True) -> return True

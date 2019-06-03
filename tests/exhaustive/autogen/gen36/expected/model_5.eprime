@@ -13,30 +13,24 @@ branching on
 such that
     var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[2] ->
     flatten([[var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1]; int(1)],
-             flatten(var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-                         [1, .., ..]);
+             ([] : `matrix indexed by [int()] of int`);
                  int(1..2)])
     <lex
     flatten([[var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[2]; int(1)],
-             flatten(var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-                         [2, .., ..]);
+             ([] : `matrix indexed by [int()] of int`);
                  int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[q2] = false ->
          var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q2] = 0
              | q2 : int(1..2)]),
     var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[2] -> var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[1],
     and([var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[q5] ->
-         and([q19 <= var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q5]
+         and([q23 <= var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q5]
               -> false
-                  | q19 : int(1..2)])
+                  | q23 : int(1..2)])
              | q5 : int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[q5] ->
          (2 <= var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q5] ->
-          var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-              [q5, 1, ..]
-          <lex
-          var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-              [q5, 2, ..])
+          false)
              | q5 : int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR18R5R3_Flags[q5] ->
          3 <= var6_ExplicitVarSizeWithFlagsR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q5]

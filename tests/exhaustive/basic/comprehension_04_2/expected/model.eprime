@@ -13,11 +13,11 @@ such that
                i_ExplicitVarSizeWithMarker_Values_2 : matrix indexed by [int(1..2)] of bool,
                2 <= i_ExplicitVarSizeWithMarker_Marker ->
                flatten([[i_ExplicitVarSizeWithMarker_Values_1[1]; int(1)],
-                        [toInt(i_ExplicitVarSizeWithMarker_Values_2[1]); int(1)];
+                        [-toInt(i_ExplicitVarSizeWithMarker_Values_2[1]); int(1)];
                             int(1..2)])
                <lex
                flatten([[i_ExplicitVarSizeWithMarker_Values_1[2]; int(1)],
-                        [toInt(i_ExplicitVarSizeWithMarker_Values_2[2]); int(1)];
+                        [-toInt(i_ExplicitVarSizeWithMarker_Values_2[2]); int(1)];
                             int(1..2)]),
                and([q2 > i_ExplicitVarSizeWithMarker_Marker ->
                     i_ExplicitVarSizeWithMarker_Values_1[q2] = 7 /\ i_ExplicitVarSizeWithMarker_Values_2[q2] = false

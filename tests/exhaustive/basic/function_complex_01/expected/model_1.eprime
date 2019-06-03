@@ -17,27 +17,35 @@ branching on
      x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2]
 such that
     and([q1 + 1 <= x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Marker ->
-         flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
-                       [q1];
-                       int(1)],
-                  x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
-                      [q1, ..],
-                  [toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
-                             [q1, q11])
-                       | q11 : int(1..2)],
+         flatten([flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
+                                [q1];
+                                int(1)],
+                           flatten([flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
+                                                  [q1, q11];
+                                                  int(1)],
+                                             [-toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
+                                                         [q1, q11]);
+                                                  int(1)];
+                                                 int(1..2)])
+                                        | q11 : int(1..2)]);
+                               int(1..2)]),
                   [x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2[q1]; int(1)];
-                      int(1..4)])
+                      int(1..2)])
          <lex
-         flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
-                       [q1 + 1];
-                       int(1)],
-                  x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
-                      [q1 + 1, ..],
-                  [toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
-                             [q1 + 1, q12])
-                       | q12 : int(1..2)],
+         flatten([flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
+                                [q1 + 1];
+                                int(1)],
+                           flatten([flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
+                                                  [q1 + 1, q12];
+                                                  int(1)],
+                                             [-toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
+                                                         [q1 + 1, q12]);
+                                                  int(1)];
+                                                 int(1..2)])
+                                        | q12 : int(1..2)]);
+                               int(1..2)]),
                   [x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2[q1 + 1]; int(1)];
-                      int(1..4)])
+                      int(1..2)])
              | q1 : int(1..2)]),
     and([q2 > x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Marker ->
          x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
@@ -64,16 +72,16 @@ such that
           flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
                         [q3, 1];
                         int(1)],
-                   [toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
-                              [q3, 1]);
+                   [-toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
+                               [q3, 1]);
                         int(1)];
                        int(1..2)])
           <lex
           flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
                         [q3, 2];
                         int(1)],
-                   [toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
-                              [q3, 2]);
+                   [-toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
+                               [q3, 2]);
                         int(1)];
                        int(1..2)]))
              | q3 : int(1..3)]),
@@ -121,11 +129,11 @@ such that
                q7_ExplicitVarSizeWithMarker_Values_2 : matrix indexed by [int(1..2)] of bool,
                2 <= q7_ExplicitVarSizeWithMarker_Marker ->
                flatten([[q7_ExplicitVarSizeWithMarker_Values_1[1]; int(1)],
-                        [toInt(q7_ExplicitVarSizeWithMarker_Values_2[1]); int(1)];
+                        [-toInt(q7_ExplicitVarSizeWithMarker_Values_2[1]); int(1)];
                             int(1..2)])
                <lex
                flatten([[q7_ExplicitVarSizeWithMarker_Values_1[2]; int(1)],
-                        [toInt(q7_ExplicitVarSizeWithMarker_Values_2[2]); int(1)];
+                        [-toInt(q7_ExplicitVarSizeWithMarker_Values_2[2]); int(1)];
                             int(1..2)]),
                and([q14 > q7_ExplicitVarSizeWithMarker_Marker ->
                     q7_ExplicitVarSizeWithMarker_Values_1[q14] = 7 /\ q7_ExplicitVarSizeWithMarker_Values_2[q14] = false
@@ -137,22 +145,28 @@ such that
          (flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
                         [q21];
                         int(1)],
-                   x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
-                       [q21, ..],
-                   [toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
-                              [q21, q23])
-                        | q23 : int(1..2)];
-                       int(1..3)])
+                   flatten([flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
+                                          [q21, q23];
+                                          int(1)],
+                                     [-toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
+                                                 [q21, q23]);
+                                          int(1)];
+                                         int(1..2)])
+                                | q23 : int(1..2)]);
+                       int(1..2)])
           <lex
           flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Marker
                         [q22];
                         int(1)],
-                   x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
-                       [q22, ..],
-                   [toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
-                              [q22, q24])
-                        | q24 : int(1..2)];
-                       int(1..3)])
+                   flatten([flatten([[x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_1
+                                          [q22, q24];
+                                          int(1)],
+                                     [-toInt(x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1_ExplicitVarSizeWithMarker_Values_2
+                                                 [q22, q24]);
+                                          int(1)];
+                                         int(1..2)])
+                                | q24 : int(1..2)]);
+                       int(1..2)])
           ->
           x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2[q21] !=
           x_FunctionAsRelationR5_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2[q22])

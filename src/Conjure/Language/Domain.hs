@@ -26,6 +26,7 @@ module Conjure.Language.Domain
     , normaliseDomain, normaliseRange
     , innerDomainOf
     , singletonDomainInt
+    , matrixNumDimsD
     ) where
 
 -- conjure
@@ -262,6 +263,7 @@ reprAtTopLevel = rootLabel . reprTree
 applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
 applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainIntE{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) =
@@ -1005,3 +1007,7 @@ singletonDomainInt (DomainInt _ [RangeBounded a b]) =
             then Just a
             else Nothing
 singletonDomainInt _ = Nothing
+
+matrixNumDimsD :: Domain r x -> Int
+matrixNumDimsD (DomainMatrix _ t) = 1 + matrixNumDimsD t
+matrixNumDimsD _ = 0

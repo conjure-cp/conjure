@@ -14,30 +14,24 @@ such that
     2 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Marker ->
     flatten([[var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1];
                   int(1)],
-             flatten(var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-                         [1, .., ..]);
+             ([] : `matrix indexed by [int()] of int`);
                  int(1..2)])
     <lex
     flatten([[var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[2];
                   int(1)],
-             flatten(var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-                         [2, .., ..]);
+             ([] : `matrix indexed by [int()] of int`);
                  int(1..2)]),
     and([q2 > var6_ExplicitVarSizeWithMarkerR18R5R3_Marker ->
          var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q2] = 0
              | q2 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Marker ->
-         and([q17 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q3]
+         and([q21 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q3]
               -> false
-                  | q17 : int(1..2)])
+                  | q21 : int(1..2)])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Marker ->
          (2 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q3] ->
-          var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-              [q3, 1, ..]
-          <lex
-          var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-              [q3, 2, ..])
+          false)
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Marker ->
          3 <= var6_ExplicitVarSizeWithMarkerR18R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q3]
