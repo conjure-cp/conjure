@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import fs = require('fs');
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import WebviewHelper from './webviewHelper';
 import apiConstructor = require('node-object-hash');
 import rimraf = require("rimraf");
@@ -11,8 +11,8 @@ const hasher = apiConstructor({ sort: true, coerce: true }).hash;
 const collator = new Intl.Collator(undefined, { numeric: true });
 
 export interface ConjureOptions {
-    timelimit: number;
     strategy: string;
+    timelimit: number | undefined;
 }
 
 export interface MinionOptions {
@@ -20,17 +20,17 @@ export interface MinionOptions {
     preprocessing: string;
     findallsols: boolean;
     randomiseorder: boolean;
-    nodelimit: number;
-    sollimit: number;
-    cpulimit: number;
+    nodelimit: number | undefined;
+    sollimit: number | undefined;
+    cpulimit: number | undefined;
 }
 
 export interface SavileRowOptions {
     optimisation: string;
     symmetryBreaking: string;
     translation: string;
-    timelimit: number;
-    cnflimit: number;
+    timelimit: number | undefined;
+    cnflimit: number | undefined;
 }
 
 export interface Configuration {
@@ -39,6 +39,17 @@ export interface Configuration {
     conjureOptions: ConjureOptions;
     savileRowOptions: SavileRowOptions;
     minionOptions: MinionOptions;
+}
+
+interface SearchJob {
+    hash: string;
+    args: string[];
+    preview: string;
+}
+
+interface CachedSearch {
+    hash: string;
+    args: string[];
 }
 
 function getConfigHash(config: Configuration, essenceFiles: string[], paramFiles: string[]): string {
@@ -62,6 +73,284 @@ function getConfigPreview(config: Configuration): string {
     return res;
 }
 
+function getProgressMessage(doneCount: number, jobCount: number): string {
+    return `${doneCount}/${jobCount} completed... `;
+}
+
+async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], paramFiles: vscode.Uri[]) {
+
+    let jobs: SearchJob[] = [];
+    let cached: CachedSearch[] = [];
+
+    for (let i = 0; i < configs.length; i++) {
+
+        const config = configs[i];
+
+        const hash = getConfigHash(config, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
+        const args = configToArgList(config, hash);
+
+
+        let caches = await vscode.workspace.findFiles("**/*.extensionCache");
+        let matching = caches.filter((file) => file.path.split("/").includes(hash));
+
+        if (matching.length > 0) {
+            cached.push({ hash: hash, args: args });
+            vscode.window.showInformationMessage(`Loading tree ${i} from cache...`);
+            continue;
+        }
+
+        const preview = getConfigPreview(config);
+        jobs.push({ hash: hash, args: args, preview: preview });
+    }
+
+    vscode.window.withProgress({
+        cancellable: true,
+        location: vscode.ProgressLocation.Notification,
+        title: 'Solving CSPs ...\n'
+
+    }, (progress, token) => {
+
+        var p = new Promise((resolve, reject) => {
+
+            let doneCount = 0;
+            let jobCount = 0;
+
+            let procs: ChildProcess[] = [];
+
+            jobs.forEach((job) => {
+                jobCount++;
+
+                const proc = spawn("conjure", job.args, {
+                    shell: true,
+                    cwd: vscode.workspace.rootPath,
+                    detached: true
+                });
+
+                procs.push(proc);
+
+                progress.report({ message: getProgressMessage(doneCount, jobCount) + "running conjure..", increment: 0 });
+
+                let errorMessage = "";
+
+                proc.stdout.on('data', (data) => {
+                    if (data.includes("Saved under")) {
+                        progress.report(
+                            {
+                                message: getProgressMessage(doneCount, jobCount) + " running savilerow..",
+                                increment: 10
+                            }
+                        );
+                    }
+                });
+
+                proc.stderr.on('data', (data) => {
+                    errorMessage += `${data}`;
+                });
+
+                proc.on('close', (code) => {
+
+                    doneCount++;
+
+                    progress.report({ message: `${doneCount}/${jobCount} completed...` + " running savilerow..", increment: 20 });
+
+                    fs.writeFileSync(path.join(vscode.workspace.rootPath!, job.hash, "vscode.extensionCache"), "blank");
+
+                    console.log(`child process exited with code ${code}`);
+                    console.error(errorMessage);
+                    vscode.window.showErrorMessage(errorMessage);
+                    if (errorMessage === "") {
+                        let command = "conjure " + job.args.join(" ");
+                        WebviewHelper.launch(path.join(vscode.workspace.rootPath!, job.hash), command);
+                    }
+                    else {
+                        rimraf.sync(path.join(vscode.workspace.rootPath!, job.hash));
+                    }
+
+                    if (doneCount === jobs.length) {
+                        resolve();
+                        vscode.window.showInformationMessage("Done!");
+                    }
+
+                });
+
+                proc.on('error', (err) => {
+                    console.log('Failed to start subprocess.');
+                    console.error(err);
+                    vscode.window.showErrorMessage("Failed to start conjure ;_;");
+                });
+
+                token.onCancellationRequested(() => {
+                    procs.map((proc: ChildProcess) => process.kill(-proc.pid));
+                    errorMessage = "Search Cancelled!";
+                    rimraf.sync(path.join(vscode.workspace.rootPath!, job.hash));
+                });
+            });
+
+            cached.forEach(search => {
+                let command = "conjure " + search.args.join(" ");
+                WebviewHelper.launch(path.join(vscode.workspace.rootPath!, search.hash), command);
+            });
+
+            if (jobs.length === 0) {
+                resolve();
+            }
+        });
+        return p;
+    }); // vscode.window.withProgress
+}
+
+async function solveSingle(config: Configuration, essenceFiles: vscode.Uri[], paramFiles: vscode.Uri[]) {
+
+    const hash = getConfigHash(config, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
+
+    let caches = await vscode.workspace.findFiles("**/*.extensionCache");
+    let matching = caches.filter((file) => file.path.split("/").includes(hash));
+
+    if (matching.length > 0) {
+        vscode.window.showInformationMessage("Already done this one!");
+        WebviewHelper.launch(path.dirname(matching[0].path));
+        return;
+    }
+
+    const args = configToArgList(config, hash);
+    const preview = getConfigPreview(config);
+
+    vscode.window.withProgress({
+        cancellable: true,
+        location: vscode.ProgressLocation.Notification,
+        title: 'Solving CSP ...\n' + preview
+
+    }, async (progress, token) => {
+
+        var p = new Promise((resolve, reject) => {
+
+            let command = "conjure " + args.join(" ");
+            console.log(command);
+
+            const proc = spawn("conjure", args, {
+                shell: true,
+                cwd: vscode.workspace.rootPath,
+                detached: true
+            });
+
+            progress.report({ message: "Running Conjure...", increment: 10 });
+
+            let errorMessage = "";
+
+            proc.stdout.on('data', (data) => {
+                //  console.log(`stdout:      ${data}`);
+                if (data.includes("Saved under")) {
+                    progress.report({ message: "Running Savilerow...", increment: 10 });
+                }
+            });
+
+            proc.stderr.on('data', (data) => {
+                errorMessage += `${data}`;
+            });
+
+            proc.on('close', (code) => {
+                fs.writeFileSync(path.join(vscode.workspace.rootPath!, hash, "vscode.extensionCache"), "blank");
+
+                console.log(`child process exited with code ${code}`);
+                console.error(errorMessage);
+                vscode.window.showErrorMessage(errorMessage);
+                if (errorMessage === "") {
+                    vscode.window.showInformationMessage("Done!");
+                    WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash), command);
+                }
+                else {
+                    rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
+                }
+
+                resolve();
+            });
+
+            proc.on('error', (err) => {
+                console.log('Failed to start subprocess.');
+                console.error(err);
+                vscode.window.showErrorMessage("Failed to start conjure ;_;");
+                reject();
+            });
+
+            token.onCancellationRequested(() => {
+                process.kill(-proc.pid);
+                errorMessage = "Search Cancelled!";
+                rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
+            });
+        });
+        return p;
+    }); // vscode.window.withProgress
+}
+
+function configToArgList(config: Configuration, hash: string): string[] {
+
+    let conjureOptions = ["solve", config.modelFileName, config.paramFileName, "-o", hash];
+
+    if (config.conjureOptions.timelimit) {
+        conjureOptions.push("--limit-time=" + String(config.conjureOptions.timelimit));
+    }
+
+    conjureOptions.push("-a");
+    conjureOptions.push(config.conjureOptions.strategy);
+
+    let savileRowOptions = [
+        "--savilerow-options",
+        "\"-" + config.savileRowOptions.optimisation,
+        "-" + config.savileRowOptions.symmetryBreaking,
+    ];
+
+    if (config.savileRowOptions.translation !== "default") {
+        savileRowOptions.push("-" + config.savileRowOptions.translation);
+    }
+
+    if (config.savileRowOptions.cnflimit) {
+        savileRowOptions.push("-cnflimit");
+        savileRowOptions.push(String(config.savileRowOptions.cnflimit));
+    }
+
+    if (config.savileRowOptions.timelimit) {
+        savileRowOptions.push("-timelimit");
+        savileRowOptions.push(String(config.savileRowOptions.timelimit));
+    }
+
+    savileRowOptions.push("\"");
+
+    let minionOptions = ["--solver-options", "\"-dumptreesql", hash + "/out.db"];
+
+    if (config.minionOptions.findallsols) {
+        minionOptions.push("-findallsols");
+    }
+    if (config.minionOptions.randomiseorder) {
+        minionOptions.push("-randomiseorder");
+    }
+    if (config.minionOptions.nodelimit) {
+        minionOptions.push("-nodelimit");
+        minionOptions.push(String(config.minionOptions.nodelimit));
+    }
+    if (config.minionOptions.sollimit) {
+        minionOptions.push("-sollimit");
+        minionOptions.push(String(config.minionOptions.sollimit));
+    }
+    if (config.minionOptions.cpulimit) {
+        minionOptions.push("-cpulimit");
+        minionOptions.push(String(config.minionOptions.cpulimit));
+    }
+
+    if (config.minionOptions.preprocessing !== "default") {
+        minionOptions.push("-preprocess");
+        minionOptions.push(config.minionOptions.preprocessing);
+    }
+
+    if (config.minionOptions.consistency !== "default") {
+        minionOptions.push("-prop-node");
+        minionOptions.push(config.minionOptions.consistency);
+    }
+
+    minionOptions.push("\"");
+
+    return conjureOptions.concat(savileRowOptions).concat(minionOptions);
+}
+
 export default class ConfigureHelper {
 
 
@@ -75,74 +364,6 @@ export default class ConfigureHelper {
         ConfigureHelper.context = context;
     }
 
-    private static configToArgList(config: Configuration, hash: string): string[] {
-
-        let conjureOptions = ["solve", config.modelFileName, config.paramFileName, "-o", hash];
-
-        if (config.conjureOptions.timelimit > 0){
-            conjureOptions.push("--limit-time=" + String(config.conjureOptions.timelimit));
-        }
-
-        conjureOptions.push("-a");
-        conjureOptions.push(config.conjureOptions.strategy);
-
-        let savileRowOptions = [
-            "--savilerow-options",
-             "\"-" + config.savileRowOptions.optimisation,
-             "-" + config.savileRowOptions.symmetryBreaking,
-            ];
-
-        if (config.savileRowOptions.translation !== "default"){
-            savileRowOptions.push("-" + config.savileRowOptions.translation);
-        }
-
-        if (config.savileRowOptions.cnflimit > 0){
-            savileRowOptions.push("-cnflimit");
-            savileRowOptions.push(String(config.savileRowOptions.cnflimit));
-        }
-
-        if (config.savileRowOptions.timelimit > 0){
-            savileRowOptions.push("-timelimit");
-            savileRowOptions.push(String(config.savileRowOptions.timelimit));
-        }
-
-        savileRowOptions.push("\"");
-
-        let minionOptions = ["--solver-options", "\"-dumptreesql", hash + "/out.db"];
-
-        if (config.minionOptions.findallsols) {
-            minionOptions.push("-findallsols");
-        }
-        if (config.minionOptions.randomiseorder) {
-            minionOptions.push("-randomiseorder");
-        }
-        if (config.minionOptions.nodelimit > 0) {
-            minionOptions.push("-nodelimit");
-            minionOptions.push(String(config.minionOptions.nodelimit));
-        }
-        if (config.minionOptions.sollimit > 0) {
-            minionOptions.push("-sollimit");
-            minionOptions.push(String(config.minionOptions.sollimit));
-        }
-        if (config.minionOptions.cpulimit > 0) {
-            minionOptions.push("-cpulimit");
-            minionOptions.push(String(config.minionOptions.cpulimit));
-        }
-
-        if (config.minionOptions.preprocessing !== "default") {
-            minionOptions.push("-preprocess");
-            minionOptions.push(config.minionOptions.preprocessing);
-        }
-
-        if (config.minionOptions.consistency !== "default") {
-            minionOptions.push("-prop-node");
-            minionOptions.push(config.minionOptions.consistency);
-        }
-
-        minionOptions.push("\"");
-
-        return conjureOptions.concat(savileRowOptions).concat(minionOptions);
-    }
 
     public static async invalidateCaches() {
         let caches = await vscode.workspace.findFiles("**/*.extensionCache");
@@ -190,87 +411,12 @@ export default class ConfigureHelper {
                     break;
 
                 case 'solve':
-
-                    const hash = getConfigHash(message.data, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path));
-                    // const hash = "blah";
-
-                    let caches = await vscode.workspace.findFiles("**/*.extensionCache");
-                    let matching = caches.filter((file) => file.path.split("/").includes(hash));
-
-                    if (matching.length > 0) {
-                        vscode.window.showInformationMessage("Already done this one!");
-                        WebviewHelper.launch(path.dirname(matching[0].path));
-                        return;
+                    if (message.diff) {
+                        solveAny([message.data.config1, message.data.config2], essenceFiles, paramFiles);
                     }
-
-                    const args = this.configToArgList(message.data, hash);
-                    const preview = getConfigPreview(message.data);
-
-                    vscode.window.withProgress({
-                        cancellable: true,
-                        location: vscode.ProgressLocation.Notification,
-                        title: 'Solving CSP ...\n' + preview
-
-                    }, async (progress, token) => {
-
-                        var p = new Promise((resolve, reject) => {
-
-                            let command = "conjure " + args.join(" "); 
-                            console.log(command);
-
-                            const proc = spawn("conjure", args, {
-                                shell: true,
-                                cwd: vscode.workspace.rootPath,
-                                detached: true
-                            });
-
-                            progress.report({message: "Running Conjure...", increment: 10});
-
-                            let errorMessage = "";
-
-                            proc.stdout.on('data', (data) => {
-                                //  console.log(`stdout:      ${data}`);
-                                if (data.includes("Saved under")){
-                                    progress.report({message: "Running Savilerow...", increment: 10});
-                                }
-                            });
-
-                            proc.stderr.on('data', (data) => {
-                                errorMessage += `${data}`;
-                            });
-
-                            proc.on('close', (code) => {
-                                fs.writeFileSync(path.join(vscode.workspace.rootPath!, hash, "vscode.extensionCache"), "blank");
-
-                                console.log(`child process exited with code ${code}`);
-                                console.error(errorMessage);
-                                vscode.window.showErrorMessage(errorMessage);
-                                if (errorMessage === "") {
-                                    vscode.window.showInformationMessage("Done!");
-                                    WebviewHelper.launch(path.join(vscode.workspace.rootPath!, hash), command);
-                                }
-                                else {
-                                    rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
-                                }
-
-                                resolve();
-                            });
-
-                            proc.on('error', (err) => {
-                                console.log('Failed to start subprocess.');
-                                console.error(err);
-                                vscode.window.showErrorMessage("Failed to start conjure ;_;");
-                                reject();
-                            });
-
-                            token.onCancellationRequested(() => {
-                                process.kill(-proc.pid);
-                                errorMessage = "Search Cancelled!";
-                                rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
-                            });
-                        });
-                        return p;
-                    }); // vscode.window.withProgress
+                    else {
+                        solveSingle(message.data.config1, essenceFiles, paramFiles);
+                    }
                     break;
             }
         }, undefined, this.context.subscriptions);
