@@ -5,7 +5,7 @@ find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-20..3)
-branching on [s_Occurrence, s_ExplicitVarSizeWithDummy, x]
+branching on [s_ExplicitVarSizeWithDummy, s_Occurrence, x]
 such that
     and([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q11] != 5, i != s_ExplicitVarSizeWithDummy[q11],
               allDiff([i + s_ExplicitVarSizeWithDummy[q11], i * s_ExplicitVarSizeWithDummy[q11],

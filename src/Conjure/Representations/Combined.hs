@@ -2,6 +2,7 @@ module Conjure.Representations.Combined
     ( downD, downC, up
     , downD1, downC1, up1
     , downToX1
+    , symmetryOrderingDispatch
     , reprOptions, getStructurals
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     ) where
@@ -24,6 +25,7 @@ import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithDummy
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
+import Conjure.Representations.MSet.Occurrence
 import Conjure.Representations.MSet.ExplicitWithFlags
 import Conjure.Representations.MSet.ExplicitWithRepetition
 import Conjure.Representations.Function.Function1D
@@ -40,48 +42,55 @@ import Conjure.Representations.Partition.PartitionAsSet
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
-downToX1
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    => FindOrGiven
-    -> Name
-    -> DomainX Expression
-    -> m [Expression]
+downToX1 ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    FindOrGiven -> Name -> DomainX Expression -> m [Expression]
 downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
-downD1
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    =>           (Name, DomainX Expression)
-    -> m (Maybe [(Name, DomainX Expression)])
+downD1 ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, DomainX Expression) -> m (Maybe [(Name, DomainX Expression)])
 downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 
 -- | Refine (down) a domain, together with a constant (C), one level (1).
 --   The domain has to be fully instantiated.
-downC1
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    =>           (Name, DomainC, Constant)
-    -> m (Maybe [(Name, DomainC, Constant)])
+downC1 ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)])
 downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, constant)
 
 
 -- | Translate a bunch of low level constants up, one level.
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
-up1
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    =>   (Name, DomainC)
-    ->  [(Name, Constant)]
-    -> m (Name, Constant)
+up1 ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant)
 up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 
 
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
-downD
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    =>    (Name, DomainX Expression)
-    -> m [(Name, DomainX Expression)]
+downD ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, DomainX Expression) -> m [(Name, DomainX Expression)]
 downD inp@(_, domain) = do
     mout <- rDownD (dispatch domain) inp
     case mout of
@@ -90,10 +99,12 @@ downD inp@(_, domain) = do
 
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
-downC
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    =>    (Name, DomainC, Constant)
-    -> m [(Name, DomainC, Constant)]
+downC ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, DomainC, Constant) -> m [(Name, DomainC, Constant)]
 downC inp0 = do
     let inp1 = case inp0 of (nm, dom, TypedConstant con _) -> (nm, dom, con)
                             _                              -> inp0
@@ -105,11 +116,12 @@ downC inp0 = do
 -- | Translate a bunch of low level constants up, all the way.
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
-up
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    =>  [(Name, Constant)]
-    ->   (Name, DomainC)
-    -> m (Name, Constant)
+up ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
 up ctxt (name, highDomain) = do
     toDescend'
         -- :: Maybe [(Name, DomainX x)]
@@ -132,11 +144,32 @@ up ctxt (name, highDomain) = do
             up1 (name, highDomain) midConstants
 
 
+-- | ...
+symmetryOrderingDispatch ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Expression -> m [Expression]) ->
+    Expression ->
+    DomainX Expression ->
+    m Expression
+symmetryOrderingDispatch downX1 inp domain =
+    rSymmetryOrdering
+        (dispatch domain)
+        symmetryOrderingDispatch downX1
+        inp domain
+
+
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
-dispatch
-    :: (MonadFail m, NameGen m, EnumerateDomain m, Pretty x)
-    => Domain HasRepresentation x -> Representation m
+dispatch ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    Pretty x =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain HasRepresentation x -> Representation m
 dispatch domain = do
     let nope = bug $ "No representation for the domain:" <+> pretty domain
     case domain of
@@ -155,6 +188,7 @@ dispatch domain = do
             Set_ExplicitVarSizeWithFlags      -> setExplicitVarSizeWithFlags
             _ -> nope
         DomainMSet r _ _ -> case r of
+            MSet_Occurrence                   -> msetOccurrence
             MSet_ExplicitWithFlags            -> msetExplicitWithFlags
             MSet_ExplicitWithRepetition       -> msetExplicitWithRepetition
             _ -> nope
@@ -188,14 +222,17 @@ type AllRepresentations m = [[Representation m]]
 
 
 -- | No levels!
-reprsStandardOrderNoLevels
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    => AllRepresentations m
+reprsStandardOrderNoLevels ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    AllRepresentations m
 reprsStandardOrderNoLevels = return $ concat
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitWithFlags, msetExplicitWithRepetition
+      , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
@@ -211,14 +248,17 @@ reprsStandardOrderNoLevels = return $ concat
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.
-reprsStandardOrder
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    => AllRepresentations m
+reprsStandardOrder ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    AllRepresentations m
 reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitWithFlags, msetExplicitWithRepetition
+      , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
@@ -232,16 +272,20 @@ reprsStandardOrder =
 
 
 -- | Sparser representations are to be preferred for parameters.
-reprsSparseOrder
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    => AllRepresentations m
+reprsSparseOrder ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    AllRepresentations m
 reprsSparseOrder = map return
     [ primitive, tuple, record, variant, matrix downD1 downC1 up1
 
     , setExplicit, setExplicitVarSizeWithDummy, setExplicitVarSizeWithMarker
     , setOccurrence, setExplicitVarSizeWithFlags              -- redundant
 
-    , msetExplicitWithFlags, msetExplicitWithRepetition
+    , msetExplicitWithFlags
+    , msetExplicitWithRepetition, msetOccurrence              -- redundant
 
     , function1D, functionND
     , functionAsRelation dispatch (reprOptions reprsSparseOrder)
@@ -259,11 +303,12 @@ reprsSparseOrder = map return
 
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
-reprOptions
-    :: (Pretty x, ExpressionLike x, Monad m, Functor m)
-    => AllRepresentations m
-    -> Domain () x
-    -> m [Domain HasRepresentation x]
+reprOptions ::
+    Monad m =>
+    Functor m =>
+    Pretty x =>
+    ExpressionLike x =>
+    AllRepresentations m -> Domain () x -> m [Domain HasRepresentation x]
 reprOptions reprs domain = go reprs
     where
         go [] = return []
@@ -279,10 +324,13 @@ reprOptions reprs domain = go reprs
 -- | For a domain, returns the structural constraints.
 --   Makes recursive calls to generate the complete structural constraints.
 --   Takes in a function to refine inner guys.
-getStructurals
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
-    => (Expression -> m [Expression])
-    -> DomainX Expression
-    -> m (Expression -> m [Expression])
+getStructurals ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Expression -> m [Expression]) ->
+    DomainX Expression ->
+    m (Expression -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 

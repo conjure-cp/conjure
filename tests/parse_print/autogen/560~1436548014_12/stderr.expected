@@ -4,7 +4,7 @@ Error:
                  partition({5, 5, 4, 3, 1}, {1}) - partition({0, 1, 4, 1, 4}, {1}))
     Error:
         When type checking: partition({5, 5, 4, 3, 1}, {1}) - partition({0, 1, 4, 1, 4}, {1})
-        Arguments expected to be one of these types: int, set of ?, mset of ?, function ? --> ?, relation of (?)
+        Arguments have unsupported types.
         lhs        : partition({5, 5, 4, 3, 1}, {1})
         type of lhs: partition from int
         rhs        : partition({0, 1, 4, 1, 4}, {1})

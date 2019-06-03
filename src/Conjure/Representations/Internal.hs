@@ -3,7 +3,7 @@
 
 module Conjure.Representations.Internal
     ( Representation(..)
-    , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
+    , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_SymmetryOrdering, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
     , DomainX, DomainC
     , DispatchFunction, ReprOptionsFunction
     , rDownToX
@@ -31,11 +31,12 @@ type DomainC = Domain HasRepresentation Constant
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation (m :: * -> *) = Representation
-    { rCheck          :: TypeOf_ReprCheck  m
-    , rDownD          :: TypeOf_DownD      m
-    , rStructural     :: TypeOf_Structural m
-    , rDownC          :: TypeOf_DownC      m
-    , rUp             :: TypeOf_Up         m
+    { rCheck            :: TypeOf_ReprCheck        m
+    , rDownD            :: TypeOf_DownD            m
+    , rStructural       :: TypeOf_Structural       m
+    , rDownC            :: TypeOf_DownC            m
+    , rUp               :: TypeOf_Up               m
+    , rSymmetryOrdering :: TypeOf_SymmetryOrdering m
     }
 
 type TypeOf_ReprCheck (m :: * -> *) =
@@ -47,6 +48,13 @@ type TypeOf_ReprCheck (m :: * -> *) =
 type TypeOf_DownD (m :: * -> *) =
                  (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
+
+type TypeOf_SymmetryOrdering (m :: * -> *) =
+       ((Expression -> m [Expression]) -> Expression -> DomainX Expression -> m Expression) -- inner S.O.
+    -> (Expression -> m [Expression])               -- general downX1
+    -> Expression                                   -- this as an expression
+    -> DomainX Expression                           -- name and domain
+    -> m Expression                                 -- output, of type [int]
 
 type TypeOf_Structural (m :: * -> *) =
        (DomainX Expression -> m (Expression -> m [Expression]))

@@ -23,8 +23,10 @@ import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
+import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGenM, runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
+import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render, prParens )
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
@@ -58,7 +60,13 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
 
 
-mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, EnumerateDomain m) => UI -> m ()
+mainWithArgs :: forall m .
+    MonadIO m =>
+    MonadLog m =>
+    MonadFail m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> m ()
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering
@@ -123,6 +131,7 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             , Config.responses                  = responsesList
+            , Config.estimateNumberOfModels     = estimateNumberOfModels
             }
     runNameGen model $ outputModels config model
 mainWithArgs TranslateParameter{..} = do
@@ -185,8 +194,21 @@ mainWithArgs SymmetryDetection{..} = do
 mainWithArgs ParameterGenerator{..} = do
     when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
     model  <- readModelFromFile essence
-    output <- parameterGenerator model
+    output <- runNameGen () $ parameterGenerator minInt maxInt model
     writeModel lineWidth outputFormat (Just essenceOut) output
+    let
+        toIrace nm lb ub | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            prParens (pretty lb)
+        toIrace nm lb ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" i" <+>
+            prettyList prParens "," [lb, ub]
+    liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
+        [ toIrace nm lb ub
+        | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
+        ]
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
@@ -341,6 +363,7 @@ mainWithArgs config@Solve{..} = do
             pp logLevel $ "Generating models for" <+> pretty essence
             liftIO $ removeDirectoryIfExists outputDirectory
             let modelling = let savedChoices = def
+                                estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
             mainWithArgs modelling
@@ -388,18 +411,19 @@ savilerowScriptName :: Sys.FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"
-    | otherwise = "Cannot detect operating system."
+    | otherwise = bug "Cannot detect operating system."
 
 
-savileRowNoParam
-    :: UI
-    -> (FilePath, Model)    -- model
-    -> IO (Either
-        [Doc]               -- user error
-        [ ( FilePath        -- model
-          , FilePath        -- param
-          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
-          ) ])
+savileRowNoParam ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI ->
+    (FilePath, Model) ->        -- model
+    IO (Either
+     [Doc]                      -- user error
+     [ ( FilePath               -- model
+       , FilePath               -- param
+       , Maybe FilePath         -- solution, Nothing if solutionsInOneFile=True
+       ) ])
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
@@ -410,28 +434,23 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
         liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
-                                    solutionsInOneFile
-                                    ( outputDirectory, outBase
-                                    , modelPath, "<no param file>"
-                                    , lineWidth
-                                    , outputFormat
-                                    )
-                                    tr
-                                    (1::Int))
+                                    (outBase, modelPath, "<no param file>", ui)
+                                    tr (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
-savileRowWithParams
-    :: UI
-    -> (FilePath, Model)    -- model
-    -> (FilePath, Model)    -- param
-    -> IO (Either
-        [Doc]               -- user error
-        [ ( FilePath        -- model
-          , FilePath        -- param
-          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
-          ) ])
+savileRowWithParams ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI ->
+    (FilePath, Model) ->        -- model
+    (FilePath, Model) ->        -- param
+    IO (Either
+     [Doc]                      -- user error
+     [ ( FilePath               -- model
+       , FilePath               -- param
+       , Maybe FilePath         -- solution, Nothing if solutionsInOneFile=True
+       ) ])
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
@@ -455,14 +474,8 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                 liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
-                                            solutionsInOneFile
-                                            ( outputDirectory, outBase
-                                            , modelPath, paramPath
-                                            , lineWidth
-                                            , outputFormat
-                                            )
-                                            tr
-                                            (1::Int))
+                                            (outBase, modelPath, paramPath, ui)
+                                            tr (1::Int))
             srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
@@ -508,21 +521,15 @@ srMkArgs Solve{..} outBase modelPath =
 srMkArgs _ _ _ = bug "srMkArgs"
 
 
+srStdoutHandler ::
+    (FilePath, FilePath, FilePath, UI) ->
+    (Model -> NameGenM (IdentityT IO) Model) ->
+    Int ->
+    Handle ->
+    IO [Either String (FilePath, FilePath, Maybe FilePath)]
 srStdoutHandler
-    :: Bool
-    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
-    -> (Model -> NameGenM (IdentityT IO) Model)
-    -> Int
-    -> Handle
-    -> IO [Either String (FilePath, FilePath, Maybe FilePath)]
-srStdoutHandler
-        solutionsInOneFile
-        args@( outputDirectory, outBase
-             , modelPath, paramPath
-             , lineWidth, outputFormat
-             )
-        tr
-        solutionNumber h = do
+        args@(outBase , modelPath, paramPath , Solve{..})
+        tr solutionNumber h = do
     eof <- hIsEOF h
     if eof
         then do
@@ -531,9 +538,14 @@ srStdoutHandler
         else do
             line <- hGetLine h
             case stripPrefix "Solution: " line of
-                Nothing ->
+                Nothing -> do
+                    if isPrefixOf "Created output file for domain filtering" line
+                        then pp logLevel $ hsep ["Running minion for domain filtering."]
+                        else if isPrefixOf "Created output file" line
+                            then pp logLevel $ hsep ["Running solver:", pretty solver]
+                            else return ()
                     fmap (Left line :)
-                         (srStdoutHandler solutionsInOneFile args tr solutionNumber h)
+                         (srStdoutHandler args tr solutionNumber h)
                 Just solutionText -> do
                     eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
                     essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
@@ -549,7 +561,7 @@ srStdoutHandler
                             when (outputFormat == JSON) $
                                 writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
-                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
+                                 (srStdoutHandler args tr (solutionNumber+1) h)
                         True -> do
                             let mkFilename ext = outputDirectory </> outBase
                                                         ++ ext
@@ -564,7 +576,8 @@ srStdoutHandler
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
                             appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
-                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
+                                 (srStdoutHandler args tr (solutionNumber+1) h)
+srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
 srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
@@ -587,14 +600,16 @@ srCleanUp stdoutSR solutions = do
                                 , "Savile Row exit-code:" <+> pretty exitCodeSR
                                 ]])
         | exitCodeSR == 0 -> return (Right solutions)
-        | otherwise -> 
+        | otherwise ->
             return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                , "Savile Row stderr:"    <+> pretty stderrSR
                                , "Savile Row exit-code:" <+> pretty exitCodeSR
                                ]])
 
 
-validateSolutionNoParam :: UI -> FilePath -> IO ()
+validateSolutionNoParam ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> FilePath -> IO ()
 validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
@@ -607,7 +622,9 @@ validateSolutionNoParam Solve{..} solutionPath = do
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
-validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
+validateSolutionWithParams ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> FilePath -> FilePath -> IO ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
     pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence

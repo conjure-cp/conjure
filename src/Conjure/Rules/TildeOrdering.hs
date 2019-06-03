@@ -11,8 +11,8 @@ rule_BoolInt = "tildeOrd-bool-int" `namedRule` theRule where
         tyx <- typeOf x
         tyy <- typeOf y
         case mostDefined [tyx, tyy] of
-            TypeBool -> return ()
-            TypeInt  -> return ()
+            TypeBool  -> return ()
+            TypeInt _ -> return ()
             _ -> na "rule_BoolInt"
         return
             ( "~< to <"
@@ -22,8 +22,8 @@ rule_BoolInt = "tildeOrd-bool-int" `namedRule` theRule where
         tyx <- typeOf x
         tyy <- typeOf y
         case mostDefined [tyx, tyy] of
-            TypeBool -> return ()
-            TypeInt  -> return ()
+            TypeBool  -> return ()
+            TypeInt _ -> return ()
             _ -> na "rule_BoolInt"
         return
             ( "~<= to <="

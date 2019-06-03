@@ -497,6 +497,7 @@ opMatrixIndexing
        , Pretty x
        , TypeOf x
        , MonadFail m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Proxy (m :: * -> *)
     -> ( x -> [x] -> x
@@ -559,6 +560,27 @@ opFlatten _ =
                 MkOpFlatten (OpFlatten Nothing x) -> return x
                 _ -> na ("Lenses.opFlatten:" <++> pretty p)
     )
+
+
+flattenIfNeeded ::
+    Int ->
+    Expression ->
+    Expression
+flattenIfNeeded dims m =
+    if dims > 1
+        then make opFlatten m
+        else m
+
+
+oneDimensionaliser ::
+    Int -> -- current number of dimensions
+    Expression ->
+    Expression
+oneDimensionaliser dims x =
+    case dims of
+        0 -> fromList [x]
+        1 -> x
+        _ -> make opFlatten x
 
 
 opConcatenate
@@ -1146,15 +1168,15 @@ constantInt
        , Expression -> m Integer
        )
 constantInt _ =
-    ( Constant . ConstantInt
+    ( Constant . ConstantInt TagInt
     , \ p -> case p of
-            (Constant (ConstantInt i)) -> return i
+            (Constant (ConstantInt TagInt i)) -> return i
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 
 
 matrixLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> Domain () Expression -> [Expression] -> Expression
        , Expression -> m (Type, Domain () Expression, [Expression])
@@ -1208,7 +1230,7 @@ onMatrixLiteral mlvl f = case mlvl of
 
 
 setLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1232,7 +1254,7 @@ setLiteral _ =
 
 
 msetLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1256,7 +1278,7 @@ msetLiteral _ =
 
 
 functionLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [(Expression,Expression)] -> Expression
        , Expression -> m (Type, [(Expression,Expression)])
@@ -1280,7 +1302,7 @@ functionLiteral _ =
 
 
 sequenceLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1304,7 +1326,7 @@ sequenceLiteral _ =
 
 
 relationLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
@@ -1328,7 +1350,7 @@ relationLiteral _ =
 
 
 partitionLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
@@ -1445,8 +1467,36 @@ opLex _ =
     )
 
 
-fixRelationProj :: Data a => a -> a
-fixRelationProj = transformBi f
+opOrdering
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x -> x, (x,x)) -> x
+       , x -> m (x -> x -> x, (x,x))
+       )
+opOrdering _ =
+    ( \ (mk, (x,y)) -> mk x y
+    , \ p -> case project p of
+        Just (MkOpLt       (OpLt       x y)) -> return (\ x' y' -> inject (MkOpLt       (OpLt       x' y')), (x,y) )
+        Just (MkOpLeq      (OpLeq      x y)) -> return (\ x' y' -> inject (MkOpLeq      (OpLeq      x' y')), (x,y) )
+        Just (MkOpTildeLt  (OpTildeLt  x y)) -> return (\ x' y' -> inject (MkOpTildeLt  (OpTildeLt  x' y')), (x,y) )
+        Just (MkOpTildeLeq (OpTildeLeq x y)) -> return (\ x' y' -> inject (MkOpTildeLeq (OpTildeLeq x' y')), (x,y) )
+        Just (MkOpLexLt    (OpLexLt    x y)) -> return (\ x' y' -> inject (MkOpLexLt    (OpLexLt    x' y')), (x,y) )
+        Just (MkOpLexLeq   (OpLexLeq   x y)) -> return (\ x' y' -> inject (MkOpLexLeq   (OpLexLeq   x' y')), (x,y) )
+        _ -> na ("Lenses.opOrdering:" <++> pretty p)
+    )
+
+
+fixTHParsing :: Data a => a -> a
+fixTHParsing p =
+    let ?typeCheckerMode = RelaxedIntegerTags
+    in  fixRelationProj p
+
+
+fixRelationProj :: (Data a, ?typeCheckerMode :: TypeCheckerMode) => a -> a
+fixRelationProj= transformBi f
     where
         f :: Expression -> Expression
         f p =
@@ -1460,9 +1510,9 @@ fixRelationProj = transformBi f
 
 
 maxOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-maxOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.maxOfDomain []"
-maxOfDomain (DomainInt [r]) = maxOfRange r
-maxOfDomain (DomainInt rs ) = do
+maxOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.maxOfDomain []"
+maxOfDomain (DomainInt _ [r]) = maxOfRange r
+maxOfDomain (DomainInt _ rs ) = do
     xs <- mapM maxOfRange rs
     return (make opMax (fromList xs))
 maxOfDomain d = fail ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
@@ -1473,9 +1523,9 @@ maxOfRange (RangeBounded _ x) = return x
 maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty r)
 
 minOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-minOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.minOfDomain []"
-minOfDomain (DomainInt [r]) = minOfRange r
-minOfDomain (DomainInt rs ) = do
+minOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.minOfDomain []"
+minOfDomain (DomainInt _ [r]) = minOfRange r
+minOfDomain (DomainInt _ rs ) = do
     xs <- mapM minOfRange rs
     return (make opMin (fromList xs))
 minOfDomain d = fail ("rule_DomainMinMax.minOfDomain" <+> pretty d)

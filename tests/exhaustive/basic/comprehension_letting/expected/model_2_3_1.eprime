@@ -8,7 +8,7 @@ letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-20..4)
 branching on
-    [s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, s_Occurrence,
+    [s_Occurrence, s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values,
      x]
 such that
     and([and([s_ExplicitVarSizeWithDummy[q17] != 5, q18 <= s_ExplicitVarSizeWithMarker_Marker,
@@ -93,14 +93,14 @@ such that
              s_ExplicitVarSizeWithMarker_Values[q15] = s_ExplicitVarSizeWithDummy[q13]
                  | q15 : int(1..4)])
              | q13 : int(1..4)]),
-    and([s_Occurrence[q22] ->
-         or([s_ExplicitVarSizeWithDummy[q24] != 5 /\ s_ExplicitVarSizeWithDummy[q24] = q22 | q24 : int(1..4)])
-             | q22 : int(1..4)]),
-    and([s_ExplicitVarSizeWithDummy[q26] != 5 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q26]] | q26 : int(1..4)]),
-    and([s_Occurrence[q27] ->
-         or([q29 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q29] = q27
-                 | q29 : int(1..4)])
-             | q27 : int(1..4)]),
-    and([q31 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q31]]
-             | q31 : int(1..4)])
+    and([s_Occurrence[q40] ->
+         or([s_ExplicitVarSizeWithDummy[q42] != 5 /\ s_ExplicitVarSizeWithDummy[q42] = q40 | q42 : int(1..4)])
+             | q40 : int(1..4)]),
+    and([s_ExplicitVarSizeWithDummy[q44] != 5 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q44]] | q44 : int(1..4)]),
+    and([s_Occurrence[q45] ->
+         or([q47 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q47] = q45
+                 | q47 : int(1..4)])
+             | q45 : int(1..4)]),
+    and([q49 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q49]]
+             | q49 : int(1..4)])
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ParallelListComp #-}
 
 module Conjure.Representations.Tuple
@@ -6,9 +7,7 @@ module Conjure.Representations.Tuple
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 
 -- text
@@ -16,7 +15,7 @@ import Data.Text ( pack )
 
 
 tuple :: forall m . (MonadFail m, NameGen m) => Representation m
-tuple = Representation chck downD structuralCons downC up
+tuple = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -78,3 +77,10 @@ tuple = Representation chck downD structuralCons downC up
             return (name, ConstantAbstract (AbsLitTuple vals))
         up _ _ = na "{up}"
 
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            xs <- downX1 inp
+            Just xsDoms' <- downD ("SO", domain)
+            let xsDoms = map snd xsDoms'
+            soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
+            return $ make opFlatten (fromList soValues)

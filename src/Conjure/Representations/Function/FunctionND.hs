@@ -7,14 +7,13 @@ module Conjure.Representations.Function.FunctionND ( functionND, viewAsDomainTup
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
-import Conjure.Language.TypeOf
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-functionND :: forall m . (MonadFail m, NameGen m) => Representation m
-functionND = Representation chck downD structuralCons downC up
+functionND :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -64,7 +63,9 @@ functionND = Representation chck downD structuralCons downC up
                 toIndex x = [ [essence| &x[&k] |] | k <- kRange ]
                 index x m = make opMatrixIndexing m (toIndex x)
 
-            let injectiveCons values = do
+            let
+                injectiveCons :: Expression -> m [Expression]
+                injectiveCons values = do
                     tyTo <- typeOf innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
@@ -92,7 +93,8 @@ functionND = Representation chck downD structuralCons downC up
                                         &i .< &j -> &valuesIndexedI != &valuesIndexedJ
                                 |]
 
-            let surjectiveCons values = do
+                surjectiveCons :: Expression -> m [Expression]
+                surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let valuesIndexedJ = index j values
@@ -103,14 +105,16 @@ functionND = Representation chck downD structuralCons downC up
                                     &valuesIndexedJ = &i
                         |]
 
-            let jectivityCons values = case jectivityAttr of
+                jectivityCons :: Expression -> m [Expression]
+                jectivityCons values = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  values
                     JectivityAttr_Surjective -> surjectiveCons values
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons  values
                                                      <*> surjectiveCons values
 
-            let cardinality = do
+                cardinality :: m Expression
+                cardinality = do
                     (iPat, _) <- quantifiedVar
                     return [essence| sum &iPat : &innerDomainFr . 1 |]
 
@@ -145,7 +149,7 @@ functionND = Representation chck downD structuralCons downC up
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , value@(ConstantAbstract (AbsLitFunction vals))
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             let
@@ -167,8 +171,21 @@ functionND = Representation chck downD structuralCons downC up
                 unrollC [i] prevIndices = do
                     domVals <- domainValues i
                     let active val = check $ prevIndices ++ [val]
+
+                    missing <- concatForM domVals $ \ val ->
+                        case active val of
+                            Nothing -> return [ConstantAbstract $ AbsLitTuple $ prevIndices ++ [val]]
+                            Just {} -> return []
+
+                    unless (null missing) $
+                        fail $ vcat [ "Some points are undefined on a total function:" <++> prettyList id "," missing
+                                    , "    Function:" <+> pretty name
+                                    , "    Domain:" <++> pretty domain
+                                    , "    Value :" <++> pretty value
+                                    ]
+
                     return $ ConstantAbstract $ AbsLitMatrix i
-                                [ fromMaybe (bug "FunctionND downC") (active val)
+                                [ fromMaybe (bug $ "FunctionND downC" <+> pretty val) (active val)
                                 | val <- domVals ]
                 unrollC (i:is) prevIndices = do
                     domVals <- domainValues i
@@ -227,6 +244,28 @@ functionND = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionND"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            
+            -- setting up the quantification
+            let kRange = case innerDomainFr of
+                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                    DomainRecord rs -> map (fromName . fst) rs
+                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                    , "indexDomain:" <+> pretty innerDomainFr
+                                    ]
+                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
+                valuesIndexed = make opMatrixIndexing values toIndex
+
+            soValues <- innerSO downX1 valuesIndexed innerDomainTo
+
+            return $ make opFlatten $
+                Comprehension soValues
+                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
 
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]

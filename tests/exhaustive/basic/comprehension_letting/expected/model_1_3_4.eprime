@@ -9,8 +9,8 @@ letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-16..3)
 branching on
-    [s_Occurrence, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values,
-     s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, x]
+    [s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, s_Occurrence,
+     s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, x]
 such that
     and([and([s_Occurrence[i], q28 <= s_ExplicitVarSizeWithMarker_Marker, i != s_ExplicitVarSizeWithMarker_Values[q28],
               allDiff([i + s_ExplicitVarSizeWithMarker_Values[q28], i * s_ExplicitVarSizeWithMarker_Values[q28],

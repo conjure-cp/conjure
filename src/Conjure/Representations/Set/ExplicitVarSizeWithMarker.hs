@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithMarker :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
+setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -28,7 +28,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag TagInt <$> domainSizeOf innerDomain
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainSet _ (SetAttr attrs) innerDomain)) = do
@@ -99,7 +99,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -111,7 +111,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt (genericLength constants)
+                  , ConstantInt TagInt (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -125,7 +125,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
-                        ConstantInt card ->
+                        ConstantInt _ card ->
                             case (viewConstantMatrix constantMatrix, constantMatrix) of
                                 (Just (_, vals), _) ->
                                     return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))
@@ -157,3 +157,18 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [marker, values] <- downX1 inp
+            Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] inner
+            return
+                [essence|
+                    flatten([ [ &marker ]
+                            , flatten([ &soValues
+                                      | &iPat : &index
+                                      ])
+                            ])
+                |]

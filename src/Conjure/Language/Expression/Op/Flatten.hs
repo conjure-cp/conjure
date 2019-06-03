@@ -27,7 +27,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
         case ty of
             TypeList n -> return (TypeList (flattenType n))
             TypeMatrix _ n -> return (TypeList (flattenType n))
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
     typeOf p@(OpFlatten (Just n) m) = do
         let flattenType lvl ty | lvl < 0 = return ty
             flattenType lvl (TypeList inner) = flattenType (lvl-1) inner
@@ -42,7 +44,7 @@ instance EvaluateOp OpFlatten where
             flat c = [c]
         let flattened = flat m
         return (ConstantAbstract $ AbsLitMatrix
-                    (DomainInt [RangeBounded 1 (fromInt (genericLength flattened))])
+                    (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength flattened))])
                     flattened)
     evaluateOp (OpFlatten (Just n) m) = do
         let flat lvl c | lvl < 0 = return [c]
@@ -50,7 +52,7 @@ instance EvaluateOp OpFlatten where
             flat _ _ = fail $ "Cannot flatten" <+> pretty n <+> "levels."
         flattened <- flat n m
         return (ConstantAbstract $ AbsLitMatrix
-                    (DomainInt [RangeBounded 1 (fromInt (genericLength flattened))])
+                    (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength flattened))])
                     flattened)
 
 instance SimplifyOp OpFlatten x where

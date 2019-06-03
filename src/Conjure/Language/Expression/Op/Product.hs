@@ -22,13 +22,17 @@ instance FromJSON  x => FromJSON  (OpProduct x) where parseJSON = genericParseJS
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
     typeOf p@(OpProduct x) = do
         ty <- typeOf x
-        case ty of
-            TypeList TypeAny -> return TypeInt
-            TypeList TypeInt -> return TypeInt
-            TypeMatrix _ TypeAny -> return TypeInt
-            TypeMatrix _ TypeInt -> return TypeInt
-            TypeSet TypeInt -> return TypeInt
-            TypeMSet TypeInt -> return TypeInt
+        innerTy <- case ty of
+            TypeList t -> return t
+            TypeMatrix _ t -> return t
+            TypeSet t -> return t
+            TypeMSet t -> return t
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
+        case innerTy of
+            TypeInt t | ?typeCheckerMode == RelaxedIntegerTags -> return (TypeInt t)
+            TypeInt TagInt -> return (TypeInt TagInt)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -37,11 +41,13 @@ instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 
 instance EvaluateOp OpProduct where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
-        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut "OpProduct" x
+        , any isUndef xs =
+            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt TagInt . product <$> intsOut "OpProduct" x
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)
@@ -53,7 +59,10 @@ instance (OpProduct x :< x) => SimplifyOp OpProduct x where
         | Just xs <- listOut x
         , let filtered = filter (/=1) xs
         , length filtered /= length xs      -- there were 1's
-        = return $ inject $ OpProduct $ fromList filtered
+        = case filtered of
+            []  -> return 1
+            [n] -> return n
+            _   -> return $ inject $ OpProduct $ fromList filtered
     simplifyOp _ = na "simplifyOp{OpProduct}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpProduct x) where

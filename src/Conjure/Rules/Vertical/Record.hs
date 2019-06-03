@@ -1,7 +1,9 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Rules.Vertical.Record where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq  )
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
 
 -- containers
 import qualified Data.Map.Strict as M ( fromList, (!) )
@@ -67,34 +69,6 @@ rule_Record_Leq = "record-Leq" `namedRule` theRule where
         return
             ( "Horizontal rule for record <="
             , return $ decomposeLexLeq p xs ys
-            )
-
-
-rule_Record_DotLt :: Rule
-rule_Record_DotLt = "record-DotLt" `namedRule` theRule where
-    theRule p = do
-        (x,y)              <- match opDotLt p
-        TypeRecord xFields <- typeOf x
-        TypeRecord yFields <- typeOf y
-        xs                 <- downX1 x
-        ys                 <- sortByFields xFields yFields <$> downX1 y
-        return
-            ( "Horizontal rule for record <"
-            , return $ decomposeLexDotLt p xs ys
-            )
-
-
-rule_Record_DotLeq :: Rule
-rule_Record_DotLeq = "record-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (x,y)              <- match opDotLeq p
-        TypeRecord xFields <- typeOf x
-        TypeRecord yFields <- typeOf y
-        xs                 <- downX1 x
-        ys                 <- sortByFields xFields yFields <$> downX1 y
-        return
-            ( "Horizontal rule for record <="
-            , return $ decomposeLexDotLeq p xs ys
             )
 
 

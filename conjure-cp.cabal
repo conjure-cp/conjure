@@ -159,6 +159,7 @@ Library
                      , Conjure.Representations.Set.ExplicitVarSizeWithDummy
                      , Conjure.Representations.Set.ExplicitVarSizeWithMarker
                      , Conjure.Representations.Set.ExplicitVarSizeWithFlags
+                     , Conjure.Representations.MSet.Occurrence
                      , Conjure.Representations.MSet.ExplicitWithFlags
                      , Conjure.Representations.MSet.ExplicitWithRepetition
                      , Conjure.Representations.Function.Function1D
@@ -189,6 +190,7 @@ Library
                      , Conjure.Rules.Vertical.Set.ExplicitVarSizeWithFlags
 
                      , Conjure.Rules.Horizontal.MSet
+                     , Conjure.Rules.Vertical.MSet.Occurrence
                      , Conjure.Rules.Vertical.MSet.ExplicitWithFlags
                      , Conjure.Rules.Vertical.MSet.ExplicitWithRepetition
 
@@ -288,6 +290,8 @@ Library
         build-depends: template-haskell == 2.12.*
     if impl(ghc == 8.4.*)
         build-depends: template-haskell == 2.13.*
+    if impl(ghc == 8.6.*)
+        build-depends: template-haskell == 2.14.*
 
     if impl(ghc < 8.4)
         build-depends: semigroups >= 0.18.4
@@ -295,6 +299,7 @@ Library
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        ImplicitParams
         LambdaCase
         MultiParamTypeClasses
         MultiWayIf
@@ -302,6 +307,7 @@ Library
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        NoMonadFailDesugaring
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -330,6 +336,7 @@ Executable conjure
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        ImplicitParams
         LambdaCase
         MultiParamTypeClasses
         MultiWayIf
@@ -337,6 +344,7 @@ Executable conjure
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        NoMonadFailDesugaring
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -387,6 +395,7 @@ Test-Suite conjure-testing
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        ImplicitParams
         LambdaCase
         MultiParamTypeClasses
         MultiWayIf
@@ -394,6 +403,7 @@ Test-Suite conjure-testing
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        NoMonadFailDesugaring
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

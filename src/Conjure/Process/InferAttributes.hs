@@ -3,6 +3,7 @@
 -- | This is an extremely simplified version of type-strengthening
 module Conjure.Process.InferAttributes ( inferAttributes ) where
 
+import Conjure.Bug
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.Domain.AddAttributes ( mkMin )
@@ -10,9 +11,14 @@ import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Language.NameResolution ( resolveX, resolveD )
 
 
-inferAttributes :: (MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+inferAttributes ::
+    MonadFail m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 inferAttributes = flip evalStateT [] . go where
-    go :: 
+    go ::
         MonadFail m =>
         MonadUserError m =>
         NameGen m =>
@@ -32,10 +38,11 @@ inferAttributes = flip evalStateT [] . go where
                         LettingDomainDefnUnnamed nm x -> do
                             x' <- resolveX x
                             modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
-                        LettingDomainDefnEnum _ nms -> do
-                            modify ( [ (nm, Alias (Constant (ConstantInt i)))
+                        LettingDomainDefnEnum (Name ename) nms -> do
+                            modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
                                      | (nm, i) <- zip nms [1..]
                                      ] ++)
+                        LettingDomainDefnEnum{}     -> bug "inferAttributes"
                         GivenDomainDefnEnum{}       -> return ()             -- ignoring
                 _ -> return ()
         transformBiM inferAttributesD m
@@ -45,6 +52,7 @@ inferAttributesD ::
     MonadUserError m =>
     NameGen m =>
     MonadState [(Name, ReferenceTo)] m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
     Domain () Expression ->
     m (Domain () Expression)
 inferAttributesD (DomainPartition () (PartitionAttr partsNum1 partsSize1 isRegular1) innerDomain0) = do

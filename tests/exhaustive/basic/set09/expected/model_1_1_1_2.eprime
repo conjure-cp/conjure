@@ -3,7 +3,7 @@ language ESSENCE' 1.0
 find x_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..6)
-branching on [x_Occurrence, y_Occurrence, y_ExplicitVarSizeWithDummy]
+branching on [x_Occurrence, y_ExplicitVarSizeWithDummy, y_Occurrence]
 such that
     and([x_Occurrence[i] /\ y_Occurrence[j] -> i + 2 = j | i : int(2..5), j : int(2..5)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(2..5)]),

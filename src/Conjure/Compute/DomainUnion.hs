@@ -44,7 +44,8 @@ instance
     domainUnion DomainAny{} d = return d
     domainUnion d DomainAny{} = return d
     domainUnion DomainBool DomainBool = return DomainBool
-    domainUnion (DomainInt r1) (DomainInt r2) = return $ DomainInt (r1 `L.union` r2)
+    domainUnion (DomainInt t r1) (DomainInt _ r2) =
+        return $ DomainInt t (r1 `L.union` r2)
     domainUnion (DomainTuple []) d@DomainTuple{} = return d
     domainUnion d@DomainTuple{} (DomainTuple []) = return d
     domainUnion (DomainTuple xs) (DomainTuple ys)

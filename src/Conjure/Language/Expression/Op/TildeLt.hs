@@ -22,94 +22,10 @@ instance BinaryOperator (OpTildeLt x) where
     opLexeme _ = L_TildeLt
 
 instance (TypeOf x, Pretty x) => TypeOf (OpTildeLt x) where
-    typeOf p@(OpTildeLt a b) = sameToSameToBool p a b []
+    typeOf p@(OpTildeLt a b) = sameToSameToBool p a b [] (const True)
 
 instance EvaluateOp OpTildeLt where
-    evaluateOp (OpTildeLt x y) = return $ ConstantBool $ tilLt x y
-        where
-            freq :: Eq a => a -> [a] -> Int
-            freq i xs = sum [ 1 | j <- xs , i == j ]
-
-            tupleE (i,j) = ConstantAbstract $ AbsLitTuple [i,j]
-
-            tilLt (ConstantBool a) (ConstantBool b) = a < b
-            tilLt (ConstantInt  a) (ConstantInt  b) = a < b
-            tilLt (viewConstantTuple -> Just [])
-                  (viewConstantTuple -> Just []) = False
-            tilLt (viewConstantTuple -> Just (a:as))
-                  (viewConstantTuple -> Just (b:bs)) =
-                      if tilLt a b
-                          then True
-                          else a == b &&
-                               tilLt (ConstantAbstract $ AbsLitTuple as)
-                                     (ConstantAbstract $ AbsLitTuple bs)
-            tilLt (viewConstantSet -> Just as)
-                  (viewConstantSet -> Just bs) =
-                or [ and [ freq i as < freq i bs
-                         , and [ if tilLt j i
-                                     then freq j as == freq j bs
-                                     else True
-                               | j <- cs
-                               ]
-                         ]
-                   | let cs = sortNub (as ++ bs)
-                   , i <- cs
-                   ]
-            tilLt (viewConstantMSet -> Just as)
-                  (viewConstantMSet -> Just bs) =
-                or [ and [ freq i as < freq i bs
-                         , and [ if tilLt j i
-                                     then freq j as == freq j bs
-                                     else True
-                               | j <- cs
-                               ]
-                         ]
-                   | let cs = as ++ bs
-                   , i <- cs
-                   ]
-            tilLt (viewConstantFunction -> Just as')
-                  (viewConstantFunction -> Just bs') =
-                or [ and [ freq i as < freq i bs
-                         , and [ if tilLt j i
-                                     then freq j as == freq j bs
-                                     else True
-                               | j <- cs
-                               ]
-                         ]
-                   | let as = map tupleE as'
-                   , let bs = map tupleE bs'
-                   , let cs = as ++ bs
-                   , i <- cs
-                   ]
-            tilLt (viewConstantRelation -> Just as')
-                  (viewConstantRelation -> Just bs') =
-                or [ and [ freq i as < freq i bs
-                         , and [ if tilLt j i
-                                     then freq j as == freq j bs
-                                     else True
-                               | j <- cs
-                               ]
-                         ]
-                   | let as = map (ConstantAbstract . AbsLitTuple) as'
-                   , let bs = map (ConstantAbstract . AbsLitTuple) bs'
-                   , let cs = as ++ bs
-                   , i <- cs
-                   ]
-            tilLt (viewConstantPartition -> Just as')
-                  (viewConstantPartition -> Just bs') =
-                or [ and [ freq i as < freq i bs
-                         , and [ if tilLt j i
-                                     then freq j as == freq j bs
-                                     else True
-                               | j <- cs
-                               ]
-                         ]
-                   | let as = map (ConstantAbstract . AbsLitSet) as'
-                   , let bs = map (ConstantAbstract . AbsLitSet) bs'
-                   , let cs = as ++ bs
-                   , i <- cs
-                   ]
-            tilLt a b = a < b
+    evaluateOp (OpTildeLt x y) = return $ ConstantBool $ tildeLt x y
 
 instance SimplifyOp OpTildeLt x where
     simplifyOp _ = na "simplifyOp{OpTildeLt}"
@@ -125,3 +41,103 @@ instance VarSymBreakingDescription x => VarSymBreakingDescription (OpTildeLt x) 
             , varSymBreakingDescription b
             ])
         ]
+
+
+tildeLt :: Constant -> Constant -> Bool
+tildeLt = tilLt
+    where
+        freq :: Eq a => a -> [a] -> Int
+        freq i xs = sum [ 1 | j <- xs , i == j ]
+
+        tupleE (i,j) = ConstantAbstract $ AbsLitTuple [i,j]
+        
+        tilLt :: Constant -> Constant -> Bool
+        tilLt (ConstantBool a) (ConstantBool b) = a < b
+        tilLt (ConstantInt TagInt a) (ConstantInt TagInt b) = a < b
+        tilLt (ConstantInt (TagEnum an) a) (ConstantInt (TagEnum bn) b)
+              | an == bn = a < b
+        tilLt (viewConstantTuple -> Just [])
+              (viewConstantTuple -> Just []) = False
+        tilLt (viewConstantTuple -> Just (a:as))
+              (viewConstantTuple -> Just (b:bs)) =
+                  if tilLt a b
+                      then True
+                      else a == b &&
+                           tilLt (ConstantAbstract $ AbsLitTuple as)
+                                 (ConstantAbstract $ AbsLitTuple bs)
+        tilLt (viewConstantSet -> Just as)
+              (viewConstantSet -> Just bs) =
+            or [ and [ freq i as < freq i bs
+                     , and [ if tilLt j i
+                                 then freq j as == freq j bs
+                                 else True
+                           | j <- cs
+                           ]
+                     ]
+               | let cs = sortNub (as ++ bs)
+               , i <- cs
+               ]
+        tilLt (viewConstantMSet -> Just as)
+              (viewConstantMSet -> Just bs) =
+            or [ and [ freq i as < freq i bs
+                     , and [ if tilLt j i
+                                 then freq j as == freq j bs
+                                 else True
+                           | j <- cs
+                           ]
+                     ]
+               | let cs = as ++ bs
+               , i <- cs
+               ]
+        tilLt (viewConstantFunction -> Just as')
+              (viewConstantFunction -> Just bs') =
+            or [ and [ freq i as < freq i bs
+                     , and [ if tilLt j i
+                                 then freq j as == freq j bs
+                                 else True
+                           | j <- cs
+                           ]
+                     ]
+               | let as = map tupleE as'
+               , let bs = map tupleE bs'
+               , let cs = as ++ bs
+               , i <- cs
+               ]
+        tilLt (viewConstantRelation -> Just as')
+              (viewConstantRelation -> Just bs') =
+            or [ and [ freq i as < freq i bs
+                     , and [ if tilLt j i
+                                 then freq j as == freq j bs
+                                 else True
+                           | j <- cs
+                           ]
+                     ]
+               | let as = map (ConstantAbstract . AbsLitTuple) as'
+               , let bs = map (ConstantAbstract . AbsLitTuple) bs'
+               , let cs = as ++ bs
+               , i <- cs
+               ]
+        tilLt (viewConstantPartition -> Just as')
+              (viewConstantPartition -> Just bs') =
+            or [ and [ freq i as < freq i bs
+                     , and [ if tilLt j i
+                                 then freq j as == freq j bs
+                                 else True
+                           | j <- cs
+                           ]
+                     ]
+               | let as = map (ConstantAbstract . AbsLitSet) as'
+               , let bs = map (ConstantAbstract . AbsLitSet) bs'
+               , let cs = as ++ bs
+               , i <- cs
+               ]
+        tilLt a b = a < b
+
+
+ordTildeLt :: Constant -> Constant -> Ordering
+ordTildeLt x y =
+    case (tildeLt x y, tildeLt y x) of
+        (True, _) -> LT
+        (_, True) -> GT
+        _         -> EQ
+

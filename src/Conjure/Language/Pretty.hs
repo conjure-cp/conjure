@@ -156,4 +156,4 @@ logDebugId :: (MonadLog m, Pretty a) => Doc -> a -> m a
 logDebugId msg a = logDebug (msg <++> pretty a) >> return a
 
 tracingPretty :: Pretty a => Doc -> a -> a
-tracingPretty s a = trace (renderWide $ "tracing " <+> s <> ": " <++> pretty a) a
+tracingPretty s a = trace (renderWide $ "tracing" <+> s <> ": " <++> pretty a) a

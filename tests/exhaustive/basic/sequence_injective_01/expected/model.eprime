@@ -5,7 +5,7 @@ find f_ExplicitBounded_Values_1: matrix indexed by [int(1..2)] of int(1..2)
 find f_ExplicitBounded_Values_2: matrix indexed by [int(1..2)] of int(1..2)
 branching on [f_ExplicitBounded_Length, f_ExplicitBounded_Values_1, f_ExplicitBounded_Values_2]
 such that
-    and([!(f_ExplicitBounded_Values_1[q1] = f_ExplicitBounded_Values_1[q2] /\
-           f_ExplicitBounded_Values_2[q1] = f_ExplicitBounded_Values_2[q2])
+    and([f_ExplicitBounded_Values_1[q1] != f_ExplicitBounded_Values_1[q2] \/
+         f_ExplicitBounded_Values_2[q1] != f_ExplicitBounded_Values_2[q2]
              | q1 : int(1..2), q2 : int(1..2), q1 < q2])
 

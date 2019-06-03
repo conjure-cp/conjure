@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 msetExplicitWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-msetExplicitWithFlags = Representation chck downD structuralCons downC up
+msetExplicitWithFlags = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -138,7 +138,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
 
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -148,8 +148,8 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
-            let counts = map (ConstantInt . snd) constants
-            let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantInt 0)
+            let counts = map (ConstantInt TagInt . snd) constants
+            let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantInt TagInt 0)
 
             return $ Just
                 [ ( nameFlag domain name
@@ -174,7 +174,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract $ AbsLitMSet $ concat
                                                     [ replicate (fromInteger i) v
-                                                    | (ConstantInt i,v) <- zip flags vals
+                                                    | (ConstantInt TagInt i,v) <- zip flags vals
                                                     ] )
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
@@ -202,3 +202,18 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [flags, values] <- downX1 inp
+            Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] inner
+            return
+                [essence|
+                    flatten([ flatten([ [-&flags[&i]]
+                                      , &soValues
+                                      ])
+                            | &iPat : &index
+                            ])
+                |]

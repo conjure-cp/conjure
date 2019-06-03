@@ -20,8 +20,8 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-function1D :: forall m . (MonadFail m, NameGen m) => Representation m
-function1D = Representation chck downD structuralCons downC up
+function1D :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -60,7 +60,9 @@ function1D = Representation chck downD structuralCons downC up
                 innerDomainFr
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
 
-            let injectiveCons m = do
+            let
+                injectiveCons :: Expression -> m [Expression]
+                injectiveCons m = do
                     tyTo <- typeOf innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
@@ -80,7 +82,8 @@ function1D = Representation chck downD structuralCons downC up
                                         &i .< &j -> &m[&i] != &m[&j]
                                 |]
 
-            let surjectiveCons m = do
+                surjectiveCons :: Expression -> m [Expression]
+                surjectiveCons m = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- list
@@ -89,7 +92,9 @@ function1D = Representation chck downD structuralCons downC up
                                 exists &jPat : &innerDomainFr .
                                     &m[&j] = &i
                         |]
-            let jectivityCons m = case jectivityAttr of
+
+                jectivityCons :: Expression -> m [Expression]
+                jectivityCons m = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  m
                     JectivityAttr_Surjective -> surjectiveCons m
@@ -134,7 +139,7 @@ function1D = Representation chck downD structuralCons downC up
                 [ val
                 | fr <- froms
                 , let val = case lookup fr vals of
-                                Nothing -> fail $ vcat [ "No value for " <+> pretty fr
+                                Nothing -> fail $ vcat [ "No value for" <+> pretty fr
                                                        , "In:" <+> pretty (AbsLitFunction vals)
                                                        ]
                                 Just v  -> return v
@@ -173,10 +178,23 @@ function1D = Representation chck downD structuralCons downC up
                                 ]
         up _ _ = na "{up} Function1D"
 
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
+            return
+                [essence|
+                    flatten([ &soValues
+                            | &iPat : &innerDomainFr
+                            ])
+                |]
+
 
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
 domainValues dom =
     case dom of
         DomainBool -> return [ConstantBool False, ConstantBool True]
-        DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
+        DomainInt t rs -> map (ConstantInt t) <$> valuesInIntDomain rs
         _ -> fail ("domainValues, not supported:" <+> pretty dom)

@@ -4,7 +4,9 @@ import Conjure.Prelude
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.MainHelper ( mainWithArgs )
 import Conjure.Language.Pretty ( pretty )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UserError ( userErr1 )
+import Conjure.Language.Pretty ( renderWide )
 
 -- base
 import System.CPUTime ( getCPUTime )
@@ -61,8 +63,13 @@ main = do
                      >>= helpAutoWidth
     input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do
-            logDebug ("Command line options: " <+> pretty (show input))
+            logDebug ("Command line options:" <+> pretty (show input))
+            let ?typeCheckerMode = StronglyTyped
             mainWithArgs input
+            case input of
+                Modelling{} | estimateNumberOfModels input ->
+                    liftIO $ putStrLn $ renderWide $ pretty $ toJSON input
+                _ -> return ()
     case limitTime input of
         Just sec | sec > 0 -> do
             putStrLn $ "Running with a time limit of " ++ show sec ++ " seconds."

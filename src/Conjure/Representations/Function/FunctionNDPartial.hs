@@ -14,8 +14,13 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 import Conjure.Representations.Function.FunctionND ( viewAsDomainTuple, mkLensAsDomainTuple )
 
 
-functionNDPartial :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-functionNDPartial = Representation chck downD structuralCons downC up
+functionNDPartial :: forall m .
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Representation m
+functionNDPartial = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -67,7 +72,9 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 toIndex x = [ [essence| &x[&k] |] | k <- kRange ]
                 index x m = make opMatrixIndexing m (toIndex x)
 
-            let injectiveCons flags values = do
+            let
+                injectiveCons :: Expression -> Expression -> m [Expression]
+                injectiveCons flags values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let flagsIndexedI  = index i flags
@@ -85,7 +92,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 ])
                         |]
 
-            let surjectiveCons flags values = do
+                surjectiveCons :: Expression -> Expression -> m [Expression]
+                surjectiveCons flags values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
 
@@ -98,19 +106,22 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                     &flagsIndexed /\ &valuesIndexed = &i
                         |]
 
-            let jectivityCons flags values = case jectivityAttr of
+                jectivityCons :: Expression -> Expression -> m [Expression]
+                jectivityCons flags values = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  flags values
                     JectivityAttr_Surjective -> surjectiveCons flags values
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons  flags values
                                                      <*> surjectiveCons flags values
 
-            let cardinality flags = do
+                cardinality :: Expression -> m Expression
+                cardinality flags = do
                     (iPat, i) <- quantifiedVar
                     let flagsIndexed  = index i flags
                     return [essence| sum &iPat : &innerDomainFr . toInt(&flagsIndexed) |]
 
-            let dontCareInactives flags values = do
+                dontCareInactives :: Expression -> Expression -> m [Expression]
+                dontCareInactives flags values = do
                     (iPat, i) <- quantifiedVar
                     let flagsIndexed  = index i flags
                     let valuesIndexed = index i values
@@ -265,3 +276,30 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionNDPartial"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [flags, values] <- downX1 inp
+            Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            
+            -- setting up the quantification
+            let kRange = case innerDomainFr of
+                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                    DomainRecord rs -> map (fromName . fst) rs
+                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                    , "indexDomain:" <+> pretty innerDomainFr
+                                    ]
+                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
+                flagsIndexed = make opMatrixIndexing flags toIndex
+                valuesIndexed = make opMatrixIndexing values toIndex
+
+            soValues <- innerSO downX1 valuesIndexed innerDomainTo
+
+            return $ make opFlatten $
+                Comprehension
+                    [essence| flatten([ [-&flagsIndexed]
+                                      , &soValues
+                                      ])
+                            |]
+                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]

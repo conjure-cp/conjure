@@ -3,7 +3,7 @@
  - Description : Strengthen a model using type- and domain-inference.
  - Copyright   : Billy Brown 2017
  - License     : BSD3
- 
+
  Processing step that attempts to strengthen an Essence model, using methods described in the "Reformulating Essence Specifications for Robustness" paper.
 -}
 
@@ -45,7 +45,7 @@ type AttrPair    = (AttrName, Maybe Expression)
 type ToAddToRem  = ([ExpressionZ], [ExpressionZ])
 
 -- | Strengthen a model using type- and domain-inference.
-strengthenModel :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
+strengthenModel :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, ?typeCheckerMode :: TypeCheckerMode)
                 => LogLevel -- ^ Log level to use.
                 -> Bool     -- ^ Generate logs for rule applications.
                 -> Model    -- ^ Model to strengthen.
@@ -270,7 +270,7 @@ matching :: Expression
          -> Maybe (a, (Expression, Expression))
 matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
                       [x] -> pure x
-                      _   -> fail $ "no matching operator for expression: " <+> pretty e
+                      _   -> fail $ "no matching operator for expression:" <+> pretty e
 
 -- | (In)equality operator lens pairs.
 ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
@@ -339,7 +339,7 @@ toAddRem :: ToAddToRem -> ToAddToRem -> ToAddToRem
 toAddRem (ta, tr) = toAdd ta . toRem tr
 
 -- | Apply a rule to arbitrary levels of nested domains.
-nested :: (MonadFail m, MonadLog m, NameGen m)
+nested :: (MonadFail m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
        => (Model -> (FindVar, [ExpressionZ])
                  -> m ([AttrPair], ToAddToRem))
        -> Model
@@ -409,7 +409,7 @@ totalInjectiveIsBijective _ ((_, dom), _)
          _ -> return mempty
 
 -- | If a function is defined for all values in its domain, then it is total.
-definedForAllIsTotal :: (MonadFail m, MonadLog m)
+definedForAllIsTotal :: (MonadFail m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
                      => Model
                      -> (FindVar, [ExpressionZ])
                      -> m ([AttrPair], ToAddToRem)
@@ -440,7 +440,7 @@ definedForAllIsTotal _ ((n, dom), cs)
 -- | If all distinct inputs to a function have distinct results, then it is injective.
 --   It will also be total if there are no conditions other than the disequality between
 --   the two inputs.
-diffArgResultIsInjective :: (MonadFail m, MonadLog m)
+diffArgResultIsInjective :: (MonadFail m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
                          => Model
                          -> (FindVar, [ExpressionZ])
                          -> m ([AttrPair], ToAddToRem)
@@ -476,7 +476,7 @@ varSize _ ((n, _), cs) = do
   return $ unzipMaybeK results
 
 -- | Set the minimum size of a set based on it being a superset of another.
-setSize :: (MonadFail m, MonadLog m, NameGen m)
+setSize :: (MonadFail m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
         => Model
         -> (FindVar, [ExpressionZ])
         -> m ([AttrPair], ToAddToRem)
@@ -630,7 +630,7 @@ mSetOccur _ _ = return mempty
 
 -- | Mark a partition regular if its numParts * partSize = |domain|, or if there
 --   is a constraint on its parts constraining them to be of equal size.
-partRegular :: (MonadFail m, MonadLog m)
+partRegular :: (MonadFail m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
             => Model
             -> (FindVar, [ExpressionZ])
             -> m ([AttrPair], ToAddToRem)
@@ -752,7 +752,7 @@ funcRangeEqSet _ _ = return mempty
 
 -- | An (in)equality in a forAll implies that the (in)equality also applies to
 --   the sums of both terms.
-forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
+forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
                     => Model
                     -> (FindVar, [ExpressionZ])
                     -> m ([AttrPair], ToAddToRem)
@@ -781,8 +781,8 @@ forAllIneqToIneqSum _ (_, cs) = do
     partsAreNumeric (_, _, e1, e2) = (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
     domainIsNumeric e = case domainOf e of
                              Right DomainInt{}           -> return True
-                             Right (DomainAny _ TypeInt) -> return True
-                             _                           -> return False
+                             Right (DomainAny _ (TypeInt _)) -> return True
+                             _                               -> return False
     -- Replace the forAll with the (in)equality between sums
     mkConstraint :: (Generator, Maybe ExpressionZ, Expression, Expression) -> Maybe ExpressionZ
     mkConstraint (gen, Just z, _, _)
@@ -796,7 +796,7 @@ forAllIneqToIneqSum _ (_, cs) = do
     mkConstraint _ = Nothing
 
 -- | Iterate slightly faster over a domain if generating two distinct variables.
-fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
+fasterIteration :: (MonadFail m, MonadIO m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
                 => Model
                 -> (FindVar, [ExpressionZ])
                 -> m ([AttrPair], ToAddToRem)

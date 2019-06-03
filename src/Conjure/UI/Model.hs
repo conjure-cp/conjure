@@ -46,7 +46,8 @@ import Conjure.UI.IO ( writeModel )
 import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
 
 import Conjure.Representations
-    ( downX1, downD, reprOptions, getStructurals
+    ( downX, downX1, downD, reprOptions, getStructurals
+    , symmetryOrdering
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     )
 
@@ -65,6 +66,7 @@ import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker as Vertica
 import qualified Conjure.Rules.Vertical.Set.Occurrence as Vertical.Set.Occurrence
 
 import qualified Conjure.Rules.Horizontal.MSet as Horizontal.MSet
+import qualified Conjure.Rules.Vertical.MSet.Occurrence as Vertical.MSet.Occurrence
 import qualified Conjure.Rules.Vertical.MSet.ExplicitWithFlags as Vertical.MSet.ExplicitWithFlags
 import qualified Conjure.Rules.Vertical.MSet.ExplicitWithRepetition as Vertical.MSet.ExplicitWithRepetition
 
@@ -101,15 +103,22 @@ import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
 import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
-import Pipes ( Producer, await, yield, (>->), cat )
+import Pipes ( Pipe, Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 
-outputModels
-    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m)
-    => Config
-    -> Model
-    -> m ()
+outputModels ::
+    forall m .
+    MonadIO m =>
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    MonadUserError m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    Model ->
+    m ()
 outputModels config model = do
 
     liftIO $ writeIORef recordedResponses (responses config)
@@ -131,10 +140,21 @@ outputModels config model = do
         ["Identifiers cannot contain a quotation mark character in them:" <+> prettyList id "," primeyIdentifiers]
 
     let dir = outputDirectory config
-    liftIO $ createDirectoryIfMissing True dir
+
+    unless (estimateNumberOfModels config) $
+        liftIO $ createDirectoryIfMissing True dir
 
     let
+        limitModelsIfEstimating :: Pipe LogOrModel LogOrModel m ()
+        limitModelsIfEstimating =
+            if estimateNumberOfModels config
+                then limitModelsNeeded 1
+                else Pipes.cat
+
+        limitModelsIfNeeded :: Pipe LogOrModel LogOrModel m ()
         limitModelsIfNeeded = maybe Pipes.cat limitModelsNeeded (limitModels config)
+
+        limitModelsNeeded :: Int -> Pipe LogOrModel LogOrModel m ()
         limitModelsNeeded 0 = return ()
         limitModelsNeeded n = do
             x <- Pipes.await
@@ -159,23 +179,42 @@ outputModels config model = do
                                        |> concat
                                 else padLeft 6 '0' (show i)
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    writeModel (lineWidth config) Plain (Just filename) eprime
+                    if estimateNumberOfModels config
+                        then do
+                            let
+                                estimate :: Integer
+                                estimate = product $ 1 : [ toInteger numOptions
+                                                         | (_question, _choice, numOptions) <-
+                                                             eprime |> mInfo |> miTrailCompact
+                                                         ]
+                            liftIO $ print
+                                        $ "These options would generate at least"
+                                        <+> pretty estimate
+                                        <+> (if estimate == 1 then "model" else "models") <> "."
+                        else writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
+
+    let ?typeCheckerMode = RelaxedIntegerTags
 
     Pipes.foldM each
                 (return (numberingStart config))
                 (const $ return ())
                 (toCompletion config model
-                    >-> limitModelsIfNeeded)
+                    >-> limitModelsIfNeeded
+                    >-> limitModelsIfEstimating)
 
 
-toCompletion
-    :: forall m . (MonadIO m, MonadFail m, NameGen m, EnumerateDomain m)
-    => Config
-    -> Model
-    -> Producer LogOrModel m ()
+toCompletion :: forall m .
+    MonadIO m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    Model ->
+    Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
@@ -205,11 +244,15 @@ toCompletion config m = do
 -- | If a rule is applied at a position P, the MonadZipper will be retained focused at that location
 --   and new rules will be tried using P as the top of the zipper-tree.
 --   The whole model (containing P too) will be tried later for completeness.
-remainingWIP
-    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
-    => Config
-    -> ModelWIP
-    -> m [Question]
+remainingWIP ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    ModelWIP ->
+    m [Question]
 remainingWIP config (StartOver model)
     | Just modelZipper <- mkModelZipper model = do
         qs <- remaining config modelZipper (mInfo model)
@@ -226,12 +269,16 @@ remainingWIP config wip@(TryThisFirst modelZipper info) = do
                                                                             -- something on the left needs attention.
 
 
-remaining
-    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
-    => Config
-    -> ModelZipper
-    -> ModelInfo
-    -> m [Question]
+remaining ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    ModelZipper ->
+    ModelInfo ->
+    m [Question]
 remaining config modelZipper minfo = do
     -- note: the call to getQuestions can update the NameGen state
     importNameGenState (minfo |> miNameGenState)
@@ -252,8 +299,8 @@ remaining config modelZipper minfo = do
                                 [ "Rule application changes type:" <+> pretty ruleName
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
-                                , "Type before:" <+> pretty tyBefore
-                                , "Type after :" <+> pretty tyAfter
+                                , "Type before:" <+> pretty (show tyBefore)
+                                , "Type after :" <+> pretty (show tyAfter)
                                 ]
                 (Left msg, _) -> bug $ vcat
                                 [ "Type error before rule application:" <+> pretty ruleName
@@ -304,11 +351,15 @@ remaining config modelZipper minfo = do
 
 -- | Computes all applicable questions.
 --   strategyQ == PickFirst is special-cased for performance.
-getQuestions
-    :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
-    => Config
-    -> ModelZipper
-    -> m [(ModelZipper, [(Doc, RuleResult m)])]
+getQuestions ::
+    MonadLog m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    ModelZipper ->
+    m [(ModelZipper, [(Doc, RuleResult m)])]
 getQuestions config modelZipper | strategyQ config == PickFirst = maybeToList <$>
     let
         loopLevels :: Monad m => [m (Maybe a)] -> m (Maybe a)
@@ -610,7 +661,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
-        f (TypeList ty) = TypeMatrix TypeInt ty
+        f (TypeList ty) = TypeMatrix (TypeInt TagInt) ty
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
@@ -652,7 +703,49 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
+dropTagForSR ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
+dropTagForSR m = do
+    let
+        replacePredSucc [essence| pred(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| false |]
+                                -- since True becomes False
+                                --       False becomes out-of-bounds, hence False
+                TypeInt{}  -> do
+                    let xTagInt = reTag TagInt x
+                    return [essence| &xTagInt - 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc [essence| succ(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| !&x |]
+                                -- since False becomes True
+                                --       True becomes out-of-bounds, hence False
+                                -- "succ" is exactly "negate" on bools
+                TypeInt{}  -> do
+                    let xTagInt = reTag TagInt x
+                    return [essence| &xTagInt + 1 |]
+                _          -> bug "predSucc"
+        -- replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
+        -- replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
+        replacePredSucc x = return x
+
+    st <- transformBiM replacePredSucc (mStatements m)
+    return m { mStatements = st }
+    where
+
+
+updateDeclarations ::
+    MonadUserError m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -665,11 +758,11 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt TagInt [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum
-                                            [ case y of 
+                                            [ case y of
                                                 Constant (ConstantAbstract AbsLitMatrix{}) -> 0
                                                 Constant ConstantAbstract{} -> 1
                                                 AbstractLiteral AbsLitMatrix{} -> 0
@@ -683,7 +776,13 @@ updateDeclarations model = do
                     orders' <- forM orders $ \case
                         BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            outNames <- concatMapM (onEachDomainSearch nm) domains
+                            -- last one is the representation of what's in true(?)
+                            -- put that first!
+                            let reorder xs =
+                                    case reverse xs of
+                                        [] -> []
+                                        (y:ys) -> y : reverse ys
+                            outNames <- concatMapM (onEachDomainSearch nm) (reorder domains)
                             return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
@@ -693,7 +792,7 @@ updateDeclarations model = do
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
                 Right outs -> forM outs $ \ (n, d) -> do
-                    d' <- transformBiM trySimplify $ forgetRepr d
+                    d' <- transformBiM (trySimplify []) $ forgetRepr d
                     return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
@@ -717,7 +816,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
-    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+    fails <- fmap (nub . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
@@ -762,6 +861,10 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                         ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                            | (i, c) <- zip allNats (tail (ascendants x))
                                            ]
+                    [essence| &_ .< &_ |] ->
+                        return ["", ("Not refined:" <+> pretty (hole x))]
+                    [essence| &_ .<= &_ |] ->
+                        return ["", ("Not refined:" <+> pretty (hole x))]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -787,7 +890,12 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
 checkIfHasUndefined m = return m
 
 
-topLevelBubbles :: (MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+topLevelBubbles ::
+    MonadFail m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 topLevelBubbles m = do
     let
         onStmt (SuchThat xs) = onExprs xs
@@ -847,7 +955,10 @@ topLevelBubbles m = do
     return m { mStatements = statements' }
 
 
-sliceThemMatrices :: Monad m => Model -> m Model
+sliceThemMatrices ::
+    Monad m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 sliceThemMatrices model = do
     let
         -- nothing stays with a matrix type
@@ -904,7 +1015,13 @@ removeExtraSlices model = do
 logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
 logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
 
-prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+prologue ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
@@ -929,9 +1046,16 @@ prologue model = do
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
 
 
-epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+epilogue ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
@@ -944,14 +1068,21 @@ epilogue model = return model
     >>= return . languageEprime       >>= logDebugIdModel "[languageEprime]"
 
 
-applicableRules
-    :: forall m n . ( MonadUserError n, MonadLog n, NameGen n, EnumerateDomain n
-                    , MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m, MonadFail m
-                    )
-    => Config
-    -> [Rule]
-    -> ModelZipper
-    -> n [(Doc, RuleResult m)]
+applicableRules :: forall m n .
+    MonadUserError n =>
+    MonadLog n =>
+    NameGen n =>
+    EnumerateDomain n =>
+    MonadUserError m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    [Rule] ->
+    ModelZipper ->
+    n [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
@@ -1005,7 +1136,7 @@ applicableRules Config{..} rulesAtLevel x = do
            ]
 
 
-allRules :: Config -> [[Rule]]
+allRules :: (?typeCheckerMode :: TypeCheckerMode) => Config -> [[Rule]]
 allRules config =
     [ [ rule_FullEvaluate
       ]
@@ -1017,6 +1148,10 @@ allRules config =
       , rule_ChooseReprForLocals        config
       ]
     , bubbleUpRules
+    , [ rule_Eq
+      , rule_Neq
+      , rule_Comprehension_Cardinality
+      ]
     , verticalRules
     , horizontalRules
     ] ++ otherRules
@@ -1044,8 +1179,6 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
-    , Vertical.Tuple.rule_Tuple_DotLeq
-    , Vertical.Tuple.rule_Tuple_DotLt
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
@@ -1054,16 +1187,12 @@ verticalRules =
     , Vertical.Record.rule_Record_Neq
     , Vertical.Record.rule_Record_Leq
     , Vertical.Record.rule_Record_Lt
-    , Vertical.Record.rule_Record_DotLeq
-    , Vertical.Record.rule_Record_DotLt
     , Vertical.Record.rule_Record_Index
 
     , Vertical.Variant.rule_Variant_Eq
     , Vertical.Variant.rule_Variant_Neq
     , Vertical.Variant.rule_Variant_Leq
     , Vertical.Variant.rule_Variant_Lt
-    , Vertical.Variant.rule_Variant_DotLeq
-    , Vertical.Variant.rule_Variant_DotLt
     , Vertical.Variant.rule_Variant_Index
     , Vertical.Variant.rule_Variant_Active
 
@@ -1082,8 +1211,6 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
-    , Vertical.Matrix.rule_Matrix_DotLeq_Decompose
-    , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Min
@@ -1102,6 +1229,9 @@ verticalRules =
     , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In
 
+    , Vertical.MSet.Occurrence.rule_Comprehension
+    , Vertical.MSet.Occurrence.rule_Freq
+
     , Vertical.MSet.ExplicitWithFlags.rule_Comprehension
     , Vertical.MSet.ExplicitWithFlags.rule_Freq
 
@@ -1112,6 +1242,7 @@ verticalRules =
     , Vertical.Function.Function1D.rule_Image
 
     , Vertical.Function.Function1DPartial.rule_Comprehension
+    , Vertical.Function.Function1DPartial.rule_PowerSet_Comprehension
     , Vertical.Function.Function1DPartial.rule_Image_NotABool
     , Vertical.Function.Function1DPartial.rule_Image_Bool
     , Vertical.Function.Function1DPartial.rule_InDefined
@@ -1140,6 +1271,7 @@ verticalRules =
     , Vertical.Relation.RelationAsMatrix.rule_Image
 
     , Vertical.Relation.RelationAsSet.rule_Comprehension
+    , Vertical.Relation.RelationAsSet.rule_Card
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
@@ -1151,8 +1283,6 @@ horizontalRules =
     [ Horizontal.Set.rule_Comprehension_Literal
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
-    , Horizontal.Set.rule_DotLeq
-    , Horizontal.Set.rule_DotLt
     , Horizontal.Set.rule_Subset
     , Horizontal.Set.rule_SubsetEq
     , Horizontal.Set.rule_Supset
@@ -1171,8 +1301,6 @@ horizontalRules =
     , Horizontal.MSet.rule_Comprehension_ToSet_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
-    , Horizontal.MSet.rule_DotLeq
-    , Horizontal.MSet.rule_DotLt
     , Horizontal.MSet.rule_Subset
     , Horizontal.MSet.rule_SubsetEq
     , Horizontal.MSet.rule_Supset
@@ -1196,8 +1324,6 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_ImageSet
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
-    , Horizontal.Function.rule_DotLeq
-    , Horizontal.Function.rule_DotLt
     , Horizontal.Function.rule_Subset
     , Horizontal.Function.rule_SubsetEq
     , Horizontal.Function.rule_Supset
@@ -1226,8 +1352,6 @@ horizontalRules =
     , Horizontal.Sequence.rule_Eq
     , Horizontal.Sequence.rule_Eq_Comprehension
     , Horizontal.Sequence.rule_Neq
-    , Horizontal.Sequence.rule_DotLeq
-    , Horizontal.Sequence.rule_DotLt
     , Horizontal.Sequence.rule_Subset
     , Horizontal.Sequence.rule_SubsetEq
     , Horizontal.Sequence.rule_Supset
@@ -1249,8 +1373,6 @@ horizontalRules =
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_Neq
-    , Horizontal.Relation.rule_DotLeq
-    , Horizontal.Relation.rule_DotLt
     , Horizontal.Relation.rule_Subset
     , Horizontal.Relation.rule_SubsetEq
     , Horizontal.Relation.rule_Supset
@@ -1260,8 +1382,6 @@ horizontalRules =
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
-    , Horizontal.Partition.rule_DotLeq
-    , Horizontal.Partition.rule_DotLt
     , Horizontal.Partition.rule_Together
     , Horizontal.Partition.rule_Apart
     , Horizontal.Partition.rule_Party
@@ -1308,12 +1428,10 @@ otherRules =
         , rule_Decompose_AllDiff
 
         , rule_GeneratorsFirst
-
-        , rule_DomainCardinality
+        ]
+    ,
+        [ rule_DomainCardinality
         , rule_DomainMinMax
-
-        , rule_Pred
-        , rule_Succ
 
         , rule_ComplexAbsPat
 
@@ -1323,8 +1441,6 @@ otherRules =
         , rule_QuantifierShift2
         , rule_QuantifierShift3
 
-        , rule_DotLt_IntLike
-        , rule_DotLeq_IntLike
         ]
 
     ,   [ rule_Comprehension_Simplify
@@ -1347,10 +1463,12 @@ delayedRules =
         ]
     ,   [ rule_ReducerToComprehension
         ]
+    ,   [ rule_DotLtLeq
+        ]
     ]
 
 
-rule_ChooseRepr :: Config -> Rule
+rule_ChooseRepr :: (?typeCheckerMode :: TypeCheckerMode) => Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
@@ -1660,6 +1778,72 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
     theRule _ = na "rule_GeneratorsFirst"
 
 
+rule_Eq :: Rule
+rule_Eq = "identical-domain-eq" `namedRule` theRule where
+    theRule p = do
+        (x,y) <- match opEq p
+        domX  <- domainOf x
+        domY  <- domainOf y
+        unless (domX == domY) $ na "rule_Eq domains not identical"
+        sameRepresentationTree x y
+        xs <- downX x
+        ys <- downX y
+        unless (length xs == length ys) $ na "rule_Eq"
+        when (xs == [x]) $ na "rule_Eq"
+        when (ys == [y]) $ na "rule_Eq"
+        return
+            ( "Generic vertical rule for identical-domain equality"
+            , return $ make opAnd $ fromList $ zipWith (\ i j -> [essence| &i = &j |] ) xs ys
+            )
+
+
+rule_Neq :: Rule
+rule_Neq = "identical-domain-neq" `namedRule` theRule where
+    theRule p = do
+        (x,y) <- match opNeq p
+        domX  <- domainOf x
+        domY  <- domainOf y
+        unless (domX == domY) $ na "rule_Neq domains not identical"
+        sameRepresentationTree x y
+        xs <- downX x
+        ys <- downX y
+        unless (length xs == length ys) $ na "rule_Neq"
+        when (xs == [x]) $ na "rule_Neq"
+        when (ys == [y]) $ na "rule_Neq"
+        return
+            ( "Generic vertical rule for identical-domain equality"
+            , return $ make opOr $ fromList $ zipWith (\ i j -> [essence| &i != &j |] ) xs ys
+            )
+
+
+rule_DotLtLeq :: Rule
+rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
+    theRule p = do
+        (a,b,mk) <- case p of
+                    [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
+                    [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
+                    _ -> na "rule_DotLtLeq"
+        -- aType <- typeOf a
+        -- case aType of
+        --     TypeTuple{}     -> return ()
+        --     TypeMatrix{}    -> return ()
+        --     TypeSet{}       -> return ()
+        --     TypeMSet{}      -> return ()
+        --     TypeFunction{}  -> return ()
+        --     TypeSequence{}  -> return ()
+        --     TypeRelation{}  -> return ()
+        --     TypePartition{} -> return ()
+        --     _ -> na "rule_DotLtLeq"
+        -- sameRepresentationTree a b
+
+        ma <- symmetryOrdering a
+        mb <- symmetryOrdering b
+        return
+            ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
+            , return $ mk ma mb
+            )
+
+
 rule_ReducerToComprehension :: Rule
 rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
     theRule p = do
@@ -1706,17 +1890,35 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
+    theRule [essence| &xs <lex &ys |] =
+        case (listOut xs, listOut ys) of
+            (Just [x], Just [y]) -> return
+                ( "<lex on singleton matrices"
+                , return [essence| &x < &y |]
+                )
+            _ -> na "rule_FlattenOf1D"
+    theRule [essence| &xs <=lex &ys |] =
+        case (listOut xs, listOut ys) of
+            (Just [x], Just [y]) -> return
+                ( "<=lex on singleton matrices"
+                , return [essence| &x <= &y |]
+                )
+            _ -> na "rule_FlattenOf1D"
     theRule p = do
         x   <- match opFlatten p
         tyx <- typeOf x
-        case tyx of
-            TypeList     TypeBool{} -> return ()
-            TypeList     TypeInt{}  -> return ()
-            TypeMatrix _ TypeBool{} -> return ()
-            TypeMatrix _ TypeInt{}  -> return ()
+        out <- case tyx of
+            TypeList     TypeBool{} -> return x
+            TypeList     TypeInt{}  -> return x
+            TypeMatrix _ TypeBool{} -> return x
+            TypeMatrix _ TypeInt{}  -> return x
+            TypeMatrix{}            -> -- more than 1D
+                case listOut x of
+                    Just [y] -> return (make opFlatten y)
+                    _        -> na "rule_FlattenOf1D"
             _ -> na "rule_FlattenOf1D"
         return ( "1D matrices do not need a flatten."
-               , return x
+               , return out
                )
 
 
@@ -1726,7 +1928,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ TypeInt  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -1758,7 +1960,7 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
         return
             ( "Cardinality of a domain"
             , case d of
-                DomainInt [RangeBounded 1 u] -> return u
+                DomainInt _ [RangeBounded 1 u] -> return u
                 _ -> do
                     (iPat, _) <- quantifiedVar
                     return [essence| sum([ 1 | &iPat : &d ]) |]
@@ -1785,33 +1987,6 @@ rule_DomainMinMax = "domain-MinMax" `namedRule` theRule where
     getDomain (Domain d) = return d
     getDomain (Reference _ (Just (Alias (Domain d)))) = getDomain (Domain d)
     getDomain _ = na "rule_DomainMinMax.getDomain"
-
-
-rule_Pred :: Rule
-rule_Pred = "pred" `namedRule` theRule where
-    theRule [essence| pred(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
-                                                                -- since True becomes False
-                                                                --       False becomes out-of-bounds, hence False
-            TypeInt{}  -> return ( "Predecessor of integer", return [essence| &x - 1 |] )
-            _          -> na "rule_Pred"
-    theRule _ = na "rule_Pred"
-
-
-rule_Succ :: Rule
-rule_Succ = "succ" `namedRule` theRule where
-    theRule [essence| succ(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Succecessor of boolean", return [essence| !&x |] )
-                                                                -- since False becomes True
-                                                                --       True becomes out-of-bounds, hence False
-                                                                -- "succ" is exactly "negate" on bools
-            TypeInt{}  -> return ( "Succecessor of integer", return [essence| &x + 1 |] )
-            _          -> na "rule_Succ"
-    theRule _ = na "rule_Succ"
 
 
 rule_ComplexAbsPat :: Rule
@@ -1872,6 +2047,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 ]
         theGuard <- case toInline of
             []  -> na "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
         let bodySkipped = opSkip theGuard body
@@ -1894,13 +2070,14 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             Just z -> do
                 let h = hole z
                 case ( match opAnd h, match opOr h, match opSum h
-                     , match opMin h, match opMax h ) of
-                    (Just{}, _, _, _, _) -> return ("and", opAndSkip)
-                    (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
-                    (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
-                    (_, _, _, Just{}, _) -> na "rule_InlineConditions (min)"
-                    (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
-                    _                    -> na "rule_InlineConditions (meh-2)"
+                     , match opMin h, match opMax h, match opOrdering h ) of
+                    (Just{}, _, _, _, _, _) -> return ("and", opAndSkip)
+                    (_, Just{}, _, _, _, _) -> return ("or" , opOrSkip )
+                    (_, _, Just{}, _, _, _) -> return ("sum", opSumSkip)
+                    (_, _, _, Just{}, _, _) -> na "rule_InlineConditions (min)"
+                    (_, _, _, _, Just{}, _) -> na "rule_InlineConditions (max)"
+                    (_, _, _, _, _, Just{}) -> return ("ordering", opSumSkip)
+                    _                       -> na "rule_InlineConditions (meh-2)"
                                             -- case Zipper.up z of
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
@@ -1921,6 +2098,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
                 ]
         theGuard <- case toInline of
             []  -> na "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
         domBody <- domainOf body
@@ -1929,7 +2107,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             collectLowerBounds (RangeBounded x _) = return x
             collectLowerBounds _ = userErr1 ("Unexpected infinite domain:" <+> pretty domBody)
 
-            collectLowerBoundsD (DomainInt rs) = mapM collectLowerBounds rs
+            collectLowerBoundsD (DomainInt _ rs) = mapM collectLowerBounds rs
             collectLowerBoundsD _  = userErr1 ("Expected an integer domain, but got:" <+> pretty domBody)
 
         bounds <- collectLowerBoundsD domBody
@@ -1991,38 +2169,6 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
                                 ]
                             ]
                         ])
-            )
-
-
-rule_DotLt_IntLike :: Rule
-rule_DotLt_IntLike = "intLike-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b) <- match opDotLt p
-        tya   <- typeOf a
-        tyb   <- typeOf b
-        case mostDefined [tya, tyb] of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
-            _ -> na "rule_DotLt_IntLike"
-        return
-            ( "Horizontal rule for int-like .<" <+> pretty (make opLt a b)
-            , return $ make opLt a b
-            )
-
-
-rule_DotLeq_IntLike :: Rule
-rule_DotLeq_IntLike = "intLike-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b) <- match opDotLeq p
-        tya   <- typeOf a
-        tyb   <- typeOf b
-        case mostDefined [tya, tyb] of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
-            _ -> na "rule_DotLeq_IntLike"
-        return
-            ( "Horizontal rule for int-like .<" <+> pretty (make opLeq a b)
-            , return $ make opLeq a b
             )
 
 
@@ -2125,16 +2271,13 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
             TypeMatrix{} -> return ()           -- the matrix literal should contain further matrix/list stuff.
             TypeList{}   -> return ()
             _            -> na "rule_QuantifierShift2"
-        let flattenIfNeeded = if matrixNumDims ty > 1
-                                then make opFlatten
-                                else id
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
                             ty
                             index
-                            (map (mkQuan . flattenIfNeeded) elems))
+                            (map (mkQuan . flattenIfNeeded (matrixNumDims ty)) elems))
             )
 
 
@@ -2193,3 +2336,17 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
+
+
+rule_Comprehension_Cardinality :: Rule
+rule_Comprehension_Cardinality = "comprehension-cardinality" `namedRule` theRule where
+  theRule p = do
+    c <- match opTwoBars p
+    case c of
+      (Comprehension _ gensOrConds) ->
+        let ofones = Comprehension (fromInt 1) gensOrConds
+        in return ( "Horizontal rule for comprehension cardinality"
+                  , return [essence| sum(&ofones) |]
+                  )
+      _ -> na "rule_Comprehension_Cardinality"
+

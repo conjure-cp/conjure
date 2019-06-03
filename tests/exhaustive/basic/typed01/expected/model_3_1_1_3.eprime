@@ -7,8 +7,8 @@ find y_Occurrence: matrix indexed by [int(1)] of bool
 find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
 branching on
-    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence, y_Occurrence,
-     y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values]
+    [x_Occurrence, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values,
+     y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values, y_Occurrence]
 such that
     1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]] -> false,
     1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,

@@ -1,0 +1,6 @@
+given a,b,c,s : int(1..10)
+given f : set of int(a..b)
+given g : set (size s) of int(a..b)
+given h : set (minSize s) of int(a..c)
+where g != h
+where f = g intersect h

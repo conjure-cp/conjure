@@ -2,6 +2,8 @@
 
 module Conjure.Language.Type
     ( Type(..)
+    , IntTag(..), reTag
+    , TypeCheckerMode(..)
     , typeUnify
     , typesUnify
     , mostDefined
@@ -22,7 +24,7 @@ import Conjure.Language.Pretty
 data Type
     = TypeAny
     | TypeBool
-    | TypeInt
+    | TypeInt IntTag
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
@@ -46,7 +48,7 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
-    pretty TypeInt = "int"
+    pretty TypeInt{} = "int"
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
@@ -70,15 +72,47 @@ instance Pretty Type where
     pretty (TypePartition x) = "partition from" <+> pretty x
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
 
+
+data IntTag = TagInt                    -- was an integer in the input
+            | TagEnum Text              -- was an enum in the input
+            | TagUnnamed Text           -- was an unnamed in the input
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize IntTag
+instance Hashable  IntTag
+instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
+instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
+
+reTag :: Data a => IntTag -> a -> a
+reTag t = transformBi (const t)
+
+
+-- This parameter will decide the mode of the type checker.
+-- There are two modes: StronglyTyped and RelaxedIntegerTags.
+-- StronglyTyped is used for user input.
+-- RelaxedIntegerTags is for internal use only and it ignores the integer tags during type checking.
+
+data TypeCheckerMode = StronglyTyped | RelaxedIntegerTags
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize TypeCheckerMode
+instance Hashable  TypeCheckerMode
+instance ToJSON    TypeCheckerMode where toJSON = genericToJSON jsonOptions
+instance FromJSON  TypeCheckerMode where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty TypeCheckerMode where
+    pretty = pretty . show
+
+
 -- | Check whether two types unify or not.
-typeUnify :: Type -> Type -> Bool
+typeUnify :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
-typeUnify TypeInt TypeInt = True
-typeUnify TypeInt TypeEnum{} = True
-typeUnify TypeEnum{} TypeInt = True
-typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
+typeUnify (TypeInt t1) (TypeInt t2) = case ?typeCheckerMode of
+                                         StronglyTyped -> t1 == t2
+                                         RelaxedIntegerTags -> True
+typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
 typeUnify TypeTuple{} (TypeTuple [TypeAny]) = True
@@ -107,20 +141,20 @@ typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
-typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- also hacks to make sameToSameToBool work
+typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- hack to make sameToSameToBool work
 typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = (length as == length bs) && and (zipWith typeUnify as bs)
 typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
 typeUnify _ _ = False
 
 -- | Check whether a given list of types unify with each other or not.
-typesUnify :: [Type] -> Bool
+typesUnify :: (?typeCheckerMode :: TypeCheckerMode) => [Type] -> Bool
 typesUnify ts = and [ typeUnify i j | i <- ts, j <- ts ]
 
--- | Given a list of types return "the most defined" one in this list.
+-- | Given a list of types, return "the most defined" one in this list.
 --   This is to get rid of TypeAny's if there are any.
 --   Precondition: `typesUnify`
-mostDefined :: [Type] -> Type
+mostDefined :: (?typeCheckerMode :: TypeCheckerMode) => [Type] -> Type
 mostDefined = foldr f TypeAny
     where
         f :: Type -> Type -> Type
@@ -170,7 +204,10 @@ matrixNumDims (TypeMatrix _ t) = 1 + matrixNumDims t
 matrixNumDims (TypeList     t) = 1 + matrixNumDims t
 matrixNumDims _ = 0
 
-homoType :: MonadFail m => Doc -> [Type] -> m Type
+homoType ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Doc -> [Type] -> m Type
 homoType msg [] = fail $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
 homoType msg xs =
     if typesUnify xs
@@ -185,7 +222,7 @@ innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
-innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt,t])
+innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt TagInt,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
@@ -194,6 +231,7 @@ isPrimitiveType :: Type -> Bool
 isPrimitiveType TypeBool{} = True
 isPrimitiveType TypeInt{} = True
 isPrimitiveType (TypeMatrix index inner) = and [isPrimitiveType index, isPrimitiveType inner]
+isPrimitiveType (TypeList inner) = isPrimitiveType inner
 isPrimitiveType _ = False
 
 typeCanIndexMatrix :: Type -> Bool

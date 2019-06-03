@@ -24,7 +24,7 @@ instance BinaryOperator (OpNeq x) where
     opLexeme _ = L_Neq
 
 instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
-    typeOf p@(OpNeq a b) = sameToSameToBool p a b []
+    typeOf p@(OpNeq a b) = sameToSameToBool p a b [] (const True)
 
 instance EvaluateOp OpNeq where
     evaluateOp (OpNeq ConstantUndefined{} _) = return $ fromBool False

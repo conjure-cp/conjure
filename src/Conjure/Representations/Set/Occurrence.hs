@@ -10,7 +10,7 @@ import Conjure.Representations.Common
 
 
 setOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
-setOccurrence = Representation chck downD structuralCons downC up
+setOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -43,7 +43,7 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt intRanges))
+              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt t intRanges))
               , ConstantAbstract (AbsLitSet constants)
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
@@ -53,21 +53,21 @@ setOccurrence = Representation chck downD structuralCons downC up
                       , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
                           | v <- innerDomainVals
-                          , let isIn = ConstantInt v `elem` constants
+                          , let isIn = ConstantInt t v `elem` constants
                           ]
                       )
                     ]
         downC _ = na "{downC} Occurrence"
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
+        up ctxt (name, domain@(DomainSet _ _ (DomainInt t intRanges)))=
             case lookup (outName domain name) ctxt of
                 Just constantMatrix ->
                     case viewConstantMatrix constantMatrix of
                         Just (_, vals) -> do
                             innerDomainVals <- valuesInIntDomain intRanges
                             return (name, ConstantAbstract $ AbsLitSet
-                                            [ ConstantInt v
+                                            [ ConstantInt t v
                                             | (v,b) <- zip innerDomainVals vals
                                             , viewConstantBool b == Just True
                                             ] )
@@ -85,3 +85,11 @@ setOccurrence = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} Occurrence"
+
+        -- produce a [int]
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO downX1 inp (DomainSet Set_Occurrence _attrs innerDomain) = do
+            [m] <- downX1 inp
+            (iPat, i) <- quantifiedVar
+            return [essence| [ -toInt(&m[&i]) | &iPat : &innerDomain ] |]
+        symmetryOrdering _ _ _ _ = na "{symmetryOrdering} Occurrence"

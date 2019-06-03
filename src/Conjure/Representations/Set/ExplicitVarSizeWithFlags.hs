@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
+setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -29,7 +29,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag TagInt <$> domainSizeOf innerDomain
 
 
         downD :: TypeOf_DownD m
@@ -111,7 +111,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -184,3 +184,18 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp domain = do
+            [flags, values] <- downX1 inp
+            Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] inner
+            return
+                [essence|
+                    flatten([ flatten([ [-toInt(&flags[&i])]
+                                      , &soValues
+                                      ])
+                            | &iPat : &index
+                            ])
+                |]

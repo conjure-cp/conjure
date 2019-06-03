@@ -7,8 +7,8 @@ find y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values:
 find y_1_3: matrix indexed by [int(1, 2)] of int(33, 55)
 find y_1_2_Function1DR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2, 3)
 branching on
-    [y_1_1, y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags, y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values,
-     y_1_3, y_1_2_Function1DR6_ExplicitVarSizeWithDummy]
+    [y_1_1, y_1_2_Function1DR6_ExplicitVarSizeWithDummy, y_1_3, y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags,
+     y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values]
 such that
     and([and([y_1_1[q35] = [10, 11; int(1..2)][q35],
               and([and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q35, q38, q46] /\
