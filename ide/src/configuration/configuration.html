@@ -6,9 +6,35 @@
 </head>
 
 <body>
-    <form class="border border-light p-5" onsubmit="return false">
+    <form class="border border-light p-5" onsubmit="return false" id="mainForm">
 
         <p class="h4 mb-4 text-center">Configuration</p>
+
+        <div class="text-center mb-4">
+
+            <div class="text-center" >
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="diff">
+                        </div>
+                    </div>
+                    <label for="findallsols" class="form-control">Dif</label>
+                </div>
+            </div>
+
+            <div class="btn-group btn-group-toggle text-center mb-4" data-toggle="buttons">
+                <label class="btn btn-primary active" id="1Label">
+                    <input type="radio" name="options" value="1" id="1" autocomplete="off" class="rButton"> 1
+                </label>
+                <label class="btn btn-primary" id="2Label">
+                    <input type="radio" name="options" value="2" id="2" autocomplete="off" class="rButton"> 2
+                </label>
+            </div>
+
+        </div>
+
+
 
         <div class="row">
             <div class="col">
@@ -136,7 +162,7 @@
                         <label for="inputPassword">CPU limit</label>
                     </div>
                     <div class="col">
-                        <input id="cpulimit" class="input-group mb-3 tbox" placeholder="None">
+                        <input id="cpulimit" class="input-group mb-3 tbox digits" placeholder="None">
                     </div>
                 </div>
                 <label for="defaultSelect">Preprocessing</label>
@@ -160,27 +186,6 @@
             </div>
         </div>
 
-
-        <div class="text-center mb-4">
-
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        <input type="checkbox" id="diff">
-                    </div>
-                </div>
-                <label for="findallsols" class="form-control">Dif</label>
-            </div>
-            
-            <div class="btn-group btn-group-toggle text-center" data-toggle="buttons">
-                <label class="btn btn-primary active" id="1Label">
-                    <input type="radio" name="options" value="1" id="1" autocomplete="off" class="rButton"> 1
-                </label>
-                <label class="btn btn-primary" id="2Label">
-                    <input type="radio" name="options" value="2" id="2" autocomplete="off" class="rButton"> 2
-                </label>
-            </div>
-        </div>
 
         <button id="solve" class="btn btn-primary btn-block" type="submit">Solve</button>
 

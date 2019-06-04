@@ -386,7 +386,7 @@ export default class ConfigureHelper {
         var htmlFile = createHTML({
             title: 'example',
             // script: [jspanelJS, d3, jquery, validator, mouseTrap, canvas, fileSaver,  scriptUri],
-            script: [jquery, scriptUri],
+            script: [jquery, validator, scriptUri],
             // script: [],
             scriptAsync: false,
             // css: [jspanelCSS, bootstrap, fontawesome, cssUri],

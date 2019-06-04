@@ -127,24 +127,24 @@ $("#solve").click(() => {
 
     let diffing = $("#diff").is(":checked");
 
-    if(!diffing){
+    if (!diffing) {
         configs = [collectFields()];
     }
-    else{
-        if ($("#2Label").hasClass("active")){
+    else {
+        if ($("#2Label").hasClass("active")) {
             config2 = collectFields();
         }
-        else{
+        else {
             config1 = collectFields();
         }
         configs = [config1, config2];
     }
 
-    
+
 
     vscode.postMessage({
         command: "solve",
-        data: {configs: configs},
+        data: { configs: configs },
         diff: diffing
     });
 
