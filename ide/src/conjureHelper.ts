@@ -3,7 +3,8 @@ import fs = require('fs');
 import * as path from 'path';
 import * as vscode from 'vscode';
 import WebviewHelper from './webviewHelper';
-const { exec } = require('child_process');
+import { resolve } from 'url';
+const { execSync, exec } = require('child_process');
 
 const ESSENCE = "essence";
 
@@ -41,8 +42,25 @@ export default class ConjureHelper {
 
         context.subscriptions.push(vscode.languages.registerHoverProvider(ESSENCE, {
             provideHover(document: vscode.TextDocument, position: vscode.Position) {
-                console.log(document.getText(document.getWordRangeAtPosition(position)));
-                return new vscode.Hover(new vscode.MarkdownString('# Iam a hover \n ## sadasd'));
+
+                let command = "conjure ide " + document.fileName + " --dump-domains";
+                let list = JSON.parse(execSync(command));
+                let word = document.getText(document.getWordRangeAtPosition(position));
+
+                for (let i = 0; i < list.length; i++) {
+                    const current = list[i];
+                    if (current.name === word) {
+                        console.log("returning " + current);
+
+                        let r = {
+                            value: current.domain,
+                            language: "essence"
+                        };
+
+                        return new vscode.Hover(r);
+                    }
+                }
+                return undefined;
             }
         }));
 
