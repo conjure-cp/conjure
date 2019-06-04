@@ -52,6 +52,10 @@ interface CachedSearch {
     args: string[];
 }
 
+function saveConfiguration(){
+    vscode.workspace.getConfiguration()
+}
+
 function getConfigHash(config: Configuration, essenceFiles: string[], paramFiles: string[]): string {
 
     config.modelFileName = essenceFiles.find((p) => p.includes(config.modelFileName))!;
@@ -218,7 +222,9 @@ async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], pa
             if (jobs.length === 0) {
                 resolve();
             }
-        });
+        }).then(() => {
+            vscode.window.showInformationMessage("Done");
+       });
         return p;
     }); // vscode.window.withProgress
 }

@@ -2,10 +2,8 @@ import Globals from './modules/Globals';
 import Keyboard from './controls/Keyboard';
 import Listener from './modules/Listener';
 import Buttons from './controls/Buttons';
+import * as Web from './modules/Web';
 
-/**
- * Main entry point for the webview
- */
 
 $("#wantSVG").prop("checked",true);
 

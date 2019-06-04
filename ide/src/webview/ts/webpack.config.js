@@ -1,5 +1,5 @@
 module.exports = {
-  entry: "./src/main.ts",
+  entry: "./src/treeVis.ts",
   output: {
       filename: "./bundle.js",
   },
@@ -25,7 +25,7 @@ module.exports = {
   watchOptions: {
     aggregateTimeout: 300,
     poll: 1000,
-    ignored: './node_modules/'
+    ignored: '../../../node_modules/'
   }
 
   // Other options...

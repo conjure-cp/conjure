@@ -117,9 +117,10 @@ proc loadSimpleDomains*(nodeId: string, wantExpressions: bool = false): SimpleDo
     return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
 
-proc getLongestBranchingVarName*(): JsonNode =
+proc getLongestBranchingVarName*(): string =
     ## Returns the length of longest branching variable name
-    return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+    return db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+    # return "1000"
 
 proc getSet*(nodeId: string): Set =
     ## Returns the first set found in the pretty domains of a node

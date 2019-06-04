@@ -1,7 +1,9 @@
 import "../util/treelist";
 import Globals from './Globals';
+import * as Web from './Web';
 import State from './State';
 import Node from './Node';
+
 
 declare var jsPanel: any;
 declare var d3: any;
@@ -223,16 +225,35 @@ export default class Panel {
                         let path = this.getSetPath(node);
 
                         // Add the path to the list of paths wanted.
-                        if(!State.pathList.includes(path)){
+                        if (!State.pathList.includes(path)) {
                             State.pathList.push(path);
                         }
 
                         // Load the set with that path
-                        Globals.vscode.postMessage({
-                            command: 'loadSet',
-                            nodeId: State.selectedId,
-                            path: path
-                        });
+                        // Globals.vscode.postMessage({
+                        //     command: 'loadSet',
+                        //     nodeId: State.selectedId,
+                        //     path: path
+                        // });
+
+                        Web.getRequest('loadSet/' + State.selectedId + "/" + path)
+                            .then(response => {
+                                let data = JSON.parse(response);
+                                console.log(data);
+                                // Add the child set to the parent
+                                Globals.lv.id2Node[data.structure.name].children = data.structure.children;
+                                // Update the tree list
+                                Globals.lv.updateFromRoot();
+                                // Update the values of the domains
+                                Globals.lv.updateDomains([data.update]);
+                                // Send a pretty request to get changes 
+                                Globals.sendPrettyRequest(Globals.vscode);
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+
+
                     }
                 }
                 // Toggle the node and update the tree list.
@@ -290,7 +311,7 @@ export default class Panel {
     }
 
 
-    public updateSet(old: any, n: any){
+    public updateSet(old: any, n: any) {
         old.Cardinality = n.Cardinality;
         old.Children = n.Children;
         old.Included = n.Included;
@@ -318,7 +339,7 @@ export default class Panel {
 
         data.forEach((element: any) => {
 
-        
+
 
             // Check if the domain is a set
             if (element.hasOwnProperty("Cardinality")) {
@@ -340,12 +361,12 @@ export default class Panel {
                     }
                     else {
 
-                        if (!setNode[2].children){
+                        if (!setNode[2].children) {
                             setNode[2].children = [];
-                        //     setNode[2] = { name: "Children", children: [] };
+                            //     setNode[2] = { name: "Children", children: [] };
                         }
                         // }
-                        let updatedNames : string[] = [];
+                        let updatedNames: string[] = [];
 
                         if (element.Children.children) {
 
@@ -356,23 +377,23 @@ export default class Panel {
                             });
 
 
-                            element.Children.children.forEach((child : any) => {
+                            element.Children.children.forEach((child: any) => {
 
                                 updatedNames.push(child.name)
 
-                                if (!currentNames.includes(child.name)){
+                                if (!currentNames.includes(child.name)) {
                                     setNode[2].children.push(child);
                                 }
                             });
 
                         }
 
-                        for(let i = 0; i < setNode[2].children.length; i++){
+                        for (let i = 0; i < setNode[2].children.length; i++) {
 
                             let child = setNode[2].children[i];
 
-                            if(!updatedNames.includes(child.name)){
-                                
+                            if (!updatedNames.includes(child.name)) {
+
                                 setNode[2].children.splice(i, 1);
                             }
                         };

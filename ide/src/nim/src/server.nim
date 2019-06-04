@@ -5,7 +5,11 @@ import util/types
 import util/init
 import util/response
 
+
 routes:
+    get "/":
+       resp readFile("/home/tom/conjure/ide/src/webview/ts/test.html")
+
     get re"/init/(.*)":
         let path = request.matches[0]
 
@@ -16,21 +20,23 @@ routes:
         except:
             let e = getCurrentException()
             let msg = getCurrentExceptionMsg()
-            resp %*{"error":msg}
+            
+            resp(Http200, [("Access-Control-Allow-Origin", "*")], ${"error":msg})
 
-        resp %response 
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%response))
+        # resp(Http200, [("Content-Type","text/css")] , "foo")
 
     get "/simpleDomains/@nodeId/@wantExpressions":
-        resp %loadSimpleDomains(@"nodeId", parseBool(@"wantExpressions"))
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadSimpleDomains(@"nodeId", parseBool(@"wantExpressions"))))
         
     get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
-        resp %loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))))
 
     get "/loadNodes/@nodeId":
-        resp %loadNodes(@"nodeId")
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadNodes(@"nodeId")))
 
     get "/longestBranchingVariable":
-        resp getLongestBranchingVarName()
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], getLongestBranchingVarName())
 
     get "/loadSet/@nodeId/@path":
-        resp loadSetChild(@"nodeId",@"path")
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $loadSetChild(@"nodeId",@"path"))

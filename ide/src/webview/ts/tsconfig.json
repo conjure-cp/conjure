@@ -6,8 +6,15 @@
         "target": "es5",
         "noEmitOnError": true,
         "noImplicitAny": true,
-        "sourceMap": true
+        "sourceMap": true,
+        // "types": []
+        "typeRoots" : ["./node_modules/@types"],
+        "rootDirs": ["/conjure/ide/src/webview/ts/test","/conjure/ide/src/webview/ts/src"]
     },
+    // "files":[
+    //     "./src/**",
+    //     "./test/**"
+    // ]
     // "files": [
     //     "./src/controls/Buttons.ts",
     //     "./src/controls/Keyboard.ts",
@@ -20,6 +27,8 @@
     // ]
 
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "../../../node_modules/@types/",
+        "./node_modules/@types/jasmine"
     ]
 }

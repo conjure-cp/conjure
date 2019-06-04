@@ -1,8 +1,29 @@
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.js"
+        integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js"></script> -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+    <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"></script> -->
+    <script src="https://d3js.org/d3.v3.min.js";></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.5.0/dist/jspanel.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/jspanel4@4.5.0/dist/jspanel.css" rel="stylesheet">
+    <!-- const canvas =
+    "https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js";
+    const fileSaver =
+    "https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"; -->
+</head>
 
 <body>
     <style>
         body {
-            background-color: var(--background-color);
+            background-color: #1d4460;
             overflow: hidden;
             position: fixed;
             /* background-color: #fff */
@@ -13,7 +34,7 @@
         }
 
         text {
-            color: var(--vscode-editor-foreground)
+            color: white;
         }
 
         #pane {
@@ -35,7 +56,7 @@
 
         .node circle {
             fill: white;
-            stroke: var(--vscode-terminal-ansiBlue);
+            stroke: darkcyan;
             stroke-width: 5px;
             transition: stroke 500ms, fill 500ms;
         }
@@ -46,26 +67,26 @@
         }
 
         circle.hasOthers {
-            fill: var(--vscode-terminal-ansiGreen);
+            fill: greenyellow;
             transition: stroke 500ms, fill 500ms;
         }
 
         circle.hasOthers.red {
-            fill: var(--vscode-terminal-ansiRed);
+            fill: red;
             transition: stroke 500ms, fill 500ms;
         }
 
         circle.selected {
             border-style: dotted;
             border: 2px;
-            border-color: var(--vscode-terminal-ansiBlue);
+            border-color: darkcyan;
             stroke: coral;
             transition: stroke 500ms, fill 500ms;
         }
 
         .node text {
             font: 18px sans-serif;
-            fill: var(--vscode-editor-foreground)
+            fill: white;
         }
 
         .node--internal text {
@@ -74,13 +95,13 @@
 
         .link {
             fill: none;
-            stroke: var(--vscode-terminal-ansiGreen);
+            stroke: greenyellow;
             stroke-width: 2px;
         }
 
         .link.red {
             fill: none;
-            stroke: var(--vscode-terminal-ansiRed);
+            stroke: red;
             stroke-width: 2px;
         }
 
