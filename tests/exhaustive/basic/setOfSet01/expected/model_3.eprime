@@ -1,0 +1,36 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithMarkerR5_Marker: int(0..4)
+find x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..4)] of int(0..2)
+find x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..4), int(1..2)] of int(1..2)
+branching on
+    [x_ExplicitVarSizeWithMarkerR5_Marker, x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
+such that
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarkerR5_Marker ->
+         flatten([[x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q1]; int(1)],
+                  flatten([[x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q1, q7]; int(1)]
+                               | q7 : int(1..2)]);
+                      int(1..2)])
+         <lex
+         flatten([[x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1]; int(1)],
+                  flatten([[x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q1 + 1, q8]; int(1)]
+                               | q8 : int(1..2)]);
+                      int(1..2)])
+             | q1 : int(1..3)]),
+    and([q2 > x_ExplicitVarSizeWithMarkerR5_Marker ->
+         x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q2] = 0 /\
+         and([x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q2, q9] = 1 | q9 : int(1..2)])
+             | q2 : int(1..4)]),
+    and([q3 <= x_ExplicitVarSizeWithMarkerR5_Marker ->
+         (2 <= x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q3] ->
+          x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, 1] <
+          x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, 2])
+             | q3 : int(1..4)]),
+    and([q3 <= x_ExplicitVarSizeWithMarkerR5_Marker ->
+         and([q5 > x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q3] ->
+              x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, q5] = 1
+                  | q5 : int(1..2)])
+             | q3 : int(1..4)])
+

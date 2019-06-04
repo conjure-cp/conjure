@@ -1,0 +1,24 @@
+language ESSENCE' 1.0
+
+find x_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2)] of int(0..3)
+find x_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2), int(1..3)] of int(1..2)
+branching on [x_ExplicitR5_ExplicitVarSizeWithMarker_Marker, x_ExplicitR5_ExplicitVarSizeWithMarker_Values]
+such that
+    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
+             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q6]; int(1)] | q6 : int(1..3)]);
+                 int(1..2)])
+    <lex
+    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
+             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q7]; int(1)] | q7 : int(1..3)]);
+                 int(1..2)]),
+    and([and([q3 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
+              x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3] <
+              x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]
+                  | q3 : int(1..2)])
+             | q2 : int(1..2)]),
+    and([and([q4 > x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
+              x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q4] = 1
+                  | q4 : int(1..3)])
+             | q2 : int(1..2)]),
+    and([x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] <= 3 | q2 : int(1..2)])
+

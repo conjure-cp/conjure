@@ -1,0 +1,139 @@
+language ESSENCE' 1.0
+
+find y_1_1: matrix indexed by [int(1, 2)] of int(10, 11)
+find y_1_2_Function1DR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2, 3)
+find y_1_3: matrix indexed by [int(1, 2)] of int(33, 55)
+find y_1_2_Function1DR2_Occurrence: matrix indexed by [int(1, 2), int(1..3), int(1, 2)] of bool
+branching on [y_1_1, y_1_2_Function1DR2_Occurrence, y_1_3, y_1_2_Function1DR6_ExplicitVarSizeWithDummy]
+such that
+    and([and([y_1_1[q10] = [10, 11; int(1..2)][q10],
+              and([and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q21] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q21] = 1
+                                | q21 : int(1..2)])
+                            | 1 = q10, 1 = q13])
+                   /\
+                   and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q23] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q23] = 2
+                                | q23 : int(1..2)])
+                            | 1 = q10, 1 = q13])
+                   /\
+                   and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q26] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q26] = 1
+                                | q26 : int(1..2)])
+                            | 1 = q10, 2 = q13])
+                   /\
+                   (and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q31] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q31] = 1
+                                 | q31 : int(1..2)])
+                             | 2 = q10, 1 = q13])
+                    /\
+                    and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q33] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q33] = 2
+                                 | q33 : int(1..2)])
+                             | 2 = q10, 1 = q13])
+                    /\
+                    and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q36] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q36] = 1
+                                 | q36 : int(1..2)])
+                             | 2 = q10, 2 = q13]))
+                   /\
+                   and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] != 3 ->
+                        or([1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] | 1 = q10, 1 = q13]) \/
+                        or([2 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] | 1 = q10, 1 = q13])
+                        \/ or([1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] | 1 = q10, 2 = q13])
+                        \/
+                        (or([1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] | 2 = q10, 1 = q13]) \/
+                         or([2 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] | 2 = q10, 1 = q13])
+                         \/ or([1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, q13, q38] | 2 = q10, 2 = q13]))
+                            | q38 : int(1..2)])
+                       | q13 : int(1..3)])
+              /\
+              (and([and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q51] != 3 ->
+                              1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q51] \/
+                              2 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q51]
+                                  | q51 : int(1..2)])
+                         /\
+                         (or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q54] != 3 /\
+                              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q54] = 1
+                                  | q54 : int(1..2)])
+                          /\
+                          or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q54] != 3 /\
+                              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q54] = 2
+                                  | q54 : int(1..2)]))
+                             | 1 = q10]),
+                    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q51] != 3 ->
+                              1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q51]
+                                  | q51 : int(1..2)])
+                         /\
+                         or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q54] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q54] = 1
+                                 | q54 : int(1..2)])
+                             | 1 = q10]),
+                    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 3, q51] != 3 -> false | q51 : int(1..2)])
+                             | 1 = q10]);
+                        int(1..3)])
+               /\
+               and([and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q56] != 3 ->
+                              1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q56] \/
+                              2 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q56]
+                                  | q56 : int(1..2)])
+                         /\
+                         (or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q59] != 3 /\
+                              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q59] = 1
+                                  | q59 : int(1..2)])
+                          /\
+                          or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q59] != 3 /\
+                              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 1, q59] = 2
+                                  | q59 : int(1..2)]))
+                             | 2 = q10]),
+                    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q56] != 3 ->
+                              1 = y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q56]
+                                  | q56 : int(1..2)])
+                         /\
+                         or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q59] != 3 /\
+                             y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 2, q59] = 1
+                                 | q59 : int(1..2)])
+                             | 2 = q10]),
+                    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q10, 3, q56] != 3 -> false | q56 : int(1..2)])
+                             | 2 = q10]);
+                        int(1..3)])),
+              y_1_3[q10] = [33, 55; int(1..2)][q10];
+                  int(1..3)])
+             | q10 : int(1, 2)]),
+    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q1, q2, 1] <
+              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q1, q2, 2]
+              \/ y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q1, q2, 1] = 3
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q1, q2, 1] = 3 ->
+              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q1, q2, 2] = 3
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([y_1_1[q76] = y_1_1[q76],
+              and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q79, q81] != 3 ->
+                        y_1_2_Function1DR2_Occurrence
+                            [q76, q79, y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q79, q81]]
+                            | q81 : int(1..2)])
+                   /\
+                   and([y_1_2_Function1DR2_Occurrence[q76, q79, q82] ->
+                        or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q79, q84] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q79, q84] = q82
+                                | q84 : int(1..2)])
+                            | q82 : int(1, 2)])
+                       | q79 : int(1..3)])
+              /\
+              and([and([y_1_2_Function1DR2_Occurrence[q76, q85, q86] ->
+                        or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q85, q88] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q85, q88] = q86
+                                | q88 : int(1..2)])
+                            | q86 : int(1, 2)])
+                   /\
+                   and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q85, q90] != 3 ->
+                        y_1_2_Function1DR2_Occurrence
+                            [q76, q85, y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q76, q85, q90]]
+                            | q90 : int(1..2)])
+                       | q85 : int(1..3)]),
+              y_1_3[q76] = y_1_3[q76];
+                  int(1..3)])
+             | q76 : int(1, 2)])
+
