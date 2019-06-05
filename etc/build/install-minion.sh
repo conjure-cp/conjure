@@ -6,7 +6,7 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
 rm -rf ${BIN_DIR}/tmp-install-minion
-mkdir ${BIN_DIR}/tmp-install-minion
+mkdir -p ${BIN_DIR}/tmp-install-minion
 pushd ${BIN_DIR}/tmp-install-minion
 
 OS=$(uname)
