@@ -6,8 +6,8 @@ import Conjure.Rules.Import
 
 rules_Transform :: [Rule]
 rules_Transform = 
-  [ --Horizontal rules
-    rule_Transform_Functorially
+  [ rule_Transform_Sequence_Literal  
+  , rule_Transform_Functorially
   , rule_Transform_Comprehension
   , rule_Transform_Product_Types
   , rule_Transform_Matrix
@@ -19,10 +19,7 @@ rules_Transform =
   , rule_Transform_Indexing
   , rule_Transform_Unifying
 
-  -- Vertical rules for variant
-  -- these assume that the horizontal rules
-  -- have completed the moving inward of transform
-  -- that the Horizontal rules do
+  , rule_Transform_Variant_Literal
   , rule_Transform_Variant_Eq
   , rule_Transform_Variant_Neq
   , rule_Transform_Variant_Lt
@@ -367,6 +364,29 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule where
                            return [essence| &i |]
                          )
   theRule _ = na "rule_Transform_Unifying"
+
+
+rule_Transform_Sequence_Literal :: Rule
+rule_Transform_Sequence_Literal = "transform-sequence-literal" `namedRule` theRule where
+  theRule p = do
+   _ <- match opTransform p 
+   let (x, rx) = matchManyTransforms p
+   (_, as) <- match sequenceLiteral x  
+   return ( "Horizontal rule for transform sequence literal"
+          , return $ AbstractLiteral $ AbsLitSequence $ rx <$> as
+          ) 
+
+rule_Transform_Variant_Literal :: Rule
+rule_Transform_Variant_Literal = "transform-variant-literal" `namedRule` theRule where
+  theRule p = do
+   _ <- match opTransform p 
+   let (x, rx) = matchManyTransforms p
+   case x of
+     AbstractLiteral (AbsLitVariant d n a) ->
+       return ( "Horizontal rule for transform variant literal"
+              , return $ AbstractLiteral $ AbsLitVariant d n $ rx a
+              ) 
+     _ -> na "rule_Transform_Variant_Literal"
 
 
 atLeastOneTransform :: MonadFail m => (Expression, Expression) -> m ()
