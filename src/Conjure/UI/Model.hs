@@ -1153,6 +1153,7 @@ allRules config =
     , bubbleUpRules
     , [ rule_Eq
       , rule_Neq
+      , rule_Comprehension_Cardinality
       ]
     , verticalRules
     , horizontalRules
@@ -2357,3 +2358,17 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
+
+
+rule_Comprehension_Cardinality :: Rule
+rule_Comprehension_Cardinality = "comprehension-cardinality" `namedRule` theRule where
+  theRule p = do
+    c <- match opTwoBars p
+    case c of
+      (Comprehension _ gensOrConds) ->
+        let ofones = Comprehension (fromInt 1) gensOrConds
+        in return ( "Horizontal rule for comprehension cardinality"
+                  , return [essence| sum(&ofones) |]
+                  )
+      _ -> na "rule_Comprehension_Cardinality"
+
