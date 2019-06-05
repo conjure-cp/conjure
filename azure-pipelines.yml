@@ -16,7 +16,7 @@ pool:
 steps:
 - bash: |
     export PATH=$HOME/.local/bin:$PATH
-    BUILD_TESTS=true time make
+    BUILD_TESTS=true make
   displayName: 'Building'
 - bash: |
     export PATH=$HOME/.local/bin:$PATH
