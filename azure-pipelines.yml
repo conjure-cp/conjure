@@ -1,0 +1,20 @@
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-latest'
+    mac:
+      imageName: 'macos-latest'
+    windows:
+      imageName: 'vs2017-win2016'
+
+trigger:
+- master
+
+pool:
+  vmImage: $(imageName)
+
+steps:
+- script: BUILD_TESTS=true time make
+  displayName: 'make'
+- script: .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  displayName: 'testing'
