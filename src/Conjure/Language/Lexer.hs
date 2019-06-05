@@ -262,6 +262,9 @@ data Lexeme
     | L_pred
     | L_succ
 
+    -- type functional
+    | L_transform
+
     deriving (Eq, Ord, Show, Generic)
 
 instance Hashable Lexeme
@@ -472,6 +475,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_succ, "succ" )
 
 
+    , ( L_transform, "transform")
     ]
 
 runLexer :: MonadFail m => T.Text -> m [LexemePos]
