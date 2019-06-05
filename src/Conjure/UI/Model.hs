@@ -87,8 +87,8 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
-import qualified Conjure.Rules.Horizontal.Functional.Transform as Horizontal.Functional.Transform
-import qualified Conjure.Rules.Vertical.Functional.Transform as Vertical.Functional.Transform
+import qualified Conjure.Rules.Transform as Transform
+
 
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
@@ -1141,7 +1141,8 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: (?typeCheckerMode :: TypeCheckerMode) => Config -> [[Rule]]
 allRules config =
-    [ [ rule_FullEvaluate
+    [ Transform.rules_Transform
+    , [ rule_FullEvaluate
       ]
     , [ rule_PartialEvaluate
       ]
@@ -1278,13 +1279,6 @@ verticalRules =
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
-    , Vertical.Functional.Transform.rule_Transform_Variant_Eq
-    , Vertical.Functional.Transform.rule_Transform_Variant_Neq
-    , Vertical.Functional.Transform.rule_Transform_Variant_Lt
-    , Vertical.Functional.Transform.rule_Transform_Variant_Leq
-    , Vertical.Functional.Transform.rule_Transformed_Variant_Index
-    , Vertical.Functional.Transform.rule_Transformed_Variant_Active
-
 
     ]
 
@@ -1399,18 +1393,6 @@ horizontalRules =
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
 
-
-    , Horizontal.Functional.Transform.rule_Transform_Functorially
-    , Horizontal.Functional.Transform.rule_Transform_Comprehension
-    , Horizontal.Functional.Transform.rule_Transform_Product_Types
-    , Horizontal.Functional.Transform.rule_Transform_Matrix
-    , Horizontal.Functional.Transform.rule_Transform_Partition
-    , Horizontal.Functional.Transform.rule_Transform_Sequence
-    , Horizontal.Functional.Transform.rule_Transform_Sequence_Defined
-    , Horizontal.Functional.Transform.rule_Transformed_Indexing
-    , Horizontal.Functional.Transform.rule_Lift_Transformed_Indexing
-    , Horizontal.Functional.Transform.rule_Transform_Indexing
-    , Horizontal.Functional.Transform.rule_Transform_Unifying
     ]
 
 

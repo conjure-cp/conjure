@@ -244,13 +244,6 @@ typeCanIndexMatrix TypeInt {} = True
 typeCanIndexMatrix TypeEnum{} = True
 typeCanIndexMatrix _          = False
 
-morphing :: (?typeCheckerMode :: TypeCheckerMode)
-         => (MonadFail m)
-         => Type -> m Type
-morphing (TypeFunction a _) = return a
-morphing t = fail ("morphing:" <+> pretty (show t))
-
-
 -- ||| Traversals that tell us if a type (of a certain form) is contained in a Type
 -- This allows us to abort transform early if we can see it will have no effect
 
@@ -285,5 +278,14 @@ containsType container containee = containee `elem` universeBi container
 unifiesOrContains :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 unifiesOrContains container containee =
   typesUnify [container, containee] || containsType container containee
+
+-- as in "this homomorphism is morphing"
+morphing :: (?typeCheckerMode :: TypeCheckerMode)
+         => (MonadFail m)
+         => Type -> m Type
+morphing (TypeFunction a _) = return a
+morphing (TypeSequence a)   = return a 
+morphing t = fail ("morphing:" <+> pretty (show t))
+
 
 -- |||
