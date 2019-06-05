@@ -14,7 +14,11 @@ pool:
   vmImage: $(imageName)
 
 steps:
-- script: BUILD_TESTS=true time make
-  displayName: 'make'
-- script: .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
-  displayName: 'testing'
+- displayName: 'Building'
+  bash: |
+    export PATH=$HOME/.local/bin:$PATH
+    BUILD_TESTS=true time make
+- displayName: 'Testing'
+  bash: |
+    export PATH=$HOME/.local/bin:$PATH
+    .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
