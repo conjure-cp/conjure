@@ -5,6 +5,7 @@ module Conjure.Language.ModelStats
     , lettings
     , domainNeedsRepresentation
     , modelInfo
+    , modelDomainsJSON
     ) where
 
 import Conjure.Prelude
@@ -12,6 +13,9 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+
+-- containers
+import qualified Data.Map.Strict as M
 
 
 givens :: Model -> [(Name, Domain () Expression)]
@@ -73,5 +77,15 @@ modelInfo m = vcat
                  <+> prParens (pretty (nbAbstractGivens m) <+> "abstract")
     , "        " <+> pretty   (nbFinds  m) <+> "decision variables"
                  <+> prParens (pretty (nbAbstractFinds m ) <+> "abstract")
+    ]
+
+
+modelDomainsJSON :: Model -> JSONValue
+modelDomainsJSON m = toJSON
+    [ M.fromList [ ( "kind"   :: String , show forg                )
+                 , ( "name"   :: String , render 100000 (pretty name) )
+                 , ( "domain" :: String , render 100000 (pretty dom)  )
+                 ]
+    | Declaration (FindOrGiven forg name dom) <- mStatements m
     ]
 

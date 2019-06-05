@@ -7,7 +7,9 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
+                     , readModelInfoFromFile, readParamOrSolutionFromFile
+                     , writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -31,6 +33,7 @@ import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
+import Conjure.Language.ModelStats ( modelDomainsJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -157,6 +160,15 @@ mainWithArgs ValidateSolution{..} = do
     solution2 <- readParamOrSolutionFromFile essenceSolution
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
+mainWithArgs IDE{..} = do
+    essence2 <-
+        if null essence
+            then readModelFromStdin
+            else readModelFromFile essence
+    void $ runNameGen () $ typeCheckModel_StandAlone essence2
+    if dumpDomains
+        then liftIO $ putStrLn $ render lineWidth (modelDomainsJSON essence2)
+        else writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]

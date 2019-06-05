@@ -127,6 +127,13 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | IDE
+        { essence                    :: FilePath            -- Optional, will read from stdin if not provided
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , lineWidth                  :: Int                 -- 120 by default
+        , dumpDomains                :: Bool
+        }
     | Pretty
         { essence                    :: FilePath
         , normaliseQuantified        :: Bool
@@ -880,6 +887,39 @@ ui = modes
                     \parameter translation if required, \
                     \then Savile Row + Minion to solve, and \
                     \then solution translation."
+    , IDE
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
+        , dumpDomains
+            = False
+            &= name "dump-domains"
+            &= groupname "IDE Features"
+            &= explicit
+            &= help "Print the domains of decision variables and parameters."
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Limit in seconds of real time."
+        , lineWidth
+            = 120
+            &= name "line-width"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Line width for pretty printing.\nDefault: 120"
+        }   &= name "ide"
+            &= explicit
+            &= help "IDE support features for Conjure.\n\
+                    \Not intended for direct use."
     , Pretty
         { essence
             = def
