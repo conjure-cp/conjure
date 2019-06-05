@@ -14,11 +14,10 @@ pool:
   vmImage: $(imageName)
 
 steps:
-- bash: |
-    export PATH=$HOME/.local/bin:$PATH
-    BUILD_TESTS=true make
-  displayName: 'Building'
-- bash: |
-    export PATH=$HOME/.local/bin:$PATH
-    .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
-  displayName: 'Testing'
+- bash: export PATH=$HOME/.local/bin:$PATH
+- bash: etc/build/install-minion.sh
+  displayName: "Install Minion"
+- bash: BUILD_TESTS=true make
+  displayName: "Build Conjure"
+- bash: .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  displayName: "Test"
