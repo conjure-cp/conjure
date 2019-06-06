@@ -9,8 +9,6 @@ rm -rf ${BIN_DIR}/tmp-install-minion
 mkdir -p ${BIN_DIR}/tmp-install-minion
 pushd ${BIN_DIR}/tmp-install-minion
 
-OS=$(uname)
-
 function download {
     if which curl 2> /dev/null > /dev/null; then
         curl $1 -O
@@ -23,6 +21,8 @@ function download {
     fi
 }
 export -f download
+
+OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
     download https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-mac.tgz
