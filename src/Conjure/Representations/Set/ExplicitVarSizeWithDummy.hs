@@ -168,7 +168,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
         up _ _ = na "{up} ExplicitVarSizeWithDummy"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering _innerSO downX1 inp domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
