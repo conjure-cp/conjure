@@ -11,18 +11,31 @@ pushd ${BIN_DIR}/tmp-install-minion
 
 OS=$(uname)
 
+function download {
+    if which curl 2> /dev/null > /dev/null; then
+        curl $1 -O
+    elif which wget 2> /dev/null > /dev/null; then
+        wget --no-check-certificate -c $1
+    else
+        echo "You seem to have neither curl nor wget on this computer."
+        echo "Cannot download without one of them."
+        exit 1
+    fi
+}
+export -f download
+
 if [ "$OS" == "Darwin" ]; then
-    wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-mac.tgz
+    download https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-mac.tgz
     tar zxf savilerow-1.7.0RC-mac.tgz
     mv savilerow-1.7.0RC-mac/bin/minion ${BIN_DIR}/minion
 elif [ "$OS" == "Linux" ]; then
-    wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-linux.tgz
+    download https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-linux.tgz
     tar zxf savilerow-1.7.0RC-linux.tgz
     mv savilerow-1.7.0RC-linux/bin/minion ${BIN_DIR}/minion
 else
     # assuming this is Windows
     echo "Your OS is (according to uname): ${OS}"
-    wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-windows.tgz
+    download https://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-windows.tgz
     unzip savilerow-1.6.5-windows.zip
     mv savilerow-1.6.5-windows/bin/minion.exe ${BIN_DIR}/minion.exe
 fi
