@@ -35,7 +35,7 @@ elif [ "$OS" == "Linux" ]; then
 else
     # assuming this is Windows
     echo "Your OS is (according to uname): ${OS}"
-    download https://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-windows.tgz
+    download https://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-windows.zip
     unzip savilerow-1.6.5-windows.zip
     mv savilerow-1.6.5-windows/bin/minion.exe ${BIN_DIR}/minion.exe
 fi
