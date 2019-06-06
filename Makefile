@@ -4,7 +4,7 @@ SHELL := /bin/bash
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=8.6 make"
 export GHC_VERSION?=8.6
-export BIN_DIR?="${HOME}"/.local/bin
+export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
 
