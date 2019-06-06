@@ -10,13 +10,11 @@ branching on
 such that
     and([q1 + 1 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
          flatten([[x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1[q1]; int(1)],
-                  flatten([[x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q1, q6]; int(1)]
-                               | q6 : int(1..2)]);
+                  [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q1, q6] | q6 : int(1..2)];
                       int(1..2)])
          <lex
          flatten([[x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1[q1 + 1]; int(1)],
-                  flatten([[x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q1 + 1, q7]; int(1)]
-                               | q7 : int(1..2)]);
+                  [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q1 + 1, q7] | q7 : int(1..2)];
                       int(1..2)])
              | q1 : int(1..2)]),
     and([q2 > x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
@@ -26,7 +24,7 @@ such that
     2 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker,
     x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker <= 3,
     and([q3 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
-         x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 1] <
-         x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 2]
+         [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 1]; int(1)] <lex
+         [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 2]; int(1)]
              | q3 : int(1..3)])
 
