@@ -758,16 +758,28 @@ flattenLex m = do
             Comprehension body gocs -> do
               fbody <- flatten body
               let comp = Comprehension fbody gocs
-              return [essence| &comp |]
+              return [essence| flatten(&comp) |]
             _ -> bug $ "epilogue: flattenLex: isn't defined for this expression fellow..."
                     <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
     flattener [essence| &a <lex &b |] = do
       fa <- flatten a
       fb <- flatten b
+      tfa <- typeOf fa
+      tfb <- typeOf fb
+      case (tfa, tfb) of
+        (TypeList TypeInt{}, TypeList TypeInt{}) -> return ()
+        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) -> return ()
+        _ -> bug $ "flattener: " <+> vcat [stringToDoc $ show tfa, stringToDoc $ show tfb]
       return [essence| &fa <lex &fb |]
     flattener [essence| &a <=lex &b |] = do
       fa <- flatten a
       fb <- flatten b
+      tfa <- typeOf fa
+      tfb <- typeOf fb
+      case (tfa, tfb) of
+        (TypeList TypeInt{}, TypeList TypeInt{}) -> return ()
+        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) -> return ()
+        _ -> bug $ "flattener: " <+> vcat [stringToDoc $ show tfa, stringToDoc $ show tfb]
       return [essence| &fa <=lex &fb |]
     flattener x = return x
   st <- transformBiM flattener (mStatements m)
