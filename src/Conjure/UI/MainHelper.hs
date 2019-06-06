@@ -505,20 +505,27 @@ srMkArgs Solve{..} outBase modelPath =
         "chuffed"           -> [ "-chuffed"]
         "glucose"           -> [ "-sat"
                                , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose-syrup"
                                ]
         "lingeling"         -> [ "-sat"
                                , "-sat-family", "lingeling"
+                               , "-satsolver-bin", "lingeling"
                                ]
         "minisat"           -> [ "-sat"
                                , "-sat-family", "minisat"
+                               , "-satsolver-bin", "minisat"
                                ]
         "bc_minisat_all"    -> [ "-sat"
                                , "-sat-family", "bc_minisat_all"
+                               , "-satsolver-bin", "bc_minisat_all_release"
                                ]
         "nbc_minisat_all"   -> [ "-sat"
                                , "-sat-family", "nbc_minisat_all"
+                               , "-satsolver-bin", "nbc_minisat_all_release"
                                ]
-        "open-wbo"          -> [ "-maxsat" ]
+        "open-wbo"          -> [ "-maxsat"
+                               , "-satsolver-bin", "open-wbo"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
