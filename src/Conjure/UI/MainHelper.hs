@@ -545,7 +545,7 @@ srStdoutHandler
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
                         then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output file" line
+                        else if isPrefixOf "Created output" line
                             then pp logLevel $ hsep ["Running solver:", pretty solver]
                             else return ()
                     fmap (Left line :)
