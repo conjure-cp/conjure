@@ -363,7 +363,7 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
             ( "Horizontal rule for matrix <"
-            , return [essence| &x' <lex &y' |]
+            , return [essence| &x' .< &y' |]
             )
 
 
@@ -383,7 +383,7 @@ rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
             ( "Horizontal rule for matrix <="
-            , return [essence| &x' <=lex &y' |]
+            , return [essence| &x' .<= &y' |]
             )
 
 
