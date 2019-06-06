@@ -211,9 +211,10 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
-                    flatten([ flatten([ [-&flags[&i]]
-                                      , &soValues
-                                      ])
-                            | &iPat : &index
-                            ])
+                    [ ( -&flags[&i]
+                      , &soValues
+                      )
+                    | &iPat : &index
+                    ]
                 |]
+

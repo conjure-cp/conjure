@@ -30,7 +30,7 @@ primitive = Representation
             Just c  -> return (name, c)
     , rSymmetryOrdering = \ _innerSO _downX1 inp domain -> return $
         case domain of
-            DomainBool -> [essence| [-toInt(&inp)] |]
-            _          -> [essence| [&inp] |]
+            DomainBool -> [essence| -toInt(&inp) |]
+            _          -> [essence| &inp |]
     }
 
