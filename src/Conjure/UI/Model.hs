@@ -706,6 +706,74 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
+flattenLex :: MonadFail m
+           => NameGen m
+           => (?typeCheckerMode :: TypeCheckerMode)
+           => Model -> m Model
+flattenLex m = do
+  let
+    flatten a = do
+      ta <- typeOf a
+      case ta of
+        TypeBool -> return [essence| [-toInt(&a)] |]
+        TypeInt{} -> return [essence| [&a] |]
+        TypeList TypeInt{} -> return a
+        TypeMatrix TypeInt{} TypeInt{} -> return a
+        _ ->
+          case a of
+            AbstractLiteral x -> do
+              case x of
+                AbsLitTuple xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                AbsLitMatrix _ xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                _ -> bug $ "epilogue: flattenLex: isn't defined for this abslit fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Constant c ->
+              case c of
+                ConstantAbstract ca ->
+                  case ca of
+                    AbsLitTuple xs -> do
+                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      let flatxs = fromList fxs
+                      return [essence| flatten(&flatxs) |]
+                    AbsLitMatrix _ xs -> do
+                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      let flatxs = fromList fxs
+                      return [essence| flatten(&flatxs) |]
+                    _ -> bug $ "epilogue: flattenLex: isn't defined for this fellow..."
+                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+                TypedConstant tc _ -> flatten (Constant tc)
+                _ -> bug $ "epilogue: flattenLex: isn't defined for this constant fellow."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Reference nm ex ->
+                  bug $ "epilogue: flattenLex: flatten not defined for this referenced fellow."
+                     <+> vcat [stringToDoc (show a)
+                              ,"reference:" <+> stringToDoc (show nm)
+                              ,"fellow:" <+> stringToDoc (show ex)]
+            Comprehension body gocs -> do
+              fbody <- flatten body
+              let comp = Comprehension fbody gocs
+              return [essence| &comp |]
+            _ -> bug $ "epilogue: flattenLex: isn't defined for this expression fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+    flattener [essence| &a <lex &b |] = do
+      fa <- flatten a
+      fb <- flatten b
+      return [essence| &fa <lex &fb |]
+    flattener [essence| &a <=lex &b |] = do
+      fa <- flatten a
+      fb <- flatten b
+      return [essence| &fa <=lex &fb |]
+    flattener x = return x
+  st <- transformBiM flattener (mStatements m)
+  return m { mStatements = st }
+
+
 dropTagForSR ::
     MonadFail m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -1058,6 +1126,7 @@ epilogue ::
     Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= flattenLex                    >>= logDebugIdModel "[flattenLex]"
     >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
@@ -1827,19 +1896,6 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        -- aType <- typeOf a
-        -- case aType of
-        --     TypeTuple{}     -> return ()
-        --     TypeMatrix{}    -> return ()
-        --     TypeSet{}       -> return ()
-        --     TypeMSet{}      -> return ()
-        --     TypeFunction{}  -> return ()
-        --     TypeSequence{}  -> return ()
-        --     TypeRelation{}  -> return ()
-        --     TypePartition{} -> return ()
-        --     _ -> na "rule_DotLtLeq"
-        -- sameRepresentationTree a b
-
         ma <- symmetryOrdering a
         mb <- symmetryOrdering b
         return
