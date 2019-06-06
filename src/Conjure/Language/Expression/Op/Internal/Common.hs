@@ -281,6 +281,7 @@ functionals =
     , L_indices
     , L_inverse
 
+    , L_transform
     , L_true
 
     , LIdentifier "and"

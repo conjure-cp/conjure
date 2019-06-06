@@ -87,6 +87,9 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
+import qualified Conjure.Rules.Transform as Transform
+
+
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1138,7 +1141,8 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: (?typeCheckerMode :: TypeCheckerMode) => Config -> [[Rule]]
 allRules config =
-    [ [ rule_FullEvaluate
+    [ Transform.rules_Transform
+    , [ rule_FullEvaluate
       ]
     , [ rule_PartialEvaluate
       ]

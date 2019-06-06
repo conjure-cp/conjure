@@ -167,6 +167,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpToMSet x) = domainOf x
     domainOf (MkOpToRelation x) = domainOf x
     domainOf (MkOpToSet x) = domainOf x
+    domainOf (MkOpTransform x) = domainOf x
     domainOf (MkOpTrue x) = domainOf x
     domainOf (MkOpTwoBars x) = domainOf x
     domainOf (MkOpUnion x) = domainOf x
@@ -238,6 +239,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpToMSet x) = indexDomainsOf x
     indexDomainsOf (MkOpToRelation x) = indexDomainsOf x
     indexDomainsOf (MkOpToSet x) = indexDomainsOf x
+    indexDomainsOf (MkOpTransform (OpTransform _ x)) = indexDomainsOf x
     indexDomainsOf (MkOpTrue x) = indexDomainsOf x
     indexDomainsOf (MkOpTwoBars x) = indexDomainsOf x
     indexDomainsOf (MkOpUnion x) = indexDomainsOf x
@@ -631,6 +633,9 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
 
 instance DomainOf (OpTogether x) where
     domainOf _ = return DomainBool
+
+instance (Pretty x, TypeOf x) => DomainOf (OpTransform x) where
+    domainOf op = mkDomainAny ("OpTransform:" <++> pretty op) <$> typeOf op
 
 instance DomainOf (OpTrue x) where
     domainOf _ = return DomainBool
