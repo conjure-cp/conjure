@@ -6,8 +6,7 @@ branching on [var1_ExplicitVarSizeWithFlags_Flags, var1_ExplicitVarSizeWithFlags
 such that
     false,
     var1_ExplicitVarSizeWithFlags_Flags[2] ->
-    [-toInt(var1_ExplicitVarSizeWithFlags_Values[1]); int(1)] <lex
-    [-toInt(var1_ExplicitVarSizeWithFlags_Values[2]); int(1)],
+    -toInt(var1_ExplicitVarSizeWithFlags_Values[1]) < -toInt(var1_ExplicitVarSizeWithFlags_Values[2]),
     and([var1_ExplicitVarSizeWithFlags_Flags[q2] = false -> var1_ExplicitVarSizeWithFlags_Values[q2] = false
              | q2 : int(1..2)]),
     var1_ExplicitVarSizeWithFlags_Flags[2] -> var1_ExplicitVarSizeWithFlags_Flags[1]

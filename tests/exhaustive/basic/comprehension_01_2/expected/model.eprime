@@ -6,6 +6,5 @@ branching on [x, y]
 such that
     x =
     sum([toInt(or([i_Explicit[q4] = y | q4 : int(1..2)]))
-             | i_Explicit : matrix indexed by [int(1..2)] of int(7..9),
-               [i_Explicit[1]; int(1)] <lex [i_Explicit[2]; int(1)]])
+             | i_Explicit : matrix indexed by [int(1..2)] of int(7..9), i_Explicit[1] < i_Explicit[2]])
 

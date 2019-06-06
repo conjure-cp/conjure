@@ -9,12 +9,11 @@ branching on
      x_ExplicitVarSizeWithFlags_Values]
 such that
     or([x_ExplicitVarSizeWithFlags_Flags[q18] /\ x_ExplicitVarSizeWithFlags_Values[q18] = 1 | q18 : int(1..2)]),
-    x_ExplicitVarSizeWithFlags_Flags[2] ->
-    [x_ExplicitVarSizeWithFlags_Values[1]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[2]; int(1)],
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
     and([x_ExplicitVarSizeWithFlags_Flags[q2] = false -> x_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..2)]),
     x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
     2 <= x_ExplicitVarSizeWithMarker_Marker ->
-    [x_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[2]; int(1)],
+    x_ExplicitVarSizeWithMarker_Values[1] < x_ExplicitVarSizeWithMarker_Values[2],
     and([q7 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q7] = 1 | q7 : int(1..2)]),
     and([q10 <= x_ExplicitVarSizeWithMarker_Marker ->
          or([x_ExplicitVarSizeWithFlags_Flags[q12] /\

@@ -7,8 +7,7 @@ such that
     x =
     sum([toInt(or([i_ExplicitVarSizeWithDummy[q6] = y | q6 : int(1..2), i_ExplicitVarSizeWithDummy[q6] != 10]))
              | i_ExplicitVarSizeWithDummy : matrix indexed by [int(1..2)] of int(7..10),
-               [i_ExplicitVarSizeWithDummy[1]; int(1)] <lex [i_ExplicitVarSizeWithDummy[2]; int(1)] \/
-               i_ExplicitVarSizeWithDummy[1] = 10,
+               i_ExplicitVarSizeWithDummy[1] < i_ExplicitVarSizeWithDummy[2] \/ i_ExplicitVarSizeWithDummy[1] = 10,
                i_ExplicitVarSizeWithDummy[1] = 10 -> i_ExplicitVarSizeWithDummy[2] = 10,
                1 <= sum([toInt(i_ExplicitVarSizeWithDummy[q3] != 10) | q3 : int(1..2)]),
                sum([toInt(i_ExplicitVarSizeWithDummy[q3] != 10) | q3 : int(1..2)]) <= 2])
