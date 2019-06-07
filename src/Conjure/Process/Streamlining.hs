@@ -112,6 +112,8 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , setMost streamlinersForSingleVariable
     , setApproxHalf streamlinersForSingleVariable
 
+    , binRelAttributes
+
     , monotonicallyIncreasing
     , monotonicallyDecreasing
     , smallestFirst
@@ -309,6 +311,7 @@ setAll innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
                 DomainMSet _ _ innerDom -> Just innerDom
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
                 _ -> Nothing
     case minnerDom of
         Just innerDom -> do
@@ -334,6 +337,7 @@ setMost innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
                 DomainMSet _ _ innerDom -> Just innerDom
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
                 _ -> Nothing
     case minnerDom of
         Just innerDom -> do
@@ -357,6 +361,7 @@ setHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
                 DomainMSet _ _ innerDom -> Just innerDom
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
                 _ -> Nothing
     case minnerDom of
         Just innerDom -> do
@@ -381,6 +386,7 @@ setApproxHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
                 DomainMSet _ _ innerDom -> Just innerDom
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
                 _ -> Nothing
     case minnerDom of
         Just innerDom -> do
@@ -394,6 +400,35 @@ setApproxHalf innerStreamliner x = do
                     (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
                 |]
+        _ -> noStreamliner
+
+
+binRelAttributes ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m
+binRelAttributes x = do
+    dom <- domainOf x
+    case dom of
+        DomainRelation _ _ [inner1, inner2] | inner1 == inner2 -> return
+            [ (out, [grp])
+            | attr <- [ AttrName_reflexive
+                      , AttrName_irreflexive
+                      , AttrName_coreflexive
+                      , AttrName_symmetric
+                      , AttrName_antiSymmetric
+                      , AttrName_aSymmetric
+                      , AttrName_transitive
+                      , AttrName_connex
+                      , AttrName_Euclidean
+                      , AttrName_serial
+                      , AttrName_equivalence
+                      , AttrName_partialOrder
+                      ]
+            , let grp = show attr
+            , let out = Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint x attr Nothing
+            ]
         _ -> noStreamliner
 
 

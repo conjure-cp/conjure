@@ -599,7 +599,7 @@ data BinaryRelationAttr
     | BinRelAttr_Serial
     | BinRelAttr_Equivalence
     | BinRelAttr_PartialOrder
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Bounded, Enum)
 instance Serialize BinaryRelationAttr
 instance Hashable  BinaryRelationAttr
 instance ToJSON    BinaryRelationAttr where toJSON = genericToJSON jsonOptions
