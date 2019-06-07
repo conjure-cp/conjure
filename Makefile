@@ -10,6 +10,8 @@ export BUILD_TESTS?=false
 
 .PHONY: install
 install:
+	@echo $PATH
+	@echo $BIN_DIR
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this"
 	@echo "For example: \"GHC_VERSION=8.4 make install\""
