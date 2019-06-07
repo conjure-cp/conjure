@@ -11,15 +11,15 @@ branching on
      x_ExplicitR6_ExplicitVarSizeWithDummy]
 such that
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q6]; int(1)] | q6 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q6] | q6 : int(1..3)];
                  int(1..2)])
     <lex
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q7]; int(1)] | q7 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q7] | q7 : int(1..3)];
                  int(1..2)]),
     and([and([q3 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
-              x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3] <
-              x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]
+              [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3]; int(1)] <lex
+              [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]; int(1)]
                   | q3 : int(1..2)])
              | q2 : int(1..2)]),
     and([and([q4 > x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
@@ -29,8 +29,9 @@ such that
     and([x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] <= 3 | q2 : int(1..2)]),
     [x_ExplicitR6_ExplicitVarSizeWithDummy[1, q14] | q14 : int(1..3)] <lex
     [x_ExplicitR6_ExplicitVarSizeWithDummy[2, q15] | q15 : int(1..3)],
-    and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q10] < x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q10 + 1] \/
-              x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q10] = 3
+    and([and([[x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q10]; int(1)] <lex
+              [x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q10 + 1]; int(1)]
+              \/ x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q10] = 3
                   | q10 : int(1..2)])
              | q9 : int(1..2)]),
     and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q9, q11] = 3 ->
@@ -78,8 +79,8 @@ such that
                           int(1..2)])
                  | q48 : int(1..3)]),
     and([and([x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[q41, q42 + 1] ->
-              x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q41, q42] <
-              x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q41, q42 + 1]
+              [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q41, q42]; int(1)] <lex
+              [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q41, q42 + 1]; int(1)]
                   | q42 : int(1..2)])
              | q41 : int(1..2)]),
     and([and([x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[q41, q43] = false ->

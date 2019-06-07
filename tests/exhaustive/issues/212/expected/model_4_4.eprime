@@ -16,7 +16,7 @@ such that
                  | q15 : int(1..6)])
              | q13 : int(1..fin1), or([b_Explicit[q17] = a_Explicit[q13] | q17 : int(1..fin2)])]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
+         [x_ExplicitVarSizeWithFlags_Values[q1]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q1 + 1]; int(1)]
              | q1 : int(1..5)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2] = false -> x_ExplicitVarSizeWithFlags_Values[q2] = 0 | q2 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..5)])

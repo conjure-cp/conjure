@@ -75,8 +75,10 @@ such that
                         | q37 : int(1..3)])
                    | q43 : int(1..3)])))
             | q49 : int(1..3)]),
-    and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
-    and([b_ExplicitWithFlags_Flags[q6 + 1] > 0 -> b_ExplicitWithFlags_Values[q6] < b_ExplicitWithFlags_Values[q6 + 1]
+    and([[a_ExplicitWithRepetition_Values[q1]; int(1)] <=lex [a_ExplicitWithRepetition_Values[q1 + 1]; int(1)]
+             | q1 : int(1..2), q1 + 1 <= 3]),
+    and([b_ExplicitWithFlags_Flags[q6 + 1] > 0 ->
+         [b_ExplicitWithFlags_Values[q6]; int(1)] <lex [b_ExplicitWithFlags_Values[q6 + 1]; int(1)]
              | q6 : int(1..2)]),
     and([b_ExplicitWithFlags_Flags[q7] = 0 -> b_ExplicitWithFlags_Values[q7] = 1 | q7 : int(1..3)]),
     and([b_ExplicitWithFlags_Flags[q8 + 1] > 0 -> b_ExplicitWithFlags_Flags[q8] > 0 | q8 : int(1..2)]),
@@ -89,7 +91,7 @@ such that
          sum([toInt(a_ExplicitWithRepetition_Values[q33] = a_ExplicitWithRepetition_Values[q31])
                   | q33 : int(1..3), q33 <= 3])
              | q31 : int(1..3), q31 <= 3]),
-    and([b_ExplicitWithRepetition_Values[q13] <= b_ExplicitWithRepetition_Values[q13 + 1]
+    and([[b_ExplicitWithRepetition_Values[q13]; int(1)] <=lex [b_ExplicitWithRepetition_Values[q13 + 1]; int(1)]
              | q13 : int(1..2), q13 + 1 <= 3]),
     and([sum([toInt(b_ExplicitWithRepetition_Values[q22] = b_ExplicitWithRepetition_Values[q19])
                   | q22 : int(1..3), q22 <= 3])

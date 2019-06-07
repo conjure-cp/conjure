@@ -16,11 +16,12 @@ such that
     and([or([x_ExplicitVarSizeWithDummy[q27] != 6 /\ x_ExplicitVarSizeWithDummy[q27] = a_Explicit[q25]
                  | q27 : int(1..6)])
              | q25 : int(1..fin1), or([b_Explicit[q29] = a_Explicit[q25] | q29 : int(1..fin2)])]),
-    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 6
+    and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
+         x_ExplicitVarSizeWithDummy[q1] = 6
              | q1 : int(1..5)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 6 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..5)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q5 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values[q5] < x_ExplicitVarSizeWithFlags_Values[q5 + 1]
+         [x_ExplicitVarSizeWithFlags_Values[q5]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q5 + 1]; int(1)]
              | q5 : int(1..5)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q6] = false -> x_ExplicitVarSizeWithFlags_Values[q6] = 0 | q6 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..5)]),

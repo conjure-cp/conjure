@@ -6,7 +6,7 @@ branching on [x_Explicit, x_Occurrence]
 such that
     x_Occurrence[1],
     2 = sum([toInt(x_Occurrence[q1]) | q1 : int(1..3)]),
-    x_Explicit[1] < x_Explicit[2],
+    [x_Explicit[1]; int(1)] <lex [x_Explicit[2]; int(1)],
     and([x_Occurrence[x_Explicit[q5]] | q5 : int(1..2)]),
     and([x_Occurrence[q6] -> or([x_Explicit[q8] = q6 | q8 : int(1..2)]) | q6 : int(1..3)])
 

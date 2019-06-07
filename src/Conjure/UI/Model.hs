@@ -1886,15 +1886,11 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
         TypeInt{} -> return [essence| [&a] |]
         TypeList TypeInt{} -> return a
         TypeMatrix TypeInt{} TypeInt{} -> return a
-        _ ->
+        TypeTuple ts -> do
           case a of
             AbstractLiteral x -> do
               case x of
                 AbsLitTuple xs -> do
-                  fxs <- sequence (flatten <$> xs)
-                  let flatxs = fromList fxs
-                  return [essence| flatten(&flatxs) |]
-                AbsLitMatrix _ xs -> do
                   fxs <- sequence (flatten <$> xs)
                   let flatxs = fromList fxs
                   return [essence| flatten(&flatxs) |]
@@ -1908,7 +1904,36 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
                       fxs <- sequence (flatten <$> (Constant <$> xs))
                       let flatxs = fromList fxs
                       return [essence| flatten(&flatxs) |]
-                    AbsLitMatrix _ [] -> return [essence| [0] |]
+                    _ -> bug $ "epilogue: flattenLex: isn't defined for this fellow..."
+                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+                _ -> bug $ "epilogue: flattenLex: isn't defined for this fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Op _ -> do
+              (Single oName, o) <- quantifiedVar
+              flatten $ Comprehension o [ComprehensionLetting oName a]
+            _ -> do
+              ps <- sequence $ (\(i,_) -> do
+                                  (Single nm, tm) <- quantifiedVar
+                                  return (i,nm,tm)) <$> (zip [1..] ts)
+              let lts = (\(i,nm,tm) -> ComprehensionLetting nm [essence| &a[&i] |]) <$> ps
+                  tup = AbstractLiteral $ AbsLitTuple $ (\(_,_,tm) -> tm) <$> ps
+              flatten $ Comprehension tup lts
+        _ ->
+          case a of
+            AbstractLiteral x -> do
+              case x of
+                AbsLitMatrix _ xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                _ -> bug $ "epilogue: flattenLex: isn't defined for this abslit fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Constant c ->
+              case c of
+                ConstantAbstract ca ->
+                  case ca of
+                    AbsLitMatrix _ [] ->
+                      return [essence| ([] : `matrix indexed by [int()] of int`) |]
                     AbsLitMatrix _ xs -> do
                       fxs <- sequence (flatten <$> (Constant <$> xs))
                       let flatxs = fromList fxs
@@ -1979,20 +2004,20 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
-    theRule [essence| &xs <lex &ys |] =
-        case (listOut xs, listOut ys) of
-            (Just [x], Just [y]) -> return
-                ( "<lex on singleton matrices"
-                , return [essence| &x < &y |]
-                )
-            _ -> na "rule_FlattenOf1D"
-    theRule [essence| &xs <=lex &ys |] =
-        case (listOut xs, listOut ys) of
-            (Just [x], Just [y]) -> return
-                ( "<=lex on singleton matrices"
-                , return [essence| &x <= &y |]
-                )
-            _ -> na "rule_FlattenOf1D"
+--    theRule [essence| &xs <lex &ys |] =
+--        case (listOut xs, listOut ys) of
+--            (Just [x], Just [y]) -> return
+--                ( "<lex on singleton matrices"
+--                , return [essence| &x < &y |]
+--                )
+--            _ -> na "rule_FlattenOf1D"
+--    theRule [essence| &xs <=lex &ys |] =
+--        case (listOut xs, listOut ys) of
+--            (Just [x], Just [y]) -> return
+--                ( "<=lex on singleton matrices"
+--                , return [essence| &x <= &y |]
+--                )
+--            _ -> na "rule_FlattenOf1D"
     theRule p = do
         x   <- match opFlatten p
         tyx <- typeOf x

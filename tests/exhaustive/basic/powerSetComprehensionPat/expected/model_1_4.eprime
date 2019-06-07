@@ -8,7 +8,7 @@ such that
     and([x_Occurrence[i] /\ x_Occurrence[j] -> |i - j| >= 3 | i : int(1..7), j : int(1..7), j > i]),
     3 <= sum([toInt(x_Occurrence[q1]) | q1 : int(1..7)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
+         [x_ExplicitVarSizeWithFlags_Values[q2]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q2 + 1]; int(1)]
              | q2 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q3] = false -> x_ExplicitVarSizeWithFlags_Values[q3] = 1 | q3 : int(1..7)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..6)]),

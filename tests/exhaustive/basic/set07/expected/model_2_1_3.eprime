@@ -10,7 +10,8 @@ such that
     and([or([x_ExplicitVarSizeWithDummy[q23] != 5 /\ x_ExplicitVarSizeWithDummy[q23] = q24_1 | q23 : int(1..4)]) /\
          !x_Occurrence[q24_2]
              | q24_1 : int(1..3), q24_2 : int(4..9)]),
-    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 5
+    and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
+         x_ExplicitVarSizeWithDummy[q1] = 5
              | q1 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 5 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 5 | q2 : int(1..3)]),
     and([x_Occurrence[q25] ->
@@ -18,7 +19,7 @@ such that
              | q25 : int(1..4)]),
     and([x_ExplicitVarSizeWithDummy[q29] != 5 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q29]] | q29 : int(1..4)]),
     and([q6 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q6] < x_ExplicitVarSizeWithMarker_Values[q6 + 1]
+         [x_ExplicitVarSizeWithMarker_Values[q6]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q6 + 1]; int(1)]
              | q6 : int(1..3)]),
     and([q7 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q7] = 1 | q7 : int(1..4)]),
     and([q10 <= x_ExplicitVarSizeWithMarker_Marker ->

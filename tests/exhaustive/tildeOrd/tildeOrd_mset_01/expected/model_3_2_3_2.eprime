@@ -40,5 +40,6 @@ such that
                    | q13 : int(1..3), q13 <= 3])))
             | q17 : int(1..3), q17 <= 3]),
     3 = sum([a_MOccurrence[q1] | q1 : int(1..2)]),
-    and([b_ExplicitWithRepetition_Values[q2] <= b_ExplicitWithRepetition_Values[q2 + 1] | q2 : int(1..2), q2 + 1 <= 3])
+    and([[b_ExplicitWithRepetition_Values[q2]; int(1)] <=lex [b_ExplicitWithRepetition_Values[q2 + 1]; int(1)]
+             | q2 : int(1..2), q2 + 1 <= 3])
 

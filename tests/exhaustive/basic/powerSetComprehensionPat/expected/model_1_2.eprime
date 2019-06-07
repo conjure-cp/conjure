@@ -6,7 +6,8 @@ branching on [x_ExplicitVarSizeWithDummy, x_Occurrence]
 such that
     and([x_Occurrence[i] /\ x_Occurrence[j] -> |i - j| >= 3 | i : int(1..7), j : int(1..7), j > i]),
     3 <= sum([toInt(x_Occurrence[q1]) | q1 : int(1..7)]),
-    and([x_ExplicitVarSizeWithDummy[q2] < x_ExplicitVarSizeWithDummy[q2 + 1] \/ x_ExplicitVarSizeWithDummy[q2] = 8
+    and([[x_ExplicitVarSizeWithDummy[q2]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q2 + 1]; int(1)] \/
+         x_ExplicitVarSizeWithDummy[q2] = 8
              | q2 : int(1..6)]),
     and([x_ExplicitVarSizeWithDummy[q3] = 8 -> x_ExplicitVarSizeWithDummy[q3 + 1] = 8 | q3 : int(1..6)]),
     3 <= sum([toInt(x_ExplicitVarSizeWithDummy[q4] != 8) | q4 : int(1..7)]),

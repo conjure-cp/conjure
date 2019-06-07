@@ -38,8 +38,8 @@ such that
              | q3 : int(1..4)]),
     and([q4 <= var2_ExplicitVarSizeWithMarkerR4_Marker ->
          (var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q4, 2] ->
-          -toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 1]) <
-          -toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 2]))
+          [-toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 1]); int(1)] <lex
+          [-toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 2]); int(1)])
              | q4 : int(1..4)]),
     and([q4 <= var2_ExplicitVarSizeWithMarkerR4_Marker ->
          and([var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q4, q6] = false ->

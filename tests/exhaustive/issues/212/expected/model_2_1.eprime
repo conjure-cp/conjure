@@ -15,7 +15,8 @@ such that
     and([or([x_ExplicitVarSizeWithDummy[q15] != 6 /\ x_ExplicitVarSizeWithDummy[q15] = a_Explicit[q13]
                  | q15 : int(1..6)])
              | q13 : int(1..fin1), or([b_Explicit[q17] = a_Explicit[q13] | q17 : int(1..fin2)])]),
-    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 6
+    and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
+         x_ExplicitVarSizeWithDummy[q1] = 6
              | q1 : int(1..5)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 6 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..5)]),
     and([x_Occurrence[q18] ->

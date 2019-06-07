@@ -17,7 +17,7 @@ such that
                  | q12 : int(1..11)])
             | q10 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Values[q1] < var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
+         [var2_ExplicitVarSizeWithFlags_Values[q1]; int(1)] <lex [var2_ExplicitVarSizeWithFlags_Values[q1 + 1]; int(1)]
              | q1 : int(1..10)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false -> var2_ExplicitVarSizeWithFlags_Values[q2] = -4
              | q2 : int(1..11)]),

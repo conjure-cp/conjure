@@ -14,8 +14,8 @@ such that
              | q26 : int(1..2)]),
     [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[1, q13] | q13 : int(1..6)] <lex
     [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[2, q14] | q14 : int(1..6)],
-    and([and([x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] <
-              x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8 + 1]
+    and([and([[x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8]; int(1)] <lex
+              [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8 + 1]; int(1)]
               \/ x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] = 7
                   | q8 : int(1..5)])
              | q7 : int(1..2)]),

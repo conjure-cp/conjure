@@ -8,6 +8,6 @@ such that
         s_ExplicitVarSizeWithMarker_Values[q5] = s_ExplicitVarSizeWithMarker_Marker
             | q5 : int(1..2)]),
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
-    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
+    [s_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[2]; int(1)],
     and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)])
 

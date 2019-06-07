@@ -18,7 +18,7 @@ such that
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q8]) * catchUndef(x_ExplicitVarSizeWithFlags_Values[q8], 0)
              | q8 : int(1..let1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
+         [x_ExplicitVarSizeWithFlags_Values[q2]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q2 + 1]; int(1)]
              | q2 : int(1..let1 - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q3] = false -> x_ExplicitVarSizeWithFlags_Values[q3] = min(let2)
              | q3 : int(1..let1)]),

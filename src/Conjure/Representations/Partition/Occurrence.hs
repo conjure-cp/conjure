@@ -321,5 +321,5 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
             Just xsDoms' <- downD ("SO", domain)
             let xsDoms = map snd xsDoms'
             soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
-            return (fromList soValues)
+            return $ AbstractLiteral $ AbsLitTuple soValues 
 

@@ -7,7 +7,8 @@ such that
     and([x_ExplicitVarSizeWithDummy[q11] != 8 /\ x_ExplicitVarSizeWithDummy[q12] != 8 ->
          |x_ExplicitVarSizeWithDummy[q11] - x_ExplicitVarSizeWithDummy[q12]| >= 3
              | q11 : int(1..7), q12 : int(1..7), q12 > q11]),
-    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 8
+    and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
+         x_ExplicitVarSizeWithDummy[q1] = 8
              | q1 : int(1..6)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 8 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 8 | q2 : int(1..6)]),
     3 <= sum([toInt(x_ExplicitVarSizeWithDummy[q3] != 8) | q3 : int(1..7)]),

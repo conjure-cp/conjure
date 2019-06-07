@@ -24,6 +24,7 @@ such that
     2 <= sum([toInt(x_ExplicitVarSizeWithFlagsR3_Flags[q4]) | q4 : int(1..3)]),
     sum([toInt(x_ExplicitVarSizeWithFlagsR3_Flags[q4]) | q4 : int(1..3)]) <= 3,
     and([x_ExplicitVarSizeWithFlagsR3_Flags[q5] ->
-         x_ExplicitVarSizeWithFlagsR3_Values_2_Explicit[q5, 1] < x_ExplicitVarSizeWithFlagsR3_Values_2_Explicit[q5, 2]
+         [x_ExplicitVarSizeWithFlagsR3_Values_2_Explicit[q5, 1]; int(1)] <lex
+         [x_ExplicitVarSizeWithFlagsR3_Values_2_Explicit[q5, 2]; int(1)]
              | q5 : int(1..3)])
 

@@ -7,7 +7,7 @@ branching on [var2_ExplicitVarSizeWithDummy, var2_Occurrence]
 such that
     or([var2_Occurrence[q11] /\ !var2_Occurrence[q11] | q11 : int(-4..5, 2)]) \/
     or([var2_Occurrence[q11] /\ !var2_Occurrence[q11] | q11 : int(-4..5, 2)]),
-    and([var2_ExplicitVarSizeWithDummy[q2] < var2_ExplicitVarSizeWithDummy[q2 + 1] \/
+    and([[var2_ExplicitVarSizeWithDummy[q2]; int(1)] <lex [var2_ExplicitVarSizeWithDummy[q2 + 1]; int(1)] \/
          var2_ExplicitVarSizeWithDummy[q2] = 6
              | q2 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q3] = 6 -> var2_ExplicitVarSizeWithDummy[q3 + 1] = 6 | q3 : int(1..10)]),

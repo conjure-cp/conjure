@@ -4,5 +4,5 @@ given a: int
 find x_ExplicitWithRepetition_Flag: int(2)
 find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..2)] of int(1..a)
 branching on [x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values]
-such that x_ExplicitWithRepetition_Values[1] <= x_ExplicitWithRepetition_Values[2]
+such that [x_ExplicitWithRepetition_Values[1]; int(1)] <=lex [x_ExplicitWithRepetition_Values[2]; int(1)]
 

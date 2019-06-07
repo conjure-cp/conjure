@@ -9,11 +9,12 @@ such that
     or([x_ExplicitVarSizeWithDummy[q19] != 5 /\ x_ExplicitVarSizeWithDummy[q19] = 2 | q19 : int(1..4)]),
     or([q21 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q21] = 3 | q21 : int(1..4)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+         [x_ExplicitVarSizeWithMarker_Values[q1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q1 + 1]; int(1)]
              | q1 : int(1..3)]),
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..4)]),
     x_ExplicitVarSizeWithMarker_Marker <= 4,
-    and([x_ExplicitVarSizeWithDummy[q4] < x_ExplicitVarSizeWithDummy[q4 + 1] \/ x_ExplicitVarSizeWithDummy[q4] = 5
+    and([[x_ExplicitVarSizeWithDummy[q4]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q4 + 1]; int(1)] \/
+         x_ExplicitVarSizeWithDummy[q4] = 5
              | q4 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q5] = 5 -> x_ExplicitVarSizeWithDummy[q5 + 1] = 5 | q5 : int(1..3)]),
     sum([toInt(x_ExplicitVarSizeWithDummy[q6] != 5) | q6 : int(1..4)]) <= 4,

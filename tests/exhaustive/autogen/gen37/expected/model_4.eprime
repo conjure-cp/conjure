@@ -35,8 +35,8 @@ such that
                           int(1..2)]);
                  int(1..2)]),
     and([var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[q2, 2] ->
-         -toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[q2, 1]) <
-         -toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[q2, 2])
+         [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[q2, 1]); int(1)] <lex
+         [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[q2, 2]); int(1)]
              | q2 : int(1..2)]),
     and([and([var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[q2, q4] = false ->
               var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[q2, q4] = false

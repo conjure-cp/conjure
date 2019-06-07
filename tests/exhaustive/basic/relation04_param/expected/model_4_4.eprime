@@ -106,8 +106,8 @@ such that
              | q2 : int(1..84)]),
     and([q3 <= r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Marker ->
          (r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags[q3, 2] ->
-          r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values[q3, 1] <
-          r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values[q3, 2])
+          [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values[q3, 1]; int(1)] <lex
+          [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values[q3, 2]; int(1)])
              | q3 : int(1..84)]),
     and([q3 <= r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Marker ->
          and([r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags[q3, q5] = false ->

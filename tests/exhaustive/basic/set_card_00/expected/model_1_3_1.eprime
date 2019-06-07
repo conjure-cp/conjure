@@ -9,7 +9,7 @@ such that
         s_ExplicitVarSizeWithMarker_Values[q11] = sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)])
             | q11 : int(1..2)]),
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
-    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
+    [s_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[2]; int(1)],
     and([q3 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q3] = 1 | q3 : int(1..2)]),
     and([q6 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q6]]
              | q6 : int(1..2)]),

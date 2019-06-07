@@ -17,7 +17,8 @@ such that
          x_MOccurrence[q16]
              | q16 : int(1..2)]),
     sum([x_MOccurrence[q1] | q1 : int(1..2)]) <= 4,
-    and([x_ExplicitWithFlags_Flags[q2 + 1] > 0 -> x_ExplicitWithFlags_Values[q2] < x_ExplicitWithFlags_Values[q2 + 1]
+    and([x_ExplicitWithFlags_Flags[q2 + 1] > 0 ->
+         [x_ExplicitWithFlags_Values[q2]; int(1)] <lex [x_ExplicitWithFlags_Values[q2 + 1]; int(1)]
              | q2 : int(1..3)]),
     and([x_ExplicitWithFlags_Flags[q3] = 0 -> x_ExplicitWithFlags_Values[q3] = 1 | q3 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q4 + 1] > 0 -> x_ExplicitWithFlags_Flags[q4] > 0 | q4 : int(1..3)]),

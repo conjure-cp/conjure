@@ -30,8 +30,8 @@ where
                               | q1 : int(1..n - 2)]),
                      1 <= path_ExplicitBounded_Length, path_ExplicitBounded_Length <= n - 2,
                      and([path_ExplicitBounded_Values[q2] != path_ExplicitBounded_Values[q3]
-                              | q2 : int(1..n - 2), q3 : int(1..n - 2), q2 < q3, q2 <= path_ExplicitBounded_Length,
-                                q3 <= path_ExplicitBounded_Length])]))
+                              | q2 : int(1..n - 2), q3 : int(1..n - 2), [q2; int(1)] <lex [q3; int(1)],
+                                q2 <= path_ExplicitBounded_Length, q3 <= path_ExplicitBounded_Length])]))
              | q14 : int(1..fin1)])
 find b: int(0)
 branching on [b]

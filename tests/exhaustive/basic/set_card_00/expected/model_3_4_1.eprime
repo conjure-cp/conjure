@@ -13,9 +13,10 @@ such that
         s_ExplicitVarSizeWithFlags_Values[q29] = s_ExplicitVarSizeWithMarker_Marker
             | q29 : int(1..2)]),
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
-    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
+    [s_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[2]; int(1)],
     and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
-    s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
+    s_ExplicitVarSizeWithFlags_Flags[2] ->
+    [s_ExplicitVarSizeWithFlags_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithFlags_Values[2]; int(1)],
     and([s_ExplicitVarSizeWithFlags_Flags[q5] = false -> s_ExplicitVarSizeWithFlags_Values[q5] = 1 | q5 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Flags[1],
     and([s_ExplicitVarSizeWithFlags_Flags[q10] ->

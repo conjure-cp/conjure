@@ -13,8 +13,8 @@ such that
          and([x_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q2, q10] = 1 | q10 : int(1..2)])
              | q2 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarkerR6_Marker ->
-         x_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 1] <
-         x_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 2]
+         [x_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 1]; int(1)] <lex
+         [x_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 2]; int(1)]
          \/ x_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 1] = 3
              | q3 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarkerR6_Marker ->

@@ -14,14 +14,14 @@ branching on
      var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Values_2_RelationAsMatrix]
 such that
     and([q1 + 1 <= var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Marker ->
-         flatten([[0; int(1)],
+         flatten([([] : `matrix indexed by [int()] of int`),
                   flatten([[-toInt(var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Values_2_RelationAsMatrix
                                        [q1, q15, q16])
                                 | q16 : bool]
                                | q15 : bool]);
                       int(1..2)])
          <lex
-         flatten([[0; int(1)],
+         flatten([([] : `matrix indexed by [int()] of int`),
                   flatten([[-toInt(var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Values_2_RelationAsMatrix
                                        [q1 + 1, q18, q19])
                                 | q19 : bool]

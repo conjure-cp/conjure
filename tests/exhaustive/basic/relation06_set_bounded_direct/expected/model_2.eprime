@@ -24,7 +24,7 @@ such that
     2 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker,
     x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker <= 3,
     and([q3 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
-         x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 1] <
-         x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 2]
+         [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 1]; int(1)] <lex
+         [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 2]; int(1)]
              | q3 : int(1..3)])
 

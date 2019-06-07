@@ -37,7 +37,8 @@ such that
                sum([toInt(a_ExplicitWithRepetition_Values[q18] = q22) | q18 : int(1..3), q18 <= 3]) = b_MOccurrence[q22]
                    | q22 : int(1..2), q22 < q28])))
             | q28 : int(1..2)]),
-    and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
+    and([[a_ExplicitWithRepetition_Values[q1]; int(1)] <=lex [a_ExplicitWithRepetition_Values[q1 + 1]; int(1)]
+             | q1 : int(1..2), q1 + 1 <= 3]),
     3 = sum([b_MOccurrence[q6] | q6 : int(1..2)]),
     3 = sum([a_MOccurrence[q7] | q7 : int(1..2)]),
     and([a_MOccurrence[q9] > 0 ->

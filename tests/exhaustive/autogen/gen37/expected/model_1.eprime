@@ -15,18 +15,18 @@ such that
                       [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, q12])
                            | q12 : int(1..2)];
                           int(1..2)]),
-             [0; int(1)];
+             ([] : `matrix indexed by [int()] of int`);
                  int(1..2)])
     <lex
     flatten([flatten([[var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
                       [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, q14])
                            | q14 : int(1..2)];
                           int(1..2)]),
-             [0; int(1)];
+             ([] : `matrix indexed by [int()] of int`);
                  int(1..2)]),
     and([2 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[q2] ->
-         -toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 1]) <
-         -toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 2])
+         [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 1]); int(1)] <lex
+         [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 2]); int(1)]
              | q2 : int(1..2)]),
     and([and([q4 > var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[q2] ->
               var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, q4] = false

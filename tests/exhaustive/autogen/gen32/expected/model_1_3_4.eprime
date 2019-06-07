@@ -18,7 +18,8 @@ such that
     or([q31 <= var2_ExplicitVarSizeWithMarker_Marker /\ !var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q31]]
             | q31 : int(1..11)]),
     and([q2 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q2] < var2_ExplicitVarSizeWithMarker_Values[q2 + 1]
+         [var2_ExplicitVarSizeWithMarker_Values[q2]; int(1)] <lex
+         [var2_ExplicitVarSizeWithMarker_Values[q2 + 1]; int(1)]
              | q2 : int(1..10)]),
     and([q3 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q3] = -4
              | q3 : int(1..11)]),
@@ -29,7 +30,8 @@ such that
                  | q9 : int(1..11)])
              | q7 : int(-4..5, 2)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q10 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Values[q10] < var2_ExplicitVarSizeWithFlags_Values[q10 + 1]
+         [var2_ExplicitVarSizeWithFlags_Values[q10]; int(1)] <lex
+         [var2_ExplicitVarSizeWithFlags_Values[q10 + 1]; int(1)]
              | q10 : int(1..10)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q11] = false -> var2_ExplicitVarSizeWithFlags_Values[q11] = -4
              | q11 : int(1..11)]),
