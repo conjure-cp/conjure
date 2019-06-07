@@ -431,6 +431,24 @@ opImageSet _ =
                 _ -> na ("Lenses.opImageSet:" <++> pretty p)
     )
 
+opTransform
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x, x)
+       )
+opTransform _ =
+    ( \ x y -> inject $ MkOpTransform $ OpTransform x y
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpTransform (OpTransform x y) -> return (x,y)
+                _ -> na ("Lenses.opTransform:" <++> pretty p)
+    )
+
 
 opRelationProj
     :: ( Op x :< x

@@ -1,5 +1,6 @@
 module Conjure.UI.IO
     ( readModelFromFile
+    , readModelFromStdin
     , readModelPreambleFromFile
     , readModelInfoFromFile
     , readParamOrSolutionFromFile
@@ -25,6 +26,7 @@ import qualified Data.Serialize ( decode, encode )
 
 -- text
 import qualified Data.Text as T
+import qualified Data.Text.IO as T ( getContents )
 import qualified Data.Text.Encoding as T ( encodeUtf8 )
 
 -- bytestring
@@ -40,6 +42,13 @@ readModelFromFile fp = do
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
             readModel Parser.parseModel (Just id) pair
+
+
+readModelFromStdin :: (MonadIO m, MonadFail m, MonadUserError m) => m Model
+readModelFromStdin = do
+    con2 <- liftIO $ T.getContents
+    let pair = ("stdin", con2)
+    readModel Parser.parseModel (Just id) pair
 
 
 readParamOrSolutionFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model

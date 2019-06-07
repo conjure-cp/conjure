@@ -28,7 +28,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
         , TypeFunction TypeAny TypeAny
         , TypeRelation [TypeAny]
         ]
-        (const True)
+        (const False)
 
 instance EvaluateOp OpUnion where
     evaluateOp p | any isUndef (childrenBi p) = do
