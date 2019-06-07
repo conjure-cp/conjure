@@ -87,6 +87,9 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
+import qualified Conjure.Rules.Transform as Transform
+
+
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -792,7 +795,7 @@ updateDeclarations model = do
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
                 Right outs -> forM outs $ \ (n, d) -> do
-                    d' <- transformBiM trySimplify $ forgetRepr d
+                    d' <- transformBiM (trySimplify []) $ forgetRepr d
                     return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
@@ -1138,7 +1141,8 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: (?typeCheckerMode :: TypeCheckerMode) => Config -> [[Rule]]
 allRules config =
-    [ [ rule_FullEvaluate
+    [ Transform.rules_Transform
+    , [ rule_FullEvaluate
       ]
     , [ rule_PartialEvaluate
       ]
@@ -1150,6 +1154,7 @@ allRules config =
     , bubbleUpRules
     , [ rule_Eq
       , rule_Neq
+      , rule_Comprehension_Cardinality
       ]
     , verticalRules
     , horizontalRules
@@ -2335,3 +2340,17 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
+
+
+rule_Comprehension_Cardinality :: Rule
+rule_Comprehension_Cardinality = "comprehension-cardinality" `namedRule` theRule where
+  theRule p = do
+    c <- match opTwoBars p
+    case c of
+      (Comprehension _ gensOrConds) ->
+        let ofones = Comprehension (fromInt 1) gensOrConds
+        in return ( "Horizontal rule for comprehension cardinality"
+                  , return [essence| sum(&ofones) |]
+                  )
+      _ -> na "rule_Comprehension_Cardinality"
+

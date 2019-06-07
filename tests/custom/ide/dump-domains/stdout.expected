@@ -1,0 +1,12 @@
+[{"domain": "int(1..10)",
+  "kind": "Given",
+  "name": "n"},
+ {"domain": "set (maxSize n) of int(1..n)",
+  "kind": "Find",
+  "name": "x"},
+ {"domain": "set (minSize n) of int(1..n)",
+  "kind": "Find",
+  "name": "y"},
+ {"domain": "set (maxSize 1) of set (maxSize 1) of set (maxSize 1) of set (maxSize 1) of int(1..n)",
+  "kind": "Find",
+  "name": "nested"}]

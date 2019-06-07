@@ -1,5 +1,5 @@
-$ conjure parameter-generator int.essence --essence-out int-gen.essence
-File: int-gen.essence
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence
+File: problem-gen.essence
 language Essence 1.3
 
 given a_middle: int(0..100)
@@ -46,7 +46,7 @@ such that
 --------------------
 
 
-File: int-gen.essence.irace
+File: problem-gen.essence.irace
 a_middle "-a_middle " i (0, 100)
 a_delta "-a_delta " i (0, 50)
 b_middle "-b_middle " i (10, 100)
@@ -62,8 +62,8 @@ f_delta "-f_delta " i (0, 10)
 --------------------
 
 
-$ conjure parameter-generator int.essence --essence-out int-gen.essence --MININT -10 --MAXINT 50
-File: int-gen.essence
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
+File: problem-gen.essence
 language Essence 1.3
 
 given a_middle: int(-10..50)
@@ -110,7 +110,7 @@ such that
 --------------------
 
 
-File: int-gen.essence.irace
+File: problem-gen.essence.irace
 a_middle "-a_middle " i (-10, 50)
 a_delta "-a_delta " i (0, 30)
 b_middle "-b_middle " i (10, 50)

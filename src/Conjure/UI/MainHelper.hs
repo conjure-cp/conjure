@@ -7,7 +7,9 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
+                     , readModelInfoFromFile, readParamOrSolutionFromFile
+                     , writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -32,6 +34,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
+import Conjure.Language.ModelStats ( modelDomainsJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -172,6 +175,15 @@ mainWithArgs ValidateSolution{..} = do
     solution2 <- readParamOrSolutionFromFile essenceSolution
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
+mainWithArgs IDE{..} = do
+    essence2 <-
+        if null essence
+            then readModelFromStdin
+            else readModelFromFile essence
+    void $ runNameGen () $ typeCheckModel_StandAlone essence2
+    if dumpDomains
+        then liftIO $ putStrLn $ render lineWidth (modelDomainsJSON essence2)
+        else writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
@@ -202,10 +214,17 @@ mainWithArgs ParameterGenerator{..} = do
     model  <- readModelFromFile essence
     output <- runNameGen () $ parameterGenerator minInt maxInt model
     writeModel lineWidth outputFormat (Just essenceOut) output
+    let
+        toIrace nm lb ub | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            prParens (pretty lb)
+        toIrace nm lb ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" i" <+>
+            prettyList prParens "," [lb, ub]
     liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
-        [ pretty nm <+>
-          "\"-" <> pretty nm <> " \" i" <+>
-          prettyList prParens "," [lb, ub]
+        [ toIrace nm lb ub
         | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
         ]
 mainWithArgs ModelStrengthening{..} =
@@ -413,7 +432,7 @@ savilerowScriptName :: Sys.FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"
-    | otherwise = "Cannot detect operating system."
+    | otherwise = bug "Cannot detect operating system."
 
 
 savileRowNoParam ::
@@ -436,14 +455,8 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
         liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
-                                    solutionsInOneFile
-                                    ( outputDirectory, outBase
-                                    , modelPath, "<no param file>"
-                                    , lineWidth
-                                    , outputFormat
-                                    )
-                                    tr
-                                    (1::Int))
+                                    (outBase, modelPath, "<no param file>", ui)
+                                    tr (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
@@ -482,14 +495,8 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                 liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
-                                            solutionsInOneFile
-                                            ( outputDirectory, outBase
-                                            , modelPath, paramPath
-                                            , lineWidth
-                                            , outputFormat
-                                            )
-                                            tr
-                                            (1::Int))
+                                            (outBase, modelPath, paramPath, ui)
+                                            tr (1::Int))
             srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
@@ -505,6 +512,7 @@ srMkArgs Solve{..} outBase modelPath =
     , "-S0"
     , "-solutions-to-stdout-one-line"
     ] ++
+    [ "-cgroups" | cgroups ] ++
     ( if nbSolutions == "all"
         then ["-all-solutions"]
         else ["-num-solutions", stringToText nbSolutions]
@@ -535,21 +543,15 @@ srMkArgs Solve{..} outBase modelPath =
 srMkArgs _ _ _ = bug "srMkArgs"
 
 
+srStdoutHandler ::
+    (FilePath, FilePath, FilePath, UI) ->
+    (Model -> NameGenM (IdentityT IO) Model) ->
+    Int ->
+    Handle ->
+    IO [Either String (FilePath, FilePath, Maybe FilePath)]
 srStdoutHandler
-    :: Bool
-    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
-    -> (Model -> NameGenM (IdentityT IO) Model)
-    -> Int
-    -> Handle
-    -> IO [Either String (FilePath, FilePath, Maybe FilePath)]
-srStdoutHandler
-        solutionsInOneFile
-        args@( outputDirectory, outBase
-             , modelPath, paramPath
-             , lineWidth, outputFormat
-             )
-        tr
-        solutionNumber h = do
+        args@(outBase , modelPath, paramPath , Solve{..})
+        tr solutionNumber h = do
     eof <- hIsEOF h
     if eof
         then do
@@ -558,9 +560,14 @@ srStdoutHandler
         else do
             line <- hGetLine h
             case stripPrefix "Solution: " line of
-                Nothing ->
+                Nothing -> do
+                    if isPrefixOf "Created output file for domain filtering" line
+                        then pp logLevel $ hsep ["Running minion for domain filtering."]
+                        else if isPrefixOf "Created output file" line
+                            then pp logLevel $ hsep ["Running solver:", pretty solver]
+                            else return ()
                     fmap (Left line :)
-                         (srStdoutHandler solutionsInOneFile args tr solutionNumber h)
+                         (srStdoutHandler args tr solutionNumber h)
                 Just solutionText -> do
                     eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
                     essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
@@ -576,7 +583,7 @@ srStdoutHandler
                             when (outputFormat == JSON) $
                                 writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
-                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
+                                 (srStdoutHandler args tr (solutionNumber+1) h)
                         True -> do
                             let mkFilename ext = outputDirectory </> outBase
                                                         ++ ext
@@ -591,7 +598,8 @@ srStdoutHandler
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
                             appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
-                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
+                                 (srStdoutHandler args tr (solutionNumber+1) h)
+srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
 srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
