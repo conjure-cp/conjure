@@ -995,7 +995,9 @@ Examples:
 
 These semantics follow the original Essence definition.
 In contrast, in older versions of Conjure the relationship
-  ``apart(L,P) = !together(L,P)``
+
+ | ``apart(L,P) = !together(L,P)``
+
 held for all lists ``L`` and partitions ``P``.
 
 
