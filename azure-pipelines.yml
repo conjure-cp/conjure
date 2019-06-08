@@ -14,7 +14,7 @@ jobs:
         PATH_SEPARATOR: ':'
       Windows:
         imageName: 'vs2017-win2016'
-        BIN_DIR: 'C:/bin'
+        BIN_DIR: '/c/bin'
         PATH_SEPARATOR: ';'
   pool:
     vmImage: $(imageName)
