@@ -6,13 +6,13 @@ jobs:
     matrix:
       Linux:
         imageName: 'ubuntu-latest'
-        BIN_DIR: /usr/bin
+        BIN_DIR: /usr/local/bin
       Mac:
         imageName: 'macos-latest'
         BIN_DIR: /usr/local/bin
       Windows:
         imageName: 'vs2017-win2016'
-        BIN_DIR: /usr/bin
+        BIN_DIR: /usr/local/bin
   pool:
     vmImage: $(imageName)
   steps:
