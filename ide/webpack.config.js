@@ -1,7 +1,7 @@
 module.exports = {
-  entry: "./src/main.ts",
+  entry: "./src/config/main.tsx",
   output: {
-      filename: "./bundle.js",
+      filename: "./configBundle.js",
   },
 
   // Enable sourcemaps for debugging webpack's output.
@@ -25,7 +25,7 @@ module.exports = {
   watchOptions: {
     aggregateTimeout: 300,
     poll: 1000,
-    ignored: './node_modules/'
+    ignored: './node_modules/**'
   }
 
   // Other options...

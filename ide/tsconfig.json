@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es2018",
+        "target": "es6",
         "outDir": "out",
         "lib": [
             "es2018", "es2017", "dom"
@@ -17,6 +17,7 @@
         "noUnusedParameters": true,  /* Report errors on unused parameters. */
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "jsx": "react"
     },
     // "files": [
     //     "src/extension.ts",
@@ -26,7 +27,7 @@
     // ]
 
     "exclude": [
-        "./node_modules/*",
+        "./node_modules/**",
         "./src/webview/ts/"
     ]
 }
