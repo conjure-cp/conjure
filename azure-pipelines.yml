@@ -13,12 +13,12 @@ jobs:
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: BIN_DIR=$(Build.BinariesDirectory) BUILD_TESTS=true make
+  - bash: BIN_DIR='$(Build.BinariesDirectory)' BUILD_TESTS=true make
     displayName: "Build Conjure"
-  - bash: BIN_DIR=$(Build.BinariesDirectory) etc/build/install-minion.sh
+  - bash: BIN_DIR='$(Build.BinariesDirectory)' etc/build/install-minion.sh
     displayName: "Install Minion"
-  - bash: BIN_DIR=$(Build.BinariesDirectory) etc/build/install-glucose.sh
+  - bash: BIN_DIR='$(Build.BinariesDirectory)' etc/build/install-glucose.sh
     displayName: "Install Glucose"
-  - bash: BIN_DIR=$(Build.BinariesDirectory) .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  - bash: BIN_DIR='$(Build.BinariesDirectory)' .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
     displayName: "Test"
 
