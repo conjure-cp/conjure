@@ -2,12 +2,6 @@
 jobs:
 - job: ConjureTesting
   timeoutInMinutes: 0
-  trigger:
-    branches:
-      include:
-      - *
-      exclude:
-      - loadcore
   strategy:
     matrix:
       linux:
