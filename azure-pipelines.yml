@@ -1,24 +1,27 @@
 
 jobs:
-- job: ConjureTesting
+- job: Conjure
   timeoutInMinutes: 0
   strategy:
     matrix:
-      Linux:
+      OSLinux:
         imageName: 'ubuntu-latest'
-      Mac:
+        BIN_DIR: /bin
+      OSMac:
         imageName: 'macos-latest'
-      Windows:
+        BIN_DIR: /bin
+      OSWindows:
         imageName: 'vs2017-win2016'
+        BIN_DIR: C:/bin
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: PATH=${HOME}/.local/bin:$PATH BUILD_TESTS=true make
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH BUILD_TESTS=true make
     displayName: "Build Conjure"
-  - bash: etc/build/install-minion.sh
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH etc/build/install-minion.sh
     displayName: "Install Minion"
-  - bash: etc/build/install-glucose.sh
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH etc/build/install-glucose.sh
     displayName: "Install Glucose"
-  - bash: PATH=${HOME}/.local/bin:$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
     displayName: "Test"
 
