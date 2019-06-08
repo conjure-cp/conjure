@@ -1,26 +1,24 @@
-strategy:
-  matrix:
-    linux:
-      imageName: 'ubuntu-latest'
-    mac:
-      imageName: 'macos-latest'
-    windows:
-      imageName: 'vs2017-win2016'
 
-trigger:
-- master
+jobs:
+- job: "Conjure Testing"
+  timeoutInMinutes: 0
+  strategy:
+    matrix:
+      linux:
+        imageName: 'ubuntu-latest'
+      mac:
+        imageName: 'macos-latest'
+      windows:
+        imageName: 'vs2017-win2016'
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - bash: PATH=${HOME}/.local/bin:$PATH BUILD_TESTS=true make
+    displayName: "Build Conjure"
+  - bash: etc/build/install-minion.sh
+    displayName: "Install Minion"
+  - bash: etc/build/install-glucose.sh
+    displayName: "Install Glucose"
+  - bash: PATH=${HOME}/.local/bin:$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+    displayName: "Test"
 
-pool:
-  vmImage: $(imageName)
-
-timeoutInMinutes: 0
-
-steps:
-- bash: PATH=${HOME}/.local/bin:$PATH BUILD_TESTS=true make
-  displayName: "Build Conjure"
-- bash: etc/build/install-minion.sh
-  displayName: "Install Minion"
-- bash: etc/build/install-glucose.sh
-  displayName: "Install Glucose"
-- bash: PATH=${HOME}/.local/bin:$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
-  displayName: "Test"
