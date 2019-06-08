@@ -4,24 +4,27 @@ jobs:
   timeoutInMinutes: 0
   strategy:
     matrix:
-      OSLinux:
+      Linux:
         imageName: 'ubuntu-latest'
-        BIN_DIR: /bin
-      OSMac:
+        BIN_DIR: '/bin'
+        PATH_PREFIX: '/bin:'
+      Mac:
         imageName: 'macos-latest'
-        BIN_DIR: /bin
-      OSWindows:
+        BIN_DIR: '/bin'
+        PATH_PREFIX: '/bin:'
+      Windows:
         imageName: 'vs2017-win2016'
-        BIN_DIR: C:/bin
+        BIN_DIR: 'C:/bin'
+        PATH_PREFIX: 'C:/bin;'
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH BUILD_TESTS=true make
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(PATH_PREFIX)$PATH BUILD_TESTS=true make
     displayName: "Build Conjure"
-  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH etc/build/install-minion.sh
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(PATH_PREFIX)$PATH etc/build/install-minion.sh
     displayName: "Install Minion"
-  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH etc/build/install-glucose.sh
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(PATH_PREFIX)$PATH etc/build/install-glucose.sh
     displayName: "Install Glucose"
-  - bash: BIN_DIR=$(BIN_DIR) PATH=$(BIN_DIR):$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  - bash: BIN_DIR=$(BIN_DIR) PATH=$(PATH_PREFIX)$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
     displayName: "Test"
 
