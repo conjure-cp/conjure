@@ -6,13 +6,13 @@ jobs:
     matrix:
       Linux:
         imageName: 'ubuntu-latest'
-        BIN_DIR: ${HOME}/.local/bin
+        BIN_DIR: /usr/bin
       Mac:
         imageName: 'macos-latest'
-        BIN_DIR: ${HOME}/.local/bin
+        BIN_DIR: /usr/bin
       Windows:
         imageName: 'vs2017-win2016'
-        BIN_DIR: /mingw64/bin
+        BIN_DIR: /usr/bin
   pool:
     vmImage: $(imageName)
   steps:
@@ -22,8 +22,6 @@ jobs:
     displayName: "2"
   - bash: echo ${PATH}
     displayName: "3"
-  - bash: PATH=${BIN_DIR}:${PATH} echo ${PATH}
-    displayName: "4"
   - bash: BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: etc/build/install-minion.sh
