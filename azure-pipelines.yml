@@ -19,8 +19,6 @@ jobs:
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: ls -l $(BIN_DIR)
-    displayName: "ls BIN_DIR"
   - bash: PATH=${BIN_DIR}:$PATH BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: ls -l $(BIN_DIR)
