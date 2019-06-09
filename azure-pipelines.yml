@@ -18,6 +18,8 @@ jobs:
   steps:
   - bash: echo ${PATH}
     displayName: "echo PATH"
+  - bash: mkdir -p $(BIN_DIR)
+    displayName: "mkdir BIN_DIR"
   - bash: ls -l $(BIN_DIR)
     displayName: "ls BIN_DIR"
   - bash: BUILD_TESTS=true make
