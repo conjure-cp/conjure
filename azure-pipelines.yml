@@ -1,9 +1,10 @@
 
+trigger:
+- master
+
 jobs:
 - job: Conjure
   timeoutInMinutes: 0
-  trigger:
-  - master
   strategy:
     matrix:
       Linux:
