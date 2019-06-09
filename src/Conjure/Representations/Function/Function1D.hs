@@ -19,6 +19,9 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
+-- unordered-containers
+import qualified Data.HashMap.Strict as M
+
 
 function1D :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 function1D = Representation chck downD structuralCons downC up symmetryOrdering
@@ -132,15 +135,16 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , ConstantAbstract (AbsLitFunction vals_)
               ) | domainCanIndexMatrix innerDomainFr = do
+            let vals = M.fromList vals_
             froms            <- domainValues innerDomainFr
             valsOut          <- sequence
                 [ val
                 | fr <- froms
-                , let val = case lookup fr vals of
+                , let val = case M.lookup fr vals of
                                 Nothing -> fail $ vcat [ "No value for" <+> pretty fr
-                                                       , "In:" <+> pretty (AbsLitFunction vals)
+                                                       , "In:" <+> pretty (AbsLitFunction vals_)
                                                        ]
                                 Just v  -> return v
                 ]
