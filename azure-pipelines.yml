@@ -16,12 +16,10 @@ jobs:
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: echo $(BIN_DIR)
-    displayName: "1"
-  - bash: echo ${BIN_DIR}
-    displayName: "2"
   - bash: echo ${PATH}
-    displayName: "3"
+    displayName: "echo PATH"
+  - bash: ls -l $(BIN_DIR)
+    displayName: "ls BIN_DIR"
   - bash: BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: etc/build/install-minion.sh
