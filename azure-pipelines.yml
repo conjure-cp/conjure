@@ -9,19 +9,22 @@ jobs:
     matrix:
       Linux:
         imageName: 'ubuntu-latest'
+        runTests: true
       Mac:
         imageName: 'macos-latest'
+        runTests: true
       Windows:
         imageName: 'vs2017-win2016'
+        runTests: false
   pool:
     vmImage: $(imageName)
   steps:
   - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
     displayName: "Build Conjure"
-  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh ; fi
     displayName: "Install Minion"
-  # - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
-  #   displayName: "Install Glucose"
-  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 10 --hide-successes'
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
+    displayName: "Install Glucose"
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 10 --hide-successes' ; fi
     displayName: "Test"
 
