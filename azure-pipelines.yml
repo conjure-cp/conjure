@@ -22,6 +22,6 @@ jobs:
     displayName: "Install Minion"
   # - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
   #   displayName: "Install Glucose"
-  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 10 --hide-successes'
     displayName: "Test"
 
