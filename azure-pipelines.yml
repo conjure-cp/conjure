@@ -9,24 +9,21 @@ jobs:
     matrix:
       Linux:
         imageName: 'ubuntu-latest'
-        BIN_DIR: ${HOME}/.local/bin
       Mac:
         imageName: 'macos-latest'
-        BIN_DIR: ${HOME}/.local/bin
       Windows:
         imageName: 'vs2017-win2016'
-        BIN_DIR: ${HOME}/.local/bin
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: PATH=${BIN_DIR}:$PATH BUILD_TESTS=true make
+  - bash: PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: ls -l $(BIN_DIR)
     displayName: "ls BIN_DIR"
-  - bash: PATH=${BIN_DIR}:$PATH etc/build/install-minion.sh
+  - bash: PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
     displayName: "Install Minion"
-  - bash: PATH=${BIN_DIR}:$PATH etc/build/install-glucose.sh
+  - bash: PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
     displayName: "Install Glucose"
-  - bash: PATH=${BIN_DIR}:$PATH .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
+  - bash: PATH=${HOME}/.local/bin:${PATH} .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
     displayName: "Test"
 
