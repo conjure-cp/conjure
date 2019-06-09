@@ -412,8 +412,7 @@ pp _       = liftIO . putStrLn . renderNormal
 
 savilerowScriptName :: Sys.FilePath
 savilerowScriptName
-    | os `elem` ["darwin", "linux"] = "savilerow"
-    | os `elem` ["mingw32"] = "savilerow.bat"
+    | os `elem` ["darwin", "linux", "mingw32"] = "savilerow"
     | otherwise = bug "Cannot detect operating system."
 
 
