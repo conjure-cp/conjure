@@ -1,1 +1,6 @@
-java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "%~p0savilerow.jar" %*
+
+
+# get savilerow installation directory
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" %*
