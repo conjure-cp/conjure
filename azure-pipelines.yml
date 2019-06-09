@@ -20,8 +20,8 @@ jobs:
     displayName: "Build Conjure"
   - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
     displayName: "Install Minion"
-  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
-    displayName: "Install Glucose"
+  # - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
+  #   displayName: "Install Glucose"
   - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} .stack-work/*/*/*/*/*/conjure-testing --limit-time 10 --hide-successes
     displayName: "Test"
 
