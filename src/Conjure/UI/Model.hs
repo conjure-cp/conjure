@@ -1155,6 +1155,7 @@ allRules config =
     , [ rule_Eq
       , rule_Neq
       , rule_Comprehension_Cardinality
+      , rule_Flatten_Cardinality
       ]
     , verticalRules
     , horizontalRules
@@ -1851,7 +1852,7 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
 rule_ReducerToComprehension :: Rule
 rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
     theRule p = do
-        (_, mk, coll) <- match opReducer p
+        (_, _, mk, coll) <- match opReducer p
         -- leave comprehensions alone
         let
             isComprehension Comprehension{} = True
@@ -2138,13 +2139,14 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
                 (_, Just res) -> return ("min", \ a b -> [essence| &a >= &b |], res )
                 _ -> na "rule_InlineConditions_MaxMin"
         let
-            (toInline, _toKeep) = mconcat
+            (toInline, gocInExpr, _toKeep) = mconcat
                 [ case goc of
-                    Condition x | categoryOf x == CatDecision -> ([x],[])
-                    _ -> ([],[goc])
+                    Condition x | categoryOf x == CatDecision -> ([x],[],[])
+                    Generator (GenInExpr {}) -> ([],[goc],[])
+                    _ -> ([],[],[goc])
                 | goc <- gensOrConds
                 ]
-        when (null toInline) $ na "rule_InlineConditions_MaxMin"
+        when (null toInline && null gocInExpr) $ na "rule_InlineConditions_MaxMin"
         auxDomain <- domainOf body
         return
             ( "Creating auxiliary variable for a" <+> nameQ
@@ -2246,7 +2248,7 @@ rule_PartialEvaluate = "partial-evaluate" `namedRuleZ` theRule where
 rule_QuantifierShift :: Rule
 rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
     theRule p = do
-        (_, mkQuan, inner)              <- match opReducer p
+        (_, _, mkQuan, inner)           <- match opReducer p
         (matrix, indexer)               <- match opIndexing inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
@@ -2268,7 +2270,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
 rule_QuantifierShift2 :: Rule
 rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
     theRule p = do
-        (_, mkQuan, inner)              <- match opReducer p
+        (_, _, mkQuan, inner)           <- match opReducer p
         matrix                          <- match opFlatten inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
@@ -2289,16 +2291,15 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
 rule_QuantifierShift3 :: Rule
 rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
     theRule p = do
-        (_, mkQuan, inner)              <- match opReducer p
+        (_, True, mkQuan, inner)        <- match opReducer p
         matrix                          <- match opConcatenate inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         return
             ( "Shifting quantifier inwards"
-            , return $ mkQuan
-                        (make matrixLiteral
-                            ty
-                            index
-                            (map mkQuan elems))
+            , return $ mkQuan $ make matrixLiteral
+                                        ty
+                                        index
+                                        (map mkQuan elems)
             )
 
 
@@ -2344,13 +2345,20 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
 
 rule_Comprehension_Cardinality :: Rule
 rule_Comprehension_Cardinality = "comprehension-cardinality" `namedRule` theRule where
-  theRule p = do
-    c <- match opTwoBars p
-    case c of
-      (Comprehension _ gensOrConds) ->
+    theRule p = do
+        Comprehension _ gensOrConds <- match opTwoBars p
         let ofones = Comprehension (fromInt 1) gensOrConds
-        in return ( "Horizontal rule for comprehension cardinality"
-                  , return [essence| sum(&ofones) |]
-                  )
-      _ -> na "rule_Comprehension_Cardinality"
+        return ( "Horizontal rule for comprehension cardinality"
+               , return [essence| sum(&ofones) |]
+               )
+
+rule_Flatten_Cardinality :: Rule
+rule_Flatten_Cardinality = "flatten-cardinality" `namedRule` theRule where
+    theRule p = do
+        list <- match opTwoBars p >>= match opConcatenate
+        return ( "Horizontal rule for comprehension cardinality"
+               , do
+                   (iPat, i) <- quantifiedVar
+                   return [essence| sum([ |&i| | &iPat <- &list ]) |]
+               )
 

@@ -1,0 +1,7 @@
+language Essence 1.3
+find connections: matrix indexed by [int(1..3)] of int(-2..25)
+
+such that 
+connections[1] = -1,
+connections[3] = 2,
+connections[2] = min([connections[i] | i <- [1,3], connections[i]!=-1 ]),

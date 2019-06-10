@@ -383,7 +383,8 @@ instance DomainOf (OpEq x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpFactorial x) where
     domainOf op = mkDomainAny ("OpFactorial:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpFlatten x) where
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpFlatten x) where
+    domainOf (OpFlatten (Just 1) x) = domainOf x >>= innerDomainOf
     domainOf op = mkDomainAny ("OpFlatten:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) where
