@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.Language.NameResolution
     ( resolveNames
@@ -15,6 +16,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.TH
 
 
 resolveNamesMulti
@@ -231,10 +233,10 @@ resolveX p@Comprehension{} = scope $ do
                         modify ((nm, refto) :)
                     return (Generator gen')
                 Condition y -> Condition <$> resolveX y
-                ComprehensionLetting nm expr -> do
+                ComprehensionLetting pat expr -> do
                     expr' <- resolveX expr
-                    modify ((nm, Alias expr') :)
-                    return (ComprehensionLetting nm expr')
+                    resolveAbsPat p pat expr'
+                    return (ComprehensionLetting pat expr')
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"
@@ -294,7 +296,7 @@ resolveAbsPat ::
     Expression ->
     m ()
 resolveAbsPat _ AbstractPatternMetaVar{} _ = bug "resolveAbsPat AbstractPatternMetaVar"
-    resolveAbsPat _ (Single nm) x = modify ((nm, Alias x) :)
+resolveAbsPat _ (Single nm) x = modify ((nm, Alias x) :)
 resolveAbsPat context (AbsPatTuple ps) x =
     sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
               | (p, i_) <- zip ps allNats

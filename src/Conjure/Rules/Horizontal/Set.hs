@@ -10,21 +10,19 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
+            Generator (GenInExpr pat@AbsPatSet{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension_Literal"
         (TypeSet tau, elems) <- match setLiteral expr
         let outLiteral = make matrixLiteral
                             (TypeMatrix (TypeInt TagInt) tau)
                             (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
-        let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on set literals"
-            , do
-                 (iPat, i) <- quantifiedVar
-                 return $ Comprehension (upd i body)
-                         $  gocBefore
-                         ++ [Generator (GenInExpr iPat outLiteral)]
-                         ++ transformBi (upd i) gocAfter
+            , return $ Comprehension body
+                     $  gocBefore
+                     ++ [Generator (GenInExpr pat outLiteral)]
+                     ++ gocAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 

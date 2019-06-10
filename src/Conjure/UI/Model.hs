@@ -1766,10 +1766,10 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
             , return $ Comprehension body gensOrConds'
             )
     theRule (Comprehension body gensOrConds)
-        | let (lettings, rest) = mconcat
+        | let (lettings :: [Name], rest :: [GeneratorOrCondition]) = mconcat
                 [ case x of
-                    ComprehensionLetting nm _ -> ([nm],[] )
-                    _                         -> ([]  ,[x])
+                    ComprehensionLetting pat _ -> (universeBi pat,[] )
+                    _                          -> ([]  ,[x])
                 | x <- gensOrConds
                 ]
         , let f (Reference nm (Just (Alias x))) | nm `elem` lettings = f x

@@ -11,7 +11,7 @@ rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+            Generator (GenInExpr pat expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
         tyInner <- typeOf body
@@ -242,7 +242,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
                 Generator (GenDomainHasRepr nm _) -> [nm]
                 Generator (GenInExpr        pt _) -> universeBi pt
                 Condition _                       -> []
-                ComprehensionLetting nm _         -> [nm]
+                ComprehensionLetting pt _         -> universeBi pt
 
         (innerBody', innerGocs') <- updateQuantified innerBody innerGocs
         return

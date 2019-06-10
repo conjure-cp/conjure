@@ -609,6 +609,7 @@ auxiliaryVar = do
     return (nm, ref)
 
 
+-- | pattern, template, argument, result
 lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression
 lambdaToFunction (Single nm) body = \ p ->
     let
@@ -645,7 +646,7 @@ lambdaToFunction (AbsPatMatrix ts) body = \ p ->
         ps = case p of
             Constant (ConstantAbstract (AbsLitMatrix _ xs)) -> map Constant xs
             AbstractLiteral (AbsLitMatrix _ xs) -> xs
-            _ -> bug "lambdaToFunction, AbsPatMatrix"
+            _ -> bug $ "lambdaToFunction, AbsPatMatrix" <++> vcat [pretty p, pretty (show p)]
     in
         unroll ts ps body
 lambdaToFunction (AbsPatSet ts) body = \ p ->
@@ -659,7 +660,7 @@ lambdaToFunction (AbsPatSet ts) body = \ p ->
         ps = case p of
             Constant (ConstantAbstract (AbsLitSet xs)) -> map Constant xs
             AbstractLiteral (AbsLitSet xs) -> xs
-            _ -> bug "lambdaToFunction, AbsPatSet"
+            _ -> bug $ "lambdaToFunction, AbsPatSet" <++> vcat [pretty p, pretty (show p)]
     in
         unroll ts ps body
 lambdaToFunction p@AbstractPatternMetaVar{} _ = bug $ "Unsupported AbstractPattern, got" <+> pretty (show p)
@@ -773,7 +774,7 @@ patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"
 data GeneratorOrCondition
     = Generator Generator
     | Condition Expression
-    | ComprehensionLetting Name Expression
+    | ComprehensionLetting AbstractPattern Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Pretty GeneratorOrCondition where
