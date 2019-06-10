@@ -838,13 +838,13 @@ parseQuantifiedExpr = do
 
 parseQuantifiedName :: Parser Text
 parseQuantifiedName = do
-    Name n <- parseName
-    let quans = ["forAll", "exists", "sum"]
-    if n `elem` quans
-        then return n
-        else fail $ vcat [ "Unrecognised quantifier:" <+> pretty n
-                         , "Expected one of:" <+> prettyList id "," quans
-                         ]
+    let
+        isIdentifier (LIdentifier "forAll") = True
+        isIdentifier (LIdentifier "exists") = True
+        isIdentifier (LIdentifier "sum") = True
+        isIdentifier _ = False
+    LIdentifier n <- satisfyT isIdentifier
+    return n
 
 
 parseAbstractPattern :: Parser AbstractPattern
@@ -1010,7 +1010,10 @@ identifierText :: Parser T.Text
 identifierText = do
     LIdentifier i <- satisfyT isIdentifier
     return i
-    where isIdentifier LIdentifier {} = True
+    where 
+          isIdentifier (LIdentifier "forAll") = False
+          isIdentifier (LIdentifier "exists") = False
+          isIdentifier LIdentifier{} = True
           isIdentifier _ = False
 
 satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
