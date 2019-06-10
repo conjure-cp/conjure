@@ -90,18 +90,15 @@ translateQnName qnName = case qnName of
 
 parseTopLevels :: Parser [Statement]
 parseTopLevels = do
-    let one = msum
-                [ do
-                    lexeme L_find
+    let one = satisfyL $ \case
+                L_find -> Just $ do
                     decls <- flip sepEndBy1 comma $ do
                         is <- commaSeparated parseNameOrMeta
                         j  <- colon >> parseDomain
                         return [ Declaration (FindOrGiven Find i j)
                                | i <- is ]
                     return $ concat decls
-                    <?> "find statement"
-                , do
-                    lexeme L_given
+                L_given -> Just $ do
                     decls <- commaSeparated $ do
                         is <- commaSeparated parseName
                         msum
@@ -122,9 +119,7 @@ parseTopLevels = do
                                     ]
                             ]
                     return $ concat decls
-                    <?> "given statement"
-                , do
-                    lexeme L_letting
+                L_letting -> Just $ do
                     decls <- commaSeparated $ do
                         is <- commaSeparated parseName
                         lexeme L_be
@@ -161,41 +156,28 @@ parseTopLevels = do
                                        ]
                             ]
                     return $ concat decls
-                    <?> "letting statement"
-                , do
-                    lexeme L_where
+                L_where -> Just $ do
                     xs <- commaSeparated parseExpr
                     return [Where xs]
-                    <?> "where statement"
-                , do
-                    lexeme L_such
+                L_such -> Just $ do
                     lexeme L_that
                     xs <- commaSeparated parseExpr
                     return [SuchThat xs]
-                    <?> "such that statement"
-                , do
-                    lexeme L_minimising
+                L_minimising -> Just $ do
                     x <- parseExpr
                     return [ Objective Minimising x ]
-                    <?> "objective"
-                , do
-                    lexeme L_maximising
+                L_maximising -> Just $ do
                     x <- parseExpr
                     return [ Objective Maximising x ]
-                    <?> "objective"
-                , do
-                    lexeme L_branching
+                L_branching -> Just $ do
                     lexeme L_on
                     xs <- brackets $ commaSeparated parseSearchOrder
                     return [ SearchOrder xs ]
-                    <?> "branching on"
-                , do
-                    lexeme L_heuristic
+                L_heuristic -> Just $ do
                     nm <- parseName
                     return [ SearchHeuristic nm ]
-                    <?> "heuristic"
-                ] <?> "statement"
-    concat <$> some one
+                _ -> Nothing
+    concat <$> some (one <?> "statement")
 
 parseSearchOrder :: Parser SearchOrder
 parseSearchOrder = msum [try pBranchingOn, pCut]
@@ -1036,6 +1018,21 @@ satisfyT predicate = token nextPos testTok
     where
         testTok :: LexemePos -> Either [Message] Lexeme
         testTok (LexemePos tok _ _) = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
+        nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
+        nextPos _ _ (LexemePos _ _ pos) = pos
+
+satisfyL :: forall a . (Lexeme -> Maybe (Parser a)) -> Parser a
+satisfyL predicate = do
+    p <- token nextPos testTok
+    p
+    where
+        testTok :: LexemePos -> Either [Message] (Parser a)
+        testTok (LexemePos tok _ _) =
+            -- trace ("satisfyL: " ++ show pos ++ "\t" ++ show tok) $
+            case predicate tok of
+                Nothing  -> Left [Unexpected (showToken tok)]
+                Just res -> Right res
+
         nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
         nextPos _ _ (LexemePos _ _ pos) = pos
 
