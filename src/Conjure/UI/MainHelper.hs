@@ -243,6 +243,9 @@ mainWithArgs config@Solve{..} = do
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
+    unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
+        when (nbSolutions == "all" || nbSolutions /= "1") $
+            userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readParamOrSolutionFromFile f
         return (f, p)
