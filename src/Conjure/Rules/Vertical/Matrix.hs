@@ -4,32 +4,54 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
+import Conjure.Rules.Definition ( RuleResult(..), QuestionType(..) )
 import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
+
+-- uniplate
+import Data.Generics.Uniplate.Zipper ( hole )
+import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 
 rule_Comprehension_Literal :: Rule
-rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
+rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
+    theRule z (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
+        notInsideMinMax z
         tyInner <- typeOf body
         let ty = TypeMatrix (TypeInt TagInt) tyInner
         return
-            ( "Vertical rule for matrix-comprehension on matrix literal"
-            , return $ if null elems
-                then make matrixLiteral ty (mkDomainIntB 1 0) []
-                else make opConcatenate $ AbstractLiteral $ AbsLitMatrix
-                    (mkDomainIntB 1 (fromInt $ genericLength elems))
-                    [ Comprehension body
-                        $  gocBefore
-                        ++ [ComprehensionLetting pat el]
-                        ++ gocAfter
-                    | el <- elems
-                    ]
-            )
-    theRule _ = na "rule_Comprehension_Literal"
+            [ RuleResult
+                { ruleResultDescr = "Vertical rule for matrix-comprehension on matrix literal"
+                , ruleResultType  = ExpressionRefinement
+                , ruleResultHook  = Nothing
+                , ruleResult      = return $
+                    if null elems
+                        then make matrixLiteral ty (mkDomainIntB 1 0) []
+                        else make opConcatenate $ AbstractLiteral $ AbsLitMatrix
+                            (mkDomainIntB 1 (fromInt $ genericLength elems))
+                            [ Comprehension body
+                                $  gocBefore
+                                ++ [ComprehensionLetting pat el]
+                                ++ gocAfter
+                            | el <- elems
+                            ]
+                } ]
+    theRule _ _ = na "rule_Comprehension_Literal"
+
+    notInsideMinMax z0 =
+        case Zipper.up z0 of
+            Nothing -> na "rule_Comprehension_Literal 1"
+            Just z1 -> do
+                let h = hole z1
+                case match opReducer h of
+                    Just (_, False, _, _) -> na "rule_Comprehension_Literal"
+                    Just (_, True , _, _) -> return ()
+                    Nothing               -> case Zipper.up z1 of
+                                                Nothing -> return ()
+                                                Just u  -> notInsideMinMax u
 
 
 -- | input:  [ i | i <- m[j] ] with m = [a,b,c]
@@ -70,7 +92,7 @@ rule_ModifierAroundIndexedMatrixLiteral = "modifier-around-indexed-matrix-litera
 rule_QuantifierAroundIndexedMatrixLiteral :: Rule
 rule_QuantifierAroundIndexedMatrixLiteral = "quantifier-around-indexed-matrix-literal" `namedRule` theRule where
     theRule p = do
-        (_, mkM, p2)      <- match opReducer p
+        (_, _, mkM, p2) <- match opReducer p
         (matrix, indices) <- match opMatrixIndexing p2
         case match opMatrixIndexing p of
             Nothing -> return ()
@@ -441,7 +463,7 @@ rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `na
 rule_Comprehension_Singleton :: Rule
 rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theRule where
     theRule p = do
-        (_, _mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opReducer p
+        (_, _, _mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opReducer p
         return
             ( "Removing quantifier of a single item"
             , return singleVal

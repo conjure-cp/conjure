@@ -1076,7 +1076,7 @@ opSum _ =
     )
 
 
-data ReducerType = RepetitionIsFine | RepetitionIsNotFine
+data ReducerType = RepetitionIsNotSignificant | RepetitionIsSignificant
     deriving (Eq, Ord, Show)
 
 opReducer
@@ -1086,20 +1086,26 @@ opReducer
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
-       , x -> m (ReducerType, x -> x, x)
+       , x -> m ( ReducerType
+                , Bool              -- defined on []
+                , x -> x
+                , x
+                )
        )
 opReducer _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
             op <- project p
+            let is = RepetitionIsSignificant
+            let isn't = RepetitionIsNotSignificant
             case op of
-                MkOpAnd     (OpAnd     x) -> return (RepetitionIsNotFine, inject . MkOpAnd     . OpAnd     , x)
-                MkOpOr      (OpOr      x) -> return (RepetitionIsNotFine, inject . MkOpOr      . OpOr      , x)
-                MkOpXor     (OpXor     x) -> return (RepetitionIsNotFine, inject . MkOpXor     . OpXor     , x)
-                MkOpSum     (OpSum     x) -> return (RepetitionIsFine   , inject . MkOpSum     . OpSum     , x)
-                MkOpProduct (OpProduct x) -> return (RepetitionIsFine   , inject . MkOpProduct . OpProduct , x)
-                MkOpMax     (OpMax     x) -> return (RepetitionIsNotFine, inject . MkOpMax     . OpMax     , x)
-                MkOpMin     (OpMin     x) -> return (RepetitionIsNotFine, inject . MkOpMin     . OpMin     , x)
+                MkOpAnd     (OpAnd     x) -> return (isn't, True , inject . MkOpAnd     . OpAnd     , x)
+                MkOpOr      (OpOr      x) -> return (isn't, True , inject . MkOpOr      . OpOr      , x)
+                MkOpXor     (OpXor     x) -> return (is   , False, inject . MkOpXor     . OpXor     , x)
+                MkOpSum     (OpSum     x) -> return (is   , True , inject . MkOpSum     . OpSum     , x)
+                MkOpProduct (OpProduct x) -> return (is   , True , inject . MkOpProduct . OpProduct , x)
+                MkOpMax     (OpMax     x) -> return (isn't, False, inject . MkOpMax     . OpMax     , x)
+                MkOpMin     (OpMin     x) -> return (isn't, False, inject . MkOpMin     . OpMin     , x)
                 _ -> na ("Lenses.opReducer:" <++> pretty p)
     )
 
