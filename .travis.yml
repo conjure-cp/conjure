@@ -118,6 +118,9 @@ install:
   - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
   - minion | head -n2                        # print version
 
+  # Glucose
+  - (glucose-syrup --help > /dev/null 2> /dev/null) || etc/build/install-glucose.sh
+
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 
 script:
