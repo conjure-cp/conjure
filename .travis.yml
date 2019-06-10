@@ -119,7 +119,7 @@ install:
   - minion | head -n2                        # print version
 
   # Glucose
-  - (glucose-syrup --help > /dev/null 2> /dev/null) || etc/build/install-glucose.sh
+  - (glucose --help > /dev/null 2> /dev/null) || etc/build/install-glucose.sh
 
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 
