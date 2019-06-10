@@ -25,6 +25,6 @@ jobs:
     displayName: "Install Minion"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
     displayName: "Install Glucose"
-  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 10 --hide-successes' ; fi
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 0 --hide-successes' ; fi
     displayName: "Test"
 
