@@ -2133,6 +2133,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
 rule_InlineConditions_MaxMin :: Rule
 rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
     theRule p = do
+        when (categoryOf p < CatDecision) $ na "rule_InlineConditions_MaxMin"
         (nameQ, binOp, Comprehension body gensOrConds) <-
             case (match opMax p, match opMin p) of
                 (Just res, _) -> return ("max", \ a b -> [essence| &a <= &b |], res )

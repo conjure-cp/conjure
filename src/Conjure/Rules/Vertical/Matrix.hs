@@ -41,10 +41,6 @@ rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
                 } ]
     theRule _ _ = na "rule_Comprehension_Literal"
 
-    -- keep going up, until finding a quantifier
-    -- when found, return the skipping operator for the quantifier
-    -- if none exists, do not apply the rule.
-    -- (or maybe we should call bug right ahead, it can't be anything else.)
     notInsideMinMax z0 =
         case Zipper.up z0 of
             Nothing -> na "rule_Comprehension_Literal 1"
