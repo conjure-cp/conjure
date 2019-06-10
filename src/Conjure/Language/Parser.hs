@@ -697,10 +697,10 @@ parseComprehension = brackets $ do
         letting :: Parser [GeneratorOrCondition]
         letting = do
             lexeme L_letting
-            nm <- parseNameOrMeta
+            pat <- parseAbstractPattern
             lexeme L_be
-            x  <- parseExpr
-            return [ComprehensionLetting nm x]
+            x <- parseExpr
+            return [ComprehensionLetting pat x]
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain

@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.Language.NameResolution
     ( resolveNames
@@ -15,6 +16,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.TH
 
 
 resolveNamesMulti
@@ -231,10 +233,10 @@ resolveX p@Comprehension{} = scope $ do
                         modify ((nm, refto) :)
                     return (Generator gen')
                 Condition y -> Condition <$> resolveX y
-                ComprehensionLetting nm expr -> do
+                ComprehensionLetting pat expr -> do
                     expr' <- resolveX expr
-                    modify ((nm, Alias expr') :)
-                    return (ComprehensionLetting nm expr')
+                    resolveAbsPat p pat expr'
+                    return (ComprehensionLetting pat expr')
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"
@@ -286,15 +288,43 @@ resolveD d = do
     mapM resolveX d'
 
 
-resolveAbsLit
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => AbstractLiteral Expression
-    -> m (AbstractLiteral Expression)
+resolveAbsPat ::
+    MonadUserError m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    Expression ->
+    AbstractPattern ->
+    Expression ->
+    m ()
+resolveAbsPat _ AbstractPatternMetaVar{} _ = bug "resolveAbsPat AbstractPatternMetaVar"
+resolveAbsPat _ (Single nm) x = modify ((nm, Alias x) :)
+resolveAbsPat context (AbsPatTuple ps) x =
+    sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
+              | (p, i_) <- zip ps allNats
+              , let i = fromInt i_
+              ]
+resolveAbsPat context (AbsPatMatrix ps) x =
+    sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
+              | (p, i_) <- zip ps allNats
+              , let i = fromInt i_
+              ]
+resolveAbsPat context (AbsPatSet ps) x = do
+    ys <- case x of
+        Constant (ConstantAbstract (AbsLitSet xs)) -> return (map Constant xs)
+        AbstractLiteral (AbsLitSet xs) -> return xs
+        _ -> userErr1 $ "Abstract set pattern cannot be used in this context:" <++> pretty context
+    sequence_ [ resolveAbsPat context p y
+              | (p,y) <- zip ps ys
+              ]
+
+
+resolveAbsLit ::
+    MonadFail m =>
+    MonadUserError m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    AbstractLiteral Expression ->
+    m (AbstractLiteral Expression)
 resolveAbsLit (AbsLitVariant Nothing n x) = do
     x'   <- resolveX x
     mval <- gets id
