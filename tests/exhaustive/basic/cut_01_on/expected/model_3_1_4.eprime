@@ -12,8 +12,8 @@ branching on
      x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence]
 such that
     !cut1 <->
-    or([q31 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q31] = 1 | q31 : int(1..3)]) /\
-    or([q33 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q33] = 2 | q33 : int(1..3)]),
+    or([q30 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q30] = 1 | q30 : int(1..3)]) /\
+    or([q32 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q32] = 2 | q32 : int(1..3)]),
     !cut2 <-> x_Occurrence[1],
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          [x_ExplicitVarSizeWithMarker_Values[q1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q1 + 1]; int(1)]

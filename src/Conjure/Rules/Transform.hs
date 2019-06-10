@@ -48,7 +48,7 @@ rule_Transform_Functorially = "transform-functorially" `namedRule` theRule where
                return (Comprehension body $
                      gocBefore
                  ++ [Generator (GenInExpr dPat [essence| &y |])]
-                 ++ ((ComprehensionLetting pat [essence|
+                 ++ ((ComprehensionLetting (Single pat) [essence|
                               transform(&morphism, &d) |] ):gocAfter)
                       )
              )
@@ -75,13 +75,13 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule whe
   transformOverGenOrCond m (Generator g) = transformOverGenerator m g
   transformOverGenOrCond m (Condition e) =
     return [Condition [essence| transform(&m,&e) |]]
-  transformOverGenOrCond m (ComprehensionLetting n e) =
-    return [ComprehensionLetting n [essence| transform(&m,&e) |]]
+  transformOverGenOrCond m (ComprehensionLetting pat e) =
+    return [ComprehensionLetting pat [essence| transform(&m,&e) |]]
 
   transformOverGenerator m (GenDomainHasRepr a d) = do
     (Single nm, n) <- quantifiedVarOverDomain $ forgetRepr d
     return [Generator (GenDomainHasRepr nm d)
-           ,ComprehensionLetting a [essence| transform(&m, &n) |]
+           ,ComprehensionLetting (Single a) [essence| transform(&m, &n) |]
            ]
   transformOverGenerator m (GenInExpr a e) =
     return [Generator (GenInExpr a [essence| transform(&m,&e) |])]
@@ -89,7 +89,7 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule whe
     (rPat, ns) <- clonePattern absPat
     return $ [Generator (GenDomainNoRepr rPat d)]
            ++ ((\(pat,exp) ->
-                  ComprehensionLetting pat [essence| transform(&m,&exp) |]
+                  ComprehensionLetting (Single pat) [essence| transform(&m,&exp) |]
                ) <$> ns)
 
   clonePattern (Single name) = do
@@ -165,9 +165,9 @@ rule_Transform_Matrix = "transform-matrix" `namedRule` theRule where
           return (Comprehension body $
                 gocBefore
             ++ [Generator (GenDomainNoRepr dPat (forgetRepr domIndx))]
-            ++ [ComprehensionLetting iName [essence| transform(&morphism, &d) |]]
-            ++ [ComprehensionLetting mName [essence| &matexp[&i] |]]
-            ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
+            ++ [ComprehensionLetting (Single iName) [essence| transform(&morphism, &d) |]]
+            ++ [ComprehensionLetting (Single mName) [essence| &matexp[&i] |]]
+            ++ [ComprehensionLetting (Single pat) [essence| transform(&morphism, &m) |]]
             ++ gocAfter)
         )
       else na "rule_Transform_Matrix"
@@ -194,7 +194,7 @@ rule_Transform_Partition = "transform-partition" `namedRule` theRule where
                return (Comprehension body $
                      gocBefore
                  ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
-                 ++ ((ComprehensionLetting pat [essence| transform(&morphism, &d) |] ):gocAfter)
+                 ++ ((ComprehensionLetting (Single pat) [essence| transform(&morphism, &d) |] ):gocAfter)
                       )
              )
        else na "rule_Transform_Partition"
@@ -221,7 +221,7 @@ rule_Transform_Sequence = "transform-sequence" `namedRule` theRule where
                return (Comprehension body $
                      gocBefore
                  ++ [Generator (GenInExpr dPat [essence| &y |])]
-                 ++ ((ComprehensionLetting pat [essence|
+                 ++ ((ComprehensionLetting (Single pat) [essence|
                    (&d[1], transform(&morphism, &d[2])) |] ):gocAfter)
                       )
 
@@ -275,9 +275,9 @@ rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule where
                (Single mName, m) <- quantifiedVar
                return (Comprehension body $
                      gocBefore
-                 ++ [ComprehensionLetting mName [essence| &matexp[&indexer] |]]
+                 ++ [ComprehensionLetting (Single mName) [essence| &matexp[&indexer] |]]
 
-                 ++ [ComprehensionLetting pat [essence| transform(&morphism, &m) |]]
+                 ++ [ComprehensionLetting (Single pat) [essence| transform(&morphism, &m) |]]
                  ++ gocAfter)
              )
        else na "rule_Transformed_Indexing"
@@ -297,7 +297,7 @@ rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule
   liftIndexing (exp, morphism, mat, indexer) = do
     (Single nm, m) <- quantifiedVar
     return ( (exp, [essence| transform(&morphism, &m) |])
-           , ComprehensionLetting nm [essence| &mat[&indexer] |])
+           , ComprehensionLetting (Single nm) [essence| &mat[&indexer] |])
 
   transformBody bdy [] = bdy
   transformBody bdy ((orig, repl):rest) = 
@@ -322,10 +322,10 @@ rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule
 rule_Transform_Indexing :: Rule
 rule_Transform_Indexing = "transform-indexing" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+    (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
          Generator (GenInExpr pat expr) -> return (pat, expr)
          _ -> na "rule_Transform_Indexing"
-    (morphism, matexp) <- match opTransform exp
+    (morphism, matexp) <- match opTransform expr
     (mat, indexer)     <- match opIndexing matexp
     ty <- typeOf mat
     inn <- morphing =<< typeOf morphism 
@@ -338,8 +338,8 @@ rule_Transform_Indexing = "transform-indexing" `namedRule` theRule where
                (Single iName, i) <- quantifiedVar
                return (Comprehension body $
                      gocBefore
-                 ++ [ComprehensionLetting iName [essence| transform(&morphism, &indexer) |]]
-                 ++ [ComprehensionLetting mName [essence| &mat[&i] |]]
+                 ++ [ComprehensionLetting (Single iName) [essence| transform(&morphism, &indexer) |]]
+                 ++ [ComprehensionLetting (Single mName) [essence| &mat[&i] |]]
 
                  ++ [Generator (GenInExpr pat [essence| transform(&morphism, &m) |])]
                  ++ gocAfter)

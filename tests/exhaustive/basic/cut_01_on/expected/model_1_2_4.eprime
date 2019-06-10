@@ -11,7 +11,7 @@ branching on
      x_ExplicitVarSizeWithDummy]
 such that
     !cut1 <-> x_Occurrence[1] /\ x_Occurrence[2],
-    !cut2 <-> or([x_ExplicitVarSizeWithDummy[q32] != 4 /\ x_ExplicitVarSizeWithDummy[q32] = 1 | q32 : int(1..3)]),
+    !cut2 <-> or([x_ExplicitVarSizeWithDummy[q31] != 4 /\ x_ExplicitVarSizeWithDummy[q31] = 1 | q31 : int(1..3)]),
     and([[x_ExplicitVarSizeWithDummy[q2]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q2 + 1]; int(1)] \/
          x_ExplicitVarSizeWithDummy[q2] = 4
              | q2 : int(1..2)]),

@@ -220,7 +220,8 @@ mainWithArgs config@Solve{..} = do
     let executables = [ ( "minion"          , "minion" )
                       , ( "gecode"          , "fzn-gecode" )
                       , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "glucose"         , "glucose-syrup" )
+                      , ( "glucose"         , "glucose" )
+                      , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
                       , ( "minisat"         , "minisat" )
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
@@ -505,20 +506,31 @@ srMkArgs Solve{..} outBase modelPath =
         "chuffed"           -> [ "-chuffed"]
         "glucose"           -> [ "-sat"
                                , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose"
+                               ]
+        "glucose-syrup"     -> [ "-sat"
+                               , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose-syrup"
                                ]
         "lingeling"         -> [ "-sat"
                                , "-sat-family", "lingeling"
+                               , "-satsolver-bin", "lingeling"
                                ]
         "minisat"           -> [ "-sat"
                                , "-sat-family", "minisat"
+                               , "-satsolver-bin", "minisat"
                                ]
         "bc_minisat_all"    -> [ "-sat"
                                , "-sat-family", "bc_minisat_all"
+                               , "-satsolver-bin", "bc_minisat_all_release"
                                ]
         "nbc_minisat_all"   -> [ "-sat"
                                , "-sat-family", "nbc_minisat_all"
+                               , "-satsolver-bin", "nbc_minisat_all_release"
                                ]
-        "open-wbo"          -> [ "-maxsat" ]
+        "open-wbo"          -> [ "-maxsat"
+                               , "-satsolver-bin", "open-wbo"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
@@ -545,7 +557,7 @@ srStdoutHandler
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
                         then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output file" line
+                        else if isPrefixOf "Created output" line
                             then pp logLevel $ hsep ["Running solver:", pretty solver]
                             else return ()
                     fmap (Left line :)

@@ -113,9 +113,9 @@ instantiateE (Comprehension body gensOrConds) = do
             if constant == ConstantBool True
                 then loop rest
                 else return []
-        loop (ComprehensionLetting n expr : rest) = do
+        loop (ComprehensionLetting pat expr : rest) = do
             constant <- instantiateE expr
-            valid <- bind (Single n) constant
+            valid <- bind pat constant
             unless valid (bug "ComprehensionLetting.bind expected to be valid")
             loop rest
 

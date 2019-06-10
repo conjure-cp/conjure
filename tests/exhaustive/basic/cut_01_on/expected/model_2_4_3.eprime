@@ -12,10 +12,10 @@ branching on
      x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     !cut1 <->
-    or([x_ExplicitVarSizeWithDummy[q40] != 4 /\ x_ExplicitVarSizeWithDummy[q40] = 1 | q40 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithDummy[q42] != 4 /\ x_ExplicitVarSizeWithDummy[q42] = 2 | q42 : int(1..3)]),
+    or([x_ExplicitVarSizeWithDummy[q39] != 4 /\ x_ExplicitVarSizeWithDummy[q39] = 1 | q39 : int(1..3)]) /\
+    or([x_ExplicitVarSizeWithDummy[q41] != 4 /\ x_ExplicitVarSizeWithDummy[q41] = 2 | q41 : int(1..3)]),
     !cut2 <->
-    or([x_ExplicitVarSizeWithFlags_Flags[q44] /\ x_ExplicitVarSizeWithFlags_Values[q44] = 1 | q44 : int(1..3)]),
+    or([x_ExplicitVarSizeWithFlags_Flags[q43] /\ x_ExplicitVarSizeWithFlags_Values[q43] = 1 | q43 : int(1..3)]),
     and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
          x_ExplicitVarSizeWithDummy[q1] = 4
              | q1 : int(1..2)]),

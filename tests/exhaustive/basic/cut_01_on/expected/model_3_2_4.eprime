@@ -12,9 +12,9 @@ branching on
      x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithDummy]
 such that
     !cut1 <->
-    or([q40 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q40] = 1 | q40 : int(1..3)]) /\
-    or([q42 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q42] = 2 | q42 : int(1..3)]),
-    !cut2 <-> or([x_ExplicitVarSizeWithDummy[q44] != 4 /\ x_ExplicitVarSizeWithDummy[q44] = 1 | q44 : int(1..3)]),
+    or([q39 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q39] = 1 | q39 : int(1..3)]) /\
+    or([q41 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q41] = 2 | q41 : int(1..3)]),
+    !cut2 <-> or([x_ExplicitVarSizeWithDummy[q43] != 4 /\ x_ExplicitVarSizeWithDummy[q43] = 1 | q43 : int(1..3)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          [x_ExplicitVarSizeWithMarker_Values[q1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q1 + 1]; int(1)]
              | q1 : int(1..2)]),

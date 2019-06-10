@@ -67,13 +67,6 @@ matrix:
       env: GHC=8.6 SR="-O2" SOL=minion
       compiler: ": # GHC 8.6"
 
-  allow_failures:
-    - env: GHC=8.6 SR="-O0" SOL=minion
-    - env: GHC=8.6 SR="-O2" SOL=minion
-    - env: GHC=8.6 SR="-O0" SOL=lingeling
-    - env: GHC=8.6 SR="-O2" SOL=lingeling
-    - env: GHC=8.6 SR="-O2" SOL=minion
-
 before_install:
   - export STARTTIME=$(date +%s)
   # expanding the names of the environment variables
@@ -117,6 +110,9 @@ install:
   # Minion
   - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
   - minion | head -n2                        # print version
+
+  # Glucose
+  - (glucose --help > /dev/null 2> /dev/null) || etc/build/install-glucose.sh
 
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 

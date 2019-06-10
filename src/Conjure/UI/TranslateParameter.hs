@@ -28,22 +28,22 @@ translateParameter ::
     m Model      -- eprime param
 
 translateParameter eprimeModel0 essenceParam0 = do
-    logDebug $ "[eprimeModel  0]" <+> pretty essenceParam0
-    logDebug $ "[essenceParam 0]" <+> pretty essenceParam0
+    logDebug $ "[eprimeModel  0]" <+-> pretty essenceParam0
+    logDebug $ "[essenceParam 0]" <+-> pretty essenceParam0
     (eprimeModel, essenceParam1) <- removeEnumsFromParam eprimeModel0 essenceParam0
-    logDebug $ "[eprimeModel  1]" <+> pretty eprimeModel
-    logDebug $ "[essenceParam 1]" <+> pretty essenceParam1
+    logDebug $ "[eprimeModel  1]" <+-> pretty eprimeModel
+    logDebug $ "[essenceParam 1]" <+-> pretty essenceParam1
     (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
-    logDebug $ "[essenceParam 2]" <+> pretty essenceParam
+    logDebug $ "[essenceParam 2]" <+-> pretty essenceParam
 
     let essenceLettings   = extractLettings essenceParam
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miRepresentations
                                         |> filter (\ (n,_) -> n `elem` essenceGivenNames )
 
-    logDebug $ "[essenceLettings  ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceLettings ]
-    logDebug $ "[essenceGivenNames]" <+> vcat (map pretty essenceGivenNames)
-    logDebug $ "[essenceGivens    ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceGivens ]
+    logDebug $ "[essenceLettings  ]" <+-> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceLettings ]
+    logDebug $ "[essenceGivenNames]" <+-> vcat (map pretty essenceGivenNames)
+    logDebug $ "[essenceGivens    ]" <+-> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceGivens ]
 
     -- some sanity checks here
     -- TODO: check if for every given there is a letting (there can be more)
@@ -76,12 +76,12 @@ translateParameter eprimeModel0 essenceParam0 = do
     essenceLettings' <- forM essenceLettings $ \ (name, val) -> do
         constant <- instantiateExpression allLettings val
         return (name, constant)
-    logDebug $ "[essenceLettings' ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceLettings' ]
+    logDebug $ "[essenceLettings' ]" <+> vcat [ pretty n <> ":" <+-> pretty x | (n,x) <- essenceLettings' ]
 
     essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
         constant <- instantiateDomain allLettings dom
         return (name, constant)
-    logDebug $ "[essenceGivens'   ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceGivens' ]
+    logDebug $ "[essenceGivens'   ]" <+> vcat [ pretty n <> ":" <+-> pretty x | (n,x) <- essenceGivens' ]
 
     essenceGivensAndLettings <- sequence
             [ case lookup n essenceLettings' of
@@ -120,7 +120,7 @@ translateParameter eprimeModel0 essenceParam0 = do
             ]
     logDebug $ "[essenceGivensAndLettings ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
-                                                             , "constant:" <+> pretty c
+                                                             , "constant:" <+-> pretty c
                                                              ]
                                                       | Just (n,d,c) <- essenceGivensAndLettings
                                                       ]
@@ -136,9 +136,9 @@ translateParameter eprimeModel0 essenceParam0 = do
         essenceGivensAndLettings' :: [(Name, Domain HasRepresentation Constant, Constant)]
         essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
 
-    logDebug $ "[essenceGivensAndLettings']" <+> vcat [ vcat [ "name    :" <+> pretty n
+    logDebug $ "[essenceGivensAndLettings']" <+-> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
-                                                             , "constant:" <+> pretty c
+                                                             , "constant:" <+-> pretty c
                                                              ]
                                                       | (n,d,c) <- essenceGivensAndLettings'
                                                       ]
@@ -161,7 +161,7 @@ translateParameter eprimeModel0 essenceParam0 = do
         <- failToUserError $ concatMapM downC essenceGivensAndLettings' >>= mapM decorateWithType
     logDebug $ "[eprimeLettings           ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
-                                                             , "constant:" <+> pretty c
+                                                             , "constant:" <+-> pretty c
                                                              ]
                                                       | (n,d,c) <- eprimeLettings
                                                       ]

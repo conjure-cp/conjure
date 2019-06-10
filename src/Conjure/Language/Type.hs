@@ -270,7 +270,8 @@ containsProductType ot@(TypeRecord ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
 containsProductType _ _ = False
 
--- Is the type 
+
+-- Is the type
 containsType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 containsType container containee = containee `elem` universeBi container
 
@@ -278,6 +279,7 @@ containsType container containee = containee `elem` universeBi container
 unifiesOrContains :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 unifiesOrContains container containee =
   typesUnify [container, containee] || containsType container containee
+
 
 -- as in "this homomorphism is morphing"
 morphing :: (?typeCheckerMode :: TypeCheckerMode)
@@ -287,5 +289,3 @@ morphing (TypeFunction a _) = return a
 morphing (TypeSequence a)   = return a 
 morphing t = fail ("morphing:" <+> pretty (show t))
 
-
--- |||

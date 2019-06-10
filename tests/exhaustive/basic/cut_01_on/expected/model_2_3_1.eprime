@@ -11,10 +11,10 @@ branching on
      x_ExplicitVarSizeWithMarker_Values]
 such that
     !cut1 <->
-    or([x_ExplicitVarSizeWithDummy[q20] != 4 /\ x_ExplicitVarSizeWithDummy[q20] = 1 | q20 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithDummy[q22] != 4 /\ x_ExplicitVarSizeWithDummy[q22] = 2 | q22 : int(1..3)]),
+    or([x_ExplicitVarSizeWithDummy[q19] != 4 /\ x_ExplicitVarSizeWithDummy[q19] = 1 | q19 : int(1..3)]) /\
+    or([x_ExplicitVarSizeWithDummy[q21] != 4 /\ x_ExplicitVarSizeWithDummy[q21] = 2 | q21 : int(1..3)]),
     !cut2 <->
-    or([q24 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q24] = 1 | q24 : int(1..3)]),
+    or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q23] = 1 | q23 : int(1..3)]),
     and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
          x_ExplicitVarSizeWithDummy[q1] = 4
              | q1 : int(1..2)]),
@@ -33,14 +33,14 @@ such that
              x_ExplicitVarSizeWithMarker_Values[q15] = x_ExplicitVarSizeWithDummy[q13]
                  | q15 : int(1..3)])
              | q13 : int(1..3)]),
-    and([x_Occurrence[q25] ->
-         or([x_ExplicitVarSizeWithDummy[q27] != 4 /\ x_ExplicitVarSizeWithDummy[q27] = q25 | q27 : int(1..3)])
-             | q25 : int(1..3)]),
-    and([x_ExplicitVarSizeWithDummy[q29] != 4 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q29]] | q29 : int(1..3)]),
-    and([x_Occurrence[q30] ->
-         or([q32 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q32] = q30
-                 | q32 : int(1..3)])
-             | q30 : int(1..3)]),
-    and([q34 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q34]]
-             | q34 : int(1..3)])
+    and([x_Occurrence[q24] ->
+         or([x_ExplicitVarSizeWithDummy[q26] != 4 /\ x_ExplicitVarSizeWithDummy[q26] = q24 | q26 : int(1..3)])
+             | q24 : int(1..3)]),
+    and([x_ExplicitVarSizeWithDummy[q28] != 4 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q28]] | q28 : int(1..3)]),
+    and([x_Occurrence[q29] ->
+         or([q31 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q31] = q29
+                 | q31 : int(1..3)])
+             | q29 : int(1..3)]),
+    and([q33 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q33]]
+             | q33 : int(1..3)])
 

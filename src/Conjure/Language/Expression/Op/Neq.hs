@@ -24,7 +24,20 @@ instance BinaryOperator (OpNeq x) where
     opLexeme _ = L_Neq
 
 instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
-    typeOf p@(OpNeq a b) = sameToSameToBool p a b [] (const True)
+    typeOf p@(OpNeq a b) = do
+        tyA <- typeOf a
+        tyB <- typeOf b
+        case tyA of
+            TypeList{} -> raiseTypeError $ vcat [ pretty p
+                                                , "Cannot use a comprehension in an equality expression."
+                                                ]
+            _ -> return ()
+        case tyB of
+            TypeList{} -> raiseTypeError $ vcat [ pretty p
+                                                , "Cannot use a comprehension in an equality expression."
+                                                ]
+            _ -> return ()
+        sameToSameToBool p a b [] (const True)
 
 instance EvaluateOp OpNeq where
     evaluateOp (OpNeq ConstantUndefined{} _) = return $ fromBool False
