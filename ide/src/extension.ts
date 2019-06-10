@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import WebviewHelper from './webviewHelper';
 import ConjureHelper from './conjureHelper';
-import ConfigureHelper from './configureHelper';
+import ConfigureHelper from './configHelper';
 import * as server from './server/server'
 
 export const LANGID = "essence";

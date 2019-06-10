@@ -144,7 +144,7 @@ export default class WebviewHelper {
     /**
      * Returns a single html file containing all the scripts and css from internal and external resources.
      */
-    private static getWebContent(): string {
+    public static getWebContent(): string {
 
         // Internal resources
         const html = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview', 'main.html'));

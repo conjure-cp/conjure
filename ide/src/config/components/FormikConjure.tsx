@@ -17,6 +17,7 @@ interface Props {
     diff: boolean
     essenceFiles: string[]
     paramFiles: string[]
+    responseHandler: (content: any) => void
 }
 
 interface Config {
@@ -89,7 +90,7 @@ const validationSchema = Yup.object().shape({
     )
 })
 
-const submissionHandler = (values: Values) => {
+const submissionHandler = (values: Values, props: Props) => {
 
     let cleaned = values.configs.map((config: Config) => {
 
@@ -118,6 +119,11 @@ const submissionHandler = (values: Values) => {
         },
         body: JSON.stringify(cleaned)
     })
+        .then(response => response.json())
+        .then((data) => {
+            props.responseHandler(data.content)
+            console.log(data)
+        })
 
 }
 
@@ -147,6 +153,7 @@ const renderArrayElements = (props: Props, values: Values) => (
                     <StageHeader
                         title="Conjure"
                         id={`conjure${index + 1}`}
+                        startCollapsed={true}
                     >
 
                         <Field
@@ -172,6 +179,7 @@ const renderArrayElements = (props: Props, values: Values) => (
                     <StageHeader
                         title="Savilerow"
                         id={`sr${index + 1}`}
+                        startCollapsed={true}
                     >
                         <Field
                             name={`configs[${index}].optimisation`}
@@ -240,6 +248,7 @@ const renderArrayElements = (props: Props, values: Values) => (
                     <StageHeader
                         title="Minion"
                         id={`minion${index + 1}`}
+                        startCollapsed={true}
                     >
                         <Checkbox
                             name={`configs[${index}].minionSwitches`}
@@ -313,7 +322,11 @@ const Stage = (props: Props) => {
 
         <Formik
             initialValues={{ configs: list }}
-            onSubmit={submissionHandler}
+            onSubmit={
+                (values) => {
+                    submissionHandler(values, props)
+                }
+            }
             validationSchema={validationSchema}
             enableReinitialize={true}
             render={({ values }) => (
