@@ -1162,6 +1162,7 @@ allRules config =
     , [ rule_Eq
       , rule_Neq
       , rule_Comprehension_Cardinality
+      , rule_pushFromSolution
       ]
     , verticalRules
     , horizontalRules
@@ -2360,4 +2361,20 @@ rule_Comprehension_Cardinality = "comprehension-cardinality" `namedRule` theRule
                   , return [essence| sum(&ofones) |]
                   )
       _ -> na "rule_Comprehension_Cardinality"
+
+
+rule_pushFromSolution :: Rule
+rule_pushFromSolution = "push-fromSolution" `namedRule` theRule where
+    theRule [essence| fromSolution(&inp) |] = do
+        case inp of
+            Reference{} -> na "rule_pushFromSolution"
+            _ -> return ()
+        let
+            push x@(Reference _ (Just (DeclNoRepr Find _ _ _))) = [essence| fromSolution(&x) |]
+            push x@(Reference _ (Just (DeclHasRepr Find _ _))) = [essence| fromSolution(&x) |]
+            push x = descend push x
+        return ( "Push fromSolution"
+               , return (push inp)
+               )
+    theRule _ = na "rule_pushFromSolution"
 
