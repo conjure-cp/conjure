@@ -7,8 +7,8 @@ find cut2: bool
 branching on [cut1, cut2, x_Occurrence, x_ExplicitVarSizeWithDummy]
 such that
     !cut1 <->
-    or([x_ExplicitVarSizeWithDummy[q14] != 4 /\ x_ExplicitVarSizeWithDummy[q14] = 1 | q14 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithDummy[q16] != 4 /\ x_ExplicitVarSizeWithDummy[q16] = 2 | q16 : int(1..3)]),
+    or([x_ExplicitVarSizeWithDummy[q13] != 4 /\ x_ExplicitVarSizeWithDummy[q13] = 1 | q13 : int(1..3)]) /\
+    or([x_ExplicitVarSizeWithDummy[q15] != 4 /\ x_ExplicitVarSizeWithDummy[q15] = 2 | q15 : int(1..3)]),
     !cut2 <-> x_Occurrence[1],
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 4
              | q1 : int(1..2)]),
