@@ -1,0 +1,23 @@
+language ESSENCE' 1.0
+
+find x_s_Occurrence: matrix indexed by [int(1..5)] of bool
+find x_v: matrix indexed by [int(0..1)] of int(1..2)
+find y_s_Occurrence: matrix indexed by [int(1..5)] of bool
+find y_v: matrix indexed by [int(0..1)] of int(1..2)
+branching on [x_s_Occurrence, x_v, y_s_Occurrence, y_v]
+such that
+    sum([toInt(x_s_Occurrence[q9]) | q9 : int(1..5)]) < sum([toInt(y_s_Occurrence[q10]) | q10 : int(1..5)]),
+    sum([toInt(x_s_Occurrence[q12]) | q12 : int(1..5)]) <= sum([toInt(y_s_Occurrence[q13]) | q13 : int(1..5)]),
+    and([x_s_Occurrence[q11] -> y_s_Occurrence[q11] | q11 : int(1..5)]),
+    or([x_s_Occurrence[q8] != y_s_Occurrence[q8] | q8 : int(1..5)]) \/
+    or([x_s_Occurrence[q8] != y_s_Occurrence[q8] | q8 : int(1..5)]),
+    2 <= sum([toInt(y_s_Occurrence[q1]) | q1 : int(1..5)]),
+    sum([toInt(y_s_Occurrence[q1]) | q1 : int(1..5)]) <= 3,
+    2 <= sum([toInt(x_s_Occurrence[q3]) | q3 : int(1..5)]),
+    sum([toInt(x_s_Occurrence[q3]) | q3 : int(1..5)]) <= 3
+, dominance_relation(sum([toInt(x_s_Occurrence[q6]) | q6 : int(1..5)]) <=
+                     sum([toInt(fromSolution(x_s_Occurrence)[q7]) | q7 : int(1..5)])
+                     /\ and([x_s_Occurrence[q5] -> fromSolution(x_s_Occurrence)[q5] | q5 : int(1..5)])
+                     -> x_v[1] > fromSolution(x_v[1]))
+
+$ Conjure's
