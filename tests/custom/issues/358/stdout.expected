@@ -1,0 +1,23 @@
+Generating models for 358.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: 358.solution
+language ESSENCE' 1.0
+
+find y: int(0..9)
+find x: int(0..9)
+branching on [y, x]
+such that
+    and([shadow1 < y ->
+         or([0 = shadow1 * shadow1, 1 = shadow1 * shadow1, 3 = shadow1 * shadow1, 4 = shadow1 * shadow1,
+             5 = shadow1 * shadow1, 6 = shadow1 * shadow1, 7 = shadow1 * shadow1, 8 = shadow1 * shadow1;
+                 int(1..8)])
+             | shadow1 : int(0..9)]),
+    or([x = i * i | i : int(0..9)])
+language Essence 1.3
+
+letting x be 0
+letting y be 0

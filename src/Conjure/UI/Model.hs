@@ -43,7 +43,7 @@ import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
-import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing )
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
@@ -1038,6 +1038,8 @@ prologue model = do
     >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugIdModel "[finiteGivens]"
+    >>= renameQuantifiedVarsToAvoidShadowing
+                                      >>= logDebugIdModel "[renameQuantifiedVarsToAvoidShadowing]"
     >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= return . initInfo_Lettings    >>= logDebugIdModel "[initInfo_Lettings]"
     >>= removeDomainLettings          >>= logDebugIdModel "[removeDomainLettings]"

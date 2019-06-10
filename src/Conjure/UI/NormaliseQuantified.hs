@@ -1,6 +1,7 @@
 module Conjure.UI.NormaliseQuantified
     ( normaliseQuantifiedVariables
     , distinctQuantifiedVars
+    , renameQuantifiedVarsToAvoidShadowing
     ) where
 
 import Conjure.Prelude
@@ -84,6 +85,47 @@ distinctQuantifiedVars m@Model{mStatements=stmts} = do
             namegenst <- exportNameGenState
             let miInfoOut = (mInfo m) { miNameGenState = namegenst }
             return m { mStatements = stmtsOut, mInfo = miInfoOut }
+
+
+renameQuantifiedVarsToAvoidShadowing :: NameGen m => Model -> m Model
+renameQuantifiedVarsToAvoidShadowing model = do
+    let
+
+        allDecls :: [Name]
+        allDecls = concat [ case d of
+                                FindOrGiven _ nm _ -> [nm]
+                                Letting nm _ -> [nm]
+                                GivenDomainDefnEnum nm -> [nm]
+                                LettingDomainDefnEnum nm nms -> nm : nms
+                                LettingDomainDefnUnnamed nm _ -> [nm]
+                          | Declaration d <- mStatements model
+                          ]
+
+        rename :: NameGen m => Expression -> m Expression
+        rename p@(Comprehension _ gocs) = do
+            let quantifiedNames = getQuantifiedNames gocs
+            oldNew <- concat <$> sequence
+                    [ do
+                        if qn `elem` allDecls
+                            then do
+                                new <- nextName "shadow"
+                                return [(qn, new)]
+                            else
+                                return []
+                    | qn <- quantifiedNames
+                    ]
+            let
+                f :: Name -> Name
+                f nm = fromMaybe nm (lookup nm oldNew)
+
+            let p' = transformBi f p
+            descendM rename p'
+        rename p = descendM rename p
+
+    stmtsOut <- descendBiM rename (mStatements model)
+    namegenst <- exportNameGenState
+    let miInfoOut = (mInfo model) { miNameGenState = namegenst }
+    return model { mStatements = stmtsOut, mInfo = miInfoOut }
 
 
 getQuantifiedNames :: [GeneratorOrCondition] -> [Name]
