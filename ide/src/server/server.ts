@@ -1,31 +1,30 @@
-import fs = require('fs')
-import rimraf = require("rimraf")
+import * as sqlite3 from 'sqlite3'
 import * as path from 'path'
-import * as vscode from 'vscode';
-import * as express from "express";
-import { Server, Path, GET, POST, PathParam, QueryParam, Errors } from "typescript-rest";
-import * as init from "./init";
+import * as vscode from 'vscode'
+import * as express from "express"
+import { Server, Path, GET, POST, PathParam, QueryParam, Errors } from "typescript-rest"
+import * as init from "./init"
 import * as cors from 'cors'
-import apiConstructor = require('node-object-hash')
-import { spawn, ChildProcess } from 'child_process'
+const fetch = require('node-fetch')
 
-import ConfigHelper from '../configHelper';
-import WebviewHelper from '../webviewHelper';
+
+import ConfigHelper from '../configHelper'
+import WebviewHelper from '../webviewHelper'
+import TreeHelper from '../treeHelper'
+import { Z_FULL_FLUSH } from 'zlib';
 
 const collator = new Intl.Collator(undefined, { numeric: true })
-const hasher = apiConstructor({ sort: true, coerce: true }).hash
 
 interface Response {
     models: string[]
     params: string[]
 }
 
-
 @Path("/config")
 class ConfigService {
 
     toRel(uri: vscode.Uri): string {
-        return vscode.workspace.asRelativePath(uri.path);
+        return vscode.workspace.asRelativePath(uri.path)
     }
 
     @Path("/files")
@@ -39,6 +38,7 @@ class ConfigService {
             params: params.map(uri => this.toRel(uri)).sort(collator.compare)
         }
     }
+
     @Path("/solve")
     @POST
     async startSearch(list: any) {
@@ -57,12 +57,26 @@ class ConfigService {
 
         }, (progress, token) => {
             return ConfigHelper.makePromise(needToGenerate, progress, token)
-        }).then(() => {
-            console.log("Everything done")
-            return {
-                message: "hello!",
-                content: WebviewHelper.getWebContent()
-            }
+        }).then(async () => {
+
+            const trees = needToGenerate.concat(loadFromCache)
+
+            // trees.forEach((tree) => {
+            //     const fullPath = (path.join(vscode.workspace.rootPath!, tree.hash))
+            // })
+
+            console.log("HERE")
+
+            const fullPath = (path.join(vscode.workspace.rootPath!, trees[0].hash))
+
+            return await fetch(`http://localhost:5000/init/${fullPath}`)
+                .then((response: any) => response.json())
+
+
+            // return {
+            //     message: "hello!",
+            //     content: WebviewHelper.getWebContent()
+            // }
         })
     }
 }

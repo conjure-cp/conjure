@@ -2,10 +2,11 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import StageHeader from "./components/StageHeader"
 import FormikConjure from "./components/FormikConjure"
-import Tree from "./components/Tree"
+import {Core, TreeVis} from "./components/TreeVis"
+
 
 interface State {
-    content: any
+    core: Core | undefined
     gotResponse: boolean
     diff: boolean
     models: string[]
@@ -17,7 +18,7 @@ class F extends React.Component<any, State>{
     constructor(props: any) {
         super(props)
         this.state = {
-            content: null,
+            core: undefined,
             gotResponse: false,
             diff: false,
             models: [],
@@ -27,14 +28,16 @@ class F extends React.Component<any, State>{
         this.initResponseHandler = this.initResponseHandler.bind(this)
     }
 
-    initResponseHandler(content: any) {
-        console.log("CALLED!")
-
+    initResponseHandler(core: Core) {
         this.setState(
             (prevState: State) => {
-                return { ...prevState, gotResponse: true, content:content }
+                return { ...prevState, gotResponse: true, core: core }
             }
         )
+
+        console.log("CALLED!")
+        console.log(this.state.core)
+        console.log("~~~~~~")
     }
 
     clickHandler() {
@@ -51,7 +54,6 @@ class F extends React.Component<any, State>{
             .then((data) => {
                 this.setState({ ...data })
             })
-
     }
 
     render() {
@@ -60,7 +62,8 @@ class F extends React.Component<any, State>{
                 <StageHeader
                     title={"Setup"}
                     id={"Setup"}
-                    startCollapsed={this.state.gotResponse}
+                    // startCollapsed={this.state.gotResponse}
+                    startCollapsed={false}
                 >
                     <div className="input-group mb-3">
                         <div className="input-group-prepend">
@@ -85,7 +88,7 @@ class F extends React.Component<any, State>{
                         paramFiles={this.state.params}
                     />
                 </StageHeader>
-                <Tree/>
+                {this.state.core && <TreeVis core={this.state.core} />}
             </div>
         )
     }

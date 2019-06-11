@@ -121,8 +121,11 @@ const submissionHandler = (values: Values, props: Props) => {
     })
         .then(response => response.json())
         .then((data) => {
-            props.responseHandler(data.content)
-            console.log(data)
+            props.responseHandler(data.core)
+            // console.log(data)
+        })
+        .catch((error)=>{
+            console.error(error)
         })
 
 }
