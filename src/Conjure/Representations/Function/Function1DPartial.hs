@@ -213,9 +213,10 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
             soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
             return
                 [essence|
-                    flatten([ flatten([ [-toInt(&flags[&i])]
-                                      , &soValues
-                                      ])
-                            | &iPat : &innerDomainFr
-                            ])
+                    [ ( -toInt(&flags[&i])
+                      , &soValues
+                      )
+                    | &iPat : &innerDomainFr
+                    ]
                 |]
+

@@ -58,11 +58,11 @@ such that
                  | q27 : int(1..2)])
              | q25 : int(1..2)]),
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q38]; int(1)] | q38 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q38] | q38 : int(1..3)];
                  int(1..2)])
     <lex
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q39]; int(1)] | q39 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q39] | q39 : int(1..3)];
                  int(1..2)]),
     and([and([q35 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q34] ->
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q34, q35] <

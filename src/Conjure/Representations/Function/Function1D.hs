@@ -184,16 +184,9 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            [values] <- downX1 inp
-            Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
-            (iPat, i) <- quantifiedVar
-            soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
-            return
-                [essence|
-                    flatten([ &soValues
-                            | &iPat : &innerDomainFr
-                            ])
-                |]
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner innerDomain
 
 
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]

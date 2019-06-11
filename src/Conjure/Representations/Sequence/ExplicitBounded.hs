@@ -289,9 +289,9 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
-                    flatten([ [ &marker ]
-                            , flatten([ &soValues
-                                      | &iPat : &index
-                                      ])
-                            ])
+                    ( &marker
+                    , [ &soValues
+                      | &iPat : &index
+                      ]
+                    )
                 |]

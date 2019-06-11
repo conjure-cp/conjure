@@ -17,21 +17,15 @@ branching on
 such that
     2 <= var6_ExplicitVarSizeWithMarkerR19_Marker ->
     flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_NumParts[1]; int(1)],
-             flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_WhichPart[1, q14]; int(1)]
-                          | q14 : int(2, 5)]),
-             flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_PartSizes[1, q15]; int(1)]
-                          | q15 : int(1..2)]),
-             flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_FirstIndex[1, q16]; int(1)]
-                          | q16 : int(1..2)]);
+             [var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_WhichPart[1, q14] | q14 : int(2, 5)],
+             [var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_PartSizes[1, q15] | q15 : int(1..2)],
+             [var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_FirstIndex[1, q16] | q16 : int(1..2)];
                  int(1..4)])
     <lex
     flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_NumParts[2]; int(1)],
-             flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_WhichPart[2, q17]; int(1)]
-                          | q17 : int(2, 5)]),
-             flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_PartSizes[2, q18]; int(1)]
-                          | q18 : int(1..2)]),
-             flatten([[var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_FirstIndex[2, q19]; int(1)]
-                          | q19 : int(1..2)]);
+             [var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_WhichPart[2, q17] | q17 : int(2, 5)],
+             [var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_PartSizes[2, q18] | q18 : int(1..2)],
+             [var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_FirstIndex[2, q19] | q19 : int(1..2)];
                  int(1..4)]),
     and([q2 > var6_ExplicitVarSizeWithMarkerR19_Marker ->
          and([var6_ExplicitVarSizeWithMarkerR19_Values_PartitionOccurrence_NumParts[q2] = 1,

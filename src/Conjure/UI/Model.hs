@@ -1014,6 +1014,30 @@ removeExtraSlices model = do
     statements <- descendBiM onExpr (mStatements model)
     return model { mStatements = statements }
 
+lexSingletons :: (?typeCheckerMode :: TypeCheckerMode)
+              => Monad m
+              => Model -> m Model
+lexSingletons model = do
+  let onExpr ::  (?typeCheckerMode :: TypeCheckerMode)
+              => Monad m => Expression -> m Expression
+      onExpr [essence| &l <lex &r |] =
+        case (matchSingleton l, matchSingleton r) of
+          (Nothing, Nothing) -> return [essence| &l <lex &r |]
+          (Just ls, Just rs) -> return [essence| &ls < &rs |]
+          _ -> bug $ "lexSingleton: match inconsistent" 
+      onExpr [essence| &l <=lex &r |] =
+        case (matchSingleton l, matchSingleton r) of
+          (Nothing, Nothing) -> return [essence| &l <=lex &r |]
+          (Just ls, Just rs) -> return [essence| &ls <= &rs |]
+          _ -> bug $ "lexSingleton: match inconsistent" 
+      onExpr x = return x
+      matchSingleton ::  (?typeCheckerMode :: TypeCheckerMode)
+              => Expression -> Maybe Expression
+      matchSingleton (match matrixLiteral -> Just (TypeMatrix _ TypeInt{},_,[s])) =
+        Just s
+      matchSingleton _ = Nothing
+  statements <- transformBiM onExpr (mStatements model)
+  return model { mStatements = statements }
 
 logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
 logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
@@ -1060,6 +1084,7 @@ epilogue ::
     Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= lexSingletons                 >>= logDebugIdModel "[lexSingletons]"
     >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
@@ -1472,6 +1497,7 @@ delayedRules =
     ,   [ rule_ReducerToComprehension
         ]
     ,   [ rule_DotLtLeq
+        , rule_Flatten_Lex
         ]
     ]
 
@@ -1824,6 +1850,7 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             )
 
 
+
 rule_DotLtLeq :: Rule
 rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
     theRule p = do
@@ -1831,19 +1858,6 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        -- aType <- typeOf a
-        -- case aType of
-        --     TypeTuple{}     -> return ()
-        --     TypeMatrix{}    -> return ()
-        --     TypeSet{}       -> return ()
-        --     TypeMSet{}      -> return ()
-        --     TypeFunction{}  -> return ()
-        --     TypeSequence{}  -> return ()
-        --     TypeRelation{}  -> return ()
-        --     TypePartition{} -> return ()
-        --     _ -> na "rule_DotLtLeq"
-        -- sameRepresentationTree a b
-
         ma <- symmetryOrdering a
         mb <- symmetryOrdering b
         return
@@ -1851,6 +1865,129 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
             , return $ mk ma mb
             )
 
+
+rule_Flatten_Lex :: Rule
+rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
+    theRule [essence| &a <lex &b |] = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeList TypeInt{}, TypeList TypeInt{}) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
+          na "rule_Flatten_Lex"
+        _ -> return () 
+      fa <- flatten a
+      fb <- flatten b
+      tfa <- typeOf fa
+      tfb <- typeOf fb
+      case (tfa, tfb) of
+        (TypeList TypeInt{}, TypeList TypeInt{}) -> return ()
+        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) -> return ()
+        _ -> bug $ "flattener: " <+> vcat [stringToDoc $ show tfa, stringToDoc $ show tfb]
+      return ( "Flatten Lex less"
+             , return [essence| &fa <lex &fb |]
+             )
+    theRule [essence| &a <=lex &b |] = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeList TypeInt{}, TypeList TypeInt{}) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
+          na "rule_Flatten_Lex"
+        _ -> return () 
+      fa <- flatten a
+      fb <- flatten b
+      tfa <- typeOf fa
+      tfb <- typeOf fb
+      case (tfa, tfb) of
+        (TypeList TypeInt{}, TypeList TypeInt{}) -> return ()
+        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) -> return ()
+        _ -> bug $ "flattener: " <+> vcat [stringToDoc $ show tfa, stringToDoc $ show tfb]
+      return ( "Flatten Lex Lt"
+             , return [essence| &fa <=lex &fb |]
+             )
+    theRule _ = na "rule_Flatten_Lex"  
+    flatten a = do
+      ta <- typeOf a
+      case ta of
+        TypeBool -> return [essence| [-toInt(&a)] |]
+        TypeInt{} -> return [essence| [&a] |]
+        TypeList TypeInt{} -> return a
+        TypeMatrix TypeInt{} TypeInt{} -> return a
+        TypeTuple ts -> do
+          case a of
+            AbstractLiteral x -> do
+              case x of
+                AbsLitTuple xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Constant c ->
+              case c of
+                ConstantAbstract ca ->
+                  case ca of
+                    AbsLitTuple xs -> do
+                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      let flatxs = fromList fxs
+                      return [essence| flatten(&flatxs) |]
+                    _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
+                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Op _ -> do
+              (oName, o) <- quantifiedVar
+              flatten $ Comprehension o [ComprehensionLetting oName a]
+            _ -> do
+              ps <- sequence $ (\(i,_) -> do
+                                  (Single nm, tm) <- quantifiedVar
+                                  return (i,nm,tm)) <$> (zip [1..] ts)
+              let lts = (\(i,nm,_tm) -> ComprehensionLetting (Single nm) [essence| &a[&i] |]) <$> ps
+                  tup = AbstractLiteral $ AbsLitTuple $ (\(_,_,tm) -> tm) <$> ps
+              flatten $ Comprehension tup lts
+        _ ->
+          case a of
+            AbstractLiteral x -> do
+              case x of
+                AbsLitMatrix _ xs -> do
+                  fxs <- sequence (flatten <$> xs)
+                  let flatxs = fromList fxs
+                  return [essence| flatten(&flatxs) |]
+                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Constant c ->
+              case c of
+                ConstantAbstract ca ->
+                  case ca of
+                    AbsLitMatrix _ [] ->
+                      return [essence| ([] : `matrix indexed by [int()] of int`) |]
+                    AbsLitMatrix _ xs -> do
+                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      let flatxs = fromList fxs
+                      return [essence| flatten(&flatxs) |]
+                    _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
+                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+                TypedConstant tc _ -> flatten (Constant tc)
+                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
+            Op _ -> do
+              (oName, o) <- quantifiedVar
+              flatten $ Comprehension o [ComprehensionLetting oName a]
+            Reference nm ex ->
+                  bug $ "rule_FlattenLex: flatten isn't defined for this reference fellow..."
+                     <+> vcat [stringToDoc (show a)
+                              ,"reference:" <+> stringToDoc (show nm)
+                              ,"fellow:" <+> stringToDoc (show ex)]
+            Comprehension body gocs -> do
+              fbody <- flatten body
+              let comp = Comprehension fbody gocs
+              return [essence| flatten(&comp) |]
+            _ -> bug $ "rule_FlattenLex: flatten isn't defined for this expression fellow..."
+
+                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
 
 rule_ReducerToComprehension :: Rule
 rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
@@ -1899,20 +2036,6 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
-    theRule [essence| &xs <lex &ys |] =
-        case (listOut xs, listOut ys) of
-            (Just [x], Just [y]) -> return
-                ( "<lex on singleton matrices"
-                , return [essence| &x < &y |]
-                )
-            _ -> na "rule_FlattenOf1D"
-    theRule [essence| &xs <=lex &ys |] =
-        case (listOut xs, listOut ys) of
-            (Just [x], Just [y]) -> return
-                ( "<=lex on singleton matrices"
-                , return [essence| &x <= &y |]
-                )
-            _ -> na "rule_FlattenOf1D"
     theRule p = do
         x   <- match opFlatten p
         tyx <- typeOf x
@@ -1929,7 +2052,6 @@ rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
         return ( "1D matrices do not need a flatten."
                , return out
                )
-
 
 rule_Decompose_AllDiff :: Rule
 rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where

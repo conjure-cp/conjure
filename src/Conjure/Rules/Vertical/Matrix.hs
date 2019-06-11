@@ -372,10 +372,9 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
 rule_Matrix_Lt_Primitive :: Rule
 rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
     theRule p = do
-        (x,y)           <- case (match opLt p, match opDotLt p, match opTildeLt p) of
-                                (Just a, _, _) -> return a
-                                (_, Just a, _) -> return a
-                                (_, _, Just a) -> return a
+        (x,y)           <- case (match opLt p, match opTildeLt p) of
+                                (Just a, _) -> return a
+                                (_, Just a) -> return a
                                 _ -> na "rule_Matrix_Lt_Primitive"
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
@@ -385,17 +384,16 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
             ( "Horizontal rule for matrix <"
-            , return [essence| &x' <lex &y' |]
+            , return [essence| &x' .< &y' |]
             )
 
 
 rule_Matrix_Leq_Primitive :: Rule
 rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
     theRule p = do
-        (x,y)           <- case (match opLeq p, match opDotLeq p, match opTildeLeq p) of
-                                (Just a, _, _) -> return a
-                                (_, Just a, _) -> return a
-                                (_, _, Just a) -> return a
+        (x,y)           <- case (match opLeq p, match opTildeLeq p) of
+                                (Just a, _) -> return a
+                                (_, Just a) -> return a
                                 _ -> na "rule_Matrix_Leq_Primitive"
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
@@ -405,7 +403,7 @@ rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
             ( "Horizontal rule for matrix <="
-            , return [essence| &x' <=lex &y' |]
+            , return [essence| &x' .<= &y' |]
             )
 
 
