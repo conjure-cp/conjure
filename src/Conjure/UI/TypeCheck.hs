@@ -143,7 +143,6 @@ typeCheckModel model1 = do
                             [ "In the objective:" <++> pretty st
                             , "Expected type `int`, but got:" <++> pretty t
                             , "Expression:" <+> pretty o
-                            , "Expression:" <+> pretty (show o)
                             ]
                         return o
                 case mty of

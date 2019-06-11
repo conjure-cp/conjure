@@ -157,7 +157,7 @@ symmetryOrdering inp =
                 case mDom of
                     DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
                     _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
-            _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
+            _ -> bug ("symmetryOrdering, unhandled Op:" <++> pretty (show op))
         -- Comprehension body stmts -> do
         --     xs <- downX1 body
         --     return [Comprehension x stmts | x <- xs]

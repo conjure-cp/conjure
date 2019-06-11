@@ -1,5 +1,7 @@
 module Conjure.UI.NormaliseQuantified
     ( normaliseQuantifiedVariables
+    , normaliseQuantifiedVariablesE
+    , normaliseQuantifiedVariablesS
     , distinctQuantifiedVars
     , renameQuantifiedVarsToAvoidShadowing
     ) where
@@ -10,26 +12,31 @@ import Conjure.Language
 
 normaliseQuantifiedVariables :: Model -> Model
 normaliseQuantifiedVariables m@Model{mStatements=st} =
-    let stOut = descendBi (normX_Leveled 1) st
+    let stOut = map normaliseQuantifiedVariablesS st
     in  m { mStatements = stOut }
 
-    where
-        normX_Leveled :: Int -> Expression -> Expression
-        normX_Leveled nextInt p@(Comprehension _ gocs) =
-            let
-                quantifiedNames = getQuantifiedNames gocs
-                oldNew =
-                    [ (qn, MachineName "q" i [])
-                    | (qn, i) <- zip quantifiedNames [nextInt..]
-                    ]
-                nextInt' = nextInt + length oldNew
-                f :: Name -> Name
-                f nm = fromMaybe nm (lookup nm oldNew)
-            in
-                p |> descend (normX_Leveled nextInt')
-                  |> transformBi f
-        normX_Leveled nextInt p =
-                p |> descend (normX_Leveled nextInt)
+normaliseQuantifiedVariablesE :: Expression -> Expression
+normaliseQuantifiedVariablesE = normX_Leveled 1
+
+normaliseQuantifiedVariablesS :: Statement -> Statement
+normaliseQuantifiedVariablesS = descendBi normaliseQuantifiedVariablesE
+
+normX_Leveled :: Int -> Expression -> Expression
+normX_Leveled nextInt p@(Comprehension _ gocs) =
+    let
+        quantifiedNames = getQuantifiedNames gocs
+        oldNew =
+            [ (qn, MachineName "q" i [])
+            | (qn, i) <- zip quantifiedNames [nextInt..]
+            ]
+        nextInt' = nextInt + length oldNew
+        f :: Name -> Name
+        f nm = fromMaybe nm (lookup nm oldNew)
+    in
+        p |> descend (normX_Leveled nextInt')
+          |> transformBi f
+normX_Leveled nextInt p =
+        p |> descend (normX_Leveled nextInt)
 
 
 distinctQuantifiedVars :: NameGen m => Model -> m Model

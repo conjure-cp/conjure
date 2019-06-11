@@ -4,7 +4,7 @@ module Conjure.Custom ( tests ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Pretty ( pretty, renderWide )
+import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
 import Conjure.ModelAllSolveAll ( TestTimeLimit(..) )
 
 -- tasty
@@ -19,10 +19,6 @@ import Shelly ( cd, bash, errExit, lastStderr )
 
 -- system-filepath
 import Filesystem.Path.CurrentOS as Path ( fromText )
-
--- Diff
-import Data.Algorithm.Diff ( Diff(..), getGroupedDiff )
-import Data.Algorithm.DiffOutput ( ppDiff )
 
 
 tests :: IO (TestTimeLimit -> TestTree)
@@ -83,26 +79,19 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                     readIfExists :: FilePath -> IO String
                     readIfExists f = fromMaybe "" <$> readFileIfExists f
 
-                let
-                    getDiff :: [String] -> [String] -> Doc
-                    getDiff generated expected = 
-                        let
-                            isBoth Both{} = True
-                            isBoth _ = False
-
-                            diffs = filter (not . isBoth) $ getGroupedDiff expected generated
-                        in
-                            pretty (ppDiff diffs)
-
                 step "Checking stderr"
                 stderrG <- readIfExists (tBaseDir </> "stderr")
                 stderrE <- readIfExists (tBaseDir </> "stderr.expected")
                 unless (stderrE == stderrG) $
-                    assertFailure $ renderWide $ getDiff (lines stderrG) (lines stderrE)
+                    assertFailure $ renderNormal $ vcat
+                        [ "unexpected stderr:" <++> vcat (map pretty (lines stderrG))
+                        , "was expecting:    " <++> vcat (map pretty (lines stderrE)) ]
                 step "Checking stdout"
                 stdoutG <- readIfExists (tBaseDir </> "stdout")
                 stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
                 unless (stdoutE == stdoutG) $
-                    assertFailure $ renderWide $ getDiff (lines stdoutG) (lines stdoutE)
+                    assertFailure $ renderNormal $ vcat
+                        [ "unexpected stderr:" <++> vcat (map pretty (lines stdoutG))
+                        , "was expecting:    " <++> vcat (map pretty (lines stdoutE)) ]
             else []
 

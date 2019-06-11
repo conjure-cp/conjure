@@ -43,7 +43,10 @@ import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
-import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing )
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing
+                                      , normaliseQuantifiedVariablesS, normaliseQuantifiedVariablesE
+                                      )
+
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
@@ -232,7 +235,7 @@ toCompletion config m = do
 
         loopy :: ModelWIP -> Producer LogOrModel m ()
         loopy modelWIP = do
-            logDebug $ "[loopy]" <+> pretty ((modelWIPOut modelWIP) {mInfo = def})
+            logDebug $ "[loop]" <+> pretty ((modelWIPOut modelWIP) {mInfo = def})
             qs <- remainingWIP config modelWIP
             if null qs
                 then do
@@ -418,6 +421,8 @@ strategyToDriver config questions = do
                     vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
                          : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                            | (i,c) <- zip allNats (qAscendants q)
+                           -- if logLevel < LogDebugVerbose, only show a select few levels
+                           , logLevel config == LogDebugVerbose || i `elem` [1,3,5,10,25]
                            ]
             ]
     pickedQs <- executeStrategy optionsQ (strategyQ config)
@@ -425,9 +430,10 @@ strategyToDriver config questions = do
         let optionsA =
                 [ (doc, a)
                 | (n, a) <- zip allNats (qAnswers pickedQ)
-                , let doc =
-                        nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
-                                                                       , pretty (aAnswer a) ]
+                , let doc = nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat
+                                [ pretty (aText a)
+                                , sep [pretty (qHole pickedQ),  "~~>", pretty (aAnswer a)]
+                                ]
                 ]
         let strategyA' = case qType pickedQ of
                 ChooseRepr            -> representations
@@ -473,7 +479,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
-            print (vcat (map fst options))
+            putStrLn $ renderWide $ vcat (map fst options)
             let
                 nextRecordedResponse :: IO (Maybe Int)
                 nextRecordedResponse = do
@@ -490,6 +496,11 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                     case mrecorded of
                         Just recorded -> do
                             putStrLn ("Response: " ++ show recorded)
+                            unless (recorded >= 1 && recorded <= length options) $
+                                userErr1 $ vcat [ "Recorded response out of range."
+                                                , nest 4 $ "Expected a value between 1 and" <+> pretty (length options)
+                                                , nest 4 $ "But got: " <+> pretty recorded
+                                                ]
                             return recorded
                         Nothing -> do
                             putStr "Pick option: "
@@ -624,7 +635,8 @@ reverseTrails m =
 
 
 oneSuchThat :: Model -> Model
-oneSuchThat m = m { mStatements = onStatements (mStatements m) }
+oneSuchThat m = m { mStatements = onStatements (mStatements m)
+                                    |> nubBy ((==) `on` normaliseQuantifiedVariablesS) }
 
     where
 
@@ -633,10 +645,10 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
             let
                 (suchThats0, objectives, others) = xs |> map collect |> mconcat
                 suchThats = suchThats0
-                      |> map breakConjunctions                         -- break top level /\'s
+                      |> map breakConjunctions                              -- break top level /\'s
                       |> mconcat
-                      |> filter (/= Constant (ConstantBool True))      -- remove top level true's
-                      |> nub                                           -- uniq
+                      |> filter (/= Constant (ConstantBool True))           -- remove top level true's
+                      |> nubBy ((==) `on` normaliseQuantifiedVariablesE)    -- uniq
             in
                 others ++ objectives ++ [SuchThat (combine suchThats)]
 
@@ -739,7 +751,6 @@ dropTagForSR m = do
 
     st <- transformBiM replacePredSucc (mStatements m)
     return m { mStatements = st }
-    where
 
 
 updateDeclarations ::
@@ -1014,6 +1025,7 @@ removeExtraSlices model = do
     statements <- descendBiM onExpr (mStatements model)
     return model { mStatements = statements }
 
+
 lexSingletons :: (?typeCheckerMode :: TypeCheckerMode)
               => Monad m
               => Model -> m Model
@@ -1038,6 +1050,7 @@ lexSingletons model = do
       matchSingleton _ = Nothing
   statements <- transformBiM onExpr (mStatements model)
   return model { mStatements = statements }
+
 
 logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
 logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
@@ -1851,7 +1864,6 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             )
 
 
-
 rule_DotLtLeq :: Rule
 rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
     theRule p = do
@@ -1990,6 +2002,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
 
                     <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
 
+
 rule_ReducerToComprehension :: Rule
 rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
     theRule p = do
@@ -2053,6 +2066,7 @@ rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
         return ( "1D matrices do not need a flatten."
                , return out
                )
+
 
 rule_Decompose_AllDiff :: Rule
 rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
