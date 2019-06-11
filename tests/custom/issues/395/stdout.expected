@@ -1,0 +1,90 @@
+language ESSENCE' 1.0
+
+given m: int(1..)
+find Cs_ExplicitBounded_Length: int(m)
+find Cs_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(0..m)
+find Cz_ExplicitBounded_Length: int(m)
+find Cz_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(0..m)
+find conjure_aux1_ExplicitBounded_Length: int(m)
+find conjure_aux1_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(1..m)
+branching on
+    [Cs_ExplicitBounded_Length, Cs_ExplicitBounded_Values, Cz_ExplicitBounded_Length, Cz_ExplicitBounded_Values]
+such that
+    and([and([conjure_aux1_ExplicitBounded_Values[q3 - 1] < conjure_aux1_ExplicitBounded_Values[q3], q3 - 1 <= m,
+              q3 <= m;
+                  int(1..3)])
+             | q3 : int(2..m), q3 <= m]),
+    and([and([Cz_ExplicitBounded_Values[q5] = Cs_ExplicitBounded_Values[conjure_aux1_ExplicitBounded_Values[q5]],
+              q5 <= m, conjure_aux1_ExplicitBounded_Values[q5] <= m /\ q5 <= m;
+                  int(1..3)])
+             | q5 : int(1..m), q5 <= m])
+
+$ Conjure's
+$ {"finds": [{"Name": "Cs"}, {"Name": "Cz"}],
+$  "givens": [{"Name": "m"}],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Auto": {"Interactive": []}},
+language ESSENCE' 1.0
+
+given m: int(1..)
+find Cz_ExplicitBounded_Length: int(m)
+find Cz_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(0..m)
+find conjure_aux1_ExplicitBounded_Length:
+        matrix indexed by [int(m), matrix indexed by [int(1..m)] of int(0..m)] of int(m)
+find conjure_aux1_ExplicitBounded_Values:
+        matrix indexed by [int(m), matrix indexed by [int(1..m)] of int(0..m), int(1..m)] of int(1..m)
+branching on [Cz_ExplicitBounded_Length, Cz_ExplicitBounded_Values]
+such that
+    and([and([and([conjure_aux1_ExplicitBounded_Values[m, Cs_ExplicitBounded_Values, q3 - 1] <
+                   conjure_aux1_ExplicitBounded_Values[m, Cs_ExplicitBounded_Values, q3],
+                   q3 - 1 <= m, q3 <= m;
+                       int(1..3)])
+                  | q3 : int(2..m), q3 <= m])
+             | Cs_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)]),
+    and([true | Cs_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)]),
+    or([and([Cz_ExplicitBounded_Values[q5] = Cs_ExplicitBounded_Values[conjure_aux1_ExplicitBounded_Values[q5]] /\
+             q5 <= m
+             /\ (conjure_aux1_ExplicitBounded_Values[q5] <= m /\ q5 <= m)
+                 | q5 : int(1..m), q5 <= m])
+            | Cs_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)])
+
+$ Conjure's
+$ {"finds": [{"Name": "Cz"}],
+$  "givens": [{"Name": "m"}],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+language ESSENCE' 1.0
+
+given m: int(1..)
+find Cs_ExplicitBounded_Length: int(m)
+find Cs_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(0..m)
+find Cz_ExplicitBounded_Length: int(m)
+find Cz_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(0..m)
+find conjure_aux1_ExplicitBounded_Length: int(m)
+find conjure_aux1_ExplicitBounded_Values: matrix indexed by [int(1..m)] of int(1..m)
+branching on
+    [Cs_ExplicitBounded_Length, Cs_ExplicitBounded_Values, Cz_ExplicitBounded_Length, Cz_ExplicitBounded_Values]
+such that
+    and([and([conjure_aux1_ExplicitBounded_Values[q3 - 1] < conjure_aux1_ExplicitBounded_Values[q3], q3 - 1 <= m,
+              q3 <= m;
+                  int(1..3)])
+             | q3 : int(2..m), q3 <= m]),
+    and([and([Cz_ExplicitBounded_Values[q5] = Cs_ExplicitBounded_Values[conjure_aux1_ExplicitBounded_Values[q5]],
+              q5 <= m, conjure_aux1_ExplicitBounded_Values[q5] <= m /\ q5 <= m;
+                  int(1..3)])
+             | q5 : int(1..m), q5 <= m])
+
+$ Conjure's
+$ {"finds": [{"Name": "Cs"}, {"Name": "Cz"}],
+$  "givens": [{"Name": "m"}],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Auto": {"Interactive": []}},
