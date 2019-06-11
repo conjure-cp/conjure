@@ -4,5 +4,5 @@ find s_Explicit: matrix indexed by [int(1..2)] of int(1..2)
 branching on [s_Explicit]
 such that
     or([s_Explicit[q4] = 2 | q4 : int(1..2)]),
-    [s_Explicit[1]; int(1)] <lex [s_Explicit[2]; int(1)]
+    s_Explicit[1] < s_Explicit[2]
 
