@@ -1014,9 +1014,12 @@ removeExtraSlices model = do
     statements <- descendBiM onExpr (mStatements model)
     return model { mStatements = statements }
 
-lexSingletons :: Monad m => Model -> m Model
+lexSingletons :: (?typeCheckerMode :: TypeCheckerMode)
+              => Monad m
+              => Model -> m Model
 lexSingletons model = do
-  let onExpr :: Monad m => Expression -> m Expression
+  let onExpr ::  (?typeCheckerMode :: TypeCheckerMode)
+              => Monad m => Expression -> m Expression
       onExpr [essence| &l <lex &r |] =
         case (matchSingleton l, matchSingleton r) of
           (Nothing, Nothing) -> return [essence| &l <lex &r |]
@@ -1028,12 +1031,12 @@ lexSingletons model = do
           (Just ls, Just rs) -> return [essence| &ls <= &rs |]
           _ -> bug $ "lexSingleton: match inconsistent" 
       onExpr x = return x
-      matchSingleton :: Expression -> Maybe Expression
-      matchSingleton (AbstractLiteral (AbsLitMatrix _ [s])) = Just s
-      matchSingleton (Constant (ConstantAbstract (AbsLitMatrix _ [s]))) =
-        Just (Constant s)
+      matchSingleton ::  (?typeCheckerMode :: TypeCheckerMode)
+              => Expression -> Maybe Expression
+      matchSingleton (match matrixLiteral -> Just (TypeMatrix _ TypeInt{},_,[s])) =
+        Just s
       matchSingleton _ = Nothing
-  statements <- descendBiM onExpr (mStatements model)
+  statements <- transformBiM onExpr (mStatements model)
   return model { mStatements = statements }
 
 logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
