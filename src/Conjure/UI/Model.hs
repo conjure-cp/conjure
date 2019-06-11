@@ -430,10 +430,12 @@ strategyToDriver config questions = do
         let optionsA =
                 [ (doc, a)
                 | (n, a) <- zip allNats (qAnswers pickedQ)
-                , let doc = nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat
-                                [ pretty (aText a)
-                                , sep [pretty (qHole pickedQ),  "~~>", pretty (aAnswer a)]
-                                ]
+                , let doc = nest 4 $ "Answer" <+> pretty n <> ":" <+>
+                        if "choose-repr" `isPrefixOf` show (aRuleName a)
+                            then pretty (aText a)
+                            else vcat [ pretty (aText a)
+                                      , sep [pretty (qHole pickedQ),  "~~>", pretty (aAnswer a)]
+                                      ]
                 ]
         let strategyA' = case qType pickedQ of
                 ChooseRepr            -> representations
@@ -479,7 +481,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
-            putStrLn $ renderWide $ vcat (map fst options)
+            putStrLn $ render 80 $ vcat (map fst options)
             let
                 nextRecordedResponse :: IO (Maybe Int)
                 nextRecordedResponse = do
