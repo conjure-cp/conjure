@@ -1,0 +1,95 @@
+Generating models for 401-1.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: 401-1.solution
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(1..5)] of int(1..5)
+branching on [m]
+such that and([m[q2] = 1 | q2 : int(1..5)])
+
+$ Conjure's
+$ {"finds": [{"Name": "m"}],
+$  "givens": [],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Compact": []},
+language Essence 1.3
+
+letting m be [1, 1, 1, 1, 1; int(1..5)]
+ ====================
+Generating models for 401-2.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: 401-2.solution
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(1..5), int(1..3)] of int(1..5)
+branching on [m]
+such that and([allDiff(m[q3, ..]) | q3 : int(1..5)])
+
+$ Conjure's
+$ {"finds": [{"Name": "m"}],
+$  "givens": [],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Compact": []},
+language Essence 1.3
+
+letting m be
+        [[1, 2, 3; int(1..3)], [1, 2, 3; int(1..3)], [1, 2, 3; int(1..3)], [1, 2, 3; int(1..3)], [1, 2, 3; int(1..3)];
+             int(1..5)]
+$ Visualisation for m
+$ 1 2 3
+$ 1 2 3
+$ 1 2 3
+$ 1 2 3
+$ 1 2 3
+
+ ====================
+Generating models for 401-3.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: 401-3.solution
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(1..5), int(1..3)] of int(1..5)
+branching on [m]
+such that and([m[q3, q4] = 1 | q3 : int(1..5), q4 : int(1..3)])
+
+$ Conjure's
+$ {"finds": [{"Name": "m"}],
+$  "givens": [],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Compact": []},
+language Essence 1.3
+
+letting m be
+        [[1, 1, 1; int(1..3)], [1, 1, 1; int(1..3)], [1, 1, 1; int(1..3)], [1, 1, 1; int(1..3)], [1, 1, 1; int(1..3)];
+             int(1..5)]
+$ Visualisation for m
+$ 1 1 1
+$ 1 1 1
+$ 1 1 1
+$ 1 1 1
+$ 1 1 1
+
