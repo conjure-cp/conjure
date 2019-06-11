@@ -123,7 +123,8 @@ script:
   - ls -l .stack-work/dist/*/*/build/conjure-testing/conjure-testing
   - cp .stack-work/dist/*/*/build/conjure-testing/conjure-testing ${BIN_DIR}/conjure-testing
   - export ELAPSED=$(($(date +%s) - ${STARTTIME}))
-  - if [ ${ELAPSED} -gt 1800 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
+  - echo "Time so far: ${ELAPSED} seconds"
+  - if [ ${ELAPSED} -gt 1200 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
   # - ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
   - rm stack.yaml
   - if ! grep -A20 FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
