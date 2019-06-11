@@ -27,7 +27,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLt x) where
         TypeInt{} | ?typeCheckerMode == RelaxedIntegerTags -> True
         TypeInt TagInt -> True
         TypeInt TagEnum{} -> True
-        TypeMatrix TypeInt{} TypeInt{} -> True
         _ -> False
 
 instance EvaluateOp OpLt where
