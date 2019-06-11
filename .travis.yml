@@ -50,19 +50,19 @@ matrix:
     - os: linux
       env: GHC=8.6 SR="-O0" SOL=minion
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: linux
       env: GHC=8.6 SR="-O2" SOL=minion
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: linux
       env: GHC=8.6 SR="-O0" SOL=lingeling
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: linux
       env: GHC=8.6 SR="-O2" SOL=lingeling
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: osx
       env: GHC=8.6 SR="-O2" SOL=minion
       compiler: ": # GHC 8.6"
@@ -130,17 +130,13 @@ script:
 
 cache:
   directories:
-    - ${HOME}/.cabal
     - ${HOME}/.local/bin
     - ${HOME}/.ghc
-    - ${HOME}/.tools
     - ${HOME}/.stack
-    - .cabal-sandbox
     - .stack-work
-    - dist
   timeout: 600
 
 
 branches:
   except:
-    - ide
+    - loadcore
