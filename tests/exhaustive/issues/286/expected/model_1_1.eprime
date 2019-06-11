@@ -9,7 +9,7 @@ branching on
 such that
     sum([toInt(q19 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) | q19 : int(1..b)]) <=
     sum([1   | q20_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),
-               and([[q20_ExplicitVarSizeWithDummy[q21]; int(1)] <lex [q20_ExplicitVarSizeWithDummy[q21 + 1]; int(1)] \/
+               and([q20_ExplicitVarSizeWithDummy[q21] < q20_ExplicitVarSizeWithDummy[q21 + 1] \/
                     q20_ExplicitVarSizeWithDummy[q21] = b + 1
                         | q21 : int(1..b - 1)]),
                and([q20_ExplicitVarSizeWithDummy[q22] = b + 1 -> q20_ExplicitVarSizeWithDummy[q22 + 1] = b + 1

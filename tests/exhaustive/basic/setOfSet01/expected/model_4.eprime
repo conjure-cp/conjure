@@ -28,8 +28,8 @@ such that
              | q2 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarkerR4_Marker ->
          (x_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, 2] ->
-          [x_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, 1]; int(1)] <lex
-          [x_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, 2]; int(1)])
+          x_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, 1] <
+          x_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, 2])
              | q3 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarkerR4_Marker ->
          and([x_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, q5] = false ->

@@ -22,7 +22,7 @@ such that
              | i : int(1..2)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..2)]),
     and([q4 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
-         [s_ExplicitVarSizeWithMarker_Values[q4]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[q4 + 1]; int(1)]
+         s_ExplicitVarSizeWithMarker_Values[q4] < s_ExplicitVarSizeWithMarker_Values[q4 + 1]
              | q4 : int(1..2)]),
     and([q5 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q5] = 1 | q5 : int(1..3)])
 

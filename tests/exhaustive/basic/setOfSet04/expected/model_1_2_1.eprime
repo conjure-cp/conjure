@@ -9,9 +9,8 @@ such that
     and([sum([toInt(x_ExplicitR2_Occurrence[q2, q3]) | q3 : int(1..2)]) <= 3 | q2 : int(1..2)]),
     [x_ExplicitR6_ExplicitVarSizeWithDummy[1, q12] | q12 : int(1..3)] <lex
     [x_ExplicitR6_ExplicitVarSizeWithDummy[2, q13] | q13 : int(1..3)],
-    and([and([[x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8]; int(1)] <lex
-              [x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8 + 1]; int(1)]
-              \/ x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] = 3
+    and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] < x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8 + 1] \/
+              x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] = 3
                   | q8 : int(1..2)])
              | q7 : int(1..2)]),
     and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q9] = 3 -> x_ExplicitR6_ExplicitVarSizeWithDummy[q7, q9 + 1] = 3

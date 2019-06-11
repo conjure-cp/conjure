@@ -22,14 +22,14 @@ such that
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q19]) * catchUndef(x_ExplicitVarSizeWithFlags_Values[q19], 0)
              | q19 : int(1..let1)]),
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         [x_ExplicitVarSizeWithMarker_Values[q2]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q2 + 1]; int(1)]
+         x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..let1 - 1)]),
     and([q3 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q3] = min(let2)
              | q3 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
     and([x_ExplicitVarSizeWithFlags_Flags[q5 + 1] ->
-         [x_ExplicitVarSizeWithFlags_Values[q5]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q5 + 1]; int(1)]
+         x_ExplicitVarSizeWithFlags_Values[q5] < x_ExplicitVarSizeWithFlags_Values[q5 + 1]
              | q5 : int(1..let1 - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q6] = false -> x_ExplicitVarSizeWithFlags_Values[q6] = min(let2)
              | q6 : int(1..let1)]),

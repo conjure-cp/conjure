@@ -23,8 +23,8 @@ such that
              | q2 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarkerR5_Marker ->
          (2 <= x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q3] ->
-          [x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, 1]; int(1)] <lex
-          [x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, 2]; int(1)])
+          x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, 1] <
+          x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q3, 2])
              | q3 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarkerR5_Marker ->
          and([q5 > x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q3] ->

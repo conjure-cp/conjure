@@ -45,8 +45,8 @@ such that
              | q3 : int(1..4)]),
     and([q4 <= var2_ExplicitVarSizeWithMarkerR4_Marker ->
          (var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q4, 2] ->
-          [-toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 1]); int(1)] <lex
-          [-toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 2]); int(1)])
+          -toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 1]) <
+          -toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q4, 2]))
              | q4 : int(1..4)]),
     and([q4 <= var2_ExplicitVarSizeWithMarkerR4_Marker ->
          and([var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q4, q6] = false ->
@@ -75,8 +75,8 @@ such that
              | q15 : int(1..4)]),
     and([q16 <= var2_ExplicitVarSizeWithMarkerR5_Marker ->
          (2 <= var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q16] ->
-          [-toInt(var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 1]); int(1)] <lex
-          [-toInt(var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 2]); int(1)])
+          -toInt(var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 1]) <
+          -toInt(var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 2]))
              | q16 : int(1..4)]),
     and([q16 <= var2_ExplicitVarSizeWithMarkerR5_Marker ->
          and([q18 > var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q16] ->

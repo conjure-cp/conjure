@@ -7,7 +7,7 @@ branching on [s_Occurrence, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSiz
 such that
     s_Occurrence[s_ExplicitVarSizeWithMarker_Marker],
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
-    [s_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[2]; int(1)],
+    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
     and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
     and([s_Occurrence[q5] ->
          or([q7 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q7] = q5 | q7 : int(1..2)])

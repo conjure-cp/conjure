@@ -21,12 +21,11 @@ such that
                  | q23 : int(1..11)])
             | q21 : int(1..11)]),
     and([q1 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         [var2_ExplicitVarSizeWithMarker_Values[q1]; int(1)] <lex
-         [var2_ExplicitVarSizeWithMarker_Values[q1 + 1]; int(1)]
+         var2_ExplicitVarSizeWithMarker_Values[q1] < var2_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..10)]),
     and([q2 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q2] = -4
              | q2 : int(1..11)]),
-    and([[var2_ExplicitVarSizeWithDummy[q4]; int(1)] <lex [var2_ExplicitVarSizeWithDummy[q4 + 1]; int(1)] \/
+    and([var2_ExplicitVarSizeWithDummy[q4] < var2_ExplicitVarSizeWithDummy[q4 + 1] \/
          var2_ExplicitVarSizeWithDummy[q4] = 6
              | q4 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q5] = 6 -> var2_ExplicitVarSizeWithDummy[q5 + 1] = 6 | q5 : int(1..10)]),

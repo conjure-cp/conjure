@@ -24,7 +24,7 @@ such that
             | q10 : int(1..4)]),
     3 = sum([toInt(a_Occurrence[q1]) | q1 : int(1..4)]),
     3 = sum([toInt(b_Occurrence[q2]) | q2 : int(1..4)]),
-    and([[b_Explicit[q3]; int(1)] <lex [b_Explicit[q3 + 1]; int(1)] | q3 : int(1..2)]),
+    and([b_Explicit[q3] < b_Explicit[q3 + 1] | q3 : int(1..2)]),
     and([b_Occurrence[b_Explicit[q6]] | q6 : int(1..3)]),
     and([b_Occurrence[q7] -> or([b_Explicit[q9] = q7 | q9 : int(1..3)]) | q7 : int(1..4)])
 

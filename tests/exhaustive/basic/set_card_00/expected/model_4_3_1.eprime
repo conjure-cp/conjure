@@ -12,12 +12,11 @@ such that
     or([q29 <= s_ExplicitVarSizeWithMarker_Marker /\
         s_ExplicitVarSizeWithMarker_Values[q29] = sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q31]) | q31 : int(1..2)])
             | q29 : int(1..2)]),
-    s_ExplicitVarSizeWithFlags_Flags[2] ->
-    [s_ExplicitVarSizeWithFlags_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithFlags_Values[2]; int(1)],
+    s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
     and([s_ExplicitVarSizeWithFlags_Flags[q2] = false -> s_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Flags[1],
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
-    [s_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[2]; int(1)],
+    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
     and([q7 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q7] = 1 | q7 : int(1..2)]),
     and([q10 <= s_ExplicitVarSizeWithMarker_Marker ->
          or([s_ExplicitVarSizeWithFlags_Flags[q12] /\

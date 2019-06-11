@@ -8,7 +8,7 @@ such that
          |x_ExplicitVarSizeWithFlags_Values[q6] - x_ExplicitVarSizeWithFlags_Values[q7]| >= 3
              | q6 : int(1..7), q7 : int(1..7), q7 > q6]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         [x_ExplicitVarSizeWithFlags_Values[q1]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q1 + 1]; int(1)]
+         x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2] = false -> x_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..7)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..6)]),

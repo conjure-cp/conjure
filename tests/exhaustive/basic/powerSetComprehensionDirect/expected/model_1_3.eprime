@@ -13,14 +13,14 @@ such that
          ->
          sum([t_ExplicitVarSizeWithDummy[q16] | q16 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q16] != b + 1]) <=
          6   | t_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1),
-               and([[t_ExplicitVarSizeWithDummy[q10]; int(1)] <lex [t_ExplicitVarSizeWithDummy[q10 + 1]; int(1)] \/
+               and([t_ExplicitVarSizeWithDummy[q10] < t_ExplicitVarSizeWithDummy[q10 + 1] \/
                     t_ExplicitVarSizeWithDummy[q10] = b + 1
                         | q10 : int(1..1 + (b - a) - 1)]),
                and([t_ExplicitVarSizeWithDummy[q11] = b + 1 -> t_ExplicitVarSizeWithDummy[q11 + 1] = b + 1
                         | q11 : int(1..1 + (b - a) - 1)])]),
     n <= sum([toInt(x_Occurrence[q1]) | q1 : int(a..b)]),
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         [x_ExplicitVarSizeWithMarker_Values[q2]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q2 + 1]; int(1)]
+         x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..1 + (b - a) - 1)]),
     and([q3 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q3] = a
              | q3 : int(1..1 + (b - a))]),

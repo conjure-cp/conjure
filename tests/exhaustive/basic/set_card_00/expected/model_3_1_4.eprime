@@ -11,7 +11,7 @@ branching on
 such that
     s_Occurrence[s_ExplicitVarSizeWithMarker_Marker],
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
-    [s_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithMarker_Values[2]; int(1)],
+    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
     and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
     and([s_Occurrence[q23] ->
          or([q25 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q25] = q23
@@ -19,8 +19,7 @@ such that
              | q23 : int(1..2)]),
     and([q27 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q27]]
              | q27 : int(1..2)]),
-    s_ExplicitVarSizeWithFlags_Flags[2] ->
-    [s_ExplicitVarSizeWithFlags_Values[1]; int(1)] <lex [s_ExplicitVarSizeWithFlags_Values[2]; int(1)],
+    s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
     and([s_ExplicitVarSizeWithFlags_Flags[q6] = false -> s_ExplicitVarSizeWithFlags_Values[q6] = 1 | q6 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Flags[1],
     and([s_ExplicitVarSizeWithFlags_Flags[q11] ->

@@ -6,8 +6,7 @@ find var3_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..5)] of bool
 branching on [var3_ExplicitVarSizeWithFlags_Flags, var3_ExplicitVarSizeWithFlags_Values]
 such that
     and([var3_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         [-toInt(var3_ExplicitVarSizeWithFlags_Values[q1]); int(1)] <lex
-         [-toInt(var3_ExplicitVarSizeWithFlags_Values[q1 + 1]); int(1)]
+         -toInt(var3_ExplicitVarSizeWithFlags_Values[q1]) < -toInt(var3_ExplicitVarSizeWithFlags_Values[q1 + 1])
              | q1 : int(1..4)]),
     and([var3_ExplicitVarSizeWithFlags_Flags[q2] = false -> var3_ExplicitVarSizeWithFlags_Values[q2] = false
              | q2 : int(1..5)]),

@@ -13,8 +13,7 @@ such that
     or([x_ExplicitVarSizeWithDummy[q56] != 5 /\ x_ExplicitVarSizeWithDummy[q56] = 1 | q56 : int(1..4)]),
     x_Occurrence[2],
     or([x_ExplicitVarSizeWithFlags_Flags[q49] /\ x_ExplicitVarSizeWithFlags_Values[q49] = 3 | q49 : int(1..4)]),
-    and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
-         x_ExplicitVarSizeWithDummy[q1] = 5
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 5
              | q1 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 5 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 5 | q2 : int(1..3)]),
     sum([toInt(x_ExplicitVarSizeWithDummy[q3] != 5) | q3 : int(1..4)]) <= 4,
@@ -24,7 +23,7 @@ such that
              | q50 : int(1..4)]),
     and([x_ExplicitVarSizeWithDummy[q54] != 5 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q54]] | q54 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] ->
-         [x_ExplicitVarSizeWithFlags_Values[q6]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q6 + 1]; int(1)]
+         x_ExplicitVarSizeWithFlags_Values[q6] < x_ExplicitVarSizeWithFlags_Values[q6 + 1]
              | q6 : int(1..3)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q7] = false -> x_ExplicitVarSizeWithFlags_Values[q7] = 1 | q7 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q8 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q8] | q8 : int(1..3)]),
@@ -45,7 +44,7 @@ such that
          or([x_ExplicitVarSizeWithFlags_Flags[q23] /\ x_ExplicitVarSizeWithFlags_Values[q23] = q21 | q23 : int(1..4)])
              | q21 : int(1..4)]),
     and([q24 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         [x_ExplicitVarSizeWithMarker_Values[q24]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q24 + 1]; int(1)]
+         x_ExplicitVarSizeWithMarker_Values[q24] < x_ExplicitVarSizeWithMarker_Values[q24 + 1]
              | q24 : int(1..3)]),
     and([q25 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q25] = 1 | q25 : int(1..4)]),
     x_ExplicitVarSizeWithMarker_Marker <= 4,

@@ -18,8 +18,8 @@ such that
              | q5 : int(1..6)]),
     x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker <= 6,
     and([q6 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker ->
-         and([[x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit[q6, q7]; int(1)] <lex
-              [x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit[q6, q7 + 1]; int(1)]
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit[q6, q7] <
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit[q6, q7 + 1]
                   | q7 : int(1..2)])
              | q6 : int(1..6)]),
     6 = sum([toInt(q12 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker) * 3 | q12 : int(1..6)])

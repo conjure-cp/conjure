@@ -110,8 +110,8 @@ such that
              | q9 : int(1..84)]),
     and([q10 <= r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Marker ->
          (2 <= r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Marker[q10] ->
-          [r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Values[q10, 1]; int(1)] <lex
-          [r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Values[q10, 2]; int(1)])
+          r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Values[q10, 1] <
+          r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Values[q10, 2])
              | q10 : int(1..84)]),
     and([q10 <= r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Marker ->
          and([q12 > r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Marker[q10] ->

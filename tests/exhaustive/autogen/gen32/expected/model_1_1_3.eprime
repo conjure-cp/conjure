@@ -9,8 +9,7 @@ such that
     or([var2_Occurrence[q10] /\ !var2_Occurrence[q10] | q10 : int(-4..5, 2)]) \/
     or([var2_Occurrence[q10] /\ !var2_Occurrence[q10] | q10 : int(-4..5, 2)]),
     and([q2 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         [var2_ExplicitVarSizeWithMarker_Values[q2]; int(1)] <lex
-         [var2_ExplicitVarSizeWithMarker_Values[q2 + 1]; int(1)]
+         var2_ExplicitVarSizeWithMarker_Values[q2] < var2_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..10)]),
     and([q3 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q3] = -4
              | q3 : int(1..11)]),

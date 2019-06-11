@@ -15,7 +15,7 @@ such that
     and([x_Occurrence[a_Explicit[q18]]
              | q18 : int(1..fin1), or([b_Explicit[q20] = a_Explicit[q18] | q20 : int(1..fin2)])]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
-         [x_ExplicitVarSizeWithFlags_Values[q2]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[q2 + 1]; int(1)]
+         x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
              | q2 : int(1..5)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q3] = false -> x_ExplicitVarSizeWithFlags_Values[q3] = 0 | q3 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..5)]),

@@ -28,8 +28,8 @@ such that
                    | q22 : int(1..3)])))
             | q19 : int(1..3)]),
     3 = sum([toInt(a_Occurrence[q1]) | q1 : int(1..4)]),
-    and([[b_Explicit[q2]; int(1)] <lex [b_Explicit[q2 + 1]; int(1)] | q2 : int(1..2)]),
-    and([[a_Explicit[q4]; int(1)] <lex [a_Explicit[q4 + 1]; int(1)] | q4 : int(1..2)]),
+    and([b_Explicit[q2] < b_Explicit[q2 + 1] | q2 : int(1..2)]),
+    and([a_Explicit[q4] < a_Explicit[q4 + 1] | q4 : int(1..2)]),
     and([a_Occurrence[a_Explicit[q7]] | q7 : int(1..3)]),
     and([a_Occurrence[q8] -> or([a_Explicit[q10] = q8 | q10 : int(1..3)]) | q8 : int(1..4)]),
     3 = sum([toInt(b_Occurrence[q11]) | q11 : int(1..4)]),

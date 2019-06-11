@@ -883,8 +883,8 @@ such that
     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker <= 2,
     and([q16 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          (2 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q16] ->
-          [b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 1]; int(1)] <lex
-          [b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 2]; int(1)])
+          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 1] <
+          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, 2])
              | q16 : int(1..2)]),
     and([q16 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          and([q18 > b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q16] ->

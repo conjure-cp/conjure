@@ -14,8 +14,7 @@ such that
                  | q8 : int(1..11)])
             | q5 : int(-4..5, 2)]),
     and([q1 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         [var2_ExplicitVarSizeWithMarker_Values[q1]; int(1)] <lex
-         [var2_ExplicitVarSizeWithMarker_Values[q1 + 1]; int(1)]
+         var2_ExplicitVarSizeWithMarker_Values[q1] < var2_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..10)]),
     and([q2 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q2] = -4
              | q2 : int(1..11)]),

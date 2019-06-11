@@ -56,8 +56,7 @@ such that
                = b_MOccurrence[q33]
                    | q33 : int(1..2), q33 < q37])))
             | q37 : int(1..2)]),
-    and([a_ExplicitWithFlags_Flags[q1 + 1] > 0 ->
-         [a_ExplicitWithFlags_Values[q1]; int(1)] <lex [a_ExplicitWithFlags_Values[q1 + 1]; int(1)]
+    and([a_ExplicitWithFlags_Flags[q1 + 1] > 0 -> a_ExplicitWithFlags_Values[q1] < a_ExplicitWithFlags_Values[q1 + 1]
              | q1 : int(1..2)]),
     and([a_ExplicitWithFlags_Flags[q2] = 0 -> a_ExplicitWithFlags_Values[q2] = 1 | q2 : int(1..3)]),
     and([a_ExplicitWithFlags_Flags[q3 + 1] > 0 -> a_ExplicitWithFlags_Flags[q3] > 0 | q3 : int(1..2)]),
@@ -75,8 +74,7 @@ such that
               catchUndef(a_ExplicitWithFlags_Flags[q25], 0)
                   | q25 : int(1..3)])
              | q24 : int(1..3)]),
-    and([[b_ExplicitWithRepetition_Values[q9]; int(1)] <=lex [b_ExplicitWithRepetition_Values[q9 + 1]; int(1)]
-             | q9 : int(1..2), q9 + 1 <= 3]),
+    and([b_ExplicitWithRepetition_Values[q9] <= b_ExplicitWithRepetition_Values[q9 + 1] | q9 : int(1..2), q9 + 1 <= 3]),
     and([sum([toInt(b_ExplicitWithRepetition_Values[q17] = b_ExplicitWithRepetition_Values[q15])
                   | q17 : int(1..3), q17 <= 3])
          = b_MOccurrence[b_ExplicitWithRepetition_Values[q15]]

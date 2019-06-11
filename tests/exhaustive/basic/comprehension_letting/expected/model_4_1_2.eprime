@@ -62,7 +62,7 @@ such that
              | q29 : int(1..4), j : int(1..4)])
     > 0,
     and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         [s_ExplicitVarSizeWithFlags_Values[q1]; int(1)] <lex [s_ExplicitVarSizeWithFlags_Values[q1 + 1]; int(1)]
+         s_ExplicitVarSizeWithFlags_Values[q1] < s_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..3)]),
     and([s_ExplicitVarSizeWithFlags_Flags[q2] = false -> s_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..4)]),
     and([s_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> s_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..3)]),
@@ -71,8 +71,7 @@ such that
              | q24 : int(1..4)]),
     and([s_ExplicitVarSizeWithFlags_Flags[q28] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q28]]
              | q28 : int(1..4)]),
-    and([[s_ExplicitVarSizeWithDummy[q7]; int(1)] <lex [s_ExplicitVarSizeWithDummy[q7 + 1]; int(1)] \/
-         s_ExplicitVarSizeWithDummy[q7] = 5
+    and([s_ExplicitVarSizeWithDummy[q7] < s_ExplicitVarSizeWithDummy[q7 + 1] \/ s_ExplicitVarSizeWithDummy[q7] = 5
              | q7 : int(1..3)]),
     and([s_ExplicitVarSizeWithDummy[q8] = 5 -> s_ExplicitVarSizeWithDummy[q8 + 1] = 5 | q8 : int(1..3)]),
     and([s_ExplicitVarSizeWithDummy[q12] != 5 ->

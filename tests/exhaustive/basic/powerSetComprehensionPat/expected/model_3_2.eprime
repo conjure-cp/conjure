@@ -9,12 +9,11 @@ such that
          |x_ExplicitVarSizeWithMarker_Values[q16] - x_ExplicitVarSizeWithMarker_Values[q17]| >= 3
              | q16 : int(1..7), q17 : int(1..7), q17 > q16]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         [x_ExplicitVarSizeWithMarker_Values[q1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[q1 + 1]; int(1)]
+         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..6)]),
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..7)]),
     3 <= x_ExplicitVarSizeWithMarker_Marker,
-    and([[x_ExplicitVarSizeWithDummy[q4]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q4 + 1]; int(1)] \/
-         x_ExplicitVarSizeWithDummy[q4] = 8
+    and([x_ExplicitVarSizeWithDummy[q4] < x_ExplicitVarSizeWithDummy[q4 + 1] \/ x_ExplicitVarSizeWithDummy[q4] = 8
              | q4 : int(1..6)]),
     and([x_ExplicitVarSizeWithDummy[q5] = 8 -> x_ExplicitVarSizeWithDummy[q5 + 1] = 8 | q5 : int(1..6)]),
     3 <= sum([toInt(x_ExplicitVarSizeWithDummy[q6] != 8) | q6 : int(1..7)]),

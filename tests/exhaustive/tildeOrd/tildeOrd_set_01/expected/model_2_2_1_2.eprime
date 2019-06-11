@@ -33,8 +33,8 @@ such that
                toInt(or([b_Explicit[q24] = b_Explicit[q20] | q24 : int(1..3)]))
                    | q20 : int(1..3)])))
             | q14 : int(1..3)]),
-    and([[a_Explicit[q1]; int(1)] <lex [a_Explicit[q1 + 1]; int(1)] | q1 : int(1..2)]),
-    and([[b_Explicit[q3]; int(1)] <lex [b_Explicit[q3 + 1]; int(1)] | q3 : int(1..2)]),
+    and([a_Explicit[q1] < a_Explicit[q1 + 1] | q1 : int(1..2)]),
+    and([b_Explicit[q3] < b_Explicit[q3 + 1] | q3 : int(1..2)]),
     3 = sum([toInt(a_Occurrence[q5]) | q5 : int(1..4)]),
     and([a_Occurrence[q6] -> or([a_Explicit[q8] = q6 | q8 : int(1..3)]) | q6 : int(1..4)]),
     and([a_Occurrence[a_Explicit[q10]] | q10 : int(1..3)])

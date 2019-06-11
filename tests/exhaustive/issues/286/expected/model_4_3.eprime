@@ -19,7 +19,7 @@ branching on
 such that
     sum([toInt(q57 <= p_PartitionOccurrence_NumParts) | q57 : int(1..b)]) <=
     sum([1   | q59_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),
-               and([[q59_ExplicitVarSizeWithDummy[q60]; int(1)] <lex [q59_ExplicitVarSizeWithDummy[q60 + 1]; int(1)] \/
+               and([q59_ExplicitVarSizeWithDummy[q60] < q59_ExplicitVarSizeWithDummy[q60 + 1] \/
                     q59_ExplicitVarSizeWithDummy[q60] = b + 1
                         | q60 : int(1..b - 1)]),
                and([q59_ExplicitVarSizeWithDummy[q61] = b + 1 -> q59_ExplicitVarSizeWithDummy[q61 + 1] = b + 1
@@ -76,10 +76,8 @@ such that
     p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker <= b,
     and([q16 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          and([q17 + 1 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q16] ->
-              [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, q17]; int(1)]
-              <lex
-              [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, q17 + 1];
-                   int(1)]
+              p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, q17] <
+              p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q16, q17 + 1]
                   | q17 : int(1..b - 1)])
              | q16 : int(1..b)]),
     and([q16 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->

@@ -5,8 +5,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 branching on [s_Occurrence, s_ExplicitVarSizeWithDummy]
 such that
     s_Occurrence[sum([toInt(s_ExplicitVarSizeWithDummy[q7] != 3) | q7 : int(1..2)])],
-    [s_ExplicitVarSizeWithDummy[1]; int(1)] <lex [s_ExplicitVarSizeWithDummy[2]; int(1)] \/
-    s_ExplicitVarSizeWithDummy[1] = 3,
+    s_ExplicitVarSizeWithDummy[1] < s_ExplicitVarSizeWithDummy[2] \/ s_ExplicitVarSizeWithDummy[1] = 3,
     s_ExplicitVarSizeWithDummy[1] = 3 -> s_ExplicitVarSizeWithDummy[2] = 3,
     and([s_Occurrence[q8] ->
          or([s_ExplicitVarSizeWithDummy[q10] != 3 /\ s_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..2)])

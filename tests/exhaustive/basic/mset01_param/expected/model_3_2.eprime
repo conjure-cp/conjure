@@ -18,7 +18,7 @@ such that
              | q19 : int(1..2)]),
     sum([x_MOccurrence[q1] | q1 : int(1..2)]) <= 4,
     and([q2 + 1 <= x_ExplicitWithRepetition_Flag ->
-         [x_ExplicitWithRepetition_Values[q2]; int(1)] <=lex [x_ExplicitWithRepetition_Values[q2 + 1]; int(1)]
+         x_ExplicitWithRepetition_Values[q2] <= x_ExplicitWithRepetition_Values[q2 + 1]
              | q2 : int(1..3)]),
     and([q3 > x_ExplicitWithRepetition_Flag -> x_ExplicitWithRepetition_Values[q3] = 1 | q3 : int(1..4)]),
     and([q5 <= x_ExplicitWithRepetition_Flag ->

@@ -15,7 +15,7 @@ such that
              var2_ExplicitVarSizeWithDummy[q11] = var2_ExplicitVarSizeWithDummy[q9]
                  | q11 : int(1..11)])
             | q9 : int(1..11)]),
-    and([[var2_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [var2_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
+    and([var2_ExplicitVarSizeWithDummy[q1] < var2_ExplicitVarSizeWithDummy[q1 + 1] \/
          var2_ExplicitVarSizeWithDummy[q1] = 6
              | q1 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q2] = 6 -> var2_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..10)])

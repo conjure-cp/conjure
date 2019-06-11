@@ -9,8 +9,7 @@ such that
     or([x_ExplicitVarSizeWithDummy[q7] != 4 /\ x_ExplicitVarSizeWithDummy[q7] = 1 | q7 : int(1..3)]) /\
     or([x_ExplicitVarSizeWithDummy[q9] != 4 /\ x_ExplicitVarSizeWithDummy[q9] = 2 | q9 : int(1..3)]),
     !cut2 <-> or([x_ExplicitVarSizeWithDummy[q11] != 4 /\ x_ExplicitVarSizeWithDummy[q11] = 1 | q11 : int(1..3)]),
-    and([[x_ExplicitVarSizeWithDummy[q1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q1 + 1]; int(1)] \/
-         x_ExplicitVarSizeWithDummy[q1] = 4
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 4
              | q1 : int(1..2)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 4 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 4 | q2 : int(1..2)])
 

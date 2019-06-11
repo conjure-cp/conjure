@@ -62,10 +62,8 @@ such that
                         | q36 : int(1..3), q36 <= 3])
                    | q30 : int(1..3), q30 <= 3])))
             | q22 : int(1..3), q22 <= 3]),
-    and([[a_ExplicitWithRepetition_Values[q1]; int(1)] <=lex [a_ExplicitWithRepetition_Values[q1 + 1]; int(1)]
-             | q1 : int(1..2), q1 + 1 <= 3]),
-    and([[b_ExplicitWithRepetition_Values[q6]; int(1)] <=lex [b_ExplicitWithRepetition_Values[q6 + 1]; int(1)]
-             | q6 : int(1..2), q6 + 1 <= 3]),
+    and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
+    and([b_ExplicitWithRepetition_Values[q6] <= b_ExplicitWithRepetition_Values[q6 + 1] | q6 : int(1..2), q6 + 1 <= 3]),
     3 = sum([b_MOccurrence[q11] | q11 : int(1..2)]),
     and([b_MOccurrence[q13] > 0 ->
          b_MOccurrence[q13] = sum([toInt(b_ExplicitWithRepetition_Values[q15] = q13) | q15 : int(1..3), q15 <= 3])

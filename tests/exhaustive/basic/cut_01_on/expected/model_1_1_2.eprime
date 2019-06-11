@@ -8,8 +8,7 @@ branching on [cut1, cut2, x_ExplicitVarSizeWithDummy, x_Occurrence]
 such that
     !cut1 <-> x_Occurrence[1] /\ x_Occurrence[2],
     !cut2 <-> x_Occurrence[1],
-    and([[x_ExplicitVarSizeWithDummy[q2]; int(1)] <lex [x_ExplicitVarSizeWithDummy[q2 + 1]; int(1)] \/
-         x_ExplicitVarSizeWithDummy[q2] = 4
+    and([x_ExplicitVarSizeWithDummy[q2] < x_ExplicitVarSizeWithDummy[q2 + 1] \/ x_ExplicitVarSizeWithDummy[q2] = 4
              | q2 : int(1..2)]),
     and([x_ExplicitVarSizeWithDummy[q3] = 4 -> x_ExplicitVarSizeWithDummy[q3 + 1] = 4 | q3 : int(1..2)]),
     and([x_ExplicitVarSizeWithDummy[q7] != 4 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q7]] | q7 : int(1..3)]),

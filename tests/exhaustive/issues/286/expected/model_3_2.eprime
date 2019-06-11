@@ -18,7 +18,7 @@ branching on
 such that
     sum([toInt(q70 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker) | q70 : int(1..b)]) <=
     sum([1   | q71_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),
-               and([[q71_ExplicitVarSizeWithDummy[q72]; int(1)] <lex [q71_ExplicitVarSizeWithDummy[q72 + 1]; int(1)] \/
+               and([q71_ExplicitVarSizeWithDummy[q72] < q71_ExplicitVarSizeWithDummy[q72 + 1] \/
                     q71_ExplicitVarSizeWithDummy[q72] = b + 1
                         | q72 : int(1..b - 1)]),
                and([q71_ExplicitVarSizeWithDummy[q73] = b + 1 -> q71_ExplicitVarSizeWithDummy[q73 + 1] = b + 1
@@ -57,9 +57,8 @@ such that
     p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker <= b,
     and([q6 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          and([q7 + 1 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q6] ->
-              [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q6, q7]; int(1)]
-              <lex
-              [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q6, q7 + 1]; int(1)]
+              p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q6, q7] <
+              p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q6, q7 + 1]
                   | q7 : int(1..b - 1)])
              | q6 : int(1..b)]),
     and([q6 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
@@ -98,8 +97,8 @@ such that
              | q15 : int(1..b)]),
     p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker <= b,
     and([q16 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         and([[p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17]; int(1)] <lex
-              [p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17 + 1]; int(1)]
+         and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17] <
+              p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17 + 1]
               \/ p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17] = b + 1
                   | q17 : int(1..b - 1)])
              | q16 : int(1..b)]),

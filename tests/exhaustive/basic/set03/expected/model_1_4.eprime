@@ -7,8 +7,7 @@ branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Value
 such that
     x_Occurrence[1],
     sum([toInt(x_Occurrence[q1]) | q1 : int(1..2)]) <= 2,
-    x_ExplicitVarSizeWithFlags_Flags[2] ->
-    [x_ExplicitVarSizeWithFlags_Values[1]; int(1)] <lex [x_ExplicitVarSizeWithFlags_Values[2]; int(1)],
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
     and([x_ExplicitVarSizeWithFlags_Flags[q3] = false -> x_ExplicitVarSizeWithFlags_Values[q3] = 1 | q3 : int(1..2)]),
     x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q5]) | q5 : int(1..2)]) <= 2,
