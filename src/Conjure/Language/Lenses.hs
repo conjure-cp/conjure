@@ -542,6 +542,50 @@ opMatrixIndexing _ =
             _ -> return (p, [])
 
 
+opMatrixIndexingSlicing
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       , TypeOf x
+       , ?typeCheckerMode :: TypeCheckerMode
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> [Either x (Maybe x, Maybe x)] -> x
+       , x -> m (x, [Either x (Maybe x, Maybe x)])           -- either an index or a slice
+       )
+opMatrixIndexingSlicing _ =
+    ( mk
+    , \ p -> do
+        (m, is, wasThereAnySlicing) <- go p
+        if not (null is) && wasThereAnySlicing
+            then return (m, is)
+            else na ("Lenses.opMatrixIndexingSlicing:" <+> pretty p)
+    )
+    where
+        mk m [] = m
+        mk m (Left i:is) = mk (make opIndexing m i) is
+        mk m (Right (lb, ub):is) = mk (make opSlicing m lb ub) is
+
+        go p = case project p of
+            Just (MkOpIndexing (OpIndexing x i)) -> do
+                ty <- typeOf x
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{} -> return ()
+                    _ -> na ("Lenses.opMatrixIndexingSlicing:" <+> pretty p)
+                (m, is, wasThereAnySlicing) <- go x
+                return (m, is ++ [Left i], wasThereAnySlicing)
+            Just (MkOpSlicing (OpSlicing x lb ub)) -> do
+                ty <- typeOf x
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{} -> return ()
+                    _ -> na ("Lenses.opMatrixIndexingSlicing:" <+> pretty p)
+                (m, is, _) <- go x
+                return (m, is ++ [Right (lb, ub)], True)
+            _ -> return (p, [], False)
+
+
 opSlicing
     :: ( Op x :< x
        , Pretty x

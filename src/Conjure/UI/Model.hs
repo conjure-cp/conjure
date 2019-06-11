@@ -1219,6 +1219,7 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
+    , Vertical.Matrix.rule_ExpandSlices
 
     , Vertical.Set.Explicit.rule_Min
     , Vertical.Set.Explicit.rule_Max
@@ -1868,10 +1869,11 @@ rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule whe
             Just {} -> na "rule_ReducerToComprehension"
         tyColl <- typeOf coll
         howToIndex <- case tyColl of
-            TypeMatrix{} -> return $ Left ()
-            TypeList{}   -> return $ Right ()
-            TypeSet{}    -> return $ Right ()
-            TypeMSet{}   -> return $ Right ()
+            TypeSequence{} -> return $ Left ()
+            TypeMatrix{}   -> return $ Right ()
+            TypeList{}     -> return $ Right ()
+            TypeSet{}      -> return $ Right ()
+            TypeMSet{}     -> return $ Right ()
             _ -> na "rule_ReducerToComprehension"
         return
             ( "Creating a comprehension for the collection inside the reducer operator."

@@ -511,3 +511,34 @@ rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
                     , return firstElem
                     )
             else na "rule_IndexingIdentical"
+
+
+rule_ExpandSlices :: Rule
+rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
+    theRule p = do
+        (m, is) <- match opMatrixIndexingSlicing p
+        indexDoms <- indexDomainsOf m
+        unless (length is == length indexDoms) $ na "rule_ExpandSlices"
+        (is', gocs) <- unzip <$> sequence
+            [ case index of
+                Left i -> -- indexing
+                    return
+                        ( Left i
+                        , []
+                        )
+                Right (mLowerBound, mUpperBound) -> do -- slicing
+                    (jPat, j) <- quantifiedVar
+                    return
+                        ( Left j
+                        , concat [ [ Generator (GenDomainNoRepr jPat indexDom) ]
+                                 , [ Condition [essence| &j >= &lb |] | Just lb <- [mLowerBound] ]
+                                 , [ Condition [essence| &j <= &ub |] | Just ub <- [mUpperBound] ]
+                                 ]
+                        )
+            | (index, indexDom) <- zip is indexDoms
+            ]
+        when (null gocs) $ na "rule_ExpandSlices: this was all indexing and no slicing"
+        return ( "Expanding a matrix slice"
+               , return $ Comprehension (make opMatrixIndexingSlicing m is') (concat gocs)
+               )
+
