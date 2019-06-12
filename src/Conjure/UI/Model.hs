@@ -1685,22 +1685,14 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
 
-        let genOptions =
-                [ do
-                    outs <- downD (nm, dom)
-                    structurals <- mkStructurals nm dom
-                    return (dom, outs, structurals)
-                | dom <- domOpts
-                ]
-
         return
             [ RuleResult
                 { ruleResultDescr = "Choosing representation for quantified variable" <+> pretty nm
                                         <+> "(with type:" <+> pretty ty <> ")"
                 , ruleResultType = ChooseRepr_Quantified
                 , ruleResult = bugFailT "rule_ChooseReprForComprehension" $ do
-                    option <- genOption
-                    let (thisDom, outDomains, structurals) = option
+                    outDomains <- downD (nm, thisDom)
+                    structurals <- mkStructurals nm thisDom
                     let updateRepr (Reference nm' _)
                             | nm == nm'
                             = Reference nm (Just (DeclHasRepr Quantified nm thisDom))
@@ -1715,7 +1707,7 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
                     return out
                 , ruleResultHook = Nothing
                 }
-            | genOption <- genOptions
+            | thisDom <- domOpts
             ]
     theRule _ = na "rule_ChooseReprForComprehension"
 
@@ -1748,21 +1740,13 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
 
-        let genOptions =
-                [ do
-                    outs <- downD (nm, dom)
-                    structurals <- mkStructurals nm dom
-                    return (dom, outs, structurals)
-                | dom <- domOpts
-                ]
-
         return
             [ RuleResult
                 { ruleResultDescr = "Choosing representation for local variable" <+> pretty nm
                 , ruleResultType = ChooseRepr_Auxiliary
                 , ruleResult = bugFailT "rule_ChooseReprForLocals" $ do
-                    option <- genOption
-                    let (thisDom, outDomains, structurals) = option
+                    outDomains <- downD (nm, thisDom)
+                    structurals <- mkStructurals nm thisDom
                     let updateRepr (Reference nm' _)
                             | nm == nm'
                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
@@ -1781,7 +1765,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                     return out
                 , ruleResultHook = Nothing
                 }
-            | genOption <- genOptions
+            | thisDom <- domOpts
             ]
     theRule _ = na "rule_ChooseReprForLocals"
 
