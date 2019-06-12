@@ -133,6 +133,7 @@ data UI
         , limitTime                  :: Maybe Int
         , lineWidth                  :: Int                 -- 120 by default
         , dumpDeclarations           :: Bool
+        , dumpRepresentations        :: Bool
         }
     | Pretty
         { essence                    :: FilePath
@@ -898,7 +899,13 @@ ui = modes
             &= name "dump-declarations"
             &= groupname "IDE Features"
             &= explicit
-            &= help "Print the domains of decision variables and parameters."
+            &= help "Print information about top level declarations."
+        , dumpRepresentations
+            = False
+            &= name "dump-representations"
+            &= groupname "IDE Features"
+            &= explicit
+            &= help "List the available representations for decision variables and parameters."
         , logLevel
             = def
             &= name "log-level"

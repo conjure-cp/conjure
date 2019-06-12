@@ -8,6 +8,7 @@ module Conjure.UI.Model
     ( outputModels
     , Strategy(..), Config(..), parseStrategy
     , nbUses
+    , modelRepresentationsJSON
     ) where
 
 import Conjure.Prelude
@@ -46,7 +47,6 @@ import Conjure.UI.IO ( writeModel )
 import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing
                                       , normaliseQuantifiedVariablesS, normaliseQuantifiedVariablesE
                                       )
-
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
@@ -92,8 +92,6 @@ import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Par
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 import qualified Conjure.Rules.Transform as Transform
 
-
-
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
 import qualified Conjure.Rules.TildeOrdering as TildeOrdering
@@ -103,7 +101,6 @@ import System.IO ( hFlush, stdout )
 import Data.IORef ( IORef, newIORef, readIORef, writeIORef )
 import System.IO.Unsafe ( unsafePerformIO )
 
-
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
 import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
@@ -111,6 +108,10 @@ import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 -- pipes
 import Pipes ( Pipe, Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
+
+import qualified Data.Aeson.Types as JSON   -- aeson
+import qualified Data.HashMap.Strict as M   -- containers
+import qualified Data.Vector as V           -- vector
 
 
 outputModels ::
@@ -245,6 +246,48 @@ toCompletion config m = do
                 else do
                     nextModels <- driver qs
                     mapM_ loopy nextModels
+
+
+modelRepresentationsJSON ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m JSONValue
+modelRepresentationsJSON model = do
+    reprs <- modelRepresentations model
+    return $ JSON.Array $ V.fromList
+        [ JSON.Object $ M.fromList
+            [ "name" ~~ r name
+            , "representations" ~~ representationsJSON
+            ]
+        | (name, domains) <- reprs
+        , let representationsJSON = JSON.Array $ V.fromList
+                [ JSON.Object $ M.fromList
+                    [ "description" ~~ r d
+                    , "answer" ~~ toJSON i
+                    ]
+                | (i, d) <- zip allNats domains
+                ]
+        ]
+    where
+        (~~) :: Text -> JSONValue -> (Text, JSONValue)
+        x ~~ y = (x, y)
+        r s = JSON.String $ stringToText $ render 100000 $ pretty s
+
+
+modelRepresentations ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m [(Name, [Domain HasRepresentation Expression])]
+modelRepresentations model =
+    concatForM (mStatements model) $ \case
+        Declaration (FindOrGiven _ name domain) -> do
+            domOpts <- reprOptions reprsStandardOrder domain
+            return [(name, domOpts)]
+        _ -> return []
 
 
 -- | If a rule is applied at a position P, the MonadZipper will be retained focused at that location

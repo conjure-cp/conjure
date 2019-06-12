@@ -10,7 +10,7 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -166,9 +166,12 @@ mainWithArgs IDE{..} = do
             then readModelFromStdin
             else readModelFromFile essence
     void $ runNameGen () $ typeCheckModel_StandAlone essence2
-    if dumpDeclarations
-        then liftIO $ putStrLn $ render lineWidth (modelDeclarationsJSON essence2)
-        else writeModel lineWidth JSON Nothing essence2
+    if
+        | dumpDeclarations    -> liftIO $ putStrLn $ render lineWidth (modelDeclarationsJSON essence2)
+        | dumpRepresentations -> do
+            json <- runNameGen () $ modelRepresentationsJSON essence2
+            liftIO $ putStrLn $ render lineWidth json
+        | otherwise           -> writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
