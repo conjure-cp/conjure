@@ -132,7 +132,7 @@ data UI
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , lineWidth                  :: Int                 -- 120 by default
-        , dumpDomains                :: Bool
+        , dumpDeclarations           :: Bool
         }
     | Pretty
         { essence                    :: FilePath
@@ -893,9 +893,9 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , dumpDomains
+        , dumpDeclarations
             = False
-            &= name "dump-domains"
+            &= name "dump-declarations"
             &= groupname "IDE Features"
             &= explicit
             &= help "Print the domains of decision variables and parameters."

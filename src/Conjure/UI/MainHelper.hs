@@ -33,7 +33,7 @@ import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
-import Conjure.Language.ModelStats ( modelDomainsJSON )
+import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -166,8 +166,8 @@ mainWithArgs IDE{..} = do
             then readModelFromStdin
             else readModelFromFile essence
     void $ runNameGen () $ typeCheckModel_StandAlone essence2
-    if dumpDomains
-        then liftIO $ putStrLn $ render lineWidth (modelDomainsJSON essence2)
+    if dumpDeclarations
+        then liftIO $ putStrLn $ render lineWidth (modelDeclarationsJSON essence2)
         else writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
