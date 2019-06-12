@@ -51,6 +51,7 @@ parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames m
                     return [SuchThat xs']
                 Objective         {}                   -> return []
                 SuchThat          {}                   -> return []
+                CommentLine       {}                   -> return []
             return m { mStatements = concat outStatements }
 
         evaluateBounds m = do

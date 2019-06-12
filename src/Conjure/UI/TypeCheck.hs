@@ -175,6 +175,7 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (SuchThat xs')
+            CommentLine{} -> return st
     unless (null errs) (userErr errs)
 
     -- now that everything knows its type, we can recover

@@ -135,6 +135,7 @@ resolveStatement st =
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
+        CommentLine{} -> return st
 
 
 resolveSearchOrder ::

@@ -152,6 +152,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                              , nm `elem` (universeBi x :: [Name])
                                                              ]
                                                          ]
+        CommentLine{} -> return ()
 
 
 introduceRecordFields ::
