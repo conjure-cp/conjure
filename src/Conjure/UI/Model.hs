@@ -285,7 +285,7 @@ modelRepresentations ::
 modelRepresentations model =
     concatForM (mStatements model) $ \case
         Declaration (FindOrGiven _ name domain) -> do
-            domOpts <- reprOptions reprsStandardOrder domain
+            domOpts <- reprOptions reprsStandardOrderNoLevels domain
             return [(name, domOpts)]
         _ -> return []
 
