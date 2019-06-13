@@ -40,7 +40,9 @@ sanityChecks model = do
                             Just (a,b) -> do
                                 let
                                     disallowed (Comprehension _ gocs) =
-                                        not $ null [ () | Generator (GenInExpr {}) <- gocs ]
+                                        or [ not $ null [ () | Generator (GenInExpr {}) <- gocs ]
+                                           , not $ null [ () | Condition c <- gocs, categoryOf c == CatDecision ]
+                                           ]
                                     disallowed _ = False
                                 when (disallowed a || disallowed b) $
                                     recordErr [ "Type error in" <+> vcat
