@@ -55,7 +55,6 @@ data Statement
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
-    | CommentLine Text
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
@@ -70,8 +69,6 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
-    pretty (CommentLine "") = ""
-    pretty (CommentLine t) = "$" <> pretty t
 
 instance VarSymBreakingDescription Statement where
     varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
@@ -94,7 +91,6 @@ instance VarSymBreakingDescription Statement where
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription CommentLine{} = toJSON ()
 
 
 ------------------------------------------------------------------------------------------------------------------------

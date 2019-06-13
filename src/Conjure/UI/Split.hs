@@ -43,7 +43,6 @@ split m = do
         toPermute (Where xs)             = Left [Where [x] | x <- xs]
         toPermute st@Objective{}         = Left [st]
         toPermute (SuchThat xs)          = Left [SuchThat [x] | x <- xs]
-        toPermute CommentLine{}          = Left []
     let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
     forM_ (statements
             |> concat
