@@ -74,22 +74,11 @@ class ConfigService {
       .then(async () => {
         const trees = needToGenerate.concat(loadFromCache);
 
-        // trees.forEach((tree) => {
-        //     const fullPath = (path.join(vscode.workspace.rootPath!, tree.hash))
-        // })
-
-        console.log("HERE");
-
         const fullPath = path.join(vscode.workspace.rootPath!, trees[0].hash);
 
         return await fetch(`http://localhost:5000/init/${fullPath}`).then(
           (response: any) => response.json()
         );
-
-        // return {
-        //     message: "hello!",
-        //     content: WebviewHelper.getWebContent()
-        // }
       });
   }
 }

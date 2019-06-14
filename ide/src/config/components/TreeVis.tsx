@@ -31,19 +31,17 @@ export default class TreeVis extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {};
+    console.log("TreviewProps ", props);
   }
 
   focusNode(node: HierarchyPointNode<Node>) {
-    let x = -node.x;
-    let y = -node.y;
-
     zoom.translateTo(
       d3
         .select("#tree svg")
         .transition()
-        .duration(750),
-      x,
-      y
+        .duration(this.props.duration),
+      node.x,
+      node.y
     );
   }
 

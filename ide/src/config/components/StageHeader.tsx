@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 interface Props {
+  collapseHandler?: () => void;
   startCollapsed?: boolean;
   title: string;
   id: string;
@@ -17,7 +18,17 @@ const StageHeader = (props: Props) => {
   return (
     <div className="card mb-4">
       <h5 className="card-header">
-        <a className={outerClass} data-toggle="collapse" data-target={"#" + id}>
+        <a
+          className={outerClass}
+          data-toggle="collapse"
+          data-target={"#" + id}
+          onClick={() => {
+            if (props.collapseHandler) {
+              props.collapseHandler();
+            }
+            console.log("!!!!!!!!");
+          }}
+        >
           {props.title} Options
         </a>
       </h5>

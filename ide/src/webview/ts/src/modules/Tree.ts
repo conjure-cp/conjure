@@ -1,4 +1,7 @@
 declare var d3: any;
+
+// import * as `$` from "jQuery"
+
 import Globals from "./Globals";
 import State from "./State";
 import Node from "./Node";

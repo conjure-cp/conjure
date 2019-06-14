@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { Form, Field, FieldArray, Formik, FieldArrayRenderProps } from "formik";
+import { Form, Field, FieldArray, Formik } from "formik";
 import * as Yup from "yup";
 
 import TextWithLabel from "./TextWithLabel";
@@ -116,12 +116,12 @@ const submissionHandler = (values: Values, props: Props) => {
   })
     .then(response => response.json())
     .then(data => {
+      console.log(data);
       props.responseHandler(data.core);
-      // console.log(data)
-    })
-    .catch(error => {
-      console.error(error);
     });
+  // .catch(error => {
+  //   console.log(error);
+  // });
 };
 
 const renderArrayElements = (props: Props, values: Values) =>

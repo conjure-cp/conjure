@@ -646,7 +646,17 @@ export default class ConfigureHelper {
         "configBundle.js"
       )
     );
+
+    const cssPath = vscode.Uri.file(
+      path.join(
+        ConfigureHelper.context.extensionPath,
+        "src/config/",
+        "styles.css"
+      )
+    );
+
     const scriptUri = scriptPath.with({ scheme: "vscode-resource" });
+    const cssUri = cssPath.with({ scheme: "vscode-resource" });
 
     // External scripts
     const jspanelCSS =
@@ -675,7 +685,7 @@ export default class ConfigureHelper {
       // script: [],
       scriptAsync: false,
       // css: [jspanelCSS, bootstrap, fontawesome, cssUri],
-      css: [jspanelCSS, bootstrap, fontawesome],
+      css: [cssUri, jspanelCSS, bootstrap, fontawesome],
       lang: "en",
       dir: "rtl",
       head: '<meta name="description" content="example">',

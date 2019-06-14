@@ -24,6 +24,11 @@ class F extends React.Component<any, State> {
     };
     this.clickHandler = this.clickHandler.bind(this);
     this.initResponseHandler = this.initResponseHandler.bind(this);
+    this.collapseHandler = this.collapseHandler.bind(this);
+  }
+
+  collapseHandler() {
+    // this.setState({ gotResponse: false });
   }
 
   initResponseHandler(core: Core) {
@@ -31,14 +36,14 @@ class F extends React.Component<any, State> {
       return { ...prevState, gotResponse: true, core: core };
     });
 
-    console.log("CALLED!");
+    console.log("Init response handler!");
     console.log(this.state.core);
     console.log("~~~~~~");
   }
 
   clickHandler() {
     this.setState((prevState: State) => {
-      return { diff: !prevState.diff };
+      return { diff: !prevState.diff, gotResponse: false };
     });
   }
 
@@ -51,13 +56,15 @@ class F extends React.Component<any, State> {
   }
 
   render() {
+    console.log(this.state.core);
+
     return (
       <div>
         <StageHeader
           title={"Setup"}
           id={"Setup"}
-          // startCollapsed={this.state.gotResponse}
-          startCollapsed={true}
+          startCollapsed={this.state.gotResponse}
+          collapseHandler={this.collapseHandler}
         >
           <div className="input-group mb-3">
             <div className="input-group-prepend">
@@ -81,8 +88,8 @@ class F extends React.Component<any, State> {
             paramFiles={this.state.params}
           />
         </StageHeader>
-        {/* {this.state.core && <TreeVis core={this.state.core} />} */}
-        <TreeContainer/>
+        {this.state.core && <TreeContainer core={this.state.core} />}
+        {/* <TreeContainer  /> */}
       </div>
     );
   }
