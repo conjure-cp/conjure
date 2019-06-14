@@ -1,117 +1,152 @@
-import * as React from "react"
-import * as ReactDOM from "react-dom"
-import * as d3 from 'd3'
-import Tree from 'react-d3-tree'
-import Node from "../modules/Node"
-import { stat } from "fs";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import * as d3 from "d3";
+import Node from "../modules/Node";
+import { HierarchyPointLink, HierarchyPointNode } from "d3";
 
-
-
-export interface Core {
-    nodes: any[]
-    solAncestorIds: number[]
-}
-
-type MyMap = Record<string, Node>
-
-interface State {
-    // core: Core
-    // solNodeIds: number[]
-    // id2Node: MyMap
-}
+interface State {}
 
 interface Props {
-    core: Core
+  width: number;
+  height: number;
+  rootNode: Node;
+  duration: number;
+  selected: number;
 }
 
-export class TreeVis extends React.Component<Props, State>{
+const linkGenerator = d3
+  .linkVertical<any, Node>()
+  .x(function(d: Node) {
+    return d.x;
+  })
+  .y(function(d: Node) {
+    return d.y;
+  });
 
-    constructor(props: Props) {
+const zoom = d3.zoom<any, any>().on("zoom", function() {
+  d3.select("#tree svg g").attr("transform", d3.event.transform);
+});
 
-        console.log("constructor!!")
+export default class TreeVis extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {};
+  }
 
-        super(props)
-        // this.state = {core: props.core, solNodeIds: [], id2Node: {}}
-        this.makeState = this.makeState.bind(this)
+  focusNode(node: HierarchyPointNode<Node>) {
+    let x = -node.x;
+    let y = -node.y;
 
-        this.state = {}
-    }
+    zoom.translateTo(
+      d3
+        .select("#tree svg")
+        .transition()
+        .duration(750),
+      x,
+      y
+    );
+  }
 
-    
+  drawTree() {
+    const layout = d3.tree<Node>().nodeSize([50, 50]);
+    const svg = d3.select("#tree svg g");
+    const rootNode = layout(d3.hierarchy<Node>(this.props.rootNode));
+    const nodeList = rootNode.descendants();
+    let g = svg.selectAll("g.node");
+    let node = g.data(nodeList);
 
-    makeState(core: Core) {
-        let state: any = {}
-        state.solNodeIds = []
-        state.id2Node = {}
+    let nodeEnter = node
+      .enter()
+      .append("g")
+      .attr("class", "node");
 
-        for (let i = 0; i < core.nodes.length; i++) {
-            const newNode = core.nodes[i]
-            const parentId = newNode.parentId
+    nodeEnter
+      .attr("transform", d =>
+        d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
+      )
+      .transition()
+      .duration(this.props.duration)
+      .attr("transform", d => `translate(${d.x},${d.y})`);
 
-            // console.log(newNode)
+    nodeEnter
+      .append("svg:circle")
+      .attr("r", 6)
+      .attr("fill", "green");
 
-            if (newNode.isSolution) {
-                state.solNodeIds.push(newNode.id)
-            }
+    node.select("circle").classed("selected", d => {
+      return d.data.id === this.props.selected;
+    });
 
-            if (newNode.parentId === -1) {
-                state.id2Node[newNode.id] = newNode
-                continue
-            }
+    node.each(d => {
+      if (d.data.id === this.props.selected) {
+        this.focusNode(d);
+      }
+    });
 
-            if (!state.id2Node[parentId].children) {
-                state.id2Node[parentId].children = []
-            }
+    node
+      .transition()
+      .duration(this.props.duration)
+      .attr("transform", d => `translate(${d.x},${d.y})`);
 
-            if (newNode.isLeftChild) {
-                state.id2Node[parentId].children!.unshift(newNode)
-            }
+    node
+      .exit<HierarchyPointNode<Node>>()
+      .transition()
+      .duration(this.props.duration)
+      .attr("transform", d =>
+        d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
+      )
+      .remove();
 
-            else {
-                state.id2Node[parentId].children!.push(newNode)
-            }
+    let p = svg.selectAll("path.link");
 
-            state.id2Node[newNode.id] = newNode
-        }
+    const linkList = rootNode.links();
+    let link = p.data(linkList);
 
-        return state
-    }
+    link
+      .enter()
+      .insert("svg:path", "g")
+      .attr("class", "link")
+      .attr("d", d => {
+        const origin = { x: d.source.x, y: d.source.y };
+        return linkGenerator({ source: origin, target: origin });
+      })
+      .transition()
+      .duration(this.props.duration)
+      .attr("d", linkGenerator);
 
-    
+    link
+      .transition()
+      .duration(this.props.duration)
+      .attr("d", linkGenerator);
 
-    render() {
+    link
+      .exit<HierarchyPointLink<Node>>()
+      .transition()
+      .duration(this.props.duration)
+      .attr("d", d => {
+        const origin = { x: d.source.x, y: d.source.y };
+        return linkGenerator({ source: origin, target: origin });
+      })
+      .remove();
+  }
 
-        const map = this.makeState(this.props.core).id2Node
-        const rootNode = d3.hierarchy(map[0])
+  componentDidMount() {
+    let svg = d3
+      .select("#tree")
+      .append("svg")
+      .attr("width", this.props.width)
+      .attr("height", this.props.height)
+      .call(zoom)
+      .append("g");
 
+    this.drawTree();
+  }
 
+  componentDidUpdate() {
+    this.drawTree();
+  }
 
-
-        console.log("rendering...")
-        console.log(map)
- 
-
-        return (
-            <div>
-                This is the tree
-                <div>
-
-
-
-
-                </div>
-
-
-                <div id="treeWrapper" style={{ width: '50em', height: '20em' }}>
-                    {map[0] && <Tree 
-                    data={map[0]} 
-                    orientation="vertical"
-                    onClick={(nodeData, evt) => {
-                        console.log("here!")
-                    }}
-                     />}
-                </div>
-            </div>
-        )
-    }
+  render() {
+    return <div id="tree">This is the tree</div>;
+  }
 }

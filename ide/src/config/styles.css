@@ -1,16 +1,56 @@
-.navbar {
-    background-color: aqua;
-    font-size: 50px;
-}
-
 a:after {
-    font-family:Fontawesome;
-    content:'\f077';
-    float:right;
-    font-size:10px;
-    font-weight:300;
+  font-family: Fontawesome;
+  content: "\f077";
+  float: right;
+  font-size: 10px;
+  font-weight: 300;
 }
 a.collapsed:after {
-    font-family:Fontawesome;
-    content:'\f078';
+  font-family: Fontawesome;
+  content: "\f078";
+}
+
+.changed * {
+  color: coral;
+}
+
+.node circle {
+  fill: white;
+  stroke: cornflowerblue;
+  stroke-width: 5px;
+  transition: stroke 500ms, fill 500ms;
+}
+
+circle.solution {
+  fill: gold;
+  transition: stroke 500ms, fill 500ms;
+}
+
+circle.hasOthers {
+  fill: green;
+  transition: stroke 500ms, fill 500ms;
+}
+
+circle.hasOthers.red {
+  fill: red;
+  transition: stroke 500ms, fill 500ms;
+}
+
+circle.selected {
+  border-style: dotted;
+  border: 2px;
+  border-color: cornflowerblue;
+  stroke: coral;
+}
+
+.link {
+  fill: none;
+  stroke: green;
+  stroke-width: 2px;
+}
+
+.link.red {
+  fill: none;
+  stroke: red;
+  stroke-width: 2px;
 }

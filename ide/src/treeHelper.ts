@@ -1,12 +1,9 @@
-import * as path from 'path'
+// import * as path from 'path'
 
+// export default class TreeHelper {
 
-export default class TreeHelper {
+//     public static init(fullPath: string) {
+//         console.log("here")
 
-    public static init(fullPath: string) {
-        console.log("here")
-
-
-
-    }
-}
+//     }
+// }

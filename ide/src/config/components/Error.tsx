@@ -1,14 +1,10 @@
-import * as React from "react"
-import * as ReactDOM from "react-dom"
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 interface Props {
-    message: string
+  message: string;
 }
 
-const Error = (props: Props) => 
-    (
-        <p style={{"color": "red"}}>{props.message}</p>
-    )
+const Error = (props: Props) => <p style={{ color: "red" }}>{props.message}</p>;
 
-
-export default Error
+export default Error;
