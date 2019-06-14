@@ -219,6 +219,7 @@
                                                - gecode (CP solver)
                                                - chuffed (CP solver)
                                                - glucose (SAT solver)
+                                               - glucose-syrup (SAT solver)
                                                - lingeling (SAT solver)
                                                - minisat (SAT solver)
                                                - bc_minisat_all (AllSAT solver, only works with
@@ -239,7 +240,9 @@
  General:
       --limit-time=INT                        Limit in seconds of real time.
  IDE Features:
-      --dump-domains                          Print the domains of decision variables and parameters.
+      --dump-declarations                     Print information about top level declarations.
+      --dump-representations                  List the available representations for decision variables and
+                                              parameters.
  
  conjure pretty [OPTIONS] ESSENCE_FILE
    Pretty print as Essence file to stdout.

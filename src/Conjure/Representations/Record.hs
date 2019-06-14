@@ -83,4 +83,5 @@ record = Representation chck downD structuralCons downC up symmetryOrdering
             Just xsDoms' <- downD ("SO", domain)
             let xsDoms = map snd xsDoms'
             soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
-            return $ make opFlatten (fromList soValues)
+            return $ AbstractLiteral $ AbsLitTuple soValues
+

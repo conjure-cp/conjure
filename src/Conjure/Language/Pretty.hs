@@ -3,6 +3,7 @@
 module Conjure.Language.Pretty
     ( Pretty(..)
     , (<++>), (<+>), (<>)
+    , (<+->)
     , prettyList, prettyListDoc
     , parensIf
     , render, renderNormal, renderWide
@@ -67,6 +68,10 @@ instance Pretty a => Pretty (Maybe a) where
 infixl 5 <++>
 (<++>) :: Doc -> Doc -> Doc
 a <++> b = hang a 4 b
+
+-- | For debugging output, truncates the second argument to 5 lines
+(<+->) :: Doc -> Doc -> Doc
+a <+-> b = a <+> (vcat $ map pretty $ take 5 $ lines $ renderWide $ b)
 
 prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
 prettyList wrap punc = prettyListDoc wrap punc . map pretty

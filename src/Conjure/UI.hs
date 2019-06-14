@@ -132,7 +132,8 @@ data UI
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , lineWidth                  :: Int                 -- 120 by default
-        , dumpDomains                :: Bool
+        , dumpDeclarations           :: Bool
+        , dumpRepresentations        :: Bool
         }
     | Pretty
         { essence                    :: FilePath
@@ -837,6 +838,7 @@ ui = modes
                     \ - gecode (CP solver)\n\
                     \ - chuffed (CP solver)\n\
                     \ - glucose (SAT solver)\n\
+                    \ - glucose-syrup (SAT solver)\n\
                     \ - lingeling (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
@@ -892,12 +894,18 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , dumpDomains
+        , dumpDeclarations
             = False
-            &= name "dump-domains"
+            &= name "dump-declarations"
             &= groupname "IDE Features"
             &= explicit
-            &= help "Print the domains of decision variables and parameters."
+            &= help "Print information about top level declarations."
+        , dumpRepresentations
+            = False
+            &= name "dump-representations"
+            &= groupname "IDE Features"
+            &= explicit
+            &= help "List the available representations for decision variables and parameters."
         , logLevel
             = def
             &= name "log-level"

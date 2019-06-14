@@ -10,7 +10,7 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -33,7 +33,7 @@ import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
-import Conjure.Language.ModelStats ( modelDomainsJSON )
+import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -166,9 +166,12 @@ mainWithArgs IDE{..} = do
             then readModelFromStdin
             else readModelFromFile essence
     void $ runNameGen () $ typeCheckModel_StandAlone essence2
-    if dumpDomains
-        then liftIO $ putStrLn $ render lineWidth (modelDomainsJSON essence2)
-        else writeModel lineWidth JSON Nothing essence2
+    if
+        | dumpDeclarations    -> liftIO $ putStrLn $ render lineWidth (modelDeclarationsJSON essence2)
+        | dumpRepresentations -> do
+            json <- runNameGen () $ modelRepresentationsJSON essence2
+            liftIO $ putStrLn $ render lineWidth json
+        | otherwise           -> writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
@@ -220,7 +223,8 @@ mainWithArgs config@Solve{..} = do
     let executables = [ ( "minion"          , "minion" )
                       , ( "gecode"          , "fzn-gecode" )
                       , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "glucose"         , "glucose-syrup" )
+                      , ( "glucose"         , "glucose" )
+                      , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
                       , ( "minisat"         , "minisat" )
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
@@ -242,6 +246,9 @@ mainWithArgs config@Solve{..} = do
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
+    unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
+        when (nbSolutions == "all" || nbSolutions /= "1") $
+            userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readParamOrSolutionFromFile f
         return (f, p)
@@ -505,20 +512,31 @@ srMkArgs Solve{..} outBase modelPath =
         "chuffed"           -> [ "-chuffed"]
         "glucose"           -> [ "-sat"
                                , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose"
+                               ]
+        "glucose-syrup"     -> [ "-sat"
+                               , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose-syrup"
                                ]
         "lingeling"         -> [ "-sat"
                                , "-sat-family", "lingeling"
+                               , "-satsolver-bin", "lingeling"
                                ]
         "minisat"           -> [ "-sat"
                                , "-sat-family", "minisat"
+                               , "-satsolver-bin", "minisat"
                                ]
         "bc_minisat_all"    -> [ "-sat"
                                , "-sat-family", "bc_minisat_all"
+                               , "-satsolver-bin", "bc_minisat_all_release"
                                ]
         "nbc_minisat_all"   -> [ "-sat"
                                , "-sat-family", "nbc_minisat_all"
+                               , "-satsolver-bin", "nbc_minisat_all_release"
                                ]
-        "open-wbo"          -> [ "-maxsat" ]
+        "open-wbo"          -> [ "-maxsat"
+                               , "-satsolver-bin", "open-wbo"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
@@ -545,7 +563,7 @@ srStdoutHandler
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
                         then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output file" line
+                        else if isPrefixOf "Created output" line
                             then pp logLevel $ hsep ["Running solver:", pretty solver]
                             else return ()
                     fmap (Left line :)

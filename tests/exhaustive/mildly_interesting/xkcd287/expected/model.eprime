@@ -5,14 +5,14 @@ find order_Function1DPartial_Values: matrix indexed by [int(1..6)] of int(1..10)
 branching on [order_Function1DPartial_Flags, order_Function1DPartial_Values]
 such that
     1505 =
-    sum([toInt(order_Function1DPartial_Flags[q9]) *
-         catchUndef(sum([sum([215 | 1 = q9]), sum([275 | 2 = q9]), sum([335 | 3 = q9]), sum([355 | 4 = q9]),
-                         sum([420 | 5 = q9]), sum([580 | 6 = q9]);
+    sum([toInt(order_Function1DPartial_Flags[q8]) *
+         catchUndef(sum([sum([215 | 1 = q8]), sum([275 | 2 = q8]), sum([335 | 3 = q8]), sum([355 | 4 = q8]),
+                         sum([420 | 5 = q8]), sum([580 | 6 = q8]);
                              int(1..6)])
-                    * order_Function1DPartial_Values[q9],
+                    * order_Function1DPartial_Values[q8],
                     0)
-             | q9 : int(1..6)]),
-    and([order_Function1DPartial_Flags[q9] -> or([1 = q9, 2 = q9, 3 = q9, 4 = q9, 5 = q9, 6 = q9; int(1..6)])
-             | q9 : int(1..6)]),
-    and([order_Function1DPartial_Flags[q5] = false -> order_Function1DPartial_Values[q5] = 1 | q5 : int(1..6)])
+             | q8 : int(1..6)]),
+    and([order_Function1DPartial_Flags[q8] -> or([1 = q8, 2 = q8, 3 = q8, 4 = q8, 5 = q8, 6 = q8; int(1..6)])
+             | q8 : int(1..6)]),
+    and([order_Function1DPartial_Flags[q4] = false -> order_Function1DPartial_Values[q4] = 1 | q4 : int(1..6)])
 

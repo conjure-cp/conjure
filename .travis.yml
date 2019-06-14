@@ -50,29 +50,22 @@ matrix:
     - os: linux
       env: GHC=8.6 SR="-O0" SOL=minion
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: linux
       env: GHC=8.6 SR="-O2" SOL=minion
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: linux
       env: GHC=8.6 SR="-O0" SOL=lingeling
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: linux
       env: GHC=8.6 SR="-O2" SOL=lingeling
       compiler: ": # GHC 8.6"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.3]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.6.5]}}
     - os: osx
       env: GHC=8.6 SR="-O2" SOL=minion
       compiler: ": # GHC 8.6"
-
-  allow_failures:
-    - env: GHC=8.6 SR="-O0" SOL=minion
-    - env: GHC=8.6 SR="-O2" SOL=minion
-    - env: GHC=8.6 SR="-O0" SOL=lingeling
-    - env: GHC=8.6 SR="-O2" SOL=lingeling
-    - env: GHC=8.6 SR="-O2" SOL=minion
 
 before_install:
   - export STARTTIME=$(date +%s)
@@ -118,33 +111,32 @@ install:
   - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
   - minion | head -n2                        # print version
 
+  # Glucose
+  - (glucose --help > /dev/null 2> /dev/null) || etc/build/install-glucose.sh
+
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 
 script:
   - touch conjure-testing.stdout
   - export ELAPSED=$(($(date +%s) - ${STARTTIME}))
   - echo "Time elapsed so far is ${ELAPSED} seconds."
-  # - if [ ${ELAPSED} -gt 900 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
   - cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
   - ls -l .stack-work/dist/*/*/build/conjure-testing/conjure-testing
   - cp .stack-work/dist/*/*/build/conjure-testing/conjure-testing ${BIN_DIR}/conjure-testing
-  - ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
+  - if [ ${ELAPSED} -gt 1200 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
+  # - ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
   - rm stack.yaml
   - if ! grep -A20 FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
 
 cache:
   directories:
-    - ${HOME}/.cabal
     - ${HOME}/.local/bin
     - ${HOME}/.ghc
-    - ${HOME}/.tools
     - ${HOME}/.stack
-    - .cabal-sandbox
     - .stack-work
-    - dist
   timeout: 600
 
 
 branches:
   except:
-    - ide
+    - loadcore
