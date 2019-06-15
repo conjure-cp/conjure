@@ -2,7 +2,13 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import StageHeader from "./components/StageHeader";
 import FormikConjure from "./components/FormikConjure";
-import { Core, TreeContainer } from "./components/TreeContainer";
+import { Core, TreeContainer, MyMap } from "./components/TreeContainer";
+import Node from "./modules/Node";
+
+if (process.env.NODE_ENV !== "production") {
+  const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js");
+  whyDidYouRender(React);
+}
 
 interface State {
   core: Core | undefined;
@@ -13,6 +19,8 @@ interface State {
 }
 
 class F extends React.Component<any, State> {
+  static whyDidYouRender = true;
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -27,18 +35,10 @@ class F extends React.Component<any, State> {
     this.collapseHandler = this.collapseHandler.bind(this);
   }
 
-  collapseHandler() {
-    // this.setState({ gotResponse: false });
-  }
+  collapseHandler() {}
 
   initResponseHandler(core: Core) {
-    this.setState((prevState: State) => {
-      return { ...prevState, gotResponse: true, core: core };
-    });
-
-    console.log("Init response handler!");
-    console.log(this.state.core);
-    console.log("~~~~~~");
+    this.setState({ gotResponse: true, core: core });
   }
 
   clickHandler() {
@@ -56,21 +56,145 @@ class F extends React.Component<any, State> {
   }
 
   render() {
-    console.log(this.state.core);
+    const testCore = {
+      nodes: [
+        {
+          id: 0,
+          parentId: -1,
+          label: "",
+          prettyLabel: "",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 32
+        },
+        {
+          id: 1,
+          parentId: 0,
+          label: "Root Propagation",
+          prettyLabel: "Root Propagation",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 31
+        },
+        {
+          id: 2,
+          parentId: 1,
+          label: "setA_Occurrence_00001 = 0",
+          prettyLabel: "1 was excluded from setA",
+          childCount: 2,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 30
+        },
+        {
+          id: 16,
+          parentId: 2,
+          label: "setA_Occurrence_00002 != 0",
+          prettyLabel: "2 was included in setA",
+          childCount: 2,
+          isSolution: false,
+          isLeftChild: false,
+          descCount: 16
+        },
+        {
+          id: 26,
+          parentId: 16,
+          label: "setA_Occurrence_00003 != 0",
+          prettyLabel: "3 was included in setA",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: false,
+          descCount: 6
+        },
+        {
+          id: 27,
+          parentId: 26,
+          label: "setA_Occurrence_00004 = 0",
+          prettyLabel: "4 was excluded from setA",
+          childCount: 2,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 5
+        },
+        {
+          id: 30,
+          parentId: 27,
+          label: "setA_Occurrence_00005 != 0",
+          prettyLabel: "5 was included in setA",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: false,
+          descCount: 2
+        },
+        {
+          id: 31,
+          parentId: 30,
+          label: "setA_Occurrence_00006 = 0",
+          prettyLabel: "6 was excluded from setA",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 1
+        },
+        {
+          id: 32,
+          parentId: 31,
+          label: "setA_Occurrence_00007 = 0",
+          prettyLabel: "7 was excluded from setA",
+          childCount: 0,
+          isSolution: true,
+          isLeftChild: true,
+          descCount: 0
+        },
+        {
+          id: 3,
+          parentId: 2,
+          label: "setA_Occurrence_00002 = 0",
+          prettyLabel: "2 was excluded from setA",
+          childCount: 2,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 12
+        },
+        {
+          id: 17,
+          parentId: 16,
+          label: "setA_Occurrence_00003 = 0",
+          prettyLabel: "3 was excluded from setA",
+          childCount: 2,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 8
+        },
+        {
+          id: 28,
+          parentId: 27,
+          label: "setA_Occurrence_00005 = 0",
+          prettyLabel: "5 was excluded from setA",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 1
+        }
+      ],
+      solAncestorIds: [0, 1, 2, 16, 26, 27, 30, 31, 32],
+      id: "blah"
+    };
 
     return (
-      <div>
+      <div className="row">
         <StageHeader
           title={"Setup"}
           id={"Setup"}
-          startCollapsed={this.state.gotResponse}
+          // startCollapsed={this.state.gotResponse}
           collapseHandler={this.collapseHandler}
         >
           <div className="input-group mb-3">
             <div className="input-group-prepend">
               <div className="input-group-text">
                 <input
-                  name="isGoing"
                   type="checkbox"
                   checked={this.state.diff}
                   onChange={this.clickHandler}
@@ -89,7 +213,7 @@ class F extends React.Component<any, State> {
           />
         </StageHeader>
         {this.state.core && <TreeContainer core={this.state.core} />}
-        {/* <TreeContainer  /> */}
+        {/* <TreeContainer core={testCore} /> */}
       </div>
     );
   }

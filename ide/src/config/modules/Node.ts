@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 /**
  * This class represents a d3 hierarchy node
  */
@@ -46,32 +47,41 @@ export default class Node {
     this.isLeftChild = isLeftchild;
     this.childCount = childCount;
     this.isSolution = isSolution;
-    this.collapse = this.collapse.bind(this);
-    this.expand = this.expand.bind(this);
   }
 
-  /**
-   * Deeply expands a node's children
-   * @param node
-   */
+  public static fromNode(old: Node) {
+    let n = new Node(
+      old.id,
+      old.label,
+      old.prettyLabel,
+      old.parentId,
+      old.descCount,
+      old.isLeftChild,
+      old.childCount,
+      old.isSolution
+    );
+    n.children = old.children;
+    n._children = old._children;
+    return n;
+  }
 
-  public expand() {
+  public static expandNode(node: Node) {
     let recurse = (insideNode: Node) => {
       for (var i in insideNode._children!) {
         recurse(insideNode._children![Number(i)]);
       }
+
       Node.showChildren(insideNode);
     };
 
-    recurse(this);
+    recurse(node);
   }
-
   /**
    * Deeply collapses a node's children
    * @param node
    */
 
-  public collapse() {
+  public static collapseNode(node: Node) {
     let recurse = (insideNode: Node) => {
       for (var i in insideNode.children!) {
         recurse(insideNode.children![Number(i)]);
@@ -80,7 +90,7 @@ export default class Node {
       Node.hideChildren(insideNode);
     };
 
-    recurse(this);
+    recurse(node);
   }
 
   /**

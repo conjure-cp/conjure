@@ -1,46 +1,78 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as d3 from "d3";
 import Node from "../modules/Node";
 import TreeVis from "./TreeVis";
-import { HierarchyLink, HierarchyPointLink, HierarchyNode } from "d3";
-import { any } from "prop-types";
 import { HotKeys } from "react-hotkeys";
-import * as _ from "lodash";
-import { stat } from "fs";
+import { cloneDeep } from "lodash";
+import * as d3 from "d3";
 
-const map = {
-  goLeft: ["left", "down"],
-  goRight: "right",
-  goUp: "up",
-  addNode: "a",
-  collapse: "c",
-  expand: "e"
-};
+export type MyMap = Record<number, Node>;
 
 export interface Core {
-  nodes: any[];
+  nodes: Node[];
   solAncestorIds: number[];
-}
-
-type MyMap = Record<number, Node>;
-
-interface State {
-  id2Node: MyMap;
-  selected: number;
+  id: string;
 }
 
 interface Props {
   core: Core;
 }
 
-export class TreeContainer extends React.Component<Props, State> {
-  constructor(props: Props) {
-    // console.log("constructor!!");
+interface State {
+  id2Node: MyMap;
+  solveable: boolean;
+  selected: number;
+  linScale: any;
+  minsize: number;
+}
 
+function makeState(core: Core): State {
+  const minsize = 7;
+  const solveable = core.nodes.find(n => n.isSolution) !== undefined;
+  const linScale = d3
+    .scaleLinear()
+    .domain([0, core.nodes[0].descCount]) // upper domain is Way more just to be safe
+    .range([minsize, 30]);
+
+  let id2Node: MyMap = {};
+
+  for (let i = 0; i < core.nodes.length; i++) {
+    const newNode = core.nodes[i];
+    const parentId = newNode.parentId;
+    if (newNode.parentId === -1) {
+      id2Node[newNode.id] = newNode;
+      continue;
+    }
+    if (!id2Node[parentId].children) {
+      id2Node[parentId].children = [];
+    }
+    if (newNode.isLeftChild) {
+      id2Node[parentId].children!.unshift(newNode);
+    } else {
+      id2Node[parentId].children!.push(newNode);
+    }
+    id2Node[newNode.id] = newNode;
+  }
+
+  let state: State = {
+    id2Node: id2Node,
+    minsize: minsize,
+    solveable: solveable,
+    linScale: linScale,
+    selected: 0
+  };
+
+  return state;
+}
+
+export class TreeContainer extends React.Component<Props, State> {
+  static whyDidYouRender = true;
+
+  handlers: any;
+
+  constructor(props: Props) {
     super(props);
-    // this.state = {core: props.core, solNodeIds: [], id2Node: {}}
-    this.makeState = this.makeState.bind(this);
+
     this.addNode = this.addNode.bind(this);
     this.goLeft = this.goLeft.bind(this);
     this.goUp = this.goUp.bind(this);
@@ -48,63 +80,23 @@ export class TreeContainer extends React.Component<Props, State> {
     this.collapse = this.collapse.bind(this);
     this.expand = this.expand.bind(this);
 
-    // const data = new Node(0, "rooot node", "blah", -1, 100, true, 2, false);
-    // const kid1 = new Node(1, "kid 1", "blah", 0, 100, true, 2, false);
-    // const kid2 = new Node(2, "kid 2", "blah", 0, 100, true, 2, false);
+    this.state = makeState(this.props.core);
 
-    // data.children = [kid1, kid2];
-
-    // let initMap: MyMap = {};
-    // initMap[0] = data;
-    // initMap[1] = kid1;
-    // initMap[2] = kid2;
-
-    // this.state = { id2Node: initMap, selected: 0 };
-    // this.state = this.makeState(this.props.core);
-  }
-
-  componentDidMount() {}
-
-  makeState(core: Core): State {
-    let state: any = {};
-    state.solNodeIds = [];
-    state.id2Node = {};
-    state.selected = 0;
-
-    for (let i = 0; i < core.nodes.length; i++) {
-      const newNode = core.nodes[i];
-      const parentId = newNode.parentId;
-
-      if (newNode.isSolution) {
-        state.solNodeIds.push(newNode.id);
-      }
-
-      if (newNode.parentId === -1) {
-        state.id2Node[newNode.id] = newNode;
-        continue;
-      }
-
-      if (!state.id2Node[parentId].children) {
-        state.id2Node[parentId].children = [];
-      }
-
-      if (newNode.isLeftChild) {
-        state.id2Node[parentId].children!.unshift(newNode);
-      } else {
-        state.id2Node[parentId].children!.push(newNode);
-      }
-
-      state.id2Node[newNode.id] = newNode;
-    }
-
-    return state;
+    this.handlers = {
+      addNode: this.addNode,
+      goLeft: this.goLeft,
+      goUp: this.goUp,
+      goRight: this.goRight,
+      collapse: this.collapse,
+      expand: this.expand
+    };
   }
 
   addNode() {
     const newNode = new Node(10, "newboy", "new", 2, 100, true, 2, false);
 
     this.setState((prevState: State) => {
-      let newMap = _.extend({}, prevState.id2Node);
+      let newMap = cloneDeep(prevState.id2Node);
 
       if (!newMap[2].children) {
         newMap[2].children = [];
@@ -116,6 +108,7 @@ export class TreeContainer extends React.Component<Props, State> {
   }
 
   goLeft() {
+    // console.log("moving");
     this.setState((prev: State) => {
       const current = prev.id2Node[this.state.selected];
       if (!current.children) {
@@ -150,45 +143,43 @@ export class TreeContainer extends React.Component<Props, State> {
 
   collapse() {
     this.setState((prevState: State) => {
-      let newMap = _.extend({}, prevState.id2Node);
-      newMap[prevState.selected].collapse();
+      let newMap = cloneDeep(prevState.id2Node);
+      Node.collapseNode(newMap[prevState.selected]);
       return { id2Node: newMap };
     });
-
-    // console.log("collasped!");
   }
 
   expand() {
     this.setState((prevState: State) => {
-      let newMap = _.extend({}, prevState.id2Node);
-      newMap[prevState.selected].expand();
+      let newMap = cloneDeep(prevState.id2Node);
+      Node.expandNode(newMap[prevState.selected]);
       return { id2Node: newMap };
     });
 
     // console.log("expanded!");
   }
 
+  componentDidUpdate(prevProps: Props) {
+    // Typical usage (don't forget to compare props):
+    if (this.props.core.id !== prevProps.core.id) {
+      this.setState(makeState(this.props.core));
+    }
+  }
+
   render() {
-    const handlers = {
-      addNode: this.addNode,
-      goLeft: this.goLeft,
-      goUp: this.goUp,
-      goRight: this.goRight,
-      collapse: this.collapse,
-      expand: this.expand
-    };
-
-    console.log("TrecontainerProps ", this.props);
-    const { selected, id2Node } = this.makeState(this.props.core);
-
     return (
-      <HotKeys keyMap={map} handlers={handlers}>
+      <HotKeys keyMap={map} handlers={this.handlers}>
         <div>
           This is the container
           <TreeVis
-            rootNode={id2Node[0]}
-            selected={selected}
-            duration={1000}
+            id={this.props.core.id}
+            rootNode={this.state.id2Node[0]}
+            selected={this.state.selected}
+            solAncestorIds={this.props.core.solAncestorIds}
+            solveable={this.state.solveable}
+            linScale={this.state.linScale}
+            minsize={this.state.minsize}
+            duration={500}
             width={500}
             height={500}
           />
@@ -197,3 +188,12 @@ export class TreeContainer extends React.Component<Props, State> {
     );
   }
 }
+
+const map = {
+  goLeft: ["left", "down"],
+  goRight: "right",
+  goUp: "up",
+  addNode: "a",
+  collapse: "c",
+  expand: "e"
+};

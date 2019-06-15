@@ -77,7 +77,11 @@ class ConfigService {
         const fullPath = path.join(vscode.workspace.rootPath!, trees[0].hash);
 
         return await fetch(`http://localhost:5000/init/${fullPath}`).then(
-          (response: any) => response.json()
+          (response: any) =>
+            response.json().then((json: any) => {
+              json["core"]["id"] = trees[0].hash;
+              return json;
+            })
         );
       });
   }

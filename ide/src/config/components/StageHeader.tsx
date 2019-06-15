@@ -26,7 +26,7 @@ const StageHeader = (props: Props) => {
             if (props.collapseHandler) {
               props.collapseHandler();
             }
-            console.log("!!!!!!!!");
+            // console.log("!!!!!!!!");
           }}
         >
           {props.title} Options
