@@ -85,8 +85,6 @@ export default class TreeVis extends React.Component<Props, State> {
       "solution",
       (d: HierarchyPointNode<Node>) => d.data.isSolution
     );
-
-    circle.attr("fill", "pink");
   }
 
   drawTree() {
@@ -100,7 +98,7 @@ export default class TreeVis extends React.Component<Props, State> {
     console.log(nodeList.map(d => d.data));
 
     let g = svg.selectAll("g.node");
-    let node = g.data(nodeList);
+    let node = g.data(nodeList, d => d.data.id);
 
     let nodeEnter = node
       .enter()
@@ -111,33 +109,31 @@ export default class TreeVis extends React.Component<Props, State> {
       });
 
     nodeEnter
-      // .attr("transform", d =>
-      //   d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
-      // )
+      .attr("transform", d =>
+        d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
+      )
       .transition()
       .duration(this.props.duration)
       .attr("transform", d => `translate(${d.x},${d.y})`);
 
-    nodeEnter
-      .append("circle")
-      .attr("r", "10")
-      .attr("fill", "black");
-    nodeEnter
-      .append("text")
-      .attr("fill", "black")
-      // Labels y coordinate should be halfway between the node and its parent.
-      .attr("y", () => {
-        return 0;
-      })
-      .attr("dy", ".35em")
-      .attr("text-anchor", "middle")
-      // Set the text
-      .text(d => {
-        // Check the labels checkbox to see if pretty or simple labels are needed.
-        return d.data.id;
-      });
+    nodeEnter.append("circle");
 
-    // this.updateCircles(nodeEnter);
+    // nodeEnter
+    //   .append("text")
+    //   .attr("fill", "black")
+    //   // Labels y coordinate should be halfway between the node and its parent.
+    //   .attr("y", () => {
+    //     return 0;
+    //   })
+    //   .attr("dy", ".35em")
+    //   .attr("text-anchor", "middle")
+    //   // Set the text
+    //   .text(d => {
+    //     // Check the labels checkbox to see if pretty or simple labels are needed.
+    //     return d.data.id;
+    //   });
+
+    this.updateCircles(nodeEnter);
 
     const nodeUpdate = node.each(d => {
       if (d.data.id === this.props.selected) {
@@ -169,7 +165,7 @@ export default class TreeVis extends React.Component<Props, State> {
     let p = svg.selectAll("path.link");
 
     const linkList = rootNode.links();
-    let link = p.data(linkList);
+    let link = p.data(linkList, d => d.target.data.id);
 
     link
       .enter()
