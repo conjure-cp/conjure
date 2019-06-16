@@ -98,7 +98,7 @@ export default class Node {
    * @param node
    */
 
-  private static showChildren(node: Node) {
+  public static showChildren(node: Node) {
     if (node) {
       if (node._children) {
         node.children = node._children;
@@ -112,7 +112,7 @@ export default class Node {
    * @param node
    */
 
-  private static hideChildren(node: Node) {
+  public static hideChildren(node: Node) {
     if (node) {
       if (node.children) {
         node._children = node.children;

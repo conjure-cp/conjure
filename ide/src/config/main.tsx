@@ -19,7 +19,7 @@ interface State {
 }
 
 class F extends React.Component<any, State> {
-  static whyDidYouRender = true;
+  // static whyDidYouRender = true;
 
   constructor(props: any) {
     super(props);
@@ -183,6 +183,63 @@ class F extends React.Component<any, State> {
       id: "blah"
     };
 
+    const fiveNodes = {
+      nodes: [
+        {
+          id: 0,
+          parentId: -1,
+          label: "",
+          prettyLabel: "",
+          childCount: 2,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 4
+        },
+        {
+          id: 1,
+          parentId: 0,
+          label: "Root Propagation",
+          prettyLabel: "Root Propagation",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 1
+        },
+        {
+          id: 3,
+          parentId: 0,
+          label: "setA_Occurrence_00001 = 0",
+          prettyLabel: "1 was excluded from setA",
+          childCount: 1,
+          isSolution: false,
+          isLeftChild: false,
+          descCount: 1
+        },
+        {
+          id: 2,
+          parentId: 1,
+          label: "setA_Occurrence_00001 = 0",
+          prettyLabel: "1 was excluded from setA",
+          childCount: 0,
+          isSolution: false,
+          isLeftChild: false,
+          descCount: 0
+        },
+        {
+          id: 4,
+          parentId: 3,
+          label: "setA_Occurrence_00001 = 0",
+          prettyLabel: "1 was excluded from setA",
+          childCount: 0,
+          isSolution: false,
+          isLeftChild: true,
+          descCount: 0
+        }
+      ],
+      id: "poop",
+      solAncestorIds: [0, 2]
+    };
+
     return (
       <div className="row">
         <StageHeader
@@ -213,7 +270,7 @@ class F extends React.Component<any, State> {
           />
         </StageHeader>
         {this.state.core && <TreeContainer core={this.state.core} />}
-        {/* <TreeContainer core={testCore} /> */}
+        {/* <TreeContainer core={fiveNodes} /> */}
       </div>
     );
   }

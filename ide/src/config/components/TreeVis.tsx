@@ -17,6 +17,7 @@ interface Props {
   solveable: boolean;
   linScale: any;
   minsize: number;
+  nodeClickHandler: (d: Node) => void;
 }
 
 const linkGenerator = d3
@@ -33,7 +34,7 @@ const zoom = d3.zoom<any, any>().on("zoom", function() {
 });
 
 export default class TreeVis extends React.Component<Props, State> {
-  static whyDidYouRender = true;
+  // static whyDidYouRender = true;
 
   constructor(props: Props) {
     super(props);
@@ -47,7 +48,7 @@ export default class TreeVis extends React.Component<Props, State> {
         .transition()
         .duration(this.props.duration),
       node.x,
-      node.y
+      node.y + 100
     );
   }
 
@@ -84,6 +85,8 @@ export default class TreeVis extends React.Component<Props, State> {
       "solution",
       (d: HierarchyPointNode<Node>) => d.data.isSolution
     );
+
+    circle.attr("fill", "pink");
   }
 
   drawTree() {
@@ -92,25 +95,49 @@ export default class TreeVis extends React.Component<Props, State> {
     const rootNode = layout(d3.hierarchy<Node>(this.props.rootNode));
     const nodeList = rootNode.descendants();
 
+    // console.log(JSON.stringify(nodeList));
+    console.log(this.props.rootNode);
+    console.log(nodeList.map(d => d.data));
+
     let g = svg.selectAll("g.node");
     let node = g.data(nodeList);
 
     let nodeEnter = node
       .enter()
       .append("g")
-      .attr("class", "node");
+      .attr("class", "node")
+      .on("click", (d: HierarchyPointNode<Node>) => {
+        this.props.nodeClickHandler(d.data);
+      });
 
     nodeEnter
-      .attr("transform", d =>
-        d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
-      )
+      // .attr("transform", d =>
+      //   d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
+      // )
       .transition()
       .duration(this.props.duration)
       .attr("transform", d => `translate(${d.x},${d.y})`);
 
-    nodeEnter.append("circle");
+    nodeEnter
+      .append("circle")
+      .attr("r", "10")
+      .attr("fill", "black");
+    nodeEnter
+      .append("text")
+      .attr("fill", "black")
+      // Labels y coordinate should be halfway between the node and its parent.
+      .attr("y", () => {
+        return 0;
+      })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "middle")
+      // Set the text
+      .text(d => {
+        // Check the labels checkbox to see if pretty or simple labels are needed.
+        return d.data.id;
+      });
 
-    this.updateCircles(nodeEnter);
+    // this.updateCircles(nodeEnter);
 
     const nodeUpdate = node.each(d => {
       if (d.data.id === this.props.selected) {
@@ -193,21 +220,11 @@ export default class TreeVis extends React.Component<Props, State> {
 
   componentDidMount() {
     this.makeGroup();
-
     this.drawTree();
     this.drawTree();
   }
 
   componentDidUpdate(prevProps: Props) {
-    // console.log("TreeVis props", JSON.stringify(this.props));
-
-    // if (prevProps.id !== this.props.id) {
-    //   console.log("CLEARING");
-    //   let myNode = document.getElementById("thegroup");
-    //   myNode.innerHTML = "";
-    // } else {
-    //   console.log("not cleaing");
-    // }
     this.drawTree();
   }
 

@@ -5,11 +5,23 @@ import TreeVis from "./TreeVis";
 import { HotKeys } from "react-hotkeys";
 import { cloneDeep } from "lodash";
 import * as d3 from "d3";
+import { thresholdScott } from "d3";
+
+interface FromServerNode {
+  id: number;
+  parentId: number;
+  label: string;
+  prettyLabel: string;
+  childCount: number;
+  isSolution: boolean;
+  isLeftChild: boolean;
+  descCount: number;
+}
 
 export type MyMap = Record<number, Node>;
 
 export interface Core {
-  nodes: Node[];
+  nodes: FromServerNode[];
   solAncestorIds: number[];
   id: string;
 }
@@ -24,6 +36,7 @@ interface State {
   selected: number;
   linScale: any;
   minsize: number;
+  shouldGetKids: boolean;
 }
 
 function makeState(core: Core): State {
@@ -37,7 +50,18 @@ function makeState(core: Core): State {
   let id2Node: MyMap = {};
 
   for (let i = 0; i < core.nodes.length; i++) {
-    const newNode = core.nodes[i];
+    const element = core.nodes[i];
+    const newNode = new Node(
+      element.id,
+      element.label,
+      element.prettyLabel,
+      element.parentId,
+      element.descCount,
+      element.isLeftChild,
+      element.childCount,
+      element.isSolution
+    );
+
     const parentId = newNode.parentId;
     if (newNode.parentId === -1) {
       id2Node[newNode.id] = newNode;
@@ -59,14 +83,15 @@ function makeState(core: Core): State {
     minsize: minsize,
     solveable: solveable,
     linScale: linScale,
-    selected: 0
+    selected: 0,
+    shouldGetKids: false
   };
 
   return state;
 }
 
 export class TreeContainer extends React.Component<Props, State> {
-  static whyDidYouRender = true;
+  // static whyDidYouRender = true;
 
   handlers: any;
 
@@ -79,6 +104,7 @@ export class TreeContainer extends React.Component<Props, State> {
     this.goRight = this.goRight.bind(this);
     this.collapse = this.collapse.bind(this);
     this.expand = this.expand.bind(this);
+    this.nodeClickHandler = this.nodeClickHandler.bind(this);
 
     this.state = makeState(this.props.core);
 
@@ -90,6 +116,10 @@ export class TreeContainer extends React.Component<Props, State> {
       collapse: this.collapse,
       expand: this.expand
     };
+  }
+
+  nodeClickHandler(d: Node) {
+    this.setState({ selected: d.id });
   }
 
   addNode() {
@@ -107,20 +137,68 @@ export class TreeContainer extends React.Component<Props, State> {
     });
   }
 
-  goLeft() {
-    // console.log("moving");
-    this.setState((prev: State) => {
-      const current = prev.id2Node[this.state.selected];
-      if (!current.children) {
-        return null;
-      }
-      return { selected: current.children[0].id };
-    });
+  async goLeft() {
+    // console.log(this.state.selected);
+    // console.log(this.state.id2Node[this.state.selected]);
+    // console.log(this.state.id2Node);
+
+    let newMap = cloneDeep(this.state.id2Node);
+
+    const current = newMap[this.state.selected];
+
+    if (current._children) {
+      Node.showChildren(current);
+      this.setState({ id2Node: newMap });
+      return;
+    }
+
+    if (!current.children && current.childCount > 0) {
+      const res = await fetch(
+        `http://localhost:5000/loadNodes/${this.state.selected}`
+      );
+      const json = await res.json();
+
+      let newMap = cloneDeep(this.state.id2Node);
+      newMap[this.state.selected].children = json;
+      newMap[this.state.selected].children!.map((child: Node) => {
+        newMap[child.id] = child;
+      });
+      this.setState({ id2Node: newMap });
+      return;
+    }
+
+    if (!current.children) {
+      return;
+    }
+
+    this.setState({ selected: current.children[0].id });
   }
+
+  // goLeft() {
+  //   this.setState((prev: State) => {
+  //     const current = prev.id2Node[prev.selected];
+
+  //     console.log(prev.selected);
+  //     console.log(current);
+
+  //     if (!current.children && current.childCount > 0) {
+  //       return { shouldGetKids: true, selected: prev.selected };
+  //     }
+
+  //     if (!current.children) {
+  //       return null;
+  //     }
+
+  //     return {
+  //       selected: current.children[0].id,
+  //       shouldGetKids: false
+  //     };
+  //   });
+  // }
 
   goRight() {
     this.setState((prev: State) => {
-      const current = prev.id2Node[this.state.selected];
+      const current = prev.id2Node[prev.selected];
       if (!current.children) {
         return null;
       }
@@ -133,7 +211,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
   goUp() {
     this.setState((prev: State) => {
-      const current = prev.id2Node[this.state.selected];
+      const current = prev.id2Node[prev.selected];
       if (current.parentId === -1) {
         return null;
       }
@@ -144,8 +222,13 @@ export class TreeContainer extends React.Component<Props, State> {
   collapse() {
     this.setState((prevState: State) => {
       let newMap = cloneDeep(prevState.id2Node);
-      Node.collapseNode(newMap[prevState.selected]);
+      // Node.collapseNode(newMap[prevState.selected]);
+      newMap[prevState.selected]._children = newMap[prevState.selected].children;
+      newMap[prevState.selected].children = undefined;
       return { id2Node: newMap };
+
+      // Node.collapseNode(prevState.id2Node[prevState.selected]);
+      // return { id2Node: prevState.id2Node };
     });
   }
 
@@ -154,6 +237,9 @@ export class TreeContainer extends React.Component<Props, State> {
       let newMap = cloneDeep(prevState.id2Node);
       Node.expandNode(newMap[prevState.selected]);
       return { id2Node: newMap };
+
+      // Node.expandNode(prevState.id2Node[prevState.selected]);
+      // return { id2Node: prevState.id2Node };
     });
 
     // console.log("expanded!");
@@ -179,7 +265,9 @@ export class TreeContainer extends React.Component<Props, State> {
             solveable={this.state.solveable}
             linScale={this.state.linScale}
             minsize={this.state.minsize}
-            duration={500}
+            nodeClickHandler={this.nodeClickHandler}
+            // duration={500}
+            duration={2000}
             width={500}
             height={500}
           />
