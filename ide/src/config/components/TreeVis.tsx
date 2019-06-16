@@ -100,8 +100,6 @@ export default class TreeVis extends React.Component<Props, State> {
       .append("g")
       .attr("class", "node");
 
-    nodeEnter.append("circle");
-
     nodeEnter
       .attr("transform", d =>
         d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
@@ -109,6 +107,8 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .attr("transform", d => `translate(${d.x},${d.y})`);
+
+    nodeEnter.append("circle");
 
     this.updateCircles(nodeEnter);
 
@@ -118,11 +118,18 @@ export default class TreeVis extends React.Component<Props, State> {
       }
     });
 
+    nodeUpdate
+      .transition()
+      .duration(this.props.duration)
+      .attr(
+        "transform",
+        (d: HierarchyPointNode<Node>) => `translate(${d.x},${d.y})`
+      );
+
     this.updateCircles(nodeUpdate);
 
-    const nodeExit = node.exit<HierarchyPointNode<Node>>();
-
-    nodeExit
+    const nodeExit = node
+      .exit<HierarchyPointNode<Node>>()
       .transition()
       .duration(this.props.duration)
       .attr("transform", d =>
@@ -130,11 +137,7 @@ export default class TreeVis extends React.Component<Props, State> {
       )
       .remove();
 
-    nodeExit
-      .transition()
-      .duration(this.props.duration)
-      .select("circle")
-      .attr("r", 0);
+    nodeExit.select("circle").attr("r", 0);
 
     let p = svg.selectAll("path.link");
 
@@ -160,6 +163,12 @@ export default class TreeVis extends React.Component<Props, State> {
       .attr("d", linkGenerator);
 
     link
+      .classed("red", d => {
+        return (
+          !this.props.solAncestorIds.includes(d.target.data.id) ||
+          !this.props.solveable
+        );
+      })
       .transition()
       .duration(this.props.duration)
       .attr("d", linkGenerator);
