@@ -37,6 +37,7 @@ interface State {
   linScale: any;
   minsize: number;
   shouldGetKids: boolean;
+  playing: boolean;
 }
 
 function makeState(core: Core): State {
@@ -84,7 +85,8 @@ function makeState(core: Core): State {
     solveable: solveable,
     linScale: linScale,
     selected: 0,
-    shouldGetKids: false
+    shouldGetKids: false,
+    playing: false
   };
 
   return state;
@@ -105,6 +107,7 @@ export class TreeContainer extends React.Component<Props, State> {
     this.expand = this.expand.bind(this);
     this.nodeClickHandler = this.nodeClickHandler.bind(this);
     this.play = this.play.bind(this);
+    this.pPressed = this.pPressed.bind(this);
 
     this.state = makeState(this.props.core);
 
@@ -114,7 +117,7 @@ export class TreeContainer extends React.Component<Props, State> {
       goRight: this.goRight,
       collapse: this.collapse,
       expand: this.expand,
-      play: this.play
+      pPressed: this.pPressed
     };
   }
 
@@ -195,10 +198,18 @@ export class TreeContainer extends React.Component<Props, State> {
     // console.log("expanded!");
   }
 
+  pPressed() {
+    this.setState((prevState: State) => {
+      return {
+        playing: !prevState.playing
+      };
+    });
+    this.play();
+  }
+
   async play() {
     const interval = 400;
-
-    for (let i = 0; i < 10000000; i++) {
+    while (this.state.playing) {
       this.goLeft();
       await this.sleep(interval);
     }
@@ -247,5 +258,5 @@ const map = {
   addNode: "a",
   collapse: "c",
   expand: "e",
-  play: "p"
+  pPressed: "p"
 };
