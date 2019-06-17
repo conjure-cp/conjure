@@ -98,7 +98,6 @@ export class TreeContainer extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    this.addNode = this.addNode.bind(this);
     this.goLeft = this.goLeft.bind(this);
     this.goUp = this.goUp.bind(this);
     this.goRight = this.goRight.bind(this);
@@ -110,7 +109,6 @@ export class TreeContainer extends React.Component<Props, State> {
     this.state = makeState(this.props.core);
 
     this.handlers = {
-      addNode: this.addNode,
       goLeft: this.goLeft,
       goUp: this.goUp,
       goRight: this.goRight,
@@ -122,21 +120,6 @@ export class TreeContainer extends React.Component<Props, State> {
 
   nodeClickHandler(d: Node) {
     this.setState({ selected: d.id });
-  }
-
-  addNode() {
-    const newNode = new Node(10, "newboy", "new", 2, 100, true, 2, false);
-
-    this.setState((prevState: State) => {
-      let newMap = cloneDeep(prevState.id2Node);
-
-      if (!newMap[2].children) {
-        newMap[2].children = [];
-      }
-
-      newMap[2].children.push(newNode);
-      return { id2Node: newMap };
-    });
   }
 
   goLeft() {
@@ -155,12 +138,12 @@ export class TreeContainer extends React.Component<Props, State> {
       }
 
       if (!current.children && current.childCount > 0) {
-        fetch(`http://localhost:5000/loadNodes/${this.state.selected}`)
+        fetch(`http://localhost:5000/loadNodes/${prevState.selected}`)
           .then(data => data.json())
           .then(kids => {
             let newMap = cloneDeep(prevState.id2Node);
-            newMap[this.state.selected].children = kids;
-            newMap[this.state.selected].children!.map((child: Node) => {
+            newMap[prevState.selected].children = kids;
+            newMap[prevState.selected].children!.map((child: Node) => {
               newMap[child.id] = child;
               this.setState({ id2Node: newMap, selected: prevState.selected });
             });
@@ -169,79 +152,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
       return null;
     });
-
-    //   if (current._children) {
-    //     Node.showChildren(current);
-    //     this.setState({ id2Node: newMap });
-    //     return;
-    //   }
-
-    //   if (!current.children && current.childCount > 0) {
-    //     const res = await fetch(
-    //       `http://localhost:5000/loadNodes/${this.state.selected}`
-    //     );
-    //     const json = await res.json();
-
-    //     let newMap = cloneDeep(this.state.id2Node);
-    //     newMap[this.state.selected].children = json;
-    //     newMap[this.state.selected].children!.map((child: Node) => {
-    //       newMap[child.id] = child;
-    //     });
-    //     this.setState({ id2Node: newMap });
-    //     return;
-    //   }
-
-    //   if (!current.children && newMap[next]) {
-    //     this.setState({ selected: next });
-    //     return;
-    //   }
-
-    //   if (current.children) {
-    //     this.setState({ selected: current.children[0].id });
-    //   }
   }
-
-  // async goLeft() {
-  //   // console.log(this.state.selected);
-  //   // console.log(this.state.id2Node[this.state.selected]);
-  //   // console.log(this.state.id2Node);
-
-  //   const next = this.state.selected + 1;
-
-  //   let newMap = cloneDeep(this.state.id2Node);
-
-  //   const current = newMap[this.state.selected];
-
-  //   if (current._children) {
-  //     Node.showChildren(current);
-  //     this.setState({ id2Node: newMap });
-  //     return;
-  //   }
-
-  //   if (!current.children && current.childCount > 0) {
-  //     const res = await fetch(
-  //       `http://localhost:5000/loadNodes/${this.state.selected}`
-  //     );
-  //     const json = await res.json();
-
-  //     let newMap = cloneDeep(this.state.id2Node);
-  //     newMap[this.state.selected].children = json;
-  //     newMap[this.state.selected].children!.map((child: Node) => {
-  //       newMap[child.id] = child;
-  //     });
-  //     this.setState({ id2Node: newMap });
-  //     return;
-  //   }
-
-  //   if (!current.children && newMap[next]) {
-  //     this.setState({ selected: next });
-  //     return;
-  //   }
-
-  //   if (current.children) {
-  //     this.setState({ selected: current.children[0].id });
-  //   }
-  // }
 
   goRight() {
     this.setState((prev: State) => {
@@ -320,8 +231,8 @@ export class TreeContainer extends React.Component<Props, State> {
             nodeClickHandler={this.nodeClickHandler}
             duration={500}
             // duration={2000}
-            width={1000}
-            height={1000}
+            width={600}
+            height={800}
           />
         </div>
       </HotKeys>

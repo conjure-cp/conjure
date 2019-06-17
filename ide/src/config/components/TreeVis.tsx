@@ -48,9 +48,26 @@ export default class TreeVis extends React.Component<Props, State> {
         .transition()
         .duration(this.props.duration),
       node.x,
-      node.y + 400
-      // node.y
+      // node.y + 400
+      node.y
     );
+  }
+
+  getRadius(d: HierarchyPointNode<Node>): number {
+    return (d.children ? d.children.length : 0) < d.data.childCount
+      ? this.props.linScale(d.data.descCount)
+      : this.props.minsize;
+  }
+
+  hasHiddenChildren(d: HierarchyPointNode<Node>): boolean {
+    return d.data.childCount !== (d.children ? d.children.length : 0);
+  }
+
+  getDecCountMessage(d: HierarchyPointNode<Node>): string {
+    if (this.hasHiddenChildren(d)) {
+      return d.data.descCount + " nodes below";
+    }
+    return "";
   }
 
   updateCircles(selector: any) {
@@ -59,27 +76,21 @@ export default class TreeVis extends React.Component<Props, State> {
     circle
       .transition()
       .duration(this.props.duration)
-      .attr("r", (d: HierarchyPointNode<Node>) => {
-        return (d.children ? d.children.length : 0) < d.data.childCount
-          ? this.props.linScale(d.data.descCount)
-          : this.props.minsize;
-      });
+      .attr("r", (d: HierarchyPointNode<Node>) => this.getRadius(d));
 
     circle.classed(
       "selected",
       (d: HierarchyPointNode<Node>) => d.data.id === this.props.selected
     );
 
-    circle.classed(
-      "hasOthers",
-      (d: HierarchyPointNode<Node>) =>
-        d.data.childCount !== (d.children ? d.children.length : 0)
+    circle.classed("hasOthers", (d: HierarchyPointNode<Node>) =>
+      this.hasHiddenChildren(d)
     );
 
     circle.classed(
       "red",
       (d: HierarchyPointNode<Node>) =>
-        !this.props.solAncestorIds.includes(d.data.id)
+        !this.props.solAncestorIds.includes(d.data.id) || !this.props.solveable
     );
 
     circle.classed(
@@ -89,17 +100,25 @@ export default class TreeVis extends React.Component<Props, State> {
   }
 
   drawTree() {
-    const layout = d3.tree<Node>().nodeSize([50, 50]);
+    const hierarchy = d3.hierarchy<Node>(this.props.rootNode);
+    const sorted = hierarchy
+      .descendants()
+      .sort((a, b) => b.data.label.length - a.data.label.length);
+
+    const maxWidth = sorted[0].data.label.length * 10;
+    const maxHeight = this.props.linScale(this.props.rootNode.childCount) * 12;
+
+    const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight]);
     const svg = d3.select("#thegroup");
-    const rootNode = layout(d3.hierarchy<Node>(this.props.rootNode));
+    const rootNode = layout(hierarchy);
     const nodeList = rootNode.descendants();
 
     // console.log(JSON.stringify(nodeList));
-    console.log(this.props.rootNode);
-    console.log(nodeList.map(d => d.data));
+    // console.log(this.props.rootNode);
+    // console.log(nodeList.map(d => d.data));
 
     let g = svg.selectAll("g.node");
-    let node = g.data(nodeList, d => d.data.id);
+    let node = g.data(nodeList, (d: any) => d.data.id);
 
     let nodeEnter = node
       .enter()
@@ -119,20 +138,31 @@ export default class TreeVis extends React.Component<Props, State> {
 
     nodeEnter.append("circle");
 
-    // nodeEnter
-    //   .append("text")
-    //   .attr("fill", "black")
-    //   // Labels y coordinate should be halfway between the node and its parent.
-    //   .attr("y", () => {
-    //     return 0;
-    //   })
-    //   .attr("dy", ".35em")
-    //   .attr("text-anchor", "middle")
-    //   // Set the text
-    //   .text(d => {
-    //     // Check the labels checkbox to see if pretty or simple labels are needed.
-    //     return d.data.id;
-    //   });
+    nodeEnter
+      .append("text")
+      .attr("fill", "black")
+      .attr("y", -maxHeight / 2)
+      .attr("x", d => {
+        // if (d.parent && d.parent.children!.length > 1) {
+        //   return (d.data.isLeftChild ? maxWidth : -maxWidth) / 16;
+        // }
+        return 0;
+      })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "middle")
+      .text(d => {
+        return d.data.label;
+      });
+
+    nodeEnter
+      .append("text")
+      .attr("y", d => {
+        return 2 * this.getRadius(d);
+      })
+      .attr("class", "decCount")
+      .attr("dy", ".35em")
+      .attr("text-anchor", "middle")
+      .text(d => this.getDecCountMessage(d));
 
     this.updateCircles(nodeEnter);
 
@@ -149,6 +179,13 @@ export default class TreeVis extends React.Component<Props, State> {
         "transform",
         (d: HierarchyPointNode<Node>) => `translate(${d.x},${d.y})`
       );
+
+    nodeUpdate
+      .select("text.decCount")
+      .attr("y", d => {
+        return 2 * this.getRadius(d);
+      })
+      .text(d => this.getDecCountMessage(d));
 
     this.updateCircles(nodeUpdate);
 
