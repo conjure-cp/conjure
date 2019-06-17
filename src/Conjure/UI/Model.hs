@@ -1582,10 +1582,10 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                              , ruleResult = return out
                              , ruleResultHook = Just hook
                              }
-                | dom <- domOpts
-                , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
-                , let out = Reference nm (Just (DeclHasRepr forg nm dom))
-                , let hook = mkHook (channelling config) forg nm dom region
+                | thisDom <- domOpts
+                , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty thisDom
+                , let out = Reference nm (Just (DeclHasRepr forg nm thisDom))
+                , let hook = mkHook (channelling config) forg nm thisDom region
                 ]
         return options
     theRule _ = na "rule_ChooseRepr"
@@ -1718,8 +1718,6 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
 
-        ty <- typeOf domain
-
         let reprsWhichOrder
                 | representationsGivens config == Sparse = reprsSparseOrder
                 | representationLevels config == False   = reprsStandardOrderNoLevels
@@ -1730,8 +1728,8 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
 
         return
             [ RuleResult
-                { ruleResultDescr = "Choosing representation for quantified variable" <+> pretty nm
-                                        <+> "(with type:" <+> pretty ty <> ")"
+                { ruleResultDescr = "Choosing representation for quantified variable" <+>
+                                        pretty nm <> ":" <++> pretty thisDom
                 , ruleResultType = ChooseRepr_Quantified
                 , ruleResult = bugFailT "rule_ChooseReprForComprehension" $ do
                     outDomains <- downD (nm, thisDom)
@@ -1785,7 +1783,8 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
 
         return
             [ RuleResult
-                { ruleResultDescr = "Choosing representation for local variable" <+> pretty nm
+                { ruleResultDescr = "Choosing representation for auxiliary variable" <+>
+                                        pretty nm <> ":" <++> pretty thisDom
                 , ruleResultType = ChooseRepr_Auxiliary
                 , ruleResult = bugFailT "rule_ChooseReprForLocals" $ do
                     outDomains <- downD (nm, thisDom)
