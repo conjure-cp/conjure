@@ -210,9 +210,17 @@ export class TreeContainer extends React.Component<Props, State> {
   async play() {
     const interval = 400;
     while (this.state.playing) {
+      if (this.state.selected === this.state.id2Node[0].descCount) {
+        break;
+      }
+
       this.goLeft();
       await this.sleep(interval);
     }
+
+    this.setState({ playing: false });
+
+    console.log("Stopped playing");
   }
 
   sleep(ms: number) {
