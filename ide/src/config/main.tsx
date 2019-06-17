@@ -269,6 +269,7 @@ class F extends React.Component<any, State> {
             paramFiles={this.state.params}
           />
         </StageHeader>
+      
         {this.state.core && <TreeContainer core={this.state.core} />}
         {/* <TreeContainer core={fiveNodes} /> */}
       </div>

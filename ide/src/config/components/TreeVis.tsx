@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom";
 import * as d3 from "d3";
 import Node from "../modules/Node";
 import { HierarchyPointLink, HierarchyPointNode, Selection } from "d3";
+import { linkGenerator } from "../modules/Helper";
 
 interface State {}
 
@@ -19,15 +20,6 @@ interface Props {
   minsize: number;
   nodeClickHandler: (d: Node) => void;
 }
-
-const linkGenerator = d3
-  .linkVertical<any, Node>()
-  .x(function(d: Node) {
-    return d.x;
-  })
-  .y(function(d: Node) {
-    return d.y;
-  });
 
 const zoom = d3.zoom<any, any>().on("zoom", function() {
   d3.select("#thegroup").attr("transform", d3.event.transform);
@@ -49,7 +41,7 @@ export default class TreeVis extends React.Component<Props, State> {
         .duration(this.props.duration),
       node.x,
       // node.y + 400
-      node.y
+      node.y + this.props.height / 4
     );
   }
 
@@ -106,7 +98,7 @@ export default class TreeVis extends React.Component<Props, State> {
       .sort((a, b) => b.data.label.length - a.data.label.length);
 
     const maxWidth = sorted[0].data.label.length * 10;
-    const maxHeight = this.props.linScale(this.props.rootNode.childCount) * 12;
+    const maxHeight = this.props.linScale(this.props.rootNode.descCount) * 3;
 
     const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight]);
     const svg = d3.select("#thegroup");
@@ -203,7 +195,7 @@ export default class TreeVis extends React.Component<Props, State> {
     let p = svg.selectAll("path.link");
 
     const linkList = rootNode.links();
-    let link = p.data(linkList, d => d.target.data.id);
+    let link = p.data(linkList, (d: any) => d.target.data.id);
 
     link
       .enter()
@@ -265,7 +257,6 @@ export default class TreeVis extends React.Component<Props, State> {
   render() {
     return (
       <div id="tree">
-        This is the tree
         <svg width={this.props.width} height={this.props.height}></svg>
       </div>
     );

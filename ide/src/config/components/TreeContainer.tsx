@@ -2,10 +2,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import Node from "../modules/Node";
 import TreeVis from "./TreeVis";
+import StatsBar from "./StatsBar";
 import { HotKeys } from "react-hotkeys";
 import { cloneDeep } from "lodash";
 import * as d3 from "d3";
-import { thresholdScott } from "d3";
+import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3";
 
 interface FromServerNode {
   id: number;
@@ -38,6 +39,7 @@ interface State {
   minsize: number;
   shouldGetKids: boolean;
   playing: boolean;
+  solNodeIds: number[];
 }
 
 function makeState(core: Core): State {
@@ -50,8 +52,15 @@ function makeState(core: Core): State {
 
   let id2Node: MyMap = {};
 
+  let solNodeIds = [];
+
   for (let i = 0; i < core.nodes.length; i++) {
     const element = core.nodes[i];
+
+    if (element.isSolution) {
+      solNodeIds.push(element.id);
+    }
+
     const newNode = new Node(
       element.id,
       element.label,
@@ -86,7 +95,8 @@ function makeState(core: Core): State {
     linScale: linScale,
     selected: 0,
     shouldGetKids: false,
-    playing: false
+    playing: false,
+    solNodeIds: solNodeIds
   };
 
   return state;
@@ -204,7 +214,6 @@ export class TreeContainer extends React.Component<Props, State> {
         playing: !prevState.playing
       };
     });
-    this.play();
   }
 
   async play() {
@@ -213,32 +222,41 @@ export class TreeContainer extends React.Component<Props, State> {
       if (this.state.selected === this.state.id2Node[0].descCount) {
         break;
       }
-
       this.goLeft();
       await this.sleep(interval);
     }
-
     this.setState({ playing: false });
-
-    console.log("Stopped playing");
   }
 
   sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: Props, prevState: State) {
     // Typical usage (don't forget to compare props):
     if (this.props.core.id !== prevProps.core.id) {
       this.setState(makeState(this.props.core));
     }
+
+    if (this.state.playing !== prevState.playing) {
+      this.play();
+    }
   }
 
   render() {
+    let failedBranchCount =
+      this.state.id2Node[0].descCount -
+      (this.state.solveable ? this.props.core.solAncestorIds.length : 0);
+
     return (
       <HotKeys keyMap={map} handlers={this.handlers}>
         <div>
-          This is the container
+          <StatsBar
+            minsize={this.state.minsize}
+            solNodeIds={this.state.solNodeIds}
+            totalNodes={this.state.id2Node[0].descCount + 1}
+            failedBranchCount={failedBranchCount}
+          />
           <TreeVis
             id={this.props.core.id}
             rootNode={this.state.id2Node[0]}
@@ -249,7 +267,6 @@ export class TreeContainer extends React.Component<Props, State> {
             minsize={this.state.minsize}
             nodeClickHandler={this.nodeClickHandler}
             duration={500}
-            // duration={2000}
             width={600}
             height={800}
           />
