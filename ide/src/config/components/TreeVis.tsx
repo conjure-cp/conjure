@@ -48,7 +48,8 @@ export default class TreeVis extends React.Component<Props, State> {
         .transition()
         .duration(this.props.duration),
       node.x,
-      node.y + 100
+      node.y + 400
+      // node.y
     );
   }
 

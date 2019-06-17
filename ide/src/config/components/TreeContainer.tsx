@@ -105,6 +105,7 @@ export class TreeContainer extends React.Component<Props, State> {
     this.collapse = this.collapse.bind(this);
     this.expand = this.expand.bind(this);
     this.nodeClickHandler = this.nodeClickHandler.bind(this);
+    this.play = this.play.bind(this);
 
     this.state = makeState(this.props.core);
 
@@ -114,7 +115,8 @@ export class TreeContainer extends React.Component<Props, State> {
       goUp: this.goUp,
       goRight: this.goRight,
       collapse: this.collapse,
-      expand: this.expand
+      expand: this.expand,
+      play: this.play
     };
   }
 
@@ -137,63 +139,108 @@ export class TreeContainer extends React.Component<Props, State> {
     });
   }
 
-  async goLeft() {
-    // console.log(this.state.selected);
-    // console.log(this.state.id2Node[this.state.selected]);
-    // console.log(this.state.id2Node);
+  goLeft() {
+    this.setState((prevState: State) => {
+      let newMap = cloneDeep(prevState.id2Node);
+      const current = newMap[prevState.selected];
+      const next = prevState.selected + 1;
 
-    let newMap = cloneDeep(this.state.id2Node);
+      if (current._children) {
+        Node.showChildren(current);
+        return { id2Node: newMap, selected: prevState.selected };
+      }
 
-    const current = newMap[this.state.selected];
+      if (newMap[next]) {
+        return { id2Node: newMap, selected: next };
+      }
 
-    if (current._children) {
-      Node.showChildren(current);
-      this.setState({ id2Node: newMap });
-      return;
-    }
+      if (!current.children && current.childCount > 0) {
+        fetch(`http://localhost:5000/loadNodes/${this.state.selected}`)
+          .then(data => data.json())
+          .then(kids => {
+            let newMap = cloneDeep(prevState.id2Node);
+            newMap[this.state.selected].children = kids;
+            newMap[this.state.selected].children!.map((child: Node) => {
+              newMap[child.id] = child;
+              this.setState({ id2Node: newMap, selected: prevState.selected });
+            });
+          });
+      }
 
-    if (!current.children && current.childCount > 0) {
-      const res = await fetch(
-        `http://localhost:5000/loadNodes/${this.state.selected}`
-      );
-      const json = await res.json();
+      return null;
+    });
 
-      let newMap = cloneDeep(this.state.id2Node);
-      newMap[this.state.selected].children = json;
-      newMap[this.state.selected].children!.map((child: Node) => {
-        newMap[child.id] = child;
-      });
-      this.setState({ id2Node: newMap });
-      return;
-    }
+    //   if (current._children) {
+    //     Node.showChildren(current);
+    //     this.setState({ id2Node: newMap });
+    //     return;
+    //   }
 
-    if (!current.children) {
-      return;
-    }
+    //   if (!current.children && current.childCount > 0) {
+    //     const res = await fetch(
+    //       `http://localhost:5000/loadNodes/${this.state.selected}`
+    //     );
+    //     const json = await res.json();
 
-    this.setState({ selected: current.children[0].id });
+    //     let newMap = cloneDeep(this.state.id2Node);
+    //     newMap[this.state.selected].children = json;
+    //     newMap[this.state.selected].children!.map((child: Node) => {
+    //       newMap[child.id] = child;
+    //     });
+    //     this.setState({ id2Node: newMap });
+    //     return;
+    //   }
+
+    //   if (!current.children && newMap[next]) {
+    //     this.setState({ selected: next });
+    //     return;
+    //   }
+
+    //   if (current.children) {
+    //     this.setState({ selected: current.children[0].id });
+    //   }
   }
 
-  // goLeft() {
-  //   this.setState((prev: State) => {
-  //     const current = prev.id2Node[prev.selected];
+  // async goLeft() {
+  //   // console.log(this.state.selected);
+  //   // console.log(this.state.id2Node[this.state.selected]);
+  //   // console.log(this.state.id2Node);
 
-  //     console.log(prev.selected);
-  //     console.log(current);
+  //   const next = this.state.selected + 1;
 
-  //     if (!current.children && current.childCount > 0) {
-  //       return { shouldGetKids: true, selected: prev.selected };
-  //     }
+  //   let newMap = cloneDeep(this.state.id2Node);
 
-  //     if (!current.children) {
-  //       return null;
-  //     }
+  //   const current = newMap[this.state.selected];
 
-  //     return {
-  //       selected: current.children[0].id,
-  //       shouldGetKids: false
-  //     };
-  //   });
+  //   if (current._children) {
+  //     Node.showChildren(current);
+  //     this.setState({ id2Node: newMap });
+  //     return;
+  //   }
+
+  //   if (!current.children && current.childCount > 0) {
+  //     const res = await fetch(
+  //       `http://localhost:5000/loadNodes/${this.state.selected}`
+  //     );
+  //     const json = await res.json();
+
+  //     let newMap = cloneDeep(this.state.id2Node);
+  //     newMap[this.state.selected].children = json;
+  //     newMap[this.state.selected].children!.map((child: Node) => {
+  //       newMap[child.id] = child;
+  //     });
+  //     this.setState({ id2Node: newMap });
+  //     return;
+  //   }
+
+  //   if (!current.children && newMap[next]) {
+  //     this.setState({ selected: next });
+  //     return;
+  //   }
+
+  //   if (current.children) {
+  //     this.setState({ selected: current.children[0].id });
+  //   }
   // }
 
   goRight() {
@@ -222,13 +269,8 @@ export class TreeContainer extends React.Component<Props, State> {
   collapse() {
     this.setState((prevState: State) => {
       let newMap = cloneDeep(prevState.id2Node);
-      // Node.collapseNode(newMap[prevState.selected]);
-      newMap[prevState.selected]._children = newMap[prevState.selected].children;
-      newMap[prevState.selected].children = undefined;
+      Node.collapseNode(newMap[prevState.selected]);
       return { id2Node: newMap };
-
-      // Node.collapseNode(prevState.id2Node[prevState.selected]);
-      // return { id2Node: prevState.id2Node };
     });
   }
 
@@ -237,12 +279,22 @@ export class TreeContainer extends React.Component<Props, State> {
       let newMap = cloneDeep(prevState.id2Node);
       Node.expandNode(newMap[prevState.selected]);
       return { id2Node: newMap };
-
-      // Node.expandNode(prevState.id2Node[prevState.selected]);
-      // return { id2Node: prevState.id2Node };
     });
 
     // console.log("expanded!");
+  }
+
+  async play() {
+    const interval = 400;
+
+    for (let i = 0; i < 10000000; i++) {
+      this.goLeft();
+      await this.sleep(interval);
+    }
+  }
+
+  sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -266,10 +318,10 @@ export class TreeContainer extends React.Component<Props, State> {
             linScale={this.state.linScale}
             minsize={this.state.minsize}
             nodeClickHandler={this.nodeClickHandler}
-            // duration={500}
-            duration={2000}
-            width={500}
-            height={500}
+            duration={500}
+            // duration={2000}
+            width={1000}
+            height={1000}
           />
         </div>
       </HotKeys>
@@ -283,5 +335,6 @@ const map = {
   goUp: "up",
   addNode: "a",
   collapse: "c",
-  expand: "e"
+  expand: "e",
+  play: "p"
 };

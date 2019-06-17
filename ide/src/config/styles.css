@@ -1,3 +1,8 @@
+body {
+  overflow: hidden;
+  position: fixed;
+}
+
 .node text {
   font: 18px sans-serif;
 }
@@ -19,7 +24,7 @@ a.collapsed:after {
 }
 
 .node circle {
-  /* fill: white; */
+  fill: white;
   stroke: cornflowerblue;
   stroke-width: 5px;
   transition: stroke 500ms, fill 500ms;
@@ -45,16 +50,19 @@ circle.selected {
   border: 2px;
   border-color: cornflowerblue;
   stroke: coral;
+  transition: stroke 500ms, fill 500ms;
 }
 
 .link {
   fill: none;
   stroke: green;
   stroke-width: 2px;
+  transition: stroke 500ms, fill 500ms;
 }
 
 .link.red {
   fill: none;
   stroke: red;
   stroke-width: 2px;
+  transition: stroke 500ms, fill 500ms;
 }
