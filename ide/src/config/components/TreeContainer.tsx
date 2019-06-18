@@ -265,6 +265,7 @@ export class TreeContainer extends React.Component<Props, State> {
             solNodeIds={this.state.solNodeIds}
             totalNodes={this.state.id2Node[0].descCount + 1}
             failedBranchCount={failedBranchCount}
+            linScale={this.state.linScale}
           />
 
           <TreeVis

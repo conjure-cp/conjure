@@ -13,6 +13,7 @@ interface Props {
   totalNodes: number;
   failedBranchCount: number;
   minsize: number;
+  linScale: any;
 }
 
 interface State {}
@@ -32,6 +33,7 @@ export default class StatusBar extends React.Component<Props, State> {
     const layout = d3.tree<Node>().nodeSize([15, 15]);
 
     let rootNode = {
+      isSolution: true,
       children: [{}, {}, {}]
     };
 
@@ -45,6 +47,11 @@ export default class StatusBar extends React.Component<Props, State> {
     if (!path) {
       path = "";
     }
+
+    console.log(
+      "RADIUS",
+      Node.getRadius(n, this.props.linScale, this.props.minsize)
+    );
 
     return (
       <div className="row">
@@ -95,7 +102,11 @@ export default class StatusBar extends React.Component<Props, State> {
                 <g className="node">
                   <circle
                     className="solution"
-                    r={this.props.minsize}
+                    r={Node.getRadius(
+                      n,
+                      this.props.linScale,
+                      this.props.minsize
+                    )}
                     cx={width / 2}
                     cy={height / 2 - 2}
                   ></circle>

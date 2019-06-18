@@ -51,12 +51,6 @@ export default class TreeVis extends React.Component<Props, State> {
     );
   }
 
-  getRadius(d: HierarchyPointNode<Node>): number {
-    return (d.children ? d.children.length : 0) < d.data.childCount
-      ? this.props.linScale(d.data.descCount)
-      : this.props.minsize;
-  }
-
   hasHiddenChildren(d: HierarchyPointNode<Node>): boolean {
     return d.data.childCount !== (d.children ? d.children.length : 0);
   }
@@ -74,7 +68,9 @@ export default class TreeVis extends React.Component<Props, State> {
     circle
       .transition()
       .duration(this.props.duration)
-      .attr("r", (d: HierarchyPointNode<Node>) => this.getRadius(d));
+      .attr("r", (d: HierarchyPointNode<Node>) =>
+        Node.getRadius(d, this.props.linScale, this.props.minsize)
+      );
 
     circle.classed(
       "selected",
@@ -155,7 +151,7 @@ export default class TreeVis extends React.Component<Props, State> {
     nodeEnter
       .append("text")
       .attr("y", d => {
-        return 2 * this.getRadius(d);
+        return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize);
       })
       .attr("class", "decCount")
       .attr("dy", ".35em")
@@ -181,7 +177,7 @@ export default class TreeVis extends React.Component<Props, State> {
     nodeUpdate
       .select("text.decCount")
       .attr("y", d => {
-        return 2 * this.getRadius(d);
+        return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize);
       })
       .text(d => this.getDecCountMessage(d));
 

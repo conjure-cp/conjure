@@ -1,4 +1,5 @@
-import * as d3 from "d3";
+import { HierarchyPointNode } from "d3";
+import * as ReactDOM from "react-dom";
 /**
  * This class represents a d3 hierarchy node
  */
@@ -63,6 +64,30 @@ export default class Node {
     n.children = old.children;
     n._children = old._children;
     return n;
+  }
+
+  public static getRadius(
+    d: HierarchyPointNode<Node>,
+    linScale: any,
+    minsize: number
+  ): number {
+    const solNodeStrokeWidth = getComputedStyle(
+      document.getElementById("root")!
+    ).getPropertyValue("--sol-stroke-width");
+
+    const normalNodeStrokeWidth = getComputedStyle(
+      document.getElementById("root")!
+    ).getPropertyValue("--stroke-width");
+
+    if (d.data.isSolution) {
+      return (
+        minsize + Number(normalNodeStrokeWidth) - Number(solNodeStrokeWidth)
+      );
+    }
+
+    return (d.children ? d.children.length : 0) < d.data.childCount
+      ? linScale(d.data.descCount)
+      : minsize;
   }
 
   public static expandNode(node: Node) {

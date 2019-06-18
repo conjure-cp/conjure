@@ -1,3 +1,8 @@
+:root {
+  --stroke-width: 5;
+  --sol-stroke-width: 2;
+}
+
 body {
   overflow: hidden;
   position: fixed;
@@ -40,7 +45,8 @@ a.collapsed:after {
 }
 
 circle.solution {
-  fill: gold;
+  fill: rgb(251, 255, 0);
+  stroke-width: var(--sol-stroke-width);
   transition: stroke 500ms, fill 500ms;
 }
 

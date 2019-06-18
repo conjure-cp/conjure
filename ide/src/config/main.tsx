@@ -280,14 +280,14 @@ class F extends React.Component<any, State> {
             />
           )}
         </div>
-        {/* <div className="col">
+        <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (
             <TreeContainer
               core={this.state.initResponse.core}
               identifier={"tree2"}
             />
           )}
-        </div> */}
+        </div>
         {/* <TreeContainer core={testCore} /> */}
       </div>
     );
