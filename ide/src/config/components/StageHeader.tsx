@@ -29,7 +29,7 @@ const StageHeader = (props: Props) => {
             // console.log("!!!!!!!!");
           }}
         >
-          {props.title} Options
+          {props.title}
         </a>
       </h5>
       <div className={innerClass} id={id}>

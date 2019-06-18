@@ -9,6 +9,7 @@ interface State {}
 
 interface Props {
   id: string;
+  identifier: string;
   width: number;
   height: number;
   rootNode: Node;
@@ -21,27 +22,32 @@ interface Props {
   nodeClickHandler: (d: Node) => void;
 }
 
-const zoom = d3.zoom<any, any>().on("zoom", function() {
-  d3.select("#thegroup").attr("transform", d3.event.transform);
-});
-
 export default class TreeVis extends React.Component<Props, State> {
   // static whyDidYouRender = true;
+  zoom: any;
 
   constructor(props: Props) {
     super(props);
     this.state = {};
+
+    console.log(this.props);
+    this.zoom = d3.zoom<any, any>().on("zoom", function() {
+      d3.select(`#${props.identifier}thegroup`).attr(
+        "transform",
+        d3.event.transform
+      );
+    });
   }
 
   focusNode(node: HierarchyPointNode<Node>) {
-    zoom.translateTo(
+    this.zoom.translateTo(
       d3
-        .select("#tree svg")
+        .select(`#${this.props.identifier} svg`)
         .transition()
         .duration(this.props.duration),
       node.x,
       // node.y + 400
-      node.y + this.props.height / 4
+      node.y + this.props.height / 6
     );
   }
 
@@ -101,7 +107,7 @@ export default class TreeVis extends React.Component<Props, State> {
     const maxHeight = this.props.linScale(this.props.rootNode.descCount) * 3;
 
     const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight]);
-    const svg = d3.select("#thegroup");
+    const svg = d3.select(`#${this.props.identifier}thegroup`);
     const rootNode = layout(hierarchy);
     const nodeList = rootNode.descendants();
 
@@ -238,10 +244,10 @@ export default class TreeVis extends React.Component<Props, State> {
   }
 
   makeGroup() {
-    d3.select("#tree svg")
-      .call(zoom)
+    d3.select(`#${this.props.identifier} svg`)
+      .call(this.zoom)
       .append("g")
-      .attr("id", "thegroup");
+      .attr("id", `${this.props.identifier}thegroup`);
   }
 
   componentDidMount() {
@@ -256,7 +262,7 @@ export default class TreeVis extends React.Component<Props, State> {
 
   render() {
     return (
-      <div id="tree">
+      <div id={this.props.identifier}>
         <svg width={this.props.width} height={this.props.height}></svg>
       </div>
     );

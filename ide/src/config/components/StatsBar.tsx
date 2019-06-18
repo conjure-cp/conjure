@@ -51,6 +51,7 @@ export default class StatusBar extends React.Component<Props, State> {
         <div className="col">
           <label>
             <svg width={width} height={height}>
+              <title>Failed Branches</title>
               <g transform={`translate(${30},${11}), scale(1)`}>
                 <path className="link red" d={path}></path>
               </g>
@@ -61,6 +62,7 @@ export default class StatusBar extends React.Component<Props, State> {
         <div className="col">
           <label>
             <svg width={width} height={height}>
+              <title>Successful Branches</title>
               <g transform={`translate(${30},${11}), scale(1)`}>
                 <path className="link " d={path}></path>
               </g>
@@ -71,6 +73,24 @@ export default class StatusBar extends React.Component<Props, State> {
         <div className="col">
           <label>
             <svg width={width} height={height}>
+              <title>Total number of nodes in the tree</title>
+              <g>
+                <g className="node">
+                  <circle
+                    r={this.props.minsize}
+                    cx={width / 2}
+                    cy={height / 2 - 2}
+                  ></circle>
+                </g>
+              </g>
+            </svg>
+            × {this.props.totalNodes}
+          </label>
+        </div>
+        <div className="col">
+          <label>
+            <svg width={width} height={height}>
+              <title>Number of Solutions found</title>
               <g>
                 <g className="node">
                   <circle
@@ -83,22 +103,6 @@ export default class StatusBar extends React.Component<Props, State> {
               </g>
             </svg>
             × {this.props.solNodeIds.length}
-          </label>
-        </div>
-        <div className="col">
-          <label>
-            <svg width={width} height={height}>
-              <g>
-                <g className="node">
-                  <circle
-                    r={this.props.minsize}
-                    cx={width / 2}
-                    cy={height / 2 - 2}
-                  ></circle>
-                </g>
-              </g>
-            </svg>
-            × {this.props.totalNodes}
           </label>
         </div>
       </div>

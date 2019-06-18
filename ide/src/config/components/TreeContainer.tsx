@@ -6,6 +6,8 @@ import StatsBar from "./StatsBar";
 import { HotKeys } from "react-hotkeys";
 import { cloneDeep } from "lodash";
 import * as d3 from "d3";
+import StageHeader from "./StageHeader";
+import { Domains } from "./Domains";
 import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3";
 
 interface FromServerNode {
@@ -28,6 +30,7 @@ export interface Core {
 }
 
 interface Props {
+  identifier: string;
   core: Core;
 }
 
@@ -118,6 +121,7 @@ export class TreeContainer extends React.Component<Props, State> {
     this.nodeClickHandler = this.nodeClickHandler.bind(this);
     this.play = this.play.bind(this);
     this.pPressed = this.pPressed.bind(this);
+    this.goToRoot = this.goToRoot.bind(this);
 
     this.state = makeState(this.props.core);
 
@@ -127,7 +131,8 @@ export class TreeContainer extends React.Component<Props, State> {
       goRight: this.goRight,
       collapse: this.collapse,
       expand: this.expand,
-      pPressed: this.pPressed
+      pPressed: this.pPressed,
+      goToRoot: this.goToRoot
     };
   }
 
@@ -216,6 +221,10 @@ export class TreeContainer extends React.Component<Props, State> {
     });
   }
 
+  goToRoot() {
+    this.setState({ selected: 0 });
+  }
+
   async play() {
     const interval = 400;
     while (this.state.playing) {
@@ -257,8 +266,10 @@ export class TreeContainer extends React.Component<Props, State> {
             totalNodes={this.state.id2Node[0].descCount + 1}
             failedBranchCount={failedBranchCount}
           />
+
           <TreeVis
             id={this.props.core.id}
+            identifier={this.props.identifier}
             rootNode={this.state.id2Node[0]}
             selected={this.state.selected}
             solAncestorIds={this.props.core.solAncestorIds}
@@ -268,8 +279,10 @@ export class TreeContainer extends React.Component<Props, State> {
             nodeClickHandler={this.nodeClickHandler}
             duration={500}
             width={600}
-            height={800}
+            height={400}
           />
+
+          <Domains id={this.props.core.id} selected={this.state.selected} />
         </div>
       </HotKeys>
     );
@@ -277,11 +290,11 @@ export class TreeContainer extends React.Component<Props, State> {
 }
 
 const map = {
-  goLeft: ["left", "down"],
-  goRight: "right",
-  goUp: "up",
-  addNode: "a",
+  goLeft: ["left", "s", "a", "down"],
+  goRight: ["right", "d"],
+  goUp: ["up", "w"],
   collapse: "c",
   expand: "e",
-  pPressed: "p"
+  pPressed: "p",
+  goToRoot: "r"
 };

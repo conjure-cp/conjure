@@ -116,8 +116,8 @@ const submissionHandler = (values: Values, props: Props) => {
   })
     .then(response => response.json())
     .then(data => {
-      console.log("From formik", data.core);
-      props.responseHandler(data.core);
+      console.log("From formik", data);
+      props.responseHandler(data);
     });
   // .catch(error => {
   //   console.log(error);

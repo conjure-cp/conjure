@@ -11,7 +11,8 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 interface State {
-  core: Core | undefined;
+  // core: Core | undefined;
+  initResponse: any;
   gotResponse: boolean;
   diff: boolean;
   models: string[];
@@ -24,7 +25,7 @@ class F extends React.Component<any, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      core: undefined,
+      initResponse: undefined,
       gotResponse: false,
       diff: false,
       models: [],
@@ -37,8 +38,9 @@ class F extends React.Component<any, State> {
 
   collapseHandler() {}
 
-  initResponseHandler(core: Core) {
-    this.setState({ gotResponse: true, core: core });
+  initResponseHandler(data: any) {
+    this.setState({ gotResponse: true, initResponse: data });
+    // console.log(core);
   }
 
   clickHandler() {
@@ -242,10 +244,11 @@ class F extends React.Component<any, State> {
 
     return (
       <div className="row">
+        {/* // <div> */}
         <StageHeader
           title={"Setup"}
           id={"Setup"}
-          // startCollapsed={this.state.gotResponse}
+          startCollapsed={this.state.gotResponse}
           collapseHandler={this.collapseHandler}
         >
           <div className="input-group mb-3">
@@ -258,7 +261,6 @@ class F extends React.Component<any, State> {
                 />
               </div>
             </div>
-
             <label className="form-control">Diff two configurations</label>
           </div>
 
@@ -269,9 +271,24 @@ class F extends React.Component<any, State> {
             paramFiles={this.state.params}
           />
         </StageHeader>
-      
-        {this.state.core && <TreeContainer core={this.state.core} />}
-        {/* <TreeContainer core={fiveNodes} /> */}
+
+        <div className="col">
+          {this.state.initResponse && this.state.initResponse.core && (
+            <TreeContainer
+              core={this.state.initResponse.core}
+              identifier={"tree1"}
+            />
+          )}
+        </div>
+        {/* <div className="col">
+          {this.state.initResponse && this.state.initResponse.core && (
+            <TreeContainer
+              core={this.state.initResponse.core}
+              identifier={"tree2"}
+            />
+          )}
+        </div> */}
+        {/* <TreeContainer core={testCore} /> */}
       </div>
     );
   }
