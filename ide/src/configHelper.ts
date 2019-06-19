@@ -134,7 +134,7 @@ export default class ConfigureHelper {
 
           fs.writeFileSync(
             path.join(this.cacheFolderPath, obj.hash, "vscode.extensionCache"),
-            "blank"
+            new Date().toUTCString()
           );
 
           console.log(`child process exited with code ${code}`);
