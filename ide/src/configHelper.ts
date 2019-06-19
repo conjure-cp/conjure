@@ -22,6 +22,7 @@ export default class ConfigureHelper {
   private static context: vscode.ExtensionContext;
   public static cacheFolderPath: string;
   private static cacheFolderName = "vscodeExtensionCache";
+  public static cacheFileName = "vscode.extensionCache";
 
   /**
    * Activate the extension
@@ -133,19 +134,17 @@ export default class ConfigureHelper {
           });
 
           fs.writeFileSync(
-            path.join(this.cacheFolderPath, obj.hash, "vscode.extensionCache"),
+            path.join(this.cacheFolderPath, obj.hash, this.cacheFileName),
             new Date().toUTCString()
           );
 
           console.log(`child process exited with code ${code}`);
           console.error(errorMessage);
           if (errorMessage === "") {
-            // let command = "conjure " + job.args.join(" ")
-            // WebviewHelper.launch(path.join(vscode.workspace.rootPath!, job.hash), command)
             console.log("Success");
           } else {
             vscode.window.showErrorMessage(
-              "Config " + pid2JobId[proc.pid] + " | " + errorMessage
+              `Config ${pid2JobId[proc.pid]} | ${errorMessage}`
             );
             rimraf.sync(path.join(vscode.workspace.rootPath!, obj.hash));
             reject();
@@ -318,7 +317,7 @@ export default class ConfigureHelper {
   }
 
   public static async invalidateCaches() {
-    let caches = await vscode.workspace.findFiles("**/*.extensionCache");
+    let caches = await vscode.workspace.findFiles(`**/${this.cacheFileName}`);
     caches.map(file => rimraf.sync(path.dirname(file.path)));
     vscode.window.showInformationMessage("Caches invalidated");
   }

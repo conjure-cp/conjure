@@ -2,6 +2,8 @@ import * as sqlite3 from "sqlite3";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as express from "express";
+import fs = require("fs");
+
 import {
   Server,
   Path,
@@ -11,6 +13,7 @@ import {
   QueryParam,
   Errors
 } from "typescript-rest";
+
 import * as init from "./init";
 import * as cors from "cors";
 const fetch = require("node-fetch");
@@ -19,6 +22,7 @@ import ConfigHelper from "../configHelper";
 import WebviewHelper from "../webviewHelper";
 // import TreeHelper from '../treeHelper'
 import { Z_FULL_FLUSH } from "zlib";
+import { fstat } from "fs";
 
 const collator = new Intl.Collator(undefined, { numeric: true });
 
@@ -27,10 +31,30 @@ interface Response {
   params: string[];
 }
 
+interface Cache {
+  pathToFolder: string;
+  timeStamp: string;
+}
+
 @Path("/config")
 class ConfigService {
   toRel(uri: vscode.Uri): string {
     return vscode.workspace.asRelativePath(uri.path);
+  }
+
+  @Path("/caches")
+  @GET
+  async getCaches(): Promise<Cache[]> {
+    let cachedFiles = await vscode.workspace.findFiles(
+      `**/${ConfigHelper.cacheFileName}`
+    );
+
+    return cachedFiles.map(uri => {
+      return {
+        pathToFolder: path.dirname(uri.path),
+        timeStamp: fs.readFileSync(uri.path).toString()
+      };
+    });
   }
 
   @Path("/files")

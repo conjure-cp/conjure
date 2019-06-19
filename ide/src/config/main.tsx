@@ -3,6 +3,9 @@ import * as ReactDOM from "react-dom";
 import StageHeader from "./components/StageHeader";
 import FormikConjure from "./components/FormikConjure";
 import { Core, TreeContainer, MyMap } from "./components/TreeContainer";
+import { Form, Field, FieldArray, Formik } from "formik";
+import SelectWithLabel from "./components/SelectWithLabel";
+import { Cache } from "../server/server";
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js");
@@ -16,6 +19,7 @@ interface State {
   diff: boolean;
   models: string[];
   params: string[];
+  caches: Cache[];
 }
 
 class F extends React.Component<any, State> {
@@ -28,7 +32,8 @@ class F extends React.Component<any, State> {
       gotResponse: false,
       diff: false,
       models: [],
-      params: []
+      params: [],
+      caches: []
     };
     this.clickHandler = this.clickHandler.bind(this);
     this.initResponseHandler = this.initResponseHandler.bind(this);
@@ -53,6 +58,12 @@ class F extends React.Component<any, State> {
       .then(response => response.json())
       .then(data => {
         this.setState({ ...data });
+      });
+
+    fetch("http://localhost:4000/config/caches")
+      .then(response => response.json())
+      .then(data => {
+        this.setState({ caches: data });
       });
   }
 
@@ -262,6 +273,24 @@ class F extends React.Component<any, State> {
             </div>
             <label className="form-control">Diff two configurations</label>
           </div>
+
+          <Formik
+            initialValues={{ cachedSelection: "" }}
+            onSubmit={values => {}}
+            enableReinitialize={true}
+            render={({ values }) => (
+              <Form>
+                <Field
+                  name={`cachedSelection`}
+                  component={SelectWithLabel}
+                  label="Caches"
+                  options={this.state.caches.map(cache => {
+                    return { val: cache.timeStamp, text: cache.timeStamp };
+                  })}
+                />
+              </Form>
+            )}
+          ></Formik>
 
           <FormikConjure
             responseHandler={this.initResponseHandler}
