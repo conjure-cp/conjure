@@ -3,7 +3,6 @@ import * as ReactDOM from "react-dom";
 import StageHeader from "./components/StageHeader";
 import FormikConjure from "./components/FormikConjure";
 import { Core, TreeContainer, MyMap } from "./components/TreeContainer";
-import Node from "./modules/Node";
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js");

@@ -57,7 +57,7 @@ export class Domains extends React.Component<Props, State> {
     this.getDomains();
   }
 
-  async componentDidUpdate(prevProps: Props, prevState: State) {
+  async componentDidUpdate(prevProps: Props, _prevState: State) {
     if (
       this.props.selected !== prevProps.selected ||
       this.props.id !== prevProps.id

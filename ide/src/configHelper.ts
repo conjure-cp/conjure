@@ -2,302 +2,11 @@ import * as path from "path";
 import * as vscode from "vscode";
 import fs = require("fs");
 import { spawn, ChildProcess } from "child_process";
-import WebviewHelper from "./webviewHelper";
 import apiConstructor = require("node-object-hash");
 import rimraf = require("rimraf");
 const createHTML = require("create-html");
 
 const hasher = apiConstructor({ sort: true, coerce: true }).hash;
-const collator = new Intl.Collator(undefined, { numeric: true });
-
-// export interface ConjureOptions {
-//     strategy: string
-//     timelimit: number | undefined
-// }
-
-// export interface MinionOptions {
-//     consistency: string
-//     preprocessing: string
-//     findallsols: boolean
-//     randomiseorder: boolean
-//     nodelimit: number | undefined
-//     sollimit: number | undefined
-//     cpulimit: number | undefined
-// }
-
-// export interface SavileRowOptions {
-//     optimisation: string
-//     symmetryBreaking: string
-//     translation: string
-//     timelimit: number | undefined
-//     cnflimit: number | undefined
-// }
-
-// export interface Configuration {
-//     modelFileName: string
-//     paramFileName: string
-//     conjureOptions: ConjureOptions
-//     savileRowOptions: SavileRowOptions
-//     minionOptions: MinionOptions
-// }
-
-// interface SearchJob {
-//     hash: string
-//     args: string[]
-//     preview: string
-// }
-
-// interface CachedSearch {
-//     hash: string
-//     args: string[]
-// }
-
-// function saveConfiguration(){
-//     vscode.workspace.getConfiguration()
-// }
-
-// function getConfigHash(config: Configuration, essenceFiles: string[], paramFiles: string[]): string {
-
-//     config.modelFileName = essenceFiles.find((p) => p.includes(config.modelFileName))!
-//     config.paramFileName = paramFiles.find((p) => p.includes(config.paramFileName))!
-
-//     let obj: any = config
-//     obj.modelFileContents = fs.readFileSync(config.modelFileName).toString()
-//     obj.paramFileContents = fs.readFileSync(config.paramFileName).toString()
-//     return hasher(obj)
-// }
-
-// function getConfigPreview(config: Configuration): string {
-//     let res = ""
-//     res += "model: {" + vscode.workspace.asRelativePath(config.modelFileName) + "} "
-//     res += "param: {" + vscode.workspace.asRelativePath(config.paramFileName) + "} "
-//     res += "Conjure Options: " + JSON.stringify(config.conjureOptions) + "  "
-//     res += "Savilerow Options: " + JSON.stringify(config.savileRowOptions) + "  "
-//     res += "Minion Options: " + JSON.stringify(config.minionOptions) + "    "
-//     return res
-// }
-
-// function getProgressMessage(doneCount: number, jobCount: number, proc: ChildProcess, pid2JobId: any): string {
-//     return `[${doneCount+1}/${jobCount}] - Config` + pid2JobId[proc.pid] + ' - '
-// }
-
-// async function solveAny(configs: Configuration[], essenceFiles: vscode.Uri[], paramFiles: vscode.Uri[]) {
-
-//     let jobs: SearchJob[] = []
-//     let cached: CachedSearch[] = []
-
-//     for (let i = 0; i < configs.length; i++) {
-
-//         const config = configs[i]
-
-//         const hash = getConfigHash(config, essenceFiles.map((uri) => uri.path), paramFiles.map((uri) => uri.path))
-
-//         if (jobs.map((job)=>job.hash).includes(hash) || cached.map((c)=>c.hash).includes(hash)){
-//             vscode.window.showErrorMessage("Configs are the same! aborting..")
-//             return
-//         }
-
-//         const args = configToArgList(config, hash)
-
-//         let caches = await vscode.workspace.findFiles("**/*.extensionCache")
-//         let matching = caches.filter((file) => file.path.split("/").includes(hash))
-
-//         if (matching.length > 0) {
-//             cached.push({ hash: hash, args: args })
-//             vscode.window.showInformationMessage(`Loading config${i+1} from cache...`)
-//             continue
-//         }
-
-//         const preview = getConfigPreview(config)
-//         jobs.push({ hash: hash, args: args, preview: preview })
-//     }
-
-//     vscode.window.withProgress({
-//         cancellable: true,
-//         location: vscode.ProgressLocation.Notification,
-//         title: 'Solving '
-
-//     }, (progress, token) => {
-
-//         var p = new Promise((resolve, _reject) => {
-
-//             let doneCount = 0
-//             let procs: ChildProcess[] = []
-//             let pid2JobId: any = {}
-
-//             for (let i = 0; i < jobs.length; i++){
-
-//                 const job = jobs[i]
-
-//                 const proc = spawn("conjure", job.args, {
-//                     shell: true,
-//                     cwd: vscode.workspace.rootPath,
-//                     detached: true
-//                 })
-
-//                 pid2JobId[proc.pid] = i + 1
-
-//                 progress.report({ message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + "Generating models..", increment: 0 })
-
-//                 let errorMessage = ""
-
-//                 proc.stdout.on('data', (data) => {
-//                     data = data.toString()
-//                     console.log(data.toString())
-
-//                     if (data.includes("Generating")) {
-
-//                         progress.report(
-//                             {
-//                                 message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Running Savilerow..",
-//                                 increment: 10
-//                             }
-//                         )
-//                     }
-//                     if (data.includes("domain")) {
-//                         progress.report(
-//                             {
-//                                 message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Domain Filtering..",
-//                                 increment: 10
-//                             }
-//                         )
-//                     }
-//                     if (data.includes("solver")) {
-//                         progress.report(
-//                             {
-//                                 message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Running Minion..",
-//                                 increment: 10
-//                             }
-//                         )
-//                     }
-//                 })
-
-//                 proc.stderr.on('data', (data) => {
-//                     errorMessage += `${data}`
-//                 })
-
-//                 proc.on('close', (code) => {
-
-//                     doneCount++
-
-//                     progress.report({ message: getProgressMessage(doneCount, jobs.length, proc, pid2JobId) + " Running Minion.." , increment: 20 })
-
-//                     fs.writeFileSync(path.join(vscode.workspace.rootPath!, job.hash, "vscode.extensionCache"), "blank")
-
-//                     console.log(`child process exited with code ${code}`)
-//                     console.error(errorMessage)
-//                     if (errorMessage === "") {
-//                         let command = "conjure " + job.args.join(" ")
-//                         WebviewHelper.launch(path.join(vscode.workspace.rootPath!, job.hash), command)
-//                     }
-//                     else {
-//                         vscode.window.showErrorMessage("Config " + pid2JobId[proc.pid] + " | " + errorMessage)
-//                         rimraf.sync(path.join(vscode.workspace.rootPath!, job.hash))
-//                     }
-
-//                     if (doneCount === jobs.length) {
-//                         resolve()
-//                     }
-
-//                 })
-
-//                 proc.on('error', (err) => {
-//                     console.log('Failed to start subprocess.')
-//                     console.error(err)
-//                     vscode.window.showErrorMessage("Failed to start conjure ;_;")
-//                 })
-
-//                 token.onCancellationRequested(() => {
-//                     procs.map((proc: ChildProcess) => process.kill(-proc.pid))
-//                     errorMessage = "Search Cancelled!"
-//                     jobs.map((j) => rimraf.sync(path.join(vscode.workspace.rootPath!, j.hash)))
-//                     cached.map((c) => rimraf.sync(path.join(vscode.workspace.rootPath!, c.hash)))
-//                 })
-//             }
-
-//             cached.forEach(search => {
-//                 let command = "conjure " + search.args.join(" ")
-//                 WebviewHelper.launch(path.join(vscode.workspace.rootPath!, search.hash), command)
-//             })
-
-//             if (jobs.length === 0) {
-//                 resolve()
-//             }
-//         }).then(() => {
-//             vscode.window.showInformationMessage("Done")
-//        })
-//         return p
-//     }) // vscode.window.withProgress
-// }
-
-// function configToArgList(config: Configuration, hash: string): string[] {
-
-//     let conjureOptions = ["solve", config.modelFileName, config.paramFileName, "-o", hash]
-
-//     if (config.conjureOptions.timelimit) {
-//         conjureOptions.push("--limit-time=" + String(config.conjureOptions.timelimit))
-//     }
-
-//     conjureOptions.push("-a")
-//     conjureOptions.push(config.conjureOptions.strategy)
-
-//     let savileRowOptions = [
-//         "--savilerow-options",
-//         "\"-" + config.savileRowOptions.optimisation,
-//         "-" + config.savileRowOptions.symmetryBreaking,
-//     ]
-
-//     if (config.savileRowOptions.translation !== "default") {
-//         savileRowOptions.push("-" + config.savileRowOptions.translation)
-//     }
-
-//     if (config.savileRowOptions.cnflimit) {
-//         savileRowOptions.push("-cnflimit")
-//         savileRowOptions.push(String(config.savileRowOptions.cnflimit))
-//     }
-
-//     if (config.savileRowOptions.timelimit) {
-//         savileRowOptions.push("-timelimit")
-//         savileRowOptions.push(String(config.savileRowOptions.timelimit))
-//     }
-
-//     savileRowOptions.push("\"")
-
-//     let minionOptions = ["--solver-options", "\"-dumptreesql", hash + "/out.db"]
-
-//     if (config.minionOptions.findallsols) {
-//         minionOptions.push("-findallsols")
-//     }
-//     if (config.minionOptions.randomiseorder) {
-//         minionOptions.push("-randomiseorder")
-//     }
-//     if (config.minionOptions.nodelimit) {
-//         minionOptions.push("-nodelimit")
-//         minionOptions.push(String(config.minionOptions.nodelimit))
-//     }
-//     if (config.minionOptions.sollimit) {
-//         minionOptions.push("-sollimit")
-//         minionOptions.push(String(config.minionOptions.sollimit))
-//     }
-//     if (config.minionOptions.cpulimit) {
-//         minionOptions.push("-cpulimit")
-//         minionOptions.push(String(config.minionOptions.cpulimit))
-//     }
-
-//     if (config.minionOptions.preprocessing !== "default") {
-//         minionOptions.push("-preprocess")
-//         minionOptions.push(config.minionOptions.preprocessing)
-//     }
-
-//     if (config.minionOptions.consistency !== "default") {
-//         minionOptions.push("-prop-node")
-//         minionOptions.push(config.minionOptions.consistency)
-//     }
-
-//     minionOptions.push("\"")
-
-//     return conjureOptions.concat(savileRowOptions).concat(minionOptions)
-// }
 
 interface ToProcess {
   args: string[];
@@ -311,6 +20,8 @@ interface Separation {
 
 export default class ConfigureHelper {
   private static context: vscode.ExtensionContext;
+  public static cacheFolderPath: string;
+  private static cacheFolderName = "vscodeExtensionCache";
 
   /**
    * Activate the extension
@@ -318,6 +29,12 @@ export default class ConfigureHelper {
    */
   public static activate(context: vscode.ExtensionContext) {
     ConfigureHelper.context = context;
+    let p = path.join(vscode.workspace.rootPath!, this.cacheFolderName);
+
+    if (!fs.existsSync(p)) {
+      fs.mkdirSync(p);
+    }
+    this.cacheFolderPath = p;
   }
 
   public static makePromise(
@@ -416,11 +133,7 @@ export default class ConfigureHelper {
           });
 
           fs.writeFileSync(
-            path.join(
-              vscode.workspace.rootPath!,
-              obj.hash,
-              "vscode.extensionCache"
-            ),
+            path.join(this.cacheFolderPath, obj.hash, "vscode.extensionCache"),
             "blank"
           );
 
@@ -478,14 +191,9 @@ export default class ConfigureHelper {
       const hash = hasher(config);
       const args = this.configToArgs(config, hash);
 
-      const caches = await vscode.workspace.findFiles("**/*.extensionCache");
-      const matching = caches.filter(file =>
-        file.path.split("/").includes(hash)
-      );
-
       const obj = { args: args, hash: hash };
 
-      if (matching.length > 0) {
+      if (fs.existsSync(path.join(this.cacheFolderPath, hash))) {
         loadFromCache.push(obj);
         vscode.window.showInformationMessage(
           `Loading config${i + 1} from cache...`
@@ -509,6 +217,8 @@ export default class ConfigureHelper {
     );
   }
   public static configToArgs(config: any, hash: string): string[] {
+    const outputPath = path.join(this.cacheFolderPath, hash);
+
     const fullPathToModel = path.join(
       vscode.workspace.rootPath!,
       config.essenceFile
@@ -523,7 +233,7 @@ export default class ConfigureHelper {
       fullPathToModel,
       fullPathToParam,
       "-o",
-      hash
+      outputPath
     ];
 
     if ("conjureTime" in config) {
@@ -561,7 +271,11 @@ export default class ConfigureHelper {
 
     savileRowOptions.push('"');
 
-    let minionOptions = ["--solver-options", '"-dumptreesql', hash + "/out.db"];
+    let minionOptions = [
+      "--solver-options",
+      '"-dumptreesql',
+      path.join(outputPath, "/out.db")
+    ];
 
     if ("minionSwitches" in config) {
       minionOptions = minionOptions.concat(config.minionSwitches);

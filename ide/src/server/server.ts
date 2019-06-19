@@ -74,7 +74,8 @@ class ConfigService {
       .then(async () => {
         const trees = needToGenerate.concat(loadFromCache);
 
-        const fullPath = path.join(vscode.workspace.rootPath!, trees[0].hash);
+        const fullPath = path.join(ConfigHelper.cacheFolderPath, trees[0].hash);
+        // const fullPath = path.join(vscode.workspace.rootPath!, trees[0].hash);
 
         return await fetch(`http://localhost:5000/init/${fullPath}`).then(
           (response: any) =>

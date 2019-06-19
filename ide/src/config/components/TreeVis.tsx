@@ -136,12 +136,6 @@ export default class TreeVis extends React.Component<Props, State> {
       .append("text")
       .attr("fill", "black")
       .attr("y", -maxHeight / 2)
-      .attr("x", d => {
-        // if (d.parent && d.parent.children!.length > 1) {
-        //   return (d.data.isLeftChild ? maxWidth : -maxWidth) / 16;
-        // }
-        return 0;
-      })
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
       .text(d => {
@@ -252,7 +246,7 @@ export default class TreeVis extends React.Component<Props, State> {
     this.drawTree();
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate() {
     this.drawTree();
   }
 
