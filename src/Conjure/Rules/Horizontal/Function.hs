@@ -262,6 +262,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
+        TypeFunction{} <- typeOf func
         DomainFunction _ attrs _domFr domTo <- domainOf func
         let upd val old = lambdaToFunction pat old val
         let
@@ -332,6 +333,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
+        TypeFunction{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             [ RuleResult
