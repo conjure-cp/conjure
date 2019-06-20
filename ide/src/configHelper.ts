@@ -11,6 +11,7 @@ const hasher = apiConstructor({ sort: true, coerce: true }).hash;
 interface ToProcess {
   args: string[];
   hash: string;
+  config: any;
 }
 
 interface Separation {
@@ -22,7 +23,7 @@ export default class ConfigureHelper {
   private static context: vscode.ExtensionContext;
   public static cacheFolderPath: string;
   private static cacheFolderName = "vscodeExtensionCache";
-  public static cacheFileName = "vscode.extensionCache";
+  public static cacheFileName = "vscode.extensionCache.json";
 
   /**
    * Activate the extension
@@ -135,7 +136,10 @@ export default class ConfigureHelper {
 
           fs.writeFileSync(
             path.join(this.cacheFolderPath, obj.hash, this.cacheFileName),
-            new Date().toUTCString()
+            JSON.stringify({
+              timeStamp: new Date().toUTCString(),
+              config: obj.config
+            })
           );
 
           console.log(`child process exited with code ${code}`);
@@ -190,7 +194,7 @@ export default class ConfigureHelper {
       const hash = hasher(config);
       const args = this.configToArgs(config, hash);
 
-      const obj = { args: args, hash: hash };
+      const obj = { args: args, hash: hash, config: config };
 
       if (fs.existsSync(path.join(this.cacheFolderPath, hash))) {
         loadFromCache.push(obj);

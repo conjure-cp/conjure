@@ -17,6 +17,7 @@ interface Props {
   diff: boolean;
   essenceFiles: string[];
   paramFiles: string[];
+  cachedConfig: any;
   responseHandler: (content: any) => void;
 }
 
@@ -40,24 +41,40 @@ interface Config {
   [key: string]: string | number | string[];
 }
 
-const makeEmptyConfig = (props: Props): Config => ({
-  paramFile: props.paramFiles[0],
-  essenceFile: props.essenceFiles[0],
-  conjureTime: "",
-  strategy: "",
-  optimisation: "",
-  symmetry: "",
-  translation: "",
-  srTime: "",
-  minionTime: "",
-  cnfLimit: "",
-  minionSwitches: [],
-  nodeLimit: "",
-  cpuLimit: "",
-  solLimit: "",
-  consistency: "",
-  preprocessing: ""
-});
+const makeEmptyConfig = (props: Props): Config => {
+  console.log("selected cache args!", props.cachedConfig);
+
+  let initialConfig: Config = {
+    paramFile: props.paramFiles[0],
+    essenceFile: props.essenceFiles[0],
+    conjureTime: "",
+    strategy: "",
+    optimisation: "",
+    symmetry: "",
+    translation: "",
+    srTime: "",
+    minionTime: "",
+    cnfLimit: "",
+    minionSwitches: [],
+    nodeLimit: "",
+    cpuLimit: "",
+    solLimit: "",
+    consistency: "",
+    preprocessing: ""
+  };
+
+  if (!props.cachedConfig) {
+    return initialConfig;
+  }
+
+  Object.keys(initialConfig).map(key => {
+    if (key in props.cachedConfig) {
+      initialConfig[key] = props.cachedConfig[key];
+    }
+  });
+
+  return initialConfig;
+};
 
 const positiveInt = Yup.number()
   .positive()

@@ -1,4 +1,3 @@
-import * as sqlite3 from "sqlite3";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as express from "express";
@@ -31,9 +30,9 @@ interface Response {
   params: string[];
 }
 
-interface Cache {
-  pathToFolder: string;
+export interface Cache {
   timeStamp: string;
+  config: any;
 }
 
 @Path("/config")
@@ -50,10 +49,15 @@ class ConfigService {
     );
 
     return cachedFiles.map(uri => {
-      return {
-        pathToFolder: path.dirname(uri.path),
-        timeStamp: fs.readFileSync(uri.path).toString()
-      };
+      const json: any = JSON.parse(fs.readFileSync(uri.path).toString());
+      console.log(json);
+      return json;
+
+      // return {
+      //   pathToFolder: path.dirname(uri.path),
+      //   timeStamp: json.timeStamp,
+      //   config: json.args
+      // };
     });
   }
 
@@ -99,7 +103,6 @@ class ConfigService {
         const trees = needToGenerate.concat(loadFromCache);
 
         const fullPath = path.join(ConfigHelper.cacheFolderPath, trees[0].hash);
-        // const fullPath = path.join(vscode.workspace.rootPath!, trees[0].hash);
 
         return await fetch(`http://localhost:5000/init/${fullPath}`).then(
           (response: any) =>

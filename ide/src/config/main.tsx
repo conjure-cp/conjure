@@ -4,6 +4,7 @@ import StageHeader from "./components/StageHeader";
 import FormikConjure from "./components/FormikConjure";
 import { Core, TreeContainer, MyMap } from "./components/TreeContainer";
 import { Form, Field, FieldArray, Formik } from "formik";
+import { Caches } from "./components/Caches";
 import SelectWithLabel from "./components/SelectWithLabel";
 import { Cache } from "../server/server";
 
@@ -17,9 +18,10 @@ interface State {
   initResponse: any;
   gotResponse: boolean;
   diff: boolean;
-  models: string[];
-  params: string[];
   caches: Cache[];
+  cachedConfig?: any;
+  essenceFiles: string[];
+  paramFiles: string[];
 }
 
 class F extends React.Component<any, State> {
@@ -31,13 +33,18 @@ class F extends React.Component<any, State> {
       initResponse: undefined,
       gotResponse: false,
       diff: false,
-      models: [],
-      params: [],
-      caches: []
+      caches: [],
+      paramFiles: [],
+      essenceFiles: []
+      // selectedCacheArgs: {
+      //   paramFiles: [],
+      //   essenceFiles: []
+      // }
     };
     this.clickHandler = this.clickHandler.bind(this);
     this.initResponseHandler = this.initResponseHandler.bind(this);
     this.collapseHandler = this.collapseHandler.bind(this);
+    this.cacheSelectionHandler = this.cacheSelectionHandler.bind(this);
   }
 
   collapseHandler() {}
@@ -47,24 +54,38 @@ class F extends React.Component<any, State> {
     // console.log(core);
   }
 
+  cacheSelectionHandler(config: any) {
+    this.setState({ cachedConfig: config });
+  }
+
   clickHandler() {
     this.setState((prevState: State) => {
       return { diff: !prevState.diff, gotResponse: false };
     });
   }
 
-  componentDidMount() {
-    fetch("http://localhost:4000/config/files")
+  async componentDidMount() {
+    await fetch("http://localhost:4000/config/files")
       .then(response => response.json())
       .then(data => {
-        this.setState({ ...data });
+        this.setState({
+          paramFiles: data.params,
+          essenceFiles: data.models
+        });
+        return;
+      })
+      .then(() => {
+        fetch("http://localhost:4000/config/caches")
+          .then(response => response.json())
+          .then(data => {
+            this.setState({
+              caches: [{ timeStamp: "Untitled", config: {} }].concat(data)
+            });
+            console.log("fromServer", data);
+          });
       });
 
-    fetch("http://localhost:4000/config/caches")
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ caches: data });
-      });
+    console.log(this.state);
   }
 
   render() {
@@ -274,29 +295,18 @@ class F extends React.Component<any, State> {
             <label className="form-control">Diff two configurations</label>
           </div>
 
-          <Formik
-            initialValues={{ cachedSelection: "" }}
-            onSubmit={values => {}}
-            enableReinitialize={true}
-            render={({ values }) => (
-              <Form>
-                <Field
-                  name={`cachedSelection`}
-                  component={SelectWithLabel}
-                  label="Caches"
-                  options={this.state.caches.map(cache => {
-                    return { val: cache.timeStamp, text: cache.timeStamp };
-                  })}
-                />
-              </Form>
-            )}
-          ></Formik>
+          <Caches
+            label={"Caches"}
+            caches={this.state.caches}
+            onChangeHandler={this.cacheSelectionHandler}
+          />
 
           <FormikConjure
             responseHandler={this.initResponseHandler}
             diff={this.state.diff}
-            essenceFiles={this.state.models}
-            paramFiles={this.state.params}
+            cachedConfig={this.state.cachedConfig}
+            paramFiles={this.state.paramFiles}
+            essenceFiles={this.state.essenceFiles}
           />
         </StageHeader>
 

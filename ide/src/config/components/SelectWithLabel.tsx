@@ -19,8 +19,7 @@ const SelectWithLabel = (
 
   let opts = props.options.map((option: Props["options"][0]) => (
     <option key={option.val} value={option.val}>
-      {" "}
-      {option.text}{" "}
+      {option.text}
     </option>
   ));
 
