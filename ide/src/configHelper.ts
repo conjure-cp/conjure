@@ -4,6 +4,7 @@ import fs = require("fs");
 import { spawn, ChildProcess } from "child_process";
 import apiConstructor = require("node-object-hash");
 import rimraf = require("rimraf");
+import { noop } from "react-select/lib/utils";
 const createHTML = require("create-html");
 
 const hasher = apiConstructor({ sort: true, coerce: true }).hash;
@@ -141,11 +142,15 @@ export default class ConfigureHelper {
           });
 
           fs.writeFileSync(
-            path.join(this.cacheFolderPath, obj.hash, this.cacheFileName),
+            path.join(this.cacheFolderPath, obj.name, this.cacheFileName),
             JSON.stringify({
-              name: obj.name,
               config: obj.config
             })
+          );
+
+          fs.writeFileSync(
+            path.join(this.cacheFolderPath, obj.name, `${obj.hash}.hash`),
+            ""
           );
 
           console.log(`child process exited with code ${code}`);
@@ -195,24 +200,40 @@ export default class ConfigureHelper {
     let needToGenerate: ToProcess[] = [];
 
     for (let i = 0; i < list.length; i++) {
-      const namedConfig = list[i];
+      const cache = list[i];
 
-      const hash = hasher(namedConfig.config);
-      const args = this.configToArgs(namedConfig.config, hash);
+      const hash = hasher(cache.config);
+      const args = this.configToArgs(cache.config, cache.name);
 
       const obj = {
         args: args,
         hash: hash,
-        config: namedConfig.config,
-        name: namedConfig.name
+        config: cache.config,
+        name: cache.name
       };
 
-      if (fs.existsSync(path.join(this.cacheFolderPath, hash))) {
+      const hashes = await vscode.workspace.findFiles("**/*.hash");
+      const uri = hashes.find(h => path.basename(h.path).includes(hash));
+
+      if (uri) {
+        const dirname = path.dirname(uri.path);
+
+        if (dirname !== cache.name) {
+          fs.renameSync(
+            dirname,
+            dirname.replace(path.basename(dirname), cache.name)
+          );
+        }
+
         loadFromCache.push(obj);
         vscode.window.showInformationMessage(
           `Loading config${i + 1} from cache...`
         );
       } else {
+        console.log();
+        if (fs.existsSync(path.join(this.cacheFolderPath, obj.name))) {
+          rimraf.sync(path.join(this.cacheFolderPath, obj.name));
+        }
         needToGenerate.push(obj);
       }
     }
@@ -230,8 +251,8 @@ export default class ConfigureHelper {
       `[${doneCount + 1}/${jobCount}] - Config` + pid2JobId[proc.pid] + " - "
     );
   }
-  public static configToArgs(config: any, hash: string): string[] {
-    const outputPath = path.join(this.cacheFolderPath, hash);
+  public static configToArgs(config: any, name: string): string[] {
+    const outputPath = path.join(this.cacheFolderPath, name);
 
     const fullPathToModel = path.join(
       vscode.workspace.rootPath!,

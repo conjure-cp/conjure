@@ -15,13 +15,15 @@ routes:
 
         var response: InitResponse
 
-        try:
-            response = newInitResponse(path)
-        except:
-            let e = getCurrentException()
-            let msg = getCurrentExceptionMsg()
+        # try:
+        response = newInitResponse(path)
+        # except:
+        #     let e = getCurrentException()
+        #     let msg = getCurrentExceptionMsg()
             
-            resp(Http200, [("Access-Control-Allow-Origin", "*")], ${"error":msg})
+        #     echo msg
+
+        #     resp(Http200, [("Access-Control-Allow-Origin", "*")], ${"error":msg})
 
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%response))
         # resp(Http200, [("Content-Type","text/css")] , "foo")

@@ -162,7 +162,12 @@ const submissionHandler = (values: Values, props: Props) => {
     let newNamedConfig: Cache = {
       config: cleaned,
       name:
-        namedConfig.name !== "" ? namedConfig.name : new Date().toUTCString()
+        namedConfig.name !== ""
+          ? namedConfig.name
+          : new Date()
+              .toUTCString()
+              .replace(/ /g, "_")
+              .replace(/,/g, "_")
     };
 
     return newNamedConfig;

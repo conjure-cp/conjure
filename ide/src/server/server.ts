@@ -41,9 +41,14 @@ class ConfigService {
     );
 
     return cachedFiles.map(uri => {
-      const json: any = JSON.parse(fs.readFileSync(uri.path).toString());
-      console.log(json);
-      return json;
+      return {
+        name: path.basename(path.dirname(uri.path)),
+        config: JSON.parse(fs.readFileSync(uri.path).toString()).config
+      };
+
+      // const json: any = JSON.parse(fs.readFileSync(uri.path).toString());
+      // console.log(json);
+      // return json;
 
       // return {
       //   pathToFolder: path.dirname(uri.path),
@@ -94,7 +99,7 @@ class ConfigService {
       .then(async () => {
         const trees = needToGenerate.concat(loadFromCache);
 
-        const fullPath = path.join(ConfigHelper.cacheFolderPath, trees[0].hash);
+        const fullPath = path.join(ConfigHelper.cacheFolderPath, trees[0].name);
 
         return await fetch(`http://localhost:5000/init/${fullPath}`).then(
           (response: any) =>
