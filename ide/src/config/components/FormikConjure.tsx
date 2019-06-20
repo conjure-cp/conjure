@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Caches } from "./Caches";
 import * as ReactDOM from "react-dom";
 
 import { Form, Field, FieldArray, Formik } from "formik";
@@ -8,6 +9,7 @@ import TextWithLabel from "./TextWithLabel";
 import SelectWithLabel from "./SelectWithLabel";
 import StageHeader from "./StageHeader";
 import Checkbox from "./Checkbox";
+import { Cache } from "../../server/server";
 
 interface Values {
   configs: Config[];
@@ -15,9 +17,11 @@ interface Values {
 
 interface Props {
   diff: boolean;
+  caches: Cache[];
+  cacheChangeHandler: (config: any, index: number) => void;
   essenceFiles: string[];
   paramFiles: string[];
-  cachedConfig: any;
+  cachedConfigs?: any[];
   responseHandler: (content: any) => void;
 }
 
@@ -41,8 +45,8 @@ interface Config {
   [key: string]: string | number | string[];
 }
 
-const makeEmptyConfig = (props: Props): Config => {
-  console.log("selected cache args!", props.cachedConfig);
+const makeEmptyConfig = (props: Props, index: number): Config => {
+  console.log("selected cache args!", props.cachedConfigs);
 
   let initialConfig: Config = {
     paramFile: props.paramFiles[0],
@@ -63,13 +67,19 @@ const makeEmptyConfig = (props: Props): Config => {
     preprocessing: ""
   };
 
-  if (!props.cachedConfig) {
+  if (!props.cachedConfigs || !props.cachedConfigs[index]) {
     return initialConfig;
   }
+  return overwriteWithCachedOptions(props.cachedConfigs[index], initialConfig);
+};
 
+const overwriteWithCachedOptions = (
+  cachedConfig: any,
+  initialConfig: Config
+): Config => {
   Object.keys(initialConfig).map(key => {
-    if (key in props.cachedConfig) {
-      initialConfig[key] = props.cachedConfig[key];
+    if (key in cachedConfig) {
+      initialConfig[key] = cachedConfig[key];
     }
   });
 
@@ -142,13 +152,20 @@ const submissionHandler = (values: Values, props: Props) => {
 };
 
 const renderArrayElements = (props: Props, values: Values) =>
-  values.configs.map((_config, index) => {
+  values.configs.map((config, index) => {
     return (
       <div className="col" key={index}>
         <StageHeader
           title={`Configuration ${index + 1}`}
           id={`config${index + 1}`}
         >
+          <Caches
+            index={index}
+            label={"Caches"}
+            caches={props.caches}
+            onChangeHandler={props.cacheChangeHandler}
+          />
+
           <Field
             name={`configs[${index}].essenceFile`}
             component={SelectWithLabel}
@@ -322,9 +339,9 @@ const renderArrayElements = (props: Props, values: Values) =>
   });
 
 const Stage = (props: Props) => {
-  let empty = makeEmptyConfig(props);
-
-  let list = props.diff ? [empty, empty] : [empty];
+  let list = props.diff
+    ? [makeEmptyConfig(props, 0), makeEmptyConfig(props, 1)]
+    : [makeEmptyConfig(props, 0)];
 
   return (
     <Formik

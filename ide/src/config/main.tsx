@@ -19,7 +19,7 @@ interface State {
   gotResponse: boolean;
   diff: boolean;
   caches: Cache[];
-  cachedConfig?: any;
+  cachedConfigs?: any[];
   essenceFiles: string[];
   paramFiles: string[];
 }
@@ -36,10 +36,6 @@ class F extends React.Component<any, State> {
       caches: [],
       paramFiles: [],
       essenceFiles: []
-      // selectedCacheArgs: {
-      //   paramFiles: [],
-      //   essenceFiles: []
-      // }
     };
   }
 
@@ -50,8 +46,15 @@ class F extends React.Component<any, State> {
     // console.log(core);
   };
 
-  cacheSelectionHandler = (config: any) => {
-    this.setState({ cachedConfig: config });
+  cacheChangeHandler = (config: any, index: number) => {
+    this.setState((prevState: State) => {
+      let copy = prevState.cachedConfigs;
+      if (!copy) {
+        return { cachedConfigs: [config, {}] };
+      }
+      copy[index] = config;
+      return { cachedConfigs: copy };
+    });
   };
 
   clickHandler = () => {
@@ -292,18 +295,14 @@ class F extends React.Component<any, State> {
             <label className="form-control">Diff two configurations</label>
           </div>
 
-          <Caches
-            label={"Caches"}
-            caches={this.state.caches}
-            onChangeHandler={this.cacheSelectionHandler}
-          />
-
           <FormikConjure
             responseHandler={this.initResponseHandler}
             diff={this.state.diff}
-            cachedConfig={this.state.cachedConfig}
+            cachedConfigs={this.state.cachedConfigs}
             paramFiles={this.state.paramFiles}
             essenceFiles={this.state.essenceFiles}
+            cacheChangeHandler={this.cacheChangeHandler}
+            caches={this.state.caches}
           />
         </StageHeader>
 

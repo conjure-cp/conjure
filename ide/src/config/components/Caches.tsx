@@ -12,7 +12,8 @@ if (process.env.NODE_ENV !== "production") {
 interface Props {
   label: string;
   caches: Cache[];
-  onChangeHandler: (cacheName: string) => void;
+  index: number;
+  onChangeHandler: (config: any, index: number) => void;
 }
 
 interface State {
@@ -33,7 +34,7 @@ export class Caches extends React.Component<Props, State> {
 
   handleChange = (selectedOption: any) => {
     this.setState({ selectedOption: selectedOption });
-    this.props.onChangeHandler(selectedOption.value);
+    this.props.onChangeHandler(selectedOption.value, this.props.index);
     // console.log(`Option selected:`, selectedOption);
   };
 
