@@ -41,30 +41,26 @@ class F extends React.Component<any, State> {
       //   essenceFiles: []
       // }
     };
-    this.clickHandler = this.clickHandler.bind(this);
-    this.initResponseHandler = this.initResponseHandler.bind(this);
-    this.collapseHandler = this.collapseHandler.bind(this);
-    this.cacheSelectionHandler = this.cacheSelectionHandler.bind(this);
   }
 
   collapseHandler() {}
 
-  initResponseHandler(data: any) {
+  initResponseHandler = (data: any) => {
     this.setState({ gotResponse: true, initResponse: data });
     // console.log(core);
-  }
+  };
 
-  cacheSelectionHandler(config: any) {
+  cacheSelectionHandler = (config: any) => {
     this.setState({ cachedConfig: config });
-  }
+  };
 
-  clickHandler() {
+  clickHandler = () => {
     this.setState((prevState: State) => {
       return { diff: !prevState.diff, gotResponse: false };
     });
-  }
+  };
 
-  async componentDidMount() {
+  componentDidMount = async () => {
     await fetch("http://localhost:4000/config/files")
       .then(response => response.json())
       .then(data => {
@@ -86,9 +82,9 @@ class F extends React.Component<any, State> {
       });
 
     console.log(this.state);
-  }
+  };
 
-  render() {
+  render = () => {
     const testCore = {
       nodes: [
         {
@@ -329,7 +325,7 @@ class F extends React.Component<any, State> {
         {/* <TreeContainer core={testCore} /> */}
       </div>
     );
-  }
+  };
 }
 
 ReactDOM.render(

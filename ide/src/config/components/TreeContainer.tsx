@@ -112,17 +112,6 @@ export class TreeContainer extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-
-    this.goLeft = this.goLeft.bind(this);
-    this.goUp = this.goUp.bind(this);
-    this.goRight = this.goRight.bind(this);
-    this.collapse = this.collapse.bind(this);
-    this.expand = this.expand.bind(this);
-    this.nodeClickHandler = this.nodeClickHandler.bind(this);
-    this.play = this.play.bind(this);
-    this.pPressed = this.pPressed.bind(this);
-    this.goToRoot = this.goToRoot.bind(this);
-
     this.state = makeState(this.props.core);
 
     this.handlers = {
@@ -136,11 +125,11 @@ export class TreeContainer extends React.Component<Props, State> {
     };
   }
 
-  nodeClickHandler(d: Node) {
+  nodeClickHandler = (d: Node) => {
     this.setState({ selected: d.id });
-  }
+  };
 
-  goLeft() {
+  goLeft = () => {
     this.setState((prevState: State) => {
       let newMap = cloneDeep(prevState.id2Node);
       const current = newMap[prevState.selected];
@@ -170,9 +159,9 @@ export class TreeContainer extends React.Component<Props, State> {
 
       return null;
     });
-  }
+  };
 
-  goRight() {
+  goRight = () => {
     this.setState((prev: State) => {
       const current = prev.id2Node[prev.selected];
       if (!current.children) {
@@ -183,9 +172,9 @@ export class TreeContainer extends React.Component<Props, State> {
       }
       return { selected: current.children[1].id };
     });
-  }
+  };
 
-  goUp() {
+  goUp = () => {
     this.setState((prev: State) => {
       const current = prev.id2Node[prev.selected];
       if (current.parentId === -1) {
@@ -193,17 +182,17 @@ export class TreeContainer extends React.Component<Props, State> {
       }
       return { selected: current.parentId };
     });
-  }
+  };
 
-  collapse() {
+  collapse = () => {
     this.setState((prevState: State) => {
       let newMap = cloneDeep(prevState.id2Node);
       Node.collapseNode(newMap[prevState.selected]);
       return { id2Node: newMap };
     });
-  }
+  };
 
-  expand() {
+  expand = () => {
     this.setState((prevState: State) => {
       let newMap = cloneDeep(prevState.id2Node);
       Node.expandNode(newMap[prevState.selected]);
@@ -211,21 +200,21 @@ export class TreeContainer extends React.Component<Props, State> {
     });
 
     // console.log("expanded!");
-  }
+  };
 
-  pPressed() {
+  pPressed = () => {
     this.setState((prevState: State) => {
       return {
         playing: !prevState.playing
       };
     });
-  }
+  };
 
-  goToRoot() {
+  goToRoot = () => {
     this.setState({ selected: 0 });
-  }
+  };
 
-  async play() {
+  play = async () => {
     const interval = 400;
     while (this.state.playing) {
       if (this.state.selected === this.state.id2Node[0].descCount) {
@@ -235,13 +224,13 @@ export class TreeContainer extends React.Component<Props, State> {
       await this.sleep(interval);
     }
     this.setState({ playing: false });
-  }
+  };
 
-  sleep(ms: number) {
+  sleep = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  };
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  componentDidUpdate = (prevProps: Props, prevState: State) => {
     // Typical usage (don't forget to compare props):
     if (this.props.core.id !== prevProps.core.id) {
       this.setState(makeState(this.props.core));
@@ -250,9 +239,9 @@ export class TreeContainer extends React.Component<Props, State> {
     if (this.state.playing !== prevState.playing) {
       this.play();
     }
-  }
+  };
 
-  render() {
+  render = () => {
     let failedBranchCount =
       this.state.id2Node[0].descCount -
       (this.state.solveable ? this.props.core.solAncestorIds.length : 0);
@@ -287,7 +276,7 @@ export class TreeContainer extends React.Component<Props, State> {
         </div>
       </HotKeys>
     );
-  }
+  };
 }
 
 const map = {
