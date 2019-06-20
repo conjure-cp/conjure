@@ -58,8 +58,8 @@ const makeNamedConfig = (props: Props, index: number): Cache => {
   }
 
   let name = getName(props.selectedCaches);
-  console.log(props.selectedCaches);
-  console.log("naeis", name);
+  // console.log(props.selectedCaches);
+  // console.log("naeis", name);
 
   return {
     config: makeEmptyConfig(props, index),
@@ -68,7 +68,7 @@ const makeNamedConfig = (props: Props, index: number): Cache => {
 };
 
 const makeEmptyConfig = (props: Props, index: number): Config => {
-  console.log("selected cache args!", props.selectedCaches);
+  // console.log("selected cache args!", props.selectedCaches);
 
   let initialConfig: Config = {
     paramFile: props.paramFiles[0],
@@ -92,16 +92,21 @@ const makeEmptyConfig = (props: Props, index: number): Config => {
   if (!props.selectedCaches || !props.selectedCaches[index]) {
     return initialConfig;
   }
-  return overwriteWithCachedOptions(props.selectedCaches[index], initialConfig);
+  return overwriteWithCachedOptions(
+    props.selectedCaches[index]!,
+    initialConfig
+  );
 };
 
 const overwriteWithCachedOptions = (
-  cachedConfig: any,
+  selectedCache: Cache,
   initialConfig: Config
 ): Config => {
+  console.log("selected Cache ", selectedCache);
+
   Object.keys(initialConfig).map(key => {
-    if (key in cachedConfig) {
-      initialConfig[key] = cachedConfig[key];
+    if (key in selectedCache.config) {
+      initialConfig[key] = selectedCache.config[key];
     }
   });
 
@@ -302,16 +307,16 @@ const renderArrayElements = (props: Props, values: Values) =>
                 { val: "-var-sym-breaking", text: "Variable Symmetry Breaking" }
               ]}
             />
-            {/* <Field
+            <Field
               name={`namedConfigs[${index}].config.srTime`}
               component={TextWithLabel}
               label="Time limit"
-            /> */}
-            {/* <Field
+            />
+            <Field
               name={`namedConfigs[${index}].config.cnfLimit`}
               component={TextWithLabel}
               label="CNF clause limit"
-            /> */}
+            />
           </StageHeader>
 
           <StageHeader
@@ -319,7 +324,7 @@ const renderArrayElements = (props: Props, values: Values) =>
             id={`minion${index + 1}`}
             startCollapsed={true}
           >
-            {/* <Checkbox
+            <Checkbox
               name={`namedConfigs[${index}].config.minionSwitches`}
               value="-findallsols"
               label="Find all solutions"
@@ -328,8 +333,8 @@ const renderArrayElements = (props: Props, values: Values) =>
               name={`namedConfigs[${index}].config.minionSwitches`}
               value="-randomiseorder"
               label="Randomise Var Order"
-            /> */}
-            {/* <Field
+            />
+            <Field
               name={`namedConfigs[${index}].config.nodeLimit`}
               component={TextWithLabel}
               label="Node Limit"
@@ -343,7 +348,7 @@ const renderArrayElements = (props: Props, values: Values) =>
               name={`namedConfigs[${index}].config.cpuLimit`}
               component={TextWithLabel}
               label="CPU Limit"
-            /> */}
+            />
             <Field
               name={`namedConfigs[${index}].config.preprocessing`}
               component={SelectWithLabel}

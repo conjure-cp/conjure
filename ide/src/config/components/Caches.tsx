@@ -40,7 +40,6 @@ export class Caches extends React.Component<Props, State> {
   handleChange = (selectedOption: any) => {
     this.setState({ selectedOption: selectedOption });
     this.props.onChangeHandler(selectedOption.value, this.props.index);
-    // console.log(`Option selected:`, selectedOption);
   };
 
   getOptions = () => {
