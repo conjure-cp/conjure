@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Core, TreeContainer, MyMap } from "./TreeContainer";
 import { Form, Field, FieldArray, Formik } from "formik";
-import { Cache } from "../../server/server";
+import { Cache } from "../../configHelper";
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js");
@@ -13,17 +13,22 @@ interface Props {
   label: string;
   caches: Cache[];
   index: number;
-  onChangeHandler: (config: any, index: number) => void;
+  onChangeHandler: (cache: Cache, index: number) => void;
+}
+
+interface Option {
+  value: Cache;
+  label: string;
 }
 
 interface State {
-  selectedOption: { value: any; label: string };
+  selectedOption: Option;
 }
 
 import Select from "react-select";
 
 const untitled = {
-  value: {},
+  value: { config: {}, name: "" },
   label: "Untitled"
 };
 
@@ -39,8 +44,8 @@ export class Caches extends React.Component<Props, State> {
   };
 
   getOptions = () => {
-    const cachedOptions = this.props.caches.map(c => {
-      return { value: c.config, label: c.timeStamp };
+    const cachedOptions: Option[] = this.props.caches.map(c => {
+      return { value: c, label: c.name };
     });
     cachedOptions.unshift(untitled);
     return cachedOptions;

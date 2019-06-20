@@ -12,11 +12,17 @@ interface ToProcess {
   args: string[];
   hash: string;
   config: any;
+  name: string;
 }
 
 interface Separation {
   needToGenerate: ToProcess[];
   loadFromCache: ToProcess[];
+}
+
+export interface Cache {
+  name: string;
+  config: any;
 }
 
 export default class ConfigureHelper {
@@ -137,7 +143,7 @@ export default class ConfigureHelper {
           fs.writeFileSync(
             path.join(this.cacheFolderPath, obj.hash, this.cacheFileName),
             JSON.stringify({
-              timeStamp: new Date().toUTCString(),
+              name: obj.name,
               config: obj.config
             })
           );
@@ -184,17 +190,22 @@ export default class ConfigureHelper {
     });
   }
 
-  public static async separateJobs(list: any): Promise<Separation> {
+  public static async separateJobs(list: Cache[]): Promise<Separation> {
     let loadFromCache: ToProcess[] = [];
     let needToGenerate: ToProcess[] = [];
 
     for (let i = 0; i < list.length; i++) {
-      const config = list[i];
+      const namedConfig = list[i];
 
-      const hash = hasher(config);
-      const args = this.configToArgs(config, hash);
+      const hash = hasher(namedConfig.config);
+      const args = this.configToArgs(namedConfig.config, hash);
 
-      const obj = { args: args, hash: hash, config: config };
+      const obj = {
+        args: args,
+        hash: hash,
+        config: namedConfig.config,
+        name: namedConfig.name
+      };
 
       if (fs.existsSync(path.join(this.cacheFolderPath, hash))) {
         loadFromCache.push(obj);

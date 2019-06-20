@@ -6,7 +6,7 @@ import { Core, TreeContainer, MyMap } from "./components/TreeContainer";
 import { Form, Field, FieldArray, Formik } from "formik";
 import { Caches } from "./components/Caches";
 import SelectWithLabel from "./components/SelectWithLabel";
-import { Cache } from "../server/server";
+import { Cache } from "../configHelper";
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js");
@@ -18,8 +18,8 @@ interface State {
   initResponse: any;
   gotResponse: boolean;
   diff: boolean;
-  caches: Cache[];
-  cachedConfigs?: any[];
+  allCaches: Cache[];
+  selectedCaches?: (Cache | undefined)[];
   essenceFiles: string[];
   paramFiles: string[];
 }
@@ -33,7 +33,7 @@ class F extends React.Component<any, State> {
       initResponse: undefined,
       gotResponse: false,
       diff: false,
-      caches: [],
+      allCaches: [],
       paramFiles: [],
       essenceFiles: []
     };
@@ -46,14 +46,14 @@ class F extends React.Component<any, State> {
     // console.log(core);
   };
 
-  cacheChangeHandler = (config: any, index: number) => {
+  cacheChangeHandler = (cache: Cache, index: number) => {
     this.setState((prevState: State) => {
-      let copy = prevState.cachedConfigs;
+      let copy = prevState.selectedCaches;
       if (!copy) {
-        return { cachedConfigs: [config, {}] };
+        return { selectedCaches: [{ ...cache }, undefined] };
       }
-      copy[index] = config;
-      return { cachedConfigs: copy };
+      copy[index] = cache;
+      return { selectedCaches: copy };
     });
   };
 
@@ -79,7 +79,7 @@ class F extends React.Component<any, State> {
           .then(data => {
             this.setState({
               // caches: [{ timeStamp: "Untitled", config: {} }].concat(data)
-              caches: data
+              allCaches: data
             });
             console.log("fromServer", data);
           });
@@ -298,11 +298,11 @@ class F extends React.Component<any, State> {
           <FormikConjure
             responseHandler={this.initResponseHandler}
             diff={this.state.diff}
-            cachedConfigs={this.state.cachedConfigs}
+            selectedCaches={this.state.selectedCaches}
             paramFiles={this.state.paramFiles}
             essenceFiles={this.state.essenceFiles}
             cacheChangeHandler={this.cacheChangeHandler}
-            caches={this.state.caches}
+            caches={this.state.allCaches}
           />
         </StageHeader>
 
@@ -314,14 +314,14 @@ class F extends React.Component<any, State> {
             />
           )}
         </div>
-        <div className="col">
+        {/* <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (
             <TreeContainer
               core={this.state.initResponse.core}
               identifier={"tree2"}
             />
           )}
-        </div>
+        </div> */}
         {/* <TreeContainer core={testCore} /> */}
       </div>
     );

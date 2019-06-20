@@ -9,19 +9,19 @@ import TextWithLabel from "./TextWithLabel";
 import SelectWithLabel from "./SelectWithLabel";
 import StageHeader from "./StageHeader";
 import Checkbox from "./Checkbox";
-import { Cache } from "../../server/server";
+import { Cache } from "../../configHelper";
 
 interface Values {
-  configs: Config[];
+  namedConfigs: Cache[];
 }
 
 interface Props {
   diff: boolean;
   caches: Cache[];
-  cacheChangeHandler: (config: any, index: number) => void;
+  cacheChangeHandler: (cache: Cache, index: number) => void;
   essenceFiles: string[];
   paramFiles: string[];
-  cachedConfigs?: any[];
+  selectedCaches?: (Cache | undefined)[];
   responseHandler: (content: any) => void;
 }
 
@@ -45,8 +45,30 @@ interface Config {
   [key: string]: string | number | string[];
 }
 
+const makeNamedConfig = (props: Props, index: number): Cache => {
+  function getName(caches?: (Cache | undefined)[]) {
+    if (!caches) {
+      return "";
+    }
+    if (!caches[index]) {
+      return "";
+    }
+
+    return caches[index]!.name;
+  }
+
+  let name = getName(props.selectedCaches);
+  console.log(props.selectedCaches);
+  console.log("naeis", name);
+
+  return {
+    config: makeEmptyConfig(props, index),
+    name: name
+  };
+};
+
 const makeEmptyConfig = (props: Props, index: number): Config => {
-  console.log("selected cache args!", props.cachedConfigs);
+  console.log("selected cache args!", props.selectedCaches);
 
   let initialConfig: Config = {
     paramFile: props.paramFiles[0],
@@ -67,10 +89,10 @@ const makeEmptyConfig = (props: Props, index: number): Config => {
     preprocessing: ""
   };
 
-  if (!props.cachedConfigs || !props.cachedConfigs[index]) {
+  if (!props.selectedCaches || !props.selectedCaches[index]) {
     return initialConfig;
   }
-  return overwriteWithCachedOptions(props.cachedConfigs[index], initialConfig);
+  return overwriteWithCachedOptions(props.selectedCaches[index], initialConfig);
 };
 
 const overwriteWithCachedOptions = (
@@ -117,7 +139,9 @@ const validationSchema = Yup.object().shape({
 });
 
 const submissionHandler = (values: Values, props: Props) => {
-  let cleaned = values.configs.map((config: Config) => {
+  let cleaned = values.namedConfigs.map(namedConfig => {
+    const config = namedConfig.config;
+
     let cleaned: any = {};
 
     Object.keys(config).map((key: string) => {
@@ -130,8 +154,16 @@ const submissionHandler = (values: Values, props: Props) => {
       delete cleaned["minionSwitches"];
     }
 
-    return cleaned;
+    let newNamedConfig: Cache = {
+      config: cleaned,
+      name:
+        namedConfig.name !== "" ? namedConfig.name : new Date().toUTCString()
+    };
+
+    return newNamedConfig;
   });
+
+  console.log(cleaned);
 
   fetch("http://localhost:4000/config/solve", {
     method: "post",
@@ -152,13 +184,19 @@ const submissionHandler = (values: Values, props: Props) => {
 };
 
 const renderArrayElements = (props: Props, values: Values) =>
-  values.configs.map((config, index) => {
+  values.namedConfigs.map((config, index) => {
     return (
       <div className="col" key={index}>
         <StageHeader
           title={`Configuration ${index + 1}`}
           id={`config${index + 1}`}
         >
+          <Field
+            name={`namedConfigs[${index}].name`}
+            component={TextWithLabel}
+            label={"Save as:"}
+          />
+
           <Caches
             index={index}
             label={"Caches"}
@@ -167,7 +205,7 @@ const renderArrayElements = (props: Props, values: Values) =>
           />
 
           <Field
-            name={`configs[${index}].essenceFile`}
+            name={`namedConfigs[${index}].config.essenceFile`}
             component={SelectWithLabel}
             label="Model"
             options={props.essenceFiles.map(file => {
@@ -176,7 +214,7 @@ const renderArrayElements = (props: Props, values: Values) =>
           />
 
           <Field
-            name={`configs[${index}].paramFile`}
+            name={`namedConfigs[${index}].config.paramFile`}
             component={SelectWithLabel}
             label="Param"
             options={props.paramFiles.map(file => {
@@ -190,13 +228,13 @@ const renderArrayElements = (props: Props, values: Values) =>
             startCollapsed={true}
           >
             <Field
-              name={`configs[${index}].conjureTime`}
+              name={`namedConfigs[${index}].config.conjureTime`}
               component={TextWithLabel}
               label={"Time limit"}
             />
 
             <Field
-              name={`configs[${index}].strategy`}
+              name={`namedConfigs[${index}].config.strategy`}
               component={SelectWithLabel}
               label="Strategy"
               options={[
@@ -213,7 +251,7 @@ const renderArrayElements = (props: Props, values: Values) =>
             startCollapsed={true}
           >
             <Field
-              name={`configs[${index}].optimisation`}
+              name={`namedConfigs[${index}].config.optimisation`}
               component={SelectWithLabel}
               label="Optimisation"
               options={[
@@ -225,7 +263,7 @@ const renderArrayElements = (props: Props, values: Values) =>
               ]}
             />
             <Field
-              name={`configs[${index}].symmetry`}
+              name={`namedConfigs[${index}].config.symmetry`}
               component={SelectWithLabel}
               label="Symmetry Breaking"
               options={[
@@ -236,7 +274,7 @@ const renderArrayElements = (props: Props, values: Values) =>
               ]}
             />
             <Field
-              name={`configs[${index}].translation`}
+              name={`namedConfigs[${index}].config.translation`}
               component={SelectWithLabel}
               label="Translation"
               options={[
@@ -264,16 +302,16 @@ const renderArrayElements = (props: Props, values: Values) =>
                 { val: "-var-sym-breaking", text: "Variable Symmetry Breaking" }
               ]}
             />
-            <Field
-              name={`configs[${index}].srTime`}
+            {/* <Field
+              name={`namedConfigs[${index}].config.srTime`}
               component={TextWithLabel}
               label="Time limit"
-            />
-            <Field
-              name={`configs[${index}].cnfLimit`}
+            /> */}
+            {/* <Field
+              name={`namedConfigs[${index}].config.cnfLimit`}
               component={TextWithLabel}
               label="CNF clause limit"
-            />
+            /> */}
           </StageHeader>
 
           <StageHeader
@@ -281,33 +319,33 @@ const renderArrayElements = (props: Props, values: Values) =>
             id={`minion${index + 1}`}
             startCollapsed={true}
           >
-            <Checkbox
-              name={`configs[${index}].minionSwitches`}
+            {/* <Checkbox
+              name={`namedConfigs[${index}].config.minionSwitches`}
               value="-findallsols"
               label="Find all solutions"
             />
             <Checkbox
-              name={`configs[${index}].minionSwitches`}
+              name={`namedConfigs[${index}].config.minionSwitches`}
               value="-randomiseorder"
               label="Randomise Var Order"
-            />
-            <Field
-              name={`configs[${index}].nodeLimit`}
+            /> */}
+            {/* <Field
+              name={`namedConfigs[${index}].config.nodeLimit`}
               component={TextWithLabel}
               label="Node Limit"
             />
             <Field
-              name={`configs[${index}].solLimit`}
+              name={`namedConfigs[${index}].config.solLimit`}
               component={TextWithLabel}
               label="Solution Limit"
             />
             <Field
-              name={`configs[${index}].cpuLimit`}
+              name={`namedConfigs[${index}].config.cpuLimit`}
               component={TextWithLabel}
               label="CPU Limit"
-            />
+            /> */}
             <Field
-              name={`configs[${index}].preprocessing`}
+              name={`namedConfigs[${index}].config.preprocessing`}
               component={SelectWithLabel}
               label="Preprocessing"
               options={[
@@ -320,7 +358,7 @@ const renderArrayElements = (props: Props, values: Values) =>
               ]}
             />
             <Field
-              name={`configs[${index}].consistency`}
+              name={`namedConfigs[${index}].config.consistency`}
               component={SelectWithLabel}
               label="Consistency"
               options={[
@@ -339,13 +377,15 @@ const renderArrayElements = (props: Props, values: Values) =>
   });
 
 const Stage = (props: Props) => {
+  console.log("props", props);
+
   let list = props.diff
-    ? [makeEmptyConfig(props, 0), makeEmptyConfig(props, 1)]
-    : [makeEmptyConfig(props, 0)];
+    ? [makeNamedConfig(props, 0), makeNamedConfig(props, 1)]
+    : [makeNamedConfig(props, 0)];
 
   return (
     <Formik
-      initialValues={{ configs: list }}
+      initialValues={{ namedConfigs: list }}
       onSubmit={values => {
         submissionHandler(values, props);
       }}

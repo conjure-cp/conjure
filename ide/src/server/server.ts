@@ -18,21 +18,13 @@ import * as cors from "cors";
 const fetch = require("node-fetch");
 
 import ConfigHelper from "../configHelper";
-import WebviewHelper from "../webviewHelper";
-// import TreeHelper from '../treeHelper'
-import { Z_FULL_FLUSH } from "zlib";
-import { fstat } from "fs";
+import { Cache } from "../configHelper";
 
 const collator = new Intl.Collator(undefined, { numeric: true });
 
 interface Response {
   models: string[];
   params: string[];
-}
-
-export interface Cache {
-  timeStamp: string;
-  config: any;
 }
 
 @Path("/config")
@@ -75,7 +67,7 @@ class ConfigService {
 
   @Path("/solve")
   @POST
-  async startSearch(list: any) {
+  async startSearch(list: Cache[]) {
     if (
       list.length > 1 &&
       JSON.stringify(list[0]) === JSON.stringify(list[1])
