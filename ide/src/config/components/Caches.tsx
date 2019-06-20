@@ -16,20 +16,19 @@ interface Props {
 }
 
 interface State {
-  selectedOption: { value: string; label: string };
+  selectedOption: { value: any; label: string };
 }
 
 import Select from "react-select";
 
-const options = [
-  { value: "chocolate", label: "Chocolate" },
-  { value: "strawberry", label: "Strawberry" },
-  { value: "vanilla", label: "Vanilla" }
-];
+const untitled = {
+  value: {},
+  label: "Untitled"
+};
 
 export class Caches extends React.Component<Props, State> {
   state = {
-    selectedOption: { value: "", label: "" }
+    selectedOption: { ...untitled }
   };
 
   handleChange = (selectedOption: any) => {
@@ -39,9 +38,11 @@ export class Caches extends React.Component<Props, State> {
   };
 
   getOptions = () => {
-    return this.props.caches.map(c => {
+    const cachedOptions = this.props.caches.map(c => {
       return { value: c.config, label: c.timeStamp };
     });
+    cachedOptions.unshift(untitled);
+    return cachedOptions;
   };
 
   render() {

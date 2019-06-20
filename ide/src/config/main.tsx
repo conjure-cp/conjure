@@ -75,7 +75,8 @@ class F extends React.Component<any, State> {
           .then(response => response.json())
           .then(data => {
             this.setState({
-              caches: [{ timeStamp: "Untitled", config: {} }].concat(data)
+              // caches: [{ timeStamp: "Untitled", config: {} }].concat(data)
+              caches: data
             });
             console.log("fromServer", data);
           });
