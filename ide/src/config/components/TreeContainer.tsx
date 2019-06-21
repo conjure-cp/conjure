@@ -38,6 +38,7 @@ export interface Core {
 interface Props {
   identifier: string;
   core: Core;
+  info: string;
 }
 
 export interface State {
@@ -208,6 +209,17 @@ export class TreeContainer extends React.Component<Props, State> {
     // console.log("expanded!");
   };
 
+  nextFailed = () => {
+    // this.setState((prevState: State) => {
+    //   let solId = prevState.selected;
+    //   while (solId in prevState.solNodeIds) {
+    //     solId
+    //   }
+    // })
+  };
+
+  prevFailed = () => {};
+
   prevSol = () => {
     this.setState((prevState: State) => {
       const solId = getPrevSolId(prevState);
@@ -272,6 +284,9 @@ export class TreeContainer extends React.Component<Props, State> {
       <HotKeys keyMap={map} handlers={this.handlers}>
         <div>
           <StatsBar
+            info={this.props.info}
+            nextFailedHandler={this.nextFailed}
+            prevFailedHandler={this.prevFailed}
             nextSolHandler={this.nextSol}
             prevSolHandler={this.prevSol}
             minsize={this.state.minsize}

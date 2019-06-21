@@ -5,13 +5,14 @@ type InitResponse* = ref object of RootObj
     prettyAtRoot*: TreeViewNode
     simpleAtRoot*: SimpleDomainResponse
     core*: Core
+    info*: string
     
 
 proc newInitResponse*(path: string): InitResponse =
     ## constructor
-    let core = init(path)
+    let (core, info) = init(path)
     let prettyAtRoot = getSkeleton()
     let simpleAtRoot = loadSimpleDomains("0", true)
 
-    return InitResponse(prettyAtRoot: prettyAtRoot, simpleAtRoot: simpleAtRoot, core: core)
+    return InitResponse(prettyAtRoot: prettyAtRoot, simpleAtRoot: simpleAtRoot, core: core, info: info)
 

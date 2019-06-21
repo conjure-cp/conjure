@@ -7,11 +7,13 @@ import branchingCondition
 var db: DbConn
 var decTable: Table[int, int]
 
-proc init*(dirPath: string): Core =
+proc init*(dirPath: string): (Core, string) =
     ## Initialises data structures 
-    db = findFiles(dirPath)
+    var eprimeInfoFilePath: string
+    (db, eprimeInfoFilePath) = findFiles(dirPath)
     decTable = getDescendants(db)
-    return makeCore(db, decTable)
+    let infoFile = readFile(eprimeInfoFilePath)
+    return (makeCore(db, decTable), infoFile)
 
 proc loadNodes*(nodeId: string): seq[Node] =
     ## Loads the children of a node

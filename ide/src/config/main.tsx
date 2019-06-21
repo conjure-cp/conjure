@@ -312,6 +312,7 @@ class F extends React.Component<any, State> {
         <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (
             <TreeContainer
+              info={this.state.initResponse.info}
               core={this.state.initResponse.core}
               identifier={"tree1"}
             />

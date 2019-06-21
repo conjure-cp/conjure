@@ -3,7 +3,7 @@ import jsonify
 import process
 import branchingCondition
 
-proc findFiles*(dirPath: string): DbConn =
+proc findFiles*(dirPath: string): (DbConn, string) =
     ## Locate files in directory pointed to by path
 
     let current = getCurrentDir()
@@ -11,6 +11,7 @@ proc findFiles*(dirPath: string): DbConn =
 
     var minionFilePath: string
     var eprimeFilePath: string
+    var eprimeInfoFilePath: string
     var dbFilePath: string
 
     let minionFiles = toSeq(walkFiles("*.eprime-minion"))
@@ -24,6 +25,12 @@ proc findFiles*(dirPath: string): DbConn =
         raise newException(InitException, "No eprime file found!")
     if (eprimeFiles.len() > 1):
         raise newException(InitException, "More than one eprime file found!")
+
+    let eprimeInfoFiles = toSeq(walkFiles("*.eprime-info"))
+    if (eprimeInfoFiles.len() == 0):
+        raise newException(InitException, "No eprime-info file found!")
+    if (eprimeInfoFiles.len() > 1):
+        raise newException(InitException, "More than one eprime-info file found!")
     
     let dbFiles = toSeq(walkFiles("*.db"))
     if (dbFiles.len() == 0):
@@ -33,6 +40,7 @@ proc findFiles*(dirPath: string): DbConn =
 
     minionFilePath = absolutePath(minionFiles[0])
     eprimeFilePath = absolutePath(eprimeFiles[0])
+    eprimeInfoFilePath = absolutePath(eprimeInfoFiles[0])
     dbFilePath = absolutePath(dbFiles[0])
 
     setCurrentDir(current)
@@ -41,7 +49,7 @@ proc findFiles*(dirPath: string): DbConn =
 
     initParser(db, minionFilePath, eprimeFilePath)
 
-    return db
+    return (db, eprimeInfoFilePath)
 
 
 proc getDescendants*(db: DbConn): Table[int, int] =
