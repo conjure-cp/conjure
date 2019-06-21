@@ -129,7 +129,7 @@ export default class ConfigureHelper {
 
         proc.stderr.on("data", data => {
           errorMessage += `${data}`;
-          console.log(`${data}`);
+          console.error(`${data}`);
         });
 
         proc.on("close", code => {
@@ -164,7 +164,7 @@ export default class ConfigureHelper {
           if (errorMessage === "") {
             console.log("Success");
           } else {
-            process.kill(-proc.pid);
+            kill(proc.pid);
             vscode.window.showErrorMessage(
               `Config ${pid2JobId[proc.pid]} | ${errorMessage}`
             );
@@ -188,10 +188,7 @@ export default class ConfigureHelper {
           procs.map((proc: ChildProcess) => {
             console.log(proc.pid);
             kill(proc.pid);
-            // process.kill(-proc.pid);
           });
-
-          // errorMessage = "Search Cancelled!";
 
           console.log("canceled");
 
