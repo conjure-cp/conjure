@@ -46,7 +46,7 @@ interface Config {
 }
 
 const makeNamedConfig = (props: Props, index: number): Cache => {
-  function getName(caches?: (Cache | undefined)[]) {
+  const getName = (caches?: (Cache | undefined)[]) => {
     if (!caches) {
       return "";
     }
@@ -55,7 +55,7 @@ const makeNamedConfig = (props: Props, index: number): Cache => {
     }
 
     return caches[index]!.name;
-  }
+  };
 
   let name = getName(props.selectedCaches);
   // console.log(props.selectedCaches);
@@ -102,7 +102,7 @@ const overwriteWithCachedOptions = (
   selectedCache: Cache,
   initialConfig: Config
 ): Config => {
-  console.log("selected Cache ", selectedCache);
+  // console.log("selected Cache ", selectedCache);
 
   Object.keys(initialConfig).map(key => {
     if (key in selectedCache.config) {
@@ -173,7 +173,7 @@ const submissionHandler = (values: Values, props: Props) => {
     return newNamedConfig;
   });
 
-  console.log(cleaned);
+  // console.log(cleaned);
 
   fetch("http://localhost:4000/config/solve", {
     method: "post",
@@ -185,7 +185,7 @@ const submissionHandler = (values: Values, props: Props) => {
   })
     .then(response => response.json())
     .then(data => {
-      console.log("From formik", data);
+      // console.log("From formik", data);
       props.responseHandler(data);
     });
   // .catch(error => {
@@ -387,7 +387,7 @@ const renderArrayElements = (props: Props, values: Values) =>
   });
 
 const Stage = (props: Props) => {
-  console.log("props", props);
+  // console.log("props", props);
 
   let list = props.diff
     ? [makeNamedConfig(props, 0), makeNamedConfig(props, 1)]

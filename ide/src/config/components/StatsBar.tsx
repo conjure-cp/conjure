@@ -14,6 +14,8 @@ interface Props {
   failedBranchCount: number;
   minsize: number;
   linScale: any;
+  nextSolHandler: () => void;
+  prevSolHandler: () => void;
 }
 
 interface State {}
@@ -48,10 +50,10 @@ export default class StatusBar extends React.Component<Props, State> {
       path = "";
     }
 
-    console.log(
-      "RADIUS",
-      Node.getRadius(n, this.props.linScale, this.props.minsize)
-    );
+    // console.log(
+    // "RADIUS",
+    // Node.getRadius(n, this.props.linScale, this.props.minsize)
+    // );
 
     return (
       <div className="row">
@@ -115,6 +117,9 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.solNodeIds.length}
           </label>
+
+          <button onClick={this.props.nextSolHandler}>Next</button>
+          <button onClick={this.props.prevSolHandler}>Previous</button>
         </div>
       </div>
     );

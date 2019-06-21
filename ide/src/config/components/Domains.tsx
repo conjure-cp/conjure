@@ -49,7 +49,7 @@ export class Domains extends React.Component<Props, State> {
       }Domains/${this.props.selected}/false${this.state.pretty ? "/" : ""}`
     );
     const data = await response.json();
-    console.log(data);
+    // console.log(data);
     this.setState({ vars: data.vars, changedNames: data.changedNames });
   }
 
@@ -76,7 +76,7 @@ export class Domains extends React.Component<Props, State> {
   }
 
   getRows() {
-    console.log(this.state);
+    // console.log(this.state);
     // this.getDomains();
     return this.state.vars.map((variable, i) => {
       return (
@@ -97,7 +97,7 @@ export class Domains extends React.Component<Props, State> {
   render() {
     return (
       //   <h1>{this.state.changedNames[0]}</h1>
-      <StageHeader title={"Domains"} id={"Domains"}>
+      <StageHeader title={`Domains at ${this.props.selected}`} id={"Domains"}>
         <div className="input-group mb-3">
           <div className="input-group-prepend">
             <div className="input-group-text">

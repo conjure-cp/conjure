@@ -62,6 +62,12 @@ export default class TreeVis extends React.Component<Props, State> {
     return "";
   }
 
+  maybeFocus(d: HierarchyPointNode<Node>): void {
+    if (d.data.id === this.props.selected) {
+      this.focusNode(d);
+    }
+  }
+
   updateCircles(selector: any) {
     let circle = selector.select("circle");
 
@@ -126,6 +132,7 @@ export default class TreeVis extends React.Component<Props, State> {
       .attr("transform", d =>
         d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
       )
+      .each(d => this.maybeFocus(d))
       .transition()
       .duration(this.props.duration)
       .attr("transform", d => `translate(${d.x},${d.y})`);
@@ -155,9 +162,7 @@ export default class TreeVis extends React.Component<Props, State> {
     this.updateCircles(nodeEnter);
 
     const nodeUpdate = node.each(d => {
-      if (d.data.id === this.props.selected) {
-        this.focusNode(d);
-      }
+      this.maybeFocus(d);
     });
 
     nodeUpdate

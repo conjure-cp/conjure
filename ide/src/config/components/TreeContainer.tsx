@@ -3,7 +3,6 @@ import * as ReactDOM from "react-dom";
 import Node from "../modules/Node";
 import TreeVis from "./TreeVis";
 import StatsBar from "./StatsBar";
-import Pause from "./Pause";
 import Play from "./Play";
 import { HotKeys } from "react-hotkeys";
 import { cloneDeep } from "lodash";
@@ -11,6 +10,11 @@ import * as d3 from "d3";
 import StageHeader from "./StageHeader";
 import { Domains } from "./Domains";
 import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3";
+import {
+  getNextSolId,
+  getPrevSolId,
+  showAllAncestors
+} from "../modules/Helper";
 
 interface FromServerNode {
   id: number;
@@ -36,7 +40,7 @@ interface Props {
   core: Core;
 }
 
-interface State {
+export interface State {
   id2Node: MyMap;
   solveable: boolean;
   selected: number;
@@ -47,7 +51,7 @@ interface State {
   solNodeIds: number[];
 }
 
-function makeState(core: Core): State {
+const makeState = (core: Core): State => {
   const minsize = 7;
   const solveable = core.nodes.find(n => n.isSolution) !== undefined;
   const linScale = d3
@@ -105,7 +109,7 @@ function makeState(core: Core): State {
   };
 
   return state;
-}
+};
 
 export class TreeContainer extends React.Component<Props, State> {
   // static whyDidYouRender = true;
@@ -204,6 +208,22 @@ export class TreeContainer extends React.Component<Props, State> {
     // console.log("expanded!");
   };
 
+  prevSol = () => {
+    this.setState((prevState: State) => {
+      const solId = getPrevSolId(prevState);
+      const newMap = showAllAncestors(prevState, solId);
+      return { selected: solId, id2Node: newMap };
+    });
+  };
+
+  nextSol = () => {
+    this.setState((prevState: State) => {
+      const solId = getNextSolId(prevState);
+      const newMap = showAllAncestors(prevState, solId);
+      return { selected: solId, id2Node: newMap };
+    });
+  };
+
   pPressed = () => {
     this.setState((prevState: State) => {
       return {
@@ -252,6 +272,8 @@ export class TreeContainer extends React.Component<Props, State> {
       <HotKeys keyMap={map} handlers={this.handlers}>
         <div>
           <StatsBar
+            nextSolHandler={this.nextSol}
+            prevSolHandler={this.prevSol}
             minsize={this.state.minsize}
             solNodeIds={this.state.solNodeIds}
             totalNodes={this.state.id2Node[0].descCount + 1}
