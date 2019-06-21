@@ -11,8 +11,8 @@ const Play = ({ clickHandler, x, playing }: Props) => {
     <polygon points="0,0 50,30 0,60" />
   ) : (
     [
-      <polygon points="0,0 15,0 15,60 0,60" />,
-      <polygon points="25,0 40,0 40,60 25,60" />
+      <polygon key="0" points="0,0 15,0 15,60 0,60" />,
+      <polygon key="1" points="25,0 40,0 40,60 25,60" />
     ]
   );
   return (

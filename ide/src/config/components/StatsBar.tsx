@@ -97,29 +97,44 @@ export default class StatusBar extends React.Component<Props, State> {
           </label>
         </div>
         <div className="col">
-          <label>
-            <svg width={width} height={height}>
-              <title>Number of Solutions found</title>
-              <g>
-                <g className="node">
-                  <circle
-                    className="solution"
-                    r={Node.getRadius(
-                      n,
-                      this.props.linScale,
-                      this.props.minsize
-                    )}
-                    cx={width / 2}
-                    cy={height / 2 - 2}
-                  ></circle>
+          <div className="row">
+            <label>
+              <svg width={width} height={height}>
+                <title>Number of Solutions found</title>
+                <g>
+                  <g className="node">
+                    <circle
+                      className="solution"
+                      r={Node.getRadius(
+                        n,
+                        this.props.linScale,
+                        this.props.minsize
+                      )}
+                      cx={width / 2}
+                      cy={height / 2 - 2}
+                    ></circle>
+                  </g>
                 </g>
-              </g>
-            </svg>
-            × {this.props.solNodeIds.length}
-          </label>
-
-          <button onClick={this.props.nextSolHandler}>Next</button>
-          <button onClick={this.props.prevSolHandler}>Previous</button>
+              </svg>
+              × {this.props.solNodeIds.length}
+            </label>
+          </div>
+          {this.props.solNodeIds.length > 0 && (
+            <div className="row">
+              <button
+                className="btn btn-light"
+                onClick={this.props.prevSolHandler}
+              >
+                🢀
+              </button>
+              <button
+                className="btn btn-light"
+                onClick={this.props.nextSolHandler}
+              >
+                🢂
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
