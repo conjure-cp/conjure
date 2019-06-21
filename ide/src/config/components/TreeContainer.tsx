@@ -268,8 +268,8 @@ export class TreeContainer extends React.Component<Props, State> {
             minsize={this.state.minsize}
             nodeClickHandler={this.nodeClickHandler}
             duration={500}
-            width={600}
-            height={400}
+            width={1200}
+            height={500}
           />
 
           <Domains id={this.props.core.id} selected={this.state.selected} />

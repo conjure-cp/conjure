@@ -6,6 +6,7 @@ import apiConstructor = require("node-object-hash");
 import rimraf = require("rimraf");
 import { noop } from "react-select/lib/utils";
 const createHTML = require("create-html");
+const kill = require("tree-kill");
 
 const hasher = apiConstructor({ sort: true, coerce: true }).hash;
 
@@ -53,6 +54,7 @@ export default class ConfigureHelper {
   ) {
     return new Promise((resolve, reject) => {
       const pIncrement = 5;
+
       let doneCount = 0;
       let procs: ChildProcess[] = [];
       let pid2JobId: any = {};
@@ -62,9 +64,11 @@ export default class ConfigureHelper {
 
         const proc = spawn("conjure", obj.args, {
           shell: true,
-          cwd: vscode.workspace.rootPath,
+          cwd: this.cacheFolderPath,
           detached: true
         });
+
+        procs.push(proc);
 
         pid2JobId[proc.pid] = i + 1;
 
@@ -125,6 +129,7 @@ export default class ConfigureHelper {
 
         proc.stderr.on("data", data => {
           errorMessage += `${data}`;
+          console.log(`${data}`);
         });
 
         proc.on("close", code => {
@@ -155,9 +160,11 @@ export default class ConfigureHelper {
 
           console.log(`child process exited with code ${code}`);
           console.error(errorMessage);
+
           if (errorMessage === "") {
             console.log("Success");
           } else {
+            process.kill(-proc.pid);
             vscode.window.showErrorMessage(
               `Config ${pid2JobId[proc.pid]} | ${errorMessage}`
             );
@@ -178,13 +185,19 @@ export default class ConfigureHelper {
         });
 
         token.onCancellationRequested(() => {
-          procs.map((proc: ChildProcess) => process.kill(-proc.pid));
-          errorMessage = "Search Cancelled!";
-          // rimraf.sync(path.join(vscode.workspace.rootPath!, hash));
+          procs.map((proc: ChildProcess) => {
+            console.log(proc.pid);
+            kill(proc.pid);
+            // process.kill(-proc.pid);
+          });
+
+          // errorMessage = "Search Cancelled!";
+
+          console.log("canceled");
+
           needToGenerate.map(j =>
-            rimraf.sync(path.join(vscode.workspace.rootPath!, j.hash))
+            rimraf.sync(path.join(this.cacheFolderPath, j.name))
           );
-          // cached.map((c) => rimraf.sync(path.join(vscode.workspace.rootPath!, c.hash)))
         });
       }
       if (needToGenerate.length === 0) {
@@ -247,9 +260,7 @@ export default class ConfigureHelper {
     proc: ChildProcess,
     pid2JobId: any
   ): string {
-    return (
-      `[${doneCount + 1}/${jobCount}] - Config` + pid2JobId[proc.pid] + " - "
-    );
+    return `[${doneCount + 1}/${jobCount}] - Config ${pid2JobId[proc.pid]} - `;
   }
   public static configToArgs(config: any, name: string): string[] {
     const outputPath = path.join(this.cacheFolderPath, name);

@@ -43,6 +43,7 @@ class F extends React.Component<any, State> {
 
   initResponseHandler = (data: any) => {
     this.setState({ gotResponse: true, initResponse: data });
+    this.getFiles();
     // console.log(core);
   };
 
@@ -63,7 +64,7 @@ class F extends React.Component<any, State> {
     });
   };
 
-  componentDidMount = async () => {
+  getFiles = async () => {
     await fetch("http://localhost:4000/config/files")
       .then(response => response.json())
       .then(data => {
@@ -84,8 +85,10 @@ class F extends React.Component<any, State> {
             console.log("fromServer", data);
           });
       });
+  };
 
-    console.log(this.state);
+  componentDidMount = () => {
+    this.getFiles();
   };
 
   render = () => {
@@ -314,14 +317,6 @@ class F extends React.Component<any, State> {
             />
           )}
         </div>
-        {/* <div className="col">
-          {this.state.initResponse && this.state.initResponse.core && (
-            <TreeContainer
-              core={this.state.initResponse.core}
-              identifier={"tree2"}
-            />
-          )}
-        </div> */}
         {/* <TreeContainer core={testCore} /> */}
       </div>
     );

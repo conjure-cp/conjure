@@ -144,7 +144,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const submissionHandler = (values: Values, props: Props) => {
-  let cleaned = values.namedConfigs.map(namedConfig => {
+  let cleaned = values.namedConfigs.map((namedConfig, index) => {
     const config = namedConfig.config;
 
     let cleaned: any = {};
@@ -164,10 +164,10 @@ const submissionHandler = (values: Values, props: Props) => {
       name:
         namedConfig.name !== ""
           ? namedConfig.name
-          : new Date()
+          : `${new Date()
               .toUTCString()
               .replace(/ /g, "_")
-              .replace(/,/g, "_")
+              .replace(/,/g, "_")}_${index + 1}`
     };
 
     return newNamedConfig;
@@ -194,7 +194,7 @@ const submissionHandler = (values: Values, props: Props) => {
 };
 
 const renderArrayElements = (props: Props, values: Values) =>
-  values.namedConfigs.map((config, index) => {
+  values.namedConfigs.map((_config, index) => {
     return (
       <div className="col" key={index}>
         <StageHeader
