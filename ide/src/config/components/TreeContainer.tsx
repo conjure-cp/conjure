@@ -3,6 +3,8 @@ import * as ReactDOM from "react-dom";
 import Node from "../modules/Node";
 import TreeVis from "./TreeVis";
 import StatsBar from "./StatsBar";
+import Pause from "./Pause";
+import Play from "./Play";
 import { HotKeys } from "react-hotkeys";
 import { cloneDeep } from "lodash";
 import * as d3 from "d3";
@@ -271,6 +273,14 @@ export class TreeContainer extends React.Component<Props, State> {
             width={1200}
             height={500}
           />
+
+          <div className="player mb-3">
+            <Play
+              clickHandler={this.pPressed}
+              playing={this.state.playing}
+              x={575}
+            />
+          </div>
 
           <Domains id={this.props.core.id} selected={this.state.selected} />
         </div>
