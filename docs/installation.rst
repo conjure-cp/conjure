@@ -44,6 +44,7 @@ In addition, a number of supported backend solvers can be compiled using the `ma
 This target also takes a BIN_DIR environment variable to control the location of the solver executables.
 
 .. code-block:: bash
+
     BIN_DIR=/somewhere/in/your/path make solvers
 
 Installing Savile Row
