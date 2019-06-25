@@ -52,6 +52,8 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
+    pretty (TypeInt (TagEnum n)) = pretty n
+    pretty (TypeInt (TagUnnamed n)) = pretty n
     pretty TypeInt{} = "int"
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
