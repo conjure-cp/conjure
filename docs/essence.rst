@@ -1040,7 +1040,7 @@ The following snippets illustrate the use of quantifiers.
    find b : bool such that b = exists i : int(0..4) . i*i=i $ true
 
 The same variable can be reused for multiple quantifications, as a quantified variable has scope that is local to its quantifier.
-However, avoid using the same name both for quantification and as a global decision variable in a ``find``, as this is treated as an error by Savile Row.
+Older versions of Savile Row do not support using the same name both for quantification and as a global decision variable in a ``find``.
 
 An alternative quantifier-like syntax
 
