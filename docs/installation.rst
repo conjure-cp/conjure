@@ -37,8 +37,8 @@ For more precise control, you might want to consider installing the Haskell tool
 Installation is known to work with
 `GHC-8.0.2 <http://www.haskell.org/ghc/download_ghc_8_0_2.html>`_,
 `GHC-8.2.2 <http://www.haskell.org/ghc/download_ghc_8_2_2.html>`_,
-`GHC-8.4.2 <http://www.haskell.org/ghc/download_ghc_8_4_4.html>`_, and
-`GHC-8.4.2 <http://www.haskell.org/ghc/download_ghc_8_6_5.html>`_.
+`GHC-8.4.4 <http://www.haskell.org/ghc/download_ghc_8_4_4.html>`_, and
+`GHC-8.6.5 <http://www.haskell.org/ghc/download_ghc_8_6_5.html>`_.
 
 In addition, a number of supported backend solvers can be compiled using the `make solvers` target.
 This target also takes a BIN_DIR environment variable to control the location of the solver executables.
