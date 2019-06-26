@@ -252,6 +252,7 @@ modelRepresentationsJSON ::
     MonadFail m =>
     NameGen m =>
     EnumerateDomain m =>
+    MonadLog m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m JSONValue
 modelRepresentationsJSON model = do
@@ -280,9 +281,11 @@ modelRepresentations ::
     MonadFail m =>
     NameGen m =>
     EnumerateDomain m =>
+    MonadLog m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m [(Name, [Domain HasRepresentation Expression])]
-modelRepresentations model =
+modelRepresentations model0 = do
+    model <- prologue model0
     concatForM (mStatements model) $ \case
         Declaration (FindOrGiven _ name domain) -> do
             domOpts <- reprOptions reprsStandardOrderNoLevels domain
