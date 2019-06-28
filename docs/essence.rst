@@ -20,10 +20,13 @@ we use the "#" character to denote comments,
 we use double-quotes for terminal strings,
 and we use a ``list`` construct to indicate a list of syntax elements.
 
-The ``list`` construct has two variants:
+The ``list`` construct has three arguments:
 
-#. First variant takes two arguments where the first argument is the syntax of the items of the list and second argument is the item separator.
-#. Second variant takes an additional third argument which indicates the surrounding bracket for the list. The third argument can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
+#. First argument is the syntax of the items of the list.
+#. Second argument is the item separator.
+#. Third argument indicates the surrounding bracket for the list. It can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
+
+Only the first argument is mandatory, the rest of the arguments are optional when an item separator or surrounding brackets are not required.
 
 .. code-block:: bnf
 
