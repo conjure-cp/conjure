@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Conjure.Process.FiniteGivens
     ( finiteGivens
     , finiteGivensParam
@@ -150,7 +152,7 @@ mkFiniteOutermost (DomainTuple inners) = do
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
                 return (concat innerValues)
         )
-mkFiniteOutermost (DomainRecord inners) = do
+mkFiniteOutermost (DomainRecord (sortOn fst -> inners)) = do
     mids <- mapM (mkFiniteInner . snd) inners
     return
         ( DomainRecord (zip (map fst inners) (map fst3 mids))
@@ -160,7 +162,7 @@ mkFiniteOutermost (DomainRecord inners) = do
                 xs' <- failToUserError $ viewConstantRecord constant
                 let
                     xs :: [Constant]
-                    xs = map snd xs'
+                    xs = map snd $ sortOn fst xs'
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
                 return (concat innerValues)
@@ -414,7 +416,7 @@ mkFiniteInner (DomainTuple inners) = do
                 innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
         )
-mkFiniteInner (DomainRecord inners) = do
+mkFiniteInner (DomainRecord (sortOn fst -> inners)) = do
     mids <- mapM (mkFiniteInner . snd) inners
     return
         ( DomainRecord (zip (map fst inners) (map fst3 mids))
@@ -424,7 +426,7 @@ mkFiniteInner (DomainRecord inners) = do
                 xss' :: [[(Name, Constant)]] <- failToUserError $ mapM viewConstantRecord constants
                 let
                     xss :: [[Constant]]
-                    xss = map (map snd) xss'
+                    xss = map (map snd . sortOn fst) xss'
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
