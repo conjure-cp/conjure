@@ -50,7 +50,8 @@ RUN apt-get install -y --no-install-recommends \
      make \
      netbase \
      wget \
-     zlib1g-dev
+     zlib1g-dev \
+     xz-utils
 
 WORKDIR $WORK
 
