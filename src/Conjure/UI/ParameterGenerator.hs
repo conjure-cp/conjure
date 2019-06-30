@@ -430,7 +430,7 @@ pgOnDomain x nm dom =
             -- drop total, post constraint instead
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
-                        FunctionAttr size _totality jectivity -> do
+                        FunctionAttr size PartialityAttr_Partial jectivity -> do
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
@@ -460,6 +460,8 @@ pgOnDomain x nm dom =
                                                , DomainInt TagInt [RangeBounded lb ub]
                                                )
                             return (FunctionAttr sizeOut PartialityAttr_Partial jectivity, lb, ub, cardDomain)
+                        FunctionAttr _size PartialityAttr_Total jectivity -> do
+                            return (FunctionAttr SizeAttr_None PartialityAttr_Partial jectivity, Nothing, Nothing, bug "cardDomain not needed")
 
             let isTotal = case attr of
                                 FunctionAttr _ PartialityAttr_Total _ -> True
