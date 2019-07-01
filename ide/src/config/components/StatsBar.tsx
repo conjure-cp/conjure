@@ -1,25 +1,25 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import Node from "../modules/Node";
-import TreeVis from "./TreeVis";
-import FlickThru from "./FlickThu";
-import { HotKeys } from "react-hotkeys";
-import { cloneDeep } from "lodash";
-import * as d3 from "d3";
-import { thresholdScott } from "d3";
-import { linkGenerator, getNextSolId } from "../modules/Helper";
+import * as React from "react"
+import * as ReactDOM from "react-dom"
+import Node from "../modules/Node"
+import TreeVis from "./TreeVis"
+import FlickThru from "./FlickThu"
+import { HotKeys } from "react-hotkeys"
+import { cloneDeep } from "lodash"
+import * as d3 from "d3"
+import { thresholdScott } from "d3"
+import { linkGenerator, getNextSolId } from "../modules/Helper"
 
 interface Props {
-  solNodeIds: number[];
-  totalNodes: number;
-  failedBranchCount: number;
-  minsize: number;
-  linScale: any;
-  info: string;
-  nextSolHandler: () => void;
-  prevSolHandler: () => void;
-  nextFailedHandler: () => void;
-  prevFailedHandler: () => void;
+  solNodeIds: number[]
+  totalNodes: number
+  failedBranchCount: number
+  minsize: number
+  linScale: any
+  info: string
+  nextSolHandler: () => void
+  prevSolHandler: () => void
+  nextFailedHandler: () => void
+  prevFailedHandler: () => void
 }
 
 interface State {}
@@ -28,31 +28,31 @@ export default class StatusBar extends React.Component<Props, State> {
   // static whyDidYouRender = true;
 
   constructor(props: Props) {
-    super(props);
-    console.log(props.info);
+    super(props)
+    console.log(props.info)
     // this.goLeft = this.goLeft.bind(this);
   }
 
   render() {
-    const height = this.props.minsize * 6;
-    const width = this.props.minsize * 6;
+    const height = this.props.minsize * 6
+    const width = this.props.minsize * 6
 
-    const layout = d3.tree<Node>().nodeSize([15, 15]);
+    const layout = d3.tree<Node>().nodeSize([15, 15])
 
     let rootNode = {
       isSolution: true,
       children: [{}, {}, {}]
-    };
+    }
 
-    const hierarchy = d3.hierarchy<any>(rootNode);
+    const hierarchy = d3.hierarchy<any>(rootNode)
 
-    let n = layout(hierarchy);
-    let links = n.links();
+    let n = layout(hierarchy)
+    let links = n.links()
 
-    let path = linkGenerator(links[0]);
+    let path = linkGenerator(links[0])
 
     if (!path) {
-      path = "";
+      path = ""
     }
 
     // console.log(
@@ -139,7 +139,7 @@ export default class StatusBar extends React.Component<Props, State> {
                 nextHandler={this.props.nextSolHandler}
                 prevHandler={this.props.prevSolHandler}
               />
-            )}
+            )}{" "}
           </div>
         </div>
 
@@ -150,6 +150,6 @@ export default class StatusBar extends React.Component<Props, State> {
           </svg>
         </div>
       </div>
-    );
+    )
   }
 }

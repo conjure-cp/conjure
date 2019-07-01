@@ -304,7 +304,7 @@ export class TreeContainer extends React.Component<Props, State> {
             nodeClickHandler={this.nodeClickHandler}
             duration={500}
             width={1200}
-            height={500}
+            height={800}
           />
 
           {/* <div className="player mb-3">

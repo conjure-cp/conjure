@@ -31,15 +31,21 @@ export default class TreeVis extends React.Component<Props, State> {
     this.state = {}
 
     console.log(this.props)
-    this.zoom = d3.zoom<any, any>().on("zoom", function() {
-      d3.select(`#${props.identifier}thegroup`).attr(
-        "transform",
-        d3.event.transform
-      )
-    })
+    this.zoom = d3
+      .zoom<any, any>()
+      .on("zoom", function() {
+        d3.select(`#${props.identifier}thegroup`).attr(
+          "transform",
+          d3.event.transform
+        )
+      })
+      .extent([[0, 0], [props.width, props.height]])
   }
 
   focusNode(node: HierarchyPointNode<Node>) {
+    // const ratio = 1290 / 465.45
+    // console.log("ratio, ", ratio)
+
     this.zoom.translateTo(
       d3
         .select(`#${this.props.identifier} svg`)
@@ -47,8 +53,6 @@ export default class TreeVis extends React.Component<Props, State> {
         .duration(this.props.duration),
       node.x,
       node.y
-      // node.y + 400
-      // node.y + this.props.height / 6
     )
   }
 
@@ -264,7 +268,8 @@ export default class TreeVis extends React.Component<Props, State> {
           // height={this.props.height}
           preserveAspectRatio="xMinYMin meet"
           // viewBox="0 0 1290 465.45"
-          viewBox="500 500 500 500"
+          viewBox={`0 0 ${this.props.width} ${this.props.height}`}
+          // viewBox="0 0 100 100"
           className="svg-content-responsive"
         ></svg>
       </div>

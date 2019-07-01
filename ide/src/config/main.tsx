@@ -291,7 +291,8 @@ class F extends React.Component<any, State> {
         <StageHeader
           title={"Setup"}
           id={"Setup"}
-          isCollapsed={this.state.isCollapsed}
+          // isCollapsed={this.state.isCollapsed}
+          isCollapsed={true}
           collapseHandler={this.collapseHandler}
         >
           <div className="input-group mb-3">
@@ -318,7 +319,7 @@ class F extends React.Component<any, State> {
           />
         </StageHeader>
 
-        <div className="col">
+        {/* <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (
             <TreeContainer
               info={this.state.initResponse.info}
@@ -326,8 +327,8 @@ class F extends React.Component<any, State> {
               identifier={"tree1"}
             />
           )}
-        </div>
-        {/* <TreeContainer core={testCore} /> */}
+        </div> */}
+        <TreeContainer info={"blah"} identifier={"letree"} core={testCore} />
       </div>
     )
   }
