@@ -11,8 +11,9 @@ import StageHeader from "./StageHeader"
 import { Domains } from "./Domains"
 import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3"
 import { getNextSolId, getPrevSolId, showAllAncestors } from "../modules/Helper"
-import SplitterLayout from "react-splitter-layout"
-import "react-splitter-layout/lib/index.css"
+import SplitPane, * as Blah from "react-split-pane"
+// import SplitterLayout from "react-splitter-layout"
+// import "react-splitter-layout/lib/index.css"
 
 interface FromServerNode {
   id: number
@@ -293,24 +294,26 @@ export class TreeContainer extends React.Component<Props, State> {
             failedBranchCount={failedBranchCount}
             linScale={this.state.linScale}
           /> */}
-          {/* <SplitterLayout vertical={false} primaryIndex={0}> */}
-          <TreeVis
-            id={this.props.core.id}
-            identifier={this.props.identifier}
-            rootNode={this.state.id2Node[0]}
-            selected={this.state.selected}
-            solAncestorIds={this.props.core.solAncestorIds}
-            solveable={this.state.solveable}
-            linScale={this.state.linScale}
-            minsize={this.state.minsize}
-            nodeClickHandler={this.nodeClickHandler}
-            duration={500}
-            width={1200}
-            height={1000}
-          />
-          {/* <div className="poop">POOP</div> */}
-          {/* <Domains id={this.props.core.id} selected={this.state.selected} /> */}
-          {/* </SplitterLayout> */}
+          <SplitPane split="horizontal" defaultSize={500}>
+            <TreeVis
+              id={this.props.core.id}
+              identifier={this.props.identifier}
+              rootNode={this.state.id2Node[0]}
+              selected={this.state.selected}
+              solAncestorIds={this.props.core.solAncestorIds}
+              solveable={this.state.solveable}
+              linScale={this.state.linScale}
+              minsize={this.state.minsize}
+              nodeClickHandler={this.nodeClickHandler}
+              duration={500}
+              width={1200}
+              height={1000}
+            />
+            {/* <div className="poop">POOP</div> */}
+            {/* <div className="poop">POOP</div> */}
+
+            <Domains id={this.props.core.id} selected={this.state.selected} />
+          </SplitPane>
 
           {/* <div className="player mb-3">
             <Play
