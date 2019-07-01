@@ -1,14 +1,14 @@
-import * as React from "react";
-import StageHeader from "./StageHeader";
+import * as React from "react"
+import StageHeader from "./StageHeader"
 
 interface Props {
-  id: string;
-  selected: number;
+  id: string
+  selected: number
 }
 
 interface Variable {
-  name: string;
-  rng: string;
+  name: string
+  rng: string
 }
 
 interface Set extends Variable {
@@ -16,30 +16,30 @@ interface Set extends Variable {
 }
 
 interface Simple {
-  vars: Variable[];
-  changedNames: string[];
+  vars: Variable[]
+  changedNames: string[]
 }
 
 interface Pretty {}
 
 interface State {
-  vars: Variable[];
-  changedNames: string[];
-  pretty: boolean;
+  vars: Variable[]
+  changedNames: string[]
+  pretty: boolean
 }
 
 export class Domains extends React.Component<Props, State> {
   // static whyDidYouRender = true;
 
   constructor(props: Props) {
-    super(props);
+    super(props)
     this.state = {
       vars: [],
       changedNames: [],
       pretty: false
-    };
+    }
 
-    this.clickHandler = this.clickHandler.bind(this);
+    this.clickHandler = this.clickHandler.bind(this)
   }
 
   async getDomains() {
@@ -47,14 +47,14 @@ export class Domains extends React.Component<Props, State> {
       `http://localhost:5000/${
         this.state.pretty ? "pretty" : "simple"
       }Domains/${this.props.selected}/false${this.state.pretty ? "/" : ""}`
-    );
-    const data = await response.json();
+    )
+    const data = await response.json()
     // console.log(data);
-    this.setState({ vars: data.vars, changedNames: data.changedNames });
+    this.setState({ vars: data.vars, changedNames: data.changedNames })
   }
 
   componentDidMount() {
-    this.getDomains();
+    this.getDomains()
   }
 
   async componentDidUpdate(prevProps: Props, _prevState: State) {
@@ -62,17 +62,17 @@ export class Domains extends React.Component<Props, State> {
       this.props.selected !== prevProps.selected ||
       this.props.id !== prevProps.id
     ) {
-      await this.getDomains();
+      await this.getDomains()
     }
   }
 
   async clickHandler() {
     this.setState(
       (prevState: State) => {
-        return { pretty: !prevState.pretty };
+        return { pretty: !prevState.pretty }
       },
       async () => await this.getDomains()
-    );
+    )
   }
 
   getRows() {
@@ -90,14 +90,18 @@ export class Domains extends React.Component<Props, State> {
           <td>{variable.name}</td>
           <td>{variable.rng}</td>
         </tr>
-      );
-    });
+      )
+    })
   }
 
   render() {
     return (
       //   <h1>{this.state.changedNames[0]}</h1>
-      <StageHeader title={`Domains at ${this.props.selected}`} id={"Domains"}>
+      <StageHeader
+        title={`Domains at ${this.props.selected}`}
+        id={"Domains"}
+        isCollapsed={false}
+      >
         <div className="input-group mb-3">
           <div className="input-group-prepend">
             <div className="input-group-text">
@@ -128,6 +132,6 @@ export class Domains extends React.Component<Props, State> {
           <></>
         )}
       </StageHeader>
-    );
+    )
   }
 }

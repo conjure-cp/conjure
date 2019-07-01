@@ -1,68 +1,78 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import StageHeader from "./components/StageHeader";
-import FormikConjure from "./components/FormikConjure";
-import { Core, TreeContainer, MyMap } from "./components/TreeContainer";
-import { Form, Field, FieldArray, Formik } from "formik";
-import { Caches } from "./components/Caches";
-import SelectWithLabel from "./components/SelectWithLabel";
-import { Cache } from "../configHelper";
+import * as React from "react"
+import * as ReactDOM from "react-dom"
+import StageHeader from "./components/StageHeader"
+import FormikConjure from "./components/FormikConjure"
+import { Core, TreeContainer, MyMap } from "./components/TreeContainer"
+import { Form, Field, FieldArray, Formik } from "formik"
+import { Caches } from "./components/Caches"
+import SelectWithLabel from "./components/SelectWithLabel"
+import { Cache } from "../configHelper"
 
 if (process.env.NODE_ENV !== "production") {
-  const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js");
-  whyDidYouRender(React);
+  const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
+  whyDidYouRender(React)
 }
 
 interface State {
   // core: Core | undefined;
-  initResponse: any;
-  gotResponse: boolean;
-  diff: boolean;
-  allCaches: Cache[];
-  selectedCaches?: (Cache | undefined)[];
-  essenceFiles: string[];
-  paramFiles: string[];
+  initResponse: any
+  isCollapsed: boolean
+  diff: boolean
+  allCaches: Cache[]
+  selectedCaches?: (Cache | undefined)[]
+  essenceFiles: string[]
+  paramFiles: string[]
 }
 
 class F extends React.Component<any, State> {
   // static whyDidYouRender = true;
 
   constructor(props: any) {
-    super(props);
+    super(props)
     this.state = {
       initResponse: undefined,
-      gotResponse: false,
+      isCollapsed: false,
       diff: false,
       allCaches: [],
       paramFiles: [],
       essenceFiles: []
-    };
+    }
   }
 
-  collapseHandler() {}
+  collapseHandler = () => {
+    this.setState((prevState: State) => {
+      console.log(
+        "toggling from",
+        prevState.isCollapsed,
+        "to",
+        !prevState.isCollapsed
+      )
+      return { isCollapsed: !prevState.isCollapsed }
+    })
+  }
 
   initResponseHandler = (data: any) => {
-    this.setState({ gotResponse: true, initResponse: data });
-    this.getFiles();
+    this.setState({ isCollapsed: true, initResponse: data })
+    this.getFiles()
     // console.log(core);
-  };
+  }
 
   cacheChangeHandler = (cache: Cache, index: number) => {
     this.setState((prevState: State) => {
-      let copy = prevState.selectedCaches;
+      let copy = prevState.selectedCaches
       if (!copy) {
-        return { selectedCaches: [{ ...cache }, undefined] };
+        return { selectedCaches: [{ ...cache }, undefined] }
       }
-      copy[index] = cache;
-      return { selectedCaches: copy };
-    });
-  };
+      copy[index] = cache
+      return { selectedCaches: copy }
+    })
+  }
 
   clickHandler = () => {
     this.setState((prevState: State) => {
-      return { diff: !prevState.diff, gotResponse: false };
-    });
-  };
+      return { diff: !prevState.diff }
+    })
+  }
 
   getFiles = async () => {
     await fetch("http://localhost:4000/config/files")
@@ -71,25 +81,24 @@ class F extends React.Component<any, State> {
         this.setState({
           paramFiles: data.params,
           essenceFiles: data.models
-        });
-        return;
+        })
+        return
       })
       .then(() => {
         fetch("http://localhost:4000/config/caches")
           .then(response => response.json())
           .then(data => {
             this.setState({
-              // caches: [{ timeStamp: "Untitled", config: {} }].concat(data)
               allCaches: data
-            });
-            console.log("fromServer", data);
-          });
-      });
-  };
+            })
+            console.log("fromServer", data)
+          })
+      })
+  }
 
   componentDidMount = () => {
-    this.getFiles();
-  };
+    this.getFiles()
+  }
 
   render = () => {
     const testCore = {
@@ -217,7 +226,7 @@ class F extends React.Component<any, State> {
       ],
       solAncestorIds: [0, 1, 2, 16, 26, 27, 30, 31, 32],
       id: "blah"
-    };
+    }
 
     const fiveNodes = {
       nodes: [
@@ -274,15 +283,15 @@ class F extends React.Component<any, State> {
       ],
       id: "poop",
       solAncestorIds: [0, 2]
-    };
+    }
 
     return (
-      <div className="row">
+      <div className="col">
         {/* // <div> */}
         <StageHeader
           title={"Setup"}
           id={"Setup"}
-          startCollapsed={this.state.gotResponse}
+          isCollapsed={this.state.isCollapsed}
           collapseHandler={this.collapseHandler}
         >
           <div className="input-group mb-3">
@@ -320,8 +329,8 @@ class F extends React.Component<any, State> {
         </div>
         {/* <TreeContainer core={testCore} /> */}
       </div>
-    );
-  };
+    )
+  }
 }
 
 ReactDOM.render(
@@ -331,4 +340,4 @@ ReactDOM.render(
     {/* <FormikConjure diff={true}/> */}
   </div>,
   document.getElementById("root")
-);
+)

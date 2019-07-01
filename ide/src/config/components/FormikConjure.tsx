@@ -1,71 +1,71 @@
-import * as React from "react";
-import { Caches } from "./Caches";
-import * as ReactDOM from "react-dom";
+import * as React from "react"
+import { Caches } from "./Caches"
+import * as ReactDOM from "react-dom"
 
-import { Form, Field, FieldArray, Formik } from "formik";
-import * as Yup from "yup";
+import { Form, Field, FieldArray, Formik } from "formik"
+import * as Yup from "yup"
 
-import TextWithLabel from "./TextWithLabel";
-import SelectWithLabel from "./SelectWithLabel";
-import StageHeader from "./StageHeader";
-import Checkbox from "./Checkbox";
-import { Cache } from "../../configHelper";
+import TextWithLabel from "./TextWithLabel"
+import SelectWithLabel from "./SelectWithLabel"
+import StageHeader from "./StageHeader"
+import Checkbox from "./Checkbox"
+import { Cache } from "../../configHelper"
 
 interface Values {
-  namedConfigs: Cache[];
+  namedConfigs: Cache[]
 }
 
 interface Props {
-  diff: boolean;
-  caches: Cache[];
-  cacheChangeHandler: (cache: Cache, index: number) => void;
-  essenceFiles: string[];
-  paramFiles: string[];
-  selectedCaches?: (Cache | undefined)[];
-  responseHandler: (content: any) => void;
+  diff: boolean
+  caches: Cache[]
+  cacheChangeHandler: (cache: Cache, index: number) => void
+  essenceFiles: string[]
+  paramFiles: string[]
+  selectedCaches?: (Cache | undefined)[]
+  responseHandler: (content: any) => void
 }
 
 interface Config {
-  essenceFile: string;
-  paramFile: string;
-  strategy: string;
-  optimisation: string;
-  symmetry: string;
-  translation: string;
-  minionSwitches: string[];
-  nodeLimit: number | string;
-  solLimit: number | string;
-  cpuLimit: number | string;
-  conjureTime: number | string;
-  srTime: number | string;
-  minionTime: number | string;
-  cnfLimit: number | string;
-  consistency: string;
-  preprocessing: string;
-  [key: string]: string | number | string[];
+  essenceFile: string
+  paramFile: string
+  strategy: string
+  optimisation: string
+  symmetry: string
+  translation: string
+  minionSwitches: string[]
+  nodeLimit: number | string
+  solLimit: number | string
+  cpuLimit: number | string
+  conjureTime: number | string
+  srTime: number | string
+  minionTime: number | string
+  cnfLimit: number | string
+  consistency: string
+  preprocessing: string
+  [key: string]: string | number | string[]
 }
 
 const makeNamedConfig = (props: Props, index: number): Cache => {
   const getName = (caches?: (Cache | undefined)[]) => {
     if (!caches) {
-      return "";
+      return ""
     }
     if (!caches[index]) {
-      return "";
+      return ""
     }
 
-    return caches[index]!.name;
-  };
+    return caches[index]!.name
+  }
 
-  let name = getName(props.selectedCaches);
+  let name = getName(props.selectedCaches)
   // console.log(props.selectedCaches);
   // console.log("naeis", name);
 
   return {
     config: makeEmptyConfig(props, index),
     name: name
-  };
-};
+  }
+}
 
 const makeEmptyConfig = (props: Props, index: number): Config => {
   // console.log("selected cache args!", props.selectedCaches);
@@ -87,16 +87,13 @@ const makeEmptyConfig = (props: Props, index: number): Config => {
     solLimit: "",
     consistency: "",
     preprocessing: ""
-  };
+  }
 
   if (!props.selectedCaches || !props.selectedCaches[index]) {
-    return initialConfig;
+    return initialConfig
   }
-  return overwriteWithCachedOptions(
-    props.selectedCaches[index]!,
-    initialConfig
-  );
-};
+  return overwriteWithCachedOptions(props.selectedCaches[index]!, initialConfig)
+}
 
 const overwriteWithCachedOptions = (
   selectedCache: Cache,
@@ -106,28 +103,28 @@ const overwriteWithCachedOptions = (
 
   Object.keys(initialConfig).map(key => {
     if (key in selectedCache.config) {
-      initialConfig[key] = selectedCache.config[key];
+      initialConfig[key] = selectedCache.config[key]
     }
-  });
+  })
 
-  return initialConfig;
-};
+  return initialConfig
+}
 
 const positiveInt = Yup.number()
   .positive()
   .integer()
-  .moreThan(0);
+  .moreThan(0)
 
 const intOrNothing = Yup.mixed().test(
   "Is a valid number or empty string",
   "Leave empty or specify an integer > 0",
   (value: any) => {
     if (value === "") {
-      return true;
+      return true
     }
-    return positiveInt.isValidSync(value);
+    return positiveInt.isValidSync(value)
   }
-);
+)
 
 const schema = {
   conjureTime: intOrNothing,
@@ -137,26 +134,26 @@ const schema = {
   nodeLimit: intOrNothing,
   cpuLimit: intOrNothing,
   solLimit: intOrNothing
-};
+}
 
 const validationSchema = Yup.object().shape({
   configs: Yup.array().of(Yup.object().shape(schema))
-});
+})
 
 const submissionHandler = (values: Values, props: Props) => {
   let cleaned = values.namedConfigs.map((namedConfig, index) => {
-    const config = namedConfig.config;
+    const config = namedConfig.config
 
-    let cleaned: any = {};
+    let cleaned: any = {}
 
     Object.keys(config).map((key: string) => {
       if (config[key] !== "") {
-        cleaned[key] = config[key];
+        cleaned[key] = config[key]
       }
-    });
+    })
 
     if (cleaned["minionSwitches"].length === 0) {
-      delete cleaned["minionSwitches"];
+      delete cleaned["minionSwitches"]
     }
 
     let newNamedConfig: Cache = {
@@ -168,10 +165,10 @@ const submissionHandler = (values: Values, props: Props) => {
               .toUTCString()
               .replace(/ /g, "_")
               .replace(/,/g, "_")}_${index + 1}`
-    };
+    }
 
-    return newNamedConfig;
-  });
+    return newNamedConfig
+  })
 
   // console.log(cleaned);
 
@@ -185,19 +182,20 @@ const submissionHandler = (values: Values, props: Props) => {
   })
     .then(response => response.json())
     .then(data => {
-      console.log("From formik", data);
-      props.responseHandler(data);
-    });
+      console.log("From formik", data)
+      props.responseHandler(data)
+    })
   // .catch(error => {
   //   console.log(error);
   // });
-};
+}
 
 const renderArrayElements = (props: Props, values: Values) =>
   values.namedConfigs.map((_config, index) => {
     return (
       <div className="col" key={index}>
         <StageHeader
+          isCollapsed={false}
           title={`Configuration ${index + 1}`}
           id={`config${index + 1}`}
         >
@@ -219,7 +217,7 @@ const renderArrayElements = (props: Props, values: Values) =>
             component={SelectWithLabel}
             label="Model"
             options={props.essenceFiles.map(file => {
-              return { val: file, text: file };
+              return { val: file, text: file }
             })}
           />
 
@@ -228,14 +226,14 @@ const renderArrayElements = (props: Props, values: Values) =>
             component={SelectWithLabel}
             label="Param"
             options={props.paramFiles.map(file => {
-              return { val: file, text: file };
+              return { val: file, text: file }
             })}
           />
 
           <StageHeader
             title="Conjure"
             id={`conjure${index + 1}`}
-            startCollapsed={true}
+            isCollapsed={true}
           >
             <Field
               name={`namedConfigs[${index}].config.conjureTime`}
@@ -258,7 +256,7 @@ const renderArrayElements = (props: Props, values: Values) =>
           <StageHeader
             title="Savilerow"
             id={`sr${index + 1}`}
-            startCollapsed={true}
+            isCollapsed={true}
           >
             <Field
               name={`namedConfigs[${index}].config.optimisation`}
@@ -327,7 +325,7 @@ const renderArrayElements = (props: Props, values: Values) =>
           <StageHeader
             title="Minion"
             id={`minion${index + 1}`}
-            startCollapsed={true}
+            isCollapsed={true}
           >
             <Checkbox
               name={`namedConfigs[${index}].config.minionSwitches`}
@@ -383,21 +381,21 @@ const renderArrayElements = (props: Props, values: Values) =>
           </StageHeader>
         </StageHeader>
       </div>
-    );
-  });
+    )
+  })
 
 const Stage = (props: Props) => {
   // console.log("props", props);
 
   let list = props.diff
     ? [makeNamedConfig(props, 0), makeNamedConfig(props, 1)]
-    : [makeNamedConfig(props, 0)];
+    : [makeNamedConfig(props, 0)]
 
   return (
     <Formik
       initialValues={{ namedConfigs: list }}
       onSubmit={values => {
-        submissionHandler(values, props);
+        submissionHandler(values, props)
       }}
       validationSchema={validationSchema}
       enableReinitialize={true}
@@ -416,7 +414,7 @@ const Stage = (props: Props) => {
         </Form>
       )}
     ></Formik>
-  );
-};
+  )
+}
 
-export default Stage;
+export default Stage
