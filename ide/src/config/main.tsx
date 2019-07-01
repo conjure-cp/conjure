@@ -7,6 +7,7 @@ import { Form, Field, FieldArray, Formik } from "formik"
 import { Caches } from "./components/Caches"
 import SelectWithLabel from "./components/SelectWithLabel"
 import { Cache } from "../configHelper"
+import "./styles.css"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
@@ -286,9 +287,9 @@ class F extends React.Component<any, State> {
     }
 
     return (
-      <div className="col">
-        {/* // <div> */}
-        <StageHeader
+      // <div className="col">
+      <div>
+        {/* <StageHeader
           title={"Setup"}
           id={"Setup"}
           // isCollapsed={this.state.isCollapsed}
@@ -317,7 +318,7 @@ class F extends React.Component<any, State> {
             cacheChangeHandler={this.cacheChangeHandler}
             caches={this.state.allCaches}
           />
-        </StageHeader>
+        </StageHeader> */}
 
         {/* <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (

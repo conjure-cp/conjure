@@ -17,7 +17,11 @@ module.exports = {
     rules: [
       { test: /\.tsx?$/, enforce: "pre", loader: "awesome-typescript-loader" },
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
-      { test: /\.js$/, enforce: "pre", loader: "source-map-loader" }
+      { test: /\.js$/, enforce: "pre", loader: "source-map-loader" },
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
+      }
     ]
   },
 
@@ -28,4 +32,4 @@ module.exports = {
   }
 
   // Other options...
-};
+}

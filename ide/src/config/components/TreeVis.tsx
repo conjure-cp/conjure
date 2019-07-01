@@ -264,13 +264,11 @@ export default class TreeVis extends React.Component<Props, State> {
     return (
       <div id={this.props.identifier} className="svg-container">
         <svg
-          // width={this.props.width}
-          // height={this.props.height}
-          preserveAspectRatio="xMinYMin meet"
+          preserveAspectRatio="xMidYMid meet"
           // viewBox="0 0 1290 465.45"
           viewBox={`0 0 ${this.props.width} ${this.props.height}`}
-          // viewBox="0 0 100 100"
-          className="svg-content-responsive"
+          // viewBox={`0 0 600 400`}
+          // className="svg-content-responsive"
         ></svg>
       </div>
     )

@@ -11,6 +11,8 @@ import StageHeader from "./StageHeader"
 import { Domains } from "./Domains"
 import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3"
 import { getNextSolId, getPrevSolId, showAllAncestors } from "../modules/Helper"
+import SplitterLayout from "react-splitter-layout"
+import "react-splitter-layout/lib/index.css"
 
 interface FromServerNode {
   id: number
@@ -279,7 +281,7 @@ export class TreeContainer extends React.Component<Props, State> {
     return (
       <GlobalHotKeys keyMap={map} handlers={this.handlers}>
         <div className="treeContainer">
-          <StatsBar
+          {/* <StatsBar
             info={this.props.info}
             nextFailedHandler={this.nextFailed}
             prevFailedHandler={this.prevFailed}
@@ -290,8 +292,8 @@ export class TreeContainer extends React.Component<Props, State> {
             totalNodes={this.state.id2Node[0].descCount + 1}
             failedBranchCount={failedBranchCount}
             linScale={this.state.linScale}
-          />
-
+          /> */}
+          {/* <SplitterLayout vertical={false} primaryIndex={0}> */}
           <TreeVis
             id={this.props.core.id}
             identifier={this.props.identifier}
@@ -304,8 +306,11 @@ export class TreeContainer extends React.Component<Props, State> {
             nodeClickHandler={this.nodeClickHandler}
             duration={500}
             width={1200}
-            height={800}
+            height={1000}
           />
+          {/* <div className="poop">POOP</div> */}
+          {/* <Domains id={this.props.core.id} selected={this.state.selected} /> */}
+          {/* </SplitterLayout> */}
 
           {/* <div className="player mb-3">
             <Play
@@ -314,8 +319,6 @@ export class TreeContainer extends React.Component<Props, State> {
               x={575}
             />
           </div> */}
-
-          <Domains id={this.props.core.id} selected={this.state.selected} />
         </div>
       </GlobalHotKeys>
     )
