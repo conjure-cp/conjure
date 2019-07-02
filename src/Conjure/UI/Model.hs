@@ -2255,7 +2255,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                     (_, _, _, _, Just{}, _, _) -> na "rule_InlineConditions (min)"
                     (_, _, _, _, _, Just{}, _) -> na "rule_InlineConditions (max)"
                     (_, _, _, _, _, _, Just{}) -> return ("ordering", opSumSkip)
-                    _                       -> na "rule_InlineConditions (meh-2)"
+                    _                          -> na "rule_InlineConditions (meh-2)"
                                             -- case Zipper.up z of
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
