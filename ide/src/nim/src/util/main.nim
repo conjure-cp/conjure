@@ -41,27 +41,6 @@ proc loadNodes*(nodeId: string): seq[Node] =
 
     echo query
 
-    # let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution  from Node where path like '" & 
-    #     path & "%' and nodeId != " & nodeId & " limit 10 order by nodeId asc; "
-
-    # let query = ("""
-    #     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in(
-
-    #     WITH split(word, str) AS (
-    #         SELECT '', (select path from Node where nodeId = """ & nodeId & """)||'/'
-    #         UNION ALL SELECT
-    #         substr(str, 0, instr(str, '/')),
-    #         substr(str, instr(str, '/')+1)
-    #         FROM split WHERE str!=''
-    #     ) SELECT word FROM split WHERE word!=''
-    #     )
-    #     order by nodeId asc
-    # """)
-
-    # echo query
-
-    # let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
-    #                 nodeId & "  order by nodeId asc")
     discard processQuery(db, sql(query), result)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =

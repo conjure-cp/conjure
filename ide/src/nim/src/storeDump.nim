@@ -1,6 +1,11 @@
-import db_sqlite, parseutils
+import db_sqlite, parseutils, os
 
-let db = open("out.db", "", "", "")
+if (paramCount() != 1):
+    echo "usage ./storeDump <PathToDB>"
+
+# echo paramCount(), " ", paramStr(1)
+
+let db = open(paramStr(1), "", "", "")
 
 var nodeCount: int
 discard db.getValue(sql"select count(nodeId) from Node").parseInt(nodeCount)
@@ -13,5 +18,3 @@ for i in countup(0, nodeCount):
     file.writeLine(x[1], ",",  x[2])
 
   file.close()
-
-echo nodeCount
