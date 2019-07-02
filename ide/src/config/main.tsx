@@ -287,9 +287,8 @@ class F extends React.Component<any, State> {
     }
 
     return (
-      // <div className="col">
       <div>
-        {/* <StageHeader
+        <StageHeader
           title={"Setup"}
           id={"Setup"}
           // isCollapsed={this.state.isCollapsed}
@@ -318,7 +317,7 @@ class F extends React.Component<any, State> {
             cacheChangeHandler={this.cacheChangeHandler}
             caches={this.state.allCaches}
           />
-        </StageHeader> */}
+        </StageHeader>
 
         {/* <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (

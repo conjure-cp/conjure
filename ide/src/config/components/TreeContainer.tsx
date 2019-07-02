@@ -12,6 +12,7 @@ import { Domains } from "./Domains"
 import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3"
 import { getNextSolId, getPrevSolId, showAllAncestors } from "../modules/Helper"
 import SplitPane, * as Blah from "react-split-pane"
+const Split = require("react-split")
 // import SplitterLayout from "react-splitter-layout"
 // import "react-splitter-layout/lib/index.css"
 
@@ -282,7 +283,7 @@ export class TreeContainer extends React.Component<Props, State> {
     return (
       <GlobalHotKeys keyMap={map} handlers={this.handlers}>
         <div className="treeContainer">
-          {/* <StatsBar
+          <StatsBar
             info={this.props.info}
             nextFailedHandler={this.nextFailed}
             prevFailedHandler={this.prevFailed}
@@ -293,28 +294,32 @@ export class TreeContainer extends React.Component<Props, State> {
             totalNodes={this.state.id2Node[0].descCount + 1}
             failedBranchCount={failedBranchCount}
             linScale={this.state.linScale}
-          /> */}
-          <SplitPane split="horizontal" defaultSize={500}>
-            <TreeVis
-              id={this.props.core.id}
-              identifier={this.props.identifier}
-              rootNode={this.state.id2Node[0]}
-              selected={this.state.selected}
-              solAncestorIds={this.props.core.solAncestorIds}
-              solveable={this.state.solveable}
-              linScale={this.state.linScale}
-              minsize={this.state.minsize}
-              nodeClickHandler={this.nodeClickHandler}
-              duration={500}
-              width={1200}
-              height={1000}
-            />
-            {/* <div className="poop">POOP</div> */}
-            {/* <div className="poop">POOP</div> */}
+          />
+          <Wrapper>
+            <SplitPane split="horizontal" defaultSize={600}>
+              {/* <Split> */}
+              <TreeVis
+                id={this.props.core.id}
+                identifier={this.props.identifier}
+                rootNode={this.state.id2Node[0]}
+                selected={this.state.selected}
+                solAncestorIds={this.props.core.solAncestorIds}
+                solveable={this.state.solveable}
+                linScale={this.state.linScale}
+                minsize={this.state.minsize}
+                nodeClickHandler={this.nodeClickHandler}
+                duration={500}
+                width={1200}
+                height={500}
+              />
 
-            <Domains id={this.props.core.id} selected={this.state.selected} />
-          </SplitPane>
+              <Domains id={this.props.core.id} selected={this.state.selected} />
 
+              {/* <div className="hello">Hello</div>
+              <div className="boyo">boyo</div> */}
+              {/* </Split> */}
+            </SplitPane>
+          </Wrapper>
           {/* <div className="player mb-3">
             <Play
               clickHandler={this.pPressed}
@@ -337,3 +342,18 @@ const map = {
   pPressed: "p",
   goToRoot: "r"
 }
+
+const Wrapper = (props: any) => (
+  <div
+    style={{
+      flex: 1,
+      display: "flex",
+      height: "100%",
+      width: "100%",
+      border: "1px solid red",
+      position: "relative"
+    }}
+  >
+    {props.children}
+  </div>
+)
