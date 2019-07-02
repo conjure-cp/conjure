@@ -277,9 +277,14 @@ rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `
 rule_Comprehension_Nested :: Rule
 rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, Comprehension innerBody innerGocs), gocAfter) <- matchFirst gensOrConds $ \case
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToMSet] expr)
             _ -> na "rule_Comprehension_Nested"
+        let
+            extract (isAlias -> Just x) = extract x
+            extract (Comprehension innerBody innerGocs) = return (innerBody, innerGocs)
+            extract _ = na "rule_Comprehension_Nested"
+        (innerBody, innerGocs) <- extract expr
         let upd val old = lambdaToFunction pat old val
         let
             -- update the quantified variable names inside innerBody&innerGocs_ here,
