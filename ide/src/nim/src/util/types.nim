@@ -38,7 +38,7 @@ type Node* = ref object of RootObj
     childCount*: int
     isSolution*: bool
     isLeftChild*: bool
-    descCount*: int
+    descCount*: string
 
 type Core* = ref object of RootObj
     nodes*: seq[Node]

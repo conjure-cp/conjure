@@ -5,22 +5,22 @@ import process
 import branchingCondition
 
 var db: DbConn
-var decTable: Table[int, int]
 
 proc init*(dirPath: string): (Core, string) =
     ## Initialises data structures 
     var eprimeInfoFilePath: string
     (db, eprimeInfoFilePath) = findFiles(dirPath)
-    decTable = getDescendants(db)
+    writePaths(db, makePaths(db))
+    # decTable = getDescendants(db)
     let infoFile = readFile(eprimeInfoFilePath)
-    return (makeCore(db, decTable), infoFile)
+    return (makeCore(db), infoFile)
 
 proc loadNodes*(nodeId: string): seq[Node] =
     ## Loads the children of a node
 
     let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
                     nodeId & "  order by nodeId asc")
-    discard processQuery(db, query, result, decTable)
+    discard processQuery(db, query, result)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
     ## Finds the set belonging to a path

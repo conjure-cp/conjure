@@ -36,16 +36,42 @@ suite "findFiles":
             let path = testDataPath & "extension/multipleMinionFiles"
             discard findFiles(path)
 
-suite "descendants":
-    test "calculationIsCorrect":
-        # let path = "/cs/home/to26/EssenceCatalog/problems/csplib-prob006/GolombRuler-04-conjure-output"
-        let path = testDataPath & "golomb"
-        let db = findFiles(path)
-        let t = getDescendants(db)
-        let totalNodes = db.getValue(sql"select count(nodeId) from Node")
-        check($(t[0]+1) == totalNodes)
+suite "path":
+    test "1":
+        let path = testDataPath & "gears1000"
+        let (db, _) = findFiles(path)
+        expect(DbError):
+            let val = db.getValue(sql"select path from Node where nodeId = 0")
+            echo "hello boyo"
 
-        var leafId: int
-        for leaf in db.fastRows(sql"select nodeId from Node where nodeId not in (select parentId from Node) "):
-            discard leaf[0].parseInt(leafId)
-            check(t[leafId] == 0)
+        discard init(path)
+        let val = db.getValue(sql"select path from Node where nodeId = 0")
+
+suite "makePaths":
+    test "1":
+        let path = testDataPath & "gears1000"
+        let (db, _) = findFiles(path)
+        let table = makePaths(db)
+        writePaths(db, table)
+
+
+
+
+        
+
+        # init(path)
+
+
+# suite "descendants":
+#     test "calculationIsCorrect":
+#         # let path = "/cs/home/to26/EssenceCatalog/problems/csplib-prob006/GolombRuler-04-conjure-output"
+#         let path = testDataPath & "golomb"
+#         let (db, _ = findFiles(path)
+#         let t = getDescendants(db)
+#         let totalNodes = db.getValue(sql"select count(nodeId) from Node")
+#         check($(t[0]+1) == totalNodes)
+
+#         var leafId: int
+#         for leaf in db.fastRows(sql"select nodeId from Node where nodeId not in (select parentId from Node) "):
+#             discard leaf[0].parseInt(leafId)
+#             check(t[leafId] == 0)

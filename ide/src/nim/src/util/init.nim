@@ -1,4 +1,4 @@
-import tables, os, db_sqlite, types, process, parseutils, times, strutils, json, sequtils
+import tables, os, db_sqlite, types, process, parseutils, times, strutils, json, sequtils, sugar
 import jsonify
 import process
 import branchingCondition
@@ -50,6 +50,73 @@ proc findFiles*(dirPath: string): (DbConn, string) =
     initParser(db, minionFilePath, eprimeFilePath)
 
     return (db, eprimeInfoFilePath)
+
+proc makePaths*(db: DbConn): Table[string, string] =
+    ## Calculate the number of descendants for each node in the tree
+    let query = "select nodeId, parentId from Node;"
+
+    var pathTable = initTable[string, string]()
+    var id2Children = initTable[string, (string, string)]()
+
+    # var nodeId, parentId: int
+    for res in db.fastRows(sql(query)):
+        # discard res[0].parseInt(nodeId)
+        # discard res[1].parseInt(parentId)
+
+        let nodeId = res[0]
+        let parentId = res[1]
+
+        if (not id2Children.haskey(parentId)):
+            id2Children[parentId] = ("-1", "-1")
+
+        let (kid1, kid2) = id2Children[parentId]
+
+        if kid1 == "-1":
+            id2Children[parentId] = ($nodeId, "-1")
+        else:
+            id2Children[parentId] = (kid1, $nodeId)
+
+    proc recursive(id: string, parentPath: string) = 
+
+        if id == "0":
+            pathTable[id] = "0"
+        else:
+            pathTable[id] = parentPath & "/" & $id
+        
+        if id in id2Children:
+            let (kid1, kid2) = id2Children[id]
+            if (kid1 != "-1"):
+                recursive(kid1, pathTable[id])
+            if (kid2 != "-1"):
+                recursive(kid2, pathTable[id])
+
+    recursive("0", "/")
+    
+    # echo id2Children
+
+    # for path in pathTable.values():
+    #     echo path
+
+    return pathTable
+
+
+proc writePaths*(db: DBConn, table: Table[string, string]) =
+
+    let colNames = db.getAllRows(sql"PRAGMA table_info(Node);").map(row => row[1])
+    if (colNames.contains("path")):
+        return
+
+    db.exec(sql"ALTER TABLE NODE ADD COLUMN path TEXT;")
+
+    db.exec(sql"BEGIN TRANSACTION")
+
+    for nodeId in table.keys():
+        db.exec(sql"update Node set path = ? where nodeId = ?", table[nodeId], nodeId)
+        # echo table[nodeId]
+
+    db.exec(sql"END TRANSACTION")
+    echo "done"
+
 
 
 proc getDescendants*(db: DbConn): Table[int, int] =
@@ -128,7 +195,7 @@ let noSolutionFailedQuery = sql("""with recursive
     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId not in correctPath and parentId in correctPath;""")
 
 
-proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], descTable: Table[int, int]): seq[int] =
+proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node]): seq[int] =
     ## Sets a list of nodes retrieved from database by executing sql query.
     ## Returns a list of node ids for ancestors of solution nodes.
 
@@ -154,17 +221,20 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node], descTable:
             l = getLabel(getInitialVariables(), row2[0], row1[3], row2[1])
             pL = getLabel(getInitialVariables(), row2[0], row1[3], row2[1], true)
 
+        let path = db.getValue(sql"select path from Node where nodeId = ?", nId)
+        let descCount = db.getValue(sql("select count(nodeId) from Node where path like '" & path & "/%'"))
+
         list.add(Node(parentId: pId,
                         id: nId,
                         label:l,
                         prettyLabel: pL,
                         isLeftChild: parsebool(row1[3]),
                         childCount: childCount,
-                        descCount: descTable[nId],
+                        descCount: descCount,
                         isSolution: parseBool(row1[5])))
 
 
-proc makeCore*(db: DbConn, decTable: Table[int, int]): Core =
+proc makeCore*(db: DbConn): Core =
     ## Returns data required for building the core of the tree
     var coreQuery : SqlQuery
     var failedQuery : SqlQuery
@@ -172,6 +242,7 @@ proc makeCore*(db: DbConn, decTable: Table[int, int]): Core =
     var nodeList: seq[Node]
 
     let firstQuery = "select nodeId from Node where isSolution = 1 limit 1"
+
     if db.getValue(sql(firstQuery)) == "":
         coreQuery = noSolutionQuery
         failedQuery = noSolutionFailedQuery
@@ -179,7 +250,7 @@ proc makeCore*(db: DbConn, decTable: Table[int, int]): Core =
         failedQuery = solutionFailedQuery
         coreQuery = solutionQuery
 
-    solAncestorIds = processQuery(db, coreQuery, nodeList, decTable)
-    discard processQuery(db, failedQuery, nodeList, decTable)
+    solAncestorIds = processQuery(db, coreQuery, nodeList)
+    discard processQuery(db, failedQuery, nodeList)
 
     return Core(nodes: nodeList, solAncestorIds: solAncestorIds)
