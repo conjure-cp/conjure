@@ -6,8 +6,10 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Compute.DomainOf ( domainOf )
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
-
+import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
+import {-# SOURCE #-} Conjure.Language.Instantiate ( instantiateExpression )    
 import {-# SOURCE #-} Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 
@@ -54,8 +56,11 @@ instance EvaluateOp OpApart where
     evaluateOp op = na $ "evaluateOp{OpApart}:" <++> pretty (show op)
 
 instance EvaluateOp OpAttributeAsConstraint where
-    -- TODO
-    evaluateOp _ = return (ConstantBool True)
+    evaluateOp (OpAttributeAsConstraint x attrName attrVal) = do
+        dom <- domainOf x
+        constraint <- mkAttributeToConstraint dom attrName (fmap Constant attrVal) (Constant x)
+        evaluated <- instantiateExpression [] constraint
+        return evaluated
 
 instance EvaluateOp OpCatchUndef where
     evaluateOp (OpCatchUndef ConstantUndefined{} d) = return d
