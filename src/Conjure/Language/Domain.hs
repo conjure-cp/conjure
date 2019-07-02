@@ -923,7 +923,7 @@ textToRepresentation t []             | t == "RelationAsMatrix"           = retu
 textToRepresentation t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
 textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
 textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
-textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
+textToRepresentation _ _ = Nothing
 
 representationToShortText :: HasRepresentation -> Text
 representationToShortText Set_Occurrence                 = "Occurrence"

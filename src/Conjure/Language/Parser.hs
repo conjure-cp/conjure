@@ -237,19 +237,21 @@ parseDomainWithRepr = pDomainAtom
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
-        parseRepr = msum [ braces parseReprInner
-                         , return NoRepresentation
-                         ]
-
-        parseReprInner = do
-            pos    <- getPosition
-            nm     <- identifierText
-            inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
-            case textToRepresentation nm inners of
-                Nothing -> do
-                    setPosition pos
-                    fail ("Not a valid representation:" <+> pretty nm)
-                Just r  -> return r
+        parseRepr = return NoRepresentation
+        -- -- Parsing set {representation} of ... notation if needed
+        -- parseRepr = msum [ braces parseReprInner
+        --                  , return NoRepresentation
+        --                  ]
+        --
+        -- parseReprInner = do
+        --     pos    <- getPosition
+        --     nm     <- identifierText
+        --     inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
+        --     case textToRepresentation nm inners of
+        --         Nothing -> do
+        --             setPosition pos
+        --             fail ("Not a valid representation:" <+> pretty nm)
+        --         Just r  -> return r
 
         pBool = do
             lexeme L_bool
