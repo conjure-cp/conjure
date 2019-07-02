@@ -15,12 +15,54 @@ proc init*(dirPath: string): (Core, string) =
     let infoFile = readFile(eprimeInfoFilePath)
     return (makeCore(db), infoFile)
 
+
+
 proc loadNodes*(nodeId: string): seq[Node] =
     ## Loads the children of a node
 
-    let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
-                    nodeId & "  order by nodeId asc")
-    discard processQuery(db, query, result)
+    let limit = 10
+
+    var nId : int
+    discard nodeId.parseInt(nId)
+
+    let path = db.getValue(sql"select path from Node where nodeId = ?", nodeId)
+    echo path
+
+    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution, path as p from Node where path like '" & 
+        path & """%' and (select count(*) from
+        (WITH split(word, str) AS (
+                    SELECT '', p ||'/'
+                    UNION ALL SELECT
+                    substr(str, 0, instr(str, '/')),
+                    substr(str, instr(str, '/')+1)
+                    FROM split WHERE str!=''
+                ) SELECT word FROM split WHERE word!=''
+        ) ) <= """ & $(path.split("/").len() + limit) & " and nodeId != " & nodeId & " order by length(p)"
+
+    echo query
+
+    # let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution  from Node where path like '" & 
+    #     path & "%' and nodeId != " & nodeId & " limit 10 order by nodeId asc; "
+
+    # let query = ("""
+    #     select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where nodeId in(
+
+    #     WITH split(word, str) AS (
+    #         SELECT '', (select path from Node where nodeId = """ & nodeId & """)||'/'
+    #         UNION ALL SELECT
+    #         substr(str, 0, instr(str, '/')),
+    #         substr(str, instr(str, '/')+1)
+    #         FROM split WHERE str!=''
+    #     ) SELECT word FROM split WHERE word!=''
+    #     )
+    #     order by nodeId asc
+    # """)
+
+    # echo query
+
+    # let query = sql("select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where parentId = " & 
+    #                 nodeId & "  order by nodeId asc")
+    discard processQuery(db, sql(query), result)
 
 proc getExpandedSetChild*(nodeId, path: string): Set =
     ## Finds the set belonging to a path

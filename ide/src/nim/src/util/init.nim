@@ -118,46 +118,6 @@ proc writePaths*(db: DBConn, table: Table[string, string]) =
     echo "done"
 
 
-
-proc getDescendants*(db: DbConn): Table[int, int] =
-    ## Calculate the number of descendants for each node in the tree
-    let query = "select nodeId, parentId from Node ;"
-
-    var descTable = initTable[int, int]()
-    var id2Parent = initTable[int, int]()
-    var id2Children = initTable[int, seq[int]]()
-    var leafList : seq[int]
-
-    var nodeId, parentId: int
-
-    for res in db.fastRows(sql(query)):
-        discard res[0].parseInt(nodeId)
-        discard res[1].parseInt(parentId)
-
-        if (not id2Children.haskey(parentId)):
-            id2Children[parentId] = @[]
-
-        id2Children[parentId].add(nodeId)
-
-    proc recursive(id: int): int = 
-        if (not id2Children.hasKey(id)):
-            descTable[id] = 0
-            return 1
-        
-        var sum: int
-
-        for childId in id2Children[id]:
-            sum += recursive(childId)
-
-        descTable[id] = sum
-
-        return sum + 1
-
-    discard recursive(0)
-
-    return descTable
-
-
 let solutionQuery = sql("""with recursive
         correctPath(n) as (
         select nodeId from Node where isSolution = 1  
@@ -210,6 +170,7 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node]): seq[int] 
         result.add(nId)
 
         var childCount : int
+
         discard db.getValue(sql"select count(nodeId) from Node where parentId = ?", row1[0]).parseInt(childCount)
 
         let row2 = db.getRow(sql"select branchingVariable, value from Node where nodeId = ?", pId)

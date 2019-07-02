@@ -42,12 +42,12 @@ class F extends React.Component<any, State> {
 
   collapseHandler = () => {
     this.setState((prevState: State) => {
-      console.log(
-        "toggling from",
-        prevState.isCollapsed,
-        "to",
-        !prevState.isCollapsed
-      )
+      // console.log(
+      //   "toggling from",
+      //   prevState.isCollapsed,
+      //   "to",
+      //   !prevState.isCollapsed
+      // )
       return { isCollapsed: !prevState.isCollapsed }
     })
   }
@@ -92,7 +92,7 @@ class F extends React.Component<any, State> {
             this.setState({
               allCaches: data
             })
-            console.log("fromServer", data)
+            // console.log("fromServer", data)
           })
       })
   }

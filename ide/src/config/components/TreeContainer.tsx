@@ -155,12 +155,26 @@ export class TreeContainer extends React.Component<Props, State> {
         fetch(`http://localhost:5000/loadNodes/${prevState.selected}`)
           .then(data => data.json())
           .then(kids => {
+            console.log(kids)
             let newMap = cloneDeep(prevState.id2Node)
-            newMap[prevState.selected].children = kids
-            newMap[prevState.selected].children!.map((child: Node) => {
-              newMap[child.id] = child
+            kids.map((kid: Node) => {
+              if (!newMap[kid.parentId].children) {
+                newMap[kid.parentId].children = []
+              }
+              if (kid.isLeftChild) {
+                newMap[kid.parentId].children!.unshift(kid)
+              } else {
+                newMap[kid.parentId].children!.push(kid)
+              }
+
+              newMap[kid.id] = kid
               this.setState({ id2Node: newMap, selected: prevState.selected })
             })
+            // newMap[prevState.selected].children = kids
+            // newMap[prevState.selected].children!.map((child: Node) => {
+            //   newMap[child.id] = child
+            //   this.setState({ id2Node: newMap, selected: prevState.selected })
+            // })
           })
       }
 
