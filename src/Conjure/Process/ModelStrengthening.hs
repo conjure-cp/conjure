@@ -661,7 +661,7 @@ partRegular _ ((n, d@DomainPartition{}), cs)
                              | Just n1 <- domainSizeOf dom >>= e2c
                              , Just pNum' <- e2c pNum
                              , Just pSize' <- e2c pSize
-                             , Just n2 <- evaluateOp $ MkOpProduct $ OpProduct $ fromList [ pNum', pSize' ]
+                             , Just n2 <- runNameGen () $ evaluateOp $ MkOpProduct $ OpProduct $ fromList [ pNum', pSize' ]
                              , n1 == n2
                                -> ([("regular", Nothing)], mempty)
                            _   -> mempty

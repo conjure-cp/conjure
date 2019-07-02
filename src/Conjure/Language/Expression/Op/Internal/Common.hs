@@ -34,20 +34,26 @@ import Conjure.Language.TypeOf as X
 import Conjure.Language.Pretty as X
 import Conjure.Language.AdHoc as X
 import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
+import Conjure.Language.NameGen ( NameGen )
 
 
 -- | Assume: the input is already normalised.
 --   Make sure the output is normalised.
 class EvaluateOp op where
-    evaluateOp :: ( MonadFail m, ?typeCheckerMode :: TypeCheckerMode) => op Constant -> m Constant
+    evaluateOp :: 
+        MonadFail m =>
+        NameGen m =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
+        op Constant -> m Constant
 
 class SimplifyOp op x where
-    simplifyOp :: ( MonadFail m
-                  , Eq x
-                  , Num x
-                  , ExpressionLike x
-                  ) => op x         -- the input
-                    -> m x          -- the simplified output (or failure if it cannot be simplified)
+    simplifyOp ::
+        MonadFail m =>
+        Eq x =>
+        Num x =>
+        ExpressionLike x =>
+        op x ->     -- the input
+        m x         -- the simplified output (or failure if it cannot be simplified)
 
 class BinaryOperator op where
     opLexeme :: proxy op -> Lexeme

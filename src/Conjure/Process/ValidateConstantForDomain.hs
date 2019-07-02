@@ -5,6 +5,7 @@ module Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain ) w
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.Instantiate ( instantiateExpression )
+import Conjure.Language.NameGen ( NameGen )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
