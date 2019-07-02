@@ -40,15 +40,6 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSum x) where
 instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus
 
-instance EvaluateOp OpSum where
-    evaluateOp p | any isUndef (childrenBi p) =
-            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpSum x)
-        | Just xs <- listOut x
-        , any isUndef xs =
-            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpSum x) = ConstantInt TagInt . sum <$> intsOut "OpSum" x
-
 instance (OpSum x :< x) => SimplifyOp OpSum x where
     simplifyOp (OpSum x)
         | Just xs <- listOut x

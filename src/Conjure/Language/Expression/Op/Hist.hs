@@ -27,15 +27,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
             TypeList     aInner -> return $ TypeMatrix (TypeInt TagInt) $ TypeTuple [aInner, (TypeInt TagInt)]
             _ -> raiseTypeError p
 
-instance EvaluateOp OpHist where
-    evaluateOp (OpHist (viewConstantMSet -> Just cs)) = return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt TagInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
-        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt TagInt n] | (e, n) <- histogram cs ]
-    evaluateOp (OpHist (viewConstantMatrix -> Just (_, cs))) = return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt TagInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
-        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt TagInt n] | (e, n) <- histogram cs ]
-    evaluateOp op = na $ "evaluateOp{OpHist}:" <++> pretty (show op)
-
 instance SimplifyOp OpHist x where
     simplifyOp _ = na "simplifyOp{OpHist}"
 

@@ -26,15 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
             (TypeSet xTyInner, TypePartition pTyInner) | typesUnify [xTyInner, pTyInner] -> return TypeBool
             _ -> raiseTypeError inp
 
-instance EvaluateOp OpTogether where
-    evaluateOp (OpTogether _ ConstantUndefined{}) = return (fromBool False)
-    evaluateOp (OpTogether (viewConstantSet -> Just ys) (viewConstantPartition -> Just xss)) =
-        return $ ConstantBool $ or
-            [ and [ y `elem` xs | y <- ys ]
-            | xs <- xss
-            ]
-    evaluateOp op = na $ "evaluateOp{OpTogether}:" <++> pretty (show op)
-
 instance SimplifyOp OpTogether x where
     simplifyOp _ = na "simplifyOp{OpTogether}"
 

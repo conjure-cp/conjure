@@ -24,13 +24,6 @@ instance BinaryOperator (OpEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
     typeOf p@(OpEq a b) = sameToSameToBool p a b [] (const True)
 
-instance EvaluateOp OpEq where
-    evaluateOp (OpEq ConstantUndefined{} _) = return $ fromBool False
-    evaluateOp (OpEq _ ConstantUndefined{}) = return $ fromBool False
-    evaluateOp (OpEq (TypedConstant x _) y) = evaluateOp (OpEq x y)
-    evaluateOp (OpEq x (TypedConstant y _)) = evaluateOp (OpEq x y)
-    evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
-
 instance SimplifyOp OpEq x where
     simplifyOp (OpEq a b)
         | fromBool True == a = return b

@@ -4,7 +4,6 @@ module Conjure.Language.Expression.Op.RelationProj where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.Expression.Op.Image
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -46,31 +45,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                             loop _ _ = raiseTypeError $ "(relation projection)" <+> pretty p
                         TypeRelation <$> loop xs ts'
             _ -> raiseTypeError $ "(relation projection)" <+> pretty p
-
-instance EvaluateOp OpRelationProj where
-    evaluateOp (OpRelationProj (viewConstantRelation -> Just xss) mas) = do
-        let mas' = catMaybes mas
-        if length mas == length mas'
-            then -- all Just's
-                return $ ConstantBool $ mas' `elem` xss
-            else
-                return $ ConstantAbstract $ AbsLitRelation
-                    [ xsProject
-                    | xs <- xss
-                    , let xsProject   = [ x
-                                        | (x, Nothing) <- zip xs mas
-                                        ]
-                    , let xsCondition = [ x == y
-                                        | (x, Just y ) <- zip xs mas
-                                        ]
-                    , and xsCondition
-                    ]
-    -- leave the OpImage evaluator in -- it is just easier
-    evaluateOp (OpRelationProj f@(viewConstantFunction -> Just _) [Just arg]) =
-        evaluateOp (OpImage f arg)
-    evaluateOp (OpRelationProj f@(viewConstantSequence -> Just _) [Just arg]) =
-        evaluateOp (OpImage f arg)
-    evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)
 
 instance SimplifyOp OpRelationProj x where
     simplifyOp _ = na "simplifyOp{OpRelationProj}"

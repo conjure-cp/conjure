@@ -31,10 +31,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpCatchUndef x) where
             then return (mostDefined [tyX, tyD])
             else raiseTypeError p
 
-instance EvaluateOp OpCatchUndef where
-    evaluateOp (OpCatchUndef ConstantUndefined{} d) = return d
-    evaluateOp (OpCatchUndef x _) = return x
-
 instance SimplifyOp OpCatchUndef x where
     simplifyOp _ = na "simplifyOp{OpCatchUndef}"
 

@@ -24,10 +24,6 @@ instance TypeOf (OpAttributeAsConstraint x) where
     -- can check more here
     typeOf OpAttributeAsConstraint{} = return TypeBool
 
-instance EvaluateOp OpAttributeAsConstraint where
-    -- TODO
-    evaluateOp _ = return (ConstantBool True)
-
 instance SimplifyOp OpAttributeAsConstraint x where
     simplifyOp _ = na "simplifyOp{OpAttributeAsConstraint}"
 

@@ -35,9 +35,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTransform x) where
                 , "morphism type:" <+> pretty (TypeFunction from to)
                 ]
 
-instance EvaluateOp OpTransform where
-    evaluateOp op = na $ "evaluateOp{OpTransform}:" <++> pretty (show op)
-
 instance SimplifyOp OpTransform x where
     simplifyOp _ = na "simplifyOp{OpTransform}"
 

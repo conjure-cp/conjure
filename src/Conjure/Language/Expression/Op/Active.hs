@@ -34,10 +34,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpActive x) where
                                        , pretty ty
                                        ]
 
-instance EvaluateOp OpActive where
-    evaluateOp (OpActive (viewConstantVariant -> Just (_, n1, _)) n2) = return $ fromBool $ n1 == n2
-    evaluateOp op = na $ "evaluateOp{OpActive}:" <++> pretty (show op)
-
 instance SimplifyOp OpActive x where
     simplifyOp _ = na "simplifyOp{OpActive}"
 

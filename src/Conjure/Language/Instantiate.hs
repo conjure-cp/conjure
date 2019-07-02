@@ -18,6 +18,7 @@ import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.EvaluateOp ( evaluateOp )
 import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain, enumerateInConstant )
 
 

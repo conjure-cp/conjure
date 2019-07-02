@@ -37,9 +37,6 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpAnd x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
 
-instance EvaluateOp OpAnd where
-    evaluateOp (OpAnd x) = ConstantBool . and <$> boolsOut x
-
 instance (OpAnd x :< x) => SimplifyOp OpAnd x where
     simplifyOp (OpAnd x)
         | Just xs <- listOut x

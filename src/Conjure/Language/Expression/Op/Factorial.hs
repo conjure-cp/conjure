@@ -26,11 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFactorial x) where
             _ -> raiseTypeError p
         return (TypeInt t)
 
-instance EvaluateOp OpFactorial where
-    evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpFactorial x) = ConstantInt TagInt . product . enumFromTo 1 <$> intOut "factorial" x
-
 instance SimplifyOp OpFactorial x where
     simplifyOp _ = na "simplifyOp{OpFactorial}"
 

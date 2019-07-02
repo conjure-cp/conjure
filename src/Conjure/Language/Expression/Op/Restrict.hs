@@ -27,20 +27,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
             then return (TypeFunction (mostDefined [from', from]) to)
             else raiseTypeError p
 
-instance EvaluateOp OpRestrict where
-    evaluateOp _ = return $ ConstantBool True
-    -- -- TODO
-    -- evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
-    --     dom     <- domainOut domX
-    --     outVals <- concatForM xs $ \case
-    --         x@(a, _) -> do
-    --             mres <- runExceptT $ validateConstantForDomain "<in memory>" a (dom :: Domain () Constant)
-    --             case mres of
-    --                 Left {} -> return []
-    --                 Right{} -> return [x]
-    --     return $ ConstantAbstract $ AbsLitFunction $ sortNub outVals
-    -- evaluateOp op = na $ "evaluateOp{OpRestrict}:" <++> pretty (show op)
-
 instance SimplifyOp OpRestrict x where
     simplifyOp _ = na "simplifyOp{OpRestrict}"
 
