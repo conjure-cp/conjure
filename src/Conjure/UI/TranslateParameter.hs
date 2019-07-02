@@ -14,6 +14,7 @@ import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam )
 import Conjure.Process.FiniteGivens ( finiteGivensParam )
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 import Conjure.Representations ( downC )
 
 
@@ -143,8 +144,9 @@ translateParameter eprimeModel0 essenceParam0 = do
                                                       | (n,d,c) <- essenceGivensAndLettings'
                                                       ]
 
-    errs <- execWriterT $ forM_ essenceGivensAndLettings' $ \ (nm, dom, val) ->
-        case validateConstantForDomain nm val dom of
+    errs <- execWriterT $ forM_ essenceGivensAndLettings' $ \ (nm, dom, val) -> do
+        mres <- runExceptT $ validateConstantForDomain nm val dom
+        case mres of
             Left err -> tell [err]
             Right () -> return ()
     unless (null errs) (userErr errs)

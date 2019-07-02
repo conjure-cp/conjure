@@ -6,16 +6,17 @@ import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 
 validateSolution ::
     MonadFail m =>
+    NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model ->      -- essence model
@@ -36,7 +37,10 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    either userErr1 return (validateConstantForDomain nm valC domC)
+                    mres <- runExceptT (validateConstantForDomain nm valC domC)
+                    case mres of
+                        Right{} -> return ()
+                        Left err -> userErr1 err
                     modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
                                          , "Its domain:" <++> pretty dom
@@ -55,7 +59,10 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    either userErr1 return (validateConstantForDomain nm valC domC)
+                    mres <- runExceptT (validateConstantForDomain nm valC domC)
+                    case mres of
+                        Right{} -> return ()
+                        Left err -> userErr1 err
                     modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
                                          , "Its domain:" <++> pretty dom

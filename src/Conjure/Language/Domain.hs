@@ -22,7 +22,7 @@ module Conjure.Language.Domain
     , forgetRepr, changeRepr, defRepr
     , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainIntBTagged, mkDomainAny
     , typeOfDomain
-    , readBinRel
+    , readBinRel, binRelToAttrName
     , normaliseDomain, normaliseRange
     , innerDomainOf
     , singletonDomainInt
@@ -634,6 +634,21 @@ readBinRel AttrName_serial        = return BinRelAttr_Serial
 readBinRel AttrName_equivalence   = return BinRelAttr_Equivalence
 readBinRel AttrName_partialOrder  = return BinRelAttr_PartialOrder
 readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
+
+binRelToAttrName :: BinaryRelationAttr -> AttrName
+binRelToAttrName BinRelAttr_Reflexive       = AttrName_reflexive    
+binRelToAttrName BinRelAttr_Irreflexive     = AttrName_irreflexive  
+binRelToAttrName BinRelAttr_Coreflexive     = AttrName_coreflexive  
+binRelToAttrName BinRelAttr_Symmetric       = AttrName_symmetric    
+binRelToAttrName BinRelAttr_AntiSymmetric   = AttrName_antiSymmetric
+binRelToAttrName BinRelAttr_ASymmetric      = AttrName_aSymmetric   
+binRelToAttrName BinRelAttr_Transitive      = AttrName_transitive   
+binRelToAttrName BinRelAttr_Total           = AttrName_total        
+binRelToAttrName BinRelAttr_Connex          = AttrName_connex       
+binRelToAttrName BinRelAttr_Euclidean       = AttrName_Euclidean    
+binRelToAttrName BinRelAttr_Serial          = AttrName_serial       
+binRelToAttrName BinRelAttr_Equivalence     = AttrName_equivalence  
+binRelToAttrName BinRelAttr_PartialOrder    = AttrName_partialOrder 
 
 -- reflexive        forAll x : T . rel(x,x)
 -- irreflexive      forAll x : T . !rel(x,x)

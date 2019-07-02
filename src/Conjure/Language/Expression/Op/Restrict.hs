@@ -27,15 +27,16 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
             else raiseTypeError p
 
 instance EvaluateOp OpRestrict where
-    evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
-        dom       <- domainOut domX
-        return $ ConstantAbstract $ AbsLitFunction $ sortNub
-            [ x
-            | x@(a,_) <- xs
-            , case validateConstantForDomain "<in memory>" a (dom :: Domain () Constant) of
-                Nothing -> False
-                Just{}  -> True
-            ]
+    -- TODO
+    -- evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
+    --     dom       <- domainOut domX
+    --     return $ ConstantAbstract $ AbsLitFunction $ sortNub
+    --         [ x
+    --         | x@(a,_) <- xs
+    --         , case validateConstantForDomain "<in memory>" a (dom :: Domain () Constant) of
+    --             Nothing -> False
+    --             Just{}  -> True
+    --         ]
     evaluateOp op = na $ "evaluateOp{OpRestrict}:" <++> pretty (show op)
 
 instance SimplifyOp OpRestrict x where
