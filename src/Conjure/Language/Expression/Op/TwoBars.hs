@@ -4,8 +4,6 @@ module Conjure.Language.Expression.Op.TwoBars where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.DomainSizeOf
-import Conjure.Language.NameGen ( runNameGen)
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -37,26 +35,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
                                                      , "But got:" <+> pretty ty
                                                      ]
         return $ TypeInt TagInt
-
-instance EvaluateOp OpTwoBars where
-    evaluateOp (OpTwoBars x) =
-        case x of
-            -- absolute value
-            ConstantInt _ y                         -> return $ ConstantInt TagInt $ abs y
-
-            -- cardinality of a constant
-            (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt TagInt $ genericLength                    xs
-            (viewConstantSet       -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
-            (viewConstantMSet      -> Just xs)      -> return $ ConstantInt TagInt $ genericLength                    xs
-            (viewConstantFunction  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
-            (viewConstantSequence  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength                    xs
-            (viewConstantRelation  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
-            (viewConstantPartition -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub $ concat xs
-
-            -- cardinality of a domain
-            DomainInConstant (DomainInt _ rs) -> ConstantInt TagInt . genericLength <$> rangesInts rs
-            DomainInConstant dom            -> runNameGen () $ domainSizeOf dom
-            _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 instance SimplifyOp OpTwoBars x where
     simplifyOp _ = na "simplifyOp{OpTwoBars}"

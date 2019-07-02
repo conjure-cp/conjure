@@ -3,7 +3,6 @@
 module Conjure.Language.Expression.Op.Indexing where
 
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
@@ -76,47 +75,6 @@ instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf 
                     , "Indexing:"       <+> pretty m
                     , "With type:"      <+> pretty tyM
                     ]
-
-instance EvaluateOp OpIndexing where
-    evaluateOp p@(OpIndexing m i) | isUndef i = do
-        ty   <- typeOf m
-        tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
-                           TypeList tyTo     -> return tyTo
-                           _ -> fail "evaluateOp{OpIndexing}"
-        return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
-    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt _ x)) = do
-            ty   <- typeOf m
-            tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
-                               TypeList tyTo     -> return tyTo
-                               _ -> bug "evaluateOp{OpIndexing}"
-            indexVals <- valuesInIntDomain index
-            case [ v | (i, v) <- zip indexVals vals, i == x ] of
-                [v] -> return v
-                []  -> return $ mkUndef tyTo $ vcat
-                        [ "Matrix is not defined at this point:" <+> pretty x
-                        , "Matrix value:" <+> pretty m
-                        ]
-                _   -> return $ mkUndef tyTo $ vcat
-                        [ "Matrix is multiply defined at this point:" <+> pretty x
-                        , "Matrix value:" <+> pretty m
-                        ]
-    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt _ x)) =
-        return (at vals (fromInteger (x-1)))
-    evaluateOp rec@(OpIndexing (viewConstantRecord -> Just vals) (ConstantField name _)) =
-        case lookup name vals of
-            Nothing -> fail $ vcat
-                    [ "Record doesn't have a member with this name:" <+> pretty name
-                    , "Record:" <+> pretty rec
-                    ]
-            Just val -> return val
-    evaluateOp var@(OpIndexing (viewConstantVariant -> Just (_, name', x)) (ConstantField name ty)) =
-        if name == name'
-            then return x
-            else return $ mkUndef ty $ vcat
-                    [ "Variant isn't set to a member with this name:" <+> pretty name
-                    , "Variant:" <+> pretty var
-                    ]
-    evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 instance SimplifyOp OpIndexing x where
     simplifyOp _ = na "simplifyOp{OpIndexing}"

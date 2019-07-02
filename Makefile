@@ -19,6 +19,7 @@ install:
 	@echo "Set the environment variable BIN_DIR to change this"
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
+	@mkdir -p ${BIN_DIR}
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi

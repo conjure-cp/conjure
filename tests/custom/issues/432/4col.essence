@@ -1,0 +1,12 @@
+$ graph 4-coloring problem
+given
+  countries new type enum,
+  borders : relation (irreflexive, symmetric) of (countries*countries)
+
+$ where symmetric(borders)
+$ such that symmetric(borders)
+
+letting colours be new type enum {red, blue, green, yellow}
+
+find f: function (total) countries --> colours
+such that forAll (c,d) in borders . f(c) != f(d)

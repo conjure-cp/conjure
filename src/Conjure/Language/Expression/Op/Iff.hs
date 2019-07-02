@@ -24,10 +24,6 @@ instance BinaryOperator (OpIff x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpIff x) where
     typeOf p@(OpIff a b) = boolToBoolToBool p a b
 
-instance EvaluateOp OpIff where
-    evaluateOp (OpIff (ConstantBool x) (ConstantBool y)) = return $ ConstantBool $ x == y
-    evaluateOp _ = na "evaluateOp{OpIff}"
-
 instance SimplifyOp OpIff x where
     simplifyOp (OpIff a b)
         | fromBool True == a = return b

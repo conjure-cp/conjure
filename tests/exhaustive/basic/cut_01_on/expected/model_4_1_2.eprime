@@ -11,8 +11,8 @@ branching on
      x_Occurrence]
 such that
     !cut1 <->
-    or([x_ExplicitVarSizeWithFlags_Flags[q32] /\ x_ExplicitVarSizeWithFlags_Values[q32] = 1 | q32 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithFlags_Flags[q34] /\ x_ExplicitVarSizeWithFlags_Values[q34] = 2 | q34 : int(1..3)]),
+    or([x_ExplicitVarSizeWithFlags_Flags[q31] /\ x_ExplicitVarSizeWithFlags_Values[q31] = 1 | q31 : int(1..3)]) /\
+    or([x_ExplicitVarSizeWithFlags_Flags[q33] /\ x_ExplicitVarSizeWithFlags_Values[q33] = 2 | q33 : int(1..3)]),
     !cut2 <-> x_Occurrence[1],
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]

@@ -4,6 +4,7 @@ module Conjure.Language.Expression.Op.Restrict where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+-- import {-# SOURCE #-} Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -25,18 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
         if typesUnify [from, from']
             then return (TypeFunction (mostDefined [from', from]) to)
             else raiseTypeError p
-
-instance EvaluateOp OpRestrict where
-    evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
-        dom       <- domainOut domX
-        return $ ConstantAbstract $ AbsLitFunction $ sortNub
-            [ x
-            | x@(a,_) <- xs
-            , case validateConstantForDomain "<in memory>" a (dom :: Domain () Constant) of
-                Nothing -> False
-                Just{}  -> True
-            ]
-    evaluateOp op = na $ "evaluateOp{OpRestrict}:" <++> pretty (show op)
 
 instance SimplifyOp OpRestrict x where
     simplifyOp _ = na "simplifyOp{OpRestrict}"

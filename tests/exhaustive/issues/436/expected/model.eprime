@@ -1,0 +1,7 @@
+language ESSENCE' 1.0
+
+given e_EnumSize: int
+find x: int(0..10000)
+branching on [x]
+such that x = sum([1 | q4 : int(1..e_EnumSize), q5 : int(1..e_EnumSize)])
+

@@ -1,6 +1,6 @@
 
 Name:           conjure-cp
-Version:        2.2.0
+Version:        2.3.0
 Synopsis:       Conjure: The Automated Constraint Modelling Tool
 Description:    .
 Homepage:       http://github.com/conjure-cp/conjure
@@ -25,18 +25,20 @@ Library
 
                      -- definitions of language constructs
                      , Conjure.Language
-                     , Conjure.Language.AdHoc
-                     , Conjure.Language.Definition
-                     , Conjure.Language.Expression
-                     , Conjure.Language.Name
-                     , Conjure.Language.NameGen
-                     , Conjure.Language.Constant
                      , Conjure.Language.AbstractLiteral
+                     , Conjure.Language.AdHoc
+                     , Conjure.Language.Constant
+                     , Conjure.Language.Definition
                      , Conjure.Language.Domain
                      , Conjure.Language.Domain.AddAttributes
-                     , Conjure.Language.Type
+                     , Conjure.Language.EvaluateOp
+                     , Conjure.Language.Expression
                      , Conjure.Language.Lenses
+                     , Conjure.Language.Name
+                     , Conjure.Language.NameGen
                      , Conjure.Language.TH
+                     , Conjure.Language.Type
+
 
                      , Conjure.Language.Expression.Internal.Generated
                      , Conjure.Language.Expression.DomainSizeOf
@@ -111,6 +113,7 @@ Library
                      , Conjure.Language.Expression.Op.ToMSet
                      , Conjure.Language.Expression.Op.ToRelation
                      , Conjure.Language.Expression.Op.ToSet
+                     , Conjure.Language.Expression.Op.Transform
                      , Conjure.Language.Expression.Op.True
                      , Conjure.Language.Expression.Op.TwoBars
                      , Conjure.Language.Expression.Op.Union
@@ -128,21 +131,22 @@ Library
                      , Conjure.Language.ModelDiff
                      , Conjure.Language.ModelStats
                      , Conjure.Language.Lexer
+                     , Conjure.Language.NameResolution
                      , Conjure.Language.Parser
                      , Conjure.Language.ParserC
                      , Conjure.Language.Pretty
-                     , Conjure.Language.NameResolution
                      , Conjure.Language.ZeroVal
-                     , Conjure.Process.Sanity
-                     , Conjure.Process.Enums
-                     , Conjure.Process.Unnameds
-                     , Conjure.Process.Enumerate
-                     , Conjure.Process.FiniteGivens
-                     , Conjure.Process.LettingsForComplexInDoms
                      , Conjure.Process.AttributeAsConstraints
                      , Conjure.Process.DealWithCuts
-                     , Conjure.Process.ModelStrengthening
+                     , Conjure.Process.Enumerate
+                     , Conjure.Process.Enums
+                     , Conjure.Process.FiniteGivens
                      , Conjure.Process.InferAttributes
+                     , Conjure.Process.LettingsForComplexInDoms
+                     , Conjure.Process.ModelStrengthening
+                     , Conjure.Process.Sanity
+                     , Conjure.Process.Unnameds
+                     , Conjure.Process.ValidateConstantForDomain
 
                      -- definitions of representations: how to go down and up
                      , Conjure.Representations
@@ -211,6 +215,8 @@ Library
                      , Conjure.Rules.Horizontal.Partition
                      , Conjure.Rules.Vertical.Partition.PartitionAsSet
                      , Conjure.Rules.Vertical.Partition.Occurrence
+
+                     , Conjure.Rules.Transform
 
                      , Conjure.Rules.BubbleUp
                      , Conjure.Rules.DontCare

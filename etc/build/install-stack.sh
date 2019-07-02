@@ -12,8 +12,10 @@ export CI=${CI:-false}
 function dlStack {
     if [ `uname` = "Darwin" ] ; then
         curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ${BIN_DIR}
-    else
+    elif [ `uname` = "Linux" ] ; then
         curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ${BIN_DIR} '*/stack'
+    else
+        return 1
     fi
 }
 export -f dlStack

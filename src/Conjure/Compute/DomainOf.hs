@@ -167,6 +167,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpToMSet x) = domainOf x
     domainOf (MkOpToRelation x) = domainOf x
     domainOf (MkOpToSet x) = domainOf x
+    domainOf (MkOpTransform x) = domainOf x
     domainOf (MkOpTrue x) = domainOf x
     domainOf (MkOpTwoBars x) = domainOf x
     domainOf (MkOpUnion x) = domainOf x
@@ -238,6 +239,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpToMSet x) = indexDomainsOf x
     indexDomainsOf (MkOpToRelation x) = indexDomainsOf x
     indexDomainsOf (MkOpToSet x) = indexDomainsOf x
+    indexDomainsOf (MkOpTransform (OpTransform _ x)) = indexDomainsOf x
     indexDomainsOf (MkOpTrue x) = indexDomainsOf x
     indexDomainsOf (MkOpTwoBars x) = indexDomainsOf x
     indexDomainsOf (MkOpUnion x) = indexDomainsOf x
@@ -381,7 +383,8 @@ instance DomainOf (OpEq x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpFactorial x) where
     domainOf op = mkDomainAny ("OpFactorial:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpFlatten x) where
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpFlatten x) where
+    domainOf (OpFlatten (Just 1) x) = domainOf x >>= innerDomainOf
     domainOf op = mkDomainAny ("OpFlatten:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) where
@@ -399,8 +402,13 @@ instance (Pretty x, TypeOf x) => DomainOf (OpHist x) where
 instance DomainOf (OpIff x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpImage x) where
-    domainOf op = mkDomainAny ("OpImage:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpImage x) where
+    domainOf (OpImage f _) = do
+        fDomain <- domainOf f
+        case fDomain of
+            DomainFunction _ _ _ to -> return to
+            DomainSequence _ _ to -> return to
+            _ -> fail "domainOf, OpImage, not a function or sequence"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where
     domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op
@@ -631,6 +639,9 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
 
 instance DomainOf (OpTogether x) where
     domainOf _ = return DomainBool
+
+instance (Pretty x, TypeOf x) => DomainOf (OpTransform x) where
+    domainOf op = mkDomainAny ("OpTransform:" <++> pretty op) <$> typeOf op
 
 instance DomainOf (OpTrue x) where
     domainOf _ = return DomainBool

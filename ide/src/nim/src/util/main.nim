@@ -20,7 +20,7 @@ proc init*(dirPath: string): (Core, string) =
 proc loadNodes*(nodeId: string): seq[Node] =
     ## Loads the children of a node
 
-    let limit = 10
+    let limit = 3
 
     var nId : int
     discard nodeId.parseInt(nId)

@@ -106,7 +106,7 @@ rule_Leq = "sequence-leq{ExplicitBounded}" `namedRule` theRule where
         return
             ( "Mapping over a sequence, ExplicitBounded representation"
             , return [essence|
-                flatten([&aValues, [&aLength]]) <=lex
+                flatten([&aValues, [&aLength]]) .<=
                 flatten([&bValues, [&bLength]])
                              |]
                )
@@ -126,7 +126,7 @@ rule_Lt = "sequence-lt{ExplicitBounded}" `namedRule` theRule where
         return
             ( "Mapping over a sequence, ExplicitBounded representation"
             , return [essence|
-                flatten([&aValues, [&aLength]]) <lex
+                flatten([&aValues, [&aLength]]) .<
                 flatten([&bValues, [&bLength]])
                              |]
                )

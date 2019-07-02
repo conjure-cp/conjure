@@ -30,17 +30,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
                                        , "The argument has type:" <+> pretty tx
                                        ]
 
-instance EvaluateOp OpToMSet where
-    evaluateOp (OpToMSet (viewConstantSet -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitMSet xs
-    evaluateOp (OpToMSet (viewConstantMSet -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitMSet xs
-    evaluateOp (OpToMSet (viewConstantFunction -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitMSet [ConstantAbstract $ AbsLitTuple [a,b] | (a,b) <- xs]
-    evaluateOp (OpToMSet (viewConstantRelation -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitMSet $ map (ConstantAbstract . AbsLitTuple) xs
-    evaluateOp op = na $ "evaluateOp{OpToMSet}:" <++> pretty (show op)
-
 instance SimplifyOp OpToMSet x where
     simplifyOp _ = na "simplifyOp{OpToMSet}"
 

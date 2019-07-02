@@ -24,13 +24,6 @@ instance BinaryOperator (OpPow x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpPow x) where
   typeOf p@(OpPow a b) = intToIntToInt p a b
 
-instance EvaluateOp OpPow where
-    evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpPow x y)
-        | y >= 0    = ConstantInt TagInt <$> ((^) <$> intOut "pow x" x <*> intOut "pow y" y)
-        | otherwise = return $ mkUndef (TypeInt TagInt) $ "negative exponent:" <+> pretty p
-
 instance SimplifyOp OpPow x where
     simplifyOp _ = na "simplifyOp{OpPow}"
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 
@@ -12,6 +13,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.CategoryOf ( categoryChecking )
 import Conjure.Language.Pretty
 import Conjure.Language.Lenses
+import Conjure.Language.TH ( essence )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Language.NameResolution ( resolveNames )
@@ -125,19 +127,34 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (Where xs')
-            Objective _ x -> do
+            Objective minMax x -> do
                 mty <- runExceptT $ typeOf x
+                let
+                    go TypeInt{} o = return o
+                    go (TypeTuple ts) o =
+                        fromList <$> sequence [ go t [essence| &o[&i] |]
+                                              | (i', t) <- zip allNats ts
+                                              , let i = fromInt i'
+                                              ]
+                    go (TypeMatrix _ t) (AbstractLiteral (AbsLitMatrix _ os)) =
+                        fromList <$> sequence [ go t o | o <- os ]
+                    go t o = do
+                        tell $ return $ vcat
+                            [ "In the objective:" <++> pretty st
+                            , "Expected type `int`, but got:" <++> pretty t
+                            , "Expression:" <+> pretty o
+                            ]
+                        return o
                 case mty of
-                    Right TypeInt{} -> return ()
-                    Left err -> tell $ return $ vcat
-                        [ "In the objective:" <++> pretty st
-                        , "Error:" <++> pretty err
-                        ]
-                    Right ty -> tell $ return $ vcat
-                        [ "In the objective:" <++> pretty st
-                        , "Expected type `int`, but got:" <++> pretty ty
-                        ]
-                return st
+                    Right ty -> do
+                        x' <- go ty x
+                        return (Objective minMax x')
+                    Left err -> do
+                        tell $ return $ vcat
+                            [ "In the objective:" <++> pretty st
+                            , "Error:" <++> pretty err
+                            ]
+                        return st
             SuchThat xs -> do
                 xs' <- forM xs $ \ x -> do
                     mty <- runExceptT $ typeOf x

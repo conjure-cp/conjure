@@ -24,9 +24,6 @@ instance BinaryOperator (OpImply x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpImply x) where
     typeOf p@(OpImply a b) = boolToBoolToBool p a b
 
-instance EvaluateOp OpImply where
-    evaluateOp (OpImply x y) = ConstantBool <$> ((<=) <$> boolOut x <*> boolOut y)
-
 instance SimplifyOp OpImply x where
     simplifyOp (OpImply a b)
         | fromBool True  == a = return b

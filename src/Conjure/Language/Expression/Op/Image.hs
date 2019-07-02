@@ -36,39 +36,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
                 , "argument type:" <+> pretty xTy
                 ]
 
-instance EvaluateOp OpImage where
-    evaluateOp (OpImage f@(viewConstantFunction -> Just xs) a) =
-        case [ y | (x,y) <- xs, a == x ] of
-            [y] -> return y
-            []  -> do
-                TypeFunction _ tyTo <- typeOf f
-                return $ mkUndef tyTo $ vcat
-                    [ "Function is not defined at this point:" <+> pretty a
-                    , "Function value:" <+> pretty f
-                    ]
-            _   -> do
-                TypeFunction _ tyTo <- typeOf f
-                return $ mkUndef tyTo $ vcat
-                    [ "Function is multiply defined at this point:" <+> pretty a
-                    , "Function value:" <+> pretty f
-                    ]
-    evaluateOp (OpImage f@(viewConstantSequence -> Just xs) a) =
-        case [ y | (x,y) <- zip allNats xs, a == fromInt x ] of
-            [y] -> return y
-            []  -> do
-                TypeSequence tyTo <- typeOf f
-                return $ mkUndef tyTo $ vcat
-                    [ "Sequence is not defined at this point:" <+> pretty a
-                    , "Sequence value:" <+> pretty f
-                    ]
-            _   -> do
-                TypeSequence tyTo <- typeOf f
-                return $ mkUndef tyTo $ vcat
-                    [ "Sequence is multiply defined at this point:" <+> pretty a
-                    , "Sequence value:" <+> pretty f
-                    ]
-    evaluateOp op = na $ "evaluateOp{OpImage}:" <++> pretty (show op)
-
 instance SimplifyOp OpImage x where
     simplifyOp _ = na "simplifyOp{OpImage}"
 
