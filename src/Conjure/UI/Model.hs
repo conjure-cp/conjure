@@ -2246,22 +2246,27 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             Nothing -> na "rule_InlineConditions (meh-1)"
             Just z -> do
                 let h = hole z
-                case ( match opAnd h, match opOr h, match opSum h
+                case ( match opAnd h, match opOr h, match opSum h, match opProduct h
                      , match opMin h, match opMax h, match opOrdering h ) of
-                    (Just{}, _, _, _, _, _) -> return ("and", opAndSkip)
-                    (_, Just{}, _, _, _, _) -> return ("or" , opOrSkip )
-                    (_, _, Just{}, _, _, _) -> return ("sum", opSumSkip)
-                    (_, _, _, Just{}, _, _) -> na "rule_InlineConditions (min)"
-                    (_, _, _, _, Just{}, _) -> na "rule_InlineConditions (max)"
-                    (_, _, _, _, _, Just{}) -> return ("ordering", opSumSkip)
+                    (Just{}, _, _, _, _, _, _) -> return ("and", opAndSkip)
+                    (_, Just{}, _, _, _, _, _) -> return ("or" , opOrSkip )
+                    (_, _, Just{}, _, _, _, _) -> return ("sum", opSumSkip)
+                    (_, _, _, Just{}, _, _, _) -> return ("product", opProductSkip)
+                    (_, _, _, _, Just{}, _, _) -> na "rule_InlineConditions (min)"
+                    (_, _, _, _, _, Just{}, _) -> na "rule_InlineConditions (max)"
+                    (_, _, _, _, _, _, Just{}) -> return ("ordering", opSumSkip)
                     _                       -> na "rule_InlineConditions (meh-2)"
                                             -- case Zipper.up z of
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
 
-    opAndSkip b x = [essence| &b -> &x |]
-    opOrSkip  b x = [essence| &b /\ &x |]
-    opSumSkip b x = [essence| toInt(&b) * catchUndef(&x, 0) |]
+    opAndSkip     b x = [essence| &b -> &x |]
+    opOrSkip      b x = [essence| &b /\ &x |]
+    opSumSkip     b x = [essence| toInt(&b) * catchUndef(&x, 0) |]
+    opProductSkip b x = [essence| [ 1
+                                  , catchUndef(&x,1)
+                                  ; int(0..1)
+                                  ] [toInt(&b)] |]
 
 
 rule_InlineConditions_AllDiff :: Rule
