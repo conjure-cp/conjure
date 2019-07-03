@@ -19,7 +19,7 @@ import {
 } from "../modules/Helper"
 import SplitPane, * as Blah from "react-split-pane"
 import { MySlider } from "./Slider"
-import { ShellQuoting } from "vscode"
+import { Check } from "./Check"
 // import * as Handle from "./Slider",
 // import SplitterLayout from "react-splitter-layout"
 // import "react-splitter-layout/lib/index.css"
@@ -59,6 +59,7 @@ export interface State {
   playing: boolean
   solNodeIds: number[]
   loadDepth: number
+  reverse: boolean
 }
 
 const makeState = (core: Core): State => {
@@ -116,7 +117,8 @@ const makeState = (core: Core): State => {
     shouldGetKids: false,
     playing: false,
     solNodeIds: solNodeIds,
-    loadDepth: 1
+    loadDepth: 1,
+    reverse: false
   }
 
   return state
@@ -413,10 +415,18 @@ export class TreeContainer extends React.Component<Props, State> {
   play = async () => {
     const interval = 400
     while (this.state.playing) {
-      if (this.state.selected === this.state.id2Node[0].descCount) {
+      if (
+        (this.state.selected === last(this.props.core.solAncestorIds)! &&
+          !this.state.reverse) ||
+        (this.state.selected === 0 && this.state.reverse)
+      ) {
         break
       }
-      this.goLeft()
+      if (this.state.reverse) {
+        this.goToPreviousHandler()
+      } else {
+        this.goLeft()
+      }
       await this.sleep(interval)
     }
     this.setState({ playing: false })
@@ -463,12 +473,32 @@ export class TreeContainer extends React.Component<Props, State> {
           />
 
           <div className="sliderContainer row">
-            <label className="col">Lazy loading depth:</label>
-            <div className="slider col">
+            <label className="col-1-2">Lazy loading depth:</label>
+            <div className="slider col-1">
               <MySlider
                 sliderChangeHandler={(value: number) => {
                   this.setState({ loadDepth: value })
                 }}
+              />
+            </div>
+
+            <div className="col">
+              <Check
+                title={"Reverse play order"}
+                checked={this.state.reverse}
+                onChange={() => {
+                  this.setState((prevState: State) => {
+                    return { reverse: !prevState.reverse }
+                  })
+                }}
+              />
+            </div>
+
+            <div className="player col mb-3">
+              <Play
+                clickHandler={this.pPressed}
+                playing={this.state.playing}
+                x={0}
               />
             </div>
           </div>
@@ -494,13 +524,6 @@ export class TreeContainer extends React.Component<Props, State> {
               <Domains id={this.props.core.id} selected={this.state.selected} />
             </SplitPane>
           </Wrapper>
-          {/* <div className="player mb-3">
-            <Play
-              clickHandler={this.pPressed}
-              playing={this.state.playing}
-              x={575}
-            />
-          </div> */}
         </div>
       </GlobalHotKeys>
     )

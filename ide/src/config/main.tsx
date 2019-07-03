@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom"
 import StageHeader from "./components/StageHeader"
 import FormikConjure from "./components/FormikConjure"
 import { Core, TreeContainer, MyMap } from "./components/TreeContainer"
+import { Check } from "./components/Check"
 import { Form, Field, FieldArray, Formik } from "formik"
 import { Caches } from "./components/Caches"
 import SelectWithLabel from "./components/SelectWithLabel"
@@ -42,12 +43,6 @@ class F extends React.Component<any, State> {
 
   collapseHandler = () => {
     this.setState((prevState: State) => {
-      // console.log(
-      //   "toggling from",
-      //   prevState.isCollapsed,
-      //   "to",
-      //   !prevState.isCollapsed
-      // )
       return { isCollapsed: !prevState.isCollapsed }
     })
   }
@@ -295,18 +290,11 @@ class F extends React.Component<any, State> {
           // isCollapsed={true}
           collapseHandler={this.collapseHandler}
         >
-          <div className="input-group mb-3">
-            <div className="input-group-prepend">
-              <div className="input-group-text">
-                <input
-                  type="checkbox"
-                  checked={this.state.diff}
-                  onChange={this.clickHandler}
-                />
-              </div>
-            </div>
-            <label className="form-control">Diff two configurations</label>
-          </div>
+          <Check
+            title={"Do two diffs"}
+            checked={this.state.diff}
+            onChange={this.clickHandler}
+          />
 
           <FormikConjure
             responseHandler={this.initResponseHandler}
