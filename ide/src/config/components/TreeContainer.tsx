@@ -5,7 +5,7 @@ import TreeVis from "./TreeVis"
 import StatsBar from "./StatsBar"
 import Play from "./Play"
 import { HotKeys, GlobalHotKeys } from "react-hotkeys"
-import { cloneDeep } from "lodash"
+import { cloneDeep, last } from "lodash"
 import * as d3 from "d3"
 import StageHeader from "./StageHeader"
 import { Domains } from "./Domains"
@@ -13,6 +13,7 @@ import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3"
 import { getNextSolId, getPrevSolId, showAllAncestors } from "../modules/Helper"
 import SplitPane, * as Blah from "react-split-pane"
 import { MySlider } from "./Slider"
+import { ShellQuoting } from "vscode"
 // import * as Handle from "./Slider",
 // import SplitterLayout from "react-splitter-layout"
 // import "react-splitter-layout/lib/index.css"
@@ -228,13 +229,51 @@ export class TreeContainer extends React.Component<Props, State> {
     // console.log("expanded!");
   }
 
+  getNextFailedId = (current: number) => {
+    let counter = current
+
+    while (
+      this.props.core.solAncestorIds.includes(counter) &&
+      counter < last(this.props.core.solAncestorIds)!
+    ) {
+      counter++
+    }
+
+    if (!this.props.core.solAncestorIds.includes(counter)) {
+      return counter
+    }
+
+    return -1
+  }
+
   nextFailed = () => {
-    // this.setState((prevState: State) => {
-    //   let solId = prevState.selected;
-    //   while (solId in prevState.solNodeIds) {
-    //     solId
-    //   }
-    // })
+    if (!this.state.solveable) {
+      this.goLeft()
+      return
+    }
+
+    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
+      let nextId = this.getNextFailedId(this.state.selected)
+      if (nextId !== -1) {
+        this.setState((prevState: State) => {
+          const newMap = showAllAncestors(prevState, nextId)
+          return { selected: nextId, id2Node: newMap }
+        })
+      }
+      return
+    }
+
+    if (this.props.core.solAncestorIds.includes(this.state.selected + 1)) {
+      let nextId = this.getNextFailedId(this.state.selected + 1)
+      if (nextId !== -1) {
+        this.setState((prevState: State) => {
+          const newMap = showAllAncestors(prevState, nextId)
+          return { selected: nextId, id2Node: newMap }
+        })
+      }
+    } else {
+      this.goLeft()
+    }
   }
 
   prevFailed = () => {}
