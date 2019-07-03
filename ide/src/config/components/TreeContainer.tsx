@@ -60,6 +60,7 @@ export interface State {
   solNodeIds: number[]
   loadDepth: number
   reverse: boolean
+  totalNodeCount: number
 }
 
 const makeState = (core: Core): State => {
@@ -118,7 +119,8 @@ const makeState = (core: Core): State => {
     playing: false,
     solNodeIds: solNodeIds,
     loadDepth: 1,
-    reverse: false
+    reverse: false,
+    totalNodeCount: last(core.solAncestorIds)! + 1
   }
 
   return state
@@ -371,6 +373,10 @@ export class TreeContainer extends React.Component<Props, State> {
         this.props.core.solAncestorIds
       )
 
+      if (nextId === -1) {
+        return
+      }
+
       if (nextId in this.state.id2Node) {
         this.setState((prevState: State) => {
           const newMap = showAllAncestors(prevState, nextId)
@@ -449,7 +455,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
   render = () => {
     let failedBranchCount =
-      this.state.id2Node[0].descCount -
+      this.state.totalNodeCount -
       (this.state.solveable ? this.props.core.solAncestorIds.length : 0)
 
     return (
@@ -467,7 +473,7 @@ export class TreeContainer extends React.Component<Props, State> {
             prevSolHandler={this.prevSol}
             minsize={this.state.minsize}
             solNodeIds={this.state.solNodeIds}
-            totalNodes={last(this.props.core.solAncestorIds)!}
+            totalNodes={this.state.totalNodeCount}
             failedBranchCount={failedBranchCount}
             linScale={this.state.linScale}
           />

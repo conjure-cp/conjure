@@ -62,7 +62,7 @@ export default class TreeVis extends React.Component<Props, State> {
 
   getDecCountMessage(d: HierarchyPointNode<Node>): string {
     if (this.hasHiddenChildren(d)) {
-      return d.data.descCount - 1 + " nodes below"
+      return d.data.descCount + " nodes below"
     }
     return ""
   }

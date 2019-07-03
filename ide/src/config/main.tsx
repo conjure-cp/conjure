@@ -7,7 +7,7 @@ import { Check } from "./components/Check"
 import { Form, Field, FieldArray, Formik } from "formik"
 import { Caches } from "./components/Caches"
 import SelectWithLabel from "./components/SelectWithLabel"
-import { Cache } from "../configHelper"
+import { Cache, VarRepresentation } from "../configHelper"
 import "./styles.css"
 
 if (process.env.NODE_ENV !== "production") {
@@ -24,6 +24,7 @@ interface State {
   selectedCaches?: (Cache | undefined)[]
   essenceFiles: string[]
   paramFiles: string[]
+  representations: { path: string; representations: VarRepresentation[] }[]
 }
 
 class F extends React.Component<any, State> {
@@ -37,7 +38,8 @@ class F extends React.Component<any, State> {
       diff: false,
       allCaches: [],
       paramFiles: [],
-      essenceFiles: []
+      essenceFiles: [],
+      reps: []
     }
   }
 
@@ -76,8 +78,10 @@ class F extends React.Component<any, State> {
       .then(data => {
         this.setState({
           paramFiles: data.params,
-          essenceFiles: data.models
+          essenceFiles: data.models,
+          reps: data.representations
         })
+        console.log(data.representations)
         return
       })
       .then(() => {
