@@ -139,7 +139,7 @@ export class TreeContainer extends React.Component<Props, State> {
       expand: this.expand,
       pPressed: this.pPressed,
       goToRoot: this.goToRoot,
-      goPrev: this.goPrev
+      goPrev: this.goToPreviousHandler
     }
   }
 
@@ -170,12 +170,20 @@ export class TreeContainer extends React.Component<Props, State> {
     })
   }
 
-  goPrev = () => {
-    if (this.state.selected === 0) {
+  goToPreviousHandler = () => {
+    this.goPrev()
+  }
+
+  goPrev = (start?: number) => {
+    let current = start ? start : this.state.selected
+
+    console.log(current)
+
+    if (current === 0) {
       return
     }
 
-    const nextId = this.state.selected - 1
+    const nextId = current - 1
 
     if (nextId in this.state.id2Node) {
       this.setState((prevState: State) => {
@@ -297,6 +305,8 @@ export class TreeContainer extends React.Component<Props, State> {
           const newMap = showAllAncestors(prevState, nextId)
           return { selected: nextId, id2Node: newMap }
         })
+      } else {
+        this.goPrev(nextId + 1)
       }
       return
     }
@@ -306,14 +316,17 @@ export class TreeContainer extends React.Component<Props, State> {
         this.state.selected - 1,
         this.props.core.solAncestorIds
       )
+
       if (nextId in this.state.id2Node) {
         this.setState((prevState: State) => {
           const newMap = showAllAncestors(prevState, nextId)
           return { selected: nextId, id2Node: newMap }
         })
+      } else {
+        this.goPrev(nextId + 1)
       }
     } else {
-      console.log("should call go prev")
+      this.goPrev()
     }
   }
 
