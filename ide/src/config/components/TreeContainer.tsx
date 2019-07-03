@@ -12,7 +12,8 @@ import { Domains } from "./Domains"
 import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3"
 import { getNextSolId, getPrevSolId, showAllAncestors } from "../modules/Helper"
 import SplitPane, * as Blah from "react-split-pane"
-const Split = require("react-split")
+import { MySlider } from "./Slider"
+// import * as Handle from "./Slider",
 // import SplitterLayout from "react-splitter-layout"
 // import "react-splitter-layout/lib/index.css"
 
@@ -50,6 +51,7 @@ export interface State {
   shouldGetKids: boolean
   playing: boolean
   solNodeIds: number[]
+  loadDepth: number
 }
 
 const makeState = (core: Core): State => {
@@ -106,7 +108,8 @@ const makeState = (core: Core): State => {
     selected: 0,
     shouldGetKids: false,
     playing: false,
-    solNodeIds: solNodeIds
+    solNodeIds: solNodeIds,
+    loadDepth: 1
   }
 
   return state
@@ -152,7 +155,9 @@ export class TreeContainer extends React.Component<Props, State> {
       }
 
       if (!current.children && current.childCount > 0) {
-        fetch(`http://localhost:5000/loadNodes/${prevState.selected}`)
+        fetch(
+          `http://localhost:5000/loadNodes/${prevState.selected}/${prevState.loadDepth}`
+        )
           .then(data => data.json())
           .then(kids => {
             console.log(kids)
@@ -309,6 +314,18 @@ export class TreeContainer extends React.Component<Props, State> {
             failedBranchCount={failedBranchCount}
             linScale={this.state.linScale}
           />
+
+          <div className="sliderContainer row">
+            <label className="col">Lazy loading depth:</label>
+            <div className="slider col">
+              <MySlider
+                sliderChangeHandler={(value: number) => {
+                  this.setState({ loadDepth: value })
+                }}
+              />
+            </div>
+          </div>
+
           <Wrapper>
             <SplitPane split="horizontal" defaultSize={600}>
               {/* <Split> */}
@@ -328,10 +345,6 @@ export class TreeContainer extends React.Component<Props, State> {
               />
 
               <Domains id={this.props.core.id} selected={this.state.selected} />
-
-              {/* <div className="hello">Hello</div>
-              <div className="boyo">boyo</div> */}
-              {/* </Split> */}
             </SplitPane>
           </Wrapper>
           {/* <div className="player mb-3">

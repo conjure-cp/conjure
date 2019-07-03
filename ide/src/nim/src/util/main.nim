@@ -17,10 +17,12 @@ proc init*(dirPath: string): (Core, string) =
 
 
 
-proc loadNodes*(nodeId: string): seq[Node] =
+proc loadNodes*(nodeId, depth: string): seq[Node] =
     ## Loads the children of a node
 
-    let limit = 3
+    var limit: int
+    discard depth.parseInt(limit)
+    # limit += 1
 
     var nId : int
     discard nodeId.parseInt(nId)
