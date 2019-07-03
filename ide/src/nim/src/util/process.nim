@@ -1,5 +1,5 @@
 import types, util, parser, parseSets
-import re, strutils, os, tables, json, db_sqlite, parseutils, sequtils
+import re, strutils, os, tables, json, db_sqlite, parseutils, sequtils, util
 
 var prettyLookup* = initTable[string, Table[string, Variable]]()
 var eprimeLookup  = initTable[string, Variable]()
@@ -18,7 +18,7 @@ proc initParser*(db: DbConn, minionFilePath: string, eprimeFilePath: string) =
 
 proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): seq[Variable] =
     ## Returns a list of simple domains
-    var query = "select name, lower, upper from domain where"
+    var query = "select name, storeDump  from domain where"
     if (not wantExpressions):
         query &= " name not like 'aux%' and "
     query &= " nodeId = ? order by name limit ?"
@@ -27,11 +27,11 @@ proc getSimpleDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool =
 
         if (auxLookup.hasKey(domain[0])):
             var e = newExpression(auxLookup[domain[0]].name, domain[0])
-            e.rng = getPrettyRange(domain[1], domain[2])
+            e.rng = prettifyMinionStoreDump(domain[1])
             result.add(e)
         else:
             let v = newVariable(name = domain[0])
-            v.rng = getPrettyRange(domain[1], domain[2])
+            v.rng = prettifyMinionStoreDump(domain[1])
             result.add(v)
 
 proc getPrettyDomainsOfNode*(db: DbConn, nodeId: string, wantExpressions: bool = false): (seq[Variable]) =

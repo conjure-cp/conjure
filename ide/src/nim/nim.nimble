@@ -9,4 +9,4 @@ bin           = @["nim"]
 
 # Dependencies
 
-requires "nim >= 0.18.1", "jester >= 0.3.1"
+requires "nim >= 0.2", "jester >= 0.3.1"

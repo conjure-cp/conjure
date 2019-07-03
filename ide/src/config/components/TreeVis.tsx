@@ -62,7 +62,7 @@ export default class TreeVis extends React.Component<Props, State> {
 
   getDecCountMessage(d: HierarchyPointNode<Node>): string {
     if (this.hasHiddenChildren(d)) {
-      return d.data.descCount + " nodes below"
+      return d.data.descCount - 1 + " nodes below"
     }
     return ""
   }
@@ -265,7 +265,7 @@ export default class TreeVis extends React.Component<Props, State> {
       <div id={this.props.identifier} className="svg-container">
         <svg
           id="treeSVG"
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="xMidYMid slice"
           // viewBox="0 0 1290 465.45"
           viewBox={`0 0 ${this.props.width} ${this.props.height}`}
           // viewBox={`0 0 600 400`}

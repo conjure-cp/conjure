@@ -257,7 +257,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
     if (nextId in this.state.id2Node) {
       this.setState((prevState: State) => {
-        const newMap = showAllAncestors(prevState, nextId)
+        const newMap = showAllAncestors(prevState, this.state.selected)
         return { selected: nextId, id2Node: newMap }
       })
       return
@@ -467,7 +467,7 @@ export class TreeContainer extends React.Component<Props, State> {
             prevSolHandler={this.prevSol}
             minsize={this.state.minsize}
             solNodeIds={this.state.solNodeIds}
-            totalNodes={this.state.id2Node[0].descCount + 1}
+            totalNodes={last(this.props.core.solAncestorIds)!}
             failedBranchCount={failedBranchCount}
             linScale={this.state.linScale}
           />

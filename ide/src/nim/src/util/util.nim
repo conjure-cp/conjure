@@ -1,4 +1,4 @@
-import intsets, algorithm, sequtils
+import intsets, algorithm, sequtils, json
 
 
 proc getPrettyRange*(lowerBound: string, upperBound: string): string =
@@ -6,6 +6,23 @@ proc getPrettyRange*(lowerBound: string, upperBound: string): string =
     if lowerBound == upperBound:
        return "int(" & $lowerBound & ")" 
     return "int(" & $lowerBound & ".." & $upperBound & ")"
+
+# [ [2,2],[4,5],[7,15] ]
+
+proc prettifyMinionStoreDump*(dump: string): string =
+
+    result = "int("
+
+    let list = parseJson(dump)
+
+    for inner in list:
+        if inner[0] == inner[1]:
+            result &= $inner[0] & ", "
+        else:
+            result &= $inner[0] & ".." & $inner[1] & ", "
+
+    result = result[0..result.len()-3] & ")"
+
 
 proc prettifyIntSet*(i: IntSet): string =
     ## Returns a set as a range in the same format as essence
