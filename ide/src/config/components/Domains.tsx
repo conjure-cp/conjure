@@ -1,5 +1,6 @@
 import * as React from "react"
 import StageHeader from "./StageHeader"
+import { Check } from "./Check"
 
 interface Props {
   id: string
@@ -11,21 +12,12 @@ interface Variable {
   rng: string
 }
 
-interface Set extends Variable {
-  // cardinali
-}
-
-interface Simple {
-  vars: Variable[]
-  changedNames: string[]
-}
-
-interface Pretty {}
-
 interface State {
   vars: Variable[]
   changedNames: string[]
   pretty: boolean
+  onlyChanged: boolean
+  collapsed: boolean
 }
 
 export class Domains extends React.Component<Props, State> {
@@ -36,13 +28,16 @@ export class Domains extends React.Component<Props, State> {
     this.state = {
       vars: [],
       changedNames: [],
-      pretty: false
+      pretty: false,
+      onlyChanged: false,
+      collapsed: false
     }
-
-    this.clickHandler = this.clickHandler.bind(this)
   }
 
   async getDomains() {
+    if (this.state.collapsed) {
+      return
+    }
     const response = await fetch(
       `http://localhost:5000/${
         this.state.pretty ? "pretty" : "simple"
@@ -57,16 +52,17 @@ export class Domains extends React.Component<Props, State> {
     this.getDomains()
   }
 
-  async componentDidUpdate(prevProps: Props, _prevState: State) {
+  async componentDidUpdate(prevProps: Props, prevState: State) {
     if (
       this.props.selected !== prevProps.selected ||
-      this.props.id !== prevProps.id
+      this.props.id !== prevProps.id ||
+      this.state.collapsed !== prevState.collapsed
     ) {
       await this.getDomains()
     }
   }
 
-  async clickHandler() {
+  clickHandler = async () => {
     this.setState(
       (prevState: State) => {
         return { pretty: !prevState.pretty }
@@ -75,10 +71,20 @@ export class Domains extends React.Component<Props, State> {
     )
   }
 
+  collpaseHandler = () => {
+    this.setState((prevState: State) => {
+      return { collapsed: !prevState.collapsed }
+    })
+  }
+
   getRows() {
-    // console.log(this.state);
-    // this.getDomains();
     return this.state.vars.map((variable, i) => {
+      if (this.state.onlyChanged) {
+        if (!this.state.changedNames.includes(variable.name)) {
+          return
+        }
+      }
+
       return (
         <tr
           key={variable.name}
@@ -101,19 +107,23 @@ export class Domains extends React.Component<Props, State> {
         title={`Domains at ${this.props.selected}`}
         id={"Domains"}
         isCollapsed={false}
+        collapseHandler={this.collpaseHandler}
       >
-        <div className="input-group mb-3">
-          <div className="input-group-prepend">
-            <div className="input-group-text">
-              <input
-                type="checkbox"
-                checked={this.state.pretty}
-                onChange={this.clickHandler}
-              />
-            </div>
-          </div>
-          <label className="form-control">Show pretty domains</label>
-        </div>
+        <Check
+          title="Show pretty domains"
+          checked={false}
+          onChange={() => console.log("toggled pretty domains")}
+        />
+
+        <Check
+          title="Only show changed"
+          checked={this.state.onlyChanged}
+          onChange={() => {
+            this.setState((prevState: State) => {
+              return { onlyChanged: !prevState.onlyChanged }
+            })
+          }}
+        />
 
         {!this.state.pretty ? (
           <div className="table-wrapper-scroll-y my-custom-scrollbar">
