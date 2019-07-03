@@ -15,7 +15,43 @@ proc init*(dirPath: string): (Core, string) =
     let infoFile = readFile(eprimeInfoFilePath)
     return (makeCore(db), infoFile)
 
+proc loadAncestors*(nodeId: string): seq[Node] =
+    ## Loads the children of a node
+    var nId : int
+    discard nodeId.parseInt(nId)
 
+    let path = db.getValue(sql"select path from Node where nodeId = ?", nodeId)
+
+    let query = """select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where 
+    ( nodeId in
+        (WITH split(word, str) AS (
+                    SELECT '', '""" & path & """' ||'/'
+                    UNION ALL SELECT
+                    substr(str, 0, instr(str, '/')),
+                    substr(str, instr(str, '/')+1)
+                    FROM split WHERE str!=''
+                ) SELECT word FROM split WHERE word!=''
+        ) 
+    )
+
+    or
+        
+    ( parentId in
+        (WITH split(word, str) AS (
+                    SELECT '', '""" & path & """' ||'/'
+                    UNION ALL SELECT
+                    substr(str, 0, instr(str, '/')),
+                    substr(str, instr(str, '/')+1)
+                    FROM split WHERE str!=''
+                ) SELECT word FROM split WHERE word!=''
+        ) 
+    )
+         """
+
+    echo query
+
+
+    discard processQuery(db, sql(query), result)
 
 proc loadNodes*(nodeId, depth: string): seq[Node] =
     ## Loads the children of a node

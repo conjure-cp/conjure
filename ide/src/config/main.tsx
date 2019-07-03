@@ -291,8 +291,8 @@ class F extends React.Component<any, State> {
         <StageHeader
           title={"Setup"}
           id={"Setup"}
-          // isCollapsed={this.state.isCollapsed}
-          isCollapsed={true}
+          isCollapsed={this.state.isCollapsed}
+          // isCollapsed={true}
           collapseHandler={this.collapseHandler}
         >
           <div className="input-group mb-3">

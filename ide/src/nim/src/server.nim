@@ -37,8 +37,8 @@ routes:
     get "/loadNodes/@nodeId/@depth?":
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadNodes(@"nodeId", @"depth")))
 
-    # get "/loadAncestors/@nodeId":
-    #     resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(@"nodeId")))
+    get "/loadAncestors/@nodeId":
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(@"nodeId")))
 
     get "/longestBranchingVariable":
         resp(Http200, [("Access-Control-Allow-Origin", "*")], getLongestBranchingVarName())

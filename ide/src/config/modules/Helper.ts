@@ -1,70 +1,94 @@
-import { HierarchyPointLink, HierarchyPointNode, Selection } from "d3";
-import * as d3 from "d3";
-import Node from "../modules/Node";
-import { State, MyMap } from "../components/TreeContainer";
-import { cloneDeep, last } from "lodash";
+import { HierarchyPointLink, HierarchyPointNode, Selection } from "d3"
+import * as d3 from "d3"
+import Node from "../modules/Node"
+import { State, MyMap } from "../components/TreeContainer"
+import { cloneDeep, last } from "lodash"
 
 export const linkGenerator = d3
   .linkVertical<any, HierarchyPointNode<Node>>()
   .x(d => {
-    return d.x;
+    return d.x
   })
   .y(d => {
-    return d.y;
-  });
+    return d.y
+  })
 
 export const showAllAncestors = (prevState: State, startId: number): MyMap => {
-  let newMap = cloneDeep(prevState.id2Node);
+  let newMap = cloneDeep(prevState.id2Node)
 
-  let currentId = newMap[startId].id;
+  let currentId = newMap[startId].id
 
   while (true) {
-    Node.showChildren(newMap[currentId]);
+    Node.showChildren(newMap[currentId])
     if (currentId === 0) {
-      break;
+      break
     }
-    currentId = newMap[newMap[currentId].parentId].id;
+    currentId = newMap[newMap[currentId].parentId].id
   }
 
-  return newMap;
-};
+  return newMap
+}
 
 export const getNextSolId = (prevState: State): number => {
   if (!prevState.solveable) {
-    return prevState.selected;
+    return prevState.selected
   }
 
-  const currentIdInSolNodeIds = prevState.solNodeIds.indexOf(
-    prevState.selected
-  );
+  const currentIdInSolNodeIds = prevState.solNodeIds.indexOf(prevState.selected)
 
   if (currentIdInSolNodeIds === -1) {
-    return prevState.solNodeIds[0];
+    return prevState.solNodeIds[0]
   }
 
   if (prevState.solNodeIds.length <= currentIdInSolNodeIds + 1) {
-    return prevState.solNodeIds[0];
+    return prevState.solNodeIds[0]
   }
 
-  return prevState.solNodeIds[currentIdInSolNodeIds + 1];
-};
+  return prevState.solNodeIds[currentIdInSolNodeIds + 1]
+}
+
+export const getPrevFailedId = (current: number, solAncestorIds: number[]) => {
+  let counter = current
+
+  while (solAncestorIds.includes(counter) && counter > 0) {
+    counter--
+  }
+
+  if (!solAncestorIds.includes(counter)) {
+    return counter
+  }
+
+  return -1
+}
+
+export const getNextFailedId = (current: number, solAncestorIds: number[]) => {
+  let counter = current
+
+  while (solAncestorIds.includes(counter) && counter < last(solAncestorIds)!) {
+    counter++
+  }
+
+  if (!solAncestorIds.includes(counter)) {
+    return counter
+  }
+
+  return -1
+}
 
 export const getPrevSolId = (prevState: State): number => {
   if (!prevState.solveable) {
-    return prevState.selected;
+    return prevState.selected
   }
 
-  const currentIdInSolNodeIds = prevState.solNodeIds.indexOf(
-    prevState.selected
-  );
+  const currentIdInSolNodeIds = prevState.solNodeIds.indexOf(prevState.selected)
 
   if (currentIdInSolNodeIds === -1) {
-    return last(prevState.solNodeIds)!;
+    return last(prevState.solNodeIds)!
   }
 
   if (currentIdInSolNodeIds - 1 < 0) {
-    return last(prevState.solNodeIds)!;
+    return last(prevState.solNodeIds)!
   }
 
-  return prevState.solNodeIds[currentIdInSolNodeIds - 1];
-};
+  return prevState.solNodeIds[currentIdInSolNodeIds - 1]
+}
