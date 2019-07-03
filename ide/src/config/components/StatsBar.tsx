@@ -20,6 +20,10 @@ interface Props {
   prevSolHandler: () => void
   nextFailedHandler: () => void
   prevFailedHandler: () => void
+  nextNodeHandler: () => void
+  prevNodeHandler: () => void
+  nextSolBranchHandler: () => void
+  prevSolBranchHandler: () => void
 }
 
 interface State {}
@@ -72,14 +76,12 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.failedBranchCount}
           </label>
-          {this.props.solNodeIds.length > 0 && (
-            <div className="row">
-              <FlickThru
-                nextHandler={this.props.nextFailedHandler}
-                prevHandler={this.props.prevFailedHandler}
-              />
-            </div>
-          )}
+          <div className="row">
+            <FlickThru
+              nextHandler={this.props.nextFailedHandler}
+              prevHandler={this.props.prevFailedHandler}
+            />
+          </div>
         </div>
 
         <div className="col">
@@ -92,6 +94,12 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.totalNodes - 1 - this.props.failedBranchCount}
           </label>
+          <div className="row">
+            <FlickThru
+              nextHandler={this.props.nextSolBranchHandler}
+              prevHandler={this.props.prevSolBranchHandler}
+            />
+          </div>
         </div>
 
         <div className="col">
@@ -110,6 +118,12 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.totalNodes}
           </label>
+          <div className="row">
+            <FlickThru
+              nextHandler={this.props.nextNodeHandler}
+              prevHandler={this.props.prevNodeHandler}
+            />
+          </div>
         </div>
 
         <div className="col">
@@ -139,7 +153,7 @@ export default class StatusBar extends React.Component<Props, State> {
                 nextHandler={this.props.nextSolHandler}
                 prevHandler={this.props.prevSolHandler}
               />
-            )}{" "}
+            )}
           </div>
         </div>
 

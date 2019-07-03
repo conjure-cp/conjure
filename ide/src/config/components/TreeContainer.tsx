@@ -5,7 +5,7 @@ import TreeVis from "./TreeVis"
 import StatsBar from "./StatsBar"
 import Play from "./Play"
 import { HotKeys, GlobalHotKeys } from "react-hotkeys"
-import { cloneDeep, last } from "lodash"
+import { cloneDeep, last, min, max } from "lodash"
 import * as d3 from "d3"
 import StageHeader from "./StageHeader"
 import { Domains } from "./Domains"
@@ -168,6 +168,58 @@ export class TreeContainer extends React.Component<Props, State> {
       })
       return { id2Node: newMap, selected: nextId }
     })
+  }
+
+  nextSolBranch = () => {
+    if (!this.state.solveable) {
+      return
+    }
+
+    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
+      const currentIndex = this.props.core.solAncestorIds.indexOf(
+        this.state.selected
+      )
+      if (currentIndex + 1 < this.props.core.solAncestorIds.length) {
+        this.setState({
+          selected: this.props.core.solAncestorIds[currentIndex + 1]
+        })
+      }
+      return
+    }
+
+    const nextId = min(
+      this.props.core.solAncestorIds.filter(num => {
+        return this.state.selected < num
+      })
+    )!
+
+    this.setState({ selected: nextId })
+  }
+
+  prevSolBranch = () => {
+    if (!this.state.solveable) {
+      return
+    }
+
+    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
+      const currentIndex = this.props.core.solAncestorIds.indexOf(
+        this.state.selected
+      )
+      if (currentIndex - 1 >= 0) {
+        this.setState({
+          selected: this.props.core.solAncestorIds[currentIndex - 1]
+        })
+      }
+      return
+    }
+
+    const nextId = max(
+      this.props.core.solAncestorIds.filter(num => {
+        return this.state.selected > num
+      })
+    )!
+
+    this.setState({ selected: nextId })
   }
 
   goToPreviousHandler = () => {
@@ -395,6 +447,10 @@ export class TreeContainer extends React.Component<Props, State> {
         <div className="treeContainer">
           <StatsBar
             info={this.props.info}
+            nextSolBranchHandler={this.nextSolBranch}
+            prevSolBranchHandler={this.prevSolBranch}
+            nextNodeHandler={this.goLeft}
+            prevNodeHandler={this.goToPreviousHandler}
             nextFailedHandler={this.nextFailed}
             prevFailedHandler={this.prevFailed}
             nextSolHandler={this.nextSol}
