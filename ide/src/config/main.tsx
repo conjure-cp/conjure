@@ -289,7 +289,7 @@ class F extends React.Component<any, State> {
       <div>
         <StageHeader
           title={"Setup"}
-          id={"Setup"}
+          id={"setup"}
           isCollapsed={this.state.isCollapsed}
           // isCollapsed={true}
           collapseHandler={this.collapseHandler}

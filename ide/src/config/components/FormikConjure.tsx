@@ -150,7 +150,7 @@ const validationSchema = Yup.object().shape({
   configs: Yup.array().of(Yup.object().shape(schema))
 })
 
-const submissionHandler = (values: Values, props: Props) => {
+const submissionHandler = (values: Values, props: Props, state: State) => {
   console.log("!!!!!!!!!!!!!")
   console.log(values)
 
@@ -163,13 +163,20 @@ const submissionHandler = (values: Values, props: Props) => {
       if (config[key] !== "") {
         cleaned[key] = config[key]
       }
+      if (typeof config[key] !== "string") {
+        cleaned[key] = config[key].value
+      }
     })
 
-    if (cleaned["minionSwitches"].length === 0) {
+    if (!cleaned.minionSwitches) {
       delete cleaned["minionSwitches"]
     }
 
-    cleaned.answers = cleaned.answers.map((opt: any) => opt.value)
+    cleaned.answers = config.answers.map((opt: any) => opt.value)
+
+    if (!state.showReps) {
+      delete cleaned["answers"]
+    }
 
     let newNamedConfig: Cache = {
       config: cleaned,
@@ -223,32 +230,36 @@ class ConfigForm extends React.Component<Props, State> {
   ) => {
     return values.namedConfigs.map((_config, index) => {
       const currentEssenceFile = values.namedConfigs[index].config.essenceFile
+
+      // console.log("current essence file", currentEssenceFile)
+
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
       const repSelectBoxes =
-        varReps && this.state.showReps
-          ? varReps.map((vR, i) => {
-              values.namedConfigs[index].config.answers[i] = {
-                value: vR.representations[0].answer,
-                label: vR.representations[0].description
-              }
+        //   varReps && this.state.showReps ?
+        varReps.map((vR, i) => {
+          values.namedConfigs[index].config.answers[i] =
+            values.namedConfigs[index].config.answers[i] === ""
+              ? {
+                  value: vR.representations[0].answer,
+                  label: vR.representations[0].description
+                }
+              : values.namedConfigs[index].config.answers[i]
 
-              return (
-                <MySelect
-                  key={vR.name}
-                  name={vR.name}
-                  configIndex={index}
-                  index={i}
-                  value={values.namedConfigs[index].config.answers[i]}
-                  onChange={setFieldValue}
-                  onBlur={setFieldTouched}
-                  options={vR.representations.map(o => {
-                    return { value: o.answer, label: o.description }
-                  })}
-                />
-              )
-            })
-          : []
+          return (
+            <MySelect
+              name={`namedConfigs[${index}].config.answers[${i}]`}
+              key={vR.name}
+              title={vR.name}
+              // value={values.namedConfigs[index].config.answers[i]}
+              onChange={setFieldValue}
+              options={vR.representations.map(o => {
+                return { value: o.answer, label: o.description }
+              })}
+            />
+          )
+        })
+      // : []
 
       return (
         <div className="col" key={index}>
@@ -262,29 +273,27 @@ class ConfigForm extends React.Component<Props, State> {
               component={TextWithLabel}
               label={"Save as:"}
             />
-
             <Caches
               index={index}
               label={"Caches"}
               caches={props.caches}
               onChangeHandler={props.cacheChangeHandler}
             />
-
-            <Field
+            <MySelect
               name={`namedConfigs[${index}].config.essenceFile`}
-              component={SelectWithLabel}
-              label="Model"
+              title="Model"
+              onChange={setFieldValue}
               options={props.essenceFiles.map(file => {
-                return { val: file, text: file }
+                return { value: file, label: file }
               })}
             />
 
-            <Field
+            <MySelect
               name={`namedConfigs[${index}].config.paramFile`}
-              component={SelectWithLabel}
-              label="Param"
+              title="Param"
+              onChange={setFieldValue}
               options={props.paramFiles.map(file => {
-                return { val: file, text: file }
+                return { value: file, label: file }
               })}
             />
 
@@ -300,14 +309,14 @@ class ConfigForm extends React.Component<Props, State> {
               />
               <>
                 {!this.state.showReps && (
-                  <Field
+                  <MySelect
                     name={`namedConfigs[${index}].config.strategy`}
-                    component={SelectWithLabel}
-                    label="Strategy"
+                    title="Strategy"
+                    onChange={setFieldValue}
                     options={[
-                      { val: "", text: "Default" },
-                      { val: "c", text: "compact" },
-                      { val: "s", text: "sparse" }
+                      { value: "", label: "Default" },
+                      { value: "c", label: "compact" },
+                      { value: "s", label: "sparse" }
                     ]}
                   />
                 )}
@@ -323,76 +332,68 @@ class ConfigForm extends React.Component<Props, State> {
                   })
                 }
               />
-
-              {repSelectBoxes}
-
-              {/* <FieldArray
-                name={`answers`}
-                render={() =>
-                  // <button onClick={() => push("hello")}></button>
-                  repSelectBoxes
-                }
-              /> */}
-              {/* <div className="">{repSelectBoxes}</div> */}
+              {this.state.showReps && repSelectBoxes}
+              {/*  */}
             </StageHeader>
-
             <StageHeader
               title="Savilerow"
               id={`sr${index + 1}`}
               isCollapsed={true}
             >
-              <Field
+              <MySelect
                 name={`namedConfigs[${index}].config.optimisation`}
-                component={SelectWithLabel}
-                label="Optimisation"
+                // value={values.namedConfigs[index].config.optimisation}
+                title="Optimisation"
+                onChange={setFieldValue}
                 options={[
-                  { val: "", text: "Default" },
-                  { val: "-O0", text: "0" },
-                  { val: "-O1", text: "1" },
-                  { val: "-O2", text: "2" },
-                  { val: "-O3", text: "3" }
+                  { value: "", label: "Default" },
+                  { value: "-O0", label: "0" },
+                  { value: "-O1", label: "1" },
+                  { value: "-O2", label: "2" },
+                  { value: "-O3", label: "3" }
                 ]}
               />
-              <Field
+
+              <MySelect
                 name={`namedConfigs[${index}].config.symmetry`}
-                component={SelectWithLabel}
-                label="Symmetry Breaking"
+                title="Symmetry Breaking"
+                onChange={setFieldValue}
                 options={[
-                  { val: "", text: "Default" },
-                  { val: "-S0", text: "0" },
-                  { val: "-S1", text: "1" },
-                  { val: "-S2", text: "2" }
+                  { value: "", label: "Default" },
+                  { value: "-S0", label: "0" },
+                  { value: "-S1", label: "1" },
+                  { value: "-S2", label: "2" }
                 ]}
               />
-              <Field
+              <MySelect
                 name={`namedConfigs[${index}].config.translation`}
-                component={SelectWithLabel}
-                label="Translation"
+                title="Translation"
+                onChange={setFieldValue}
                 options={[
-                  { val: "", text: "Default" },
-                  { val: "-no-cse", text: "No CSE" },
-                  { val: "-identical-cse", text: "Identical CSE" },
-                  { val: "-ac-cse", text: "AC CSE" },
-                  { val: "-active-cse", text: "Active CSE" },
-                  { val: "-active-ac-cse", text: "Active AC CSE" },
-                  { val: "-deletevars", text: "Delete Vars" },
-                  { val: "-reduce-domains", text: "Reduce Domains" },
+                  { value: "", label: "Default" },
+                  { value: "-no-cse", label: "No CSE" },
+                  { value: "-identical-cse", label: "Identical CSE" },
+                  { value: "-ac-cse", label: "AC CSE" },
+                  { value: "-active-cse", label: "Active CSE" },
+                  { value: "-active-ac-cse", label: "Active AC CSE" },
+                  { value: "-deletevars", label: "Delete Vars" },
+                  { value: "-reduce-domains", label: "Reduce Domains" },
                   {
-                    val: "-reduce-domains-extend",
-                    text: "Reduce Domains Extend"
+                    value: "-reduce-domains-extend",
+                    label: "Reduce Domains Extend"
                   },
-                  { val: "-aggregate", text: "Aggregate" },
-                  { val: "-tabulate", text: "Tabulate" },
-                  { val: "-nomappers", text: "No Mappers" },
-                  { val: "-minionmappers", text: "Minion Mappers" },
-                  { val: "-no-bound-vars", text: "No Bound Variables" },
+                  { value: "-aggregate", label: "Aggregate" },
+                  { value: "-tabulate", label: "Tabulate" },
+                  { value: "-nomappers", label: "No Mappers" },
+                  { value: "-minionmappers", label: "Minion Mappers" },
+                  { value: "-no-bound-vars", label: "No Bound Variables" },
                   {
-                    val: "-remove-redundant-vars",
-                    text: "Remove Redundant Vars"
+                    value: "-remove-redundant-vars",
+                    label: "Remove Redundant Vars"
                   },
                   {
-                    val: "-var-sym-breaking",
-                    text: "Variable Symmetry Breaking"
+                    value: "-var-sym-breaking",
+                    label: "Variable Symmetry Breaking"
                   }
                 ]}
               />
@@ -407,7 +408,6 @@ class ConfigForm extends React.Component<Props, State> {
                 label="CNF clause limit"
               />
             </StageHeader>
-
             <StageHeader
               title="Minion"
               id={`minion${index + 1}`}
@@ -438,30 +438,30 @@ class ConfigForm extends React.Component<Props, State> {
                 component={TextWithLabel}
                 label="CPU Limit"
               />
-              <Field
+              <MySelect
                 name={`namedConfigs[${index}].config.preprocessing`}
-                component={SelectWithLabel}
-                label="Preprocessing"
+                title="Preprocessing"
+                onChange={setFieldValue}
                 options={[
-                  { val: "", text: "Default" },
-                  { val: "GAC", text: "GAC" },
-                  { val: "SACBounds", text: "SACBounds" },
-                  { val: "SAC", text: "SAC" },
-                  { val: "SSACBounds", text: "SSACBounds" },
-                  { val: "SSAC", text: "SSAC" }
+                  { value: "", label: "Default" },
+                  { value: "GAC", label: "GAC" },
+                  { value: "SACBounds", label: "SACBounds" },
+                  { value: "SAC", label: "SAC" },
+                  { value: "SSACBounds", label: "SSACBounds" },
+                  { value: "SSAC", label: "SSAC" }
                 ]}
               />
-              <Field
+              <MySelect
                 name={`namedConfigs[${index}].config.consistency`}
-                component={SelectWithLabel}
-                label="Consistency"
+                title="Consistency"
+                onChange={setFieldValue}
                 options={[
-                  { val: "", text: "Default" },
-                  { val: "GAC", text: "GAC" },
-                  { val: "SACBounds", text: "SACBounds" },
-                  { val: "SAC", text: "SAC" },
-                  { val: "SSACBounds", text: "SSACBounds" },
-                  { val: "SSAC", text: "SSAC" }
+                  { value: "", label: "Default" },
+                  { value: "GAC", label: "GAC" },
+                  { value: "SACBounds", label: "SACBounds" },
+                  { value: "SAC", label: "SAC" },
+                  { value: "SSACBounds", label: "SSACBounds" },
+                  { value: "SSAC", label: "SSAC" }
                 ]}
               />
             </StageHeader>
@@ -483,7 +483,7 @@ class ConfigForm extends React.Component<Props, State> {
       <Formik
         initialValues={{ namedConfigs: list }}
         onSubmit={values => {
-          submissionHandler(values, this.props)
+          submissionHandler(values, this.props, this.state)
         }}
         validationSchema={validationSchema}
         enableReinitialize={true}
