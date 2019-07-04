@@ -7,7 +7,7 @@ import { Check } from "./components/Check"
 import { Form, Field, FieldArray, Formik } from "formik"
 import { Caches } from "./components/Caches"
 import SelectWithLabel from "./components/SelectWithLabel"
-import { Cache, VarRepresentation } from "../configHelper"
+import { Cache, VarRepresentation, RepMap } from "../configHelper"
 import "./styles.css"
 
 if (process.env.NODE_ENV !== "production") {
@@ -24,7 +24,7 @@ interface State {
   selectedCaches?: (Cache | undefined)[]
   essenceFiles: string[]
   paramFiles: string[]
-  representations: { path: string; representations: VarRepresentation[] }[]
+  reps: RepMap
 }
 
 class F extends React.Component<any, State> {
@@ -39,7 +39,7 @@ class F extends React.Component<any, State> {
       allCaches: [],
       paramFiles: [],
       essenceFiles: [],
-      reps: []
+      reps: {}
     }
   }
 
@@ -301,6 +301,7 @@ class F extends React.Component<any, State> {
           />
 
           <FormikConjure
+            reps={this.state.reps}
             responseHandler={this.initResponseHandler}
             diff={this.state.diff}
             selectedCaches={this.state.selectedCaches}

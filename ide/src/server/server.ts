@@ -2,6 +2,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import * as express from "express"
 import fs = require("fs")
+import { sortBy } from "lodash"
 
 import {
   Server,
@@ -17,7 +18,7 @@ import * as init from "./init"
 import * as cors from "cors"
 const fetch = require("node-fetch")
 
-import ConfigHelper, { VarRepresentation } from "../configHelper"
+import ConfigHelper, { VarRepresentation, RepMap } from "../configHelper"
 import { Cache } from "../configHelper"
 import { execSync } from "child_process"
 
@@ -26,7 +27,7 @@ const collator = new Intl.Collator(undefined, { numeric: true })
 interface FilesResponse {
   models: string[]
   params: string[]
-  representations: { path: string; representations: VarRepresentation[] }
+  representations: RepMap
 }
 
 @Path("/config")
@@ -42,12 +43,15 @@ class ConfigService {
       `**/${ConfigHelper.cacheFileName}`
     )
 
-    return cachedFiles.map(uri => {
-      return {
-        name: path.basename(path.dirname(uri.path)),
-        config: JSON.parse(fs.readFileSync(uri.path).toString()).config
-      }
-    })
+    return sortBy(
+      cachedFiles.map(uri => {
+        return {
+          name: path.basename(path.dirname(uri.path)),
+          config: JSON.parse(fs.readFileSync(uri.path).toString()).config
+        }
+      }),
+      ["name"]
+    ).reverse()
   }
 
   @Path("/files")
@@ -67,10 +71,16 @@ class ConfigService {
       }
     })
 
+    let map: any = {}
+
+    reps.forEach(r => {
+      map[r.name] = r.representations
+    })
+
     return {
       models: models.map(uri => this.toRel(uri)).sort(collator.compare),
       params: params.map(uri => this.toRel(uri)).sort(collator.compare),
-      representations: reps
+      representations: map
     }
   }
 

@@ -2,14 +2,20 @@ import * as React from "react"
 import { Caches } from "./Caches"
 import * as ReactDOM from "react-dom"
 
-import { Form, Field, FieldArray, Formik } from "formik"
+import { Form, Field, FieldArray, Formik, FormikProps } from "formik"
 import * as Yup from "yup"
 
+import { maxBy, times } from "lodash"
 import TextWithLabel from "./TextWithLabel"
 import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "./StageHeader"
 import Checkbox from "./Checkbox"
-import { Cache } from "../../configHelper"
+import { Check } from "./Check"
+import MySelect from "./MySelect"
+import { Cache, VarRepresentation, RepMap } from "../../configHelper"
+import { reporters } from "mocha"
+
+type RepChoices = Record<string, string>
 
 interface Values {
   namedConfigs: Cache[]
@@ -21,6 +27,7 @@ interface Props {
   cacheChangeHandler: (cache: Cache, index: number) => void
   essenceFiles: string[]
   paramFiles: string[]
+  reps: RepMap
   selectedCaches?: (Cache | undefined)[]
   responseHandler: (content: any) => void
 }
@@ -45,7 +52,7 @@ interface Config {
   [key: string]: string | number | string[]
 }
 
-const makeNamedConfig = (props: Props, index: number): Cache => {
+const makeNamedConfig = (props: Props, index: number, reps: RepMap): Cache => {
   const getName = (caches?: (Cache | undefined)[]) => {
     if (!caches) {
       return ""
@@ -53,22 +60,24 @@ const makeNamedConfig = (props: Props, index: number): Cache => {
     if (!caches[index]) {
       return ""
     }
-
     return caches[index]!.name
   }
 
   let name = getName(props.selectedCaches)
-  // console.log(props.selectedCaches);
-  // console.log("naeis", name);
 
   return {
-    config: makeEmptyConfig(props, index),
+    config: makeEmptyConfig(props, index, reps),
     name: name
   }
 }
 
-const makeEmptyConfig = (props: Props, index: number): Config => {
+const makeEmptyConfig = (props: Props, index: number, reps: RepMap): Config => {
   // console.log("selected cache args!", props.selectedCaches);
+
+  const maxNumberOfQuestions =
+    Object.values(reps).length > 0
+      ? maxBy(Object.values(reps), x => x.length)!.length
+      : 0
 
   let initialConfig: Config = {
     paramFile: props.paramFiles[0],
@@ -86,7 +95,8 @@ const makeEmptyConfig = (props: Props, index: number): Config => {
     cpuLimit: "",
     solLimit: "",
     consistency: "",
-    preprocessing: ""
+    preprocessing: "",
+    answers: times(maxNumberOfQuestions, () => "")
   }
 
   if (!props.selectedCaches || !props.selectedCaches[index]) {
@@ -141,6 +151,9 @@ const validationSchema = Yup.object().shape({
 })
 
 const submissionHandler = (values: Values, props: Props) => {
+  console.log("!!!!!!!!!!!!!")
+  console.log(values)
+
   let cleaned = values.namedConfigs.map((namedConfig, index) => {
     const config = namedConfig.config
 
@@ -156,6 +169,8 @@ const submissionHandler = (values: Values, props: Props) => {
       delete cleaned["minionSwitches"]
     }
 
+    cleaned.answers = cleaned.answers.map((opt: any) => opt.value)
+
     let newNamedConfig: Cache = {
       config: cleaned,
       name:
@@ -164,13 +179,13 @@ const submissionHandler = (values: Values, props: Props) => {
           : `${new Date()
               .toUTCString()
               .replace(/ /g, "_")
-              .replace(/,/g, "_")}_${index + 1}`
+              .replace(/,/g, "_")}_Config${index + 1}`
     }
 
     return newNamedConfig
   })
 
-  // console.log(cleaned);
+  console.log(cleaned)
 
   fetch("http://localhost:4000/config/solve", {
     method: "post",
@@ -190,231 +205,312 @@ const submissionHandler = (values: Values, props: Props) => {
   // });
 }
 
-const renderArrayElements = (props: Props, values: Values) =>
-  values.namedConfigs.map((_config, index) => {
-    return (
-      <div className="col" key={index}>
-        <StageHeader
-          isCollapsed={false}
-          title={`Configuration ${index + 1}`}
-          id={`config${index + 1}`}
-        >
-          <Field
-            name={`namedConfigs[${index}].name`}
-            component={TextWithLabel}
-            label={"Save as:"}
-          />
-
-          <Caches
-            index={index}
-            label={"Caches"}
-            caches={props.caches}
-            onChangeHandler={props.cacheChangeHandler}
-          />
-
-          <Field
-            name={`namedConfigs[${index}].config.essenceFile`}
-            component={SelectWithLabel}
-            label="Model"
-            options={props.essenceFiles.map(file => {
-              return { val: file, text: file }
-            })}
-          />
-
-          <Field
-            name={`namedConfigs[${index}].config.paramFile`}
-            component={SelectWithLabel}
-            label="Param"
-            options={props.paramFiles.map(file => {
-              return { val: file, text: file }
-            })}
-          />
-
-          <StageHeader
-            title="Conjure"
-            id={`conjure${index + 1}`}
-            isCollapsed={true}
-          >
-            <Field
-              name={`namedConfigs[${index}].config.conjureTime`}
-              component={TextWithLabel}
-              label={"Time limit"}
-            />
-
-            <Field
-              name={`namedConfigs[${index}].config.strategy`}
-              component={SelectWithLabel}
-              label="Strategy"
-              options={[
-                { val: "", text: "Default" },
-                { val: "c", text: "compact" },
-                { val: "s", text: "sparse" }
-              ]}
-            />
-          </StageHeader>
-
-          <StageHeader
-            title="Savilerow"
-            id={`sr${index + 1}`}
-            isCollapsed={true}
-          >
-            <Field
-              name={`namedConfigs[${index}].config.optimisation`}
-              component={SelectWithLabel}
-              label="Optimisation"
-              options={[
-                { val: "", text: "Default" },
-                { val: "-O0", text: "0" },
-                { val: "-O1", text: "1" },
-                { val: "-O2", text: "2" },
-                { val: "-O3", text: "3" }
-              ]}
-            />
-            <Field
-              name={`namedConfigs[${index}].config.symmetry`}
-              component={SelectWithLabel}
-              label="Symmetry Breaking"
-              options={[
-                { val: "", text: "Default" },
-                { val: "-S0", text: "0" },
-                { val: "-S1", text: "1" },
-                { val: "-S2", text: "2" }
-              ]}
-            />
-            <Field
-              name={`namedConfigs[${index}].config.translation`}
-              component={SelectWithLabel}
-              label="Translation"
-              options={[
-                { val: "", text: "Default" },
-                { val: "-no-cse", text: "No CSE" },
-                { val: "-identical-cse", text: "Identical CSE" },
-                { val: "-ac-cse", text: "AC CSE" },
-                { val: "-active-cse", text: "Active CSE" },
-                { val: "-active-ac-cse", text: "Active AC CSE" },
-                { val: "-deletevars", text: "Delete Vars" },
-                { val: "-reduce-domains", text: "Reduce Domains" },
-                {
-                  val: "-reduce-domains-extend",
-                  text: "Reduce Domains Extend"
-                },
-                { val: "-aggregate", text: "Aggregate" },
-                { val: "-tabulate", text: "Tabulate" },
-                { val: "-nomappers", text: "No Mappers" },
-                { val: "-minionmappers", text: "Minion Mappers" },
-                { val: "-no-bound-vars", text: "No Bound Variables" },
-                {
-                  val: "-remove-redundant-vars",
-                  text: "Remove Redundant Vars"
-                },
-                { val: "-var-sym-breaking", text: "Variable Symmetry Breaking" }
-              ]}
-            />
-            <Field
-              name={`namedConfigs[${index}].config.srTime`}
-              component={TextWithLabel}
-              label="Time limit"
-            />
-            <Field
-              name={`namedConfigs[${index}].config.cnfLimit`}
-              component={TextWithLabel}
-              label="CNF clause limit"
-            />
-          </StageHeader>
-
-          <StageHeader
-            title="Minion"
-            id={`minion${index + 1}`}
-            isCollapsed={true}
-          >
-            <Checkbox
-              name={`namedConfigs[${index}].config.minionSwitches`}
-              value="-findallsols"
-              label="Find all solutions"
-            />
-            <Checkbox
-              name={`namedConfigs[${index}].config.minionSwitches`}
-              value="-randomiseorder"
-              label="Randomise Var Order"
-            />
-            <Field
-              name={`namedConfigs[${index}].config.nodeLimit`}
-              component={TextWithLabel}
-              label="Node Limit"
-            />
-            <Field
-              name={`namedConfigs[${index}].config.solLimit`}
-              component={TextWithLabel}
-              label="Solution Limit"
-            />
-            <Field
-              name={`namedConfigs[${index}].config.cpuLimit`}
-              component={TextWithLabel}
-              label="CPU Limit"
-            />
-            <Field
-              name={`namedConfigs[${index}].config.preprocessing`}
-              component={SelectWithLabel}
-              label="Preprocessing"
-              options={[
-                { val: "", text: "Default" },
-                { val: "GAC", text: "GAC" },
-                { val: "SACBounds", text: "SACBounds" },
-                { val: "SAC", text: "SAC" },
-                { val: "SSACBounds", text: "SSACBounds" },
-                { val: "SSAC", text: "SSAC" }
-              ]}
-            />
-            <Field
-              name={`namedConfigs[${index}].config.consistency`}
-              component={SelectWithLabel}
-              label="Consistency"
-              options={[
-                { val: "", text: "Default" },
-                { val: "GAC", text: "GAC" },
-                { val: "SACBounds", text: "SACBounds" },
-                { val: "SAC", text: "SAC" },
-                { val: "SSACBounds", text: "SSACBounds" },
-                { val: "SSAC", text: "SSAC" }
-              ]}
-            />
-          </StageHeader>
-        </StageHeader>
-      </div>
-    )
-  })
-
-const Stage = (props: Props) => {
-  // console.log("props", props);
-
-  let list = props.diff
-    ? [makeNamedConfig(props, 0), makeNamedConfig(props, 1)]
-    : [makeNamedConfig(props, 0)]
-
-  return (
-    <Formik
-      initialValues={{ namedConfigs: list }}
-      onSubmit={values => {
-        submissionHandler(values, props)
-      }}
-      validationSchema={validationSchema}
-      enableReinitialize={true}
-      render={({ values }) => (
-        <Form>
-          <div className="row">
-            <FieldArray
-              name="configs"
-              render={() => renderArrayElements(props, values)}
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-lg btn-block">
-            Solve
-          </button>
-        </Form>
-      )}
-    ></Formik>
-  )
+interface State {
+  showReps: boolean
 }
 
-export default Stage
+class ConfigForm extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { showReps: false }
+  }
+
+  renderArrayElements = (
+    props: Props,
+    values: Values,
+    setFieldValue: any,
+    setFieldTouched: any
+  ) => {
+    return values.namedConfigs.map((_config, index) => {
+      const currentEssenceFile = values.namedConfigs[index].config.essenceFile
+      const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
+
+      const repSelectBoxes =
+        varReps && this.state.showReps
+          ? varReps.map((vR, i) => {
+              values.namedConfigs[index].config.answers[i] = {
+                value: vR.representations[0].answer,
+                label: vR.representations[0].description
+              }
+
+              return (
+                <MySelect
+                  key={vR.name}
+                  name={vR.name}
+                  configIndex={index}
+                  index={i}
+                  value={values.namedConfigs[index].config.answers[i]}
+                  onChange={setFieldValue}
+                  onBlur={setFieldTouched}
+                  options={vR.representations.map(o => {
+                    return { value: o.answer, label: o.description }
+                  })}
+                />
+              )
+            })
+          : []
+
+      return (
+        <div className="col" key={index}>
+          <StageHeader
+            isCollapsed={false}
+            title={`Configuration ${index + 1}`}
+            id={`config${index + 1}`}
+          >
+            <Field
+              name={`namedConfigs[${index}].name`}
+              component={TextWithLabel}
+              label={"Save as:"}
+            />
+
+            <Caches
+              index={index}
+              label={"Caches"}
+              caches={props.caches}
+              onChangeHandler={props.cacheChangeHandler}
+            />
+
+            <Field
+              name={`namedConfigs[${index}].config.essenceFile`}
+              component={SelectWithLabel}
+              label="Model"
+              options={props.essenceFiles.map(file => {
+                return { val: file, text: file }
+              })}
+            />
+
+            <Field
+              name={`namedConfigs[${index}].config.paramFile`}
+              component={SelectWithLabel}
+              label="Param"
+              options={props.paramFiles.map(file => {
+                return { val: file, text: file }
+              })}
+            />
+
+            <StageHeader
+              title="Conjure"
+              id={`conjure${index + 1}`}
+              isCollapsed={true}
+            >
+              <Field
+                name={`namedConfigs[${index}].config.conjureTime`}
+                component={TextWithLabel}
+                label={"Time limit"}
+              />
+              <>
+                {!this.state.showReps && (
+                  <Field
+                    name={`namedConfigs[${index}].config.strategy`}
+                    component={SelectWithLabel}
+                    label="Strategy"
+                    options={[
+                      { val: "", text: "Default" },
+                      { val: "c", text: "compact" },
+                      { val: "s", text: "sparse" }
+                    ]}
+                  />
+                )}
+              </>
+              <Check
+                title={"Choose Representation"}
+                checked={this.state.showReps}
+                onChange={() =>
+                  this.setState((prevState: State) => {
+                    return {
+                      showReps: !prevState.showReps
+                    }
+                  })
+                }
+              />
+
+              {repSelectBoxes}
+
+              {/* <FieldArray
+                name={`answers`}
+                render={() =>
+                  // <button onClick={() => push("hello")}></button>
+                  repSelectBoxes
+                }
+              /> */}
+              {/* <div className="">{repSelectBoxes}</div> */}
+            </StageHeader>
+
+            <StageHeader
+              title="Savilerow"
+              id={`sr${index + 1}`}
+              isCollapsed={true}
+            >
+              <Field
+                name={`namedConfigs[${index}].config.optimisation`}
+                component={SelectWithLabel}
+                label="Optimisation"
+                options={[
+                  { val: "", text: "Default" },
+                  { val: "-O0", text: "0" },
+                  { val: "-O1", text: "1" },
+                  { val: "-O2", text: "2" },
+                  { val: "-O3", text: "3" }
+                ]}
+              />
+              <Field
+                name={`namedConfigs[${index}].config.symmetry`}
+                component={SelectWithLabel}
+                label="Symmetry Breaking"
+                options={[
+                  { val: "", text: "Default" },
+                  { val: "-S0", text: "0" },
+                  { val: "-S1", text: "1" },
+                  { val: "-S2", text: "2" }
+                ]}
+              />
+              <Field
+                name={`namedConfigs[${index}].config.translation`}
+                component={SelectWithLabel}
+                label="Translation"
+                options={[
+                  { val: "", text: "Default" },
+                  { val: "-no-cse", text: "No CSE" },
+                  { val: "-identical-cse", text: "Identical CSE" },
+                  { val: "-ac-cse", text: "AC CSE" },
+                  { val: "-active-cse", text: "Active CSE" },
+                  { val: "-active-ac-cse", text: "Active AC CSE" },
+                  { val: "-deletevars", text: "Delete Vars" },
+                  { val: "-reduce-domains", text: "Reduce Domains" },
+                  {
+                    val: "-reduce-domains-extend",
+                    text: "Reduce Domains Extend"
+                  },
+                  { val: "-aggregate", text: "Aggregate" },
+                  { val: "-tabulate", text: "Tabulate" },
+                  { val: "-nomappers", text: "No Mappers" },
+                  { val: "-minionmappers", text: "Minion Mappers" },
+                  { val: "-no-bound-vars", text: "No Bound Variables" },
+                  {
+                    val: "-remove-redundant-vars",
+                    text: "Remove Redundant Vars"
+                  },
+                  {
+                    val: "-var-sym-breaking",
+                    text: "Variable Symmetry Breaking"
+                  }
+                ]}
+              />
+              <Field
+                name={`namedConfigs[${index}].config.srTime`}
+                component={TextWithLabel}
+                label="Time limit"
+              />
+              <Field
+                name={`namedConfigs[${index}].config.cnfLimit`}
+                component={TextWithLabel}
+                label="CNF clause limit"
+              />
+            </StageHeader>
+
+            <StageHeader
+              title="Minion"
+              id={`minion${index + 1}`}
+              isCollapsed={true}
+            >
+              <Checkbox
+                name={`namedConfigs[${index}].config.minionSwitches`}
+                value="-findallsols"
+                label="Find all solutions"
+              />
+              <Checkbox
+                name={`namedConfigs[${index}].config.minionSwitches`}
+                value="-randomiseorder"
+                label="Randomise Var Order"
+              />
+              <Field
+                name={`namedConfigs[${index}].config.nodeLimit`}
+                component={TextWithLabel}
+                label="Node Limit"
+              />
+              <Field
+                name={`namedConfigs[${index}].config.solLimit`}
+                component={TextWithLabel}
+                label="Solution Limit"
+              />
+              <Field
+                name={`namedConfigs[${index}].config.cpuLimit`}
+                component={TextWithLabel}
+                label="CPU Limit"
+              />
+              <Field
+                name={`namedConfigs[${index}].config.preprocessing`}
+                component={SelectWithLabel}
+                label="Preprocessing"
+                options={[
+                  { val: "", text: "Default" },
+                  { val: "GAC", text: "GAC" },
+                  { val: "SACBounds", text: "SACBounds" },
+                  { val: "SAC", text: "SAC" },
+                  { val: "SSACBounds", text: "SSACBounds" },
+                  { val: "SSAC", text: "SSAC" }
+                ]}
+              />
+              <Field
+                name={`namedConfigs[${index}].config.consistency`}
+                component={SelectWithLabel}
+                label="Consistency"
+                options={[
+                  { val: "", text: "Default" },
+                  { val: "GAC", text: "GAC" },
+                  { val: "SACBounds", text: "SACBounds" },
+                  { val: "SAC", text: "SAC" },
+                  { val: "SSACBounds", text: "SSACBounds" },
+                  { val: "SSAC", text: "SSAC" }
+                ]}
+              />
+            </StageHeader>
+          </StageHeader>
+        </div>
+      )
+    })
+  }
+
+  render = () => {
+    let list = this.props.diff
+      ? [
+          makeNamedConfig(this.props, 0, this.props.reps),
+          makeNamedConfig(this.props, 1, this.props.reps)
+        ]
+      : [makeNamedConfig(this.props, 0, this.props.reps)]
+
+    return (
+      <Formik
+        initialValues={{ namedConfigs: list }}
+        onSubmit={values => {
+          submissionHandler(values, this.props)
+        }}
+        validationSchema={validationSchema}
+        enableReinitialize={true}
+        render={({ values, setFieldValue, setFieldTouched }) => (
+          <Form>
+            <div className="row">
+              <FieldArray
+                name="configs"
+                render={() =>
+                  this.renderArrayElements(
+                    this.props,
+                    values,
+                    setFieldValue,
+                    setFieldTouched
+                  )
+                }
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-lg btn-block">
+              Solve
+            </button>
+          </Form>
+        )}
+      ></Formik>
+    )
+  }
+}
+
+export default ConfigForm

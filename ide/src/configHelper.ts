@@ -10,9 +10,16 @@ const kill = require("tree-kill")
 
 const hasher = apiConstructor({ sort: true, coerce: true }).hash
 
+export type RepMap = Record<string, VarRepresentation[]>
+
+export interface RepOption {
+  answer: number
+  description: string
+}
+
 export interface VarRepresentation {
   name: string
-  representations: [{ answer: number; description: string }]
+  representations: RepOption[]
 }
 
 interface ToProcess {
