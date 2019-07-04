@@ -6,7 +6,6 @@ import { Core, TreeContainer, MyMap } from "./components/TreeContainer"
 import { Check } from "./components/Check"
 import { Form, Field, FieldArray, Formik } from "formik"
 import { Caches } from "./components/Caches"
-import SelectWithLabel from "./components/SelectWithLabel"
 import { Cache, VarRepresentation, RepMap } from "../configHelper"
 import "./styles.css"
 

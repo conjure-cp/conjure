@@ -7,7 +7,6 @@ import * as Yup from "yup"
 
 import { maxBy, times } from "lodash"
 import TextWithLabel from "./TextWithLabel"
-import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "./StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "./Check"
