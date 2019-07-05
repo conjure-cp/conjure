@@ -49,7 +49,7 @@ export default class MySelect extends React.Component<Props, State> {
 
     if (this.state.selectedOption) {
       opt = this.state.selectedOption
-    //   console.log("opt", opt)
+      // console.log("opt", opt)
     } else {
       if (this.props.value !== "") {
         if (typeof this.props.value === "string") {
@@ -57,6 +57,8 @@ export default class MySelect extends React.Component<Props, State> {
         } else {
           opt = this.props.value as Opt
         }
+      } else {
+        opt = this.props.options[0]
       }
     }
 

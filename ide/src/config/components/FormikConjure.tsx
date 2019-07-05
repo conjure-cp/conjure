@@ -91,68 +91,6 @@ const validationSchema = Yup.object().shape({
   namedConfigs: Yup.array().of(Yup.object().shape(namedConfigSchema))
 })
 
-const submissionHandler = (values: Values, props: Props, state: State) => {
-  console.log("!!!!!!!!!!!!!")
-  console.log(values)
-
-  let cleaned = values.namedConfigs.map((namedConfig, index) => {
-    const config = namedConfig.config
-
-    let cleaned: any = {}
-
-    Object.keys(config).map((key: string) => {
-      if (config[key] !== "") {
-        cleaned[key] = config[key]
-      }
-      if (typeof config[key] !== "string") {
-        cleaned[key] = config[key].value
-      }
-    })
-
-    if (config.minionSwitches) {
-      cleaned["minionSwitches"] = config.minionSwitches
-    }
-
-    cleaned.answers = config.answers.map((opt: any) => opt.value)
-
-    if (!state.showReps) {
-      delete cleaned["answers"]
-    }
-
-    let newNamedConfig: Cache = {
-      config: cleaned,
-      name:
-        namedConfig.name !== ""
-          ? namedConfig.name
-          : `${new Date()
-              .toUTCString()
-              .replace(/ /g, "_")
-              .replace(/,/g, "_")}_Config${index + 1}`
-    }
-
-    return newNamedConfig
-  })
-
-  console.log(cleaned)
-
-  fetch("http://localhost:4000/config/solve", {
-    method: "post",
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(cleaned)
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log("From formik", data)
-      props.responseHandler(data)
-    })
-  // .catch(error => {
-  //   console.log(error);
-  // });
-}
-
 interface State {
   showReps: boolean
 }
@@ -163,6 +101,67 @@ class ConfigForm extends React.Component<Props, State> {
     this.state = { showReps: false }
   }
 
+  submissionHandler = (values: Values, props: Props, state: State) => {
+    console.log("!!!!!!!!!!!!!")
+    console.log(values)
+
+    let cleaned = values.namedConfigs.map((namedConfig, index) => {
+      const config = namedConfig.config
+
+      let cleaned: any = {}
+
+      Object.keys(config).map((key: string) => {
+        if (config[key] !== "") {
+          cleaned[key] = config[key]
+        }
+      })
+
+      if (config.minionSwitches) {
+        cleaned["minionSwitches"] = config.minionSwitches
+      }
+
+      console.log(config.answers)
+
+      cleaned.answers = config.answers.map((answer: number, i: number) => {
+        let variable = this.props.reps[cleaned.essenceFile][i]
+        return `${variable.name}:${answer}`
+      })
+
+      if (!state.showReps) {
+        delete cleaned["answers"]
+      }
+
+      let newNamedConfig: Cache = {
+        config: cleaned,
+        name:
+          namedConfig.name !== ""
+            ? namedConfig.name
+            : `${new Date()
+                .toUTCString()
+                .replace(/ /g, "_")
+                .replace(/,/g, "_")}_Config${index + 1}`
+      }
+
+      return newNamedConfig
+    })
+
+    console.log(cleaned)
+
+    fetch("http://localhost:4000/config/solve", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(cleaned)
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log("From formik", data)
+        props.responseHandler(data)
+      })
+  }
+
   renderArrayElements = (props: Props, values: Values, setFieldValue: any) => {
     return values.namedConfigs.map((_config, index) => {
       const currentEssenceFile = values.namedConfigs[index].config.essenceFile
@@ -170,6 +169,11 @@ class ConfigForm extends React.Component<Props, State> {
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
       const repSelectBoxes = varReps.map((vR, i) => {
+        values.namedConfigs[index].config.answers[i] =
+          values.namedConfigs[index].config.answers[i] === ""
+            ? vR.representations[0].answer
+            : values.namedConfigs[index].config.answers[i]
+
         const cachedChoice = vR.representations.find(
           x => x.answer === values.namedConfigs[index].config.answers[i]
         )
@@ -189,7 +193,10 @@ class ConfigForm extends React.Component<Props, State> {
             }
             onChange={setFieldValue}
             options={vR.representations.map(o => {
-              return { value: o.answer, label: o.description }
+              return {
+                value: o.answer,
+                label: o.description
+              }
             })}
           />
         )
@@ -515,7 +522,7 @@ class ConfigForm extends React.Component<Props, State> {
       <Formik
         initialValues={{ namedConfigs: list }}
         onSubmit={values => {
-          submissionHandler(values, this.props, this.state)
+          this.submissionHandler(values, this.props, this.state)
         }}
         validationSchema={validationSchema}
         enableReinitialize={true}

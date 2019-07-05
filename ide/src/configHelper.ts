@@ -301,9 +301,11 @@ export default class ConfigureHelper {
     }
 
     if ("answers" in config) {
+      conjureOptions.push("-aai")
       conjureOptions.push("--channelling=no")
-      // conjureOptions.push("-ai")
-      // conjureOptions.push(`--responses=${config.answers.join(",")}`)
+      conjureOptions.push("--smart-filenames")
+      conjureOptions.push("--responses-representation")
+      conjureOptions.push(`${config.answers.join(",")}`)
     }
 
     let savileRowOptions = ["--savilerow-options", '"']
