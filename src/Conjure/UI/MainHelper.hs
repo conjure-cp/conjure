@@ -22,6 +22,7 @@ import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
+import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
@@ -107,6 +108,26 @@ mainWithArgs Modelling{..} = do
                                              , "Expected a comma separated list of integers."
                                              , "But got:" <+> pretty responses
                                              ]
+        responsesRepresentationList <- do
+            if null responsesRepresentation
+                then return Nothing
+                else do
+                    let parts =
+                            [ case splitOn ":" pair of
+                                [nm, val] ->
+                                    case readMay val of
+                                        Just i -> Just (Name (stringToText nm), i)
+                                        Nothing -> Nothing
+                                _ -> Nothing
+                            | pair <- splitOn "," responsesRepresentation
+                            ]
+                    let partsJust = catMaybes parts
+                    if length parts == length partsJust
+                        then return (Just partsJust)
+                        else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
+                                             , "Expected a comma separated list of variable name : integer pairs."
+                                             , "But got:" <+> pretty responsesRepresentation
+                                             ]
 
         return Config.Config
             { Config.outputDirectory            = outputDirectory
@@ -132,6 +153,7 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             , Config.responses                  = responsesList
+            , Config.responsesRepresentation    = responsesRepresentationList
             , Config.estimateNumberOfModels     = estimateNumberOfModels
             }
     runNameGen model $ outputModels config model

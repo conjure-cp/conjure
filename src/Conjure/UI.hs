@@ -23,6 +23,7 @@ data UI
         , numberingStart             :: Int
         , smartFilenames             :: Bool
         , responses                  :: String
+        , responsesRepresentation    :: String
         , estimateNumberOfModels     :: Bool                -- if set Conjure will calculate
                                                             -- a lower bound on the number of models,
                                                             -- instead of running the usual modelling mode
@@ -92,6 +93,7 @@ data UI
         , numberingStart             :: Int
         , smartFilenames             :: Bool
         , responses                  :: String
+        , responsesRepresentation    :: String
         , solutionsInOneFile         :: Bool
         -- flags related to logging
         , logLevel                   :: LogLevel
@@ -251,6 +253,16 @@ ui = modes
             &= help "A comma separated list of integers.\n\
                     \If provided, these will be used as the answers during \
                     \interactive model generation instead of prompting the user."
+        , responsesRepresentation
+            = ""
+            &= name "responses-representation"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "A comma separated list of variable name : integer pairs.\n\
+                    \If provided, these will be used as the answers during \
+                    \interactive model generation instead of prompting the user \
+                    \for the variable representation questions.\n\
+                    \See --dump-representations for a list of available representation options."
         , estimateNumberOfModels
             = False
             &= name "estimate-number-of-models"
@@ -649,6 +661,16 @@ ui = modes
             &= help "A comma separated list of integers.\n\
                     \If provided, these will be used as the answers during \
                     \interactive model generation instead of prompting the user."
+        , responsesRepresentation
+            = ""
+            &= name "responses-representation"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "A comma separated list of variable name : integer pairs.\n\
+                    \If provided, these will be used as the answers during \
+                    \interactive model generation instead of prompting the user \
+                    \for the variable representation questions.\n\
+                    \See --dump-representations for a list of available representation options."
         , solutionsInOneFile
             = False
             &= name "solutions-in-one-file"

@@ -129,6 +129,7 @@ outputModels ::
 outputModels config model = do
 
     liftIO $ writeIORef recordedResponses (responses config)
+    liftIO $ writeIORef recordedResponsesRepresentation (responsesRepresentation config)
 
     -- Savile Row does not support ' characters in identifiers
     -- We could implement a workaround where we insert a marker (like __PRIME__) for each ' character
@@ -471,7 +472,7 @@ strategyToDriver config questions = do
                            , logLevel config == LogDebugVerbose || i `elem` [1,3,5,10,25]
                            ]
             ]
-    pickedQs <- executeStrategy optionsQ (strategyQ config)
+    pickedQs <- executeStrategy (bug "strategyToDriver no Question") optionsQ (strategyQ config)
     fmap concat $ forM pickedQs $ \ (pickedQNumber, pickedQDescr, pickedQ) -> do
         let optionsA =
                 [ (doc, a)
@@ -485,11 +486,11 @@ strategyToDriver config questions = do
                 ]
         let strategyA' = case qType pickedQ of
                 ChooseRepr            -> representations
-                ChooseRepr_Find       -> representationsFinds
-                ChooseRepr_Given      -> representationsGivens
+                ChooseRepr_Find{}     -> representationsFinds
+                ChooseRepr_Given{}    -> representationsGivens
                 ChooseRepr_Auxiliary  -> representationsAuxiliaries
                 ChooseRepr_Quantified -> representationsQuantifieds
-                ChooseRepr_Cut        -> representationsCuts
+                ChooseRepr_Cut{}      -> representationsCuts
                 ExpressionRefinement  -> strategyA
         pickedAs <- executeAnswerStrategy config pickedQ optionsA (strategyA' config)
         return
@@ -510,13 +511,17 @@ recordedResponses :: IORef (Maybe [Int])
 {-# NOINLINE recordedResponses #-}
 recordedResponses = unsafePerformIO (newIORef Nothing)
 
+recordedResponsesRepresentation :: IORef (Maybe [(Name, Int)])
+{-# NOINLINE recordedResponsesRepresentation #-}
+recordedResponsesRepresentation = unsafePerformIO (newIORef Nothing)
 
-executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
-executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
-executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
+
+executeStrategy :: (MonadIO m, MonadLog m) => Question -> [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
+executeStrategy _ [] _ = bug "executeStrategy: nothing to choose from"
+executeStrategy _ [(doc, option)] (viewAuto -> (_, True)) = do
     logDebug ("Picking the only option:" <+> doc)
     return [(1, doc, option)]
-executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
+executeStrategy question options@((doc, option):_) (viewAuto -> (strategy, _)) =
     case strategy of
         Auto _      -> bug "executeStrategy: Auto"
         PickFirst   -> do
@@ -528,6 +533,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
             putStrLn $ render 80 $ vcat (map fst options)
+            recordedResponsesRepresentation' <- readIORef recordedResponsesRepresentation
             let
                 nextRecordedResponse :: IO (Maybe Int)
                 nextRecordedResponse = do
@@ -538,10 +544,25 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                             return (Just next)
                         _ -> return Nothing
 
+                nextRecordedResponseRepresentation :: Name -> Maybe Int
+                nextRecordedResponseRepresentation nm =
+                    case recordedResponsesRepresentation' of
+                        Nothing -> Nothing
+                        Just mres -> lookup nm mres
+
                 pickIndex :: IO Int
                 pickIndex = do
-                    mrecorded <- nextRecordedResponse
-                    case mrecorded of
+                    let useStoredReprResponse =
+                            case qType question of
+                                ChooseRepr_Find nm -> Just nm
+                                ChooseRepr_Given nm -> Just nm
+                                ChooseRepr_Cut nm -> Just nm
+                                _ -> Nothing
+                    let storedReprResponse =
+                            case useStoredReprResponse of
+                                Just nm -> nextRecordedResponseRepresentation nm
+                                Nothing -> Nothing
+                    case storedReprResponse of
                         Just recorded -> do
                             putStrLn ("Response: " ++ show recorded)
                             unless (recorded >= 1 && recorded <= length options) $
@@ -551,18 +572,29 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                                                 ]
                             return recorded
                         Nothing -> do
-                            putStr "Pick option: "
-                            hFlush stdout
-                            line <- getLine
-                            case (line, readMay line) of
-                                ("", _) -> return 1
-                                (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
-                                (_, Nothing) -> do
-                                    putStrLn "Enter an integer value."
-                                    pickIndex
-                                (_, Just _) -> do
-                                    print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
-                                    pickIndex
+                            mrecorded <- nextRecordedResponse
+                            case mrecorded of
+                                Just recorded -> do
+                                    putStrLn ("Response: " ++ show recorded)
+                                    unless (recorded >= 1 && recorded <= length options) $
+                                        userErr1 $ vcat [ "Recorded response out of range."
+                                                        , nest 4 $ "Expected a value between 1 and" <+> pretty (length options)
+                                                        , nest 4 $ "But got: " <+> pretty recorded
+                                                        ]
+                                    return recorded
+                                Nothing -> do
+                                    putStr "Pick option: "
+                                    hFlush stdout
+                                    line <- getLine
+                                    case (line, readMay line) of
+                                        ("", _) -> return 1
+                                        (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
+                                        (_, Nothing) -> do
+                                            putStrLn "Enter an integer value."
+                                            pickIndex
+                                        (_, Just _) -> do
+                                            print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
+                                            pickIndex
 
             pickedIndex <- pickIndex
             let (pickedDescr, picked) = at options (pickedIndex - 1)
@@ -592,11 +624,11 @@ executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
             return [(n, doc, c')]
         FollowLog -> logFollow config question options
         AtRandom -> do
-          [(n, doc, ans0)] <- executeStrategy options st
+          [(n, doc, ans0)] <- executeStrategy question options st
           ans1             <- storeChoice config question ans0
           return [(n, doc, ans1)]
         _  -> do
-          cs <- executeStrategy options st
+          cs <- executeStrategy question options st
           forM cs $ \ (n, d, c) -> do
               c' <- storeChoice config question c
               return (n, d, c')
@@ -1578,9 +1610,9 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         let options =
                 [ RuleResult { ruleResultDescr = msg
                              , ruleResultType = case forg of
-                                    Find    -> ChooseRepr_Find
-                                    Given   -> ChooseRepr_Given
-                                    CutFind -> ChooseRepr_Cut
+                                    Find    -> ChooseRepr_Find nm
+                                    Given   -> ChooseRepr_Given nm
+                                    CutFind -> ChooseRepr_Cut nm
                                     _       -> bug "rule_ChooseRepr ruleResultType"
                              , ruleResult = return out
                              , ruleResultHook = Just hook
