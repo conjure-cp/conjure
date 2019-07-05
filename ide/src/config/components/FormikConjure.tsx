@@ -135,7 +135,7 @@ const intOrNothing = Yup.mixed().test(
   }
 )
 
-const schema = {
+const configSchema = {
   conjureTime: intOrNothing,
   srTime: intOrNothing,
   minionTime: intOrNothing,
@@ -145,8 +145,12 @@ const schema = {
   solLimit: intOrNothing
 }
 
+const namedConfigSchema = {
+  config: Yup.object().shape(configSchema)
+}
+
 const validationSchema = Yup.object().shape({
-  configs: Yup.array().of(Yup.object().shape(schema))
+  namedConfigs: Yup.array().of(Yup.object().shape(namedConfigSchema))
 })
 
 const submissionHandler = (values: Values, props: Props, state: State) => {
