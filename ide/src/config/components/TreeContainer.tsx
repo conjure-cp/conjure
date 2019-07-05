@@ -184,8 +184,15 @@ export class TreeContainer extends React.Component<Props, State> {
         this.state.selected
       )
       if (currentIndex + 1 < this.props.core.solAncestorIds.length) {
-        this.setState({
-          selected: this.props.core.solAncestorIds[currentIndex + 1]
+        this.setState((prevState: State) => {
+          const newMap = showAllAncestors(
+            prevState,
+            this.props.core.solAncestorIds[currentIndex + 1]
+          )
+          return {
+            selected: this.props.core.solAncestorIds[currentIndex + 1],
+            id2Node: newMap
+          }
         })
       }
       return
@@ -197,7 +204,13 @@ export class TreeContainer extends React.Component<Props, State> {
       })
     )!
 
-    this.setState({ selected: nextId })
+    this.setState((prevState: State) => {
+      const newMap = showAllAncestors(prevState, nextId)
+      return {
+        selected: nextId,
+        id2Node: newMap
+      }
+    })
   }
 
   prevSolBranch = () => {
@@ -210,8 +223,15 @@ export class TreeContainer extends React.Component<Props, State> {
         this.state.selected
       )
       if (currentIndex - 1 >= 0) {
-        this.setState({
-          selected: this.props.core.solAncestorIds[currentIndex - 1]
+        this.setState((prevState: State) => {
+          const newMap = showAllAncestors(
+            prevState,
+            this.props.core.solAncestorIds[currentIndex - 1]
+          )
+          return {
+            selected: this.props.core.solAncestorIds[currentIndex - 1],
+            id2Node: newMap
+          }
         })
       }
       return
@@ -223,7 +243,14 @@ export class TreeContainer extends React.Component<Props, State> {
       })
     )!
 
-    this.setState({ selected: nextId })
+    this.setState((prevState: State) => {
+      const newMap = showAllAncestors(prevState, nextId)
+      return {
+        selected: nextId,
+        id2Node: newMap
+      }
+    })
+    // this.setState({ selected: nextId })
   }
 
   goToPreviousHandler = () => {

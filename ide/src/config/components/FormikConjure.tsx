@@ -11,6 +11,7 @@ import StageHeader from "./StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "./Check"
 import MySelect from "./MySelect"
+import NewSelect from "./NewSelect"
 import { Cache, VarRepresentation, RepMap } from "../../configHelper"
 import { reporters } from "mocha"
 
@@ -71,7 +72,7 @@ const makeNamedConfig = (props: Props, index: number, reps: RepMap): Cache => {
 }
 
 const makeEmptyConfig = (props: Props, index: number, reps: RepMap): Config => {
-  // console.log("selected cache args!", props.selectedCaches);
+  // console.log("selected cache args!", props.selectedCaches)
 
   const maxNumberOfQuestions =
     Object.values(reps).length > 0
@@ -146,7 +147,11 @@ const configSchema = {
 }
 
 const namedConfigSchema = {
-  config: Yup.object().shape(configSchema)
+  config: Yup.object().shape(configSchema),
+  name: Yup.string().matches(
+    /^$|^[a-z_:0-9]+$/i,
+    "Name nust be alphanumeric(underscore/colons allowed), leave blank for timestamp"
+  )
 }
 
 const validationSchema = Yup.object().shape({
@@ -171,8 +176,8 @@ const submissionHandler = (values: Values, props: Props, state: State) => {
       }
     })
 
-    if (!cleaned.minionSwitches) {
-      delete cleaned["minionSwitches"]
+    if (config.minionSwitches) {
+      cleaned["minionSwitches"] = config.minionSwitches
     }
 
     cleaned.answers = config.answers.map((opt: any) => opt.value)
@@ -264,6 +269,8 @@ class ConfigForm extends React.Component<Props, State> {
         })
       // : []
 
+      // console.log(values.namedConfigs[0])
+
       return (
         <div className="col" key={index}>
           <StageHeader
@@ -282,19 +289,21 @@ class ConfigForm extends React.Component<Props, State> {
               caches={props.caches}
               onChangeHandler={props.cacheChangeHandler}
             />
-            <MySelect
+            <NewSelect
               name={`namedConfigs[${index}].config.essenceFile`}
-              title="Model"
+              value={values.namedConfigs[index].config.essenceFile}
               onChange={setFieldValue}
+              title="Model"
               options={props.essenceFiles.map(file => {
                 return { value: file, label: file }
               })}
             />
 
-            <MySelect
+            <NewSelect
               name={`namedConfigs[${index}].config.paramFile`}
-              title="Param"
+              value={values.namedConfigs[index].config.paramFile}
               onChange={setFieldValue}
+              title="Param"
               options={props.paramFiles.map(file => {
                 return { value: file, label: file }
               })}
@@ -312,10 +321,11 @@ class ConfigForm extends React.Component<Props, State> {
               />
               <>
                 {!this.state.showReps && (
-                  <MySelect
+                  <NewSelect
                     name={`namedConfigs[${index}].config.strategy`}
-                    title="Strategy"
+                    value={values.namedConfigs[index].config.strategy}
                     onChange={setFieldValue}
+                    title="Strategy"
                     options={[
                       { value: "", label: "Default" },
                       { value: "c", label: "compact" },
@@ -343,11 +353,11 @@ class ConfigForm extends React.Component<Props, State> {
               id={`sr${index + 1}`}
               isCollapsed={true}
             >
-              <MySelect
+              <NewSelect
                 name={`namedConfigs[${index}].config.optimisation`}
-                // value={values.namedConfigs[index].config.optimisation}
-                title="Optimisation"
+                value={values.namedConfigs[index].config.optimisation}
                 onChange={setFieldValue}
+                title="Optimisation"
                 options={[
                   { value: "", label: "Default" },
                   { value: "-O0", label: "0" },
@@ -357,10 +367,11 @@ class ConfigForm extends React.Component<Props, State> {
                 ]}
               />
 
-              <MySelect
+              <NewSelect
                 name={`namedConfigs[${index}].config.symmetry`}
-                title="Symmetry Breaking"
+                value={values.namedConfigs[index].config.symmetry}
                 onChange={setFieldValue}
+                title="Symmetry Breaking"
                 options={[
                   { value: "", label: "Default" },
                   { value: "-S0", label: "0" },
@@ -368,10 +379,12 @@ class ConfigForm extends React.Component<Props, State> {
                   { value: "-S2", label: "2" }
                 ]}
               />
-              <MySelect
+
+              <NewSelect
                 name={`namedConfigs[${index}].config.translation`}
-                title="Translation"
+                value={values.namedConfigs[index].config.translation}
                 onChange={setFieldValue}
+                title="Translation"
                 options={[
                   { value: "", label: "Default" },
                   { value: "-no-cse", label: "No CSE" },
@@ -411,6 +424,7 @@ class ConfigForm extends React.Component<Props, State> {
                 label="CNF clause limit"
               />
             </StageHeader>
+
             <StageHeader
               title="Minion"
               id={`minion${index + 1}`}
@@ -441,10 +455,12 @@ class ConfigForm extends React.Component<Props, State> {
                 component={TextWithLabel}
                 label="CPU Limit"
               />
-              <MySelect
+
+              <NewSelect
                 name={`namedConfigs[${index}].config.preprocessing`}
-                title="Preprocessing"
+                value={values.namedConfigs[index].config.preprocessing}
                 onChange={setFieldValue}
+                title="Preprocessing"
                 options={[
                   { value: "", label: "Default" },
                   { value: "GAC", label: "GAC" },
@@ -454,10 +470,11 @@ class ConfigForm extends React.Component<Props, State> {
                   { value: "SSAC", label: "SSAC" }
                 ]}
               />
-              <MySelect
+              <NewSelect
                 name={`namedConfigs[${index}].config.consistency`}
-                title="Consistency"
+                value={values.namedConfigs[index].config.consistency}
                 onChange={setFieldValue}
+                title="Consistency"
                 options={[
                   { value: "", label: "Default" },
                   { value: "GAC", label: "GAC" },
