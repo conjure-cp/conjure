@@ -15,6 +15,7 @@ import NewSelect from "./NewSelect"
 import { Cache, VarRepresentation, RepMap } from "../../configHelper"
 import { reporters } from "mocha"
 import { prependListener } from "cluster"
+import { type } from "os"
 
 type RepChoices = Record<string, string>
 
@@ -122,11 +123,15 @@ class ConfigForm extends React.Component<Props, State> {
 
       console.log(config.answers)
 
-      cleaned.answers = config.answers.map((answer: number, i: number) => {
-        let variable = this.props.reps[cleaned.essenceFile][i]
-        return `${variable.name}:${answer}`
-      })
+      cleaned.answers = config.answers.map(
+        (answer: number | string, i: number) => {
+          let variable = this.props.reps[cleaned.essenceFile][i]
+          return `${variable.name}:${answer !== "" ? answer : 1}`
+        }
+      )
 
+      // cleaned.answers = cleaned.answers.filter((x: any) => x !== undefined)
+      //  || cleaned.answers.length === 0
       if (!state.showReps) {
         delete cleaned["answers"]
       }
@@ -169,10 +174,10 @@ class ConfigForm extends React.Component<Props, State> {
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
       const repSelectBoxes = varReps.map((vR, i) => {
-        values.namedConfigs[index].config.answers[i] =
-          values.namedConfigs[index].config.answers[i] === ""
-            ? vR.representations[0].answer
-            : values.namedConfigs[index].config.answers[i]
+        // values.namedConfigs[index].config.answers[i] =
+        //   values.namedConfigs[index].config.answers[i] === ""
+        //     ? vR.representations[0].answer
+        //     : values.namedConfigs[index].config.answers[i]
 
         const cachedChoice = vR.representations.find(
           x => x.answer === values.namedConfigs[index].config.answers[i]

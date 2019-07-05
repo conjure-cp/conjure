@@ -24,39 +24,39 @@ proc prettifyMinionStoreDump*(dump: string): string =
     result = result[0..result.len()-3] & ")"
 
 
-proc prettifyIntSet*(i: IntSet): string =
-    ## Returns a set as a range in the same format as essence
+# proc prettifyIntSet*(i: IntSet): string =
+#     ## Returns a set as a range in the same format as essence
 
-    result = "int("
+#     result = "int("
 
-    var list = toSeq(i.items())
+#     var list = toSeq(i.items())
 
-    if list.len() == 0:
-        return "int()"
+#     if list.len() == 0:
+#         return "int()"
 
-    list.sort(cmp)
+#     list.sort(cmp)
 
-    var index = 0
-    var prevNum = $list[0]
+#     var index = 0
+#     var prevNum = $list[0]
 
-    result &= $list[0]
+#     result &= $list[0]
 
-    while (index < list.len() - 1):
+#     while (index < list.len() - 1):
 
-        while (list[index + 1] - list[index] == 1):
-            index.inc()
-            if (index == list.len() - 1):
-                break
+#         while (list[index + 1] - list[index] == 1):
+#             index.inc()
+#             if (index == list.len() - 1):
+#                 break
         
-        if ($list[index] != prevNum):
-            result &= ".." & $list[index]
-            prevNum = $list[index]
+#         if ($list[index] != prevNum):
+#             result &= ".." & $list[index]
+#             prevNum = $list[index]
 
-        index.inc()
+#         index.inc()
 
-        if (index <= list.len()-1):
-            result &= ","
-            result &= list[index]
-            prevNum = $list[index]
+#         if (index <= list.len()-1):
+#             result &= ","
+#             result &= list[index]
+#             prevNum = $list[index]
     
-    result &= ")"
+#     result &= ")"

@@ -87,6 +87,8 @@ class ConfigService {
   @Path("/solve")
   @POST
   async startSearch(list: Cache[]) {
+    console.log("SOLLLLLLLLLLLLLLLLLLLLVE REQUEST")
+
     if (
       list.length > 1 &&
       JSON.stringify(list[0]) === JSON.stringify(list[1])
@@ -110,17 +112,29 @@ class ConfigService {
           return ConfigHelper.makePromise(needToGenerate, progress, token)
         }
       )
-      .then(async () => {
-        const trees = needToGenerate.concat(loadFromCache)
+      .then(() => {
+        return vscode.window.withProgress(
+          {
+            cancellable: false,
+            location: vscode.ProgressLocation.Notification,
+            title: "Processing Tree"
+          },
+          async () => {
+            const trees = needToGenerate.concat(loadFromCache)
 
-        const fullPath = path.join(ConfigHelper.cacheFolderPath, trees[0].name)
+            const fullPath = path.join(
+              ConfigHelper.cacheFolderPath,
+              trees[0].name
+            )
 
-        return await fetch(`http://localhost:5000/init/${fullPath}`).then(
-          (response: any) =>
-            response.json().then((json: any) => {
-              json["core"]["id"] = trees[0].hash
-              return json
-            })
+            return await fetch(`http://localhost:5000/init/${fullPath}`).then(
+              (response: any) =>
+                response.json().then((json: any) => {
+                  json["core"]["id"] = trees[0].hash
+                  return json
+                })
+            )
+          }
         )
       })
   }

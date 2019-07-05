@@ -11,8 +11,8 @@ proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPrett
     if wantPretty:
         var pretty = ""
 
-        if ("_" in branchName):
-            pretty = getPrettyBranchingCondition(vars, branchName, isLeft, value)
+        # if ("_" in branchName):
+        #     pretty = getPrettyBranchingCondition(vars, branchName, isLeft, value)
 
         if  pretty != "":
             return pretty
