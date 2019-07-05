@@ -61,6 +61,7 @@ export interface State {
   loadDepth: number
   reverse: boolean
   totalNodeCount: number
+  duration: number
 }
 
 const makeState = (core: Core): State => {
@@ -120,7 +121,8 @@ const makeState = (core: Core): State => {
     solNodeIds: solNodeIds,
     loadDepth: 1,
     reverse: false,
-    totalNodeCount: last(core.solAncestorIds)! + 1
+    totalNodeCount: last(core.solAncestorIds)! + 1,
+    duration: 500
   }
 
   return state
@@ -453,7 +455,6 @@ export class TreeContainer extends React.Component<Props, State> {
   }
 
   play = async () => {
-    const interval = 400
     while (this.state.playing) {
       if (
         (this.state.selected === last(this.props.core.solAncestorIds)! &&
@@ -467,7 +468,7 @@ export class TreeContainer extends React.Component<Props, State> {
       } else {
         this.goLeft()
       }
-      await this.sleep(interval)
+      await this.sleep(this.state.duration)
     }
     this.setState({ playing: false })
   }
@@ -516,8 +517,19 @@ export class TreeContainer extends React.Component<Props, State> {
             <label className="col-3">Lazy loading depth:</label>
             <div className="slider col-3">
               <MySlider
+                domain={[1, 5]}
                 sliderChangeHandler={(value: number) => {
                   this.setState({ loadDepth: value })
+                }}
+              />
+            </div>
+
+            <label className="col-3">Animation duration (ms):</label>
+            <div className="slider col-3">
+              <MySlider
+                domain={[0, 4000]}
+                sliderChangeHandler={(value: number) => {
+                  this.setState({ duration: value })
                 }}
               />
             </div>
@@ -555,7 +567,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 linScale={this.state.linScale}
                 minsize={this.state.minsize}
                 nodeClickHandler={this.nodeClickHandler}
-                duration={500}
+                duration={this.state.duration}
                 width={1200}
                 height={500}
               />

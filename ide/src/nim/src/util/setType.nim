@@ -127,8 +127,8 @@ proc `$`*(s: Set): string =
             result &= indent & $child & "\n"
 
 
-proc getPrettyIncluded*(s: Set): string =
-    return prettifyIntSet(s.included)
+# proc getPrettyIncluded*(s: Set): string =
+#     return prettifyIntSet(s.included)
 
-proc getPrettyNotExcluded*(s: Set): string =
-    return prettifyIntSet(s.notExcluded)
+# proc getPrettyNotExcluded*(s: Set): string =
+#     return prettifyIntSet(s.notExcluded)

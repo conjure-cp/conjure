@@ -70,13 +70,14 @@ export const railStyle = {
 
 interface Props {
   sliderChangeHandler: (val: number) => void
+  domain: number[]
 }
 
 export function MySlider(props: Props) {
   return (
     <Slider
       rootStyle={sliderStyle}
-      domain={[1, 5]}
+      domain={props.domain}
       step={1}
       mode={2}
       values={[1]}

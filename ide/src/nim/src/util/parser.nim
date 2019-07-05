@@ -23,8 +23,8 @@ proc parseEprime*(db: DbConn, eprimeFilePath: string): Table[string, Variable] =
         if key[1].hasKey("DomainInt"):
             varLookup[name] = newVariable(name)
 
-        if key[1].hasKey("DomainSet"):
-            varLookup[name] = parseSetEprime(db, key[1]["DomainSet"], name, 0)
+        # if key[1].hasKey("DomainSet"):
+        #     varLookup[name] = parseSetEprime(db, key[1]["DomainSet"], name, 0)
 
     return varLookup
 

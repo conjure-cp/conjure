@@ -21,8 +21,8 @@ proc setToTreeView*(s: Set): TreeViewNode =
     let cardinality = TreeViewNode(name: "Cardinality", children: @[
             TreeViewNode(name: s.getCardinality())])
         
-    let included = TreeViewNode(name: "Included", children: @[TreeViewNode(  name: ($s.getPrettyIncluded()))])
-    let notExcluded = TreeViewNode(name: "Not excluded", children: @[TreeViewNode(  name: ($s.getPrettyNotExcluded()))])
+    let included = TreeViewNode(name: "Included", children: @[TreeViewNode(  name: "")])
+    let notExcluded = TreeViewNode(name: "Not excluded", children: @[TreeViewNode(  name: "")])
 
     let kids = TreeViewNode(name: "Children", children: @[])
 
@@ -85,8 +85,8 @@ proc setToJson*(s: Set, nodeId: string, wantCollapsedChildren: bool): JsonNode =
     json["name"] = %s.name
     json["Cardinality"] = %s.getCardinality()
     if (s.inner == nil):
-        json["Included"] = %s.getPrettyIncluded()
-        json["Not excluded"] = %s.getPrettyNotExcluded()
+        json["Included"] = %*{}
+        json["Not excluded"] = %*{}
     else:
         if wantCollapsedChildren:
             json["Children"] = getCollapsedSetChildren(s)
