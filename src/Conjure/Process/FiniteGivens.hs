@@ -380,7 +380,7 @@ mkFiniteInner (DomainInt t []) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt 1" <+-> fsep (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (fr, ConstantInt t (minimum ints))
+                return [ (fr, ConstantInt t (minimum0 ints))
                        , (to, ConstantInt t (maximum0 ints))
                        ]
         )
@@ -402,7 +402,7 @@ mkFiniteInner (DomainInt t [RangeUpperBounded upp]) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt 3" <+-> fsep (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (new, ConstantInt t (minimum ints)) ]
+                return [ (new, ConstantInt t (minimum0 ints)) ]
         )
 mkFiniteInner (DomainTuple inners) = do
     mids <- mapM mkFiniteInner inners
@@ -621,7 +621,12 @@ mkFiniteInner (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) = do
 mkFiniteInner d = return (d, [], const (return []))
 
 
--- specialised the type for maximum0, to avoid possible bugs
+-- specialised the type for minimum0 and maximum0, to avoid possible bugs
 -- this function is always intended to be used with Integers
+minimum0 :: [Integer] -> Integer
+minimum0 [] = 0
+minimum0 xs = minimum xs
+
 maximum0 :: [Integer] -> Integer
-maximum0 xs = maximum (0:xs)
+maximum0 [] = 0
+maximum0 xs = maximum xs
