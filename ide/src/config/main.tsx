@@ -8,6 +8,7 @@ import { Form, Field, FieldArray, Formik } from "formik"
 import { Caches } from "./components/Caches"
 import { Cache, VarRepresentation, RepMap } from "../configHelper"
 import "./styles.css"
+import { cloneDeep, last, min, max } from "lodash"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
@@ -56,7 +57,7 @@ class F extends React.Component<any, State> {
 
   cacheChangeHandler = (cache: Cache, index: number) => {
     this.setState((prevState: State) => {
-      let copy = prevState.selectedCaches
+      let copy = cloneDeep(prevState.selectedCaches)
       if (!copy) {
         return { selectedCaches: [{ ...cache }, undefined] }
       }

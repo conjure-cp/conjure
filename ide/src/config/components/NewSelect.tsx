@@ -13,7 +13,7 @@ interface Props {
   options: Opt[]
   title: string
   name: string
-  value: string
+  value: string | Opt
 }
 
 interface State {
@@ -30,9 +30,15 @@ export default class MySelect extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (this.props.value !== prevProps.value) {
-      this.setState({
-        selectedOption: { label: this.props.value, value: this.props.value }
-      })
+      if (typeof this.props.value === "string") {
+        this.setState({
+          selectedOption: { label: this.props.value, value: this.props.value }
+        })
+      } else {
+        this.setState({
+          selectedOption: this.props.value
+        })
+      }
     }
   }
 
@@ -47,7 +53,9 @@ export default class MySelect extends React.Component<Props, State> {
           options={this.props.options}
           value={
             this.props.value !== "" && !this.state.selectedOption
-              ? { label: this.props.value, value: this.props.value }
+              ? typeof this.props.value === "string"
+                ? { label: this.props.value, value: this.props.value }
+                : this.props.value
               : this.state.selectedOption
           }
           onChange={(option: any) => {

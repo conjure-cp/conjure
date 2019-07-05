@@ -301,9 +301,9 @@ export default class ConfigureHelper {
     }
 
     if ("answers" in config) {
-      conjureOptions.push("-ai")
       conjureOptions.push("--channelling=no")
-      conjureOptions.push(`--responses=${config.answers.join(",")}`)
+      // conjureOptions.push("-ai")
+      // conjureOptions.push(`--responses=${config.answers.join(",")}`)
     }
 
     let savileRowOptions = ["--savilerow-options", '"']

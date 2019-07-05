@@ -14,6 +14,7 @@ import MySelect from "./MySelect"
 import NewSelect from "./NewSelect"
 import { Cache, VarRepresentation, RepMap } from "../../configHelper"
 import { reporters } from "mocha"
+import { prependListener } from "cluster"
 
 type RepChoices = Record<string, string>
 
@@ -50,74 +51,6 @@ interface Config {
   consistency: string
   preprocessing: string
   [key: string]: string | number | string[]
-}
-
-const makeNamedConfig = (props: Props, index: number, reps: RepMap): Cache => {
-  const getName = (caches?: (Cache | undefined)[]) => {
-    if (!caches) {
-      return ""
-    }
-    if (!caches[index]) {
-      return ""
-    }
-    return caches[index]!.name
-  }
-
-  let name = getName(props.selectedCaches)
-
-  return {
-    config: makeEmptyConfig(props, index, reps),
-    name: name
-  }
-}
-
-const makeEmptyConfig = (props: Props, index: number, reps: RepMap): Config => {
-  // console.log("selected cache args!", props.selectedCaches)
-
-  const maxNumberOfQuestions =
-    Object.values(reps).length > 0
-      ? maxBy(Object.values(reps), x => x.length)!.length
-      : 0
-
-  let initialConfig: Config = {
-    paramFile: props.paramFiles[0],
-    essenceFile: props.essenceFiles[0],
-    conjureTime: "",
-    strategy: "",
-    optimisation: "",
-    symmetry: "",
-    translation: "",
-    srTime: "",
-    minionTime: "",
-    cnfLimit: "",
-    minionSwitches: [],
-    nodeLimit: "",
-    cpuLimit: "",
-    solLimit: "",
-    consistency: "",
-    preprocessing: "",
-    answers: times(maxNumberOfQuestions, () => "")
-  }
-
-  if (!props.selectedCaches || !props.selectedCaches[index]) {
-    return initialConfig
-  }
-  return overwriteWithCachedOptions(props.selectedCaches[index]!, initialConfig)
-}
-
-const overwriteWithCachedOptions = (
-  selectedCache: Cache,
-  initialConfig: Config
-): Config => {
-  // console.log("selected Cache ", selectedCache);
-
-  Object.keys(initialConfig).map(key => {
-    if (key in selectedCache.config) {
-      initialConfig[key] = selectedCache.config[key]
-    }
-  })
-
-  return initialConfig
 }
 
 const positiveInt = Yup.number()
@@ -230,12 +163,7 @@ class ConfigForm extends React.Component<Props, State> {
     this.state = { showReps: false }
   }
 
-  renderArrayElements = (
-    props: Props,
-    values: Values,
-    setFieldValue: any,
-    setFieldTouched: any
-  ) => {
+  renderArrayElements = (props: Props, values: Values, setFieldValue: any) => {
     return values.namedConfigs.map((_config, index) => {
       const currentEssenceFile = values.namedConfigs[index].config.essenceFile
 
@@ -246,30 +174,47 @@ class ConfigForm extends React.Component<Props, State> {
       const repSelectBoxes =
         //   varReps && this.state.showReps ?
         varReps.map((vR, i) => {
-          values.namedConfigs[index].config.answers[i] =
-            values.namedConfigs[index].config.answers[i] === ""
-              ? {
-                  value: vR.representations[0].answer,
-                  label: vR.representations[0].description
-                }
-              : values.namedConfigs[index].config.answers[i]
+          // values.namedConfigs[index].config.answers[i] =
+          //   values.namedConfigs[index].config.answers[i] === ""
+          //     ? {
+          //         value: vR.representations[0].answer,
+          //         label: vR.representations[0].description
+          //       }
+          //     : values.namedConfigs[index].config.answers[i]
+          const cachedChoice = vR.representations.find(
+            x => x.answer === values.namedConfigs[index].config.answers[i]
+          )!
 
           return (
-            <MySelect
+            <NewSelect
               name={`namedConfigs[${index}].config.answers[${i}]`}
               key={vR.name}
               title={vR.name}
-              // value={values.namedConfigs[index].config.answers[i]}
+              value={
+                cachedChoice
+                  ? {
+                      label: cachedChoice.description,
+                      value: cachedChoice.answer
+                    }
+                  : ""
+              }
               onChange={setFieldValue}
               options={vR.representations.map(o => {
                 return { value: o.answer, label: o.description }
               })}
             />
+            // <MySelect
+            //   name={`namedConfigs[${index}].config.answers[${i}]`}
+            //   key={vR.name}
+            //   title={vR.name}
+            //   // value={values.namedConfigs[index].config.answers[i]}
+            //   onChange={setFieldValue}
+            //   options={vR.representations.map(o => {
+            //     return { value: o.answer, label: o.description }
+            //   })}
+            // />
           )
         })
-      // : []
-
-      // console.log(values.namedConfigs[0])
 
       return (
         <div className="col" key={index}>
@@ -490,14 +435,102 @@ class ConfigForm extends React.Component<Props, State> {
       )
     })
   }
+  makeNamedConfig = (props: Props, index: number, reps: RepMap): Cache => {
+    const getName = (caches?: (Cache | undefined)[]) => {
+      if (!caches) {
+        return ""
+      }
+      if (!caches[index]) {
+        return ""
+      }
+      return caches[index]!.name
+    }
+
+    let name = getName(props.selectedCaches)
+
+    return {
+      config: this.makeEmptyConfig(props, index, reps),
+      name: name
+    }
+  }
+  makeEmptyConfig = (props: Props, index: number, reps: RepMap): Config => {
+    // console.log("selected cache args!", props.selectedCaches)
+
+    const maxNumberOfQuestions =
+      Object.values(reps).length > 0
+        ? maxBy(Object.values(reps), x => x.length)!.length
+        : 0
+
+    let initialConfig: Config = {
+      paramFile: props.paramFiles[0],
+      essenceFile: props.essenceFiles[0],
+      conjureTime: "",
+      strategy: "",
+      optimisation: "",
+      symmetry: "",
+      translation: "",
+      srTime: "",
+      minionTime: "",
+      cnfLimit: "",
+      minionSwitches: [],
+      nodeLimit: "",
+      cpuLimit: "",
+      solLimit: "",
+      consistency: "",
+      preprocessing: "",
+      answers: times(maxNumberOfQuestions, () => "")
+    }
+
+    if (!props.selectedCaches || !props.selectedCaches[index]) {
+      return initialConfig
+    }
+    return this.overwriteWithCachedOptions(
+      props.selectedCaches[index]!,
+      initialConfig
+    )
+  }
+  overwriteWithCachedOptions = (
+    selectedCache: Cache,
+    initialConfig: Config
+  ): Config => {
+    console.log("selected Cache ", selectedCache)
+
+    Object.keys(initialConfig).map(key => {
+      if (key in selectedCache.config) {
+        initialConfig[key] = selectedCache.config[key]
+      }
+    })
+
+    return initialConfig
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.selectedCaches && this.props.selectedCaches[0]) {
+      console.log(this.props.selectedCaches === prevProps.selectedCaches)
+      console.log(this.props.selectedCaches)
+      console.log(prevProps.selectedCaches)
+
+      if (!(this.props.selectedCaches === prevProps.selectedCaches)) {
+        console.log("HRE")
+
+        if ("answers" in this.props.selectedCaches![0]!.config) {
+          this.setState({ showReps: true })
+          console.log("SET TRUE")
+        } else {
+          this.setState({ showReps: false })
+          console.log("SET FALSE")
+        }
+      }
+    }
+  }
 
   render = () => {
     let list = this.props.diff
       ? [
-          makeNamedConfig(this.props, 0, this.props.reps),
-          makeNamedConfig(this.props, 1, this.props.reps)
+          this.makeNamedConfig(this.props, 0, this.props.reps),
+          this.makeNamedConfig(this.props, 1, this.props.reps)
         ]
-      : [makeNamedConfig(this.props, 0, this.props.reps)]
+      : [this.makeNamedConfig(this.props, 0, this.props.reps)]
 
     return (
       <Formik
@@ -507,18 +540,13 @@ class ConfigForm extends React.Component<Props, State> {
         }}
         validationSchema={validationSchema}
         enableReinitialize={true}
-        render={({ values, setFieldValue, setFieldTouched }) => (
+        render={({ values, setFieldValue }) => (
           <Form>
             <div className="row">
               <FieldArray
                 name="configs"
                 render={() =>
-                  this.renderArrayElements(
-                    this.props,
-                    values,
-                    setFieldValue,
-                    setFieldTouched
-                  )
+                  this.renderArrayElements(this.props, values, setFieldValue)
                 }
               />
             </div>
