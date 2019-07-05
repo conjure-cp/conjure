@@ -202,7 +202,11 @@ export class TreeContainer extends React.Component<Props, State> {
       this.props.core.solAncestorIds.filter(num => {
         return this.state.selected < num
       })
-    )!
+    )
+
+    if (!nextId) {
+      return
+    }
 
     this.setState((prevState: State) => {
       const newMap = showAllAncestors(prevState, nextId)
@@ -241,7 +245,11 @@ export class TreeContainer extends React.Component<Props, State> {
       this.props.core.solAncestorIds.filter(num => {
         return this.state.selected > num
       })
-    )!
+    )
+
+    if (!nextId) {
+      return
+    }
 
     this.setState((prevState: State) => {
       const newMap = showAllAncestors(prevState, nextId)
@@ -250,7 +258,6 @@ export class TreeContainer extends React.Component<Props, State> {
         id2Node: newMap
       }
     })
-    // this.setState({ selected: nextId })
   }
 
   goToPreviousHandler = () => {
@@ -506,8 +513,8 @@ export class TreeContainer extends React.Component<Props, State> {
           />
 
           <div className="sliderContainer row">
-            <label className="col-1-2">Lazy loading depth:</label>
-            <div className="slider col-1">
+            <label className="col-3">Lazy loading depth:</label>
+            <div className="slider col-3">
               <MySlider
                 sliderChangeHandler={(value: number) => {
                   this.setState({ loadDepth: value })
@@ -517,7 +524,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
             <div className="col">
               <Check
-                title={"Reverse play order"}
+                title={"Reverse"}
                 checked={this.state.reverse}
                 onChange={() => {
                   this.setState((prevState: State) => {
@@ -538,7 +545,6 @@ export class TreeContainer extends React.Component<Props, State> {
 
           <Wrapper>
             <SplitPane split="horizontal" defaultSize={600}>
-              {/* <Split> */}
               <TreeVis
                 id={this.props.core.id}
                 identifier={this.props.identifier}

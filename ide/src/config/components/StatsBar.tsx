@@ -92,7 +92,10 @@ export default class StatusBar extends React.Component<Props, State> {
                 <path className="link " d={path}></path>
               </g>
             </svg>
-            × {this.props.totalNodes - 1 - this.props.failedBranchCount}
+            ×{" "}
+            {this.props.totalNodes - 1 - this.props.failedBranchCount >= 0
+              ? this.props.totalNodes - 1 - this.props.failedBranchCount
+              : 0}
           </label>
           <div className="row">
             <FlickThru

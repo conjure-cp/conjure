@@ -10,21 +10,21 @@ export function Handle({
       style={{
         left: `${percent}%`,
         position: "absolute",
-        marginLeft: -15,
-        marginTop: 25,
+        marginLeft: 0,
+        marginTop: 35,
         zIndex: 2,
-        width: 30,
-        height: 30,
+        width: 10,
+        height: 10,
         border: 0,
         textAlign: "center",
         cursor: "pointer",
         borderRadius: "50%",
-        backgroundColor: "#2C4870",
-        color: "#333"
+        backgroundColor: "red",
+        color: "black"
       }}
       {...getHandleProps(id)}
     >
-      <div style={{ fontFamily: "Roboto", fontSize: 11, marginTop: -35 }}>
+      <div style={{ fontFamily: "Roboto", fontSize: 20, marginTop: -35 }}>
         {value}
       </div>
     </div>
@@ -65,7 +65,7 @@ export const railStyle = {
   height: 10,
   marginTop: 35,
   borderRadius: 5,
-  backgroundColor: "#8B9CB6"
+  backgroundColor: "skyblue"
 } as React.CSSProperties
 
 interface Props {

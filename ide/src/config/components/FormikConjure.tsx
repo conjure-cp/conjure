@@ -167,56 +167,33 @@ class ConfigForm extends React.Component<Props, State> {
     return values.namedConfigs.map((_config, index) => {
       const currentEssenceFile = values.namedConfigs[index].config.essenceFile
 
-      // console.log("current essence file", currentEssenceFile)
-
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
-      const repSelectBoxes =
-        //   varReps && this.state.showReps ?
-        varReps.map((vR, i) => {
-          // values.namedConfigs[index].config.answers[i] =
-          //   values.namedConfigs[index].config.answers[i] === ""
-          //     ? {
-          //         value: vR.representations[0].answer,
-          //         label: vR.representations[0].description
-          //       }
-          //     : values.namedConfigs[index].config.answers[i]
-          const cachedChoice = vR.representations.find(
-            x => x.answer === values.namedConfigs[index].config.answers[i]
-          )!
+      const repSelectBoxes = varReps.map((vR, i) => {
+        const cachedChoice = vR.representations.find(
+          x => x.answer === values.namedConfigs[index].config.answers[i]
+        )
 
-          console.log("CAHCED CHOICE", cachedChoice)
-
-          return (
-            <NewSelect
-              name={`namedConfigs[${index}].config.answers[${i}]`}
-              key={vR.name}
-              title={vR.name}
-              value={
-                cachedChoice
-                  ? {
-                      label: cachedChoice.description,
-                      value: cachedChoice.answer
-                    }
-                  : ""
-              }
-              onChange={setFieldValue}
-              options={vR.representations.map(o => {
-                return { value: o.answer, label: o.description }
-              })}
-            />
-            // <MySelect
-            //   name={`namedConfigs[${index}].config.answers[${i}]`}
-            //   key={vR.name}
-            //   title={vR.name}
-            //   // value={values.namedConfigs[index].config.answers[i]}
-            //   onChange={setFieldValue}
-            //   options={vR.representations.map(o => {
-            //     return { value: o.answer, label: o.description }
-            //   })}
-            // />
-          )
-        })
+        return (
+          <NewSelect
+            name={`namedConfigs[${index}].config.answers[${i}]`}
+            key={vR.name}
+            title={vR.name}
+            value={
+              cachedChoice
+                ? {
+                    label: cachedChoice.description,
+                    value: cachedChoice.answer
+                  }
+                : ""
+            }
+            onChange={setFieldValue}
+            options={vR.representations.map(o => {
+              return { value: o.answer, label: o.description }
+            })}
+          />
+        )
+      })
 
       return (
         <div className="col" key={index}>
