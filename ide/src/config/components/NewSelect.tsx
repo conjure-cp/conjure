@@ -18,14 +18,14 @@ interface Props {
 
 interface State {
   first: boolean
-  selectedOption: Opt
+  selectedOption: Opt | undefined
 }
 
 export default class MySelect extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
     // console.log(props.options)
-    this.state = { first: true, selectedOption: props.options[0] }
+    this.state = { first: true, selectedOption: undefined }
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -45,19 +45,28 @@ export default class MySelect extends React.Component<Props, State> {
   render() {
     // console.log(this.state)
 
+    let opt = undefined
+
+    if (this.state.selectedOption) {
+      opt = this.state.selectedOption
+      console.log("opt", opt)
+    } else {
+      if (this.props.value !== "") {
+        if (typeof this.props.value === "string") {
+          opt = { label: this.props.value, value: this.props.value }
+        } else {
+          opt = this.props.value as Opt
+        }
+      }
+    }
+
     return (
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="color"> {this.props.title} </label>
         <Select
           id="color"
           options={this.props.options}
-          value={
-            this.props.value !== "" && !this.state.selectedOption
-              ? typeof this.props.value === "string"
-                ? { label: this.props.value, value: this.props.value }
-                : this.props.value
-              : this.state.selectedOption
-          }
+          value={opt}
           onChange={(option: any) => {
             this.setState({ selectedOption: option })
             this.props.onChange(this.props.name, option.value)

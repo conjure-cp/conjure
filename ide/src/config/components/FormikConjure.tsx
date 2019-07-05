@@ -185,6 +185,8 @@ class ConfigForm extends React.Component<Props, State> {
             x => x.answer === values.namedConfigs[index].config.answers[i]
           )!
 
+          console.log("CAHCED CHOICE", cachedChoice)
+
           return (
             <NewSelect
               name={`namedConfigs[${index}].config.answers[${i}]`}
