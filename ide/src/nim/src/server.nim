@@ -28,25 +28,31 @@ router mainRouter:
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%response))
         # resp(Http200, [("Content-Type","text/css")] , "foo")
 
-    get "/simpleDomains/@nodeId/@wantExpressions":
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadSimpleDomains(@"nodeId", parseBool(@"wantExpressions"))))
+    post "/simpleDomains":
+        let json = parseJson($request.body)
+        echo json.pretty()
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadSimpleDomains(json["path"].getStr(), $json["nodeId"].getInt(), true)))
+    # resp "I got some JSON: " & $push
+    # get "/simpleDomains/@nodeId/@wantExpressions/(.*)":
         
-    get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))))
+    # get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
+    #     resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))))
 
-    get "/loadNodes/@nodeId/@depth?":
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadNodes(@"nodeId", @"depth")))
+    post "/loadNodes":
+        let json = parseJson($request.body)
+        echo json.pretty()
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadNodes(json["path"].getStr(), $json["nodeId"].getInt(), $json["depth"].getInt())))
 
-    get "/loadAncestors/@nodeId":
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(@"nodeId")))
+    post "/loadAncestors":
+        let json = parseJson($request.body)
+        echo json.pretty()
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(json["path"].getStr(), $json["nodeId"].getInt())))
 
-    get "/longestBranchingVariable":
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], getLongestBranchingVarName())
+    # get "/longestBranchingVariable":
+    #     resp(Http200, [("Access-Control-Allow-Origin", "*")], getLongestBranchingVarName())
 
-    get "/loadSet/@nodeId/@path":
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $loadSetChild(@"nodeId",@"path"))
-
-
+    # get "/loadSet/@nodeId/@path":
+    #     resp(Http200, [("Access-Control-Allow-Origin", "*")], $loadSetChild(@"nodeId",@"path"))
 
 
 proc main() =

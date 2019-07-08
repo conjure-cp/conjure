@@ -4,6 +4,7 @@ import { Check } from "./Check"
 
 interface Props {
   id: string
+  path: string
   selected: number
 }
 
@@ -38,13 +39,31 @@ export class Domains extends React.Component<Props, State> {
     if (this.state.collapsed) {
       return
     }
-    const response = await fetch(
-      `http://localhost:5000/${
-        this.state.pretty ? "pretty" : "simple"
-      }Domains/${this.props.selected}/false${this.state.pretty ? "/" : ""}`
-    )
+
+    let payload = {
+      path: this.props.path,
+      nodeId: this.props.selected
+    }
+
+    const response = await fetch("http://localhost:5000/simpleDomains", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify(payload)
+    })
+
+    // const response = await fetch(
+    //   `http://localhost:5000/${
+    //     this.state.pretty ? "pretty" : "simple"
+    //   }Domains/${this.props.selected}/false${this.state.pretty ? "/" : ""}/${
+    //     this.props.path
+    //   }`
+    // )
     const data = await response.json()
-    // console.log(data);
+
+    console.log(data)
     this.setState({ vars: data.vars, changedNames: data.changedNames })
   }
 

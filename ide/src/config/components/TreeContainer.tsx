@@ -47,6 +47,7 @@ interface Props {
   identifier: string
   core: Core
   info: string
+  path: string
 }
 
 export interface State {
@@ -285,7 +286,19 @@ export class TreeContainer extends React.Component<Props, State> {
       return
     }
 
-    fetch(`http://localhost:5000/loadAncestors/${nextId}`)
+    const payload = {
+      path: this.props.path,
+      nodeId: nextId
+    }
+
+    fetch("http://localhost:5000/loadAncestors", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify(payload)
+    })
       .then(data => data.json())
       .then(nodes => this.insertNodes(nodes, nextId))
   }
@@ -301,9 +314,24 @@ export class TreeContainer extends React.Component<Props, State> {
       return
     }
 
-    fetch(
-      `http://localhost:5000/loadNodes/${this.state.selected}/${this.state.loadDepth}`
-    )
+    // fetch(
+    //   `http://localhost:5000/loadNodes/${this.state.selected}/${this.state.loadDepth}/${this.props.path}`
+    // )
+
+    const payload = {
+      path: this.props.path,
+      nodeId: this.state.selected,
+      depth: this.state.loadDepth
+    }
+
+    fetch("http://localhost:5000/loadNodes", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify(payload)
+    })
       .then(data => data.json())
       .then(nodes => this.insertNodes(nodes, this.state.selected))
   }
@@ -579,7 +607,11 @@ export class TreeContainer extends React.Component<Props, State> {
                 height={500}
               />
 
-              <Domains id={this.props.core.id} selected={this.state.selected} />
+              <Domains
+                id={this.props.core.id}
+                selected={this.state.selected}
+                path={this.props.path}
+              />
             </SplitPane>
           </Wrapper>
         </div>

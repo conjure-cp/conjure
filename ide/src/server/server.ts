@@ -131,6 +131,7 @@ class ConfigService {
               (response: any) =>
                 response.json().then((json: any) => {
                   json["core"]["id"] = trees[0].hash
+                  json["path"] = fullPath
                   return json
                 })
             )

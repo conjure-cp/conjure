@@ -25,6 +25,7 @@ interface State {
   essenceFiles: string[]
   paramFiles: string[]
   reps: RepMap
+  path: string
 }
 
 class F extends React.Component<any, State> {
@@ -39,7 +40,8 @@ class F extends React.Component<any, State> {
       allCaches: [],
       paramFiles: [],
       essenceFiles: [],
-      reps: {}
+      reps: {},
+      path: "blankPath"
     }
   }
 
@@ -50,7 +52,7 @@ class F extends React.Component<any, State> {
   }
 
   initResponseHandler = (data: any) => {
-    this.setState({ isCollapsed: true, initResponse: data })
+    this.setState({ isCollapsed: true, initResponse: data, path: data.path })
     this.getFiles()
     // console.log(core);
   }
@@ -315,6 +317,7 @@ class F extends React.Component<any, State> {
         <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (
             <TreeContainer
+              path={this.state.path}
               info={this.state.initResponse.info}
               core={this.state.initResponse.core}
               identifier={"tree1"}
