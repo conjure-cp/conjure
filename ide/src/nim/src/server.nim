@@ -1,4 +1,4 @@
-import json, re, jester, times, strutils, parseutils
+import asyncdispatch, jester, os, strutils, json, re, times, parseutils
 import util/main
 import util/jsonify
 import util/types
@@ -6,7 +6,7 @@ import util/init
 import util/response
 
 
-routes:
+router mainRouter:
     get "/":
        resp readFile("/home/tom/conjure/ide/src/webview/ts/test.html")
 
@@ -45,3 +45,21 @@ routes:
 
     get "/loadSet/@nodeId/@path":
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $loadSetChild(@"nodeId",@"path"))
+
+
+
+
+proc main() =
+    
+    var port : int
+    if paramCount() == 0 :
+        port = 5000
+    else:
+        port = paramStr(1).parseInt()
+
+    let settings = newSettings(port=Port(port))
+    var jester = initJester(mainRouter, settings=settings)
+    jester.serve()
+
+when isMainModule:
+  main()

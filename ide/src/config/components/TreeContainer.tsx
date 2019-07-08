@@ -386,6 +386,11 @@ export class TreeContainer extends React.Component<Props, State> {
   }
 
   prevFailed = () => {
+    if (!this.state.solveable) {
+      this.goToPreviousHandler()
+      return
+    }
+
     if (this.props.core.solAncestorIds.includes(this.state.selected)) {
       let nextId = getPrevFailedId(
         this.state.selected,
@@ -517,6 +522,7 @@ export class TreeContainer extends React.Component<Props, State> {
             <label className="col-3">Lazy loading depth:</label>
             <div className="slider col-3">
               <MySlider
+                values={[1]}
                 domain={[1, 5]}
                 sliderChangeHandler={(value: number) => {
                   this.setState({ loadDepth: value })
@@ -527,6 +533,7 @@ export class TreeContainer extends React.Component<Props, State> {
             <label className="col-3">Animation duration (ms):</label>
             <div className="slider col-3">
               <MySlider
+                values={[500]}
                 domain={[0, 4000]}
                 sliderChangeHandler={(value: number) => {
                   this.setState({ duration: value })

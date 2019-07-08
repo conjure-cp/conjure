@@ -71,6 +71,7 @@ export const railStyle = {
 interface Props {
   sliderChangeHandler: (val: number) => void
   domain: number[]
+  values: number[]
 }
 
 export function MySlider(props: Props) {
@@ -80,9 +81,8 @@ export function MySlider(props: Props) {
       domain={props.domain}
       step={1}
       mode={2}
-      values={[1]}
+      values={props.values}
       onChange={values => {
-        console.log("SLIDINg", values)
         props.sliderChangeHandler(values[0])
       }}
     >

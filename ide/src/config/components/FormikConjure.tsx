@@ -103,8 +103,8 @@ class ConfigForm extends React.Component<Props, State> {
   }
 
   submissionHandler = (values: Values, props: Props, state: State) => {
-    console.log("!!!!!!!!!!!!!")
-    console.log(values)
+    // console.log("!!!!!!!!!!!!!")
+    // console.log(values)
 
     let cleaned = values.namedConfigs.map((namedConfig, index) => {
       const config = namedConfig.config
@@ -121,7 +121,7 @@ class ConfigForm extends React.Component<Props, State> {
         cleaned["minionSwitches"] = config.minionSwitches
       }
 
-      console.log(config.answers)
+      // console.log(config.answers)
 
       cleaned.answers = config.answers.map(
         (answer: number | string, i: number) => {
@@ -497,19 +497,19 @@ class ConfigForm extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (this.props.selectedCaches && this.props.selectedCaches[0]) {
-      console.log(this.props.selectedCaches === prevProps.selectedCaches)
-      console.log(this.props.selectedCaches)
-      console.log(prevProps.selectedCaches)
+      // console.log(this.props.selectedCaches === prevProps.selectedCaches)
+      // console.log(this.props.selectedCaches)
+      // console.log(prevProps.selectedCaches)
 
       if (!(this.props.selectedCaches === prevProps.selectedCaches)) {
-        console.log("HRE")
+        // console.log("HRE")
 
         if ("answers" in this.props.selectedCaches![0]!.config) {
           this.setState({ showReps: true })
-          console.log("SET TRUE")
+          // console.log("SET TRUE")
         } else {
           this.setState({ showReps: false })
-          console.log("SET FALSE")
+          // console.log("SET FALSE")
         }
       }
     }
