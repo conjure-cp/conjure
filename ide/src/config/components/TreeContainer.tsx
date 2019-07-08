@@ -7,9 +7,11 @@ import Play from "./Play"
 import { HotKeys, GlobalHotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max } from "lodash"
 import * as d3 from "d3"
-import StageHeader from "./StageHeader"
 import { Domains } from "./Domains"
-import { thresholdScott, HierarchyCircularNode, HierarchyPointNode } from "d3"
+import SplitPane from "react-split-pane"
+import { Wrapper } from "./Constants"
+import { MySlider } from "./Slider"
+import { Check } from "./Check"
 import {
   getNextSolId,
   getPrevSolId,
@@ -17,12 +19,6 @@ import {
   getNextFailedId,
   getPrevFailedId
 } from "../modules/Helper"
-import SplitPane, * as Blah from "react-split-pane"
-import { MySlider } from "./Slider"
-import { Check } from "./Check"
-// import * as Handle from "./Slider",
-// import SplitterLayout from "react-splitter-layout"
-// import "react-splitter-layout/lib/index.css"
 
 interface FromServerNode {
   id: number
@@ -628,18 +624,3 @@ const map = {
   goToRoot: "r",
   goPrev: "shift"
 }
-
-const Wrapper = (props: any) => (
-  <div
-    style={{
-      flex: 1,
-      display: "flex",
-      height: "100%",
-      width: "100%",
-      border: "1px solid red",
-      position: "relative"
-    }}
-  >
-    {props.children}
-  </div>
-)

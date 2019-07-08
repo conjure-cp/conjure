@@ -2,13 +2,14 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import StageHeader from "./components/StageHeader"
 import FormikConjure from "./components/FormikConjure"
-import { Core, TreeContainer, MyMap } from "./components/TreeContainer"
+import { TreeContainer } from "./components/TreeContainer"
 import { Check } from "./components/Check"
-import { Form, Field, FieldArray, Formik } from "formik"
-import { Caches } from "./components/Caches"
-import { Cache, VarRepresentation, RepMap } from "../configHelper"
+import { Cache, RepMap } from "../configHelper"
+import { cloneDeep } from "lodash"
+import SplitPane from "react-split-pane"
+import { Wrapper } from "./components/Constants"
+
 import "./styles.css"
-import { cloneDeep, last, min, max } from "lodash"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
@@ -49,6 +50,7 @@ class F extends React.Component<any, State> {
         document.getElementById("port")!.getAttribute("vscodeserverport")
       )
     }
+    console.log("hello")
   }
 
   collapseHandler = () => {
@@ -94,7 +96,6 @@ class F extends React.Component<any, State> {
           essenceFiles: data.models,
           reps: data.representations
         })
-        console.log(data.representations)
         return
       })
       .then(() => {
@@ -326,15 +327,24 @@ class F extends React.Component<any, State> {
           />
         </StageHeader>
 
-        <div className="col">
+        <div className="">
           {this.state.initResponse && this.state.initResponse.core && (
-            <TreeContainer
-              nimServerPort={this.state.nimServerPort}
-              path={this.state.path}
-              info={this.state.initResponse.info}
-              core={this.state.initResponse.core}
-              identifier={"tree1"}
-            />
+            <Wrapper>
+              <TreeContainer
+                nimServerPort={this.state.nimServerPort}
+                path={this.state.path}
+                info={this.state.initResponse.info}
+                core={this.state.initResponse.core}
+                identifier={"tree1"}
+              />
+              {/* <TreeContainer
+                nimServerPort={this.state.nimServerPort}
+                path={this.state.path}
+                info={this.state.initResponse.info}
+                core={this.state.initResponse.core}
+                identifier={"tree2"}
+              /> */}
+            </Wrapper>
           )}
         </div>
         {/* <TreeContainer info={"blah"} identifier={"letree"} core={testCore} /> */}
