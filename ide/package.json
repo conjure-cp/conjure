@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "revilotom",
   "engines": {
-    "vscode": "^1.27.0"
+    "vscode": "^1.36.0"
   },
   "main": "./out/extension",
   "categories": [
@@ -77,12 +77,12 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./ && (cd configiration/ts && npm run develop)",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test",
-    "develop": "webpack --mode development --watch",
+    "develop": "webpack --mode development --watch --config-name webview",
+    "production": "webpack --mode production",
     "format": "prettier \"src/**/*.{ts,tsx,js,jsx,css,html}\" --write",
     "lint": "tslint \"src/**/*.{ts,tsx,js,jsx}\" --quiet"
   },
@@ -98,7 +98,7 @@
     "source-map-loader": "^0.2.4",
     "style-loader": "^0.23.1",
     "tslint": "^5.8.0",
-    "typescript": "^3.2.4",
+    "typescript": "^3.5.2",
     "vscode": "^1.1.21",
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2"
@@ -142,6 +142,9 @@
     "rimraf": "^2.6.3",
     "shortid": "^2.2.14",
     "tree-kill": "^1.2.1",
+    "ts-loader": "^6.0.4",
+    "tsc": "^1.20150623.0",
+    "typescript-ioc": "^1.2.5",
     "typescript-rest": "^2.0.0",
     "vinyl-source-stream": "^2.0.0",
     "vsce": "^1.59.0",

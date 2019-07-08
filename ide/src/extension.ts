@@ -12,18 +12,15 @@ export const LANGID = "essence"
 var fp = require("find-free-port")
 
 function makeNimServer(context: vscode.ExtensionContext) {
-  const p = path.join(context.extensionPath, "src/nim/src/server")
-  if (!fs.existsSync(p)) {
-    console.log("nim server NOT FOUND!!!")
+  console.log(
     execSync(path.join(context.extensionPath, "/buildServer.sh"), {
       cwd: context.extensionPath
-    })
-  }
+    }).toString()
+  )
 }
 
 function startNimServer(context: vscode.ExtensionContext, port: number) {
-  const p = path.join(context.extensionPath, "src/nim/src/server")
-  const proc = execFile(p, [String(port)])
+  const proc = exec(`./runServer.sh ${port}`, { cwd: context.extensionPath })
   proc.stdout.on("data", function(data) {
     console.error(data.toString())
   })
@@ -51,7 +48,6 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       console.log("FREEPORTs are  ", nimServerPort, vscodeServePort)
-      // exec()
 
       startNimServer(context, nimServerPort)
 
@@ -62,28 +58,34 @@ export function activate(context: vscode.ExtensionContext) {
       ConfigureHelper.activate(context)
 
       context.subscriptions.push(
-        vscode.commands.registerCommand("conjure.model", () => {
-          ConjureHelper.model()
-        })
-      )
-      context.subscriptions.push(
-        vscode.commands.registerCommand("conjure.solve", () => {
-          ConjureHelper.solveAndVisualise(false)
-        })
-      )
-      context.subscriptions.push(
-        vscode.commands.registerCommand("conjure.solveAndVis", () => {
-          ConjureHelper.solveAndVisualise(true)
-        })
-      )
-      context.subscriptions.push(
-        vscode.commands.registerCommand("conjure.vis", () => {
-          ConjureHelper.launchVisualiserWithPath()
-        })
-      )
-      context.subscriptions.push(
+        //   vscode.commands.registerCommand("conjure.model", () => {
+        //     ConjureHelper.model()
+        //   })
+        // )
+        // context.subscriptions.push(
+        //   vscode.commands.registerCommand("conjure.solve", () => {
+        //     ConjureHelper.solveAndVisualise(false)
+        //   })
+        // )
+        // context.subscriptions.push(
+        //   vscode.commands.registerCommand("conjure.solveAndVis", () => {
+        //     ConjureHelper.solveAndVisualise(true)
+        //   })
+        // )
+        // context.subscriptions.push(
+        //   vscode.commands.registerCommand("conjure.vis", () => {
+        //     ConjureHelper.launchVisualiserWithPath()
+        //   })
+        // )
+        // context.subscriptions.push(
         vscode.commands.registerCommand("conjure.configure", () => {
-          ConfigureHelper.launch()
+          // ConfigureHelper.launch()
+          vscode.window.showInformationMessage(
+            `http://localhost:${vscodeServePort}`
+          )
+          vscode.window.showInformationMessage(
+            `Tree visualiser running at:      `
+          )
         })
       )
       context.subscriptions.push(

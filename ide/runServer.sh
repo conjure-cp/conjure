@@ -1,1 +1,1 @@
-(cd src/nim && nimble c -r src/server)
+(cd src/nim && ./nim $1)

@@ -1,1 +1,1 @@
-(cd src/nim && nimble c src/server)
+(cd src/nim && nimble build)
