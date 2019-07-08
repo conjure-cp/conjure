@@ -31,6 +31,33 @@ interface FilesResponse {
 }
 
 let nimServerPort: number
+let thisServerPort: number
+let context: vscode.ExtensionContext
+
+@Path("/")
+class HTMlService {
+  @Path("/")
+  @GET
+  getPage(): string {
+    let html =
+      fs
+        .readFileSync(
+          path.join(context.extensionPath, "src/config/configPage.html")
+        )
+        .toString() +
+      `
+      <div id="port" vscodeServerPort="${thisServerPort}"></div>
+    <script>${fs
+      .readFileSync(path.join(context.extensionPath, "dist/configBundle.js"))
+      .toString()}</script>
+  </body>
+</html>
+      `
+
+    console.log(html)
+    return html
+  }
+}
 
 @Path("/config")
 class ConfigService {
@@ -136,6 +163,7 @@ class ConfigService {
                 json["core"]["id"] = trees[0].hash
                 json["path"] = fullPath
                 json["nimServerPort"] = nimServerPort
+                json["vscodeServerPort"] = thisServerPort
                 return json
               })
             )
@@ -168,13 +196,20 @@ class Init {
   }
 }
 
-export function startServer(nsPort: number) {
+export function startServer(
+  nsPort: number,
+  vscodeServerPort: number,
+  ctx: vscode.ExtensionContext
+) {
   nimServerPort = nsPort
+  thisServerPort = vscodeServerPort
+  context = ctx
+
   let app: express.Application = express()
   app.use(cors())
   Server.buildServices(app)
 
-  app.listen(4000, function() {
-    console.log("Rest Server listening on port 4000!")
+  app.listen(vscodeServerPort, function() {
+    console.log(`Rest Server listening on port ${vscodeServerPort}!`)
   })
 }

@@ -25,6 +25,7 @@ interface Values {
 }
 
 interface Props {
+  vscodeServerPort: number
   diff: boolean
   caches: Cache[]
   cacheChangeHandler: (cache: Cache, index: number) => void
@@ -153,7 +154,7 @@ class ConfigForm extends React.Component<Props, State> {
 
     console.log(cleaned)
 
-    fetch("http://localhost:4000/config/solve", {
+    fetch(`http://localhost:${this.props.vscodeServerPort}/config/solve`, {
       method: "post",
       headers: {
         Accept: "application/json, text/plain, */*",

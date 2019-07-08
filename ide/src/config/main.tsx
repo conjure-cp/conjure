@@ -27,6 +27,7 @@ interface State {
   reps: RepMap
   path: string
   nimServerPort: number
+  vscodeServerPort: number
 }
 
 class F extends React.Component<any, State> {
@@ -43,7 +44,10 @@ class F extends React.Component<any, State> {
       essenceFiles: [],
       reps: {},
       path: "blankPath",
-      nimServerPort: 5000
+      nimServerPort: 5000,
+      vscodeServerPort: Number(
+        document.getElementById("port")!.getAttribute("vscodeserverport")
+      )
     }
   }
 
@@ -82,7 +86,7 @@ class F extends React.Component<any, State> {
   }
 
   getFiles = async () => {
-    await fetch("http://localhost:4000/config/files")
+    await fetch(`http://localhost:${this.state.vscodeServerPort}/config/files`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -94,7 +98,7 @@ class F extends React.Component<any, State> {
         return
       })
       .then(() => {
-        fetch("http://localhost:4000/config/caches")
+        fetch(`http://localhost:${this.state.vscodeServerPort}/config/caches`)
           .then(response => response.json())
           .then(data => {
             this.setState({
@@ -310,6 +314,7 @@ class F extends React.Component<any, State> {
           />
 
           <FormikConjure
+            vscodeServerPort={this.state.vscodeServerPort}
             reps={this.state.reps}
             responseHandler={this.initResponseHandler}
             diff={this.state.diff}

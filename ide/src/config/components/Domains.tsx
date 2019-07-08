@@ -60,7 +60,6 @@ export class Domains extends React.Component<Props, State> {
 
     const data = await response.json()
 
-    console.log(data)
     this.setState({ vars: data.vars, changedNames: data.changedNames })
   }
 

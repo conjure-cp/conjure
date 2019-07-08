@@ -23,15 +23,6 @@ function makeNimServer(context: vscode.ExtensionContext) {
 
 function startNimServer(context: vscode.ExtensionContext, port: number) {
   const p = path.join(context.extensionPath, "src/nim/src/server")
-
-  // const proc = execFile(p, [String(port)], (error, stdout, stderr) => {
-  //   if (error) {
-  //     console.error(`exec error: ${error}`)
-  //     return
-  //   }
-  //   console.log(`stdout: ${stdout}`)
-  //   console.log(`stderr: ${stderr}`)
-  // })
   const proc = execFile(p, [String(port)])
   proc.stdout.on("data", function(data) {
     console.error(data.toString())
@@ -48,54 +39,60 @@ export function activate(context: vscode.ExtensionContext) {
   console.log("Conjure extension activated.")
 
   makeNimServer(context)
-  fp(3000, "127.0.0.1", (err: any, nimServerPort: number) => {
-    if (err) {
-      console.log("Could not get a port!!")
-      console.error(err)
+  fp(
+    3000,
+    5000,
+    "127.0.0.1",
+    2,
+    (err: any, nimServerPort: number, vscodeServePort: number) => {
+      if (err) {
+        console.log("Could not get a port!!")
+        console.error(err)
+      }
+
+      console.log("FREEPORTs are  ", nimServerPort, vscodeServePort)
+      // exec()
+
+      startNimServer(context, nimServerPort)
+
+      server.startServer(nimServerPort, vscodeServePort, context)
+
+      ConjureHelper.activate(context)
+      WebviewHelper.activate(context)
+      ConfigureHelper.activate(context)
+
+      context.subscriptions.push(
+        vscode.commands.registerCommand("conjure.model", () => {
+          ConjureHelper.model()
+        })
+      )
+      context.subscriptions.push(
+        vscode.commands.registerCommand("conjure.solve", () => {
+          ConjureHelper.solveAndVisualise(false)
+        })
+      )
+      context.subscriptions.push(
+        vscode.commands.registerCommand("conjure.solveAndVis", () => {
+          ConjureHelper.solveAndVisualise(true)
+        })
+      )
+      context.subscriptions.push(
+        vscode.commands.registerCommand("conjure.vis", () => {
+          ConjureHelper.launchVisualiserWithPath()
+        })
+      )
+      context.subscriptions.push(
+        vscode.commands.registerCommand("conjure.configure", () => {
+          ConfigureHelper.launch()
+        })
+      )
+      context.subscriptions.push(
+        vscode.commands.registerCommand("conjure.invalidateCaches", () => {
+          ConfigureHelper.invalidateCaches()
+        })
+      )
     }
-
-    console.log("FREEPORT IS ", nimServerPort)
-    // exec()
-
-    startNimServer(context, nimServerPort)
-
-    server.startServer(nimServerPort)
-
-    ConjureHelper.activate(context)
-    WebviewHelper.activate(context)
-    ConfigureHelper.activate(context)
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand("conjure.model", () => {
-        ConjureHelper.model()
-      })
-    )
-    context.subscriptions.push(
-      vscode.commands.registerCommand("conjure.solve", () => {
-        ConjureHelper.solveAndVisualise(false)
-      })
-    )
-    context.subscriptions.push(
-      vscode.commands.registerCommand("conjure.solveAndVis", () => {
-        ConjureHelper.solveAndVisualise(true)
-      })
-    )
-    context.subscriptions.push(
-      vscode.commands.registerCommand("conjure.vis", () => {
-        ConjureHelper.launchVisualiserWithPath()
-      })
-    )
-    context.subscriptions.push(
-      vscode.commands.registerCommand("conjure.configure", () => {
-        ConfigureHelper.launch()
-      })
-    )
-    context.subscriptions.push(
-      vscode.commands.registerCommand("conjure.invalidateCaches", () => {
-        ConfigureHelper.invalidateCaches()
-      })
-    )
-  })
+  )
 }
 
 export function deactivate() {}
