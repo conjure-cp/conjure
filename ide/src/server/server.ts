@@ -30,6 +30,8 @@ interface FilesResponse {
   representations: RepMap
 }
 
+let nimServerPort: number
+
 @Path("/config")
 class ConfigService {
   toRel(uri: vscode.Uri): string {
@@ -127,13 +129,15 @@ class ConfigService {
               trees[0].name
             )
 
-            return await fetch(`http://localhost:5000/init/${fullPath}`).then(
-              (response: any) =>
-                response.json().then((json: any) => {
-                  json["core"]["id"] = trees[0].hash
-                  json["path"] = fullPath
-                  return json
-                })
+            return await fetch(
+              `http://localhost:${nimServerPort}/init/${fullPath}`
+            ).then((response: any) =>
+              response.json().then((json: any) => {
+                json["core"]["id"] = trees[0].hash
+                json["path"] = fullPath
+                json["nimServerPort"] = nimServerPort
+                return json
+              })
             )
           }
         )
@@ -164,7 +168,8 @@ class Init {
   }
 }
 
-export function startServer() {
+export function startServer(nsPort: number) {
+  nimServerPort = nsPort
   let app: express.Application = express()
   app.use(cors())
   Server.buildServices(app)

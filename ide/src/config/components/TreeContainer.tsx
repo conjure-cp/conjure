@@ -48,6 +48,7 @@ interface Props {
   core: Core
   info: string
   path: string
+  nimServerPort: number
 }
 
 export interface State {
@@ -291,7 +292,7 @@ export class TreeContainer extends React.Component<Props, State> {
       nodeId: nextId
     }
 
-    fetch("http://localhost:5000/loadAncestors", {
+    fetch(`http://localhost:${this.props.nimServerPort}/loadAncestors`, {
       method: "post",
       headers: {
         Accept: "application/json, text/plain, */*",
@@ -314,17 +315,13 @@ export class TreeContainer extends React.Component<Props, State> {
       return
     }
 
-    // fetch(
-    //   `http://localhost:5000/loadNodes/${this.state.selected}/${this.state.loadDepth}/${this.props.path}`
-    // )
-
     const payload = {
       path: this.props.path,
       nodeId: this.state.selected,
       depth: this.state.loadDepth
     }
 
-    fetch("http://localhost:5000/loadNodes", {
+    fetch(`http://localhost:${this.props.nimServerPort}/loadNodes`, {
       method: "post",
       headers: {
         Accept: "application/json, text/plain, */*",
@@ -611,6 +608,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 id={this.props.core.id}
                 selected={this.state.selected}
                 path={this.props.path}
+                nimServerPort={this.props.nimServerPort}
               />
             </SplitPane>
           </Wrapper>

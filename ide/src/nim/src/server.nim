@@ -63,9 +63,11 @@ proc main() =
     else:
         port = paramStr(1).parseInt()
 
+    echo "NIM SERVER STARTING ON " & $port
+
     let settings = newSettings(port=Port(port))
     var jester = initJester(mainRouter, settings=settings)
     jester.serve()
 
 when isMainModule:
-  main()
+    main()

@@ -16,6 +16,7 @@ import { Cache, VarRepresentation, RepMap } from "../../configHelper"
 import { reporters } from "mocha"
 import { prependListener } from "cluster"
 import { type } from "os"
+const shortid = require("shortid")
 
 type RepChoices = Record<string, string>
 
@@ -144,7 +145,7 @@ class ConfigForm extends React.Component<Props, State> {
             : `${new Date()
                 .toUTCString()
                 .replace(/ /g, "_")
-                .replace(/,/g, "_")}_Config${index + 1}`
+                .replace(/,/g, "_")}_Config${index + 1}_${shortid.generate()}`
       }
 
       return newNamedConfig

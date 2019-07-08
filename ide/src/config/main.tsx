@@ -26,6 +26,7 @@ interface State {
   paramFiles: string[]
   reps: RepMap
   path: string
+  nimServerPort: number
 }
 
 class F extends React.Component<any, State> {
@@ -41,7 +42,8 @@ class F extends React.Component<any, State> {
       paramFiles: [],
       essenceFiles: [],
       reps: {},
-      path: "blankPath"
+      path: "blankPath",
+      nimServerPort: 5000
     }
   }
 
@@ -52,7 +54,12 @@ class F extends React.Component<any, State> {
   }
 
   initResponseHandler = (data: any) => {
-    this.setState({ isCollapsed: true, initResponse: data, path: data.path })
+    this.setState({
+      isCollapsed: true,
+      initResponse: data,
+      path: data.path,
+      nimServerPort: data.nimServerPort
+    })
     this.getFiles()
     // console.log(core);
   }
@@ -317,6 +324,7 @@ class F extends React.Component<any, State> {
         <div className="col">
           {this.state.initResponse && this.state.initResponse.core && (
             <TreeContainer
+              nimServerPort={this.state.nimServerPort}
               path={this.state.path}
               info={this.state.initResponse.info}
               core={this.state.initResponse.core}
