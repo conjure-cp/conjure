@@ -455,6 +455,11 @@ export class TreeContainer extends React.Component<Props, State> {
   prevSol = () => {
     this.setState((prevState: State) => {
       const solId = getPrevSolId(prevState)
+
+      if (solId === -1) {
+        return null
+      }
+
       const newMap = showAllAncestors(prevState, solId)
       return { selected: solId, id2Node: newMap }
     })
@@ -463,6 +468,11 @@ export class TreeContainer extends React.Component<Props, State> {
   nextSol = () => {
     this.setState((prevState: State) => {
       const solId = getNextSolId(prevState)
+
+      if (solId === -1) {
+        return null
+      }
+
       const newMap = showAllAncestors(prevState, solId)
       return { selected: solId, id2Node: newMap }
     })
@@ -520,8 +530,8 @@ export class TreeContainer extends React.Component<Props, State> {
       (this.state.solveable ? this.props.core.solAncestorIds.length : 0)
 
     return (
-      <GlobalHotKeys keyMap={map} handlers={this.handlers}>
-        <div className="treeContainer">
+      <div className="treeContainer">
+        <HotKeys keyMap={map} handlers={this.handlers}>
           <StatsBar
             info={this.props.info}
             nextSolBranchHandler={this.nextSolBranch}
@@ -608,8 +618,8 @@ export class TreeContainer extends React.Component<Props, State> {
               />
             </SplitPane>
           </Wrapper>
-        </div>
-      </GlobalHotKeys>
+        </HotKeys>
+      </div>
     )
   }
 }

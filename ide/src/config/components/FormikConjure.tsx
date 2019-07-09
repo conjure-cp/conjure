@@ -127,6 +127,10 @@ class ConfigForm extends React.Component<Props, State> {
 
       cleaned.answers = config.answers.map(
         (answer: number | string, i: number) => {
+          if (typeof answer !== "number" && answer !== "") {
+            return
+          }
+
           let variable = this.props.reps[cleaned.essenceFile][i]
           return `${variable.name}:${answer !== "" ? answer : 1}`
         }

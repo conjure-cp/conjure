@@ -41,7 +41,7 @@ export const getNextSolId = (prevState: State): number => {
   }
 
   if (prevState.solNodeIds.length <= currentIdInSolNodeIds + 1) {
-    return prevState.solNodeIds[0]
+    return -1
   }
 
   return prevState.solNodeIds[currentIdInSolNodeIds + 1]
@@ -87,7 +87,7 @@ export const getPrevSolId = (prevState: State): number => {
   }
 
   if (currentIdInSolNodeIds - 1 < 0) {
-    return last(prevState.solNodeIds)!
+    return -1
   }
 
   return prevState.solNodeIds[currentIdInSolNodeIds - 1]

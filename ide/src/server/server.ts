@@ -21,6 +21,7 @@ const fetch = require("node-fetch")
 import ConfigHelper, { VarRepresentation, RepMap } from "../configHelper"
 import { Cache } from "../configHelper"
 import { execSync } from "child_process"
+import { tree } from "d3"
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 
@@ -151,22 +152,35 @@ class ConfigService {
           async () => {
             const trees = needToGenerate.concat(loadFromCache)
 
-            const fullPath = path.join(
-              ConfigHelper.cacheFolderPath,
-              trees[0].name
-            )
+            const inits = await Promise.all(
+              trees.map(async tree => {
+                const fullPath = path.join(
+                  ConfigHelper.cacheFolderPath,
+                  tree.name
+                )
 
-            return await fetch(
-              `http://localhost:${nimServerPort}/init/${fullPath}`
-            ).then((response: any) =>
-              response.json().then((json: any) => {
-                json["core"]["id"] = trees[0].hash
+                const response = await fetch(
+                  `http://localhost:${nimServerPort}/init/${fullPath}`
+                )
+
+                const json = await response.json()
+
+                json["core"]["id"] = tree.hash
                 json["path"] = fullPath
-                json["nimServerPort"] = nimServerPort
-                json["vscodeServerPort"] = thisServerPort
+                // console.log(json)
+
                 return json
               })
             )
+
+            const response = {
+              trees: inits,
+              nimServerPort: nimServerPort,
+              vscodeServerPort: thisServerPort
+            }
+
+            // console.log(inits)
+            return response
           }
         )
       })

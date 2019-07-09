@@ -18,7 +18,7 @@ if (process.env.NODE_ENV !== "production") {
 
 interface State {
   // core: Core | undefined;
-  initResponse: any
+  trees: any
   isCollapsed: boolean
   diff: boolean
   allCaches: Cache[]
@@ -26,7 +26,6 @@ interface State {
   essenceFiles: string[]
   paramFiles: string[]
   reps: RepMap
-  path: string
   nimServerPort: number
   vscodeServerPort: number
 }
@@ -37,14 +36,13 @@ class F extends React.Component<any, State> {
   constructor(props: any) {
     super(props)
     this.state = {
-      initResponse: undefined,
+      trees: undefined,
       isCollapsed: false,
       diff: false,
       allCaches: [],
       paramFiles: [],
       essenceFiles: [],
       reps: {},
-      path: "blankPath",
       nimServerPort: 5000,
       vscodeServerPort: Number(
         document.getElementById("port")!.getAttribute("vscodeserverport")
@@ -62,12 +60,12 @@ class F extends React.Component<any, State> {
   initResponseHandler = (data: any) => {
     this.setState({
       isCollapsed: true,
-      initResponse: data,
-      path: data.path,
+      trees: data.trees,
       nimServerPort: data.nimServerPort
     })
     this.getFiles()
-    // console.log(core);
+    console.log("The data from the vscodeserver")
+    console.log(data)
   }
 
   cacheChangeHandler = (cache: Cache, index: number) => {
@@ -299,6 +297,9 @@ class F extends React.Component<any, State> {
       solAncestorIds: [0, 2]
     }
 
+    if (this.state.trees) {
+      console.log(true)
+    }
     return (
       <div>
         <StageHeader
@@ -328,24 +329,22 @@ class F extends React.Component<any, State> {
         </StageHeader>
 
         <div className="">
-          {this.state.initResponse && this.state.initResponse.core && (
-            <Wrapper>
-              <TreeContainer
-                nimServerPort={this.state.nimServerPort}
-                path={this.state.path}
-                info={this.state.initResponse.info}
-                core={this.state.initResponse.core}
-                identifier={"tree1"}
-              />
-              {/* <TreeContainer
-                nimServerPort={this.state.nimServerPort}
-                path={this.state.path}
-                info={this.state.initResponse.info}
-                core={this.state.initResponse.core}
-                identifier={"tree2"}
-              /> */}
-            </Wrapper>
-          )}
+          <Wrapper>
+            {this.state.trees && (
+              this.state.trees.map((tree: any, i: number) => (
+                <TreeContainer
+                  key={this.state.trees[i].path}
+                  path={this.state.trees[i].path}
+                  nimServerPort={this.state.nimServerPort}
+                  info={this.state.trees[i].info}
+                  core={this.state.trees[i].core}
+                  identifier={`tree${i}`}
+                />
+              ))
+            )}
+            
+            )}
+          </Wrapper>
         </div>
         {/* <TreeContainer info={"blah"} identifier={"letree"} core={testCore} /> */}
       </div>
