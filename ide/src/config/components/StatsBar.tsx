@@ -7,7 +7,7 @@ import { HotKeys } from "react-hotkeys"
 import { cloneDeep } from "lodash"
 import * as d3 from "d3"
 import { thresholdScott } from "d3"
-import { linkGenerator, getNextSolId } from "../modules/Helper"
+import { linkGenerator, getNextSolId } from "../modules/TreeHelper"
 
 interface Props {
   solNodeIds: number[]

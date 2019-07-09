@@ -10,13 +10,8 @@ import { Domains } from "./Domains"
 import SplitPane from "react-split-pane"
 import { Wrapper } from "./Constants"
 import { Check } from "./Check"
-import {
-  getNextSolId,
-  getPrevSolId,
-  showAllAncestors,
-  getNextFailedId,
-  getPrevFailedId
-} from "../modules/Helper"
+import * as TreeHelper from "../modules/TreeHelper"
+import * as MovementHelper from "../modules/MovementHelper"
 
 interface FromServerNode {
   id: number
@@ -61,289 +56,39 @@ export interface State {
   totalNodeCount: number
 }
 
-const makeState = (core: Core): State => {
-  const minsize = 7
-  const solveable = core.nodes.find(n => n.isSolution) !== undefined
-  const linScale = d3
-    .scaleLinear()
-    .domain([0, core.nodes[0].descCount]) // upper domain is Way more just to be safe
-    .range([minsize, 30])
-
-  let id2Node: MyMap = {}
-
-  let solNodeIds = []
-
-  for (let i = 0; i < core.nodes.length; i++) {
-    const element = core.nodes[i]
-
-    if (element.isSolution) {
-      solNodeIds.push(element.id)
-    }
-
-    const newNode = new Node(
-      element.id,
-      element.label,
-      element.prettyLabel,
-      element.parentId,
-      element.descCount,
-      element.isLeftChild,
-      element.childCount,
-      element.isSolution
-    )
-
-    const parentId = newNode.parentId
-    if (newNode.parentId === -1) {
-      id2Node[newNode.id] = newNode
-      continue
-    }
-    if (!id2Node[parentId].children) {
-      id2Node[parentId].children = []
-    }
-    if (newNode.isLeftChild) {
-      id2Node[parentId].children!.unshift(newNode)
-    } else {
-      id2Node[parentId].children!.push(newNode)
-    }
-    id2Node[newNode.id] = newNode
-  }
-
-  let state: State = {
-    id2Node: id2Node,
-    minsize: minsize,
-    solveable: solveable,
-    linScale: linScale,
-    selected: 0,
-    shouldGetKids: false,
-    solNodeIds: solNodeIds,
-    totalNodeCount: last(core.solAncestorIds)! + 1
-  }
-
-  return state
-}
-
 export class TreeContainer extends React.Component<Props, State> {
   // static whyDidYouRender = true;
+
+  map = {
+    goLeft: ["left", "s", "a", "down"],
+    goRight: ["right", "d"],
+    goUp: ["up", "w"],
+    collapse: "c",
+    expand: "e",
+    pPressed: "p",
+    goToRoot: "r",
+    goPrev: "shift"
+  }
 
   handlers: any
 
   constructor(props: Props) {
     super(props)
-    this.state = makeState(this.props.core)
+    this.state = TreeHelper.makeState(this.props.core)
 
     this.handlers = {
-      goLeft: this.goLeft,
-      goUp: this.goUp,
-      goRight: this.goRight,
+      goLeft: () => MovementHelper.goLeft(this),
+      goUp: () => MovementHelper.goUp(this),
+      goRight: () => MovementHelper.goRight(this),
+      goToRoot: () => this.setState({ selected: 0 }),
+      goPrev: () => MovementHelper.goToPreviousHandler(this),
       collapse: this.collapse,
-      expand: this.expand,
-      goToRoot: this.goToRoot,
-      goPrev: this.goToPreviousHandler
+      expand: this.expand
     }
   }
 
   nodeClickHandler = (d: Node) => {
     this.setState({ selected: d.id })
-  }
-
-  insertNodes = (nodes: Node[], nextId: number) => {
-    this.setState((prevState: State) => {
-      let newMap = cloneDeep(prevState.id2Node)
-      nodes.map((node: Node) => {
-        if (node.id in newMap) {
-          return
-        }
-
-        if (!newMap[node.parentId].children) {
-          newMap[node.parentId].children = []
-        }
-        if (node.isLeftChild) {
-          newMap[node.parentId].children!.unshift(node)
-        } else {
-          newMap[node.parentId].children!.push(node)
-        }
-
-        newMap[node.id] = node
-      })
-      return { id2Node: newMap, selected: nextId }
-    })
-  }
-
-  nextSolBranch = () => {
-    if (!this.state.solveable) {
-      return
-    }
-
-    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
-      const currentIndex = this.props.core.solAncestorIds.indexOf(
-        this.state.selected
-      )
-      if (currentIndex + 1 < this.props.core.solAncestorIds.length) {
-        this.setState((prevState: State) => {
-          const newMap = showAllAncestors(
-            prevState,
-            this.props.core.solAncestorIds[currentIndex + 1]
-          )
-          return {
-            selected: this.props.core.solAncestorIds[currentIndex + 1],
-            id2Node: newMap
-          }
-        })
-      }
-      return
-    }
-
-    const nextId = min(
-      this.props.core.solAncestorIds.filter(num => {
-        return this.state.selected < num
-      })
-    )
-
-    if (!nextId) {
-      return
-    }
-
-    this.setState((prevState: State) => {
-      const newMap = showAllAncestors(prevState, nextId)
-      return {
-        selected: nextId,
-        id2Node: newMap
-      }
-    })
-  }
-
-  prevSolBranch = () => {
-    if (!this.state.solveable) {
-      return
-    }
-
-    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
-      const currentIndex = this.props.core.solAncestorIds.indexOf(
-        this.state.selected
-      )
-      if (currentIndex - 1 >= 0) {
-        this.setState((prevState: State) => {
-          const newMap = showAllAncestors(
-            prevState,
-            this.props.core.solAncestorIds[currentIndex - 1]
-          )
-          return {
-            selected: this.props.core.solAncestorIds[currentIndex - 1],
-            id2Node: newMap
-          }
-        })
-      }
-      return
-    }
-
-    const nextId = max(
-      this.props.core.solAncestorIds.filter(num => {
-        return this.state.selected > num
-      })
-    )
-
-    if (!nextId) {
-      return
-    }
-
-    this.setState((prevState: State) => {
-      const newMap = showAllAncestors(prevState, nextId)
-      return {
-        selected: nextId,
-        id2Node: newMap
-      }
-    })
-  }
-
-  goToPreviousHandler = () => {
-    this.goPrev()
-  }
-
-  goPrev = (start?: number) => {
-    let current = start ? start : this.state.selected
-
-    console.log(current)
-
-    if (current === 0) {
-      return
-    }
-
-    const nextId = current - 1
-
-    if (nextId in this.state.id2Node) {
-      this.setState((prevState: State) => {
-        const newMap = showAllAncestors(prevState, nextId)
-        return { selected: nextId, id2Node: newMap }
-      })
-      return
-    }
-
-    const payload = {
-      path: this.props.path,
-      nodeId: nextId
-    }
-
-    fetch(`http://localhost:${this.props.nimServerPort}/loadAncestors`, {
-      method: "post",
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "text/plain"
-      },
-      body: JSON.stringify(payload)
-    })
-      .then(data => data.json())
-      .then(nodes => this.insertNodes(nodes, nextId))
-  }
-
-  goLeft = () => {
-    const nextId = this.state.selected + 1
-
-    if (nextId in this.state.id2Node) {
-      this.setState((prevState: State) => {
-        const newMap = showAllAncestors(prevState, this.state.selected)
-        return { selected: nextId, id2Node: newMap }
-      })
-      return
-    }
-
-    const payload = {
-      path: this.props.path,
-      nodeId: this.state.selected,
-      depth: this.props.loadDepth
-    }
-
-    fetch(`http://localhost:${this.props.nimServerPort}/loadNodes`, {
-      method: "post",
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "text/plain"
-      },
-      body: JSON.stringify(payload)
-    })
-      .then(data => data.json())
-      .then(nodes => this.insertNodes(nodes, this.state.selected))
-  }
-
-  goRight = () => {
-    this.setState((prev: State) => {
-      const current = prev.id2Node[prev.selected]
-      if (!current.children) {
-        return null
-      }
-      if (current.children.length < 2) {
-        return null
-      }
-      return { selected: current.children[1].id }
-    })
-  }
-
-  goUp = () => {
-    this.setState((prev: State) => {
-      const current = prev.id2Node[prev.selected]
-      if (current.parentId === -1) {
-        return null
-      }
-      return { selected: current.parentId }
-    })
   }
 
   collapse = () => {
@@ -360,120 +105,6 @@ export class TreeContainer extends React.Component<Props, State> {
       Node.expandNode(newMap[prevState.selected])
       return { id2Node: newMap }
     })
-
-    // console.log("expanded!");
-  }
-
-  nextFailed = () => {
-    if (!this.state.solveable) {
-      this.goLeft()
-      return
-    }
-
-    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
-      let nextId = getNextFailedId(
-        this.state.selected,
-        this.props.core.solAncestorIds
-      )
-      if (nextId !== -1) {
-        this.setState((prevState: State) => {
-          const newMap = showAllAncestors(prevState, nextId)
-          return { selected: nextId, id2Node: newMap }
-        })
-      }
-      return
-    }
-
-    if (this.props.core.solAncestorIds.includes(this.state.selected + 1)) {
-      let nextId = getNextFailedId(
-        this.state.selected + 1,
-        this.props.core.solAncestorIds
-      )
-      if (nextId !== -1) {
-        this.setState((prevState: State) => {
-          const newMap = showAllAncestors(prevState, nextId)
-          return { selected: nextId, id2Node: newMap }
-        })
-      }
-    } else {
-      this.goLeft()
-    }
-  }
-
-  prevFailed = () => {
-    if (!this.state.solveable) {
-      this.goToPreviousHandler()
-      return
-    }
-
-    if (this.props.core.solAncestorIds.includes(this.state.selected)) {
-      let nextId = getPrevFailedId(
-        this.state.selected,
-        this.props.core.solAncestorIds
-      )
-
-      if (nextId in this.state.id2Node) {
-        this.setState((prevState: State) => {
-          const newMap = showAllAncestors(prevState, nextId)
-          return { selected: nextId, id2Node: newMap }
-        })
-      } else {
-        this.goPrev(nextId + 1)
-      }
-      return
-    }
-
-    if (this.props.core.solAncestorIds.includes(this.state.selected - 1)) {
-      let nextId = getPrevFailedId(
-        this.state.selected - 1,
-        this.props.core.solAncestorIds
-      )
-
-      if (nextId === -1) {
-        return
-      }
-
-      if (nextId in this.state.id2Node) {
-        this.setState((prevState: State) => {
-          const newMap = showAllAncestors(prevState, nextId)
-          return { selected: nextId, id2Node: newMap }
-        })
-      } else {
-        this.goPrev(nextId + 1)
-      }
-    } else {
-      this.goPrev()
-    }
-  }
-
-  prevSol = () => {
-    this.setState((prevState: State) => {
-      const solId = getPrevSolId(prevState)
-
-      if (solId === -1) {
-        return null
-      }
-
-      const newMap = showAllAncestors(prevState, solId)
-      return { selected: solId, id2Node: newMap }
-    })
-  }
-
-  nextSol = () => {
-    this.setState((prevState: State) => {
-      const solId = getNextSolId(prevState)
-
-      if (solId === -1) {
-        return null
-      }
-
-      const newMap = showAllAncestors(prevState, solId)
-      return { selected: solId, id2Node: newMap }
-    })
-  }
-
-  goToRoot = () => {
-    this.setState({ selected: 0 })
   }
 
   play = async () => {
@@ -486,23 +117,19 @@ export class TreeContainer extends React.Component<Props, State> {
         break
       }
       if (this.props.reverse) {
-        this.goToPreviousHandler()
+        MovementHelper.goToPreviousHandler(this)
       } else {
-        this.goLeft()
+        MovementHelper.goLeft(this)
       }
-      await this.sleep(this.props.duration)
+      await TreeHelper.sleep(this.props.duration)
     }
     this.props.finishedPlayingHandler()
-  }
-
-  sleep = (ms: number) => {
-    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   componentDidUpdate = (prevProps: Props) => {
     // Typical usage (don't forget to compare props):
     if (this.props.core.id !== prevProps.core.id) {
-      this.setState(makeState(this.props.core))
+      this.setState(TreeHelper.makeState(this.props.core))
     }
 
     if (this.props.playing !== prevProps.playing) {
@@ -517,17 +144,17 @@ export class TreeContainer extends React.Component<Props, State> {
 
     return (
       <div className="treeContainer">
-        <HotKeys keyMap={map} handlers={this.handlers}>
+        <HotKeys keyMap={this.map} handlers={this.handlers}>
           <StatsBar
             info={this.props.info}
-            nextSolBranchHandler={this.nextSolBranch}
-            prevSolBranchHandler={this.prevSolBranch}
-            nextNodeHandler={this.goLeft}
-            prevNodeHandler={this.goToPreviousHandler}
-            nextFailedHandler={this.nextFailed}
-            prevFailedHandler={this.prevFailed}
-            nextSolHandler={this.nextSol}
-            prevSolHandler={this.prevSol}
+            nextSolBranchHandler={() => MovementHelper.nextSolBranch(this)}
+            prevSolBranchHandler={() => MovementHelper.prevSolBranch(this)}
+            nextNodeHandler={() => MovementHelper.goLeft(this)}
+            prevNodeHandler={() => MovementHelper.goToPreviousHandler(this)}
+            nextFailedHandler={() => MovementHelper.nextFailed(this)}
+            prevFailedHandler={() => MovementHelper.prevFailed(this)}
+            nextSolHandler={() => MovementHelper.nextSol(this)}
+            prevSolHandler={() => MovementHelper.prevSol(this)}
             minsize={this.state.minsize}
             solNodeIds={this.state.solNodeIds}
             totalNodes={this.state.totalNodeCount}
@@ -564,15 +191,4 @@ export class TreeContainer extends React.Component<Props, State> {
       </div>
     )
   }
-}
-
-const map = {
-  goLeft: ["left", "s", "a", "down"],
-  goRight: ["right", "d"],
-  goUp: ["up", "w"],
-  collapse: "c",
-  expand: "e",
-  pPressed: "p",
-  goToRoot: "r",
-  goPrev: "shift"
 }

@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom"
 import * as d3 from "d3"
 import Node from "../modules/Node"
 import { HierarchyPointLink, HierarchyPointNode, Selection } from "d3"
-import { linkGenerator } from "../modules/Helper"
+import { linkGenerator } from "../modules/TreeHelper"
 
 interface State {}
 
