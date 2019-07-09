@@ -3,14 +3,12 @@ import * as ReactDOM from "react-dom"
 import Node from "../modules/Node"
 import TreeVis from "./TreeVis"
 import StatsBar from "./StatsBar"
-import Play from "./Play"
 import { HotKeys, GlobalHotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max } from "lodash"
 import * as d3 from "d3"
 import { Domains } from "./Domains"
 import SplitPane from "react-split-pane"
 import { Wrapper } from "./Constants"
-import { MySlider } from "./Slider"
 import { Check } from "./Check"
 import {
   getNextSolId,
@@ -45,6 +43,11 @@ interface Props {
   info: string
   path: string
   nimServerPort: number
+  playing: boolean
+  reverse: boolean
+  loadDepth: number
+  duration: number
+  finishedPlayingHandler: () => void
 }
 
 export interface State {
@@ -54,12 +57,8 @@ export interface State {
   linScale: any
   minsize: number
   shouldGetKids: boolean
-  playing: boolean
   solNodeIds: number[]
-  loadDepth: number
-  reverse: boolean
   totalNodeCount: number
-  duration: number
 }
 
 const makeState = (core: Core): State => {
@@ -115,12 +114,8 @@ const makeState = (core: Core): State => {
     linScale: linScale,
     selected: 0,
     shouldGetKids: false,
-    playing: false,
     solNodeIds: solNodeIds,
-    loadDepth: 1,
-    reverse: false,
-    totalNodeCount: last(core.solAncestorIds)! + 1,
-    duration: 500
+    totalNodeCount: last(core.solAncestorIds)! + 1
   }
 
   return state
@@ -141,7 +136,6 @@ export class TreeContainer extends React.Component<Props, State> {
       goRight: this.goRight,
       collapse: this.collapse,
       expand: this.expand,
-      pPressed: this.pPressed,
       goToRoot: this.goToRoot,
       goPrev: this.goToPreviousHandler
     }
@@ -314,7 +308,7 @@ export class TreeContainer extends React.Component<Props, State> {
     const payload = {
       path: this.props.path,
       nodeId: this.state.selected,
-      depth: this.state.loadDepth
+      depth: this.props.loadDepth
     }
 
     fetch(`http://localhost:${this.props.nimServerPort}/loadNodes`, {
@@ -478,48 +472,40 @@ export class TreeContainer extends React.Component<Props, State> {
     })
   }
 
-  pPressed = () => {
-    this.setState((prevState: State) => {
-      return {
-        playing: !prevState.playing
-      }
-    })
-  }
-
   goToRoot = () => {
     this.setState({ selected: 0 })
   }
 
   play = async () => {
-    while (this.state.playing) {
+    while (this.props.playing) {
       if (
         (this.state.selected === last(this.props.core.solAncestorIds)! &&
-          !this.state.reverse) ||
-        (this.state.selected === 0 && this.state.reverse)
+          !this.props.reverse) ||
+        (this.state.selected === 0 && this.props.reverse)
       ) {
         break
       }
-      if (this.state.reverse) {
+      if (this.props.reverse) {
         this.goToPreviousHandler()
       } else {
         this.goLeft()
       }
-      await this.sleep(this.state.duration)
+      await this.sleep(this.props.duration)
     }
-    this.setState({ playing: false })
+    this.props.finishedPlayingHandler()
   }
 
   sleep = (ms: number) => {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  componentDidUpdate = (prevProps: Props, prevState: State) => {
+  componentDidUpdate = (prevProps: Props) => {
     // Typical usage (don't forget to compare props):
     if (this.props.core.id !== prevProps.core.id) {
       this.setState(makeState(this.props.core))
     }
 
-    if (this.state.playing !== prevState.playing) {
+    if (this.props.playing !== prevProps.playing) {
       this.play()
     }
   }
@@ -549,50 +535,6 @@ export class TreeContainer extends React.Component<Props, State> {
             linScale={this.state.linScale}
           />
 
-          <div className="sliderContainer row">
-            <label className="col-3">Lazy loading depth:</label>
-            <div className="slider col-3">
-              <MySlider
-                values={[1]}
-                domain={[1, 5]}
-                sliderChangeHandler={(value: number) => {
-                  this.setState({ loadDepth: value })
-                }}
-              />
-            </div>
-
-            <label className="col-3">Animation duration (ms):</label>
-            <div className="slider col-3">
-              <MySlider
-                values={[500]}
-                domain={[0, 4000]}
-                sliderChangeHandler={(value: number) => {
-                  this.setState({ duration: value })
-                }}
-              />
-            </div>
-
-            <div className="col">
-              <Check
-                title={"Reverse"}
-                checked={this.state.reverse}
-                onChange={() => {
-                  this.setState((prevState: State) => {
-                    return { reverse: !prevState.reverse }
-                  })
-                }}
-              />
-            </div>
-
-            <div className="player col mb-3">
-              <Play
-                clickHandler={this.pPressed}
-                playing={this.state.playing}
-                x={0}
-              />
-            </div>
-          </div>
-
           <Wrapper>
             <SplitPane split="horizontal" defaultSize={600}>
               <TreeVis
@@ -605,7 +547,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 linScale={this.state.linScale}
                 minsize={this.state.minsize}
                 nodeClickHandler={this.nodeClickHandler}
-                duration={this.state.duration}
+                duration={this.props.duration}
                 width={1200}
                 height={500}
               />

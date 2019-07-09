@@ -16,7 +16,7 @@ const StageHeader = (props: Props) => {
   const innerClass = props.isCollapsed ? "collapse" : "collapse show"
 
   return (
-    <div className="card mb-4">
+    <div className="card mb-2">
       <h5 className="card-header">
         <a
           className={outerClass}
