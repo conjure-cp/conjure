@@ -43,6 +43,7 @@ interface Props {
   loadDepth: number
   duration: number
   finishedPlayingHandler: () => void
+  collapseAsExploring: boolean
 }
 
 export interface State {
@@ -93,16 +94,23 @@ export class TreeContainer extends React.Component<Props, State> {
 
   collapse = () => {
     this.setState((prevState: State) => {
+      const toCollapse = prevState.selected
+
+      console.log("Collapsing ", toCollapse)
+
       let newMap = cloneDeep(prevState.id2Node)
-      Node.collapseNode(newMap[prevState.selected])
+      // Node.collapseNode(newMap[toCollapse])
+      Node.hideChildren(newMap[toCollapse])
       return { id2Node: newMap }
     })
   }
 
   expand = () => {
     this.setState((prevState: State) => {
+      const toExpand = prevState.selected
       let newMap = cloneDeep(prevState.id2Node)
-      Node.expandNode(newMap[prevState.selected])
+      // Node.expandNode(newMap[toExpand])
+      Node.showChildren(newMap[toExpand])
       return { id2Node: newMap }
     })
   }

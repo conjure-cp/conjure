@@ -16,6 +16,7 @@ interface State {
   duration: number
   reverse: boolean
   playing: boolean
+  collapseAsExploring: boolean
 }
 
 class Forest extends React.Component<Props, State> {
@@ -25,7 +26,8 @@ class Forest extends React.Component<Props, State> {
       loadDepth: 1,
       duration: 500,
       reverse: false,
-      playing: false
+      playing: false,
+      collapseAsExploring: false
     }
   }
 
@@ -80,6 +82,17 @@ class Forest extends React.Component<Props, State> {
                       })
                     }}
                   />
+                  <Check
+                    title={"Collapse when explored"}
+                    checked={this.state.collapseAsExploring}
+                    onChange={() => {
+                      this.setState((prevState: State) => {
+                        return {
+                          collapseAsExploring: !prevState.collapseAsExploring
+                        }
+                      })
+                    }}
+                  />
                 </div>
 
                 <div className="player col mb-3">
@@ -108,6 +121,7 @@ class Forest extends React.Component<Props, State> {
                   finishedPlayingHandler={() =>
                     this.setState({ playing: false })
                   }
+                  collapseAsExploring={this.state.collapseAsExploring}
                 />
               ))}
             </Wrapper>

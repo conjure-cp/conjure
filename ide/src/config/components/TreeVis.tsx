@@ -146,6 +146,7 @@ export default class TreeVis extends React.Component<Props, State> {
 
     nodeEnter
       .append("text")
+      .style("fill-opacity", 1e-6)
       .attr("fill", "black")
       .attr("y", -maxHeight / 2)
       .attr("dy", ".35em")
@@ -153,9 +154,13 @@ export default class TreeVis extends React.Component<Props, State> {
       .text(d => {
         return d.data.label
       })
+      .transition()
+      .duration(this.props.duration)
+      .style("fill-opacity", 1)
 
     nodeEnter
       .append("text")
+      .style("fill-opacity", 1e-6)
       .attr("y", d => {
         return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize)
       })
@@ -163,6 +168,9 @@ export default class TreeVis extends React.Component<Props, State> {
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
       .text(d => this.getDecCountMessage(d))
+      .transition()
+      .duration(this.props.duration)
+      .style("fill-opacity", 1)
 
     this.updateCircles(nodeEnter)
 
@@ -173,37 +181,52 @@ export default class TreeVis extends React.Component<Props, State> {
     nodeUpdate
       .transition()
       .duration(this.props.duration)
-      .attr(
-        "transform",
-        (d: HierarchyPointNode<Node>) => `translate(${d.x},${d.y})`
-      )
+      .attr("transform", (d: HierarchyPointNode<Node>) => {
+        return `translate(${d.x},${d.y})`
+      })
 
     nodeUpdate
       .select("text.decCount")
       .attr("y", d => {
         return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize)
       })
+      .transition()
+      .duration(this.props.duration)
       .text(d => this.getDecCountMessage(d))
+      .style("fill-opacity", d =>
+        this.getDecCountMessage(d) === "" ? 1e-6 : 1
+      )
 
     this.updateCircles(nodeUpdate)
 
-    const nodeExit = node
-      .exit<HierarchyPointNode<Node>>()
+    const nodeExit = node.exit<HierarchyPointNode<Node>>()
+
+    nodeExit
+      .selectAll("text")
       .transition()
       .duration(this.props.duration)
-      .attr("transform", d =>
-        d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
-      )
-      .remove()
+      .style("fill-opacity", 1e-6)
 
-    nodeExit.select("circle").attr("r", 0)
+    nodeExit
+      .select("circle")
+      .transition()
+      .duration(this.props.duration)
+      .attr("r", 0)
+
+    nodeExit
+      .transition()
+      .duration(this.props.duration)
+      .attr("transform", d => {
+        return d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
+      })
+      .remove()
 
     let p = svg.selectAll("path.link")
 
     const linkList = rootNode.links()
     let link = p.data(linkList, (d: any) => d.target.data.id)
 
-    link
+    const enterLink = link
       .enter()
       .insert("svg:path", "g")
       .classed("link", true)
@@ -217,8 +240,10 @@ export default class TreeVis extends React.Component<Props, State> {
         const origin = { x: d.source.x, y: d.source.y }
         return linkGenerator({ source: origin, target: origin })
       })
+      .style("stroke-opacity", 0)
       .transition()
       .duration(this.props.duration)
+      .style("stroke-opacity", 1)
       .attr("d", linkGenerator)
 
     link
@@ -231,11 +256,13 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .attr("d", linkGenerator)
+      .style("stroke-opacity", 1)
 
     link
       .exit<HierarchyPointLink<Node>>()
       .transition()
       .duration(this.props.duration)
+      .style("stroke-opacity", 0)
       .attr("d", d => {
         const origin = { x: d.source.x, y: d.source.y }
         return linkGenerator({ source: origin, target: origin })

@@ -144,8 +144,15 @@ export const goUp = (instance: TreeContainer) => {
     return { selected: current.parentId }
   })
 }
-export const goLeft = (instance: TreeContainer) => {
+
+export const goLeft = async (instance: TreeContainer) => {
   const nextId = instance.state.selected + 1
+
+  const parent = instance.state.id2Node[nextId]
+
+  const grandParent = parent
+    ? instance.state.id2Node[parent.parentId]
+    : undefined
 
   if (nextId in instance.state.id2Node) {
     instance.setState((prevState: State) => {
@@ -153,8 +160,19 @@ export const goLeft = (instance: TreeContainer) => {
         prevState,
         instance.state.selected
       )
+
+      if (
+        instance.props.collapseAsExploring &&
+        grandParent &&
+        grandParent.children &&
+        nextId !== grandParent.children![0].id
+      ) {
+        Node.collapseNode(newMap[grandParent.children![0].id])
+      }
+
       return { selected: nextId, id2Node: newMap }
     })
+
     return
   }
 
@@ -164,7 +182,7 @@ export const goLeft = (instance: TreeContainer) => {
     depth: instance.props.loadDepth
   }
 
-  fetch(`http://localhost:${instance.props.nimServerPort}/loadNodes`, {
+  await fetch(`http://localhost:${instance.props.nimServerPort}/loadNodes`, {
     method: "post",
     headers: headers,
     body: JSON.stringify(payload)
@@ -294,5 +312,7 @@ export const prevSolBranch = (instance: TreeContainer) => {
 
 export const goToPreviousHandler = (instance: TreeContainer) => {
   goPrev(instance)
-  instance.collapse()
+  if (instance.props.collapseAsExploring) {
+    instance.collapse()
+  }
 }
