@@ -66,6 +66,12 @@ class ConfigService {
     return vscode.workspace.asRelativePath(uri.path)
   }
 
+  @Path("/invalidateCaches")
+  @GET
+  async invalidateCaches() {
+    await ConfigHelper.invalidateCaches()
+  }
+
   @Path("/caches")
   @GET
   async getCaches(): Promise<Cache[]> {

@@ -315,6 +315,20 @@ class F extends React.Component<any, State> {
             onChange={this.clickHandler}
           />
 
+          <button
+            className="btn btn-danger btn-lg btn-block"
+            onClick={async () => {
+              console.log("Should invalidate caches!")
+              await fetch(
+                `http://localhost:${this.state.vscodeServerPort}/config/invalidateCaches`
+              )
+              await this.getFiles()
+              console.log("Done!!")
+            }}
+          >
+            Invalidate Caches
+          </button>
+
           <FormikConjure
             vscodeServerPort={this.state.vscodeServerPort}
             reps={this.state.reps}
@@ -330,7 +344,7 @@ class F extends React.Component<any, State> {
 
         <div className="">
           <Wrapper>
-            {this.state.trees && (
+            {this.state.trees &&
               this.state.trees.map((tree: any, i: number) => (
                 <TreeContainer
                   key={this.state.trees[i].path}
@@ -340,9 +354,7 @@ class F extends React.Component<any, State> {
                   core={this.state.trees[i].core}
                   identifier={`tree${i}`}
                 />
-              ))
-            )}
-            
+              ))}
             )}
           </Wrapper>
         </div>
