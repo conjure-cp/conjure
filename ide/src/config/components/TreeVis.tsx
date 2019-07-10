@@ -2,9 +2,14 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import * as d3 from "d3"
 import Node from "../modules/Node"
-import { HierarchyPointLink, HierarchyPointNode, Selection } from "d3"
+import {
+  HierarchyPointLink,
+  HierarchyPointNode,
+  Selection,
+  precisionFixed
+} from "d3"
 import { linkGenerator } from "../modules/TreeHelper"
-import { isEqual, reduce, cloneDeep } from "lodash"
+import { isEqual, reduce, cloneDeep, reduceRight } from "lodash"
 import { runInThisContext } from "vm"
 
 type num2num = Record<number, { x: number; y: number }>
@@ -65,7 +70,21 @@ export default class TreeVis extends React.Component<Props, State> {
   }
 
   hasHiddenChildren(d: HierarchyPointNode<Node>): boolean {
-    return d.data.childCount !== (d.children ? d.children.length : 0)
+    return d.data.childCount !== (d.data.children ? d.data.children.length : 0)
+  }
+
+  hasOnlyExploredChildren(d: HierarchyPointNode<Node>): boolean {
+    if (d.children || d.data.childCount === 0) {
+      return false
+    }
+
+    for (let i = 0; i < d.data.descCount; i++) {
+      if (!(d.data.id + i + 1 in this.state.oldPos)) {
+        return false
+      }
+    }
+
+    return true
   }
 
   getDecCountMessage(d: HierarchyPointNode<Node>): string {
@@ -103,7 +122,13 @@ export default class TreeVis extends React.Component<Props, State> {
     circle.classed(
       "red",
       (d: HierarchyPointNode<Node>) =>
-        !this.props.solAncestorIds.includes(d.data.id) || !this.props.solveable
+        (!this.props.solAncestorIds.includes(d.data.id) ||
+          !this.props.solveable) &&
+        !this.hasOnlyExploredChildren(d)
+    )
+
+    circle.classed("explored", (d: HierarchyPointNode<Node>) =>
+      this.hasOnlyExploredChildren(d)
     )
 
     circle.classed(
