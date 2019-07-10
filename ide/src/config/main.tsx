@@ -68,7 +68,7 @@ class Root extends React.Component<any, State> {
     this.setState((prevState: State) => {
       let copy = cloneDeep(prevState.selectedCaches)
       if (!copy) {
-        return { selectedCaches: [{ ...cache }, undefined] }
+        copy = [undefined, undefined]
       }
       copy[index] = cache
       return { selectedCaches: copy }
