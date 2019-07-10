@@ -307,8 +307,10 @@ export default class TreeVis extends React.Component<Props, State> {
 
         let parent = this.getParentNode(d, nodeList)
 
+        parent = parent ? parent : d.parent!
+
         //   : ""
-        let exiting = parent ? `translate(${parent.x},${parent.y})` : ""
+        let exiting = `translate(${parent.x},${parent.y})`
 
         // console.log(this.state.oldPos[d.parent.data.id])
         // // console.log(this.state.oldPos[28])
@@ -383,9 +385,9 @@ export default class TreeVis extends React.Component<Props, State> {
       .attr("d", d => {
         // let parent = this.getParentNode(d.target, nodeList)
 
-        let current = this.getNode(d.source, nodeList) as any
+        let current = this.getNode(d.source, nodeList)
 
-        current = current ? current : { x: 0, y: 0 }
+        current = current ? current : d.source
 
         const origin = { x: current.x, y: current.y }
         return linkGenerator({ source: origin, target: origin })
