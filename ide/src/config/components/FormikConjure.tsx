@@ -37,6 +37,7 @@ interface Props {
 }
 
 interface Config {
+  answers: any
   essenceFile: string
   paramFile: string
   strategy: string
@@ -53,7 +54,7 @@ interface Config {
   cnfLimit: number | string
   consistency: string
   preprocessing: string
-  [key: string]: string | number | string[]
+  [key: string]: string | number | string[] | number[]
 }
 
 const positiveInt = Yup.number()
@@ -174,6 +175,8 @@ class ConfigForm extends React.Component<Props, State> {
   }
 
   renderArrayElements = (props: Props, values: Values, setFieldValue: any) => {
+    console.log(values)
+
     return values.namedConfigs.map((_config, index) => {
       const currentEssenceFile = values.namedConfigs[index].config.essenceFile
 
@@ -496,6 +499,10 @@ class ConfigForm extends React.Component<Props, State> {
       if (key in selectedCache.config) {
         initialConfig[key] = selectedCache.config[key]
       }
+    })
+
+    initialConfig.answers = initialConfig.answers.map((str: string) => {
+      return Number(str.split(":")[1])
     })
 
     return initialConfig
