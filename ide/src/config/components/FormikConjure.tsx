@@ -5,7 +5,7 @@ import * as ReactDOM from "react-dom"
 import { Form, Field, FieldArray, Formik, FormikProps } from "formik"
 import * as Yup from "yup"
 
-import { maxBy, times } from "lodash"
+import { maxBy, times, isEqual, cloneDeep } from "lodash"
 import TextWithLabel from "./TextWithLabel"
 import StageHeader from "./StageHeader"
 import Checkbox from "./Checkbox"
@@ -96,13 +96,13 @@ const validationSchema = Yup.object().shape({
 })
 
 interface State {
-  showReps: boolean
+  showReps: boolean[]
 }
 
 class ConfigForm extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { showReps: false }
+    this.state = { showReps: [false, false] }
   }
 
   submissionHandler = (values: Values, props: Props, state: State) => {
@@ -139,7 +139,7 @@ class ConfigForm extends React.Component<Props, State> {
 
       // cleaned.answers = cleaned.answers.filter((x: any) => x !== undefined)
       //  || cleaned.answers.length === 0
-      if (!state.showReps) {
+      if (!state.showReps[index]) {
         delete cleaned["answers"]
       }
 
@@ -265,7 +265,7 @@ class ConfigForm extends React.Component<Props, State> {
                 label={"Time limit"}
               />
               <>
-                {!this.state.showReps && (
+                {!this.state.showReps[index] && (
                   <NewSelect
                     name={`namedConfigs[${index}].config.strategy`}
                     value={values.namedConfigs[index].config.strategy}
@@ -281,16 +281,18 @@ class ConfigForm extends React.Component<Props, State> {
               </>
               <Check
                 title={"Choose Representation"}
-                checked={this.state.showReps}
+                checked={this.state.showReps[index]}
                 onChange={() =>
                   this.setState((prevState: State) => {
+                    let copy = cloneDeep(prevState.showReps)
+                    copy[index] = !prevState.showReps[index]
                     return {
-                      showReps: !prevState.showReps
+                      showReps: copy
                     }
                   })
                 }
               />
-              {this.state.showReps && repSelectBoxes}
+              {this.state.showReps[index] && repSelectBoxes}
               {/*  */}
             </StageHeader>
             <StageHeader
@@ -453,6 +455,7 @@ class ConfigForm extends React.Component<Props, State> {
       name: name
     }
   }
+
   makeEmptyConfig = (props: Props, index: number, reps: RepMap): Config => {
     // console.log("selected cache args!", props.selectedCaches)
 
@@ -489,12 +492,11 @@ class ConfigForm extends React.Component<Props, State> {
       initialConfig
     )
   }
+
   overwriteWithCachedOptions = (
     selectedCache: Cache,
     initialConfig: Config
   ): Config => {
-    console.log("selected Cache ", selectedCache)
-
     Object.keys(initialConfig).map(key => {
       if (key in selectedCache.config) {
         initialConfig[key] = selectedCache.config[key]
@@ -505,25 +507,32 @@ class ConfigForm extends React.Component<Props, State> {
       return Number(str.split(":")[1])
     })
 
+    console.log("selected Cache ", selectedCache)
+
     return initialConfig
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (this.props.selectedCaches && this.props.selectedCaches[0]) {
-      // console.log(this.props.selectedCaches === prevProps.selectedCaches)
-      // console.log(this.props.selectedCaches)
-      // console.log(prevProps.selectedCaches)
-
-      if (!(this.props.selectedCaches === prevProps.selectedCaches)) {
+    if (this.props.selectedCaches) {
+      if (!isEqual(this.props.selectedCaches, prevProps.selectedCaches)) {
         // console.log("HRE")
 
-        if ("answers" in this.props.selectedCaches![0]!.config) {
-          this.setState({ showReps: true })
-          // console.log("SET TRUE")
-        } else {
-          this.setState({ showReps: false })
-          // console.log("SET FALSE")
+        let flag1 = false
+        let flag2 = false
+        // let config1Flag = false
+
+        if (this.props.selectedCaches[0]) {
+          if ("answers" in this.props.selectedCaches![0]!.config) {
+            flag1 = true
+          }
         }
+        if (this.props.selectedCaches[1]) {
+          if ("answers" in this.props.selectedCaches![1]!.config) {
+            flag2 = true
+          }
+        }
+
+        this.setState({ showReps: [flag1, flag2] })
       }
     }
   }
