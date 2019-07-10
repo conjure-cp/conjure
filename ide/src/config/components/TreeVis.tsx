@@ -4,10 +4,13 @@ import * as d3 from "d3"
 import Node from "../modules/Node"
 import { HierarchyPointLink, HierarchyPointNode, Selection } from "d3"
 import { linkGenerator } from "../modules/TreeHelper"
+import { isEqual, reduce, cloneDeep } from "lodash"
+import { runInThisContext } from "vm"
 
-interface State {}
+type num2num = Record<number, { x: number; y: number }>
 
 interface Props {
+  first: boolean
   id: string
   identifier: string
   width: number
@@ -20,15 +23,20 @@ interface Props {
   linScale: any
   minsize: number
   nodeClickHandler: (d: Node) => void
+  storeNodePrevPos: (list: HierarchyPointNode<Node>[]) => void
+}
+
+interface State {
+  oldPos: num2num
 }
 
 export default class TreeVis extends React.Component<Props, State> {
-  // static whyDidYouRender = true;
+  // static whyDidYouRender = true
   zoom: any
 
   constructor(props: Props) {
     super(props)
-    this.state = {}
+    this.state = { oldPos: {} }
 
     console.log(this.props)
     this.zoom = d3
@@ -104,7 +112,39 @@ export default class TreeVis extends React.Component<Props, State> {
     )
   }
 
-  drawTree() {
+  getPrevPos = (d: HierarchyPointNode<Node>): { x: number; y: number } => {
+    return this.state.oldPos[d.data.id]
+      ? this.state.oldPos[d.data.id]
+      : { x: -1, y: -1 }
+  }
+
+  printPos = (nodeList: HierarchyPointNode<Node>[]) => {
+    console.log(
+      nodeList
+        .filter(d => d.data.id === 28)
+        .map(d =>
+          this.state.oldPos[28]
+            ? `${d.x}, ${d.y} \n ${this.state.oldPos[28].x},${this.state.oldPos[28].y}`
+            : undefined
+        )
+    )
+  }
+
+  getParentNode = (
+    d: HierarchyPointNode<Node>,
+    nodeList: HierarchyPointNode<Node>[]
+  ) => {
+    return nodeList.filter(k => k.data.id === d.parent!.data.id)[0]
+  }
+
+  getNode = (
+    d: HierarchyPointNode<Node>,
+    nodeList: HierarchyPointNode<Node>[]
+  ) => {
+    return nodeList.filter(k => k.data.id === d.data.id)[0]
+  }
+
+  drawTree(prevProps: Props, first?: boolean) {
     const hierarchy = d3.hierarchy<Node>(this.props.rootNode)
     const sorted = hierarchy
       .descendants()
@@ -118,9 +158,13 @@ export default class TreeVis extends React.Component<Props, State> {
     const rootNode = layout(hierarchy)
     const nodeList = rootNode.descendants()
 
+    console.log(nodeList.filter(d => d.data.id === 28)[0])
+
     // console.log(JSON.stringify(nodeList));
     // console.log(this.props.rootNode);
     // console.log(nodeList.map(d => d.data));
+
+    this.printPos(nodeList)
 
     let g = svg.selectAll("g.node")
     let node = g.data(nodeList, (d: any) => d.data.id)
@@ -134,9 +178,23 @@ export default class TreeVis extends React.Component<Props, State> {
       })
 
     nodeEnter
-      .attr("transform", d =>
-        d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
-      )
+      .attr("transform", d => {
+        // console.log("")
+
+        let entering = d.parent
+          ? `translate(${this.getPrevPos(d.parent).x},${
+              this.getPrevPos(d.parent).y
+            })`
+          : ""
+
+        if (d.data.id === 29) {
+          // console.log("```````````````````````")
+          // console.log("entering ", entering)
+          // console.log(this.state.oldPos[d.parent!.data.id])
+        }
+
+        return entering
+      })
       .each(d => this.maybeFocus(d))
       .transition()
       .duration(this.props.duration)
@@ -148,11 +206,14 @@ export default class TreeVis extends React.Component<Props, State> {
       .append("text")
       .style("fill-opacity", 1e-6)
       .attr("fill", "black")
-      .attr("y", -maxHeight / 2)
+      .attr("class", "decision")
+      // .attr("y", -maxHeight / 2)
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
       .text(d => {
-        return d.data.label
+        // return d.data.label
+        return `(${d.x},${d.y})
+                (${this.getPrevPos(d).x}, ${this.getPrevPos(d).y})`
       })
       .transition()
       .duration(this.props.duration)
@@ -197,6 +258,12 @@ export default class TreeVis extends React.Component<Props, State> {
         this.getDecCountMessage(d) === "" ? 1e-6 : 1
       )
 
+    nodeUpdate.select("text.decision").text(d => {
+      // return d.data.label
+      return `(${d.x},${d.y})
+                (${this.getPrevPos(d).x}, ${this.getPrevPos(d).y})`
+    })
+
     this.updateCircles(nodeUpdate)
 
     const nodeExit = node.exit<HierarchyPointNode<Node>>()
@@ -206,6 +273,12 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .style("fill-opacity", 1e-6)
+
+    nodeExit.select("text.decision").text(d => {
+      // return d.data.label
+      return `(${d.x},${d.y})
+                (${this.getPrevPos(d).x}, ${this.getPrevPos(d).y})`
+    })
 
     nodeExit
       .select("circle")
@@ -217,7 +290,42 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .attr("transform", d => {
-        return d.parent ? `translate(${d.parent.x},${d.parent.y})` : ""
+        // let exiting = d.parent
+        //   ? `translate(${this.getPrevPos(d.parent).x},${
+        //       this.getPrevPos(d.parent).y
+        //     })`
+
+        // console.log(d.parent)
+
+        // console.log(
+        //   d.parent!.x === this.getPrevPos(d.parent!).x &&
+        //     d.parent!.y === this.getPrevPos(d.parent!).y
+        // )
+
+        // this.printPos(nodeList)
+        // let parent = nodeList.filter(k => k.data.id === d.parent!.data.id)[0]
+
+        let parent = this.getParentNode(d, nodeList)
+
+        //   : ""
+        let exiting = parent ? `translate(${parent.x},${parent.y})` : ""
+
+        // console.log(this.state.oldPos[d.parent.data.id])
+        // // console.log(this.state.oldPos[28])
+        // console.log("exiting ", exiting)
+
+        // console.log(`${d.parent.x}, ${d.parent.y}`)
+        // console.log(d.parent)
+
+        return exiting
+
+        // return d.parent && this.state.oldPos[d.parent.data.id]
+        //   ? `translate(${this.state.oldPos[d.parent.data.id].x},${this.state.oldPos[d.parent.data.id].y})`
+        //   : ""
+
+        // return d.parent
+        //   ? `translate(${d.parent.data.x0},${d.parent.data.y0})`
+        //   : ""
       })
       .remove()
 
@@ -237,7 +345,16 @@ export default class TreeVis extends React.Component<Props, State> {
         )
       })
       .attr("d", d => {
-        const origin = { x: d.source.x, y: d.source.y }
+        // let parent = d.source.parent
+        //   ? this.getParentNode(d.source, nodeList)
+        //   : { x: 0, y: 0 }
+
+        let current = this.getNode(d.source, nodeList)
+
+        const origin = {
+          x: this.getPrevPos(d.source).x,
+          y: this.getPrevPos(d.source).y
+        }
         return linkGenerator({ source: origin, target: origin })
       })
       .style("stroke-opacity", 0)
@@ -264,10 +381,90 @@ export default class TreeVis extends React.Component<Props, State> {
       .duration(this.props.duration)
       .style("stroke-opacity", 0)
       .attr("d", d => {
-        const origin = { x: d.source.x, y: d.source.y }
+        // let parent = this.getParentNode(d.target, nodeList)
+
+        let current = this.getNode(d.source, nodeList) as any
+
+        current = current ? current : { x: 0, y: 0 }
+
+        const origin = { x: current.x, y: current.y }
         return linkGenerator({ source: origin, target: origin })
       })
       .remove()
+
+    this.setState((prevState: State) => {
+      let newMap = cloneDeep(prevState.oldPos)
+      nodeList.forEach(d => {
+        if (!newMap[d.data.id]) {
+          newMap[d.data.id] = { x: -1, y: -1 }
+        }
+
+        newMap[d.data.id].x = d.x
+        newMap[d.data.id].y = d.y
+      })
+      return { oldPos: newMap }
+    })
+
+    // this.setState((prevState: State) => {
+    //   let newXMap = cloneDeep(prevState.id2PrevX)
+    //   let newYMap = cloneDeep(prevState.id2PrevY)
+
+    //   nodeList.forEach(d => {
+    //     newXMap[d.data.id] = d.x
+    //     newYMap[d.data.id] = d.y
+    //   })
+
+    //   return { id2PrevX: newXMap, id2PrevY: newYMap }
+    // })
+
+    // function getObjectDiff(obj1: any, obj2: any) {
+    //   const diff = Object.keys(obj1).reduce((result, key) => {
+    //     if (!obj2.hasOwnProperty(key)) {
+    //       result.push(key)
+    //     } else if (isEqual(obj1[key], obj2[key])) {
+    //       const resultKeyIndex = result.indexOf(key)
+    //       result.splice(resultKeyIndex, 1)
+    //     }
+    //     return result
+    //   }, Object.keys(obj2))
+
+    //   return diff
+    // }
+
+    // let childrenDifferent = false
+
+    // if (!isEqual(this.props.rootNode, prevProps.rootNode)) {
+    //   function recurse(node1: Node, node2: Node) {
+    //     if (node1.children) {
+    //       node1.children.forEach((kid, i) => {
+    //         if (!node2.children) {
+    //           // console.error("CHILDREN ", node1, node2)
+    //           childrenDifferent = true
+    //           return
+    //         }
+
+    //         recurse(kid, node2.children![i])
+    //       })
+    //     }
+
+    //     if (!isEqual(node1, node2)) {
+    //       // console.error(node1, node2)
+    //     }
+    //   }
+
+    //   recurse(this.props.rootNode, prevProps.rootNode)
+    // console.log(getObjectDiff(this.props.rootNode, prevProps.rootNode))
+
+    // console.log(getObjectDiff(this.props.rootNode, prevProps.rootNode))
+    // if (
+    //   isEqual(getObjectDiff(this.props.rootNode, prevProps.rootNode), [
+    //     "children"
+    //   ]) ||
+    //   first
+    // ) {
+    //   console.log("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    //   this.props.storeNodePrevPos(nodeList)
+    // }
   }
 
   makeGroup() {
@@ -279,12 +476,17 @@ export default class TreeVis extends React.Component<Props, State> {
 
   componentDidMount() {
     this.makeGroup()
-    this.drawTree()
-    this.drawTree()
+    this.drawTree(this.props)
+    this.drawTree(this.props, true)
   }
 
-  componentDidUpdate() {
-    this.drawTree()
+  componentDidUpdate(prevProps: Props) {
+    if (
+      prevProps.selected !== this.props.selected ||
+      !isEqual(prevProps.rootNode, this.props.rootNode)
+    ) {
+      this.drawTree(prevProps)
+    }
   }
 
   render() {

@@ -99,8 +99,8 @@ export class TreeContainer extends React.Component<Props, State> {
       console.log("Collapsing ", toCollapse)
 
       let newMap = cloneDeep(prevState.id2Node)
-      // Node.collapseNode(newMap[toCollapse])
-      Node.hideChildren(newMap[toCollapse])
+      Node.collapseNode(newMap[toCollapse])
+      // Node.hideChildren(newMap[toCollapse])
       return { id2Node: newMap }
     })
   }
@@ -109,8 +109,8 @@ export class TreeContainer extends React.Component<Props, State> {
     this.setState((prevState: State) => {
       const toExpand = prevState.selected
       let newMap = cloneDeep(prevState.id2Node)
-      // Node.expandNode(newMap[toExpand])
-      Node.showChildren(newMap[toExpand])
+      Node.expandNode(newMap[toExpand])
+      // Node.showChildren(newMap[toExpand])
       return { id2Node: newMap }
     })
   }
@@ -182,9 +182,22 @@ export class TreeContainer extends React.Component<Props, State> {
                 linScale={this.state.linScale}
                 minsize={this.state.minsize}
                 nodeClickHandler={this.nodeClickHandler}
+                storeNodePrevPos={list => {
+                  this.setState((prevState: State) => {
+                    let newMap = cloneDeep(prevState.id2Node)
+                    list.forEach(d => {
+                      newMap[d.data.id].x0 = d.x
+                      newMap[d.data.id].y0 = d.y
+                    })
+                    console.log("CALLED")
+                    // console.log(newMap[28])
+                    return { id2Node: newMap }
+                  })
+                }}
                 duration={this.props.duration}
                 width={1200}
                 height={500}
+                first={true}
               />
 
               <Domains

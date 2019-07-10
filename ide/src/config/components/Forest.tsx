@@ -24,7 +24,7 @@ class Forest extends React.Component<Props, State> {
     super(props)
     this.state = {
       loadDepth: 1,
-      duration: 500,
+      duration: 2000,
       reverse: false,
       playing: false,
       collapseAsExploring: false
@@ -64,7 +64,7 @@ class Forest extends React.Component<Props, State> {
                 <label className="col-3">Animation duration (ms):</label>
                 <div className="slider col-3">
                   <MySlider
-                    values={[500]}
+                    values={[this.state.duration]}
                     domain={[0, 4000]}
                     sliderChangeHandler={(value: number) => {
                       this.setState({ duration: value })
