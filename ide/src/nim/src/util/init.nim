@@ -59,9 +59,10 @@ proc makePaths*(db: DbConn): Table[string, string] =
     var id2Children = initTable[string, (string, string)]()
 
     # var nodeId, parentId: int
+
+    echo "Loading Node Table"
+
     for res in db.fastRows(sql(query)):
-        # discard res[0].parseInt(nodeId)
-        # discard res[1].parseInt(parentId)
 
         let nodeId = res[0]
         let parentId = res[1]
@@ -75,6 +76,9 @@ proc makePaths*(db: DbConn): Table[string, string] =
             id2Children[parentId] = ($nodeId, "-1")
         else:
             id2Children[parentId] = (kid1, $nodeId)
+
+    echo "Calculating Node Paths"
+
 
     proc recursive(id: string, parentPath: string) = 
 
@@ -102,20 +106,57 @@ proc makePaths*(db: DbConn): Table[string, string] =
 
 proc writePaths*(db: DBConn, table: Table[string, string]) =
 
+
     let colNames = db.getAllRows(sql"PRAGMA table_info(Node);").map(row => row[1])
     if (colNames.contains("path")):
         return
 
+
+    db.exec(sql"BEGIN TRANSACTION;")
+
     db.exec(sql"ALTER TABLE NODE ADD COLUMN path TEXT;")
 
-    db.exec(sql"BEGIN TRANSACTION")
+    echo "Building Write Paths to DB Query"
+
+    # var query = ""
+    var query = """
+    UPDATE Node
+        SET     path =  CASE  
+    """
+
+    # var counter = 0
 
     for nodeId in table.keys():
-        db.exec(sql"update Node set path = ? where nodeId = ?", table[nodeId], nodeId)
+
+        query &= "when nodeId = " & $nodeId & " then " & " '" & table[nodeId] & "' "
+
+        # counter.inc()
+        # query &= "update Node set path = '" & table[nodeId] & "' where nodeId = " & nodeId & " \n"
+        
+        # if (counter == 2):
+        #     break
+
+
+
+        # db.exec(sql"update Node set path = ? where nodeId = ?", table[nodeId], nodeId)
         # echo table[nodeId]
 
-    db.exec(sql"END TRANSACTION")
-    echo "done"
+    query &= "END;"        
+
+    echo "Executing Query"
+
+    db.exec(sql(query))
+        
+    echo "Commiting Query"
+
+    db.exec(sql"COMMIT;")
+
+    # db.exec(sql"adisaodhiosah")
+
+
+    echo "Done"
+
+
 
 
 let solutionQuery = sql("""with recursive

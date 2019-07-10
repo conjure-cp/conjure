@@ -1,7 +1,7 @@
 import unittest, os, json, constants, db_sqlite, tables, parseutils
-import util/types
-import util/init
-import util/main
+import ../src/util/types
+import ../src/util/init
+import ../src/util/main
 
 suite "findFiles":
     test "everythingOkay":
@@ -49,7 +49,8 @@ suite "path":
 
 suite "makePaths":
     test "1":
-        let path = testDataPath & "gears1000"
+        # let path = testDataPath & "gears1000"
+        let path = "/home/tom/EssenceCatalog/problems/csplib-prob049/vscodeExtensionCache/Wed__10_Jul_2019_14:18:17_GMT_Config1_4ecgUyhgB"
         let (db, _) = findFiles(path)
         let table = makePaths(db)
         writePaths(db, table)

@@ -54,16 +54,13 @@ proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
     )
          """
 
-    echo query
-
-
     discard processQuery(db, sql(query), result)
 
 proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
     ## Loads the children of a node
-    echo "path ", dirPath
-    echo "nodeId", nodeId
-    echo "depth", depth
+    # echo "path ", dirPath
+    # echo "nodeId", nodeId
+    # echo "depth", depth
 
     let db = dBTable[dirPath]
 
@@ -75,7 +72,6 @@ proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
     discard nodeId.parseInt(nId)
 
     let path = db.getValue(sql"select path from Node where nodeId = ?", nodeId)
-    echo path
 
     let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution, path as p from Node where path like '" & 
         path & """%' and (select count(*) from
@@ -87,8 +83,6 @@ proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
                     FROM split WHERE str!=''
                 ) SELECT word FROM split WHERE word!=''
         ) ) <= """ & $(path.split("/").len() + limit) & " and nodeId != " & nodeId & " order by length(p)"
-
-    echo query
 
     discard processQuery(db, sql(query), result)
 

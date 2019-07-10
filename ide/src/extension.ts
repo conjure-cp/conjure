@@ -47,9 +47,12 @@ export function activate(context: vscode.ExtensionContext) {
         console.error(err)
       }
 
+      nimServerPort = 5000
+      vscodeServePort = 4000
+
       console.log("FREEPORTs are  ", nimServerPort, vscodeServePort)
 
-      startNimServer(context, nimServerPort)
+      // startNimServer(context, nimServerPort)
 
       server.startServer(nimServerPort, vscodeServePort, context)
 

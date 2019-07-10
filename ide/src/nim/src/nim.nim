@@ -30,22 +30,14 @@ router mainRouter:
 
     post "/simpleDomains":
         let json = parseJson($request.body)
-        echo json.pretty()
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadSimpleDomains(json["path"].getStr(), $json["nodeId"].getInt(), true)))
-    # resp "I got some JSON: " & $push
-    # get "/simpleDomains/@nodeId/@wantExpressions/(.*)":
-        
-    # get "/prettyDomains/@nodeId/@wantExpressions/@paths?":
-    #     resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadPrettyDomains(@"nodeId", @"paths", parseBool(@"wantExpressions"))))
 
     post "/loadNodes":
         let json = parseJson($request.body)
-        echo json.pretty()
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadNodes(json["path"].getStr(), $json["nodeId"].getInt(), $json["depth"].getInt())))
 
     post "/loadAncestors":
         let json = parseJson($request.body)
-        echo json.pretty()
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(json["path"].getStr(), $json["nodeId"].getInt())))
 
     # get "/longestBranchingVariable":

@@ -1,4 +1,4 @@
-import { HierarchyPointNode } from "d3"
+import { HierarchyPointNode, select } from "d3"
 import * as d3 from "d3"
 import Node from "./Node"
 import { State, MyMap, Core, TreeContainer } from "../components/TreeContainer"
@@ -182,4 +182,43 @@ export const insertNodes = (
     })
     return { id2Node: newMap, selected: nextId }
   })
+}
+
+export const collapseFailed = (solAncestorIds: number[], prevState: State) => {
+  // Collapse the failed branches
+
+  let newMap = cloneDeep(prevState.id2Node)
+
+  solAncestorIds.forEach((nodeId: number) => {
+    let current = newMap[nodeId]
+
+    if (!current.children) {
+      return
+    }
+    current.children.forEach((child: Node) => {
+      if (!solAncestorIds.includes(child.id)) {
+        Node.collapseNode(child)
+      }
+    })
+  })
+
+  // Move the selected node to one that is not within a failed branch.
+  let selected = prevState.selected
+
+  let recurse = (node: Node) => {
+    if (solAncestorIds.includes(node.id)) {
+      selected = node.id
+      return
+    }
+
+    if (node.parentId === -1) {
+      return
+    }
+
+    recurse(newMap[node.parentId])
+  }
+
+  recurse(newMap[prevState.selected])
+
+  
 }

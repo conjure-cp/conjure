@@ -54,7 +54,7 @@ class Forest extends React.Component<Props, State> {
                 <div className="slider col-3">
                   <MySlider
                     values={[1]}
-                    domain={[1, 5]}
+                    domain={[1, 10]}
                     sliderChangeHandler={(value: number) => {
                       this.setState({ loadDepth: value })
                     }}

@@ -68,7 +68,8 @@ export class TreeContainer extends React.Component<Props, State> {
     expand: "e",
     pPressed: "p",
     goToRoot: "r",
-    goPrev: "shift"
+    goPrev: "shift",
+    showCore: "f"
   }
 
   handlers: any
@@ -84,12 +85,42 @@ export class TreeContainer extends React.Component<Props, State> {
       goToRoot: () => this.setState({ selected: 0 }),
       goPrev: () => MovementHelper.goToPreviousHandler(this),
       collapse: this.collapse,
-      expand: this.expand
+      expand: this.expand,
+      showCore: this.showCore
     }
   }
 
   nodeClickHandler = (d: Node) => {
     this.setState({ selected: d.id })
+  }
+
+  showCore = () => {
+    console.log("Show core pressed!")
+
+    this.setState((prevState: State) => {
+      let newMap = cloneDeep(prevState.id2Node)
+
+      this.props.core.solAncestorIds.forEach((nodeId: number) => {
+        let current = newMap[nodeId]
+
+        if (!current.children) {
+          return
+        }
+        current.children.forEach((child: Node) => {
+          if (!this.props.core.solAncestorIds.includes(child.id)) {
+            Node.collapseNode(child)
+          }
+        })
+      })
+
+      let selected = prevState.selected
+
+      selected = max(
+        this.props.core.solAncestorIds.filter(id => id < selected)
+      )!
+
+      return { id2Node: newMap, selected: selected }
+    })
   }
 
   collapse = () => {
