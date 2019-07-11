@@ -357,7 +357,7 @@ export default class ConfigureHelper {
       minionOptions.push(config.solLimit)
     }
 
-    if ("cpuLimit" in config) {
+    if ("minionTime" in config) {
       minionOptions.push("-cpulimit")
       minionOptions.push(config.cpuLimit)
     }

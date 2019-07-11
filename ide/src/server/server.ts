@@ -123,7 +123,7 @@ class ConfigService {
   @Path("/solve")
   @POST
   async startSearch(list: Cache[]) {
-    console.log("SOLLLLLLLLLLLLLLLLLLLLVE REQUEST")
+    console.log("SOLLLLLLLLLLLLLLLLLLLLVE REQUEST", list)
 
     if (
       list.length > 1 &&

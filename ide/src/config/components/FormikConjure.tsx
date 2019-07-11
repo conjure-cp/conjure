@@ -47,7 +47,6 @@ interface Config {
   minionSwitches: string[]
   nodeLimit: number | string
   solLimit: number | string
-  cpuLimit: number | string
   conjureTime: number | string
   srTime: number | string
   minionTime: number | string
@@ -79,7 +78,6 @@ const configSchema = {
   minionTime: intOrNothing,
   cnfLimit: intOrNothing,
   nodeLimit: intOrNothing,
-  cpuLimit: intOrNothing,
   solLimit: intOrNothing
 }
 
@@ -391,7 +389,7 @@ class ConfigForm extends React.Component<Props, State> {
                 label="Solution Limit"
               />
               <Field
-                name={`namedConfigs[${index}].config.cpuLimit`}
+                name={`namedConfigs[${index}].config.minionTime`}
                 component={TextWithLabel}
                 label="CPU Limit"
               />
@@ -468,7 +466,6 @@ class ConfigForm extends React.Component<Props, State> {
       cnfLimit: "",
       minionSwitches: [],
       nodeLimit: "",
-      cpuLimit: "",
       solLimit: "",
       consistency: "",
       preprocessing: "",

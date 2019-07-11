@@ -1,4 +1,5 @@
-import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json
+import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json, strformat
+
 import jsonify
 import init
 import process
@@ -18,6 +19,58 @@ proc init*(dirPath: string): (Core, string) =
     writePaths(db)
     let infoFile = readFile(eprimeInfoFilePath)
     return (makeCore(db), infoFile)
+
+
+proc getFirstDiffPoint*(leftPath, rightPath: string): seq[(int, int)] =
+
+    let leftDB = dBTable[leftPath]
+    let rightDB = dBTable[rightPath]
+
+    let dbs = [leftDB, rightDb]
+
+    let query = "select branchingVariable, value, isLeftChild from Node"
+
+    let lRes = leftDB.getAllRows(sql(query))
+    let rRes = rightDB.getAllRows(sql(query))
+
+    var nodeIds = [0, 0]
+
+    while true:
+
+        # echo nodeIds[0], "     ", nodeIds[1]
+
+        while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
+            nodeIds[0].inc()
+            nodeIds[1].inc()
+
+        nodeIds[0].dec()
+        nodeIds[1].dec()
+
+        if result.contains((nodeIds[0], nodeIds[1])):
+            break
+
+        result.add((nodeIds[0], nodeIds[1]))
+
+        for index, db in dbs:
+
+            let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
+
+            var nextId: int
+
+            let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > ? limit 1"
+            discard db.getValue(sql(query), nodeIds[index]).parseInt(nextId)
+
+            # echo query
+            # echo "nextId ", nextId, " nodeIds ", nodeIds
+
+            nodeIds[index] = nextId
+
+
+
+        
+    
+
+
 
 proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
     ## Loads the children of a node
