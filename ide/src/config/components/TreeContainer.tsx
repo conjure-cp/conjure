@@ -178,7 +178,7 @@ export class TreeContainer extends React.Component<Props, State> {
     }
 
     if (this.props.selected !== prevProps.selected) {
-      this.setState({ selected: this.props.selected })
+      MovementHelper.loadAncestors(this.props.path, this.props.selected, this)
     }
   }
 

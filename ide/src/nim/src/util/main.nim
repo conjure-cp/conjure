@@ -38,34 +38,70 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
     var nodeIds = [0, 0]
 
     while true:
+    # for k in countup(1,100):
 
-        #echo nodeIds[0], "     ", nodeIds[1]
+        echo  ""
+        echo nodeIds[0], "     ", nodeIds[1]
+
+        let beforeIncrementingLeft = nodeIds[0]
+        let beforeIncrementingRight = nodeIds[1]
 
         while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
+            # if (nodeIds[0] + 1 >= maxNodes - 1 or nodeIds[1] + 1 >= maxNodes - 1):
+            #     return res.map(s => @[s[0], s[1]])
             nodeIds[0].inc()
             nodeIds[1].inc()
 
+            if (nodeIds[0] >= lRes.len() or nodeIds[1] >= rRes.len()):
+
+                echo ""
+                echo "quiting"
+                echo nodeIds[0], "     ", nodeIds[1]
+                res.add((beforeIncrementingLeft, beforeIncrementingRight))
+                return res.map(s => @[s[0], s[1]])
+                
+
+
+        echo nodeIds[0], "     ", nodeIds[1]
+
+
         nodeIds[0].dec()
         nodeIds[1].dec()
+        # discard leftDB.getValue(sql(fmt"select parentId from node where nodeId = {nodeIds[0]}")).parseInt(nodeIds[0])
+        # discard rightDB.getValue(sql(fmt"select parentId from node where nodeId = {nodeIds[1]}")).parseInt(nodeIds[1])
+
+        echo nodeIds[0], "     ", nodeIds[1]
+
+        if nodeIds.contains(rootNodeId):
+            break
 
         if res.contains((nodeIds[0], nodeIds[1])):
             break
 
         res.add((nodeIds[0], nodeIds[1]))
 
-        for index, db in dbs:
 
-            let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
+        while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
+            for index, db in dbs:
 
-            var nextId: int
+                let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
 
-            let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > ? limit 1"
-            discard db.getValue(sql(query), nodeIds[index]).parseInt(nextId)
+                var nextId: int
 
-            # echo query
-            # echo "nextId ", nextId, " nodeIds ", nodeIds
+                let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
+                let check = db.getValue(sql(query)).parseInt(nextId)
 
-            nodeIds[index] = nextId
+                if check == 0:
+                    break
+                    # echo ""
+                    # echo fmt"Tree{index+1}"
+                    # echo fmt"ERROR, could not parse as int `{db.getValue(sql(query))}`"
+
+
+                echo query
+                echo "nextId ", nextId, " nodeIds ", nodeIds
+
+                nodeIds[index] = nextId
 
     return res.map(s => @[s[0], s[1]])
 

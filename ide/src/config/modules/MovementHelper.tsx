@@ -206,8 +206,28 @@ export const goPrev = (instance: TreeContainer, start?: number) => {
     return
   }
 
+  loadAncestors(instance.props.path, nextId, instance)
+  // const payload = {
+  //   path: instance.props.path,
+  //   nodeId: nextId
+  // }
+
+  // fetch(`http://localhost:${instance.props.nimServerPort}/loadAncestors`, {
+  //   method: "post",
+  //   headers: headers,
+  //   body: JSON.stringify(payload)
+  // })
+  //   .then(data => data.json())
+  //   .then(nodes => TreeHelper.insertNodes(nodes, nextId, instance))
+}
+
+export const loadAncestors = (
+  path: string,
+  nextId: number,
+  instance: TreeContainer
+) => {
   const payload = {
-    path: instance.props.path,
+    path: path,
     nodeId: nextId
   }
 
