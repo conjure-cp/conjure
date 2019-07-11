@@ -47,8 +47,6 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
         let beforeIncrementingRight = nodeIds[1]
 
         while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
-            # if (nodeIds[0] + 1 >= maxNodes - 1 or nodeIds[1] + 1 >= maxNodes - 1):
-            #     return res.map(s => @[s[0], s[1]])
             nodeIds[0].inc()
             nodeIds[1].inc()
 
@@ -60,15 +58,10 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 res.add((beforeIncrementingLeft, beforeIncrementingRight))
                 return res.map(s => @[s[0], s[1]])
                 
-
-
         echo nodeIds[0], "     ", nodeIds[1]
-
 
         nodeIds[0].dec()
         nodeIds[1].dec()
-        # discard leftDB.getValue(sql(fmt"select parentId from node where nodeId = {nodeIds[0]}")).parseInt(nodeIds[0])
-        # discard rightDB.getValue(sql(fmt"select parentId from node where nodeId = {nodeIds[1]}")).parseInt(nodeIds[1])
 
         echo nodeIds[0], "     ", nodeIds[1]
 
@@ -80,8 +73,8 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
         res.add((nodeIds[0], nodeIds[1]))
 
-
         while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
+        # while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
             for index, db in dbs:
 
                 let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
@@ -89,19 +82,23 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 var nextId: int
 
                 let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
+
                 let check = db.getValue(sql(query)).parseInt(nextId)
 
-                if check == 0:
-                    break
-                    # echo ""
-                    # echo fmt"Tree{index+1}"
-                    # echo fmt"ERROR, could not parse as int `{db.getValue(sql(query))}`"
-
+                #     break
 
                 echo query
                 echo "nextId ", nextId, " nodeIds ", nodeIds
 
                 nodeIds[index] = nextId
+
+                if lRes[nodeIds[0]] == rRes[nodeIds[1]]:
+                    break
+
+                if check == 0:
+                    return res.map(s => @[s[0], s[1]])
+
+
 
     return res.map(s => @[s[0], s[1]])
 
