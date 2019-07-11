@@ -18,7 +18,7 @@ import * as init from "./init"
 import * as cors from "cors"
 const fetch = require("node-fetch")
 
-import ConfigHelper, { VarRepresentation, RepMap } from "../configHelper"
+import ConfigHelper, { RepMap, hasher } from "../configHelper"
 import { Cache } from "../configHelper"
 import { execSync } from "child_process"
 import { tree } from "d3"
@@ -156,10 +156,8 @@ class ConfigService {
             title: "Processing Tree"
           },
           async () => {
-            const trees = needToGenerate.concat(loadFromCache)
-
             const inits = await Promise.all(
-              trees.map(async tree => {
+              list.map(async tree => {
                 const fullPath = path.join(
                   ConfigHelper.cacheFolderPath,
                   tree.name
@@ -171,7 +169,8 @@ class ConfigService {
 
                 const json = await response.json()
 
-                json["core"]["id"] = tree.hash
+                json["core"]["id"] = hasher(tree.config)
+
                 json["path"] = fullPath
                 // console.log(json)
 

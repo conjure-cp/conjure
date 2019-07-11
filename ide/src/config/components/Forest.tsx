@@ -15,6 +15,7 @@ interface State {
   loadDepth: number
   duration: number
   reverse: boolean
+  showDecisions: boolean
   playing: boolean
   collapseAsExploring: boolean
 }
@@ -27,7 +28,8 @@ class Forest extends React.Component<Props, State> {
       duration: 1000,
       reverse: false,
       playing: false,
-      collapseAsExploring: false
+      collapseAsExploring: false,
+      showDecisions: true
     }
   }
 
@@ -72,35 +74,56 @@ class Forest extends React.Component<Props, State> {
                   />
                 </div>
 
-                <div className="col">
-                  <Check
-                    title={"Reverse"}
-                    checked={this.state.reverse}
-                    onChange={() => {
-                      this.setState((prevState: State) => {
-                        return { reverse: !prevState.reverse }
-                      })
-                    }}
-                  />
-                  <Check
-                    title={"Collapse when explored"}
-                    checked={this.state.collapseAsExploring}
-                    onChange={() => {
-                      this.setState((prevState: State) => {
-                        return {
-                          collapseAsExploring: !prevState.collapseAsExploring
-                        }
-                      })
-                    }}
-                  />
-                </div>
+                <Check
+                  title={"Show Branching Decisions"}
+                  checked={this.state.showDecisions}
+                  onChange={() => {
+                    this.setState((prevState: State) => {
+                      return { showDecisions: !prevState.showDecisions }
+                    })
+                  }}
+                />
 
-                <div className="player col mb-3">
-                  <Play
-                    clickHandler={this.pPressed}
-                    playing={this.state.playing}
-                    x={0}
-                  />
+                <div className="playSettingsContainer">
+                  <StageHeader
+                    title="Play Settings"
+                    id="playSettings"
+                    isCollapsed={false}
+                  >
+                    <div className=" row">
+                      <div className="player mb-3 col-2">
+                        <Play
+                          clickHandler={this.pPressed}
+                          playing={this.state.playing}
+                          x={0}
+                        />
+                      </div>
+
+                      <div className="col-10">
+                        <Check
+                          title={"Reverse"}
+                          checked={this.state.reverse}
+                          onChange={() => {
+                            this.setState((prevState: State) => {
+                              return { reverse: !prevState.reverse }
+                            })
+                          }}
+                        />
+
+                        <Check
+                          title={"Collapse when explored"}
+                          checked={this.state.collapseAsExploring}
+                          onChange={() => {
+                            this.setState((prevState: State) => {
+                              return {
+                                collapseAsExploring: !prevState.collapseAsExploring
+                              }
+                            })
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </StageHeader>
                 </div>
               </div>
             </StageHeader>
@@ -122,6 +145,7 @@ class Forest extends React.Component<Props, State> {
                     this.setState({ playing: false })
                   }
                   collapseAsExploring={this.state.collapseAsExploring}
+                  showDecisions={this.state.showDecisions}
                 />
               ))}
             </Wrapper>

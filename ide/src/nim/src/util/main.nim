@@ -15,7 +15,7 @@ proc init*(dirPath: string): (Core, string) =
     (db, eprimeInfoFilePath) = findFiles(dirPath)
     dBTable[dirPath] = db
 
-    writePaths(db, makePaths(db))
+    writePaths(db)
     let infoFile = readFile(eprimeInfoFilePath)
     return (makeCore(db), infoFile)
 

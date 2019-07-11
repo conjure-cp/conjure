@@ -40,6 +40,7 @@ interface Props {
   nimServerPort: number
   playing: boolean
   reverse: boolean
+  showDecisions: boolean
   loadDepth: number
   duration: number
   finishedPlayingHandler: () => void
@@ -228,7 +229,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 duration={this.props.duration}
                 width={1200}
                 height={500}
-                first={true}
+                showDecisions={this.props.showDecisions}
               />
 
               <Domains

@@ -15,7 +15,7 @@ import { runInThisContext } from "vm"
 type num2num = Record<number, { x: number; y: number }>
 
 interface Props {
-  first: boolean
+  showDecisions: boolean
   id: string
   identifier: string
   width: number
@@ -159,12 +159,17 @@ export default class TreeVis extends React.Component<Props, State> {
 
   drawTree() {
     const hierarchy = d3.hierarchy<Node>(this.props.rootNode)
+
     const sorted = hierarchy
       .descendants()
       .sort((a, b) => b.data.label.length - a.data.label.length)
 
-    const maxWidth = sorted[0].data.label.length * 10
-    const maxHeight = this.props.linScale(this.props.rootNode.descCount) * 3
+    const maxRadius = this.props.linScale(this.props.rootNode.descCount)
+
+    const maxWidth = this.props.showDecisions
+      ? sorted[0].data.label.length * 10
+      : maxRadius * 4
+    const maxHeight = maxRadius * 3
 
     const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight])
     const svg = d3.select(`#${this.props.identifier}thegroup`)
@@ -204,13 +209,11 @@ export default class TreeVis extends React.Component<Props, State> {
       .style("fill-opacity", 1e-6)
       .attr("fill", "black")
       .attr("class", "decision")
-      // .attr("y", -maxHeight / 2)
+      .attr("y", -maxHeight / 2)
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
       .text(d => {
-        // return d.data.label
-        return `(${d.x},${d.y})
-                (${this.getPrevPos(d).x}, ${this.getPrevPos(d).y})`
+        return this.props.showDecisions ? d.data.label : ""
       })
       .transition()
       .duration(this.props.duration)
@@ -251,14 +254,10 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .text(d => this.getDecCountMessage(d))
-      .style("fill-opacity", d =>
-        this.getDecCountMessage(d) === "" ? 1e-6 : 1
-      )
+      .style("fill-opacity", d => (this.getDecCountMessage(d) === "" ? 0 : 1))
 
     nodeUpdate.select("text.decision").text(d => {
-      // return d.data.label
-      return `(${d.x},${d.y})
-                (${this.getPrevPos(d).x}, ${this.getPrevPos(d).y})`
+      return this.props.showDecisions ? d.data.label : ""
     })
 
     this.updateCircles(nodeUpdate)
@@ -270,12 +269,6 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .style("fill-opacity", 1e-6)
-
-    nodeExit.select("text.decision").text(d => {
-      // return d.data.label
-      return `(${d.x},${d.y})
-                (${this.getPrevPos(d).x}, ${this.getPrevPos(d).y})`
-    })
 
     nodeExit
       .select("circle")
@@ -380,7 +373,8 @@ export default class TreeVis extends React.Component<Props, State> {
   componentDidUpdate(prevProps: Props) {
     if (
       prevProps.selected !== this.props.selected ||
-      !isEqual(prevProps.rootNode, this.props.rootNode)
+      !isEqual(prevProps.rootNode, this.props.rootNode) ||
+      prevProps.showDecisions !== this.props.showDecisions
     ) {
       this.drawTree()
     }

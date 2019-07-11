@@ -8,7 +8,7 @@ import { noop } from "react-select/lib/utils"
 const createHTML = require("create-html")
 const kill = require("tree-kill")
 
-const hasher = apiConstructor({ sort: true, coerce: true }).hash
+export const hasher = apiConstructor({ sort: true, coerce: true }).hash
 
 export type RepMap = Record<string, VarRepresentation[]>
 

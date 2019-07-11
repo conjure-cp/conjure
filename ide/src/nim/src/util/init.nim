@@ -104,13 +104,15 @@ proc makePaths*(db: DbConn): Table[string, string] =
     return pathTable
 
 
-proc writePaths*(db: DBConn, table: Table[string, string]) =
+proc writePaths*(db: DBConn) =
 
 
     let colNames = db.getAllRows(sql"PRAGMA table_info(Node);").map(row => row[1])
     if (colNames.contains("path")):
         return
 
+
+    let table = makePaths(db)
 
     db.exec(sql"BEGIN TRANSACTION;")
 
@@ -124,22 +126,9 @@ proc writePaths*(db: DBConn, table: Table[string, string]) =
         SET     path =  CASE  
     """
 
-    # var counter = 0
-
     for nodeId in table.keys():
 
         query &= "when nodeId = " & $nodeId & " then " & " '" & table[nodeId] & "' "
-
-        # counter.inc()
-        # query &= "update Node set path = '" & table[nodeId] & "' where nodeId = " & nodeId & " \n"
-        
-        # if (counter == 2):
-        #     break
-
-
-
-        # db.exec(sql"update Node set path = ? where nodeId = ?", table[nodeId], nodeId)
-        # echo table[nodeId]
 
     query &= "END;"        
 

@@ -24,7 +24,14 @@ export function Handle({
       }}
       {...getHandleProps(id)}
     >
-      <div style={{ fontFamily: "Roboto", fontSize: 20, marginTop: -35 }}>
+      <div
+        style={{
+          fontSize: 20,
+          marginTop: -35,
+          textAlign: "left",
+          width: "200px"
+        }}
+      >
         {value}
       </div>
     </div>
