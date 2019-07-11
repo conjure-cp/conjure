@@ -99,9 +99,11 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
             echo "here"
 
+            let before1 = nodeIds
+
             while lRes[nodeIds[0]] != rRes[nodeIds[1]]:
 
-                echo "OI"
+                echo "lefty"
                 
                 let path = leftDB.getValue(sql"select path from Node where nodeId = ?", nodeIds[0])
 
@@ -111,7 +113,31 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
                 check = leftDB.getValue(sql(query)).parseInt(nextId)
 
+                if check == 0:
+                    nodeIds = before1
+                    break
+
                 nodeIds[0] = nextId
+                
+                let before2 = nodeIds
+
+                while lRes[nodeIds[0]] != rRes[nodeIds[1]]:
+
+                    echo "righty"
+                    
+                    let path = rightDB.getValue(sql"select path from Node where nodeId = ?", nodeIds[1])
+
+                    var nextId: int
+
+                    let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[1]} limit 1"
+
+                    check = rightDB.getValue(sql(query)).parseInt(nextId)
+
+                    if check == 0:
+                        nodeIds = before2
+                        break
+
+                    nodeIds[1] = nextId
 
             if check != 0:
                 advanceBothTrees = false

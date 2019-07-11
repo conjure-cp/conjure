@@ -31,7 +31,8 @@ suite "diff":
         let rightPath = testDataPath & "/diff/default-sacbounds-12/sacbounds"
         discard init(leftPath)
         discard init(rightPath)
-        let nodeIds = diff(leftPath, rightPath)
+        # let nodeIds = diff(leftPath, rightPath)
+        let nodeIds = diff(rightPath, leftPath)
 
         echo nodeIds
 
