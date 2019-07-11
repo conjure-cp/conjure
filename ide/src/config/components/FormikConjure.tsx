@@ -7,10 +7,10 @@ import * as Yup from "yup"
 
 import { maxBy, times, isEqual, cloneDeep } from "lodash"
 import TextWithLabel from "./TextWithLabel"
+import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "./StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "./Check"
-import MySelect from "./MySelect"
 import NewSelect from "./NewSelect"
 import { Cache, VarRepresentation, RepMap } from "../../configHelper"
 import { reporters } from "mocha"
@@ -115,7 +115,7 @@ class ConfigForm extends React.Component<Props, State> {
       let cleaned: any = {}
 
       Object.keys(config).map((key: string) => {
-        if (config[key] !== "") {
+        if (config[key] !== "" && config[key] !== "Default") {
           cleaned[key] = config[key]
         }
       })
@@ -137,8 +137,6 @@ class ConfigForm extends React.Component<Props, State> {
         }
       )
 
-      // cleaned.answers = cleaned.answers.filter((x: any) => x !== undefined)
-      //  || cleaned.answers.length === 0
       if (!state.showReps[index]) {
         delete cleaned["answers"]
       }
@@ -157,7 +155,7 @@ class ConfigForm extends React.Component<Props, State> {
       return newNamedConfig
     })
 
-    console.log(cleaned)
+    console.log("cleaned", cleaned)
 
     fetch(`http://localhost:${this.props.vscodeServerPort}/config/solve`, {
       method: "post",
@@ -234,20 +232,18 @@ class ConfigForm extends React.Component<Props, State> {
               caches={props.caches}
               onChangeHandler={props.cacheChangeHandler}
             />
-            <NewSelect
+            <Field
               name={`namedConfigs[${index}].config.essenceFile`}
-              value={values.namedConfigs[index].config.essenceFile}
-              onChange={setFieldValue}
+              component={SelectWithLabel}
               title="Model"
               options={props.essenceFiles.map(file => {
                 return { value: file, label: file }
               })}
             />
 
-            <NewSelect
+            <Field
               name={`namedConfigs[${index}].config.paramFile`}
-              value={values.namedConfigs[index].config.paramFile}
-              onChange={setFieldValue}
+              component={SelectWithLabel}
               title="Param"
               options={props.paramFiles.map(file => {
                 return { value: file, label: file }
@@ -266,10 +262,9 @@ class ConfigForm extends React.Component<Props, State> {
               />
               <>
                 {!this.state.showReps[index] && (
-                  <NewSelect
+                  <Field
                     name={`namedConfigs[${index}].config.strategy`}
-                    value={values.namedConfigs[index].config.strategy}
-                    onChange={setFieldValue}
+                    component={SelectWithLabel}
                     title="Strategy"
                     options={[
                       { value: "", label: "Default" },
@@ -300,10 +295,9 @@ class ConfigForm extends React.Component<Props, State> {
               id={`sr${index + 1}`}
               isCollapsed={true}
             >
-              <NewSelect
+              <Field
                 name={`namedConfigs[${index}].config.optimisation`}
-                value={values.namedConfigs[index].config.optimisation}
-                onChange={setFieldValue}
+                component={SelectWithLabel}
                 title="Optimisation"
                 options={[
                   { value: "", label: "Default" },
@@ -314,10 +308,9 @@ class ConfigForm extends React.Component<Props, State> {
                 ]}
               />
 
-              <NewSelect
+              <Field
                 name={`namedConfigs[${index}].config.symmetry`}
-                value={values.namedConfigs[index].config.symmetry}
-                onChange={setFieldValue}
+                component={SelectWithLabel}
                 title="Symmetry Breaking"
                 options={[
                   { value: "", label: "Default" },
@@ -327,10 +320,10 @@ class ConfigForm extends React.Component<Props, State> {
                 ]}
               />
 
-              <NewSelect
+              <Field
                 name={`namedConfigs[${index}].config.translation`}
+                component={SelectWithLabel}
                 value={values.namedConfigs[index].config.translation}
-                onChange={setFieldValue}
                 title="Translation"
                 options={[
                   { value: "", label: "Default" },
@@ -403,10 +396,9 @@ class ConfigForm extends React.Component<Props, State> {
                 label="CPU Limit"
               />
 
-              <NewSelect
+              <Field
                 name={`namedConfigs[${index}].config.preprocessing`}
-                value={values.namedConfigs[index].config.preprocessing}
-                onChange={setFieldValue}
+                component={SelectWithLabel}
                 title="Preprocessing"
                 options={[
                   { value: "", label: "Default" },
@@ -417,10 +409,9 @@ class ConfigForm extends React.Component<Props, State> {
                   { value: "SSAC", label: "SSAC" }
                 ]}
               />
-              <NewSelect
+              <Field
                 name={`namedConfigs[${index}].config.consistency`}
-                value={values.namedConfigs[index].config.consistency}
-                onChange={setFieldValue}
+                component={SelectWithLabel}
                 title="Consistency"
                 options={[
                   { value: "", label: "Default" },
@@ -503,9 +494,11 @@ class ConfigForm extends React.Component<Props, State> {
       }
     })
 
-    initialConfig.answers = initialConfig.answers.map((str: string) => {
-      return Number(str.split(":")[1])
-    })
+    if (selectedCache.config.answers) {
+      initialConfig.answers = initialConfig.answers.map((str: string) => {
+        return Number(str.split(":")[1])
+      })
+    }
 
     console.log("selected Cache ", selectedCache)
 

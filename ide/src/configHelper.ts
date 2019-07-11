@@ -241,10 +241,14 @@ export default class ConfigureHelper {
         const dirname = path.dirname(uri.path)
 
         if (dirname !== cache.name) {
-          fs.renameSync(
-            dirname,
-            dirname.replace(path.basename(dirname), cache.name)
-          )
+          try {
+            fs.renameSync(
+              dirname,
+              dirname.replace(path.basename(dirname), cache.name)
+            )
+          } catch (error) {
+            vscode.window.showErrorMessage("Failed to rename cache")
+          }
         }
 
         loadFromCache.push(obj)
@@ -252,7 +256,6 @@ export default class ConfigureHelper {
           `Loading config${i + 1} from cache...`
         )
       } else {
-        console.log()
         if (fs.existsSync(path.join(this.cacheFolderPath, obj.name))) {
           rimraf.sync(path.join(this.cacheFolderPath, obj.name))
         }

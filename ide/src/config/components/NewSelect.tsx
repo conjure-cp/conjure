@@ -13,7 +13,7 @@ interface Props {
   options: Opt[]
   title: string
   name: string
-  value: string | Opt
+  value?: string | Opt
 }
 
 interface State {
@@ -51,7 +51,9 @@ export default class MySelect extends React.Component<Props, State> {
       opt = this.state.selectedOption
       // console.log("opt", opt)
     } else {
-      if (this.props.value !== "") {
+      if (!this.props.value) {
+        opt = this.props.options[0]
+      } else if (this.props.value !== "") {
         if (typeof this.props.value === "string") {
           opt = { label: this.props.value, value: this.props.value }
         } else {
@@ -70,7 +72,10 @@ export default class MySelect extends React.Component<Props, State> {
           options={this.props.options}
           value={opt}
           onChange={(option: any) => {
-            this.setState({ selectedOption: option })
+            console.log(option)
+            this.setState({
+              selectedOption: { label: option.label, value: option.value }
+            })
             this.props.onChange(this.props.name, option.value)
           }}
         />
