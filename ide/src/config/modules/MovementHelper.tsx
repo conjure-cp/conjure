@@ -5,11 +5,7 @@ import * as TreeHelper from "./TreeHelper"
 import { State, MyMap, Core, TreeContainer } from "../components/TreeContainer"
 import { cloneDeep, last, min, max } from "lodash"
 import { Collapse } from "react-select/lib/animated/transitions"
-
-const headers = {
-  Accept: "application/json, text/plain, */*",
-  "Content-Type": "text/plain"
-}
+import { headers } from "./Helper"
 
 export const nextSol = (instance: TreeContainer) => {
   instance.setState((prevState: State) => {

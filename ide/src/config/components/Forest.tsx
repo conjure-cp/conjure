@@ -5,6 +5,8 @@ import { Check } from "./Check"
 import { Wrapper } from "./Constants"
 import { MySlider } from "./Slider"
 import Play from "./Play"
+import { headers } from "../modules/Helper"
+import { isEqual } from "lodash"
 
 interface Props {
   trees: any[]
@@ -18,6 +20,8 @@ interface State {
   showDecisions: boolean
   playing: boolean
   collapseAsExploring: boolean
+  diff: number[][]
+  currentDiff: number[]
 }
 
 class Forest extends React.Component<Props, State> {
@@ -29,7 +33,9 @@ class Forest extends React.Component<Props, State> {
       reverse: false,
       playing: false,
       collapseAsExploring: false,
-      showDecisions: true
+      showDecisions: true,
+      diff: [[]],
+      currentDiff: [0, 0]
     }
   }
 
@@ -41,7 +47,39 @@ class Forest extends React.Component<Props, State> {
     })
   }
 
+  componentDidUpdate = async (prevProps: Props) => {
+    if (isEqual(prevProps.trees, this.props.trees)) {
+      return
+    }
+
+    if (!this.props.trees || this.props.trees.length < 2) {
+      return
+    }
+
+    const payload = {
+      path1: this.props.trees[0].path,
+      path2: this.props.trees[1].path
+    }
+
+    let response = await fetch(
+      `http://localhost:${this.props.nimServerPort}/diff`,
+      {
+        method: "post",
+        headers: headers,
+        body: JSON.stringify(payload)
+      }
+    )
+
+    let json = await response.json()
+
+    this.setState({ diff: json })
+
+    console.log("DIFF", json)
+  }
+
   render = () => {
+    console.log("CUrrent DIFF", this.state.currentDiff)
+
     return (
       <>
         {this.props.trees && (
@@ -54,13 +92,13 @@ class Forest extends React.Component<Props, State> {
               <div className="sliderContainer row">
                 <label className="col-3">Lazy loading depth:</label>
                 <div className="slider col-3">
-                  <MySlider
+                  {/* <MySlider
                     values={[1]}
                     domain={[1, 10]}
                     sliderChangeHandler={(value: number) => {
                       this.setState({ loadDepth: value })
                     }}
-                  />
+                  /> */}
                 </div>
 
                 <label className="col-3">Animation duration (ms):</label>
@@ -128,9 +166,26 @@ class Forest extends React.Component<Props, State> {
               </div>
             </StageHeader>
 
+            <StageHeader title={"Diff"} id={"diffSettings"} isCollapsed={false}>
+              <MySlider
+                values={[0]}
+                domain={[0, this.state.diff.length - 1]}
+                sliderChangeHandler={(value: number) => {
+                  this.setState((prevState: State) => {
+                    if (!prevState.diff[value]) {
+                      return null
+                    }
+
+                    return { currentDiff: prevState.diff[value] }
+                  })
+                }}
+              />
+            </StageHeader>
+
             <Wrapper>
               {this.props.trees.map((_tree: any, i: number) => (
                 <TreeContainer
+                  selected={this.state.currentDiff[i]}
                   key={this.props.trees[i].path}
                   path={this.props.trees[i].path}
                   nimServerPort={this.props.nimServerPort}

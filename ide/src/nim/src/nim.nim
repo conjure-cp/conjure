@@ -40,6 +40,11 @@ router mainRouter:
         let json = parseJson($request.body)
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(json["path"].getStr(), $json["nodeId"].getInt())))
 
+    post "/diff":
+        let json = parseJson($request.body)
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%diff(json["path1"].getStr(), $json["path2"].getStr())))
+    
+
     # get "/longestBranchingVariable":
     #     resp(Http200, [("Access-Control-Allow-Origin", "*")], getLongestBranchingVarName())
 

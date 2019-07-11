@@ -9,8 +9,8 @@ suite "diff":
         let rightPath = testDataPath & "/diff/default-sacbounds/sacbounds"
         discard init(leftPath)
         discard init(rightPath)
-        let nodeIds = getFirstDiffPoint(leftPath, rightPath)
+        let nodeIds = diff(leftPath, rightPath)
 
         echo nodeIds
 
-        check(nodeIds == @[(3, 3), (17, 6), (27, 9)])
+        check(nodeIds == @[@[3, 3], @[17, 6], @[27, 9]])

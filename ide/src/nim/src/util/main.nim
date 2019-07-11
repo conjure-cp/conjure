@@ -1,4 +1,4 @@
-import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json, strformat
+import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json, strformat, sequtils, sugar
 
 import jsonify
 import init
@@ -21,7 +21,9 @@ proc init*(dirPath: string): (Core, string) =
     return (makeCore(db), infoFile)
 
 
-proc getFirstDiffPoint*(leftPath, rightPath: string): seq[(int, int)] =
+proc diff*(leftPath, rightPath: string): seq[seq[int]] =
+
+    var res : seq[(int, int)]
 
     let leftDB = dBTable[leftPath]
     let rightDB = dBTable[rightPath]
@@ -37,7 +39,7 @@ proc getFirstDiffPoint*(leftPath, rightPath: string): seq[(int, int)] =
 
     while true:
 
-        # echo nodeIds[0], "     ", nodeIds[1]
+        #echo nodeIds[0], "     ", nodeIds[1]
 
         while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
             nodeIds[0].inc()
@@ -46,10 +48,10 @@ proc getFirstDiffPoint*(leftPath, rightPath: string): seq[(int, int)] =
         nodeIds[0].dec()
         nodeIds[1].dec()
 
-        if result.contains((nodeIds[0], nodeIds[1])):
+        if res.contains((nodeIds[0], nodeIds[1])):
             break
 
-        result.add((nodeIds[0], nodeIds[1]))
+        res.add((nodeIds[0], nodeIds[1]))
 
         for index, db in dbs:
 
@@ -64,6 +66,8 @@ proc getFirstDiffPoint*(leftPath, rightPath: string): seq[(int, int)] =
             # echo "nextId ", nextId, " nodeIds ", nodeIds
 
             nodeIds[index] = nextId
+
+    return res.map(s => @[s[0], s[1]])
 
 
 

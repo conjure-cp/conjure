@@ -153,7 +153,7 @@ class ConfigForm extends React.Component<Props, State> {
       return newNamedConfig
     })
 
-    console.log("cleaned", cleaned)
+    // console.log("cleaned", cleaned)
 
     fetch(`http://localhost:${this.props.vscodeServerPort}/config/solve`, {
       method: "post",
@@ -171,7 +171,7 @@ class ConfigForm extends React.Component<Props, State> {
   }
 
   renderArrayElements = (props: Props, values: Values, setFieldValue: any) => {
-    console.log(values)
+    // console.log(values)
 
     return values.namedConfigs.map((_config, index) => {
       const currentEssenceFile = values.namedConfigs[index].config.essenceFile
@@ -497,7 +497,7 @@ class ConfigForm extends React.Component<Props, State> {
       })
     }
 
-    console.log("selected Cache ", selectedCache)
+    // console.log("selected Cache ", selectedCache)
 
     return initialConfig
   }

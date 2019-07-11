@@ -33,6 +33,7 @@ export interface Core {
 }
 
 interface Props {
+  selected: number
   identifier: string
   core: Core
   info: string
@@ -77,7 +78,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props)
-    this.state = TreeHelper.makeState(this.props.core)
+    this.state = TreeHelper.makeState(this.props.core, props.selected)
 
     this.handlers = {
       goLeft: () => MovementHelper.goLeft(this),
@@ -169,11 +170,15 @@ export class TreeContainer extends React.Component<Props, State> {
   componentDidUpdate = (prevProps: Props) => {
     // Typical usage (don't forget to compare props):
     if (this.props.core.id !== prevProps.core.id) {
-      this.setState(TreeHelper.makeState(this.props.core))
+      this.setState(TreeHelper.makeState(this.props.core, this.props.selected))
     }
 
     if (this.props.playing !== prevProps.playing) {
       this.play()
+    }
+
+    if (this.props.selected !== prevProps.selected) {
+      this.setState({ selected: this.props.selected })
     }
   }
 

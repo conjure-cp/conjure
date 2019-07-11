@@ -93,7 +93,7 @@ export const getPrevSolId = (prevState: State): number => {
   return prevState.solNodeIds[currentIdInSolNodeIds - 1]
 }
 
-export const makeState = (core: Core): State => {
+export const makeState = (core: Core, selected: number): State => {
   const minsize = 7
   const solveable = core.nodes.find(n => n.isSolution) !== undefined
   const linScale = d3
@@ -144,7 +144,7 @@ export const makeState = (core: Core): State => {
     minsize: minsize,
     solveable: solveable,
     linScale: linScale,
-    selected: 0,
+    selected: selected,
     shouldGetKids: false,
     solNodeIds: solNodeIds,
     totalNodeCount: last(core.solAncestorIds)! + 1
@@ -219,6 +219,4 @@ export const collapseFailed = (solAncestorIds: number[], prevState: State) => {
   }
 
   recurse(newMap[prevState.selected])
-
-  
 }
