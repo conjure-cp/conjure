@@ -58,6 +58,11 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 echo ""
                 echo "quiting"
                 echo nodeIds[0], "     ", nodeIds[1]
+                echo result
+
+                if (res.len() == 0):
+                    return result
+
                 res.add((beforeIncrementingLeft, beforeIncrementingRight))
                 return res.map(s => @[s[0], s[1]])
                 
