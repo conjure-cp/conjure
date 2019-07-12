@@ -63,10 +63,13 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 
         # echo nodeIds[0], "     ", nodeIds[1]
 
+        # echo lRes[nodeIds[0]]
+        # echo rRes[nodeIds[1]]
+
         # If we are at a solution node then we don't need to decrement
-        if (lRes[nodeIds[0]][0] != "" and rRes[nodeIds[1]][0] != ""):
-            nodeIds[0].dec()
-            nodeIds[1].dec()
+        # if (lRes[nodeIds[0]][0] != "" and rRes[nodeIds[1]][0] != ""):
+        nodeIds[0].dec()
+        nodeIds[1].dec()
 
         # echo nodeIds[0], "     ", nodeIds[1]
 

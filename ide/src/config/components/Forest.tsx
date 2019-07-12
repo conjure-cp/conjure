@@ -20,7 +20,7 @@ interface State {
   showDecisions: boolean
   playing: boolean
   collapseAsExploring: boolean
-  diff: number[][]
+  diff: number[][] | null
   currentDiff: number[]
 }
 
@@ -34,7 +34,7 @@ class Forest extends React.Component<Props, State> {
       playing: false,
       collapseAsExploring: false,
       showDecisions: true,
-      diff: [[]],
+      diff: null,
       currentDiff: [0, 0]
     }
   }
@@ -167,25 +167,29 @@ class Forest extends React.Component<Props, State> {
             </StageHeader>
 
             <StageHeader title={"Diff"} id={"diffSettings"} isCollapsed={false}>
-              <MySlider
-                values={[0]}
-                domain={[0, this.state.diff.length - 1]}
-                sliderChangeHandler={(value: number) => {
-                  this.setState((prevState: State) => {
-                    if (!prevState.diff[value]) {
-                      return null
-                    }
-
-                    return { currentDiff: prevState.diff[value] }
-                  })
-                }}
-              />
+              <>
+                {this.state.diff ? (
+                  <MySlider
+                    values={[1]}
+                    domain={[1, this.state.diff.length]}
+                    sliderChangeHandler={(value: number) => {
+                      this.setState((prevState: State) => {
+                        return { currentDiff: prevState.diff![value - 1] }
+                      })
+                    }}
+                  />
+                ) : (
+                  <div>Waiting for diff....</div>
+                )}
+              </>
             </StageHeader>
 
             <Wrapper>
               {this.props.trees.map((_tree: any, i: number) => (
                 <TreeContainer
-                  selected={this.state.currentDiff[i]}
+                  selected={
+                    this.state.currentDiff ? this.state.currentDiff[i] : 0
+                  }
                   key={this.props.trees[i].path}
                   path={this.props.trees[i].path}
                   nimServerPort={this.props.nimServerPort}

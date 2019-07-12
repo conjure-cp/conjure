@@ -6,7 +6,7 @@ interface Props {
   isCollapsed: boolean
   title: string
   id: string
-  children: JSX.Element | JSX.Element[]
+  children?: JSX.Element | JSX.Element[]
 }
 
 const StageHeader = (props: Props) => {
