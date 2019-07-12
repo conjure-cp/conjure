@@ -34,6 +34,10 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
     let lRes = leftDB.getAllRows(sql(query))
     let rRes = rightDB.getAllRows(sql(query))
 
+    let lIsMore = lRes.len() > rRes.len()
+
+    echo "---------------------------------------", lIsMore
+
     var nodeIds = [0, 0]
 
     while true:
@@ -99,64 +103,37 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
             echo "here"
 
-            let before1 = nodeIds
+            while lRes[nodeIds[0]] != rRes[nodeIds[1]] and check != 0:
 
-            while lRes[nodeIds[0]] != rRes[nodeIds[1]]:
+                var current: int
+                var db : DbConn
+
+                if lIsMore:
+                    current = nodeIds[0]
+                    db = leftDB
+                else:
+                    current = nodeIds[1]
+                    db = rightDB
 
                 echo "lefty"
                 
-                let path = leftDB.getValue(sql"select path from Node where nodeId = ?", nodeIds[0])
+                let path = db.getValue(sql"select path from Node where nodeId = ?", current)
 
                 var nextId: int
 
-                let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[0]} limit 1"
+                let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {current} limit 1"
 
-                check = leftDB.getValue(sql(query)).parseInt(nextId)
+                check = db.getValue(sql(query)).parseInt(nextId)
 
-                if check == 0:
-                    nodeIds = before1
-                    break
-
-                nodeIds[0] = nextId
+                current = nextId
                 
-                let before2 = nodeIds
-
-                while lRes[nodeIds[0]] != rRes[nodeIds[1]]:
-
-                    echo "righty"
-                    
-                    let path = rightDB.getValue(sql"select path from Node where nodeId = ?", nodeIds[1])
-
-                    var nextId: int
-
-                    let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[1]} limit 1"
-
-                    check = rightDB.getValue(sql(query)).parseInt(nextId)
-
-                    if check == 0:
-                        nodeIds = before2
-                        break
-
-                    nodeIds[1] = nextId
+                if lIsMore:
+                   nodeIds[0] = current 
+                else:
+                   nodeIds[1] = current 
 
             if check != 0:
                 advanceBothTrees = false
-
-
-
-
-
-
-                # if lRes[nodeIds[0]] == rRes[nodeIds[1]]:
-                #     advanceBothTrees = false
-                #     break
-
-                # if check == 0:
-                #     echo query
-                #     echo fmt"`{db.getValue(sql(query))}`"
-                #     return res.map(s => @[s[0], s[1]])
-
-
 
     return res.map(s => @[s[0], s[1]])
 
