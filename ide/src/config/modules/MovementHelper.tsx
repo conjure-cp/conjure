@@ -226,6 +226,13 @@ export const loadAncestors = (
   nextId: number,
   instance: TreeContainer
 ) => {
+  // if (nextId in instance.state.id2Node) {
+  //   instance.setState((prevState: State) => {
+  //     return { id2Node: TreeHelper.showAllAncestors(prevState, nextId) }
+  //   })
+  //   return
+  // }
+
   const payload = {
     path: path,
     nodeId: nextId

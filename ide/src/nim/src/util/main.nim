@@ -41,13 +41,14 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
     var nodeIds = [0, 0]
 
     while true:
-    # for k in countup(1,100):
 
         echo  ""
         echo nodeIds[0], "     ", nodeIds[1]
 
         let beforeIncrementingLeft = nodeIds[0]
         let beforeIncrementingRight = nodeIds[1]
+
+        # Increment each tree until we get to a point where they differ
 
         while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
             nodeIds[0].inc()
@@ -68,8 +69,10 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 
         echo nodeIds[0], "     ", nodeIds[1]
 
-        nodeIds[0].dec()
-        nodeIds[1].dec()
+        # If we are at a solution node then we don't need to decrement
+        if (lRes[nodeIds[0]][0] != "" and rRes[nodeIds[1]][0] != ""):
+            nodeIds[0].dec()
+            nodeIds[1].dec()
 
         echo nodeIds[0], "     ", nodeIds[1]
 
@@ -83,8 +86,6 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
         var advanceBothTrees = true
 
-        # while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
-        # while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
         while advanceBothTrees:
             var check = 1
 

@@ -165,6 +165,10 @@ export const insertNodes = (
   instance.setState((prevState: State) => {
     let newMap = cloneDeep(prevState.id2Node)
     nodes.map((node: Node) => {
+      if (newMap[node.parentId] && newMap[node.parentId]._children) {
+        Node.showChildren(newMap[node.parentId])
+      }
+
       if (node.id in newMap) {
         return
       }
@@ -172,6 +176,7 @@ export const insertNodes = (
       if (!newMap[node.parentId].children) {
         newMap[node.parentId].children = []
       }
+
       if (node.isLeftChild) {
         newMap[node.parentId].children!.unshift(node)
       } else {
