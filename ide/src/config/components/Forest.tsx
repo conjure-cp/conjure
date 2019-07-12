@@ -20,7 +20,7 @@ interface State {
   showDecisions: boolean
   playing: boolean
   collapseAsExploring: boolean
-  diff: number[][] | null
+  diffLocations: number[][] | null
   currentDiff: number[]
 }
 
@@ -34,7 +34,7 @@ class Forest extends React.Component<Props, State> {
       playing: false,
       collapseAsExploring: false,
       showDecisions: true,
-      diff: null,
+      diffLocations: null,
       currentDiff: [0, 0]
     }
   }
@@ -72,7 +72,7 @@ class Forest extends React.Component<Props, State> {
 
     let json = await response.json()
 
-    this.setState({ diff: json })
+    this.setState({ diffLocations: json })
 
     console.log("DIFF", json)
   }
@@ -168,13 +168,15 @@ class Forest extends React.Component<Props, State> {
 
             <StageHeader title={"Diff"} id={"diffSettings"} isCollapsed={false}>
               <>
-                {this.state.diff ? (
+                {this.state.diffLocations ? (
                   <MySlider
                     values={[1]}
-                    domain={[1, this.state.diff.length]}
+                    domain={[1, this.state.diffLocations.length]}
                     sliderChangeHandler={(value: number) => {
                       this.setState((prevState: State) => {
-                        return { currentDiff: prevState.diff![value - 1] }
+                        return {
+                          currentDiff: prevState.diffLocations![value - 1]
+                        }
                       })
                     }}
                   />
@@ -187,6 +189,11 @@ class Forest extends React.Component<Props, State> {
             <Wrapper>
               {this.props.trees.map((_tree: any, i: number) => (
                 <TreeContainer
+                  diffParentIds={
+                    this.state.diffLocations
+                      ? this.state.diffLocations.map(x => x[i])
+                      : []
+                  }
                   selected={
                     this.state.currentDiff ? this.state.currentDiff[i] : 0
                   }

@@ -139,6 +139,8 @@ export const makeState = (core: Core, selected: number): State => {
     id2Node[newNode.id] = newNode
   }
 
+  let totalNodeCount = last(core.solAncestorIds)! + 1
+
   let state: State = {
     id2Node: id2Node,
     minsize: minsize,
@@ -147,7 +149,9 @@ export const makeState = (core: Core, selected: number): State => {
     selected: selected,
     shouldGetKids: false,
     solNodeIds: solNodeIds,
-    totalNodeCount: last(core.solAncestorIds)! + 1
+    totalNodeCount: totalNodeCount,
+    failedBranchCount:
+      totalNodeCount - (solveable ? core.solAncestorIds.length : 0)
   }
 
   return state

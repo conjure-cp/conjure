@@ -15,6 +15,7 @@ import { runInThisContext } from "vm"
 type num2num = Record<number, { x: number; y: number }>
 
 interface Props {
+  diffParentIds: number[]
   showDecisions: boolean
   id: string
   identifier: string
@@ -303,6 +304,12 @@ export default class TreeVis extends React.Component<Props, State> {
           !this.props.solveable
         )
       })
+      .classed(
+        "different",
+        d =>
+          this.props.diffParentIds.includes(d.source.data.id) &&
+          d.target.data.id === d.source.data.id + 1
+      )
       .attr("d", d => {
         const origin = {
           x: this.getPrevPos(d.source).x,
@@ -323,6 +330,12 @@ export default class TreeVis extends React.Component<Props, State> {
           !this.props.solveable
         )
       })
+      .classed(
+        "different",
+        d =>
+          this.props.diffParentIds.includes(d.source.data.id) &&
+          d.target.data.id === d.source.data.id + 1
+      )
       .transition()
       .duration(this.props.duration)
       .attr("d", linkGenerator)

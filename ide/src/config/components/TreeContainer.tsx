@@ -46,6 +46,7 @@ interface Props {
   duration: number
   finishedPlayingHandler: () => void
   collapseAsExploring: boolean
+  diffParentIds: number[]
 }
 
 export interface State {
@@ -57,6 +58,7 @@ export interface State {
   shouldGetKids: boolean
   solNodeIds: number[]
   totalNodeCount: number
+  failedBranchCount: number
 }
 
 export class TreeContainer extends React.Component<Props, State> {
@@ -183,9 +185,7 @@ export class TreeContainer extends React.Component<Props, State> {
   }
 
   render = () => {
-    let failedBranchCount =
-      this.state.totalNodeCount -
-      (this.state.solveable ? this.props.core.solAncestorIds.length : 0)
+    // TODO move this it shouldnt be here
 
     return (
       <div className="treeContainer">
@@ -203,7 +203,7 @@ export class TreeContainer extends React.Component<Props, State> {
             minsize={this.state.minsize}
             solNodeIds={this.state.solNodeIds}
             totalNodes={this.state.totalNodeCount}
-            failedBranchCount={failedBranchCount}
+            failedBranchCount={this.state.failedBranchCount}
             linScale={this.state.linScale}
           />
 
@@ -235,6 +235,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 width={1200}
                 height={500}
                 showDecisions={this.props.showDecisions}
+                diffParentIds={this.props.diffParentIds}
               />
 
               <Domains
