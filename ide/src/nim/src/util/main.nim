@@ -76,11 +76,6 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
         echo nodeIds[0], "     ", nodeIds[1]
 
-        if nodeIds.contains(rootNodeId):
-            break
-
-        if res.contains((nodeIds[0], nodeIds[1])):
-            break
 
         res.add((nodeIds[0], nodeIds[1]))
 

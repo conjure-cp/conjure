@@ -18,8 +18,6 @@ suite "diff":
         discard init(rightPath)
         let nodeIds = diff(leftPath, rightPath)
 
-        # echo nodeIds
-
         check(nodeIds == @[@[3, 3], @[17, 6], @[28, 10]])
 
     test "10":
