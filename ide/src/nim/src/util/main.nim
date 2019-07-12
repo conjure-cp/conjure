@@ -53,8 +53,9 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
             # If we get to the end of one of the trees then we've finished and need to return
             if (nodeIds[0] >= lRes.len() or nodeIds[1] >= rRes.len()):
+                # echo nodeIds[0], "     ", nodeIds[1]
                 # echo "quiting"
-                if (res.len() == 0):
+                if (res.len() == 0 and lRes.len() == rRes.len()):
                     return result
 
                 res.add((nodeIds[0] - 1, nodeIds[1] - 1))
