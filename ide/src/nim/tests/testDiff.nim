@@ -37,17 +37,19 @@ suite "diff":
 
         check(nodeIds == answer)
 
-        nodeIds = diff(rightPath, leftPath)
-
-        let flipped = answer.map(x => @[x[1], x[0]])
-    
-        check(nodeIds == flipped)
-
-        nodeIds = diff(leftPath, leftPath)
-
         echo nodeIds
 
-        check(nodeIds == newSeq[seq[int]](0))
+        # nodeIds = diff(rightPath, leftPath)
+
+        # let flipped = answer.map(x => @[x[1], x[0]])
+    
+        # check(nodeIds == flipped)
+
+        # nodeIds = diff(leftPath, leftPath)
+
+        # echo nodeIds
+
+        # check(nodeIds == newSeq[seq[int]](0))
 
 
         # check(nodeIds == 
