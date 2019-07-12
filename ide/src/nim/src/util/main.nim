@@ -36,17 +36,14 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
     let lIsMore = lRes.len() > rRes.len()
 
-    echo "---------------------------------------", lIsMore
+    # echo "---------------------------------------", lIsMore
 
     var nodeIds = [0, 0]
 
     while true:
 
-        echo  ""
-        echo nodeIds[0], "     ", nodeIds[1]
-
-        let beforeIncrementingLeft = nodeIds[0]
-        let beforeIncrementingRight = nodeIds[1]
+        # echo  ""
+        # echo nodeIds[0], "     ", nodeIds[1]
 
         # Increment each tree until we get to a point where they differ
 
@@ -54,184 +51,79 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
             nodeIds[0].inc()
             nodeIds[1].inc()
 
+            # If we get to the end of one of the trees then we've finished and need to return
             if (nodeIds[0] >= lRes.len() or nodeIds[1] >= rRes.len()):
-
-                echo ""
-                echo "quiting"
-                echo nodeIds[0], "     ", nodeIds[1]
-                echo result
-
+                # echo "quiting"
                 if (res.len() == 0):
                     return result
 
-                res.add((beforeIncrementingLeft, beforeIncrementingRight))
+                res.add((nodeIds[0] - 1, nodeIds[1] - 1))
                 return res.map(s => @[s[0], s[1]])
                 
-        echo nodeIds[0], "     ", nodeIds[1]
+        # echo nodeIds[0], "     ", nodeIds[1]
 
         # If we are at a solution node then we don't need to decrement
         if (lRes[nodeIds[0]][0] != "" and rRes[nodeIds[1]][0] != ""):
             nodeIds[0].dec()
             nodeIds[1].dec()
 
-        echo nodeIds[0], "     ", nodeIds[1]
+        # echo nodeIds[0], "     ", nodeIds[1]
 
-
+        # Add the first firr point to the res
         res.add((nodeIds[0], nodeIds[1]))
 
         var advanceBothTrees = true
 
+        # Advance both trees to the next branch that is not descended from the last diff point
         while advanceBothTrees:
-            var check = 1
+            var couldParse = 1
 
             for index, db in dbs:
 
                 let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
                 var nextId: int
                 let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
-                check = db.getValue(sql(query)).parseInt(nextId)
+                couldParse = db.getValue(sql(query)).parseInt(nextId)
 
-                if check == 0:
-                    echo query
-                    echo fmt"`{db.getValue(sql(query))}`"
+                if couldParse == 0:
                     return res.map(s => @[s[0], s[1]])
-
-                #     break
-                # echo query
-                echo "nextId ", nextId, " nodeIds ", nodeIds
 
                 nodeIds[index] = nextId
 
-            echo "here"
+            # Initialise the variables such that they refer to the largest tree
+            var current: int
+            var db : DbConn
 
-            while lRes[nodeIds[0]] != rRes[nodeIds[1]] and check != 0:
+            if lIsMore:
+                current = nodeIds[0]
+                db = leftDB
+            else:
+                current = nodeIds[1]
+                db = rightDB
 
-                var current: int
-                var db : DbConn
+            #  Go through all the subsequent branches of the tree with the most nodes to see if there
+            # is a node equal to that of the smaller tree
+            while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
 
-                if lIsMore:
-                    current = nodeIds[0]
-                    db = leftDB
-                else:
-                    current = nodeIds[1]
-                    db = rightDB
-
-                echo "lefty"
-                
                 let path = db.getValue(sql"select path from Node where nodeId = ?", current)
 
                 var nextId: int
 
                 let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {current} limit 1"
 
-                check = db.getValue(sql(query)).parseInt(nextId)
+                couldParse = db.getValue(sql(query)).parseInt(nextId)
 
                 current = nextId
                 
                 if lIsMore:
-                   nodeIds[0] = current 
+                    nodeIds[0] = current 
                 else:
-                   nodeIds[1] = current 
+                    nodeIds[1] = current 
 
-            if check != 0:
+            if couldParse != 0:
                 advanceBothTrees = false
 
     return res.map(s => @[s[0], s[1]])
-
-
-
-
-# proc diff*(leftPath, rightPath: string): seq[seq[int]] =
-
-#     var res : seq[(int, int)]
-
-#     let leftDB = dBTable[leftPath]
-#     let rightDB = dBTable[rightPath]
-
-#     let dbs = [leftDB, rightDb]
-
-#     let query = "select branchingVariable, value, isLeftChild from Node"
-
-#     let lRes = leftDB.getAllRows(sql(query))
-#     let rRes = rightDB.getAllRows(sql(query))
-
-#     var nodeIds = [0, 0]
-
-#     while true:
-#     # for k in countup(1,100):
-
-#         echo  ""
-#         echo nodeIds[0], "     ", nodeIds[1]
-
-#         let beforeIncrementingLeft = nodeIds[0]
-#         let beforeIncrementingRight = nodeIds[1]
-
-#         while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
-#             nodeIds[0].inc()
-#             nodeIds[1].inc()
-
-#             if (nodeIds[0] >= lRes.len() or nodeIds[1] >= rRes.len()):
-
-#                 echo ""
-#                 echo "quiting"
-#                 echo nodeIds[0], "     ", nodeIds[1]
-#                 res.add((beforeIncrementingLeft, beforeIncrementingRight))
-#                 return res.map(s => @[s[0], s[1]])
-                
-#         echo nodeIds[0], "     ", nodeIds[1]
-
-#         nodeIds[0].dec()
-#         nodeIds[1].dec()
-
-#         echo nodeIds[0], "     ", nodeIds[1]
-
-#         if nodeIds.contains(rootNodeId):
-#             break
-
-#         if res.contains((nodeIds[0], nodeIds[1])):
-#             break
-
-#         res.add((nodeIds[0], nodeIds[1]))
-
-#         var advanceBothTrees = true
-
-#         # while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
-#         # while lRes[nodeIds[0] + 1] != rRes[nodeIds[1] + 1]:
-#         while advanceBothTrees:
-#             for index, db in dbs:
-
-#                 let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
-
-#                 var nextId: int
-
-#                 let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
-
-#                 let check = db.getValue(sql(query)).parseInt(nextId)
-
-#                 #     break
-
-#                 # echo query
-#                 echo "nextId ", nextId, " nodeIds ", nodeIds
-
-#                 nodeIds[index] = nextId
-
-#                 if lRes[nodeIds[0]] == rRes[nodeIds[1]]:
-#                     advanceBothTrees = false
-#                     break
-
-#                 if check == 0:
-#                     echo query
-#                     echo fmt"`{db.getValue(sql(query))}`"
-#                     return res.map(s => @[s[0], s[1]])
-
-
-
-#     return res.map(s => @[s[0], s[1]])
-
-
-
-        
-    
 
 
 

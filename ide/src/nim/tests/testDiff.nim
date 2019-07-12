@@ -18,6 +18,7 @@ suite "diff":
         discard init(rightPath)
         let nodeIds = diff(leftPath, rightPath)
 
+
         check(nodeIds == @[@[3, 3], @[17, 6], @[28, 10]])
 
     test "10":
@@ -27,7 +28,9 @@ suite "diff":
         discard init(rightPath)
         let nodeIds = diff(leftPath, rightPath)
 
-        check(nodeIds == @[@[4, 4], @[21, 8], @[34, 11], @[44, 13], @[54, 16], @[68, 19], @[78, 22], @[88, 25], @[98, 28], @[108, 31], @[123, 35], @[137, 38], @[147, 41], @[157, 44], @[167, 47], @[177, 50], @[192, 54], @[202, 57], @[212, 60], @[224, 61]])
+        echo nodeIds
+
+        check(nodeIds == @[@[4, 4], @[21, 8], @[34, 11], @[44, 13], @[54, 16], @[68, 19], @[78, 22], @[88, 25], @[98, 28], @[108, 31], @[123, 35], @[137, 38], @[147, 41], @[157, 44], @[167, 47], @[177, 50], @[192, 54], @[202, 57], @[212, 60], @[227, 64]])
 
     test "12":
         let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
