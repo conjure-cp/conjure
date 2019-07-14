@@ -16,7 +16,6 @@ import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
-import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
@@ -73,10 +72,6 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
-    case savedChoices of
-        Just f  -> refAnswers f
-        Nothing -> return ()
-
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return

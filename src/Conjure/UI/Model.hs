@@ -41,7 +41,6 @@ import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
-import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
 import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing
@@ -606,32 +605,20 @@ executeStrategy question options@((doc, option):_) (viewAuto -> (strategy, _)) =
             logDebug ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [(pickedIndex, pickedDescr, picked)]
         Compact -> bug "executeStrategy: Compact"
-        FollowLog -> bug "executeStrategy: FollowLog"
 
 
 executeAnswerStrategy :: (MonadIO m, MonadLog m)
                       => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [(Int, Doc, Answer)]
-executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
-executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
+executeAnswerStrategy _ _ [] _ = bug "executeStrategy: nothing to choose from"
+executeAnswerStrategy _ _ [(doc, option)] (viewAuto -> (_, True)) = do
     logDebug ("Picking the only option:" <+> doc)
-    c <- storeChoice config q option
-    return [(1, doc, c)]
-executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
+    return [(1, doc, option)]
+executeAnswerStrategy _ question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> do
             let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
-            c' <- storeChoice config question c
-            return [(n, doc, c')]
-        FollowLog -> logFollow config question options
-        AtRandom -> do
-          [(n, doc, ans0)] <- executeStrategy question options st
-          ans1             <- storeChoice config question ans0
-          return [(n, doc, ans1)]
-        _  -> do
-          cs <- executeStrategy question options st
-          forM cs $ \ (n, d, c) -> do
-              c' <- storeChoice config question c
-              return (n, d, c')
+            return [(n, doc, c)]
+        _  -> executeStrategy question options st
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
