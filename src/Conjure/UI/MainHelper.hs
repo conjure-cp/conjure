@@ -654,10 +654,7 @@ validateSolutionNoParam Solve{..} solutionPath = do
     essenceM <- readModelFromFile essence
     solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
-    case result of
-        Left err -> bug err
-        Right () -> return ()
+    failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
@@ -670,11 +667,7 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     param    <- readParamOrSolutionFromFile paramPath
     solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen ()
-                                $ validateSolution essenceM2 param2 solution2
-    case result of
-        Left err -> bug err
-        Right () -> return ()
+    failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 param2 solution2
 validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
 
 

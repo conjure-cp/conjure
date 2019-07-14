@@ -22,7 +22,6 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
 finiteGivens ::
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -46,7 +45,6 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam ::
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -71,10 +69,10 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
             (_, Nothing) -> return []
             (Just domain', Just expr) -> do
                 logDebugVerbose $ "finiteGivensParam domain' " <+> pretty domain'
-                domain  <- fmap Constant <$> instantiateDomain essenceLettings domain'
+                domain  <- failToUserError $ fmap Constant <$> instantiateDomain essenceLettings domain'
                 logDebugVerbose $ "finiteGivensParam domain  " <+> pretty domain
                 logDebugVerbose $ "finiteGivensParam expr    " <+> pretty expr
-                constant <- instantiateExpression essenceLettings expr
+                constant <- failToUserError $ instantiateExpression essenceLettings expr
                 logDebugVerbose $ "finiteGivensParam constant" <+> pretty constant
                 (_, _, f) <- mkFinite domain
                 outs <- f constant
@@ -103,7 +101,6 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
 --   and adding a maxSize attribute at the inner levels.
 mkFinite ::
     MonadState Int m =>
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -129,7 +126,6 @@ mkFinite d = return (d, [], const (return []))
 
 mkFiniteOutermost ::
     MonadState Int m =>
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -178,7 +174,7 @@ mkFiniteOutermost (DomainVariant inners) = do
                 xs :: [Constant] <- sequence
                     [ case xs' of
                         (_, nm', c') | nm == nm' -> return c'
-                        _ -> instantiateDomain [] d >>= zeroVal
+                        _ -> failToUserError $ instantiateDomain [] d >>= zeroVal
                     | (nm, d) <- inners ]
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
@@ -360,7 +356,6 @@ mkFiniteOutermost d = return (d, [], const (return []))
 
 mkFiniteInner ::
     MonadState Int m =>
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -444,7 +439,7 @@ mkFiniteInner (DomainVariant inners) = do
                             [ sequence
                                 [ case xs' of
                                     (_, nm', c') | nm == nm' -> return c'
-                                    _ -> instantiateDomain [] d >>= zeroVal
+                                    _ -> failToUserError $ instantiateDomain [] d >>= zeroVal
                                 | (nm, d) <- inners ]
                             | xs' <- xss' ]
                 let innerFs = map thd3 mids

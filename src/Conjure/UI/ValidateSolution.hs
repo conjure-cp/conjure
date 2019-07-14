@@ -37,10 +37,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    mres <- runExceptT (validateConstantForDomain nm valC domC)
-                    case mres of
-                        Right{} -> return ()
-                        Left err -> userErr1 err
+                    failToUserError $ validateConstantForDomain nm valC domC
                     modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
                                          , "Its domain:" <++> pretty dom
@@ -59,10 +56,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    mres <- runExceptT (validateConstantForDomain nm valC domC)
-                    case mres of
-                        Right{} -> return ()
-                        Left err -> userErr1 err
+                    failToUserError $ validateConstantForDomain nm valC domC
                     modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
                                          , "Its domain:" <++> pretty dom

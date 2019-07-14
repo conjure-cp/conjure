@@ -1,7 +1,7 @@
 module Conjure.UserError
     ( MonadUserError(..), userErr1
     , UserErrorT(..), runUserError
-    , failToUserError
+    , failToUserError, failToBug
     ) where
 
 import Conjure.Prelude hiding ( fail )
@@ -112,4 +112,11 @@ failToUserError comp = do
     res <- runExceptT comp
     case res of
         Left err -> userErr1 err
+        Right x  -> return x
+
+failToBug :: Monad m => ExceptT m a -> m a
+failToBug comp = do
+    res <- runExceptT comp
+    case res of
+        Left err -> bug err
         Right x  -> return x
