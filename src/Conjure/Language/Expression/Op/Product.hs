@@ -31,6 +31,7 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
         case innerTy of
+            TypeAny | Just [] <- listOut x -> return (TypeInt TagInt)
             TypeInt t | ?typeCheckerMode == RelaxedIntegerTags -> return (TypeInt t)
             TypeInt TagInt -> return (TypeInt TagInt)
             _ -> raiseTypeError $ vcat [ pretty p
