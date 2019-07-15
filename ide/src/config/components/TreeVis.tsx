@@ -173,8 +173,8 @@ export default class TreeVis extends React.Component<Props, State> {
 
     const maxWidth = this.props.showDecisions
       ? sorted[0].data.label.length * 10
-      : maxRadius * 4
-    const maxHeight = maxRadius * 3
+      : maxRadius * 1
+    const maxHeight = this.props.showDecisions ? maxRadius * 3 : maxRadius * 1
 
     const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight])
     const svg = d3.select(`#${this.props.identifier}thegroup`)
@@ -233,7 +233,7 @@ export default class TreeVis extends React.Component<Props, State> {
       .attr("class", "decCount")
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
-      .text(d => this.getDecCountMessage(d))
+      .text(d => (this.props.showDecisions ? this.getDecCountMessage(d) : ""))
       .transition()
       .duration(this.props.duration)
       .style("fill-opacity", 1)
@@ -258,7 +258,7 @@ export default class TreeVis extends React.Component<Props, State> {
       })
       .transition()
       .duration(this.props.duration)
-      .text(d => this.getDecCountMessage(d))
+      .text(d => (this.props.showDecisions ? this.getDecCountMessage(d) : ""))
       .style("fill-opacity", d => (this.getDecCountMessage(d) === "" ? 0 : 1))
 
     nodeUpdate.select("text.decision").text(d => {

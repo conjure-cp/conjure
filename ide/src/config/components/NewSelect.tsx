@@ -64,6 +64,8 @@ export default class MySelect extends React.Component<Props, State> {
       }
     }
 
+    console.log(opt)
+
     return (
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="color"> {this.props.title} </label>

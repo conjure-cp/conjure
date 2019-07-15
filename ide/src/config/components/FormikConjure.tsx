@@ -12,11 +12,7 @@ import StageHeader from "./StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "./Check"
 import NewSelect from "./NewSelect"
-import { Cache, VarRepresentation, RepMap } from "../../configHelper"
-import { reporters } from "mocha"
-import { prependListener } from "cluster"
-import { type } from "os"
-const shortid = require("shortid")
+import { Cache, RepMap } from "../../configHelper"
 
 type RepChoices = Record<string, string>
 
@@ -25,7 +21,7 @@ interface Values {
 }
 
 interface Config {
-  answers: any
+  answers: (number | undefined)[]
   essenceFile: string
   paramFile: string
   strategy: string
@@ -41,7 +37,7 @@ interface Config {
   cnfLimit: number | string
   consistency: string
   preprocessing: string
-  [key: string]: string | number | string[] | number[]
+  [key: string]: any
 }
 
 interface Props {
@@ -123,11 +119,12 @@ class ConfigForm extends React.Component<Props, State> {
 
     cleaned.answers = config.answers.map(
       (answer: number | string, i: number) => {
-        if (typeof answer !== "number") {
-          return
+        let variable = this.props.reps[cleaned.essenceFile][i]
+
+        if (!answer) {
+          return `${variable.name}:${1}`
         }
 
-        let variable = this.props.reps[cleaned.essenceFile][i]
         return `${variable.name}:${answer}`
       }
     )
@@ -167,7 +164,7 @@ class ConfigForm extends React.Component<Props, State> {
       this.cleanCache(namedCache, state, values, index)
     )
 
-    // console.log("cleaned", cleaned)
+    console.log("cleaned", cleaned)
 
     fetch(`http://localhost:${this.props.vscodeServerPort}/config/solve`, {
       method: "post",
@@ -483,7 +480,7 @@ class ConfigForm extends React.Component<Props, State> {
       solLimit: "",
       consistency: "",
       preprocessing: "",
-      answers: times(maxNumberOfQuestions, () => "")
+      answers: times(maxNumberOfQuestions, () => undefined)
     }
 
     if (!props.selectedCaches || !props.selectedCaches[index]) {
@@ -506,7 +503,7 @@ class ConfigForm extends React.Component<Props, State> {
     })
 
     if (selectedCache.config.answers) {
-      initialConfig.answers = initialConfig.answers.map((str: string) => {
+      initialConfig.answers = initialConfig.answers.map((str: any) => {
         return Number(str.split(":")[1])
       })
     }
