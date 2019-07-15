@@ -7,6 +7,7 @@ import { Cache, RepMap } from "../configHelper"
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
 import "./styles.css"
+import { InitResponse } from "../server/server";
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
@@ -53,7 +54,7 @@ class Root extends React.Component<any, State> {
     })
   }
 
-  initResponseHandler = (data: any) => {
+  initResponseHandler = (data: InitResponse) => {
     this.setState({
       isCollapsed: true,
       trees: data.trees,

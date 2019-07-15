@@ -2,7 +2,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import * as express from "express"
 import fs = require("fs")
-import { sortBy } from "lodash"
+import { sortBy, isEqual, head } from "lodash"
 
 import {
   Server,
@@ -22,6 +22,7 @@ import ConfigHelper, { RepMap, hasher } from "../configHelper"
 import { Cache } from "../configHelper"
 import { execSync } from "child_process"
 import { tree } from "d3"
+import { Core } from "../config/components/TreeContainer"
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 
@@ -29,6 +30,12 @@ interface FilesResponse {
   models: string[]
   params: string[]
   representations: RepMap
+}
+
+export interface InitResponse {
+  trees: { core: Core; info: string; path: string; hash: string }[]
+  nimServerPort: number
+  vscodeServerPort: number
 }
 
 let nimServerPort: number
@@ -122,19 +129,17 @@ class ConfigService {
 
   @Path("/solve")
   @POST
-  async startSearch(list: Cache[]) {
+  async startSearch(list: Cache[]): Promise<InitResponse> {
     console.log("SOLLLLLLLLLLLLLLLLLLLLVE REQUEST", list)
 
-    // if (
-    //   list.length > 1 &&
-    //   JSON.stringify(list[0]) === JSON.stringify(list[1])
-    // ) {
-    //   vscode.window.showErrorMessage("Configs are the same! aborting..")
-    //   return
-    // }
+    let configsAreTheSame = isEqual(list[0], list[1])
+    // vscode.window.showErrorMessage("Configs are the same! aborting..")
+    // return
+
+    let jobs = configsAreTheSame ? [list[0]] : list
 
     const { needToGenerate, loadFromCache } = await ConfigHelper.separateJobs(
-      list
+      jobs
     )
 
     return vscode.window
@@ -167,14 +172,21 @@ class ConfigService {
                   `http://localhost:${nimServerPort}/init/${fullPath}`
                 )
 
-                const json = await response.json()
+                const json = (await response.json()) as {
+                  core: Core
+                  info: string
+                }
 
-                json["core"]["id"] = hasher(tree.config)
+                // json["hash"] = hasher(tree.config)
 
-                json["path"] = fullPath
+                // json["path"] = fullPath
                 // console.log(json)
 
-                return json
+                return {
+                  hash: hasher(tree.config),
+                  path: fullPath,
+                  ...json
+                }
               })
             )
 

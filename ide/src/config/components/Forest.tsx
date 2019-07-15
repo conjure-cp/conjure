@@ -209,7 +209,8 @@ class Forest extends React.Component<Props, State> {
                   selected={
                     this.state.currentDiff ? this.state.currentDiff[i] : 0
                   }
-                  key={`${this.props.trees[i].path}${i}`}
+                  hash={this.props.trees[i].hash}
+                  key={`${this.props.trees[i].hash}${i}`}
                   path={this.props.trees[i].path}
                   nimServerPort={this.props.nimServerPort}
                   info={this.props.trees[i].info}

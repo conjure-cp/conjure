@@ -150,7 +150,7 @@ class ConfigForm extends React.Component<Props, State> {
       if (isEqual(values.namedConfigs[0], values.namedConfigs[1])) {
         name += "1+2"
       } else {
-        name += `${index + 1} _${shortid.generate()}`
+        name += `${index + 1}_${shortid.generate()}`
       }
 
       let newNamedConfig: Cache = {

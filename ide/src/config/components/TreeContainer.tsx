@@ -29,7 +29,6 @@ export type MyMap = Record<number, Node>
 export interface Core {
   nodes: FromServerNode[]
   solAncestorIds: number[]
-  id: string
 }
 
 interface Props {
@@ -38,6 +37,7 @@ interface Props {
   core: Core
   info: string
   path: string
+  hash: string
   nimServerPort: number
   playing: boolean
   reverse: boolean
@@ -171,7 +171,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
   componentDidUpdate = (prevProps: Props) => {
     // Typical usage (don't forget to compare props):
-    if (this.props.core.id !== prevProps.core.id) {
+    if (this.props.hash !== prevProps.hash) {
       this.setState(TreeHelper.makeState(this.props.core, this.props.selected))
     }
 
@@ -210,7 +210,7 @@ export class TreeContainer extends React.Component<Props, State> {
           <Wrapper>
             <SplitPane split="horizontal" defaultSize={600}>
               <TreeVis
-                id={this.props.core.id}
+                hash={this.props.hash}
                 identifier={this.props.identifier}
                 rootNode={this.state.id2Node[0]}
                 selected={this.state.selected}
@@ -239,7 +239,7 @@ export class TreeContainer extends React.Component<Props, State> {
               />
 
               <Domains
-                id={this.props.core.id}
+                hash={this.props.hash}
                 selected={this.state.selected}
                 path={this.props.path}
                 nimServerPort={this.props.nimServerPort}

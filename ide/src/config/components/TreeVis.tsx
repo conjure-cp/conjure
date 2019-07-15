@@ -17,7 +17,7 @@ type num2num = Record<number, { x: number; y: number }>
 interface Props {
   diffParentIds: number[]
   showDecisions: boolean
-  id: string
+  hash: string
   identifier: string
   width: number
   height: number

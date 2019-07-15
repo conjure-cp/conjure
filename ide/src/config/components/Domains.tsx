@@ -3,7 +3,7 @@ import StageHeader from "./StageHeader"
 import { Check } from "./Check"
 
 interface Props {
-  id: string
+  hash: string
   path: string
   selected: number
   nimServerPort: number
@@ -70,7 +70,7 @@ export class Domains extends React.Component<Props, State> {
   async componentDidUpdate(prevProps: Props, prevState: State) {
     if (
       this.props.selected !== prevProps.selected ||
-      this.props.id !== prevProps.id ||
+      this.props.hash !== prevProps.hash ||
       this.state.collapsed !== prevState.collapsed
     ) {
       await this.getDomains()
