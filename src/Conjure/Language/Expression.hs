@@ -483,6 +483,7 @@ instance RepresentationOf Expression where
 instance Domain () Expression :< Expression where
     inject = Domain
     project (Domain x) = return x
+    project (Reference _ (Just (Alias x))) = project x
     project x = fail ("projecting Domain out of Expression:" <+> pretty x)
 
 instance Op Expression :< Expression where
