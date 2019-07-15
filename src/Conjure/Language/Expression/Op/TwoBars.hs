@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.TwoBars where
 
@@ -18,22 +19,25 @@ instance Hashable  x => Hashable  (OpTwoBars x)
 instance ToJSON    x => ToJSON    (OpTwoBars x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTwoBars x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
+instance (TypeOf x, Pretty x, Domain () x :< x) => TypeOf (OpTwoBars x) where
     typeOf p@(OpTwoBars a) = do
-        ty <- typeOf a
-        case ty of
-            TypeInt _       -> return ()
-            TypeList{}      -> return ()
-            TypeSet{}       -> return ()
-            TypeMSet{}      -> return ()
-            TypeFunction{}  -> return ()
-            TypeSequence{}  -> return ()
-            TypeRelation{}  -> return ()
-            TypePartition{} -> return ()
-            _               -> raiseTypeError $ vcat [ pretty p
-                                                     , "Expected an integer or a collection."
-                                                     , "But got:" <+> pretty ty
-                                                     ]
+        case project a of
+            Just (_ :: Domain () x) -> return ()
+            Nothing -> do
+                ty <- typeOf a
+                case ty of
+                    TypeInt _       -> return ()
+                    TypeList{}      -> return ()
+                    TypeSet{}       -> return ()
+                    TypeMSet{}      -> return ()
+                    TypeFunction{}  -> return ()
+                    TypeSequence{}  -> return ()
+                    TypeRelation{}  -> return ()
+                    TypePartition{} -> return ()
+                    _               -> raiseTypeError $ vcat [ pretty p
+                                                             , "Expected an integer or a collection."
+                                                             , "But got:" <+> pretty ty
+                                                             ]
         return $ TypeInt TagInt
 
 instance SimplifyOp OpTwoBars x where

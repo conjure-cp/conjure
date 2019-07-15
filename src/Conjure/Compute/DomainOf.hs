@@ -646,7 +646,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpTransform x) where
 instance DomainOf (OpTrue x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) where
+instance (Pretty x, TypeOf x, Domain () x :< x) => DomainOf (OpTwoBars x) where
     domainOf op = mkDomainAny ("OpTwoBars:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpUnion x) where
