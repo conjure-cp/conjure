@@ -817,7 +817,7 @@ dropTagForSR m = do
         replacePredSucc x = return x
 
     st <- transformBiM replacePredSucc (mStatements m)
-    return m { mStatements = st }
+    return m { mStatements = transformBi (\ _ -> TagInt) st }
 
 
 updateDeclarations ::
@@ -1165,13 +1165,13 @@ epilogue ::
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
     >>= lexSingletons                 >>= logDebugIdModel "[lexSingletons]"
-    >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugIdModel "[checkIfAllRefined]"
     >>= checkIfHasUndefined           >>= logDebugIdModel "[checkIfHasUndefined]"
     >>= sliceThemMatrices             >>= logDebugIdModel "[sliceThemMatrices]"
+    >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= return . emptyMatrixLiterals  >>= logDebugIdModel "[emptyMatrixLiterals]"
     >>= return . reverseTrails        >>= logDebugIdModel "[reverseTrails]"
     >>= return . oneSuchThat          >>= logDebugIdModel "[oneSuchThat]"
