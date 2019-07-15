@@ -51,12 +51,19 @@ export default class ConfigureHelper {
    */
   public static activate(context: vscode.ExtensionContext) {
     ConfigureHelper.context = context
-    let p = path.join(vscode.workspace.rootPath!, this.cacheFolderName)
+    let cachesPath = path.join(vscode.workspace.rootPath!, this.cacheFolderName)
 
-    if (!fs.existsSync(p)) {
-      fs.mkdirSync(p)
+    if (!fs.existsSync(cachesPath)) {
+      fs.mkdirSync(cachesPath)
     }
-    this.cacheFolderPath = p
+
+    this.cacheFolderPath = cachesPath
+
+    let diffCachesPath = path.join(cachesPath, "diffCaches")
+
+    if (!fs.existsSync(diffCachesPath)) {
+      fs.mkdirSync(diffCachesPath)
+    }
   }
 
   public static makePromise(

@@ -61,7 +61,9 @@ class Forest extends React.Component<Props, State> {
 
     const payload = {
       path1: this.props.trees[0].path,
-      path2: this.props.trees[1].path
+      path2: this.props.trees[1].path,
+      hash1: this.props.trees[0].hash,
+      hash2: this.props.trees[1].hash
     }
 
     this.setState({ diffReady: false })

@@ -20,6 +20,11 @@ proc init*(dirPath: string): (Core, string) =
     let infoFile = readFile(eprimeInfoFilePath)
     return (makeCore(db), infoFile)
 
+
+    
+
+
+
 proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
     var res : seq[(int, int)]
@@ -133,6 +138,18 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
     return res.map(s => @[s[0], s[1]])
 
 
+import os
+
+proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
+    let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
+    let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
+
+    if fileExists(diffCacheFile):
+        return parseJson(readAll(open(diffCacheFile)))
+
+    let res = diff(leftPath, rightPath)
+    writeFile(diffCacheFile, $(%res))
+    return %res
 
 proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
     ## Loads the children of a node
