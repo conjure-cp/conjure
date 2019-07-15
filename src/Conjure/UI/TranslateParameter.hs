@@ -169,7 +169,7 @@ translateParameter eprimeModel0 essenceParam0 = do
                                                       ]
 
     return $ languageEprime def
-        { mStatements =
+        { mStatements = transformBi (\ _ -> TagInt) $
             [ Declaration (Letting n (Constant x))
             | (n, _, x) <- eprimeLettings
             ] ++
