@@ -391,7 +391,7 @@ instance VarSymBreakingDescription Expression where
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
-    typeOf (Domain x)   = typeOf x
+    typeOf (Domain x) = fail ("Expected an expression, but got a domain:" <++> pretty x)
     typeOf (Reference nm Nothing) = fail ("Type error, identifier not bound:" <+> pretty nm)
     typeOf (Reference nm (Just refTo)) =
         case refTo of
@@ -409,8 +409,8 @@ instance TypeOf Expression where
                     lu' _ _ = Nothing
                 in
                     case gen of
-                        GenDomainNoRepr  pat domain -> typeOf domain                 >>= lu pat
-                        GenDomainHasRepr pat domain -> typeOf domain                 >>= lu (Single pat)
+                        GenDomainNoRepr  pat domain -> typeOfDomain domain >>= lu pat
+                        GenDomainHasRepr pat domain -> typeOfDomain domain >>= lu (Single pat)
                         GenInExpr        pat expr   -> do
                             tyExpr <- typeOf expr
                             case innerTypeOf tyExpr of
@@ -419,8 +419,8 @@ instance TypeOf Expression where
                                     [ "Type error in the generator of a comprehension or a quantified expression"
                                     , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
                                     ]
-            DeclNoRepr  _ _ dom _ -> typeOf dom
-            DeclHasRepr _ _ dom   -> typeOf dom
+            DeclNoRepr  _ _ dom _ -> typeOfDomain dom
+            DeclHasRepr _ _ dom   -> typeOfDomain dom
             RecordField _ ty      -> return ty
             VariantField _ ty     -> return ty
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do

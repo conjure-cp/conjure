@@ -10,7 +10,6 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
-import Conjure.Language.TypeOf
 import Conjure.Language.Constant
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
@@ -66,7 +65,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
             let
                 injectiveCons :: Expression -> m [Expression]
                 injectiveCons m = do
-                    tyTo <- typeOf innerDomainTo
+                    tyTo <- typeOfDomain innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
                             TypeInt{}  -> True

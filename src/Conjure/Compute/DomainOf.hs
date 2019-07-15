@@ -472,7 +472,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         let low  = [essence| max(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
         let upp  = [essence| max(&upps) |]
-        TypeInt t <- typeOf (head doms)
+        TypeInt t <- typeOfDomain (head doms)
         return (DomainInt t [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
 
@@ -485,7 +485,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         let low  = [essence| min(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
         let upp  = [essence| min(&upps) |]
-        TypeInt t <- typeOf (head doms)
+        TypeInt t <- typeOfDomain (head doms)
         return (DomainInt t [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMin:" <++> pretty op) <$> typeOf op
 

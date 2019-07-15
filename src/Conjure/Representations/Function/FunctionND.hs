@@ -66,7 +66,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             let
                 injectiveCons :: Expression -> m [Expression]
                 injectiveCons values = do
-                    tyTo <- typeOf innerDomainTo
+                    tyTo <- typeOfDomain innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
                             TypeInt{}  -> True

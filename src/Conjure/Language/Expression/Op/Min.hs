@@ -23,7 +23,7 @@ instance ( TypeOf x, Pretty x
          , Domain () x :< x
          ) => TypeOf (OpMin x) where
     typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
-        ty <- typeOf dom
+        ty <- typeOfDomain dom
         case ty of
             TypeInt TagInt -> return ty
             TypeInt (TagEnum _) -> return ty

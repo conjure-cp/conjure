@@ -14,7 +14,6 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
-import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.TH
 
@@ -263,12 +262,12 @@ resolveD (DomainReference nm Nothing) = do
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
-    t  <- typeOf d'
+    t  <- typeOfDomain d'
     modify ((n, RecordField n t) :)
     return (n, d')
 resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
-    t  <- typeOf d'
+    t  <- typeOfDomain d'
     modify ((n, VariantField n t) :)
     return (n, d')
 resolveD d = do

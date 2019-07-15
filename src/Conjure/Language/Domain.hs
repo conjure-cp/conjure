@@ -116,8 +116,6 @@ instance Arbitrary x => Arbitrary (Domain r x) where
     shrink (DomainInt t rs) = [DomainInt t (init rs)]
     shrink _ = []
 
-instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
-    typeOf = typeOfDomain
 
 typeOfDomain ::
     MonadFail m =>
@@ -151,26 +149,26 @@ typeOfDomain d@(DomainInt t rs)        = do
     return (TypeInt t)
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
-typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
-typeOfDomain (DomainRecord        xs ) = TypeRecord     <$> sequence [ do t <- typeOf d ; return (n, t)
+typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOfDomain xs
+typeOfDomain (DomainRecord        xs ) = TypeRecord     <$> sequence [ do t <- typeOfDomain d ; return (n, t)
                                                                      | (n,d) <- xs ]
-typeOfDomain (DomainVariant       xs ) = TypeVariant    <$> sequence [ do t <- typeOf d ; return (n, t)
+typeOfDomain (DomainVariant       xs ) = TypeVariant    <$> sequence [ do t <- typeOfDomain d ; return (n, t)
                                                                      | (n,d) <- xs ]
-typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
-typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
-typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
-typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf y
-typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOf x
-typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
-typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
+typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOfDomain ind <*> typeOfDomain inn
+typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOfDomain x
+typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOfDomain x
+typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOfDomain x <*> typeOfDomain y
+typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOfDomain x
+typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOfDomain xs
+typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOfDomain x
 typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
         then return (mostDefined ts)
         else fail ("Type error in" <+> pretty p)
-typeOfDomain (DomainReference _ (Just d)) = typeOf d
-typeOfDomain (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
-typeOfDomain (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
+typeOfDomain (DomainReference _ (Just d)) = typeOfDomain d
+typeOfDomain (DomainReference nm Nothing) = bug $ "typeOfDomain: DomainReference" <+> pretty nm
+typeOfDomain (DomainMetaVar nm) = bug $ "typeOfDomain: DomainMetaVar &" <> pretty nm
 
 forgetRepr :: Domain r x -> Domain () x
 forgetRepr = defRepr

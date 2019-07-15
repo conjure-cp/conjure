@@ -33,7 +33,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     valC                  <- gets id >>= flip instantiateExpression val
                     valC_typed            <- case valC of
                                                 TypedConstant c tyc -> do
-                                                    ty <- typeOf dom
+                                                    ty <- typeOfDomain dom
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
@@ -52,7 +52,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     valC                  <- gets id >>= flip instantiateExpression val
                     valC_typed            <- case valC of
                                                 TypedConstant c tyc -> do
-                                                    ty <- typeOf dom
+                                                    ty <- typeOfDomain dom
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
@@ -165,10 +165,10 @@ introduceRecordFields ::
     Domain r x -> m ()
 introduceRecordFields (DomainRecord inners) =
     forM_ inners $ \ (n, d) -> do
-        t <- typeOf d
+        t <- typeOfDomain d
         modify ((n, Constant (ConstantField n t)) :)
 introduceRecordFields (DomainVariant inners) =
     forM_ inners $ \ (n, d) -> do
-        t <- typeOf d
+        t <- typeOfDomain d
         modify ((n, Constant (ConstantField n t)) :)
 introduceRecordFields _ = return ()

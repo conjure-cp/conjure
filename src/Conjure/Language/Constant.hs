@@ -95,7 +95,7 @@ instance TypeOf Constant where
     typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
     typeOf (ConstantField _ ty)       = return ty
     typeOf (ConstantAbstract x    )   = typeOf x
-    typeOf (DomainInConstant dom)     = typeOf dom
+    typeOf (DomainInConstant dom)     = typeOfDomain dom
     typeOf (TypedConstant _ ty)       = return ty
     typeOf (ConstantUndefined _ ty)   = return ty
 

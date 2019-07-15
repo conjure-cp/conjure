@@ -8,7 +8,6 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Type
-import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam )
@@ -107,7 +106,7 @@ translateParameter eprimeModel0 essenceParam0 = do
                                 Nothing -> return $ Just (n, d, v)
                                 Just cTy1 -> do
                                     -- calculate the type of the domain, unify with the type we already have
-                                    cTy2 <- typeOf d
+                                    cTy2 <- typeOfDomain d
                                     let cTy = mostDefined [cTy1, cTy2]
                                     if elem TypeAny (universe cTy)
                                         then userErr1 $ vcat
@@ -154,7 +153,7 @@ translateParameter eprimeModel0 essenceParam0 = do
     let
         decorateWithType p@(_, _, TypedConstant{}) = return p
         decorateWithType (name, domain, constant) | emptyCollection constant = do
-            ty <- typeOf domain
+            ty <- typeOfDomain domain
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
 
