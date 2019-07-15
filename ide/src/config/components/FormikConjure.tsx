@@ -139,15 +139,23 @@ class ConfigForm extends React.Component<Props, State> {
         delete cleaned["answers"]
       }
 
+      let name =
+        namedConfig.name !== ""
+          ? namedConfig.name
+          : `${new Date()
+              .toUTCString()
+              .replace(/ /g, "_")
+              .replace(/,/g, "_")}_Config`
+
+      if (isEqual(values.namedConfigs[0], values.namedConfigs[1])) {
+        name += "1+2"
+      } else {
+        name += `${index + 1} _${shortid.generate()}`
+      }
+
       let newNamedConfig: Cache = {
         config: cleaned,
-        name:
-          namedConfig.name !== ""
-            ? namedConfig.name
-            : `${new Date()
-                .toUTCString()
-                .replace(/ /g, "_")
-                .replace(/,/g, "_")}_Config${index + 1}_${shortid.generate()}`
+        name: name
       }
 
       return newNamedConfig

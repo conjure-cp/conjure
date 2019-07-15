@@ -94,6 +94,9 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
                 nodeIds[index] = nextId
 
+            # echo lRes[nodeIds[0]], "  ~  ", rRes[nodeIds[1]]
+
+
             # Initialise the variables such that they refer to the largest tree
             var current: int
             var db : DbConn

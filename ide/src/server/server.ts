@@ -125,13 +125,13 @@ class ConfigService {
   async startSearch(list: Cache[]) {
     console.log("SOLLLLLLLLLLLLLLLLLLLLVE REQUEST", list)
 
-    if (
-      list.length > 1 &&
-      JSON.stringify(list[0]) === JSON.stringify(list[1])
-    ) {
-      vscode.window.showErrorMessage("Configs are the same! aborting..")
-      return
-    }
+    // if (
+    //   list.length > 1 &&
+    //   JSON.stringify(list[0]) === JSON.stringify(list[1])
+    // ) {
+    //   vscode.window.showErrorMessage("Configs are the same! aborting..")
+    //   return
+    // }
 
     const { needToGenerate, loadFromCache } = await ConfigHelper.separateJobs(
       list

@@ -22,6 +22,7 @@ interface State {
   collapseAsExploring: boolean
   diffLocations: number[][] | null
   currentDiff: number[]
+  diffReady: boolean
 }
 
 class Forest extends React.Component<Props, State> {
@@ -35,7 +36,8 @@ class Forest extends React.Component<Props, State> {
       collapseAsExploring: false,
       showDecisions: true,
       diffLocations: null,
-      currentDiff: [0, 0]
+      currentDiff: [0, 0],
+      diffReady: false
     }
   }
 
@@ -72,14 +74,12 @@ class Forest extends React.Component<Props, State> {
 
     let json = await response.json()
 
-    this.setState({ diffLocations: json })
+    this.setState({ diffLocations: json, diffReady: true })
 
     console.log("DIFF", json)
   }
 
   render = () => {
-    console.log("CUrrent DIFF", this.state.currentDiff)
-
     return (
       <>
         {this.props.trees && (
@@ -165,27 +165,39 @@ class Forest extends React.Component<Props, State> {
                 </div>
               </div>
             </StageHeader>
-
-            <StageHeader title={"Diff"} id={"diffSettings"} isCollapsed={false}>
-              <>
-                {this.state.diffLocations ? (
-                  <MySlider
-                    values={[1]}
-                    domain={[1, this.state.diffLocations.length]}
-                    sliderChangeHandler={(value: number) => {
-                      this.setState((prevState: State) => {
-                        return {
-                          currentDiff: prevState.diffLocations![value - 1]
-                        }
-                      })
-                    }}
-                  />
-                ) : (
-                  <div>Waiting for diff....</div>
-                )}
-              </>
-            </StageHeader>
-
+            <>
+              {this.props.trees.length === 2 && (
+                <StageHeader
+                  title={"Diff"}
+                  id={"diffSettings"}
+                  isCollapsed={false}
+                >
+                  <>
+                    {this.state.diffReady ? (
+                      <>
+                        {this.state.diffLocations!.length > 0 ? (
+                          <MySlider
+                            values={[0]}
+                            domain={[0, this.state.diffLocations!.length - 1]}
+                            sliderChangeHandler={(value: number) => {
+                              this.setState((prevState: State) => {
+                                return {
+                                  currentDiff: prevState.diffLocations![value]
+                                }
+                              })
+                            }}
+                          />
+                        ) : (
+                          <div>Trees are identical</div>
+                        )}
+                      </>
+                    ) : (
+                      <div>Waiting for diff....</div>
+                    )}
+                  </>
+                </StageHeader>
+              )}
+            </>
             <Wrapper>
               {this.props.trees.map((_tree: any, i: number) => (
                 <TreeContainer
@@ -197,7 +209,7 @@ class Forest extends React.Component<Props, State> {
                   selected={
                     this.state.currentDiff ? this.state.currentDiff[i] : 0
                   }
-                  key={this.props.trees[i].path}
+                  key={`${this.props.trees[i].path}${i}`}
                   path={this.props.trees[i].path}
                   nimServerPort={this.props.nimServerPort}
                   info={this.props.trees[i].info}
