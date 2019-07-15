@@ -411,14 +411,21 @@ instance TypeOf Expression where
                     case gen of
                         GenDomainNoRepr  pat domain -> typeOfDomain domain >>= lu pat
                         GenDomainHasRepr pat domain -> typeOfDomain domain >>= lu (Single pat)
-                        GenInExpr        pat expr   -> do
-                            tyExpr <- typeOf expr
-                            case innerTypeOf tyExpr of
-                                Just tyExprInner -> lu pat tyExprInner
-                                Nothing -> fail $ vcat
-                                    [ "Type error in the generator of a comprehension or a quantified expression"
+                        GenInExpr        pat expr   ->
+                            case project expr of
+                                Just (d :: Domain () Expression) -> fail $ vcat
+                                    [ "Expected an expression, but got a domain:" <++> pretty d
+                                    , "In the generator of a comprehension or a quantified expression"
                                     , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
                                     ]
+                                Nothing -> do
+                                    tyExpr <- typeOf expr
+                                    case innerTypeOf tyExpr of
+                                        Just tyExprInner -> lu pat tyExprInner
+                                        Nothing -> fail $ vcat
+                                            [ "Type error in the generator of a comprehension or a quantified expression"
+                                            , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
+                                            ]
             DeclNoRepr  _ _ dom _ -> typeOfDomain dom
             DeclHasRepr _ _ dom   -> typeOfDomain dom
             RecordField _ ty      -> return ty
