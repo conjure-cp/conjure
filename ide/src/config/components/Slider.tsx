@@ -10,7 +10,7 @@ export function Handle({
       style={{
         left: `${percent}%`,
         position: "absolute",
-        marginLeft: 0,
+        marginLeft: -5,
         marginTop: 35,
         zIndex: 2,
         width: 10,
