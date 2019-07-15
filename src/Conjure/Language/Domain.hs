@@ -821,8 +821,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainIntE x) = "int" <> prParens (pretty x)
 
-    pretty (DomainInt (TagEnum nm) _) = "int:" <> pretty nm
-    pretty (DomainInt (TagUnnamed nm) _) = "int:" <> pretty nm
+    pretty (DomainInt (TagEnum nm) _) = pretty nm
+    pretty (DomainInt (TagUnnamed nm) _) = pretty nm
 
     pretty (DomainInt _ []) = "int"
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
