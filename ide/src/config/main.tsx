@@ -7,7 +7,7 @@ import { Cache, RepMap } from "../configHelper"
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
 import "./styles.css"
-import { InitResponse } from "../server/server";
+import { InitResponse } from "../server/server"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
@@ -76,9 +76,16 @@ class Root extends React.Component<any, State> {
     })
   }
 
-  clickHandler = () => {
+  diffCheckHandler = (namedCache1: Cache) => {
+    console.log(namedCache1)
+
     this.setState((prevState: State) => {
-      return { diff: !prevState.diff }
+      namedCache1.name = ""
+
+      return {
+        diff: !prevState.diff,
+        selectedCaches: [namedCache1, cloneDeep(namedCache1)]
+      }
     })
   }
 
@@ -133,13 +140,8 @@ class Root extends React.Component<any, State> {
             Invalidate Caches
           </button>
 
-          <Check
-            title={"Compare trees"}
-            checked={this.state.diff}
-            onChange={this.clickHandler}
-          />
-
           <FormikConjure
+            diffCheckHandler={this.diffCheckHandler}
             vscodeServerPort={this.state.vscodeServerPort}
             reps={this.state.reps}
             responseHandler={this.initResponseHandler}

@@ -44,9 +44,10 @@ interface Props {
   showDecisions: boolean
   loadDepth: number
   duration: number
+  interval: number
   finishedPlayingHandler: () => void
   collapseAsExploring: boolean
-  diffParentIds: number[]
+  diffParentId: number
 }
 
 export interface State {
@@ -164,7 +165,7 @@ export class TreeContainer extends React.Component<Props, State> {
       } else {
         MovementHelper.goLeft(this)
       }
-      await TreeHelper.sleep(this.props.duration)
+      await TreeHelper.sleep(this.props.interval)
     }
     this.props.finishedPlayingHandler()
   }
@@ -235,7 +236,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 width={1200}
                 height={500}
                 showDecisions={this.props.showDecisions}
-                diffParentIds={this.props.diffParentIds}
+                diffParentId={this.props.diffParentId}
               />
 
               <Domains

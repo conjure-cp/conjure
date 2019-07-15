@@ -21,19 +21,7 @@ const shortid = require("shortid")
 type RepChoices = Record<string, string>
 
 interface Values {
-  namedConfigs: Cache[]
-}
-
-interface Props {
-  vscodeServerPort: number
-  diff: boolean
-  caches: Cache[]
-  cacheChangeHandler: (cache: Cache, index: number) => void
-  essenceFiles: string[]
-  paramFiles: string[]
-  reps: RepMap
-  selectedCaches?: (Cache | undefined)[]
-  responseHandler: (content: any) => void
+  namedCaches: Cache[]
 }
 
 interface Config {
@@ -54,6 +42,23 @@ interface Config {
   consistency: string
   preprocessing: string
   [key: string]: string | number | string[] | number[]
+}
+
+interface Props {
+  vscodeServerPort: number
+  diff: boolean
+  caches: Cache[]
+  cacheChangeHandler: (cache: Cache, index: number) => void
+  essenceFiles: string[]
+  paramFiles: string[]
+  reps: RepMap
+  selectedCaches?: (Cache | undefined)[]
+  responseHandler: (content: any) => void
+  diffCheckHandler: (namedCache1: Cache) => void
+}
+
+interface State {
+  showReps: boolean[]
 }
 
 const positiveInt = Yup.number()
@@ -90,12 +95,8 @@ const namedConfigSchema = {
 }
 
 const validationSchema = Yup.object().shape({
-  namedConfigs: Yup.array().of(Yup.object().shape(namedConfigSchema))
+  namedCaches: Yup.array().of(Yup.object().shape(namedConfigSchema))
 })
-
-interface State {
-  showReps: boolean[]
-}
 
 class ConfigForm extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -103,64 +104,68 @@ class ConfigForm extends React.Component<Props, State> {
     this.state = { showReps: [false, false] }
   }
 
+  cleanCache = (cache: Cache, state: State, values: Values, index: number) => {
+    const config = cache.config
+
+    let cleaned: any = {}
+
+    Object.keys(config).map((key: string) => {
+      if (config[key] !== "" && config[key] !== "Default") {
+        cleaned[key] = config[key]
+      }
+    })
+
+    if (config.minionSwitches) {
+      cleaned["minionSwitches"] = config.minionSwitches
+    }
+
+    // console.log(config.answers)
+
+    cleaned.answers = config.answers.map(
+      (answer: number | string, i: number) => {
+        if (typeof answer !== "number") {
+          return
+        }
+
+        let variable = this.props.reps[cleaned.essenceFile][i]
+        return `${variable.name}:${answer}`
+      }
+    )
+
+    if (!state.showReps[index]) {
+      delete cleaned["answers"]
+    }
+
+    let name =
+      cache.name !== ""
+        ? cache.name
+        : `${new Date()
+            // .toUTCString()
+            .toLocaleTimeString()
+            .replace(/ /g, "_")
+            .replace(/,/g, "_")}_Config`
+
+    if (isEqual(values.namedCaches[0], values.namedCaches[1])) {
+      name += "1+2"
+    } else {
+      name += `${index + 1}`
+    }
+
+    let newNamedConfig: Cache = {
+      config: cleaned,
+      name: name
+    }
+
+    return newNamedConfig
+  }
+
   submissionHandler = (values: Values, props: Props, state: State) => {
     // console.log("!!!!!!!!!!!!!")
     // console.log(values)
 
-    let cleaned = values.namedConfigs.map((namedConfig, index) => {
-      const config = namedConfig.config
-
-      let cleaned: any = {}
-
-      Object.keys(config).map((key: string) => {
-        if (config[key] !== "" && config[key] !== "Default") {
-          cleaned[key] = config[key]
-        }
-      })
-
-      if (config.minionSwitches) {
-        cleaned["minionSwitches"] = config.minionSwitches
-      }
-
-      // console.log(config.answers)
-
-      cleaned.answers = config.answers.map(
-        (answer: number | string, i: number) => {
-          if (typeof answer !== "number" && answer !== "") {
-            return
-          }
-
-          let variable = this.props.reps[cleaned.essenceFile][i]
-          return `${variable.name}:${answer !== "" ? answer : 1}`
-        }
-      )
-
-      if (!state.showReps[index]) {
-        delete cleaned["answers"]
-      }
-
-      let name =
-        namedConfig.name !== ""
-          ? namedConfig.name
-          : `${new Date()
-              // .toUTCString()
-              .toLocaleTimeString()
-              .replace(/ /g, "_")
-              .replace(/,/g, "_")}_Config`
-
-      if (isEqual(values.namedConfigs[0], values.namedConfigs[1])) {
-        name += "1+2"
-      } else {
-        name += `${index + 1}`
-      }
-
-      let newNamedConfig: Cache = {
-        config: cleaned,
-        name: name
-      }
-
-      return newNamedConfig
-    })
+    let cleaned = values.namedCaches.map((namedCache, index) =>
+      this.cleanCache(namedCache, state, values, index)
+    )
 
     // console.log("cleaned", cleaned)
 
@@ -182,24 +187,24 @@ class ConfigForm extends React.Component<Props, State> {
   renderArrayElements = (props: Props, values: Values, setFieldValue: any) => {
     // console.log(values)
 
-    return values.namedConfigs.map((_config, index) => {
-      const currentEssenceFile = values.namedConfigs[index].config.essenceFile
+    return values.namedCaches.map((_config, index) => {
+      const currentEssenceFile = values.namedCaches[index].config.essenceFile
 
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
       const repSelectBoxes = varReps.map((vR, i) => {
-        // values.namedConfigs[index].config.answers[i] =
-        //   values.namedConfigs[index].config.answers[i] === ""
+        // values.namedCaches[index].config.answers[i] =
+        //   values.namedCaches[index].config.answers[i] === ""
         //     ? vR.representations[0].answer
-        //     : values.namedConfigs[index].config.answers[i]
+        //     : values.namedCaches[index].config.answers[i]
 
         const cachedChoice = vR.representations.find(
-          x => x.answer === values.namedConfigs[index].config.answers[i]
+          x => x.answer === values.namedCaches[index].config.answers[i]
         )
 
         return (
           <NewSelect
-            name={`namedConfigs[${index}].config.answers[${i}]`}
+            name={`namedCaches[${index}].config.answers[${i}]`}
             key={vR.name}
             title={vR.name}
             value={
@@ -229,7 +234,7 @@ class ConfigForm extends React.Component<Props, State> {
             id={`config${index + 1}`}
           >
             <Field
-              name={`namedConfigs[${index}].name`}
+              name={`namedCaches[${index}].name`}
               component={TextWithLabel}
               label={"Save as:"}
             />
@@ -240,7 +245,7 @@ class ConfigForm extends React.Component<Props, State> {
               onChangeHandler={props.cacheChangeHandler}
             />
             <Field
-              name={`namedConfigs[${index}].config.essenceFile`}
+              name={`namedCaches[${index}].config.essenceFile`}
               component={SelectWithLabel}
               title="Model"
               options={props.essenceFiles.map(file => {
@@ -249,7 +254,7 @@ class ConfigForm extends React.Component<Props, State> {
             />
 
             <Field
-              name={`namedConfigs[${index}].config.paramFile`}
+              name={`namedCaches[${index}].config.paramFile`}
               component={SelectWithLabel}
               title="Param"
               options={props.paramFiles.map(file => {
@@ -263,14 +268,14 @@ class ConfigForm extends React.Component<Props, State> {
               isCollapsed={true}
             >
               <Field
-                name={`namedConfigs[${index}].config.conjureTime`}
+                name={`namedCaches[${index}].config.conjureTime`}
                 component={TextWithLabel}
                 label={"Time limit"}
               />
               <>
                 {!this.state.showReps[index] && (
                   <Field
-                    name={`namedConfigs[${index}].config.strategy`}
+                    name={`namedCaches[${index}].config.strategy`}
                     component={SelectWithLabel}
                     title="Strategy"
                     options={[
@@ -303,7 +308,7 @@ class ConfigForm extends React.Component<Props, State> {
               isCollapsed={true}
             >
               <Field
-                name={`namedConfigs[${index}].config.optimisation`}
+                name={`namedCaches[${index}].config.optimisation`}
                 component={SelectWithLabel}
                 title="Optimisation"
                 options={[
@@ -316,7 +321,7 @@ class ConfigForm extends React.Component<Props, State> {
               />
 
               <Field
-                name={`namedConfigs[${index}].config.symmetry`}
+                name={`namedCaches[${index}].config.symmetry`}
                 component={SelectWithLabel}
                 title="Symmetry Breaking"
                 options={[
@@ -328,9 +333,9 @@ class ConfigForm extends React.Component<Props, State> {
               />
 
               <Field
-                name={`namedConfigs[${index}].config.translation`}
+                name={`namedCaches[${index}].config.translation`}
                 component={SelectWithLabel}
-                value={values.namedConfigs[index].config.translation}
+                value={values.namedCaches[index].config.translation}
                 title="Translation"
                 options={[
                   { value: "", label: "Default" },
@@ -361,12 +366,12 @@ class ConfigForm extends React.Component<Props, State> {
                 ]}
               />
               <Field
-                name={`namedConfigs[${index}].config.srTime`}
+                name={`namedCaches[${index}].config.srTime`}
                 component={TextWithLabel}
                 label="Time limit"
               />
               <Field
-                name={`namedConfigs[${index}].config.cnfLimit`}
+                name={`namedCaches[${index}].config.cnfLimit`}
                 component={TextWithLabel}
                 label="CNF clause limit"
               />
@@ -378,33 +383,33 @@ class ConfigForm extends React.Component<Props, State> {
               isCollapsed={true}
             >
               <Checkbox
-                name={`namedConfigs[${index}].config.minionSwitches`}
+                name={`namedCaches[${index}].config.minionSwitches`}
                 value="-findallsols"
                 label="Find all solutions"
               />
               <Checkbox
-                name={`namedConfigs[${index}].config.minionSwitches`}
+                name={`namedCaches[${index}].config.minionSwitches`}
                 value="-randomiseorder"
                 label="Randomise Var Order"
               />
               <Field
-                name={`namedConfigs[${index}].config.nodeLimit`}
+                name={`namedCaches[${index}].config.nodeLimit`}
                 component={TextWithLabel}
                 label="Node Limit"
               />
               <Field
-                name={`namedConfigs[${index}].config.solLimit`}
+                name={`namedCaches[${index}].config.solLimit`}
                 component={TextWithLabel}
                 label="Solution Limit"
               />
               <Field
-                name={`namedConfigs[${index}].config.minionTime`}
+                name={`namedCaches[${index}].config.minionTime`}
                 component={TextWithLabel}
                 label="CPU Limit"
               />
 
               <Field
-                name={`namedConfigs[${index}].config.preprocessing`}
+                name={`namedCaches[${index}].config.preprocessing`}
                 component={SelectWithLabel}
                 title="Preprocessing"
                 options={[
@@ -417,7 +422,7 @@ class ConfigForm extends React.Component<Props, State> {
                 ]}
               />
               <Field
-                name={`namedConfigs[${index}].config.consistency`}
+                name={`namedCaches[${index}].config.consistency`}
                 component={SelectWithLabel}
                 title="Consistency"
                 options={[
@@ -546,7 +551,7 @@ class ConfigForm extends React.Component<Props, State> {
 
     return (
       <Formik
-        initialValues={{ namedConfigs: list }}
+        initialValues={{ namedCaches: list }}
         onSubmit={values => {
           this.submissionHandler(values, this.props, this.state)
         }}
@@ -554,6 +559,15 @@ class ConfigForm extends React.Component<Props, State> {
         enableReinitialize={true}
         render={({ values, setFieldValue }) => (
           <Form>
+            <Check
+              title={"Compare trees"}
+              checked={this.props.diff}
+              onChange={() => {
+                this.props.diffCheckHandler(
+                  this.cleanCache(values.namedCaches[0], this.state, values, 0)
+                )
+              }}
+            />
             <div className="row">
               <FieldArray
                 name="configs"

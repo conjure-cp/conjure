@@ -158,6 +158,7 @@ export const goLeft = async (instance: TreeContainer) => {
       )
 
       if (
+        instance.props.playing &&
         instance.props.collapseAsExploring &&
         grandParent &&
         grandParent.children &&
@@ -335,7 +336,7 @@ export const prevSolBranch = (instance: TreeContainer) => {
 
 export const goToPreviousHandler = (instance: TreeContainer) => {
   goPrev(instance)
-  if (instance.props.collapseAsExploring) {
+  if (instance.props.collapseAsExploring && instance.props.playing) {
     instance.collapse()
   }
 }

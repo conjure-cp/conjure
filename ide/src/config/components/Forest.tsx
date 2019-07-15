@@ -17,6 +17,7 @@ interface Props {
 interface State {
   loadDepth: number
   duration: number
+  interval: number
   reverse: boolean
   showDecisions: boolean
   playing: boolean
@@ -32,6 +33,7 @@ class Forest extends React.Component<Props, State> {
     this.state = {
       loadDepth: 1,
       duration: 1000,
+      interval: 1000,
       reverse: false,
       playing: false,
       collapseAsExploring: false,
@@ -66,7 +68,7 @@ class Forest extends React.Component<Props, State> {
       hash2: this.props.trees[1].hash
     }
 
-    this.setState({ diffReady: false })
+    this.setState({ diffReady: false, currentDiffIndex: -1 })
 
     fetch(`http://localhost:${this.props.nimServerPort}/diff`, {
       method: "post",
@@ -90,15 +92,17 @@ class Forest extends React.Component<Props, State> {
               <div className="sliderContainer row">
                 <label className="col-3">Lazy loading depth:</label>
                 <div className="slider col-3">
-                  {/* <MySlider
+                  <MySlider
                     values={[1]}
                     domain={[1, 10]}
                     sliderChangeHandler={(value: number) => {
                       this.setState({ loadDepth: value })
                     }}
-                  /> */}
+                  />
                 </div>
+              </div>
 
+              <div className="row">
                 <label className="col-3">Animation duration (ms):</label>
                 <div className="slider col-3">
                   <MySlider
@@ -106,6 +110,19 @@ class Forest extends React.Component<Props, State> {
                     domain={[0, 4000]}
                     sliderChangeHandler={(value: number) => {
                       this.setState({ duration: value })
+                    }}
+                  />
+                </div>
+
+                <label className="col-3">
+                  Interval between animations (ms):
+                </label>
+                <div className="slider col-3">
+                  <MySlider
+                    values={[this.state.interval]}
+                    domain={[0, 4000]}
+                    sliderChangeHandler={(value: number) => {
+                      this.setState({ interval: value })
                     }}
                   />
                 </div>
@@ -182,7 +199,7 @@ class Forest extends React.Component<Props, State> {
 
                             <MySlider
                               values={[this.state.currentDiffIndex]}
-                              domain={[0, this.state.diffLocations.length - 1]}
+                              domain={[-1, this.state.diffLocations.length - 1]}
                               sliderChangeHandler={(value: number) => {
                                 this.setState({ currentDiffIndex: value })
                               }}
@@ -191,6 +208,10 @@ class Forest extends React.Component<Props, State> {
                             <FlickThru
                               nextHandler={() => {
                                 this.setState((prevState: State) => {
+                                  if (prevState.diffLocations.length === 1) {
+                                    return { currentDiffIndex: 0 }
+                                  }
+
                                   if (
                                     prevState.currentDiffIndex + 1 >
                                     prevState.diffLocations.length - 1
@@ -205,6 +226,10 @@ class Forest extends React.Component<Props, State> {
                               }}
                               prevHandler={() => {
                                 this.setState((prevState: State) => {
+                                  if (prevState.diffLocations.length === 1) {
+                                    return { currentDiffIndex: 0 }
+                                  }
+
                                   if (prevState.currentDiffIndex - 1 < 0) {
                                     return null
                                   }
@@ -230,10 +255,12 @@ class Forest extends React.Component<Props, State> {
             <Wrapper>
               {this.props.trees.map((_tree: any, i: number) => (
                 <TreeContainer
-                  diffParentIds={
-                    this.state.diffLocations
-                      ? this.state.diffLocations.map(x => x[i])
-                      : []
+                  diffParentId={
+                    this.state.currentDiffIndex !== -1
+                      ? this.state.diffLocations.map(x => x[i])[
+                          this.state.currentDiffIndex
+                        ]
+                      : -1
                   }
                   selected={
                     this.state.currentDiffIndex !== -1
@@ -251,6 +278,7 @@ class Forest extends React.Component<Props, State> {
                   loadDepth={this.state.loadDepth}
                   reverse={this.state.reverse}
                   duration={this.state.duration}
+                  interval={this.state.interval}
                   finishedPlayingHandler={() =>
                     this.setState({ playing: false })
                   }

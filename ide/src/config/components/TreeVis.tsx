@@ -15,7 +15,7 @@ import { runInThisContext } from "vm"
 type num2num = Record<number, { x: number; y: number }>
 
 interface Props {
-  diffParentIds: number[]
+  diffParentId: number
   showDecisions: boolean
   hash: string
   identifier: string
@@ -311,8 +311,10 @@ export default class TreeVis extends React.Component<Props, State> {
       .classed(
         "different",
         d =>
-          this.props.diffParentIds.includes(d.source.data.id) &&
-          d.target.data.id === d.source.data.id + 1
+          // this.props.diffParentIds.includes(d.source.data.id) &&
+          // d.target.data.id === d.source.data.id + 1
+          d.target.data.id === d.source.data.id + 1 &&
+          d.source.data.id === this.props.diffParentId
       )
       .attr("d", d => {
         const origin = {
@@ -337,8 +339,10 @@ export default class TreeVis extends React.Component<Props, State> {
       .classed(
         "different",
         d =>
-          this.props.diffParentIds.includes(d.source.data.id) &&
-          d.target.data.id === d.source.data.id + 1
+          d.target.data.id === d.source.data.id + 1 &&
+          d.source.data.id === this.props.diffParentId
+        // this.props.diffParentIds.includes(d.source.data.id) &&
+        // d.target.data.id === d.source.data.id + 1
       )
       .transition()
       .duration(this.props.duration)

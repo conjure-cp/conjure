@@ -39,7 +39,6 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
     let lRes = leftDB.getAllRows(sql(query))
     let rRes = rightDB.getAllRows(sql(query))
 
-    let lIsMore = lRes.len() > rRes.len()
 
     # echo "---------------------------------------", lIsMore
 
@@ -83,6 +82,8 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
         var advanceBothTrees = true
 
+        # var descCounts = [0,0]
+
         # Advance both trees to the next branch that is not descended from the last diff point
         while advanceBothTrees:
             var couldParse = 1
@@ -99,12 +100,19 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
                 nodeIds[index] = nextId
 
+                # discard db.getValue(sql(fmt"select count() from Node where path like '{path}%'")).parseInt(descCounts[index])
+
+                
+
             # echo lRes[nodeIds[0]], "  ~  ", rRes[nodeIds[1]]
 
 
             # Initialise the variables such that they refer to the largest tree
             var current: int
             var db : DbConn
+
+            let lIsMore = lRes.len() > rRes.len()
+            # let lIsMore = descCounts[0] > descCounts[1]
 
             if lIsMore:
                 current = nodeIds[0]

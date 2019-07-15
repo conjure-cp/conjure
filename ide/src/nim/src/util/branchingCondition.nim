@@ -26,7 +26,7 @@ proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPrett
 
     result &= value
 
-proc innerSet(s: Set, isLeft, val, name, branchName : string): string =
+proc innerSet*(s: Set, isLeft, val, name, branchName : string): string =
 
     let splitted = branchName.split("_")
     # echo "here"
@@ -191,7 +191,7 @@ proc getSetLabel(s: Set, isLeft, val, branchName: string): string =
         current = current.inner
         copy.dec()
     
-    var b = branchName
+    # var b = branchName
 
     # var childName = s.name
 
