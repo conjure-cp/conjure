@@ -7,6 +7,7 @@ import { MySlider } from "./Slider"
 import Play from "./Play"
 import { headers } from "../modules/Helper"
 import { isEqual } from "lodash"
+import FlickThru from "./FlickThu"
 
 interface Props {
   trees: any[]
@@ -20,8 +21,8 @@ interface State {
   showDecisions: boolean
   playing: boolean
   collapseAsExploring: boolean
-  diffLocations: number[][] | null
-  currentDiff: number[]
+  diffLocations: number[][]
+  currentDiffIndex: number
   diffReady: boolean
 }
 
@@ -35,8 +36,8 @@ class Forest extends React.Component<Props, State> {
       playing: false,
       collapseAsExploring: false,
       showDecisions: true,
-      diffLocations: null,
-      currentDiff: [0, 0],
+      diffLocations: [],
+      currentDiffIndex: -1,
       diffReady: false
     }
   }
@@ -63,20 +64,15 @@ class Forest extends React.Component<Props, State> {
       path2: this.props.trees[1].path
     }
 
-    let response = await fetch(
-      `http://localhost:${this.props.nimServerPort}/diff`,
-      {
-        method: "post",
-        headers: headers,
-        body: JSON.stringify(payload)
-      }
-    )
+    this.setState({ diffReady: false })
 
-    let json = await response.json()
-
-    this.setState({ diffLocations: json, diffReady: true })
-
-    console.log("DIFF", json)
+    fetch(`http://localhost:${this.props.nimServerPort}/diff`, {
+      method: "post",
+      headers: headers,
+      body: JSON.stringify(payload)
+    })
+      .then(data => data.json())
+      .then(json => this.setState({ diffLocations: json, diffReady: true }))
   }
 
   render = () => {
@@ -175,18 +171,49 @@ class Forest extends React.Component<Props, State> {
                   <>
                     {this.state.diffReady ? (
                       <>
-                        {this.state.diffLocations!.length > 0 ? (
-                          <MySlider
-                            values={[0]}
-                            domain={[0, this.state.diffLocations!.length - 1]}
-                            sliderChangeHandler={(value: number) => {
-                              this.setState((prevState: State) => {
-                                return {
-                                  currentDiff: prevState.diffLocations![value]
-                                }
-                              })
-                            }}
-                          />
+                        {this.state.diffLocations.length > 0 ? (
+                          <>
+                            <div>
+                              Trees differ in {this.state.diffLocations.length}{" "}
+                              places
+                            </div>
+
+                            <MySlider
+                              values={[this.state.currentDiffIndex]}
+                              domain={[0, this.state.diffLocations.length - 1]}
+                              sliderChangeHandler={(value: number) => {
+                                this.setState({ currentDiffIndex: value })
+                              }}
+                            />
+
+                            <FlickThru
+                              nextHandler={() => {
+                                this.setState((prevState: State) => {
+                                  if (
+                                    prevState.currentDiffIndex + 1 >
+                                    prevState.diffLocations.length - 1
+                                  ) {
+                                    return null
+                                  }
+                                  return {
+                                    currentDiffIndex:
+                                      prevState.currentDiffIndex + 1
+                                  }
+                                })
+                              }}
+                              prevHandler={() => {
+                                this.setState((prevState: State) => {
+                                  if (prevState.currentDiffIndex - 1 < 0) {
+                                    return null
+                                  }
+                                  return {
+                                    currentDiffIndex:
+                                      prevState.currentDiffIndex - 1
+                                  }
+                                })
+                              }}
+                            />
+                          </>
                         ) : (
                           <div>Trees are identical</div>
                         )}
@@ -207,7 +234,9 @@ class Forest extends React.Component<Props, State> {
                       : []
                   }
                   selected={
-                    this.state.currentDiff ? this.state.currentDiff[i] : 0
+                    this.state.currentDiffIndex !== -1
+                      ? this.state.diffLocations[this.state.currentDiffIndex][i]
+                      : 0
                   }
                   hash={this.props.trees[i].hash}
                   key={`${this.props.trees[i].hash}${i}`}

@@ -79,6 +79,10 @@ export default class TreeVis extends React.Component<Props, State> {
       return false
     }
 
+    if (this.props.solAncestorIds.includes(d.data.id)) {
+      return false
+    }
+
     for (let i = 0; i < d.data.descCount; i++) {
       if (!(d.data.id + i + 1 in this.state.oldPos)) {
         return false
