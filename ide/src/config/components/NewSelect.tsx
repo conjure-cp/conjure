@@ -64,7 +64,7 @@ export default class MySelect extends React.Component<Props, State> {
       }
     }
 
-    console.log(opt)
+    // console.log(opt)
 
     return (
       <div style={{ margin: "1rem 0" }}>
@@ -74,7 +74,7 @@ export default class MySelect extends React.Component<Props, State> {
           options={this.props.options}
           value={opt}
           onChange={(option: any) => {
-            console.log(option)
+            // console.log(option)
             this.setState({
               selectedOption: { label: option.label, value: option.value }
             })

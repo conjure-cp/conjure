@@ -66,7 +66,8 @@ export default class Node {
   public static getRadius(
     d: HierarchyPointNode<Node>,
     linScale: any,
-    minsize: number
+    minsize: number,
+    diffParentId: number
   ): number {
     const solNodeStrokeWidth = getComputedStyle(
       document.getElementById("root")!
@@ -76,7 +77,7 @@ export default class Node {
       document.getElementById("root")!
     ).getPropertyValue("--stroke-width")
 
-    if (d.data.isSolution) {
+    if (d.data.isSolution || d.data.id === diffParentId) {
       return (
         minsize + Number(normalNodeStrokeWidth) - Number(solNodeStrokeWidth)
       )

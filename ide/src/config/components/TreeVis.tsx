@@ -112,8 +112,18 @@ export default class TreeVis extends React.Component<Props, State> {
       .transition()
       .duration(this.props.duration)
       .attr("r", (d: HierarchyPointNode<Node>) =>
-        Node.getRadius(d, this.props.linScale, this.props.minsize)
+        Node.getRadius(
+          d,
+          this.props.linScale,
+          this.props.minsize,
+          this.props.diffParentId
+        )
       )
+
+    circle.classed("different", (d: HierarchyPointNode<Node>) => {
+      console.log(this.props.diffParentId)
+      return d.data.id === this.props.diffParentId
+    })
 
     circle.classed(
       "selected",
@@ -228,7 +238,15 @@ export default class TreeVis extends React.Component<Props, State> {
       .append("text")
       .style("fill-opacity", 1e-6)
       .attr("y", d => {
-        return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize)
+        return (
+          2 *
+          Node.getRadius(
+            d,
+            this.props.linScale,
+            this.props.minsize,
+            this.props.diffParentId
+          )
+        )
       })
       .attr("class", "decCount")
       .attr("dy", ".35em")
@@ -254,7 +272,15 @@ export default class TreeVis extends React.Component<Props, State> {
     nodeUpdate
       .select("text.decCount")
       .attr("y", d => {
-        return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize)
+        return (
+          2 *
+          Node.getRadius(
+            d,
+            this.props.linScale,
+            this.props.minsize,
+            this.props.diffParentId
+          )
+        )
       })
       .transition()
       .duration(this.props.duration)
@@ -311,10 +337,9 @@ export default class TreeVis extends React.Component<Props, State> {
       .classed(
         "different",
         d =>
-          // this.props.diffParentIds.includes(d.source.data.id) &&
-          // d.target.data.id === d.source.data.id + 1
           d.target.data.id === d.source.data.id + 1 &&
-          d.source.data.id === this.props.diffParentId
+          d.source.data.id === this.props.diffParentId &&
+          this.props.diffParentId !== 0
       )
       .attr("d", d => {
         const origin = {
@@ -340,7 +365,8 @@ export default class TreeVis extends React.Component<Props, State> {
         "different",
         d =>
           d.target.data.id === d.source.data.id + 1 &&
-          d.source.data.id === this.props.diffParentId
+          d.source.data.id === this.props.diffParentId &&
+          this.props.diffParentId !== 0
         // this.props.diffParentIds.includes(d.source.data.id) &&
         // d.target.data.id === d.source.data.id + 1
       )
@@ -395,7 +421,8 @@ export default class TreeVis extends React.Component<Props, State> {
     if (
       prevProps.selected !== this.props.selected ||
       !isEqual(prevProps.rootNode, this.props.rootNode) ||
-      prevProps.showLabels !== this.props.showLabels
+      prevProps.showLabels !== this.props.showLabels ||
+      prevProps.diffParentId !== this.props.diffParentId
     ) {
       this.drawTree()
     }

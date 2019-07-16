@@ -28,9 +28,14 @@ proc checkDomainsAreEqual*(paths: array[2, string],  nodeIds: array[2, int]) : b
     return leftDB.getValue(sql(query), nodeIds[0]) == rightDB.getValue(sql(query), nodeIds[1])
     
 
+proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
+    if leftIsMore:
+        return [current, other]
+    return [other, current]
 
 
-proc diff*(leftPath, rightPath: string): seq[seq[int]] =
+
+proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
 
     var res : seq[(int, int)]
 
@@ -39,62 +44,61 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
     let dbs = [leftDB, rightDb]
 
-    # let query = "select branchingVariable, value, isLeftChild from Node"
-    let query = "select nodeId from Node"
+    let query = "select count(nodeId) from Node"
 
-    # let lRes = leftDB.getAllRows(sql(query))
-    # let rRes = rightDB.getAllRows(sql(query))
+    var lCount: int
+    var rCount: int
 
-    let lRecs = leftDB.getAllRows(sql(query)) 
-    let rRecs = rightDB.getAllRows(sql(query)) 
+    discard leftDB.getValue(sql(query)).parseInt(lCount) 
+    discard rightDB.getValue(sql(query)).parseInt(rCount) 
 
+    let lIsMore =  lCount > rCount
 
-
-    # echo "---------------------------------------", lIsMore
-
-    var nodeIds = [0, 0]
+    var nodeIds = [0,0]
+    var current: int
+    var other: int
+    var db : DbConn
 
     if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
        return @[@[0,0]] 
 
     while true:
 
-        echo  ""
-        echo nodeIds[0], "     ", nodeIds[1]
+        if debug:
+            echo  ""
+            echo nodeIds[0], "     ", nodeIds[1]
 
         # Increment each tree until we get to a point where they differ
 
-        # while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
         while checkDomainsAreEqual([leftPath, rightPath], nodeIds):
             nodeIds[0].inc()
             nodeIds[1].inc()
 
             # If we get to the end of one of the trees then we've finished and need to return
-            if (nodeIds[0] >= lRecs.len() or nodeIds[1] >= rRecs.len()):
-                echo nodeIds[0], "     ", nodeIds[1]
-                echo "quiting"
-                if (res.len() == 0 and lRecs.len() == rRecs.len()):
+            if (nodeIds[0] >= lCount or nodeIds[1] >= rCount):
+                if debug:
+                    echo nodeIds[0], "     ", nodeIds[1]
+                    echo "quiting"
+
+                if (res.len() == 0 and lCount == rCount):
                     return result
 
                 res.add((nodeIds[0] - 1, nodeIds[1] - 1))
                 return res.map(s => @[s[0], s[1]])
                 
-        echo nodeIds[0], "     ", nodeIds[1]
-
-        # echo lRes[nodeIds[0]]
-        # echo rRes[nodeIds[1]]
+        if debug:
+            echo nodeIds[0], "     ", nodeIds[1]
 
         nodeIds[0].dec()
         nodeIds[1].dec()
 
-        echo nodeIds[0], "     ", nodeIds[1]
+        if debug:
+            echo nodeIds[0], "     ", nodeIds[1]
 
         # Add the first firr point to the res
         res.add((nodeIds[0], nodeIds[1]))
 
         var advanceBothTrees = true
-
-        # var descCounts = [0,0]
 
         # Advance both trees to the next branch that is not descended from the last diff point
         while advanceBothTrees:
@@ -108,37 +112,36 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 couldParse = db.getValue(sql(query)).parseInt(nextId)
 
                 if couldParse == 0:
-                    echo "quitting 2"
-                    echo index, " ", query
+                    if debug:
+                        echo "quitting 2"
+                        echo index, " | ", query
                     return res.map(s => @[s[0], s[1]])
 
                 nodeIds[index] = nextId
-
-                # discard db.getValue(sql(fmt"select count() from Node where path like '{path}%'")).parseInt(descCounts[index])
-
                 
-            echo nodeIds[0], "     ", nodeIds[1]
+            if debug:
+                echo nodeIds[0], "     ", nodeIds[1]
 
             # Initialise the variables such that they refer to the largest tree
-            var current: int
-            var db : DbConn
-
-            let lIsMore = lRecs.len() > rRecs.len()
-            # let lIsMore = descCounts[0] > descCounts[1]
 
             if lIsMore:
                 current = nodeIds[0]
+                other = nodeIds[1]
                 db = leftDB
             else:
                 current = nodeIds[1]
+                other = nodeIds[0]
                 db = rightDB
 
             #  Go through all the subsequent branches of the tree with the most nodes to see if there
             # is a node equal to that of the smaller tree
             # while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
-            while not checkDomainsAreEqual([leftPath, rightPath], nodeIds) and couldParse != 0:
 
-                echo "here"
+            while not checkDomainsAreEqual([leftPath, rightPath], nodeIdsToArray(current, other, lIsMore)):
+
+                if debug:
+                    echo "start of botoom llop"
+                    echo nodeIds[0], "     ", nodeIds[1]
 
                 let path = db.getValue(sql"select path from Node where nodeId = ?", current)
 
@@ -148,19 +151,20 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
                 couldParse = db.getValue(sql(query)).parseInt(nextId)
 
-                current = nextId
-                
-                if lIsMore:
-                    nodeIds[0] = current 
-                else:
-                    nodeIds[1] = current 
+                if couldParse == 0:
+                    break
 
-            echo nodeIds[0], "     ", nodeIds[1]
+                current = nextId
 
             if couldParse != 0:
+                nodeIds = nodeIdsToArray(current, other, lIsMore)
                 advanceBothTrees = false
 
-    echo "end"
+            if debug:
+                echo "end of bottom loop ", nodeIds[0], "     ", nodeIds[1]
+
+    if debug:
+        echo "end"
     return res.map(s => @[s[0], s[1]])
 
 

@@ -123,6 +123,7 @@ class Forest extends React.Component<Props, State> {
 
   render = () => {
     console.log(this.state.diffLocations)
+    console.log(this.state.currentDiffIndex)
 
     return (
       <>
@@ -275,47 +276,53 @@ class Forest extends React.Component<Props, State> {
                               places
                             </div>
 
-                            <MySlider
-                              values={[this.state.currentDiffIndex]}
-                              domain={[-1, this.state.diffLocations.length - 1]}
-                              sliderChangeHandler={(value: number) => {
-                                this.setState({ currentDiffIndex: value })
-                              }}
-                            />
-
+                            {this.state.diffLocations.length > 1 && (
+                              <MySlider
+                                values={[this.state.currentDiffIndex]}
+                                domain={[
+                                  0,
+                                  this.state.diffLocations.length - 1
+                                ]}
+                                sliderChangeHandler={(value: number) => {
+                                  this.setState({ currentDiffIndex: value })
+                                }}
+                              />
+                            )}
                             <FlickThru
                               nextHandler={() => {
-                                this.setState((prevState: State) => {
-                                  if (prevState.diffLocations.length === 1) {
-                                    return { currentDiffIndex: 0 }
-                                  }
+                                // this.setState((prevState: State) => {
+                                console.log(this.state.diffLocations.length)
+                                if (this.state.diffLocations.length === 1) {
+                                  this.setState({ currentDiffIndex: 0 })
+                                }
 
-                                  if (
-                                    prevState.currentDiffIndex + 1 >
-                                    prevState.diffLocations.length - 1
-                                  ) {
-                                    return null
-                                  }
-                                  return {
-                                    currentDiffIndex:
-                                      prevState.currentDiffIndex + 1
-                                  }
+                                if (
+                                  this.state.currentDiffIndex + 1 >
+                                  this.state.diffLocations.length - 1
+                                ) {
+                                  return
+                                }
+
+                                this.setState({
+                                  currentDiffIndex:
+                                    this.state.currentDiffIndex + 1
                                 })
+                                // })
                               }}
                               prevHandler={() => {
-                                this.setState((prevState: State) => {
-                                  if (prevState.diffLocations.length === 1) {
-                                    return { currentDiffIndex: 0 }
-                                  }
+                                // this.setState((prevState: State) => {
+                                if (this.state.diffLocations.length === 1) {
+                                  this.setState({ currentDiffIndex: 0 })
+                                }
 
-                                  if (prevState.currentDiffIndex - 1 < 0) {
-                                    return null
-                                  }
-                                  return {
-                                    currentDiffIndex:
-                                      prevState.currentDiffIndex - 1
-                                  }
+                                if (this.state.currentDiffIndex - 1 < 0) {
+                                  return
+                                }
+                                this.setState({
+                                  currentDiffIndex:
+                                    this.state.currentDiffIndex - 1
                                 })
+                                // })
                               }}
                             />
                           </>
