@@ -68,16 +68,18 @@ class Root extends React.Component<any, State> {
   cacheChangeHandler = (cache: Cache, index: number) => {
     this.setState((prevState: State) => {
       let copy = cloneDeep(prevState.selectedCaches)
+      console.log(copy)
       if (!copy) {
         copy = [undefined, undefined]
       }
       copy[index] = cache
+      console.log(copy)
       return { selectedCaches: copy }
     })
   }
 
   diffCheckHandler = (namedCache1: Cache) => {
-    console.log(namedCache1)
+    // console.log(namedCache1)
 
     this.setState((prevState: State) => {
       namedCache1.name = ""

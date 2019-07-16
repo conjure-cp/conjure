@@ -25,6 +25,8 @@ interface State {
   diffLocations: number[][]
   currentDiffIndex: number
   diffReady: boolean
+  splitScreen: boolean
+  locked: boolean
 }
 
 class Forest extends React.Component<Props, State> {
@@ -40,7 +42,9 @@ class Forest extends React.Component<Props, State> {
       showLabels: true,
       diffLocations: [],
       currentDiffIndex: -1,
-      diffReady: false
+      diffReady: false,
+      splitScreen: false,
+      locked: true
     }
   }
 
@@ -57,7 +61,12 @@ class Forest extends React.Component<Props, State> {
       return
     }
 
-    if (!this.props.trees || this.props.trees.length < 2) {
+    if (!this.props.trees) {
+      return
+    }
+
+    if (this.props.trees.length < 2) {
+      this.setState({ splitScreen: true })
       return
     }
 
@@ -103,26 +112,46 @@ class Forest extends React.Component<Props, State> {
               </div>
 
               <div className="row">
-                <label className="col-3">Animation duration (ms):</label>
-                <div className="slider col-3">
-                  <MySlider
-                    values={[this.state.duration]}
-                    domain={[0, 4000]}
-                    sliderChangeHandler={(value: number) => {
-                      this.setState({ duration: value })
+                <div className="col-2">
+                  <Check
+                    title={"lock"}
+                    checked={this.state.locked}
+                    onChange={() => {
+                      this.setState((prevState: State) => {
+                        return { locked: !prevState.locked }
+                      })
                     }}
                   />
                 </div>
 
-                <label className="col-3">
+                <label className="col-2">Animation duration (ms):</label>
+                <div className="slider col-2">
+                  <MySlider
+                    values={[this.state.duration]}
+                    domain={[0, 4000]}
+                    sliderChangeHandler={(value: number) => {
+                      if (this.state.locked) {
+                        this.setState({ duration: value, interval: value })
+                      } else {
+                        this.setState({ duration: value })
+                      }
+                    }}
+                  />
+                </div>
+
+                <label className="col-2">
                   Interval between animations (ms):
                 </label>
-                <div className="slider col-3">
+                <div className="slider col-2">
                   <MySlider
                     values={[this.state.interval]}
                     domain={[0, 4000]}
                     sliderChangeHandler={(value: number) => {
-                      this.setState({ interval: value })
+                      if (this.state.locked) {
+                        this.setState({ duration: value, interval: value })
+                      } else {
+                        this.setState({ interval: value })
+                      }
                     }}
                   />
                 </div>
@@ -164,7 +193,9 @@ class Forest extends React.Component<Props, State> {
                         />
 
                         <Check
-                          title={"Collapse when explored"}
+                          title={
+                            "Collapse explored failed branches when playing"
+                          }
                           checked={this.state.collapseAsExploring}
                           onChange={() => {
                             this.setState((prevState: State) => {
@@ -187,6 +218,18 @@ class Forest extends React.Component<Props, State> {
                   id={"diffSettings"}
                   isCollapsed={false}
                 >
+                  <Check
+                    title={"Split screen"}
+                    checked={this.state.splitScreen}
+                    onChange={() => {
+                      this.setState((prevState: State) => {
+                        return {
+                          splitScreen: !prevState.splitScreen
+                        }
+                      })
+                    }}
+                  />
+
                   <>
                     {this.state.diffReady ? (
                       <>
@@ -253,39 +296,47 @@ class Forest extends React.Component<Props, State> {
               )}
             </>
             <Wrapper>
-              {this.props.trees.map((_tree: any, i: number) => (
-                <TreeContainer
-                  diffParentId={
-                    this.state.currentDiffIndex !== -1
-                      ? this.state.diffLocations.map(x => x[i])[
-                          this.state.currentDiffIndex
-                        ]
-                      : -1
-                  }
-                  selected={
-                    this.state.currentDiffIndex !== -1
-                      ? this.state.diffLocations[this.state.currentDiffIndex][i]
-                      : 0
-                  }
-                  hash={this.props.trees[i].hash}
-                  key={`${this.props.trees[i].hash}${i}`}
-                  path={this.props.trees[i].path}
-                  nimServerPort={this.props.nimServerPort}
-                  info={this.props.trees[i].info}
-                  core={this.props.trees[i].core}
-                  identifier={`tree${i}`}
-                  playing={this.state.playing}
-                  loadDepth={this.state.loadDepth}
-                  reverse={this.state.reverse}
-                  duration={this.state.duration}
-                  interval={this.state.interval}
-                  finishedPlayingHandler={() =>
-                    this.setState({ playing: false })
-                  }
-                  collapseAsExploring={this.state.collapseAsExploring}
-                  showLabels={this.state.showLabels}
-                />
-              ))}
+              {this.state.splitScreen ? (
+                <>
+                  {this.props.trees.map((_tree: any, i: number) => (
+                    <TreeContainer
+                      diffParentId={
+                        this.state.currentDiffIndex !== -1
+                          ? this.state.diffLocations.map(x => x[i])[
+                              this.state.currentDiffIndex
+                            ]
+                          : -1
+                      }
+                      selected={
+                        this.state.currentDiffIndex !== -1
+                          ? this.state.diffLocations[
+                              this.state.currentDiffIndex
+                            ][i]
+                          : 0
+                      }
+                      hash={this.props.trees[i].hash}
+                      key={`${this.props.trees[i].hash}${i}`}
+                      path={this.props.trees[i].path}
+                      nimServerPort={this.props.nimServerPort}
+                      info={this.props.trees[i].info}
+                      core={this.props.trees[i].core}
+                      identifier={`tree${i}`}
+                      playing={this.state.playing}
+                      loadDepth={this.state.loadDepth}
+                      reverse={this.state.reverse}
+                      duration={this.state.duration}
+                      interval={this.state.interval}
+                      finishedPlayingHandler={() =>
+                        this.setState({ playing: false })
+                      }
+                      collapseAsExploring={this.state.collapseAsExploring}
+                      showLabels={this.state.showLabels}
+                    />
+                  ))}
+                </>
+              ) : (
+                <div>This is not a splitscreen</div>
+              )}
             </Wrapper>
           </>
         )}

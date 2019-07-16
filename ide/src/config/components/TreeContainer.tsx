@@ -22,6 +22,7 @@ interface FromServerNode {
   isSolution: boolean
   isLeftChild: boolean
   descCount: number
+  isLeftTree: boolean
 }
 
 export type MyMap = Record<number, Node>
@@ -81,7 +82,7 @@ export class TreeContainer extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props)
-    this.state = TreeHelper.makeState(this.props.core, props.selected)
+    this.state = TreeHelper.makeState(props.core, props.selected)
 
     this.handlers = {
       goLeft: () => MovementHelper.goLeft(this),

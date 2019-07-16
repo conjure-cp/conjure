@@ -120,7 +120,8 @@ export const makeState = (core: Core, selected: number): State => {
       element.descCount,
       element.isLeftChild,
       element.childCount,
-      element.isSolution
+      element.isSolution,
+      element.isLeftTree
     )
 
     const parentId = newNode.parentId

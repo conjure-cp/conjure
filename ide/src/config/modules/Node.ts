@@ -19,7 +19,7 @@ export default class Node {
   public isLeftChild: boolean
   public childCount: number
   public isSolution: boolean
-  private static minRadius = 10
+  public isLeftTree: boolean
 
   constructor(
     id: number,
@@ -29,14 +29,16 @@ export default class Node {
     decCount: number,
     isLeftchild: boolean,
     childCount: number,
-    isSolution: boolean
+    isSolution: boolean,
+    isLeftTree: boolean,
+
   ) {
     this.id = id
+    this.x0 = null
+    this.y0 = null
     this.parentId = parentId
     this.children = undefined
     this._children = undefined
-    this.x0 = null
-    this.y0 = null
     this.depth = 0
     this.descCount = decCount
     this.label = label
@@ -44,6 +46,7 @@ export default class Node {
     this.isLeftChild = isLeftchild
     this.childCount = childCount
     this.isSolution = isSolution
+    this.isLeftTree = isLeftTree
   }
 
   public static fromNode(old: Node) {
@@ -55,7 +58,8 @@ export default class Node {
       old.descCount,
       old.isLeftChild,
       old.childCount,
-      old.isSolution
+      old.isSolution,
+      old.isLeftTree
     )
     n.children = old.children
     n._children = old._children
@@ -154,47 +158,5 @@ export default class Node {
     } else if (node.children) {
       Node.hideChildren(node)
     }
-  }
-
-  /**
-   * Returns if the node has children that are either collapse or not yet loaded.
-   * @param node
-   */
-
-  public static hasMoreChildren(node: Node): boolean {
-    let childLength = 0
-    if (node.children) {
-      childLength = node.children.length
-    }
-
-    return childLength < node.childCount
-  }
-
-  /**
-   * Returns the radius of the node.
-   * @param node
-   */
-
-  public static calculateRadius(node: Node): number {
-    if (node.children && node.children.length === node.childCount) {
-      return Node.minRadius
-    }
-
-    // Use logarithmic scale so nodes don't get too big.
-    let size = Math.log(node.descCount + Node.minRadius) * 3
-
-    if (size < Node.minRadius) {
-      return Node.minRadius
-    }
-
-    return size
-  }
-
-  /**
-   * Returns the height of a nodes descendant count label.
-   * @param node
-   */
-  public static getDescLabelHeight(node: Node) {
-    return Node.calculateRadius(node) + 13
   }
 }
