@@ -34,7 +34,6 @@ proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
     return [other, current]
 
 
-
 proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
 
     var res : seq[(int, int)]

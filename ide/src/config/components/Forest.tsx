@@ -8,9 +8,12 @@ import Play from "./Play"
 import { headers } from "../modules/Helper"
 import { isEqual } from "lodash"
 import FlickThru from "./FlickThu"
+import VisualiserSettings from "./VisualiserSettings"
+import PlaySettings from "./PlaySettings"
+import DiffSettings from "./DiffSettings"
 import { makeState } from "../modules/TreeHelper"
 
-interface Tree {
+export interface Tree {
   hash: string
   path: string
   info: string
@@ -56,38 +59,7 @@ class Forest extends React.Component<Props, State> {
     }
   }
 
-  makeCombinedMap = () => {
-    let leftMap = makeState(this.props.trees[0].core, 0).id2Node
-    let rightMap = makeState(this.props.trees[1].core, 0).id2Node
 
-    // All nodes are isLeftTree === true by default..
-
-    for (let i = 0; i < rightMap[0].descCount; i++) {
-      rightMap[i].isLeftTree = false
-    }
-
-    this.state.diffLocations.forEach(array => {
-      if (!leftMap[array[0]].children) {
-        leftMap[array[0]].children = []
-      }
-
-      if (!rightMap[array[1]].children) {
-        rightMap[array[1]].children = []
-      }
-
-      leftMap[array[0]].children = leftMap[array[0]].children!.concat(
-        rightMap[array[1]].children!
-      )
-    })
-  }
-
-  pPressed = () => {
-    this.setState((prevState: State) => {
-      return {
-        playing: !prevState.playing
-      }
-    })
-  }
 
   componentDidUpdate = async (prevProps: Props) => {
     if (isEqual(prevProps.trees, this.props.trees)) {
@@ -129,214 +101,111 @@ class Forest extends React.Component<Props, State> {
       <>
         {this.props.trees && (
           <>
-            <StageHeader
-              title={"Visualiser Settings"}
-              id={"visSettings"}
-              isCollapsed={false}
-            >
-              <div className="sliderContainer row">
-                <label className="col-3">Lazy loading depth:</label>
-                <div className="slider col-3">
-                  <MySlider
-                    values={[1]}
-                    domain={[1, 10]}
-                    sliderChangeHandler={(value: number) => {
-                      this.setState({ loadDepth: value })
-                    }}
-                  />
-                </div>
-              </div>
+            <VisualiserSettings
+              locked={this.state.locked}
+              showLabels={this.state.showLabels}
+              duration={this.state.duration}
+              interval={this.state.interval}
+              labelChangeHandler={() => {
+                this.setState((prevState: State) => {
+                  return { showLabels: !prevState.showLabels }
+                })
+              }}
+              loadDepthChangeHandler={(value: number) => {
+                this.setState({ loadDepth: value })
+              }}
+              durationChangeHandler={(value: number) => {
+                if (this.state.locked) {
+                  this.setState({ duration: value, interval: value })
+                } else {
+                  this.setState({ duration: value })
+                }
+              }}
+              intervalChangeHandler={(value: number) => {
+                if (this.state.locked) {
+                  this.setState({ duration: value, interval: value })
+                } else {
+                  this.setState({ interval: value })
+                }
+              }}
+              lockChangeHandler={() => {
+                this.setState((prevState: State) => {
+                  return { locked: !prevState.locked }
+                })
+              }}
+            />
 
-              <div className="row">
-                <div className="col-2">
-                  <Check
-                    title={"lock"}
-                    checked={this.state.locked}
-                    onChange={() => {
-                      this.setState((prevState: State) => {
-                        return { locked: !prevState.locked }
-                      })
-                    }}
-                  />
-                </div>
+            <PlaySettings
+              playing={this.state.playing}
+              reverse={this.state.reverse}
+              collapseAsExploring={this.state.collapseAsExploring}
+              collapseAsExploringHandler={() => {
+                this.setState((prevState: State) => {
+                  return {
+                    collapseAsExploring: !prevState.collapseAsExploring
+                  }
+                })
+              }}
+              reverseChangeHandler={() => {
+                this.setState((prevState: State) => {
+                  return { reverse: !prevState.reverse }
+                })
+              }}
+              pPressedHandler={() => {
+                this.setState((prevState: State) => {
+                  return {
+                    playing: !prevState.playing
+                  }
+                })
+              }}
+            />
 
-                <label className="col-2">Animation duration (ms):</label>
-                <div className="slider col-2">
-                  <MySlider
-                    values={[this.state.duration]}
-                    domain={[0, 4000]}
-                    sliderChangeHandler={(value: number) => {
-                      if (this.state.locked) {
-                        this.setState({ duration: value, interval: value })
-                      } else {
-                        this.setState({ duration: value })
-                      }
-                    }}
-                  />
-                </div>
+            <DiffSettings
+              splitScreen={this.state.splitScreen}
+              diffReady={this.state.diffReady}
+              diffLocations={this.state.diffLocations}
+              currentDiffIndex={this.state.currentDiffIndex}
+              trees={this.props.trees}
+              splitScreenChangeHandler={() => {
+                this.setState((prevState: State) => {
+                  return {
+                    splitScreen: !prevState.splitScreen
+                  }
+                })
+              }}
+              diffChangeHandler={(value: number) => {
+                this.setState({ currentDiffIndex: value })
+              }}
+              nextDiffHandler={() => {
+                if (this.state.diffLocations.length === 1) {
+                  this.setState({ currentDiffIndex: 0 })
+                }
 
-                <label className="col-2">
-                  Interval between animations (ms):
-                </label>
-                <div className="slider col-2">
-                  <MySlider
-                    values={[this.state.interval]}
-                    domain={[0, 4000]}
-                    sliderChangeHandler={(value: number) => {
-                      if (this.state.locked) {
-                        this.setState({ duration: value, interval: value })
-                      } else {
-                        this.setState({ interval: value })
-                      }
-                    }}
-                  />
-                </div>
+                if (
+                  this.state.currentDiffIndex + 1 >
+                  this.state.diffLocations.length - 1
+                ) {
+                  return
+                }
 
-                <Check
-                  title={"Show Labels"}
-                  checked={this.state.showLabels}
-                  onChange={() => {
-                    this.setState((prevState: State) => {
-                      return { showLabels: !prevState.showLabels }
-                    })
-                  }}
-                />
+                this.setState({
+                  currentDiffIndex: this.state.currentDiffIndex + 1
+                })
+              }}
+              prevDiffHandler={() => {
+                if (this.state.diffLocations.length === 1) {
+                  this.setState({ currentDiffIndex: 0 })
+                }
 
-                <div className="playSettingsContainer">
-                  <StageHeader
-                    title="Play Settings"
-                    id="playSettings"
-                    isCollapsed={false}
-                  >
-                    <div className=" row">
-                      <div className="player mb-3 col-2">
-                        <Play
-                          clickHandler={this.pPressed}
-                          playing={this.state.playing}
-                          x={0}
-                        />
-                      </div>
+                if (this.state.currentDiffIndex - 1 < 0) {
+                  return
+                }
+                this.setState({
+                  currentDiffIndex: this.state.currentDiffIndex - 1
+                })
+              }}
+            />
 
-                      <div className="col-10">
-                        <Check
-                          title={"Reverse"}
-                          checked={this.state.reverse}
-                          onChange={() => {
-                            this.setState((prevState: State) => {
-                              return { reverse: !prevState.reverse }
-                            })
-                          }}
-                        />
-
-                        <Check
-                          title={
-                            "Collapse explored failed branches when playing"
-                          }
-                          checked={this.state.collapseAsExploring}
-                          onChange={() => {
-                            this.setState((prevState: State) => {
-                              return {
-                                collapseAsExploring: !prevState.collapseAsExploring
-                              }
-                            })
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </StageHeader>
-                </div>
-              </div>
-            </StageHeader>
-            <>
-              {this.props.trees.length === 2 && (
-                <StageHeader
-                  title={"Diff"}
-                  id={"diffSettings"}
-                  isCollapsed={false}
-                >
-                  <Check
-                    title={"Split screen"}
-                    checked={this.state.splitScreen}
-                    onChange={() => {
-                      this.setState((prevState: State) => {
-                        return {
-                          splitScreen: !prevState.splitScreen
-                        }
-                      })
-                    }}
-                  />
-
-                  <>
-                    {this.state.diffReady ? (
-                      <>
-                        {this.state.diffLocations.length > 0 ? (
-                          <>
-                            <div>
-                              Trees differ in {this.state.diffLocations.length}{" "}
-                              places
-                            </div>
-
-                            {this.state.diffLocations.length > 1 && (
-                              <MySlider
-                                values={[this.state.currentDiffIndex]}
-                                domain={[
-                                  0,
-                                  this.state.diffLocations.length - 1
-                                ]}
-                                sliderChangeHandler={(value: number) => {
-                                  this.setState({ currentDiffIndex: value })
-                                }}
-                              />
-                            )}
-                            <FlickThru
-                              nextHandler={() => {
-                                // this.setState((prevState: State) => {
-                                console.log(this.state.diffLocations.length)
-                                if (this.state.diffLocations.length === 1) {
-                                  this.setState({ currentDiffIndex: 0 })
-                                }
-
-                                if (
-                                  this.state.currentDiffIndex + 1 >
-                                  this.state.diffLocations.length - 1
-                                ) {
-                                  return
-                                }
-
-                                this.setState({
-                                  currentDiffIndex:
-                                    this.state.currentDiffIndex + 1
-                                })
-                                // })
-                              }}
-                              prevHandler={() => {
-                                // this.setState((prevState: State) => {
-                                if (this.state.diffLocations.length === 1) {
-                                  this.setState({ currentDiffIndex: 0 })
-                                }
-
-                                if (this.state.currentDiffIndex - 1 < 0) {
-                                  return
-                                }
-                                this.setState({
-                                  currentDiffIndex:
-                                    this.state.currentDiffIndex - 1
-                                })
-                                // })
-                              }}
-                            />
-                          </>
-                        ) : (
-                          <div>Trees are identical</div>
-                        )}
-                      </>
-                    ) : (
-                      <div>Waiting for diff....</div>
-                    )}
-                  </>
-                </StageHeader>
-              )}
-            </>
             <Wrapper>
               {this.state.splitScreen ? (
                 <>

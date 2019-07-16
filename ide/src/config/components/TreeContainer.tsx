@@ -121,9 +121,11 @@ export class TreeContainer extends React.Component<Props, State> {
 
       let selected = prevState.selected
 
-      selected = max(
-        this.props.core.solAncestorIds.filter(id => id < selected)
-      )!
+      if (!prevState.solNodeIds.includes(selected)) {
+        selected = max(
+          this.props.core.solAncestorIds.filter(id => id < selected)
+        )!
+      }
 
       return { id2Node: newMap, selected: selected }
     })
