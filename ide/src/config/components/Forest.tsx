@@ -19,7 +19,7 @@ interface State {
   duration: number
   interval: number
   reverse: boolean
-  showDecisions: boolean
+  showLabels: boolean
   playing: boolean
   collapseAsExploring: boolean
   diffLocations: number[][]
@@ -37,7 +37,7 @@ class Forest extends React.Component<Props, State> {
       reverse: false,
       playing: false,
       collapseAsExploring: false,
-      showDecisions: true,
+      showLabels: true,
       diffLocations: [],
       currentDiffIndex: -1,
       diffReady: false
@@ -128,11 +128,11 @@ class Forest extends React.Component<Props, State> {
                 </div>
 
                 <Check
-                  title={"Show Branching Decisions"}
-                  checked={this.state.showDecisions}
+                  title={"Show Labels"}
+                  checked={this.state.showLabels}
                   onChange={() => {
                     this.setState((prevState: State) => {
-                      return { showDecisions: !prevState.showDecisions }
+                      return { showLabels: !prevState.showLabels }
                     })
                   }}
                 />
@@ -283,7 +283,7 @@ class Forest extends React.Component<Props, State> {
                     this.setState({ playing: false })
                   }
                   collapseAsExploring={this.state.collapseAsExploring}
-                  showDecisions={this.state.showDecisions}
+                  showLabels={this.state.showLabels}
                 />
               ))}
             </Wrapper>

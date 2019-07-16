@@ -41,7 +41,7 @@ interface Props {
   nimServerPort: number
   playing: boolean
   reverse: boolean
-  showDecisions: boolean
+  showLabels: boolean
   loadDepth: number
   duration: number
   interval: number
@@ -235,7 +235,7 @@ export class TreeContainer extends React.Component<Props, State> {
                 duration={this.props.duration}
                 width={1200}
                 height={500}
-                showDecisions={this.props.showDecisions}
+                showLabels={this.props.showLabels}
                 diffParentId={this.props.diffParentId}
               />
 
