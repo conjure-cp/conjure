@@ -391,6 +391,9 @@ export default class ConfigureHelper {
   }
 
   public static async invalidateCaches() {
+    let diffs = await vscode.workspace.findFiles(`**/diffCaches/*.json`)
+    diffs.map(file => rimraf.sync(file.path))
+
     let caches = await vscode.workspace.findFiles(`**/${this.cacheFileName}`)
     caches.map(file => rimraf.sync(path.dirname(file.path)))
     vscode.window.showInformationMessage("Caches invalidated")
