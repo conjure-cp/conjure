@@ -1,21 +1,29 @@
-import * as React from "react";
+import * as React from "react"
 
 interface Props {
-  nextHandler: () => void;
-  prevHandler: () => void;
+  nextHandler: () => void
+  prevHandler: () => void
 }
 
 const FlickThru = ({ nextHandler, prevHandler }: Props) => {
   return (
     <>
-      <button className="btn btn-light" onClick={prevHandler}>
+      <button
+        style={{ padding: 2 }}
+        className="btn btn-light"
+        onClick={prevHandler}
+      >
         🢀
       </button>
-      <button className="btn btn-light" onClick={nextHandler}>
+      <button
+        style={{ padding: 2 }}
+        className="btn btn-light"
+        onClick={nextHandler}
+      >
         🢂
       </button>
     </>
-  );
-};
+  )
+}
 
-export default FlickThru;
+export default FlickThru

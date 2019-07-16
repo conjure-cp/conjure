@@ -61,9 +61,7 @@ export function Track({ source, target, getTrackProps }: any) {
 export const sliderStyle = {
   // Give the slider some width
   position: "relative",
-  width: "100%",
-  height: 80,
-  border: "1px solid steelblue"
+  width: "100%"
 } as React.CSSProperties
 
 export const railStyle = {

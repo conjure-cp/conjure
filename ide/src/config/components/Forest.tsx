@@ -1,17 +1,11 @@
 import * as React from "react"
-import StageHeader from "./StageHeader"
 import { TreeContainer, Core } from "./TreeContainer"
-import { Check } from "./Check"
 import { Wrapper } from "./Constants"
-import { MySlider } from "./Slider"
-import Play from "./Play"
 import { headers } from "../modules/Helper"
 import { isEqual } from "lodash"
-import FlickThru from "./FlickThu"
 import VisualiserSettings from "./VisualiserSettings"
 import PlaySettings from "./PlaySettings"
 import DiffSettings from "./DiffSettings"
-import { makeState } from "../modules/TreeHelper"
 
 export interface Tree {
   hash: string
@@ -59,8 +53,6 @@ class Forest extends React.Component<Props, State> {
     }
   }
 
-
-
   componentDidUpdate = async (prevProps: Props) => {
     if (isEqual(prevProps.trees, this.props.trees)) {
       return
@@ -94,8 +86,8 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
-    console.log(this.state.diffLocations)
-    console.log(this.state.currentDiffIndex)
+    // console.log(this.state.diffLocations)
+    // console.log(this.state.currentDiffIndex)
 
     return (
       <>
@@ -206,49 +198,61 @@ class Forest extends React.Component<Props, State> {
               }}
             />
 
-            <Wrapper>
+            <div
+              className="forestContainer"
+              style={{ height: "85%", display: "flex" }}
+            >
               {this.state.splitScreen ? (
                 <>
                   {this.props.trees.map((_tree: any, i: number) => (
-                    <TreeContainer
-                      diffParentId={
-                        this.state.currentDiffIndex !== -1
-                          ? this.state.diffLocations.map(x => x[i])[
-                              this.state.currentDiffIndex
-                            ]
-                          : -1
-                      }
-                      selected={
-                        this.state.currentDiffIndex !== -1
-                          ? this.state.diffLocations[
-                              this.state.currentDiffIndex
-                            ][i]
-                          : 0
-                      }
-                      hash={this.props.trees[i].hash}
+                    <div
                       key={`${this.props.trees[i].hash}${i}`}
-                      path={this.props.trees[i].path}
-                      nimServerPort={this.props.nimServerPort}
-                      info={this.props.trees[i].info}
-                      core={this.props.trees[i].core}
-                      identifier={`tree${i}`}
-                      playing={this.state.playing}
-                      loadDepth={this.state.loadDepth}
-                      reverse={this.state.reverse}
-                      duration={this.state.duration}
-                      interval={this.state.interval}
-                      finishedPlayingHandler={() =>
-                        this.setState({ playing: false })
+                      className="treeContainer"
+                      style={
+                        this.props.trees.length == 2
+                          ? { width: "50%" }
+                          : { width: "100%" }
                       }
-                      collapseAsExploring={this.state.collapseAsExploring}
-                      showLabels={this.state.showLabels}
-                    />
+                    >
+                      <TreeContainer
+                        diffParentId={
+                          this.state.currentDiffIndex !== -1
+                            ? this.state.diffLocations.map(x => x[i])[
+                                this.state.currentDiffIndex
+                              ]
+                            : -1
+                        }
+                        selected={
+                          this.state.currentDiffIndex !== -1
+                            ? this.state.diffLocations[
+                                this.state.currentDiffIndex
+                              ][i]
+                            : 0
+                        }
+                        hash={this.props.trees[i].hash}
+                        path={this.props.trees[i].path}
+                        nimServerPort={this.props.nimServerPort}
+                        info={this.props.trees[i].info}
+                        core={this.props.trees[i].core}
+                        identifier={`tree${i}`}
+                        playing={this.state.playing}
+                        loadDepth={this.state.loadDepth}
+                        reverse={this.state.reverse}
+                        duration={this.state.duration}
+                        interval={this.state.interval}
+                        finishedPlayingHandler={() =>
+                          this.setState({ playing: false })
+                        }
+                        collapseAsExploring={this.state.collapseAsExploring}
+                        showLabels={this.state.showLabels}
+                      />
+                    </div>
                   ))}
                 </>
               ) : (
                 <div>This is not a splitscreen</div>
               )}
-            </Wrapper>
+            </div>
           </>
         )}
       </>

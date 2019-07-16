@@ -22,9 +22,9 @@ class PlaySettings extends React.Component<Props, State> {
 
   render = () => {
     return (
-      <StageHeader title="Play Settings" id="playSettings" isCollapsed={false}>
+      <StageHeader title="Play Settings" id="playSettings" isCollapsed={true}>
         <div className=" row">
-          <div className="player mb-3 col-2">
+          <div className="player mb-3 col-1">
             <Play
               clickHandler={this.props.pPressedHandler}
               playing={this.props.playing}
@@ -32,13 +32,14 @@ class PlaySettings extends React.Component<Props, State> {
             />
           </div>
 
-          <div className="col-10">
+          <div className="col-3">
             <Check
               title={"Reverse"}
               checked={this.props.reverse}
               onChange={this.props.reverseChangeHandler}
             />
-
+          </div>
+          <div className="col-5">
             <Check
               title={"Collapse explored failed branches when playing"}
               checked={this.props.collapseAsExploring}

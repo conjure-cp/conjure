@@ -121,7 +121,6 @@ export default class TreeVis extends React.Component<Props, State> {
       )
 
     circle.classed("different", (d: HierarchyPointNode<Node>) => {
-      console.log(this.props.diffParentId)
       return d.data.id === this.props.diffParentId
     })
 

@@ -76,12 +76,10 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.failedBranchCount}
           </label>
-          <div className="row">
-            <FlickThru
-              nextHandler={this.props.nextFailedHandler}
-              prevHandler={this.props.prevFailedHandler}
-            />
-          </div>
+          <FlickThru
+            nextHandler={this.props.nextFailedHandler}
+            prevHandler={this.props.prevFailedHandler}
+          />
         </div>
 
         <div className="col">
@@ -97,12 +95,10 @@ export default class StatusBar extends React.Component<Props, State> {
               ? this.props.totalNodes - 1 - this.props.failedBranchCount
               : 0}
           </label>
-          <div className="row">
-            <FlickThru
-              nextHandler={this.props.nextSolBranchHandler}
-              prevHandler={this.props.prevSolBranchHandler}
-            />
-          </div>
+          <FlickThru
+            nextHandler={this.props.nextSolBranchHandler}
+            prevHandler={this.props.prevSolBranchHandler}
+          />
         </div>
 
         <div className="col">
@@ -121,15 +117,13 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.totalNodes}
           </label>
-          <div className="row">
-            <FlickThru
-              nextHandler={this.props.nextNodeHandler}
-              prevHandler={this.props.prevNodeHandler}
-            />
-          </div>
+          <FlickThru
+            nextHandler={this.props.nextNodeHandler}
+            prevHandler={this.props.prevNodeHandler}
+          />
         </div>
 
-        <div className="col">
+        <div className="col-2">
           <label>
             <svg width={width} height={height}>
               <title>Number of Solutions found</title>
@@ -140,7 +134,8 @@ export default class StatusBar extends React.Component<Props, State> {
                     r={Node.getRadius(
                       n,
                       this.props.linScale,
-                      this.props.minsize
+                      this.props.minsize,
+                      -1
                     )}
                     cx={width / 2}
                     cy={height / 2 - 2}
@@ -150,17 +145,15 @@ export default class StatusBar extends React.Component<Props, State> {
             </svg>
             × {this.props.solNodeIds.length}
           </label>
-          <div className="row">
-            {this.props.solNodeIds.length > 0 && (
-              <FlickThru
-                nextHandler={this.props.nextSolHandler}
-                prevHandler={this.props.prevSolHandler}
-              />
-            )}
-          </div>
+          {this.props.solNodeIds.length > 0 && (
+            <FlickThru
+              nextHandler={this.props.nextSolHandler}
+              prevHandler={this.props.prevSolHandler}
+            />
+          )}
         </div>
 
-        <div className="col">
+        <div className="col-1">
           <svg width={width} height={height} transform="translate(0, 7)">
             <title>{this.props.info}</title>
             <path d="M12,2C6.477,2,2,6.477,2,12s4.477,10,10,10s10-4.477,10-10S17.523,2,12,2z M13,17h-2v-6h2V17z M13,9h-2V7h2V9z" />

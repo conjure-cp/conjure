@@ -28,30 +28,33 @@ class VisualiserSettings extends React.Component<Props, State> {
       <StageHeader
         title={"Visualiser Settings"}
         id={"visSettings"}
-        isCollapsed={false}
+        isCollapsed={true}
       >
-        <div className="sliderContainer row">
-          <label className="col-3">Lazy loading depth:</label>
+        <div className="row">
+          <div className="col-3">
+            <Check
+              title={"Show Labels"}
+              checked={this.props.showLabels}
+              onChange={this.props.labelChangeHandler}
+            />
+            <Check
+              title={"Sync duration and interval"}
+              checked={this.props.locked}
+              onChange={this.props.lockChangeHandler}
+            />
+          </div>
+
           <div className="slider col-3">
+            <label>Lazy loading depth:</label>
             <MySlider
               values={[1]}
               domain={[1, 10]}
               sliderChangeHandler={this.props.loadDepthChangeHandler}
             />
           </div>
-        </div>
 
-        <div className="row">
-          <div className="col-2">
-            <Check
-              title={"lock"}
-              checked={this.props.locked}
-              onChange={this.props.lockChangeHandler}
-            />
-          </div>
-
-          <label className="col-2">Animation duration (ms):</label>
-          <div className="slider col-2">
+          <div className="slider col-3">
+            <label>Animation duration (ms):</label>
             <MySlider
               values={[this.props.duration]}
               domain={[0, 4000]}
@@ -59,20 +62,14 @@ class VisualiserSettings extends React.Component<Props, State> {
             />
           </div>
 
-          <label className="col-2">Interval between animations (ms):</label>
-          <div className="slider col-2">
+          <div className="slider col-3">
+            <label>Interval between animations (ms):</label>
             <MySlider
               values={[this.props.interval]}
               domain={[0, 4000]}
               sliderChangeHandler={this.props.intervalChangeHandler}
             />
           </div>
-
-          <Check
-            title={"Show Labels"}
-            checked={this.props.showLabels}
-            onChange={this.props.labelChangeHandler}
-          />
         </div>
       </StageHeader>
     )

@@ -121,7 +121,7 @@ export class Domains extends React.Component<Props, State> {
       <StageHeader
         title={`Domains at ${this.props.selected}`}
         id={"Domains"}
-        isCollapsed={false}
+        isCollapsed={true}
         collapseHandler={this.collpaseHandler}
       >
         <Check

@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom"
 import Node from "../modules/Node"
 import TreeVis from "./TreeVis"
 import StatsBar from "./StatsBar"
-import { HotKeys, GlobalHotKeys } from "react-hotkeys"
+import { HotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max } from "lodash"
 import * as d3 from "d3"
 import { Domains } from "./Domains"
@@ -119,9 +119,9 @@ export class TreeContainer extends React.Component<Props, State> {
         })
       })
 
-      let selected = prevState.selected
+      let selected = this.state.selected
 
-      if (!prevState.solNodeIds.includes(selected)) {
+      if (!this.props.core.solAncestorIds.includes(selected)) {
         selected = max(
           this.props.core.solAncestorIds.filter(id => id < selected)
         )!
@@ -192,7 +192,6 @@ export class TreeContainer extends React.Component<Props, State> {
     // TODO move this it shouldnt be here
 
     return (
-      <div className="treeContainer">
         <HotKeys keyMap={this.map} handlers={this.handlers}>
           <StatsBar
             info={this.props.info}
@@ -212,7 +211,7 @@ export class TreeContainer extends React.Component<Props, State> {
           />
 
           <Wrapper>
-            <SplitPane split="horizontal" defaultSize={600}>
+            <SplitPane split="horizontal" defaultSize={700} maxSize={900}>
               <TreeVis
                 hash={this.props.hash}
                 identifier={this.props.identifier}
@@ -251,7 +250,6 @@ export class TreeContainer extends React.Component<Props, State> {
             </SplitPane>
           </Wrapper>
         </HotKeys>
-      </div>
     )
   }
 }
