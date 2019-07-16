@@ -22,7 +22,7 @@ interface FromServerNode {
   isSolution: boolean
   isLeftChild: boolean
   descCount: number
-  isLeftTree: boolean
+  // isLeftTree: boolean
 }
 
 export type MyMap = Record<number, Node>

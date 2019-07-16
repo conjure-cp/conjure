@@ -21,6 +21,11 @@ proc init*(dirPath: string): (Core, string) =
     return (makeCore(db), infoFile)
 
 
+proc checkDomainsAreEqual*(paths: array[2, string],  nodeIds: array[2, int]) : bool =
+    let query = "select group_concat(name, storeDump) from domain where nodeId = ?"
+    let leftDB = dBTable[paths[0]]
+    let rightDB = dBTable[paths[1]]
+    return leftDB.getValue(sql(query), nodeIds[0]) == rightDB.getValue(sql(query), nodeIds[1])
     
 
 
@@ -34,48 +39,55 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
     let dbs = [leftDB, rightDb]
 
-    let query = "select branchingVariable, value, isLeftChild from Node"
+    # let query = "select branchingVariable, value, isLeftChild from Node"
+    let query = "select nodeId from Node"
 
-    let lRes = leftDB.getAllRows(sql(query))
-    let rRes = rightDB.getAllRows(sql(query))
+    # let lRes = leftDB.getAllRows(sql(query))
+    # let rRes = rightDB.getAllRows(sql(query))
+
+    let lRecs = leftDB.getAllRows(sql(query)) 
+    let rRecs = rightDB.getAllRows(sql(query)) 
+
 
 
     # echo "---------------------------------------", lIsMore
 
     var nodeIds = [0, 0]
 
+    if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
+       return @[@[0,0]] 
+
     while true:
 
-        # echo  ""
-        # echo nodeIds[0], "     ", nodeIds[1]
+        echo  ""
+        echo nodeIds[0], "     ", nodeIds[1]
 
         # Increment each tree until we get to a point where they differ
 
-        while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
+        # while lRes[nodeIds[0]] == rRes[nodeIds[1]]:
+        while checkDomainsAreEqual([leftPath, rightPath], nodeIds):
             nodeIds[0].inc()
             nodeIds[1].inc()
 
             # If we get to the end of one of the trees then we've finished and need to return
-            if (nodeIds[0] >= lRes.len() or nodeIds[1] >= rRes.len()):
-                # echo nodeIds[0], "     ", nodeIds[1]
-                # echo "quiting"
-                if (res.len() == 0 and lRes.len() == rRes.len()):
+            if (nodeIds[0] >= lRecs.len() or nodeIds[1] >= rRecs.len()):
+                echo nodeIds[0], "     ", nodeIds[1]
+                echo "quiting"
+                if (res.len() == 0 and lRecs.len() == rRecs.len()):
                     return result
 
                 res.add((nodeIds[0] - 1, nodeIds[1] - 1))
                 return res.map(s => @[s[0], s[1]])
                 
-        # echo nodeIds[0], "     ", nodeIds[1]
+        echo nodeIds[0], "     ", nodeIds[1]
 
         # echo lRes[nodeIds[0]]
         # echo rRes[nodeIds[1]]
 
-        # If we are at a solution node then we don't need to decrement
-        # if (lRes[nodeIds[0]][0] != "" and rRes[nodeIds[1]][0] != ""):
         nodeIds[0].dec()
         nodeIds[1].dec()
 
-        # echo nodeIds[0], "     ", nodeIds[1]
+        echo nodeIds[0], "     ", nodeIds[1]
 
         # Add the first firr point to the res
         res.add((nodeIds[0], nodeIds[1]))
@@ -96,6 +108,8 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 couldParse = db.getValue(sql(query)).parseInt(nextId)
 
                 if couldParse == 0:
+                    echo "quitting 2"
+                    echo index, " ", query
                     return res.map(s => @[s[0], s[1]])
 
                 nodeIds[index] = nextId
@@ -103,15 +117,13 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 # discard db.getValue(sql(fmt"select count() from Node where path like '{path}%'")).parseInt(descCounts[index])
 
                 
-
-            # echo lRes[nodeIds[0]], "  ~  ", rRes[nodeIds[1]]
-
+            echo nodeIds[0], "     ", nodeIds[1]
 
             # Initialise the variables such that they refer to the largest tree
             var current: int
             var db : DbConn
 
-            let lIsMore = lRes.len() > rRes.len()
+            let lIsMore = lRecs.len() > rRecs.len()
             # let lIsMore = descCounts[0] > descCounts[1]
 
             if lIsMore:
@@ -123,7 +135,10 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
 
             #  Go through all the subsequent branches of the tree with the most nodes to see if there
             # is a node equal to that of the smaller tree
-            while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
+            # while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
+            while not checkDomainsAreEqual([leftPath, rightPath], nodeIds) and couldParse != 0:
+
+                echo "here"
 
                 let path = db.getValue(sql"select path from Node where nodeId = ?", current)
 
@@ -140,9 +155,12 @@ proc diff*(leftPath, rightPath: string): seq[seq[int]] =
                 else:
                     nodeIds[1] = current 
 
+            echo nodeIds[0], "     ", nodeIds[1]
+
             if couldParse != 0:
                 advanceBothTrees = false
 
+    echo "end"
     return res.map(s => @[s[0], s[1]])
 
 

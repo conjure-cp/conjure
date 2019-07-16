@@ -1,6 +1,6 @@
 import * as React from "react"
 import StageHeader from "./StageHeader"
-import { TreeContainer } from "./TreeContainer"
+import { TreeContainer, Core } from "./TreeContainer"
 import { Check } from "./Check"
 import { Wrapper } from "./Constants"
 import { MySlider } from "./Slider"
@@ -8,9 +8,17 @@ import Play from "./Play"
 import { headers } from "../modules/Helper"
 import { isEqual } from "lodash"
 import FlickThru from "./FlickThu"
+import { makeState } from "../modules/TreeHelper"
+
+interface Tree {
+  hash: string
+  path: string
+  info: string
+  core: Core
+}
 
 interface Props {
-  trees: any[]
+  trees: Tree[]
   nimServerPort: number
 }
 
@@ -46,6 +54,31 @@ class Forest extends React.Component<Props, State> {
       splitScreen: false,
       locked: true
     }
+  }
+
+  makeCombinedMap = () => {
+    let leftMap = makeState(this.props.trees[0].core, 0).id2Node
+    let rightMap = makeState(this.props.trees[1].core, 0).id2Node
+
+    // All nodes are isLeftTree === true by default..
+
+    for (let i = 0; i < rightMap[0].descCount; i++) {
+      rightMap[i].isLeftTree = false
+    }
+
+    this.state.diffLocations.forEach(array => {
+      if (!leftMap[array[0]].children) {
+        leftMap[array[0]].children = []
+      }
+
+      if (!rightMap[array[1]].children) {
+        rightMap[array[1]].children = []
+      }
+
+      leftMap[array[0]].children = leftMap[array[0]].children!.concat(
+        rightMap[array[1]].children!
+      )
+    })
   }
 
   pPressed = () => {
@@ -89,6 +122,8 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
+    console.log(this.state.diffLocations)
+
     return (
       <>
         {this.props.trees && (

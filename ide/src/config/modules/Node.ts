@@ -29,10 +29,9 @@ export default class Node {
     decCount: number,
     isLeftchild: boolean,
     childCount: number,
-    isSolution: boolean,
-    isLeftTree: boolean,
-
+    isSolution: boolean
   ) {
+    this.isLeftTree = true
     this.id = id
     this.x0 = null
     this.y0 = null
@@ -46,7 +45,6 @@ export default class Node {
     this.isLeftChild = isLeftchild
     this.childCount = childCount
     this.isSolution = isSolution
-    this.isLeftTree = isLeftTree
   }
 
   public static fromNode(old: Node) {
@@ -58,8 +56,7 @@ export default class Node {
       old.descCount,
       old.isLeftChild,
       old.childCount,
-      old.isSolution,
-      old.isLeftTree
+      old.isSolution
     )
     n.children = old.children
     n._children = old._children

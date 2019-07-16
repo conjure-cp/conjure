@@ -3,6 +3,22 @@ import ../src/util/types
 import ../src/util/types
 import ../src/util/main
 
+suite "domainsAreEqual":
+    test "equal":
+        let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
+        discard init(leftPath)
+        for i in countup(1, 100):
+            check checkDomainsAreEqual([leftPath, leftPath], [i,i]) == true
+
+    test "notequal":
+        let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
+        let rightPath = testDataPath & "/diff/default-sacbounds-10/normal"
+        discard init(leftPath)
+        discard init(rightPath)
+        for i in countup(1, 100):
+            check checkDomainsAreEqual([leftPath, rightPath], [i,i]) == false
+
+
 suite "diff":
 
     test "same":
@@ -54,20 +70,19 @@ suite "diff":
     
         check(nodeIds == flipped)
 
-    test "contrived":
-        let leftPath = testDataPath & "/diff/contrived/normal"
-        let rightPath = testDataPath & "/diff/contrived/modified"
+
+    test "reps":
+        let leftPath = testDataPath & "/diff/differentReps/ex-8"
+        let rightPath = testDataPath & "/diff/differentReps/oc-8"
         discard init(leftPath)
         discard init(rightPath)
         let nodeIds = diff(leftPath, rightPath)
-        check(nodeIds == @[@[32,32]])
+        check(nodeIds == @[@[0,0]])
 
-    test "ssac":
-        let leftPath = testDataPath & "/diff/default-ssac-8/normal"
-        let rightPath = testDataPath & "/diff/default-ssac-8/ssac"
-        discard init(leftPath)
-        discard init(rightPath)
-        let nodeIds = diff(leftPath, rightPath)
-        check(nodeIds == @[@[2,2]])
-
-        # check(nodeIds == @[@[3, 3], @[17, 6], @[28, 10]]
+    # test "contrived":
+    #     let leftPath = testDataPath & "/diff/contrived/normal"
+    #     let rightPath = testDataPath & "/diff/contrived/modified"
+    #     discard init(leftPath)
+    #     discard init(rightPath)
+    #     let nodeIds = diff(leftPath, rightPath)
+    #     check(nodeIds == @[@[32,32]])
