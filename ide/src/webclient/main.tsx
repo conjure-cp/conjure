@@ -6,7 +6,7 @@ import { Check } from "./components/Check"
 import { Cache, RepMap } from "../configHelper"
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
-import "./styles.css"
+import "./css/styles.css"
 import { InitResponse } from "../server/server"
 
 if (process.env.NODE_ENV !== "production") {

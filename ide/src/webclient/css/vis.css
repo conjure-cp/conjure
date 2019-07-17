@@ -1,0 +1,65 @@
+:root {
+  --circle-stroke-width: 5;
+  --sol-stroke-width: 2;
+  --link-stroke-width: 2;
+  --different-colour: rgb(124, 255, 255);
+  --changed-colour: coral;
+  --circle-fill-colour: white;
+  --circle-stroke-colour: cornflowerblue;
+  --solution-colour: rgb(237, 240, 53);
+  --has-others-colour: rgb(19, 248, 19);
+  --explored-fill-colour: rgb(202, 202, 202);
+  --explored-stroke-colour: grey;
+  --has-others-failed-colour: red;
+  --solution-branch-colour: green;
+}
+
+circle.different {
+  fill: var(--different-colour) !important;
+}
+
+.link.different {
+  stroke: var(--different-colour) !important;
+  stroke-width: 7px !important;
+}
+.changed * {
+  color: var(--changed-colour);
+}
+
+.node circle {
+  fill: var(--circle-fill-colour);
+  stroke: var(--circle-stroke-colour);
+  stroke-width: var(--circle-stroke-width);
+}
+
+circle.solution {
+  fill: var(--solution-colour);
+  stroke-width: var(--sol-stroke-width);
+}
+
+circle.hasOthers {
+  fill: var(--has-others-colour);
+}
+
+circle.explored {
+  fill: var(--explored-fill-colour);
+  stroke: var(--explored-stroke-colour);
+}
+
+circle.hasOthers.red {
+  fill: var(--has-others-failed-colour);
+}
+
+circle.selected {
+  stroke: var(--changed-colour);
+}
+
+.link {
+  fill: none;
+  stroke: var(--solution-branch-colour);
+  stroke-width: var(--link-stroke-width);
+}
+
+.link.red {
+  stroke: var(--has-others-failed-colour);
+}

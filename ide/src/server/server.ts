@@ -21,8 +21,7 @@ const fetch = require("node-fetch")
 import ConfigHelper, { RepMap, hasher } from "../configHelper"
 import { Cache } from "../configHelper"
 import { execSync } from "child_process"
-import { tree } from "d3"
-import { Core } from "../config/components/TreeContainer"
+import { Core } from "../webclient/components/TreeContainer"
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 
@@ -50,7 +49,7 @@ class HTMlService {
     let html =
       fs
         .readFileSync(
-          path.join(context.extensionPath, "src/config/configPage.html")
+          path.join(context.extensionPath, "src/webclient/index.html")
         )
         .toString() +
       `

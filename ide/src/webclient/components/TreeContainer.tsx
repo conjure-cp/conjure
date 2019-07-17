@@ -12,6 +12,7 @@ import { Wrapper } from "./Constants"
 import { Check } from "./Check"
 import * as TreeHelper from "../modules/TreeHelper"
 import * as MovementHelper from "../modules/MovementHelper"
+import "../css/vis.css"
 
 interface FromServerNode {
   id: number
@@ -192,64 +193,64 @@ export class TreeContainer extends React.Component<Props, State> {
     // TODO move this it shouldnt be here
 
     return (
-        <HotKeys keyMap={this.map} handlers={this.handlers}>
-          <StatsBar
-            info={this.props.info}
-            nextSolBranchHandler={() => MovementHelper.nextSolBranch(this)}
-            prevSolBranchHandler={() => MovementHelper.prevSolBranch(this)}
-            nextNodeHandler={() => MovementHelper.goLeft(this)}
-            prevNodeHandler={() => MovementHelper.goToPreviousHandler(this)}
-            nextFailedHandler={() => MovementHelper.nextFailed(this)}
-            prevFailedHandler={() => MovementHelper.prevFailed(this)}
-            nextSolHandler={() => MovementHelper.nextSol(this)}
-            prevSolHandler={() => MovementHelper.prevSol(this)}
-            minsize={this.state.minsize}
-            solNodeIds={this.state.solNodeIds}
-            totalNodes={this.state.totalNodeCount}
-            failedBranchCount={this.state.failedBranchCount}
-            linScale={this.state.linScale}
-          />
+      <HotKeys keyMap={this.map} handlers={this.handlers}>
+        <StatsBar
+          info={this.props.info}
+          nextSolBranchHandler={() => MovementHelper.nextSolBranch(this)}
+          prevSolBranchHandler={() => MovementHelper.prevSolBranch(this)}
+          nextNodeHandler={() => MovementHelper.goLeft(this)}
+          prevNodeHandler={() => MovementHelper.goToPreviousHandler(this)}
+          nextFailedHandler={() => MovementHelper.nextFailed(this)}
+          prevFailedHandler={() => MovementHelper.prevFailed(this)}
+          nextSolHandler={() => MovementHelper.nextSol(this)}
+          prevSolHandler={() => MovementHelper.prevSol(this)}
+          minsize={this.state.minsize}
+          solNodeIds={this.state.solNodeIds}
+          totalNodes={this.state.totalNodeCount}
+          failedBranchCount={this.state.failedBranchCount}
+          linScale={this.state.linScale}
+        />
 
-          <Wrapper>
-            <SplitPane split="horizontal" defaultSize={700} maxSize={900}>
-              <TreeVis
-                hash={this.props.hash}
-                identifier={this.props.identifier}
-                rootNode={this.state.id2Node[0]}
-                selected={this.state.selected}
-                solAncestorIds={this.props.core.solAncestorIds}
-                solveable={this.state.solveable}
-                linScale={this.state.linScale}
-                minsize={this.state.minsize}
-                nodeClickHandler={this.nodeClickHandler}
-                storeNodePrevPos={list => {
-                  this.setState((prevState: State) => {
-                    let newMap = cloneDeep(prevState.id2Node)
-                    list.forEach(d => {
-                      newMap[d.data.id].x0 = d.x
-                      newMap[d.data.id].y0 = d.y
-                    })
-                    console.log("CALLED")
-                    // console.log(newMap[28])
-                    return { id2Node: newMap }
+        <Wrapper>
+          <SplitPane split="horizontal" defaultSize={700} maxSize={900}>
+            <TreeVis
+              hash={this.props.hash}
+              identifier={this.props.identifier}
+              rootNode={this.state.id2Node[0]}
+              selected={this.state.selected}
+              solAncestorIds={this.props.core.solAncestorIds}
+              solveable={this.state.solveable}
+              linScale={this.state.linScale}
+              minsize={this.state.minsize}
+              nodeClickHandler={this.nodeClickHandler}
+              storeNodePrevPos={list => {
+                this.setState((prevState: State) => {
+                  let newMap = cloneDeep(prevState.id2Node)
+                  list.forEach(d => {
+                    newMap[d.data.id].x0 = d.x
+                    newMap[d.data.id].y0 = d.y
                   })
-                }}
-                duration={this.props.duration}
-                width={1200}
-                height={500}
-                showLabels={this.props.showLabels}
-                diffParentId={this.props.diffParentId}
-              />
+                  console.log("CALLED")
+                  // console.log(newMap[28])
+                  return { id2Node: newMap }
+                })
+              }}
+              duration={this.props.duration}
+              width={1200}
+              height={500}
+              showLabels={this.props.showLabels}
+              diffParentId={this.props.diffParentId}
+            />
 
-              <Domains
-                hash={this.props.hash}
-                selected={this.state.selected}
-                path={this.props.path}
-                nimServerPort={this.props.nimServerPort}
-              />
-            </SplitPane>
-          </Wrapper>
-        </HotKeys>
+            <Domains
+              hash={this.props.hash}
+              selected={this.state.selected}
+              path={this.props.path}
+              nimServerPort={this.props.nimServerPort}
+            />
+          </SplitPane>
+        </Wrapper>
+      </HotKeys>
     )
   }
 }

@@ -123,7 +123,7 @@ export default class StatusBar extends React.Component<Props, State> {
           />
         </div>
 
-        <div className="col-2">
+        <div className="col">
           <label>
             <svg width={width} height={height}>
               <title>Number of Solutions found</title>

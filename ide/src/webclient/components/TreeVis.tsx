@@ -44,7 +44,6 @@ export default class TreeVis extends React.Component<Props, State> {
     super(props)
     this.state = { oldPos: {} }
 
-    console.log(this.props)
     this.zoom = d3
       .zoom<any, any>()
       .on("zoom", function() {
@@ -57,9 +56,6 @@ export default class TreeVis extends React.Component<Props, State> {
   }
 
   focusNode(node: HierarchyPointNode<Node>) {
-    // const ratio = 1290 / 465.45
-    // console.log("ratio, ", ratio)
-
     this.zoom.translateTo(
       d3
         .select(`#${this.props.identifier} svg`)
@@ -119,6 +115,11 @@ export default class TreeVis extends React.Component<Props, State> {
           this.props.diffParentId
         )
       )
+
+    circle.style(
+      "transition",
+      `stroke ${this.props.duration}ms, fill ${this.props.duration}ms`
+    )
 
     circle.classed("different", (d: HierarchyPointNode<Node>) => {
       return d.data.id === this.props.diffParentId

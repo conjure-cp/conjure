@@ -80,7 +80,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./ && (cd configiration/ts && npm run develop)",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "npm run compile && node ./node_modules/vscode/bin/test",
+    "test": "jest",
     "develop": "webpack --mode development --watch --config-name webview",
     "production": "webpack --mode production",
     "format": "prettier \"src/**/*.{ts,tsx,js,jsx,css,html}\" --write",
@@ -88,20 +88,42 @@
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
+    "@types/jest": "^24.0.15",
     "@types/jquery": "^3.3.29",
     "@types/node": "^8.10.49",
     "awesome-typescript-loader": "^5.2.1",
     "css-loader": "^3.0.0",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.3.0",
+    "jest": "^24.8.0",
     "prettier": "^1.18.2",
     "source-map-loader": "^0.2.4",
     "style-loader": "^0.23.1",
+    "ts-jest": "^24.0.2",
     "tslint": "^5.8.0",
-    "typescript": "^3.5.2",
+    "typescript": "^3.5.3",
     "vscode": "^1.1.21",
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "**/src/webclient/__tests__/*.+(ts|tsx|js)"
+    ],
+    "testEnvironment": "node"
   },
   "dependencies": {
     "@types/cors": "^2.8.5",

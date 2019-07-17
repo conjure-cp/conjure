@@ -1,8 +1,3 @@
-:root {
-  --stroke-width: 5;
-  --sol-stroke-width: 2;
-}
-
 body {
   overflow-x: hidden;
 }
@@ -95,68 +90,4 @@ a:after {
 a.collapsed:after {
   font-family: Fontawesome;
   content: "\f078";
-}
-
-circle.different {
-  fill: aqua !important;
-}
-
-.link.different {
-  stroke: aqua !important;
-  stroke-width: 7px !important;
-  transition: stroke 500ms, stroke-width 500ms;
-}
-.changed * {
-  color: coral;
-}
-
-.node circle {
-  fill: white;
-  stroke: cornflowerblue;
-  stroke-width: 5px;
-  transition: stroke 500ms, fill 500ms;
-}
-
-circle.solution {
-  fill: rgb(251, 255, 0);
-  stroke-width: var(--sol-stroke-width);
-  transition: stroke 500ms, fill 500ms;
-}
-
-circle.hasOthers {
-  fill: rgb(19, 248, 19);
-  transition: stroke 500ms, fill 500ms;
-}
-
-circle.explored {
-  fill: rgb(202, 202, 202);
-  stroke: gray;
-  transition: stroke 500ms, fill 500ms;
-}
-
-circle.hasOthers.red {
-  fill: red;
-  transition: stroke 500ms, fill 500ms;
-}
-
-circle.selected {
-  border-style: dotted;
-  border: 2px;
-  border-color: cornflowerblue;
-  stroke: coral;
-  transition: stroke 500ms, fill 500ms;
-}
-
-.link {
-  fill: none;
-  stroke: green;
-  stroke-width: 2px;
-  transition: stroke 500ms, fill 500ms;
-}
-
-.link.red {
-  fill: none;
-  stroke: red;
-  stroke-width: 2px;
-  transition: stroke 500ms, fill 500ms;
 }
