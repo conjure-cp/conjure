@@ -1,9 +1,9 @@
 import * as React from "react"
-import StageHeader from "./StageHeader"
-import { Check } from "./Check"
-import { Tree } from "./Forest"
-import { MySlider } from "./Slider"
-import FlickThru from "./FlickThu"
+import StageHeader from "../common/StageHeader"
+import { Check } from "../common/Check"
+import { Tree } from "../Forest"
+import { MySlider } from "../common/Slider"
+import FlickThru from "../common/FlickThu"
 
 interface Props {
   trees: Tree[]

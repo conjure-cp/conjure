@@ -1,8 +1,5 @@
 import * as React from "react"
-import * as ReactDOM from "react-dom"
-import { Core, TreeContainer, MyMap } from "./TreeContainer"
-import { Form, Field, FieldArray, Formik } from "formik"
-import { Cache } from "../../configHelper"
+import { Cache } from "../../../configHelper"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")

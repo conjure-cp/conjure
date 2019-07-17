@@ -1,7 +1,7 @@
 import { HierarchyPointNode, select } from "d3"
 import * as d3 from "d3"
 import Node from "./Node"
-import { State, MyMap, Core, TreeContainer } from "../components/TreeContainer"
+import { State, MyMap, Core, TreeContainer } from "../components/vis/TreeContainer"
 import { cloneDeep, last } from "lodash"
 
 export const linkGenerator = d3

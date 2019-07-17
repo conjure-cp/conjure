@@ -1,6 +1,6 @@
 import * as React from "react"
-import StageHeader from "./StageHeader"
-import { Check } from "./Check"
+import StageHeader from "../common/StageHeader"
+import { Check } from "../common/Check"
 import Play from "./Play"
 
 interface Props {

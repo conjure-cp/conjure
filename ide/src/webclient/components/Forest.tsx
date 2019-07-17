@@ -1,11 +1,11 @@
 import * as React from "react"
-import { TreeContainer, Core } from "./TreeContainer"
-import { Wrapper } from "./Constants"
+import { TreeContainer, Core } from "./vis/TreeContainer"
+import { Wrapper } from "./common/Constants"
 import { headers } from "../modules/Helper"
 import { isEqual } from "lodash"
-import VisualiserSettings from "./VisualiserSettings"
-import PlaySettings from "./PlaySettings"
-import DiffSettings from "./DiffSettings"
+import VisualiserSettings from "./vis/VisualiserSettings"
+import PlaySettings from "./vis/PlaySettings"
+import DiffSettings from "./vis/DiffSettings"
 
 export interface Tree {
   hash: string

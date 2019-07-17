@@ -1,13 +1,8 @@
 import * as React from "react"
-import * as ReactDOM from "react-dom"
-import Node from "../modules/Node"
-import TreeVis from "./TreeVis"
-import FlickThru from "./FlickThu"
-import { HotKeys } from "react-hotkeys"
-import { cloneDeep } from "lodash"
+import Node from "../../modules/Node"
+import FlickThru from "../common/FlickThu"
 import * as d3 from "d3"
-import { thresholdScott } from "d3"
-import { linkGenerator, getNextSolId } from "../modules/TreeHelper"
+import { linkGenerator, getNextSolId } from "../../modules/TreeHelper"
 
 interface Props {
   solNodeIds: number[]

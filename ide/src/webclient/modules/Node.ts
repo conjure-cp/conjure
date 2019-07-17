@@ -69,13 +69,15 @@ export default class Node {
     minsize: number,
     diffParentId: number
   ): number {
-    const solNodeStrokeWidth = getComputedStyle(
-      document.getElementById("root")!
-    ).getPropertyValue("--sol-stroke-width")
+    const elem = document.getElementById("root")
+    const solNodeStrokeWidth = getComputedStyle(elem!).getPropertyValue(
+      "--sol-stroke-width"
+    )
+    console.log(solNodeStrokeWidth)
 
     const normalNodeStrokeWidth = getComputedStyle(
       document.getElementById("root")!
-    ).getPropertyValue("--stroke-width")
+    ).getPropertyValue("--circle-stroke-width")
 
     if (d.data.isSolution || d.data.id === diffParentId) {
       return (

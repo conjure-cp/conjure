@@ -81,6 +81,7 @@
     "watch": "tsc -watch -p ./ && (cd configiration/ts && npm run develop)",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "jest",
+    "coverage": "jest --coverage --collectCoverageFrom=src/webclient/**/*.{ts,tsx}",
     "develop": "webpack --mode development --watch --config-name webview",
     "production": "webpack --mode production",
     "format": "prettier \"src/**/*.{ts,tsx,js,jsx,css,html}\" --write",
@@ -106,7 +107,6 @@
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2"
   },
- 
   "dependencies": {
     "@types/cors": "^2.8.5",
     "@types/d3": "^5.7.2",

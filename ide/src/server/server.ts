@@ -21,7 +21,7 @@ const fetch = require("node-fetch")
 import ConfigHelper, { RepMap, hasher } from "../configHelper"
 import { Cache } from "../configHelper"
 import { execSync } from "child_process"
-import { Core } from "../webclient/components/TreeContainer"
+import { Core } from "../webclient/components/vis/TreeContainer"
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 

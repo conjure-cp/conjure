@@ -8,6 +8,5 @@ module.exports = {
       tsConfig: "tsconfig.json"
     }
   },
-  testMatch: ["**/src/webclient/__tests__/*.+(ts|tsx|js)"],
-  testEnvironment: "node"
+  testMatch: ["**/src/webclient/__tests__/*.+(ts|tsx|js)"]
 }

@@ -1,14 +1,14 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 import * as d3 from "d3"
-import Node from "../modules/Node"
+import Node from "../../modules/Node"
 import {
   HierarchyPointLink,
   HierarchyPointNode,
   Selection,
   precisionFixed
 } from "d3"
-import { linkGenerator } from "../modules/TreeHelper"
+import { linkGenerator } from "../../modules/TreeHelper"
 import { isEqual, reduce, cloneDeep, reduceRight } from "lodash"
 import { runInThisContext } from "vm"
 

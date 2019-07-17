@@ -1,12 +1,13 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import StageHeader from "./components/StageHeader"
-import FormikConjure from "./components/FormikConjure"
-import { Check } from "./components/Check"
+import StageHeader from "./components/common/StageHeader"
+import FormikConjure from "./components/config/FormikConjure"
+import { Check } from "./components/common/Check"
 import { Cache, RepMap } from "../configHelper"
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
 import "./css/styles.css"
+import "./css/vis.css"
 import { InitResponse } from "../server/server"
 
 if (process.env.NODE_ENV !== "production") {

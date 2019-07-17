@@ -8,11 +8,11 @@ import * as Yup from "yup"
 import { maxBy, times, isEqual, cloneDeep } from "lodash"
 import TextWithLabel from "./TextWithLabel"
 import SelectWithLabel from "./SelectWithLabel"
-import StageHeader from "./StageHeader"
+import StageHeader from "../common/StageHeader"
 import Checkbox from "./Checkbox"
-import { Check } from "./Check"
+import { Check } from "../common/Check"
 import NewSelect from "./NewSelect"
-import { Cache, RepMap } from "../../configHelper"
+import { Cache, RepMap } from "../../../configHelper"
 
 type RepChoices = Record<string, string>
 
