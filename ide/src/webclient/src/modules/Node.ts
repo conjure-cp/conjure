@@ -73,8 +73,6 @@ export default class Node {
     const solNodeStrokeWidth = getComputedStyle(elem!).getPropertyValue(
       "--sol-stroke-width"
     )
-    console.log(solNodeStrokeWidth)
-
     const normalNodeStrokeWidth = getComputedStyle(
       document.getElementById("root")!
     ).getPropertyValue("--circle-stroke-width")

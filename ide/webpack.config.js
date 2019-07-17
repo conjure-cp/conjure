@@ -7,7 +7,7 @@ module.exports = [
 
   {
     name: "webview",
-    entry: "./src/webclient/main.tsx",
+    entry: "./src/webclient/src/main.tsx",
     output: {
       filename: "./configBundle.js"
     },

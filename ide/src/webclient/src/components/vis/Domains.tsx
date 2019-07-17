@@ -32,7 +32,7 @@ export class Domains extends React.Component<Props, State> {
       changedNames: [],
       pretty: false,
       onlyChanged: false,
-      collapsed: false
+      collapsed: true
     }
   }
 
@@ -121,7 +121,7 @@ export class Domains extends React.Component<Props, State> {
       <StageHeader
         title={`Domains at ${this.props.selected}`}
         id={"Domains"}
-        isCollapsed={true}
+        isCollapsed={this.state.collapsed}
         collapseHandler={this.collpaseHandler}
       >
         <Check

@@ -1,5 +1,5 @@
-import Node from "../modules/Node"
-import { makeState } from "../modules/TreeHelper"
+import Node from "../src/modules/Node"
+import { makeState } from "../src/modules/TreeHelper"
 
 test("adds numbers", () => {
   expect(2 + 2).toEqual(4)

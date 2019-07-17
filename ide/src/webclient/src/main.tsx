@@ -3,12 +3,12 @@ import * as ReactDOM from "react-dom"
 import StageHeader from "./components/common/StageHeader"
 import FormikConjure from "./components/config/FormikConjure"
 import { Check } from "./components/common/Check"
-import { Cache, RepMap } from "../configHelper"
+import { Cache, RepMap } from "../../configHelper"
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
 import "./css/styles.css"
 import "./css/vis.css"
-import { InitResponse } from "../server/server"
+import { InitResponse } from "../../server/server"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
