@@ -10,8 +10,8 @@ export default class Node {
   public name: string = ""
   public prettyLabel: string
   public parentId: number
-  public children: Node[] | undefined
-  public _children: Node[] | undefined
+  public children?: Node[]
+  public _children?: Node[]
   public x0: number | null
   public y0: number | null
   public depth: number

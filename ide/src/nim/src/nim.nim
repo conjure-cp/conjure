@@ -38,6 +38,7 @@ router mainRouter:
 
     post "/loadAncestors":
         let json = parseJson($request.body)
+        echo json
         resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(json["path"].getStr(), $json["nodeId"].getInt())))
 
     post "/diff":

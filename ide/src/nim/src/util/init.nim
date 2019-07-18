@@ -214,6 +214,8 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node]): seq[int] 
 
         let path = db.getValue(sql"select path from Node where nodeId = ?", nId)
         let descCount = db.getValue(sql("select count(nodeId) from Node where path like '" & path & "/%'"))
+        var dc: int
+        discard descCount.parseInt(dc)
 
         list.add(Node(parentId: pId,
                         id: nId,
@@ -221,7 +223,7 @@ proc processQuery*( db: DbConn, query: SqlQuery, list: var seq[Node]): seq[int] 
                         prettyLabel: pL,
                         isLeftChild: parsebool(row1[3]),
                         childCount: childCount,
-                        descCount: descCount,
+                        descCount: dc,
                         isSolution: parseBool(row1[5])))
 
 

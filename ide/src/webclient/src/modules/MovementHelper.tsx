@@ -2,7 +2,12 @@ import { HierarchyPointNode } from "d3"
 import * as d3 from "d3"
 import Node from "./Node"
 import * as TreeHelper from "./TreeHelper"
-import { State, MyMap, Core, TreeContainer } from "../components/vis/TreeContainer"
+import {
+  State,
+  MyMap,
+  Core,
+  TreeContainer
+} from "../components/vis/TreeContainer"
 import { cloneDeep, last, min, max } from "lodash"
 import { Collapse } from "react-select/lib/animated/transitions"
 import { headers } from "./Helper"
@@ -208,27 +213,34 @@ export const goPrev = (instance: TreeContainer, start?: number) => {
   }
 
   loadAncestors(instance.props.path, nextId, instance)
-
 }
-
-export const loadAncestors = (
+export const fetchAncestors = async (
   path: string,
-  nextId: number,
-  instance: TreeContainer
-) => {
-
+  nodeId: number,
+  nimServerPort: number
+): Promise<Node[]> => {
   const payload = {
     path: path,
-    nodeId: nextId
+    nodeId: nodeId
   }
 
-  fetch(`http://localhost:${instance.props.nimServerPort}/loadAncestors`, {
+  const res = await fetch(`http://localhost:${nimServerPort}/loadAncestors`, {
     method: "post",
     headers: headers,
     body: JSON.stringify(payload)
   })
-    .then(data => data.json())
-    .then(nodes => TreeHelper.insertNodes(nodes, nextId, instance))
+
+  const json = await res.json()
+  return json
+}
+
+export const loadAncestors = async (
+  path: string,
+  nodeId: number,
+  instance: TreeContainer
+) => {
+  const nodes = await fetchAncestors(path, nodeId, instance.props.nimServerPort)
+  TreeHelper.insertNodes(nodes, nodeId, instance)
 }
 
 export const nextSolBranch = (instance: TreeContainer) => {

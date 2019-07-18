@@ -86,8 +86,11 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
+    // if (this.props.trees && this.props.trees.length === 2) {
+    // console.log(JSON.stringify(this.props.trees[0].core))
+    // console.log(JSON.stringify(this.props.trees[1].core))
     // console.log(this.state.diffLocations)
-    // console.log(this.state.currentDiffIndex)
+    // }
 
     return (
       <>
@@ -177,7 +180,9 @@ class Forest extends React.Component<Props, State> {
                   this.state.currentDiffIndex + 1 >
                   this.state.diffLocations.length - 1
                 ) {
-                  return
+                  this.setState({
+                    currentDiffIndex: this.state.diffLocations.length - 1
+                  })
                 }
 
                 this.setState({
@@ -190,7 +195,7 @@ class Forest extends React.Component<Props, State> {
                 }
 
                 if (this.state.currentDiffIndex - 1 < 0) {
-                  return
+                  this.setState({ currentDiffIndex: 0 })
                 }
                 this.setState({
                   currentDiffIndex: this.state.currentDiffIndex - 1

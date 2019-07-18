@@ -1,7 +1,12 @@
 import { HierarchyPointNode, select } from "d3"
 import * as d3 from "d3"
 import Node from "./Node"
-import { State, MyMap, Core, TreeContainer } from "../components/vis/TreeContainer"
+import {
+  State,
+  MyMap,
+  Core,
+  TreeContainer
+} from "../components/vis/TreeContainer"
 import { cloneDeep, last } from "lodash"
 
 export const linkGenerator = d3
@@ -161,6 +166,33 @@ export const sleep = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+export const insertNodesIntoMap = (nodes: Node[], map: MyMap): MyMap => {
+  // console.log(JSON.stringify(nodes))
+
+  nodes.map((node: Node) => {
+    if (map[node.parentId] && map[node.parentId]._children) {
+      Node.showChildren(map[node.parentId])
+    }
+
+    if (node.id in map) {
+      return
+    }
+
+    if (!map[node.parentId].children) {
+      map[node.parentId].children = []
+    }
+
+    if (node.isLeftChild) {
+      map[node.parentId].children!.unshift(node)
+    } else {
+      map[node.parentId].children!.push(node)
+    }
+
+    map[node.id] = node
+  })
+  return map
+}
+
 export const insertNodes = (
   nodes: Node[],
   nextId: number,
@@ -168,64 +200,6 @@ export const insertNodes = (
 ) => {
   instance.setState((prevState: State) => {
     let newMap = cloneDeep(prevState.id2Node)
-    nodes.map((node: Node) => {
-      if (newMap[node.parentId] && newMap[node.parentId]._children) {
-        Node.showChildren(newMap[node.parentId])
-      }
-
-      if (node.id in newMap) {
-        return
-      }
-
-      if (!newMap[node.parentId].children) {
-        newMap[node.parentId].children = []
-      }
-
-      if (node.isLeftChild) {
-        newMap[node.parentId].children!.unshift(node)
-      } else {
-        newMap[node.parentId].children!.push(node)
-      }
-
-      newMap[node.id] = node
-    })
-    return { id2Node: newMap, selected: nextId }
+    return { id2Node: insertNodesIntoMap(nodes, newMap), selected: nextId }
   })
-}
-
-export const collapseFailed = (solAncestorIds: number[], prevState: State) => {
-  // Collapse the failed branches
-
-  let newMap = cloneDeep(prevState.id2Node)
-
-  solAncestorIds.forEach((nodeId: number) => {
-    let current = newMap[nodeId]
-
-    if (!current.children) {
-      return
-    }
-    current.children.forEach((child: Node) => {
-      if (!solAncestorIds.includes(child.id)) {
-        Node.collapseNode(child)
-      }
-    })
-  })
-
-  // Move the selected node to one that is not within a failed branch.
-  let selected = prevState.selected
-
-  let recurse = (node: Node) => {
-    if (solAncestorIds.includes(node.id)) {
-      selected = node.id
-      return
-    }
-
-    if (node.parentId === -1) {
-      return
-    }
-
-    recurse(newMap[node.parentId])
-  }
-
-  recurse(newMap[prevState.selected])
 }
