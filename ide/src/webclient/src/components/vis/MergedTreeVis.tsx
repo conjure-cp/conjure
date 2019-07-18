@@ -191,6 +191,20 @@ export default class MergedTreeVis extends React.Component<Props, State> {
   }
 
   drawTree() {
+    // console.log(this.props.rootNode)
+
+    // let recurse = (insideNode: Node) => {
+    //   console.log(insideNode.id)
+
+    //   if (!insideNode.children) return
+
+    //   insideNode.children!.forEach(kid => {
+    //     recurse(kid)
+    //   })
+    // }
+
+    // recurse(this.props.rootNode)
+
     const hierarchy = d3.hierarchy<Node>(this.props.rootNode)
 
     const sorted = hierarchy
@@ -343,7 +357,10 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     }) as Link[]
 
     const toHighlightLeft = linkList
-      .filter(x => x.target.data.treeID === WhichTree.Left)
+      //   .filter(x => x.target.data.treeID === WhichTree.Left)
+      .filter(x =>
+        x.target.ancestors().find(y => y.data.treeID === WhichTree.Left)
+      )
       .map(x => {
         let copy = cloneDeep(x)
         copy.highlight = WhichTree.Left
@@ -351,7 +368,9 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       })
 
     const toHighlightRight = linkList
-      .filter(x => x.target.data.treeID === WhichTree.Right)
+      .filter(x =>
+        x.target.ancestors().find(y => y.data.treeID === WhichTree.Right)
+      )
       .map(x => {
         let copy = cloneDeep(x)
         copy.highlight = WhichTree.Right

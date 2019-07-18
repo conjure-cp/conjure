@@ -196,6 +196,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   render = () => {
     // TODO move this it shouldnt be here
 
+    // console.log(this.state.id2Node[0])
     return (
       <HotKeys keyMap={this.map} handlers={this.handlers}>
         {/* <StatsBar

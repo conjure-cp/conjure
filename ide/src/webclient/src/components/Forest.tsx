@@ -99,6 +99,7 @@ class Forest extends React.Component<Props, State> {
       this.props.nimServerPort
     )
     let mergedTree = mergeMaps(loadedMaps[0], loadedMaps[1], json)
+    // console.log(mergedTree)
 
     this.setState({
       diffLocations: json,
@@ -108,6 +109,7 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
+    // console.log(this.state.mergedTree)
     return (
       <>
         {this.props.trees && (

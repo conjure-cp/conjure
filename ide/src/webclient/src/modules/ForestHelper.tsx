@@ -53,10 +53,14 @@ export const mergeMaps = (
   })
 
   for (const array of diffLocations) {
-    leftMap[array[0]].children = leftMap[array[0]].children!.concat(
-      rightMap[array[1]].children!
-    )
+    if (rightMap[array[1]].children && leftMap[array[0]].children!) {
+      leftMap[array[0]].children = leftMap[array[0]].children!.concat(
+        rightMap[array[1]].children!
+      )
+    }
   }
+
+  // console.log(leftMap)
 
   return leftMap
 }
