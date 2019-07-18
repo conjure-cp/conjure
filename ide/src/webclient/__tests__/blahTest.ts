@@ -1,4 +1,4 @@
-import Node from "../src/modules/Node"
+import Node, { WhichTree } from "../src/modules/Node"
 import { loadDiffs, mergeMaps } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
@@ -12,6 +12,30 @@ describe("testing mergeMaps", () => {
 
   it("Should merge the maps the ancestors of each tree into their maps", async () => {
     let res = await mergeMaps(leftTree, rightTree, diffLocations)
+    expect(res[diffLocations[0][0]].children.map((x: Node) => x.id)).toEqual([
+      4,
+      7,
+      4
+    ])
+    expect(
+      res[diffLocations[0][0]].children.map((x: Node) => x.treeID)
+    ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
+    expect(res[diffLocations[1][0]].children.map((x: Node) => x.id)).toEqual([
+      18,
+      21,
+      7
+    ])
+    expect(
+      res[diffLocations[1][0]].children.map((x: Node) => x.treeID)
+    ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
+    expect(res[diffLocations[2][0]].children.map((x: Node) => x.id)).toEqual([
+      28,
+      30,
+      10
+    ])
+    expect(
+      res[diffLocations[1][0]].children.map((x: Node) => x.treeID)
+    ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
   })
 })
 
@@ -30,7 +54,7 @@ describe("test fetch ancestors", () => {
         {
           name: "",
           descCount: 0,
-          isLeftTree: true,
+          treeID: 2,
           id: 4,
           x0: null,
           y0: null,
@@ -92,6 +116,8 @@ describe("testing loadDiffs", () => {
   })
   // console.log(JSON.stringify(rightTree))
 })
+
+const diffLocations = [[3, 3], [17, 6], [27, 9]]
 
 const rightAncestors9 = [
   {
@@ -601,7 +627,6 @@ const leftAncestors3 = [
   }
 ]
 
-const diffLocations = [[3, 3], [17, 6], [27, 9]]
 
 let normal = {
   nodes: [

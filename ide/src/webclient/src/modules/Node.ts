@@ -4,6 +4,12 @@ import * as ReactDOM from "react-dom"
  * This class represents a d3 hierarchy node
  */
 
+export enum WhichTree {
+  Left,
+  Right,
+  Both
+}
+
 export default class Node {
   public id: number
   public label: string
@@ -19,7 +25,7 @@ export default class Node {
   public isLeftChild: boolean
   public childCount: number
   public isSolution: boolean
-  public isLeftTree: boolean
+  public treeID: WhichTree
 
   constructor(
     id: number,
@@ -31,7 +37,7 @@ export default class Node {
     childCount: number,
     isSolution: boolean
   ) {
-    this.isLeftTree = true
+    this.treeID = WhichTree.Both
     this.id = id
     this.x0 = null
     this.y0 = null

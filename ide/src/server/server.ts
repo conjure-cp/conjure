@@ -1,6 +1,6 @@
 import * as path from "path"
 import * as vscode from "vscode"
-import * as express from "express"
+import express from "express";
 import fs = require("fs")
 import { sortBy, isEqual, head } from "lodash"
 
@@ -15,7 +15,7 @@ import {
 } from "typescript-rest"
 
 import * as init from "./init"
-import * as cors from "cors"
+import cors from "cors";
 const fetch = require("node-fetch")
 
 import ConfigHelper, { RepMap, hasher } from "../configHelper"
