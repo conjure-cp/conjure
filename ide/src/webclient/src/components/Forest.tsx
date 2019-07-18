@@ -1,11 +1,14 @@
 import * as React from "react"
-import { TreeContainer, Core } from "./vis/TreeContainer"
+import TreeVis from "./vis/TreeVis"
+import { TreeContainer, Core, MyMap } from "./vis/TreeContainer"
+import { MergedTreeContainer } from "./vis/MergedTreeContainer"
 import { Wrapper } from "./common/Constants"
 import { headers } from "../modules/Helper"
 import { isEqual } from "lodash"
 import VisualiserSettings from "./vis/VisualiserSettings"
 import PlaySettings from "./vis/PlaySettings"
 import DiffSettings from "./vis/DiffSettings"
+import { loadDiffs, mergeMaps } from "../modules/ForestHelper"
 
 export interface Tree {
   hash: string
@@ -32,6 +35,7 @@ interface State {
   diffReady: boolean
   splitScreen: boolean
   locked: boolean
+  mergedTree: MyMap | undefined
 }
 
 class Forest extends React.Component<Props, State> {
@@ -49,7 +53,8 @@ class Forest extends React.Component<Props, State> {
       currentDiffIndex: -1,
       diffReady: false,
       splitScreen: false,
-      locked: true
+      locked: true,
+      mergedTree: undefined
     }
   }
 
@@ -76,22 +81,33 @@ class Forest extends React.Component<Props, State> {
 
     this.setState({ diffReady: false, currentDiffIndex: -1 })
 
-    fetch(`http://localhost:${this.props.nimServerPort}/diff`, {
-      method: "post",
-      headers: headers,
-      body: JSON.stringify(payload)
+    let json = await fetch(
+      `http://localhost:${this.props.nimServerPort}/diff`,
+      {
+        method: "post",
+        headers: headers,
+        body: JSON.stringify(payload)
+      }
+    ).then(data => data.json())
+
+    let paths = this.props.trees.map(x => x.path)
+    let cores = this.props.trees.map(x => x.core)
+    let loadedMaps = await loadDiffs(
+      paths,
+      cores,
+      json,
+      this.props.nimServerPort
+    )
+    let mergedTree = mergeMaps(loadedMaps[0], loadedMaps[1], json)
+
+    this.setState({
+      diffLocations: json,
+      diffReady: true,
+      mergedTree: mergedTree
     })
-      .then(data => data.json())
-      .then(json => this.setState({ diffLocations: json, diffReady: true }))
   }
 
   render = () => {
-    // if (this.props.trees && this.props.trees.length === 2) {
-    // console.log(JSON.stringify(this.props.trees[0].core))
-    // console.log(JSON.stringify(this.props.trees[1].core))
-    // console.log(this.state.diffLocations)
-    // }
-
     return (
       <>
         {this.props.trees && (
@@ -255,7 +271,25 @@ class Forest extends React.Component<Props, State> {
                   ))}
                 </>
               ) : (
-                <div>This is not a splitscreen</div>
+                this.state.mergedTree && (
+                  // <div>This is not a splitscreen</div>
+                  <div style={{ width: "100%" }}>
+                    <MergedTreeContainer
+                      map={this.state.mergedTree}
+                      path="sadas"
+                      hash="asdas"
+                      leftDiffIds={this.state.diffLocations.map(x => x[0])}
+                      rightDiffIds={this.state.diffLocations.map(x => x[1])}
+                      nimServerPort={this.props.nimServerPort}
+                      leftSolAncestorIds={
+                        this.props.trees[0].core.solAncestorIds
+                      }
+                      rightSolAncestorIds={
+                        this.props.trees[1].core.solAncestorIds
+                      }
+                    />
+                  </div>
+                )
               )}
             </div>
           </>
