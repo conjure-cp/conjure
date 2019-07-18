@@ -245,7 +245,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           duration={1000}
           width={1200}
           height={500}
-          showLabels={false}
+          showLabels={true}
           diffParentId={-1}
         />
 

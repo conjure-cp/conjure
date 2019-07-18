@@ -39,9 +39,9 @@ interface State {
 }
 
 interface Link {
-  source: Node
-  target: Node
-  highlight: false
+  source: HierarchyPointNode<Node>
+  target: HierarchyPointNode<Node>
+  highlight: WhichTree
 }
 
 export default class MergedTreeVis extends React.Component<Props, State> {
@@ -199,10 +199,8 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     const maxRadius = this.props.linScale(this.props.rootNode.descCount)
 
-    const maxWidth = this.props.showLabels
-      ? sorted[0].data.label.length * 10
-      : maxRadius * 1.5
-    const maxHeight = this.props.showLabels ? maxRadius * 3 : maxRadius * 1.5
+    const maxWidth = this.props.showLabels ? maxRadius * 3 : maxRadius * 1.5
+    const maxHeight = this.props.showLabels ? maxRadius * 1.5 : maxRadius * 1.5
 
     const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight])
     const svg = d3.select(`#${this.props.identifier}thegroup`)
@@ -242,11 +240,11 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       .style("fill-opacity", 1e-6)
       .attr("fill", "black")
       .attr("class", "decision")
-      .attr("y", -maxHeight / 2)
+      //   .attr("y", -maxHeight / 2)
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
       .text(d => {
-        return this.props.showLabels ? d.data.label : ""
+        return this.props.showLabels ? d.data.id : ""
       })
       .transition()
       .duration(this.props.duration)
@@ -306,7 +304,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       .style("fill-opacity", d => (this.getDecCountMessage(d) === "" ? 0 : 1))
 
     nodeUpdate.select("text.decision").text(d => {
-      return this.props.showLabels ? d.data.label : ""
+      return this.props.showLabels ? d.data.id : ""
     })
 
     this.updateCircles(nodeUpdate)
@@ -339,25 +337,35 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     let p = svg.selectAll("path.link")
 
-    let linkList = rootNode.links() as any[]
-
-    linkList.map(x => {
-      x.highlight = false
+    let linkList = (rootNode.links() as any[]).map(x => {
+      x.highlight = WhichTree.Both
       return x
     }) as Link[]
 
-    linkList = linkList.concat(
-      linkList
-        .filter(x => {
-          return x.source.data.id in this.props.leftDiffIds
-        })
-        .map(x => {
-          x.highlight = true
-          return x
-        })
-    )
+    const toHighlightLeft = linkList
+      .filter(x => x.target.data.treeID === WhichTree.Left)
+      .map(x => {
+        let copy = cloneDeep(x)
+        copy.highlight = WhichTree.Left
+        return copy
+      })
 
-    console.log(linkList)
+    const toHighlightRight = linkList
+      .filter(x => x.target.data.treeID === WhichTree.Right)
+      .map(x => {
+        let copy = cloneDeep(x)
+        copy.highlight = WhichTree.Right
+        return copy
+      })
+
+    linkList = linkList
+      .concat(toHighlightLeft)
+      .concat(toHighlightRight)
+      .reverse()
+
+    // console.log(linkList.filter(x => x.source.data.treeID !== WhichTree.Both))
+    // console.log(toHighlight)
+    // console.log(nodeList.filter(x => x.data.treeID !== WhichTree.Both))
 
     let link = p.data(linkList, (d: any) => d.target.data.id)
 
@@ -365,11 +373,18 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       .enter()
       .insert("svg:path", "g")
       .classed("link", true)
-      .classed("highlight", d => d.highlight)
+      .classed("highlightLeft", d => {
+        return d.highlight == WhichTree.Left
+      })
+      .classed("highlightRight", d => {
+        return d.highlight == WhichTree.Right
+      })
       .classed("red", d => {
         let solAncestorIds = this.getSolAncestorIds(d.target)
         return (
-          !solAncestorIds.includes(d.target.data.id) || !this.props.solveable
+          (!solAncestorIds.includes(d.target.data.id) ||
+            !this.props.solveable) &&
+          d.highlight === WhichTree.Both
         )
       })
       .classed(
