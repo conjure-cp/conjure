@@ -222,7 +222,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     const nodeList = rootNode.descendants()
 
     let g = svg.selectAll("g.node")
-    let node = g.data(nodeList, (d: any) => d.data.id)
+    let node = g.data(nodeList, (d: any) => `${d.data.id}~${d.data.treeID}`)
 
     let nodeEnter = node
       .enter()
@@ -386,7 +386,10 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     // console.log(toHighlight)
     // console.log(nodeList.filter(x => x.data.treeID !== WhichTree.Both))
 
-    let link = p.data(linkList, (d: any) => d.target.data.id)
+    let link = p.data(
+      linkList,
+      (d: any) => `${d.target.data.id}${d.target.data.treeID}${d.highlight}`
+    )
 
     const enterLink = link
       .enter()
