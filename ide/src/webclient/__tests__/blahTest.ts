@@ -13,11 +13,19 @@ describe("testing mergeMaps", () => {
     fetchMock.resetMocks()
   })
 
+  it("It should not modify the left or right rees", async () => {
+    let copyLeft = cloneDeep(leftTree)
+    let copyRight = cloneDeep(rightTree)
+    await mergeMaps(copyLeft, copyRight, diffLocations)
+
+    expect(copyLeft).toEqual(leftTree)
+    expect(copyRight).toEqual(rightTree)
+  })
+
   it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
     let res = await mergeMaps(cloneDeep(leftTree), cloneDeep(rightTree), [
       [0, 0]
     ])
-
     const nodeList = getNodeList(res[0])
     const bothNodes = nodeList.find(x => x.data.treeID === WhichTree.Both)
 

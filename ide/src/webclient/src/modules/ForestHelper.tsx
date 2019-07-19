@@ -4,7 +4,7 @@ import Node, { WhichTree } from "./Node"
 import { Core, MyMap } from "../components/vis/TreeContainer"
 import { fetchAncestors } from "./MovementHelper"
 import { isTSImportEqualsDeclaration } from "@babel/types"
-import { isEqual } from "lodash"
+import { isEqual, cloneDeep } from "lodash"
 import * as d3 from "d3"
 
 export const getNodeList = (root: Node) => {
@@ -36,10 +36,14 @@ export const loadDiffs = async (
 }
 
 export const mergeMaps = (
-  leftMap: MyMap,
-  rightMap: MyMap,
+  l: MyMap,
+  r: MyMap,
   diffLocations: number[][]
 ) => {
+
+  let leftMap = cloneDeep(l)
+  let rightMap = cloneDeep(r)
+
   if (isEqual(diffLocations, [[0, 0]])) {
     getNodeList(leftMap[0]).map(x => (x.data.treeID = WhichTree.Left))
     getNodeList(rightMap[0]).map(x => (x.data.treeID = WhichTree.Right))

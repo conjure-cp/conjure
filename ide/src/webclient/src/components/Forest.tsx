@@ -9,6 +9,7 @@ import VisualiserSettings from "./vis/VisualiserSettings"
 import PlaySettings from "./vis/PlaySettings"
 import DiffSettings from "./vis/DiffSettings"
 import { loadDiffs, mergeMaps } from "../modules/ForestHelper"
+import { makeState } from "../modules/TreeHelper"
 
 export interface Tree {
   hash: string
@@ -277,13 +278,13 @@ class Forest extends React.Component<Props, State> {
                   // <div>This is not a splitscreen</div>
                   <div style={{ width: "100%" }}>
                     <MergedTreeContainer
-                      map={this.state.mergedTree}
+                      leftCore={this.props.trees[0].core}
+                      rightCore={this.props.trees[1].core}
                       leftPath={this.props.trees[0].path}
                       rightPath={this.props.trees[1].path}
                       loadDepth={this.state.loadDepth}
                       hash={"blahhash"}
-                      leftDiffIds={this.state.diffLocations.map(x => x[0])}
-                      rightDiffIds={this.state.diffLocations.map(x => x[1])}
+                      diffLocations={this.state.diffLocations}
                       nimServerPort={this.props.nimServerPort}
                       leftSolAncestorIds={
                         this.props.trees[0].core.solAncestorIds

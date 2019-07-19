@@ -11,7 +11,7 @@ import {
 import { cloneDeep, last, min, max } from "lodash"
 import { Collapse } from "react-select/lib/animated/transitions"
 import { headers } from "./Helper"
-import { MergedTreeContainer } from "../components/vis/MergedTreeContainer";
+import { MergedTreeContainer } from "../components/vis/MergedTreeContainer"
 
 export const nextSol = (instance: TreeContainer) => {
   instance.setState((prevState: State) => {
@@ -174,7 +174,7 @@ export const goLeftBoyo = async (
     ) {
       Node.collapseNode(newMap[grandParent.children![0].id])
     }
-    return {id2Node: map, selected: selected}
+    return { id2Node: map, selected: nextId }
   }
 
   const payload = {
@@ -191,11 +191,10 @@ export const goLeftBoyo = async (
     .then(data => data.json())
     .then(nodes => TreeHelper.insertNodesBoyo(nodes, map))
 
-  return {id2Node: map, selected: selected}
+  return { id2Node: map, selected: selected }
 }
 
-
-export const goLeft = async (instance: TreeContainer ) => {
+export const goLeft = async (instance: TreeContainer) => {
   const nextId = instance.state.selected + 1
 
   const parent = instance.state.id2Node[nextId]

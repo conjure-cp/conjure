@@ -23,6 +23,7 @@ interface Props {
   rootNode: Node
   duration: number
   selected: number
+  selectedTreeId: WhichTree
   leftSolAncestorIds: number[]
   rightSolAncestorIds: number[]
   leftDiffIds: number[]
@@ -113,7 +114,10 @@ export default class MergedTreeVis extends React.Component<Props, State> {
   }
 
   maybeFocus(d: HierarchyPointNode<Node>): void {
-    if (d.data.id === this.props.selected) {
+    if (
+      d.data.id === this.props.selected &&
+      d.data.treeID === this.props.selectedTreeId
+    ) {
       this.focusNode(d)
     }
   }
@@ -144,7 +148,9 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     circle.classed(
       "selected",
-      (d: HierarchyPointNode<Node>) => d.data.id === this.props.selected
+      (d: HierarchyPointNode<Node>) =>
+        d.data.id === this.props.selected &&
+        d.data.treeID === this.props.selectedTreeId
     )
 
     circle.classed("hasOthers", (d: HierarchyPointNode<Node>) =>
@@ -228,8 +234,8 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     let g = svg.selectAll("g.node")
     let node = g.data(nodeList, (d: any) => {
-      let identifier = `${d.data.id}TreeID:${d.data.treeID}`
-      console.log(identifier)
+      let identifier = `NodeId${d.data.id}, TreeID:${d.data.treeID}`
+      // console.log(identifier)
       return identifier
     })
 
