@@ -220,7 +220,9 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     const layout = d3.tree<Node>().nodeSize([maxWidth, maxHeight])
     const svg = d3.select(`#${this.props.identifier}thegroup`)
     const rootNode = layout(hierarchy)
-    const nodeList = rootNode.descendants()
+    let nodeList = rootNode.descendants()
+
+    nodeList = nodeList.filter(x => x.data.id !== -1)
 
     console.log(nodeList)
 
@@ -358,7 +360,9 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     let p = svg.selectAll("path.link")
 
-    let linkList = (rootNode.links() as any[]).map(x => {
+    let linkList = (rootNode
+      .links()
+      .filter(x => x.source.data.id !== -1) as any[]).map(x => {
       x.highlight = WhichTree.Both
       return x
     }) as Link[]
