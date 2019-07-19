@@ -11,6 +11,7 @@ import {
 import { cloneDeep, last, min, max } from "lodash"
 import { Collapse } from "react-select/lib/animated/transitions"
 import { headers } from "./Helper"
+import { MergedTreeContainer } from "../components/vis/MergedTreeContainer";
 
 export const nextSol = (instance: TreeContainer) => {
   instance.setState((prevState: State) => {
@@ -146,7 +147,55 @@ export const goUp = (instance: TreeContainer) => {
   })
 }
 
-export const goLeft = async (instance: TreeContainer) => {
+export const goLeftBoyo = async (
+  selected: number,
+  map: MyMap,
+  playing: boolean,
+  collapseAsExploring: boolean,
+  path: string,
+  loadDepth: number,
+  nimServerPort: number
+) => {
+  const nextId = selected + 1
+
+  const parent = map[nextId]
+
+  const grandParent = parent ? map[parent.parentId] : undefined
+
+  if (nextId in map) {
+    const newMap = TreeHelper.showAllAncestorsBoyo(map, selected)
+
+    if (
+      playing &&
+      collapseAsExploring &&
+      grandParent &&
+      grandParent.children &&
+      nextId !== grandParent.children![0].id
+    ) {
+      Node.collapseNode(newMap[grandParent.children![0].id])
+    }
+    return {id2Node: map, selected: selected}
+  }
+
+  const payload = {
+    path: path,
+    nodeId: selected,
+    depth: loadDepth
+  }
+
+  map = await fetch(`http://localhost:${nimServerPort}/loadNodes`, {
+    method: "post",
+    headers: headers,
+    body: JSON.stringify(payload)
+  })
+    .then(data => data.json())
+    .then(nodes => TreeHelper.insertNodesBoyo(nodes, map))
+
+  return {id2Node: map, selected: selected}
+}
+
+
+export const goLeft = async (instance: TreeContainer ) => {
   const nextId = instance.state.selected + 1
 
   const parent = instance.state.id2Node[nextId]

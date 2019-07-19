@@ -5,7 +5,8 @@ import {
   State,
   MyMap,
   Core,
-  TreeContainer
+  TreeContainer,
+  FromServerNode
 } from "../components/vis/TreeContainer"
 import { cloneDeep, last } from "lodash"
 
@@ -17,6 +18,22 @@ export const linkGenerator = d3
   .y(d => {
     return d.y
   })
+
+export const showAllAncestorsBoyo = (map: MyMap, startId: number): MyMap => {
+  let newMap = cloneDeep(map)
+
+  let currentId = newMap[startId].id
+
+  while (true) {
+    Node.showChildren(newMap[currentId])
+    if (currentId === 0) {
+      break
+    }
+    currentId = newMap[newMap[currentId].parentId].id
+  }
+
+  return newMap
+}
 
 export const showAllAncestors = (prevState: State, startId: number): MyMap => {
   let newMap = cloneDeep(prevState.id2Node)
@@ -166,29 +183,40 @@ export const sleep = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const insertNodesIntoMap = (nodes: Node[], map: MyMap): MyMap => {
+export const insertNodesBoyo = (nodes: FromServerNode[], map: MyMap): MyMap => {
   // console.log(JSON.stringify(nodes))
 
-  nodes.map((node: Node) => {
-    if (map[node.parentId] && map[node.parentId]._children) {
-      Node.showChildren(map[node.parentId])
+  nodes.map((node: FromServerNode) => {
+    const newNode = new Node(
+      node.id,
+      node.label,
+      node.prettyLabel,
+      node.parentId,
+      node.descCount,
+      node.isLeftChild,
+      node.childCount,
+      node.isSolution
+    )
+
+    if (map[newNode.parentId] && map[newNode.parentId]._children) {
+      Node.showChildren(map[newNode.parentId])
     }
 
-    if (node.id in map) {
+    if (newNode.id in map) {
       return
     }
 
-    if (!map[node.parentId].children) {
-      map[node.parentId].children = []
+    if (!map[newNode.parentId].children) {
+      map[newNode.parentId].children = []
     }
 
-    if (node.isLeftChild) {
-      map[node.parentId].children!.unshift(node)
+    if (newNode.isLeftChild) {
+      map[newNode.parentId].children!.unshift(newNode)
     } else {
-      map[node.parentId].children!.push(node)
+      map[newNode.parentId].children!.push(newNode)
     }
 
-    map[node.id] = node
+    map[newNode.id] = newNode
   })
   return map
 }
@@ -200,6 +228,6 @@ export const insertNodes = (
 ) => {
   instance.setState((prevState: State) => {
     let newMap = cloneDeep(prevState.id2Node)
-    return { id2Node: insertNodesIntoMap(nodes, newMap), selected: nextId }
+    return { id2Node: insertNodesBoyo(nodes, newMap), selected: nextId }
   })
 }

@@ -211,7 +211,8 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       .descendants()
       .sort((a, b) => b.data.label.length - a.data.label.length)
 
-    const maxRadius = this.props.linScale(this.props.rootNode.descCount)
+    // const maxRadius = this.props.linScale(this.props.rootNode.descCount)
+    const maxRadius = 30
 
     const maxWidth = this.props.showLabels ? maxRadius * 3 : maxRadius * 1.5
     const maxHeight = this.props.showLabels ? maxRadius * 1.5 : maxRadius * 1.5
@@ -221,8 +222,14 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     const rootNode = layout(hierarchy)
     const nodeList = rootNode.descendants()
 
+    console.log(nodeList)
+
     let g = svg.selectAll("g.node")
-    let node = g.data(nodeList, (d: any) => `${d.data.id}~${d.data.treeID}`)
+    let node = g.data(nodeList, (d: any) => {
+      let identifier = `${d.data.id}TreeID:${d.data.treeID}`
+      console.log(identifier)
+      return identifier
+    })
 
     let nodeEnter = node
       .enter()

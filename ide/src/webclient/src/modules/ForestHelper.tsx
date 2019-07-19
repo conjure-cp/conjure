@@ -1,8 +1,18 @@
-import { makeState, insertNodesIntoMap } from "./TreeHelper"
+import { makeState, insertNodesBoyo } from "./TreeHelper"
 import { Tree } from "../components/Forest"
 import Node, { WhichTree } from "./Node"
 import { Core, MyMap } from "../components/vis/TreeContainer"
 import { fetchAncestors } from "./MovementHelper"
+import { isTSImportEqualsDeclaration } from "@babel/types"
+import { isEqual } from "lodash"
+import * as d3 from "d3"
+
+export const getNodeList = (root: Node) => {
+  const hierarchy = d3.hierarchy<Node>(root)
+  const layout = d3.tree<Node>()
+  const rootNode = layout(hierarchy)
+  return rootNode.descendants()
+}
 
 export const loadDiffs = async (
   paths: string[],
@@ -19,10 +29,8 @@ export const loadDiffs = async (
         await fetchAncestors(paths[i], array[i], nimServerPort)
       )
     }
-    maps[i] = insertNodesIntoMap(ancestors, maps[i])
+    maps[i] = insertNodesBoyo(ancestors, maps[i])
   }
-
-  // console.log(maps[2])
 
   return maps
 }
@@ -32,6 +40,14 @@ export const mergeMaps = (
   rightMap: MyMap,
   diffLocations: number[][]
 ) => {
+  if (isEqual(diffLocations, [[0, 0]])) {
+    getNodeList(leftMap[0]).map(x => (x.data.treeID = WhichTree.Left))
+    getNodeList(rightMap[0]).map(x => (x.data.treeID = WhichTree.Right))
+    const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
+    newRoot.children = [leftMap[0], rightMap[0]]
+    return { 0: newRoot }
+  }
+
   diffLocations.forEach(array => {
     if (!leftMap[array[0]].children) {
       return

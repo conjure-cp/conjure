@@ -1,8 +1,9 @@
 import * as React from "react"
-import Node from "../../modules/Node"
+import Node, { WhichTree } from "../../modules/Node"
 import MergedTreeVis from "./MergedTreeVis"
 import { HotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max } from "lodash"
+import * as MovementHelper from "../../modules/MovementHelper"
 import * as d3 from "d3"
 
 interface FromServerNode {
@@ -33,13 +34,14 @@ interface Props {
   rightSolAncestorIds: number[]
   leftDiffIds: number[]
   rightDiffIds: number[]
-  path: string
+  rightPath: string
+  leftPath: string
   hash: string
   nimServerPort: number
   //   playing: boolean
   //   reverse: boolean
   //   showLabels: boolean
-  //   loadDepth: number
+  loadDepth: number
   //   duration: number
   //   interval: number
   //   finishedPlayingHandler: () => void
@@ -84,15 +86,20 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       selected: 0,
       totalNodeCount: -1,
       failedBranchCount: -1,
-      linScale: d3
-        .scaleLinear()
-        .domain([0, props.map[0].descCount])
-        .range([5, 30])
+      linScale: (_v: number) => 10
+      //   linScale: d3
+      //     .scaleLinear()
+      //     .domain([0, props.map[0].descCount])
+      //     .range([5, 20])
     }
     // this.state = TreeHelper.makeState(props.core, props.selected)
 
     this.handlers = {
-      //   goLeft: () => MovementHelper.goLeft(this),
+        goLeft: () => {
+            
+     
+
+      },
       //   goUp: () => MovementHelper.goUp(this),
       //   goRight: () => MovementHelper.goRight(this),
       goToRoot: () => this.setState({ selected: 0 })
@@ -106,37 +113,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   nodeClickHandler = (d: Node) => {
     this.setState({ selected: d.id })
   }
-
-  //   showCore = () => {
-  //     console.log("Show core pressed!")
-
-  //     this.setState((prevState: State) => {
-  //       let newMap = cloneDeep(prevState.id2Node)
-
-  //       this.props.core.solAncestorIds.forEach((nodeId: number) => {
-  //         let current = newMap[nodeId]
-
-  //         if (!current.children) {
-  //           return
-  //         }
-  //         current.children.forEach((child: Node) => {
-  //           if (!this.props.core.solAncestorIds.includes(child.id)) {
-  //             Node.collapseNode(child)
-  //           }
-  //         })
-  //       })
-
-  //       let selected = this.state.selected
-
-  //       if (!this.props.core.solAncestorIds.includes(selected)) {
-  //         selected = max(
-  //           this.props.core.solAncestorIds.filter(id => id < selected)
-  //         )!
-  //       }
-
-  //       return { id2Node: newMap, selected: selected }
-  //     })
-  //   }
 
   collapse = () => {
     this.setState((prevState: State) => {
@@ -161,35 +137,27 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     })
   }
 
-  //   play = async () => {
-  //     while (this.props.playing) {
-  //       if (
-  //         (this.state.selected === last(this.props.core.solAncestorIds)! &&
-  //           !this.props.reverse) ||
-  //         (this.state.selected === 0 && this.props.reverse)
-  //       ) {
-  //         break
-  //       }
-  //       if (this.props.reverse) {
-  //         MovementHelper.goToPreviousHandler(this)
-  //       } else {
-  //         MovementHelper.goLeft(this)
-  //       }
-  //       await TreeHelper.sleep(this.props.interval)
-  //     }
-  //     this.props.finishedPlayingHandler()
-  //   }
+  componentDidUpdate = async (prevProps: Props, prevState: State) => {
+    // if (this.state.goingLeft !== prevState.goingLeft) {
+    //   const current = this.state.id2Node[this.state.selected]
+    //   const path =
+    //     current.treeID === WhichTree.Right
+    //       ? this.props.rightPath
+    //       : this.props.leftPath
 
-  componentDidUpdate = (prevProps: Props) => {
-    // Typical usage (don't forget to compare props):
-    // if (this.props.hash !== prevProps.hash) {
-    //   this.setState(TreeHelper.makeState(this.props.core, this.props.selected))
-    // }
-    // if (this.props.playing !== prevProps.playing) {
-    //   this.play()
-    // }
-    // if (this.props.selected !== prevProps.selected) {
-    //   MovementHelper.loadAncestors(this.props.path, this.props.selected, this)
+    //   console.log("here")
+
+    //   this.setState(
+    //     await MovementHelper.goLeftBoyo(
+    //       this.state.selected,
+    //       this.state.id2Node,
+    //       false,
+    //       false,
+    //       path,
+    //       this.props.loadDepth,
+    //       this.props.nimServerPort
+    //     )
+    //   )
     // }
   }
 
@@ -199,22 +167,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     // console.log(this.state.id2Node[0])
     return (
       <HotKeys keyMap={this.map} handlers={this.handlers}>
-        {/* <StatsBar
-          info={this.props.info}
-          nextSolBranchHandler={() => MovementHelper.nextSolBranch(this)}
-          prevSolBranchHandler={() => MovementHelper.prevSolBranch(this)}
-          nextNodeHandler={() => MovementHelper.goLeft(this)}
-          prevNodeHandler={() => MovementHelper.goToPreviousHandler(this)}
-          nextFailedHandler={() => MovementHelper.nextFailed(this)}
-          prevFailedHandler={() => MovementHelper.prevFailed(this)}
-          nextSolHandler={() => MovementHelper.nextSol(this)}
-          prevSolHandler={() => MovementHelper.prevSol(this)}
-          minsize={this.state.minsize}
-          solNodeIds={this.state.solNodeIds}
-          totalNodes={this.state.totalNodeCount}
-          failedBranchCount={this.state.failedBranchCount}
-          linScale={this.state.linScale}
-        /> */}
 
         {/* <Wrapper> */}
         {/* <SplitPane split="horizontal" defaultSize={700} maxSize={900}> */}
@@ -249,15 +201,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           showLabels={true}
           diffParentId={-1}
         />
-
-        {/* <Domains
-              hash={this.props.hash}
-              selected={this.state.selected}
-              path={this.props.path}
-              nimServerPort={this.props.nimServerPort}
-            /> */}
-        {/* </SplitPane> */}
-        {/* </Wrapper> */}
       </HotKeys>
     )
   }

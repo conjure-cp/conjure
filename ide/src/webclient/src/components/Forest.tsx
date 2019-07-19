@@ -278,8 +278,10 @@ class Forest extends React.Component<Props, State> {
                   <div style={{ width: "100%" }}>
                     <MergedTreeContainer
                       map={this.state.mergedTree}
-                      path="sadas"
-                      hash="asdas"
+                      leftPath={this.props.trees[0].path}
+                      rightPath={this.props.trees[1].path}
+                      loadDepth={this.state.loadDepth}
+                      hash={"blahhash"}
                       leftDiffIds={this.state.diffLocations.map(x => x[0])}
                       rightDiffIds={this.state.diffLocations.map(x => x[1])}
                       nimServerPort={this.props.nimServerPort}

@@ -13,7 +13,7 @@ import { Check } from "../common/Check"
 import * as TreeHelper from "../../modules/TreeHelper"
 import * as MovementHelper from "../../modules/MovementHelper"
 
-interface FromServerNode {
+export interface FromServerNode {
   id: number
   parentId: number
   label: string

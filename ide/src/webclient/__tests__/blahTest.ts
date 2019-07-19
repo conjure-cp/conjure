@@ -1,42 +1,60 @@
 import Node, { WhichTree } from "../src/modules/Node"
-import { loadDiffs, mergeMaps } from "../src/modules/ForestHelper"
+import { loadDiffs, mergeMaps, getNodeList } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
 import rightTree from "./resources/DiffLoadedSacbounds-8.json"
 import leftTree from "./resources/DiffLoadedNormal-8.json"
+import { cloneDeep } from "lodash"
+import * as d3 from "d3"
+import { node } from "prop-types"
 
 describe("testing mergeMaps", () => {
   beforeEach(() => {
     fetchMock.resetMocks()
   })
 
+  it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
+    let res = await mergeMaps(cloneDeep(leftTree), cloneDeep(rightTree), [
+      [0, 0]
+    ])
+
+    const nodeList = getNodeList(res[0])
+    const bothNodes = nodeList.find(x => x.data.treeID === WhichTree.Both)
+
+    expect(bothNodes!.data.id).toEqual(-1)
+  })
+
   it("Should merge the maps the ancestors of each tree into their maps", async () => {
     let res = await mergeMaps(leftTree, rightTree, diffLocations)
-    expect(res[diffLocations[0][0]].children.map((x: Node) => x.id)).toEqual([
+    expect(res[diffLocations[0][0]].children!.map((x: Node) => x.id)).toEqual([
       4,
       7,
       4
     ])
     expect(
-      res[diffLocations[0][0]].children.map((x: Node) => x.treeID)
+      res[diffLocations[0][0]].children!.map((x: Node) => x.treeID)
     ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
-    expect(res[diffLocations[1][0]].children.map((x: Node) => x.id)).toEqual([
+    expect(res[diffLocations[1][0]].children!.map((x: Node) => x.id)).toEqual([
       18,
       21,
       7
     ])
     expect(
-      res[diffLocations[1][0]].children.map((x: Node) => x.treeID)
+      res[diffLocations[1][0]].children!.map((x: Node) => x.treeID)
     ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
-    expect(res[diffLocations[2][0]].children.map((x: Node) => x.id)).toEqual([
+    expect(res[diffLocations[2][0]].children!.map((x: Node) => x.id)).toEqual([
       28,
       30,
       10
     ])
     expect(
-      res[diffLocations[1][0]].children.map((x: Node) => x.treeID)
+      res[diffLocations[1][0]].children!.map((x: Node) => x.treeID)
     ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
   })
+
+  // it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
+  //   let res = await mergeMaps(leftTree, rightTree, diffLocations)
+  // })
 })
 
 describe("test fetch ancestors", () => {
@@ -113,8 +131,9 @@ describe("testing loadDiffs", () => {
     expect(rightTree[9].children!.map(x => x.id)).toEqual([10])
     expect(rightTree[3].children!.map(x => x.id)).toEqual([4])
     expect(rightTree[6].children!.map(x => x.id)).toEqual([7])
+
+    // console.log(JSON.stringify(rightTree))
   })
-  // console.log(JSON.stringify(rightTree))
 })
 
 const diffLocations = [[3, 3], [17, 6], [27, 9]]
@@ -626,7 +645,6 @@ const leftAncestors3 = [
     descCount: 16
   }
 ]
-
 
 let normal = {
   nodes: [
