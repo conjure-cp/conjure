@@ -52,7 +52,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   // static whyDidYouRender = true;
 
   map = {
-    goLeft: ["left", "s", "a", "down"],
+    goLeft: ["left", "a"],
     goRight: ["right", "d"],
     goUp: ["up", "w"],
     collapse: "c",
@@ -83,22 +83,45 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         console.log(this.state.selectedTreeId)
 
         let leftDiffIds = this.props.diffLocations.map(x => x[0])
-        let rightDiffIds = this.props.diffLocations.map(x => x[1])
+        // let rightDiffIds = this.props.diffLocations.map(x => x[1])
 
-        let potentialLeftNode = null
-        let potentialRightNode = null
+        // let potentialLeftNode = null
+        // let potentialRightNode = null
 
         if (
-          leftDiffIds.includes(this.state.selected) ||
-          rightDiffIds.includes(this.state.selected)
+          leftDiffIds.includes(this.state.selected)
+          // ||
+          // rightDiffIds.includes(this.state.selected)
         ) {
+          let mergedMap = mergeMaps(
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.props.diffLocations
+          )
+
+          let currentNode = mergedMap[this.state.selected]
+          // let nextIndex = Math.floor(currentNode.children!.length / 2)
+          let nextIndex = 0
+          let nextNode = currentNode.children![nextIndex]
+
+          this.setState({
+            selected: nextNode.id,
+            selectedTreeId: nextNode.treeID
+          })
+
+          console.log(nextNode)
+
+          return
         }
 
         let onTheRightTree = this.state.selectedTreeId === WhichTree.Right
 
         let path = this.props.leftPath
         let map = this.state.leftMap
-        let treeId = WhichTree.Left
+        let treeId =
+          this.state.selectedTreeId === WhichTree.Left
+            ? WhichTree.Left
+            : WhichTree.Both
 
         if (onTheRightTree) {
           // if (this.props.diffLocations.selected === origState.selected) {
