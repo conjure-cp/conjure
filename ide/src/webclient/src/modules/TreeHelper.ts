@@ -1,6 +1,6 @@
 import { HierarchyPointNode, select } from "d3"
 import * as d3 from "d3"
-import Node from "./Node"
+import Node, { WhichTree } from "./Node"
 import {
   State,
   MyMap,
@@ -183,7 +183,7 @@ export const sleep = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const insertNodesBoyo = (nodes: FromServerNode[], map: MyMap): MyMap => {
+export const insertNodesBoyo = (nodes: FromServerNode[], map: MyMap, treeId: WhichTree): MyMap => {
   // console.log(JSON.stringify(nodes))
 
   nodes.map((node: FromServerNode) => {
@@ -197,6 +197,8 @@ export const insertNodesBoyo = (nodes: FromServerNode[], map: MyMap): MyMap => {
       node.childCount,
       node.isSolution
     )
+
+    newNode.treeId = treeId
 
     if (map[newNode.parentId] && map[newNode.parentId]._children) {
       Node.showChildren(map[newNode.parentId])
@@ -228,6 +230,6 @@ export const insertNodes = (
 ) => {
   instance.setState((prevState: State) => {
     let newMap = cloneDeep(prevState.id2Node)
-    return { id2Node: insertNodesBoyo(nodes, newMap), selected: nextId }
+    return { id2Node: insertNodesBoyo(nodes, newMap, WhichTree.Both), selected: nextId }
   })
 }

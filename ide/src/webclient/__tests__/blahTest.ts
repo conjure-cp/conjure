@@ -27,7 +27,7 @@ describe("testing mergeMaps", () => {
       [0, 0]
     ])
     const nodeList = getNodeList(res[0])
-    const bothNodes = nodeList.find(x => x.data.treeID === WhichTree.Both)
+    const bothNodes = nodeList.find(x => x.data.treeId === WhichTree.Both)
 
     expect(bothNodes!.data.id).toEqual(-1)
   })
@@ -40,7 +40,7 @@ describe("testing mergeMaps", () => {
       4
     ])
     expect(
-      res[diffLocations[0][0]].children!.map((x: Node) => x.treeID)
+      res[diffLocations[0][0]].children!.map((x: Node) => x.treeId)
     ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
     expect(res[diffLocations[1][0]].children!.map((x: Node) => x.id)).toEqual([
       18,
@@ -48,7 +48,7 @@ describe("testing mergeMaps", () => {
       7
     ])
     expect(
-      res[diffLocations[1][0]].children!.map((x: Node) => x.treeID)
+      res[diffLocations[1][0]].children!.map((x: Node) => x.treeId)
     ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
     expect(res[diffLocations[2][0]].children!.map((x: Node) => x.id)).toEqual([
       28,
@@ -56,7 +56,7 @@ describe("testing mergeMaps", () => {
       10
     ])
     expect(
-      res[diffLocations[1][0]].children!.map((x: Node) => x.treeID)
+      res[diffLocations[1][0]].children!.map((x: Node) => x.treeId)
     ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
   })
 

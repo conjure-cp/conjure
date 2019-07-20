@@ -1,6 +1,6 @@
 import { HierarchyPointNode } from "d3"
 import * as d3 from "d3"
-import Node from "./Node"
+import Node, { WhichTree } from "./Node"
 import * as TreeHelper from "./TreeHelper"
 import {
   State,
@@ -154,7 +154,8 @@ export const goLeftBoyo = async (
   collapseAsExploring: boolean,
   path: string,
   loadDepth: number,
-  nimServerPort: number
+  nimServerPort: number,
+  treeId: WhichTree
 ) => {
   const nextId = selected + 1
 
@@ -189,7 +190,7 @@ export const goLeftBoyo = async (
     body: JSON.stringify(payload)
   })
     .then(data => data.json())
-    .then(nodes => TreeHelper.insertNodesBoyo(nodes, map))
+    .then(nodes => TreeHelper.insertNodesBoyo(nodes, map, treeId))
 
   return { id2Node: map, selected: selected }
 }

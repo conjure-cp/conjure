@@ -80,7 +80,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
   }
 
   getSolAncestorIds(d: HierarchyPointNode<Node>): number[] {
-    if (d.data.treeID === WhichTree.Left || d.data.treeID === WhichTree.Both) {
+    if (d.data.treeId === WhichTree.Left || d.data.treeId === WhichTree.Both) {
       return this.props.leftSolAncestorIds
     }
     return this.props.rightSolAncestorIds
@@ -114,12 +114,26 @@ export default class MergedTreeVis extends React.Component<Props, State> {
   }
 
   maybeFocus(d: HierarchyPointNode<Node>): void {
-    if (
-      d.data.id === this.props.selected &&
-      d.data.treeID === this.props.selectedTreeId
-    ) {
+    if (this.isSelected(d)) {
       this.focusNode(d)
     }
+  }
+
+  isSelected = (d: HierarchyPointNode<Node>) => {
+    if (this.props.selectedTreeId === WhichTree.Right) {
+      if (
+        d.data.id === this.props.selected &&
+        d.data.treeId === this.props.selectedTreeId
+      ) {
+        return true
+      }
+    } else {
+      if (d.data.id === this.props.selected && d.data.treeId !== WhichTree.Right) {
+        return true
+      }
+    }
+
+    return false
   }
 
   updateCircles(selector: any) {
@@ -146,11 +160,8 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       return d.data.id === this.props.diffParentId
     })
 
-    circle.classed(
-      "selected",
-      (d: HierarchyPointNode<Node>) =>
-        d.data.id === this.props.selected &&
-        d.data.treeID === this.props.selectedTreeId
+    circle.classed("selected", (d: HierarchyPointNode<Node>) =>
+      this.isSelected(d)
     )
 
     circle.classed("hasOthers", (d: HierarchyPointNode<Node>) =>
@@ -234,7 +245,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     let g = svg.selectAll("g.node")
     let node = g.data(nodeList, (d: any) => {
-      let identifier = `NodeId${d.data.id}, TreeID:${d.data.treeID}`
+      let identifier = `NodeId${d.data.id}, TreeID:${d.data.treeId}`
       // console.log(identifier)
       return identifier
     })
@@ -376,7 +387,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     const toHighlightLeft = linkList
       //   .filter(x => x.target.data.treeID === WhichTree.Left)
       .filter(x =>
-        x.target.ancestors().find(y => y.data.treeID === WhichTree.Left)
+        x.target.ancestors().find(y => y.data.treeId === WhichTree.Left)
       )
       .map(x => {
         let copy = cloneDeep(x)
@@ -386,7 +397,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     const toHighlightRight = linkList
       .filter(x =>
-        x.target.ancestors().find(y => y.data.treeID === WhichTree.Right)
+        x.target.ancestors().find(y => y.data.treeId === WhichTree.Right)
       )
       .map(x => {
         let copy = cloneDeep(x)
@@ -405,7 +416,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     let link = p.data(
       linkList,
-      (d: any) => `${d.target.data.id}${d.target.data.treeID}${d.highlight}`
+      (d: any) => `${d.target.data.id}${d.target.data.treeId}${d.highlight}`
     )
 
     const enterLink = link
@@ -511,6 +522,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (
+      prevProps.selectedTreeId !== this.props.selectedTreeId ||
       prevProps.selected !== this.props.selected ||
       !isEqual(prevProps.rootNode, this.props.rootNode) ||
       prevProps.showLabels !== this.props.showLabels ||

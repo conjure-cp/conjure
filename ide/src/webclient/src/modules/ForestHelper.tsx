@@ -29,7 +29,7 @@ export const loadDiffs = async (
         await fetchAncestors(paths[i], array[i], nimServerPort)
       )
     }
-    maps[i] = insertNodesBoyo(ancestors, maps[i])
+    maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
   }
 
   return maps
@@ -45,8 +45,8 @@ export const mergeMaps = (
   let rightMap = cloneDeep(r)
 
   if (isEqual(diffLocations, [[0, 0]])) {
-    getNodeList(leftMap[0]).map(x => (x.data.treeID = WhichTree.Left))
-    getNodeList(rightMap[0]).map(x => (x.data.treeID = WhichTree.Right))
+    getNodeList(leftMap[0]).map(x => (x.data.treeId = WhichTree.Left))
+    getNodeList(rightMap[0]).map(x => (x.data.treeId = WhichTree.Right))
     const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
     newRoot.children = [leftMap[0], rightMap[0]]
     return { 0: newRoot }
@@ -58,7 +58,7 @@ export const mergeMaps = (
     }
 
     leftMap[array[0]].children!.forEach(kid => {
-      kid.treeID = WhichTree.Left
+      kid.treeId = WhichTree.Left
     })
   })
 
@@ -68,7 +68,7 @@ export const mergeMaps = (
     }
 
     rightMap[array[1]].children!.forEach(kid => {
-      kid.treeID = WhichTree.Right
+      kid.treeId = WhichTree.Right
     })
   })
 

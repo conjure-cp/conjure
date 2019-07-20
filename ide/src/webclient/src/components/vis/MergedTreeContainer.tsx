@@ -79,19 +79,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     this.handlers = {
       goLeft: async () => {
-        console.log("here")
-        console.log(this.state.selectedTreeId)
+        // console.log("here")
+        // console.log(this.state.selectedTreeId)
 
         let leftDiffIds = this.props.diffLocations.map(x => x[0])
-        // let rightDiffIds = this.props.diffLocations.map(x => x[1])
-
-        // let potentialLeftNode = null
-        // let potentialRightNode = null
 
         if (
           leftDiffIds.includes(this.state.selected)
-          // ||
-          // rightDiffIds.includes(this.state.selected)
         ) {
           let mergedMap = mergeMaps(
             this.state.leftMap!,
@@ -106,7 +100,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
           this.setState({
             selected: nextNode.id,
-            selectedTreeId: nextNode.treeID
+            selectedTreeId: nextNode.treeId
           })
 
           console.log(nextNode)
@@ -118,11 +112,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
         let path = this.props.leftPath
         let map = this.state.leftMap
-        let treeId =
-          this.state.selectedTreeId === WhichTree.Left
-            ? WhichTree.Left
-            : WhichTree.Both
-
+        let treeId = WhichTree.Left
+   
         if (onTheRightTree) {
           // if (this.props.diffLocations.selected === origState.selected) {
           path = this.props.rightPath
@@ -137,7 +128,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           false,
           path,
           1,
-          this.props.nimServerPort
+          this.props.nimServerPort,
+          treeId
         )
         if (onTheRightTree) {
           this.setState({
@@ -167,7 +159,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   nodeClickHandler = (d: Node) => {
-    this.setState({ selected: d.id, selectedTreeId: d.treeID })
+    this.setState({ selected: d.id, selectedTreeId: d.treeId })
   }
 
   loadAllDiffsIntoMaps = async () => {
@@ -196,7 +188,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     // console.log(this.state.selected)
 
-    console.log(this.state.selectedTreeId)
+    console.log("selected", this.state.selected, this.state.selectedTreeId)
+
     return (
       <HotKeys keyMap={this.map} handlers={this.handlers}>
         {/* <Wrapper> */}
@@ -223,16 +216,23 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             minsize={this.state.minsize}
             nodeClickHandler={this.nodeClickHandler}
             storeNodePrevPos={list => {
-              // this.setState((prevState: State) => {
-              //   let newMap = cloneDeep(prevState.id2Node)
-              //   list.forEach(d => {
-              //     newMap[d.data.id].x0 = d.x
-              //     newMap[d.data.id].y0 = d.y
-              //   })
-              //   console.log("CALLED")
-              //   // console.log(newMap[28])
-              //   return { id2Node: newMap }
-              // })
+              this.setState((prevState: State) => {
+                let leftMap = cloneDeep(prevState.leftMap)
+                let rightMap = cloneDeep(prevState.rightMap)
+
+                list.forEach(d => {
+                  if (d.data.treeId === WhichTree.Right) {
+                    rightMap![d.data.id].x0 = d.x
+                    rightMap![d.data.id].y0 = d.y
+                  } else {
+                    leftMap![d.data.id].x0 = d.x
+                    leftMap![d.data.id].y0 = d.y
+                  }
+                })
+                console.log("CALLED")
+                // console.log(newMap[28])
+                return { leftMap, rightMap }
+              })
             }}
             duration={1000}
             width={1200}

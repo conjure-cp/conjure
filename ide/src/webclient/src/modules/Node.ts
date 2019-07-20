@@ -25,7 +25,7 @@ export default class Node {
   public isLeftChild: boolean
   public childCount: number
   public isSolution: boolean
-  public treeID: WhichTree
+  public treeId: WhichTree
 
   constructor(
     id: number,
@@ -37,7 +37,7 @@ export default class Node {
     childCount: number,
     isSolution: boolean
   ) {
-    this.treeID = WhichTree.Both
+    this.treeId = WhichTree.Both
     this.id = id
     this.x0 = null
     this.y0 = null
