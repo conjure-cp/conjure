@@ -14,13 +14,6 @@ export const getNodeList = (root: Node) => {
   return rootNode.descendants()
 }
 
-export const getLeaves = (root: Node) => {
-  const hierarchy = d3.hierarchy<Node>(root)
-  const layout = d3.tree<Node>()
-  const rootNode = layout(hierarchy)
-  return rootNode.leaves()
-}
-
 export const loadDiffs = async (
   paths: string[],
   cores: Core[],
@@ -55,15 +48,19 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   }
 
   diffLocations.forEach(array => {
-    getNodeList(leftMap[array[0]]).forEach(x => {
-      x.data.treeId = WhichTree.Left
-    })
+    getNodeList(leftMap[array[0]])
+      .filter(x => x.data.id !== array[0])
+      .forEach(x => {
+        x.data.treeId = WhichTree.Left
+      })
   })
 
   diffLocations.forEach(array => {
-    getNodeList(rightMap[array[1]]).forEach(x => {
-      x.data.treeId = WhichTree.Right
-    })
+    getNodeList(rightMap[array[1]])
+      .filter(x => x.data.id !== array[1])
+      .forEach(x => {
+        x.data.treeId = WhichTree.Right
+      })
   })
 
   for (const array of diffLocations) {
@@ -77,14 +74,29 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
     }
   }
 
+  let counter = 0
   let map: MyMap = {}
-  getNodeList(leftMap[0]).forEach((x, i) => {
-    x.data.newId = i
-    map[i] = x.data
-  })
+
+  let recurse = (insideNode: Node) => {
+    insideNode.newId = counter
+    map[insideNode.newId] = insideNode
+    counter++
+
+    if (!insideNode.children) return
+
+    insideNode.children!.forEach(kid => {
+      recurse(kid)
+    })
+  }
+
+  recurse(leftMap[0])
+  // getNodeList(leftMap[0]).forEach((x, i) => {
+  //   x.data.newId = x.value
+  //   map[i] = x.data
+  // })
 
   // console.log(map)
 
-  // return leftMap
-  return map
+  return leftMap
+  // return map
 }

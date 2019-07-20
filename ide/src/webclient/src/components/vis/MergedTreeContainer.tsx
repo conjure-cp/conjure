@@ -81,77 +81,68 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         // console.log("here")
         // console.log(this.state.selectedTreeId)
 
-        const nextId = this.state.selected + 1
-
-        if (!(nextId in this.state.mergedMap!)) {
-        } else {
-          this.setState({ selected: nextId })
-        }
-
         // --------------------------------------------------------------
 
-        // let leftDiffIds = this.props.diffLocations.map(x => x[0])
+        let leftDiffIds = this.props.diffLocations.map(x => x[0])
 
-        // if (
-        //   leftDiffIds.includes(this.state.selected)
-        // ) {
-        //   let mergedMap = mergeMaps(
-        //     this.state.leftMap!,
-        //     this.state.rightMap!,
-        //     this.props.diffLocations
-        //   )
+        if (leftDiffIds.includes(this.state.selected)) {
+          let mergedMap = mergeMaps(
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.props.diffLocations
+          )
 
-        //   let currentNode = mergedMap[this.state.selected]
-        //   // let nextIndex = Math.floor(currentNode.children!.length / 2)
-        //   let nextIndex = 0
-        //   let nextNode = currentNode.children![nextIndex]
+          let currentNode = mergedMap[this.state.selected]
+          // let nextIndex = Math.floor(currentNode.children!.length / 2)
+          let nextIndex = 0
+          let nextNode = currentNode.children![nextIndex]
 
-        //   this.setState({
-        //     selected: nextNode.id,
-        //     selectedTreeId: nextNode.treeId
-        //   })
+          this.setState({
+            selected: nextNode.id,
+            selectedTreeId: nextNode.treeId
+          })
 
-        //   console.log(nextNode)
+          console.log(nextNode)
 
-        //   return
-        // }
+          return
+        }
 
-        // let onTheRightTree = this.state.selectedTreeId === WhichTree.Right
+        let onTheRightTree = this.state.selectedTreeId === WhichTree.Right
 
-        // let path = this.props.leftPath
-        // let map = this.state.leftMap
-        // let treeId = WhichTree.Left
+        let path = this.props.leftPath
+        let map = this.state.leftMap
+        let treeId = WhichTree.Left
 
-        // if (onTheRightTree) {
-        //   // if (this.props.diffLocations.selected === origState.selected) {
-        //   path = this.props.rightPath
-        //   map = this.state.rightMap
-        //   treeId = WhichTree.Right
-        // }
+        if (onTheRightTree) {
+          // if (this.props.diffLocations.selected === origState.selected) {
+          path = this.props.rightPath
+          map = this.state.rightMap
+          treeId = WhichTree.Right
+        }
 
-        // let res = await MovementHelper.goLeftBoyo(
-        //   this.state.selected,
-        //   map!,
-        //   false,
-        //   false,
-        //   path,
-        //   1,
-        //   this.props.nimServerPort,
-        //   treeId
-        // )
-        // if (onTheRightTree) {
-        //   this.setState({
-        //     rightMap: res.id2Node,
-        //     selected: res.selected,
-        //     selectedTreeId: treeId
-        //   })
-        // } else {
-        //   this.setState({
-        //     leftMap: res.id2Node,
-        //     selected: res.selected,
-        //     selectedTreeId: treeId
-        //   })
-        // }
+        let res = await MovementHelper.goLeftBoyo(
+          this.state.selected,
+          map!,
+          false,
+          false,
+          path,
+          1,
+          this.props.nimServerPort,
+          treeId
+        )
+        if (onTheRightTree) {
+          this.setState({
+            rightMap: res.id2Node,
+            selected: res.selected,
+            selectedTreeId: treeId
+          })
+        } else {
+          this.setState({
+            leftMap: res.id2Node,
+            selected: res.selected,
+            selectedTreeId: treeId
+          })
+        }
       },
       //   goUp: () => MovementHelper.goUp(this),
       //   goRight: () => MovementHelper.goRight(this),

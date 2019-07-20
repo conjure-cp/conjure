@@ -120,21 +120,24 @@ export default class MergedTreeVis extends React.Component<Props, State> {
   }
 
   isSelected = (d: HierarchyPointNode<Node>) => {
-    return d.data.id === this.props.selected
-    // if (this.props.selectedTreeId === WhichTree.Right) {
-    //   if (
-    //     d.data.id === this.props.selected &&
-    //     d.data.treeId === this.props.selectedTreeId
-    //   ) {
-    //     return true
-    //   }
-    // } else {
-    //   if (d.data.id === this.props.selected && d.data.treeId !== WhichTree.Right) {
-    //     return true
-    //   }
-    // }
+    // return d.data.id === this.props.selected
+    if (this.props.selectedTreeId === WhichTree.Right) {
+      if (
+        d.data.id === this.props.selected &&
+        d.data.treeId === this.props.selectedTreeId
+      ) {
+        return true
+      }
+    } else {
+      if (
+        d.data.id === this.props.selected &&
+        d.data.treeId !== WhichTree.Right
+      ) {
+        return true
+      }
+    }
 
-    // return false
+    return false
   }
 
   updateCircles(selector: any) {
@@ -411,7 +414,9 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       .concat(toHighlightRight)
       .reverse()
 
-    // console.log(linkList.filter(x => x.source.data.treeID !== WhichTree.Both))
+    console.log(toHighlightLeft)
+    console.log(toHighlightRight)
+    // console.log(linkList.filter(x => x.source.data.treeId !== WhichTree.Both))
     // console.log(toHighlight)
     // console.log(nodeList.filter(x => x.data.treeID !== WhichTree.Both))
 
