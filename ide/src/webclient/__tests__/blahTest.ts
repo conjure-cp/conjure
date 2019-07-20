@@ -2,15 +2,33 @@ import Node, { WhichTree } from "../src/modules/Node"
 import { loadDiffs, mergeMaps, getNodeList } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
-import rightTree from "./resources/DiffLoadedSacbounds-8.json"
-import leftTree from "./resources/DiffLoadedNormal-8.json"
 import { cloneDeep } from "lodash"
 import * as d3 from "d3"
 import { node } from "prop-types"
 
 describe("testing mergeMaps", () => {
-  beforeEach(() => {
+  let leftTree: any
+  let rightTree: any
+
+  beforeEach(async () => {
     fetchMock.resetMocks()
+    fetchMock
+      .once(JSON.stringify(leftAncestors3))
+      .once(JSON.stringify(leftAncestors17))
+      .once(JSON.stringify(leftAncestors27))
+      .once(JSON.stringify(rightAncestors9))
+      .once(JSON.stringify(rightAncestors3))
+      .once(JSON.stringify(rightAncestors6))
+
+    let res = await loadDiffs(
+      ["", "s"],
+      [normal, sacBounds],
+      diffLocations,
+      5000
+    )
+
+    leftTree = res[0]
+    rightTree = res[1]
   })
 
   it("It should not modify the left or right rees", async () => {
@@ -34,30 +52,66 @@ describe("testing mergeMaps", () => {
 
   it("Should merge the maps the ancestors of each tree into their maps", async () => {
     let res = await mergeMaps(leftTree, rightTree, diffLocations)
-    expect(res[diffLocations[0][0]].children!.map((x: Node) => x.id)).toEqual([
-      4,
-      7,
-      4
+    let diff1 = getNodeList(res[0]).find(
+      x => x.data.id === diffLocations[0][0]
+    )!
+    let diff2 = getNodeList(res[0]).find(
+      x => x.data.id === diffLocations[1][0]
+    )!
+    let diff3 = getNodeList(res[0]).find(
+      x => x.data.id === diffLocations[2][0]
+    )!
+
+    expect(diff1).toBeTruthy()
+
+    // console.log(res[3])
+
+    // console.log(diff1.children!.map(x => x.data.id))
+    // console.log(diff1.children)
+
+    expect(diff1.children!.map(x => x.data.id)).toEqual([4, 7, 4])
+    expect(diff1.children!.map(x => x.data.treeId)).toEqual([
+      WhichTree.Left,
+      WhichTree.Left,
+      WhichTree.Right
     ])
-    expect(
-      res[diffLocations[0][0]].children!.map((x: Node) => x.treeId)
-    ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
-    expect(res[diffLocations[1][0]].children!.map((x: Node) => x.id)).toEqual([
-      18,
-      21,
-      7
+    expect(diff2.children!.map(x => x.data.id)).toEqual([18, 21, 7])
+    expect(diff2.children!.map(x => x.data.treeId)).toEqual([
+      WhichTree.Left,
+      WhichTree.Left,
+      WhichTree.Right
     ])
-    expect(
-      res[diffLocations[1][0]].children!.map((x: Node) => x.treeId)
-    ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
-    expect(res[diffLocations[2][0]].children!.map((x: Node) => x.id)).toEqual([
-      28,
-      30,
-      10
+    expect(diff3.children!.map(x => x.data.id)).toEqual([28, 30, 10])
+    expect(diff3.children!.map(x => x.data.treeId)).toEqual([
+      WhichTree.Left,
+      WhichTree.Left,
+      WhichTree.Right
     ])
-    expect(
-      res[diffLocations[1][0]].children!.map((x: Node) => x.treeId)
-    ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
+
+    // expect(
+    //   res[diffLocations[0][0]].children!.map((x: Node) => x.treeId)
+    // ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
+    // expect(res[diffLocations[0][0]].children!.map((x: Node) => x.id)).toEqual([
+    //   4,
+    //   7,
+    //   4
+    // ])
+    // expect(res[diffLocations[1][0]].children!.map((x: Node) => x.id)).toEqual([
+    //   18,
+    //   21,
+    //   7
+    // ])
+    // expect(
+    //   res[diffLocations[1][0]].children!.map((x: Node) => x.treeId)
+    // ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
+    // expect(res[diffLocations[2][0]].children!.map((x: Node) => x.id)).toEqual([
+    //   28,
+    //   30,
+    //   10
+    // ])
+    // expect(
+    //   res[diffLocations[1][0]].children!.map((x: Node) => x.treeId)
+    // ).toEqual([WhichTree.Left, WhichTree.Left, WhichTree.Right])
   })
 
   // it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
@@ -80,7 +134,7 @@ describe("test fetch ancestors", () => {
         {
           name: "",
           descCount: 0,
-          treeID: 2,
+          treeId: 2,
           id: 4,
           x0: null,
           y0: null,

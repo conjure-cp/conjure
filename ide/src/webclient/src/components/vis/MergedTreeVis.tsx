@@ -120,20 +120,21 @@ export default class MergedTreeVis extends React.Component<Props, State> {
   }
 
   isSelected = (d: HierarchyPointNode<Node>) => {
-    if (this.props.selectedTreeId === WhichTree.Right) {
-      if (
-        d.data.id === this.props.selected &&
-        d.data.treeId === this.props.selectedTreeId
-      ) {
-        return true
-      }
-    } else {
-      if (d.data.id === this.props.selected && d.data.treeId !== WhichTree.Right) {
-        return true
-      }
-    }
+    return d.data.id === this.props.selected
+    // if (this.props.selectedTreeId === WhichTree.Right) {
+    //   if (
+    //     d.data.id === this.props.selected &&
+    //     d.data.treeId === this.props.selectedTreeId
+    //   ) {
+    //     return true
+    //   }
+    // } else {
+    //   if (d.data.id === this.props.selected && d.data.treeId !== WhichTree.Right) {
+    //     return true
+    //   }
+    // }
 
-    return false
+    // return false
   }
 
   updateCircles(selector: any) {

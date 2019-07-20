@@ -14,6 +14,13 @@ export const getNodeList = (root: Node) => {
   return rootNode.descendants()
 }
 
+export const getLeaves = (root: Node) => {
+  const hierarchy = d3.hierarchy<Node>(root)
+  const layout = d3.tree<Node>()
+  const rootNode = layout(hierarchy)
+  return rootNode.leaves()
+}
+
 export const loadDiffs = async (
   paths: string[],
   cores: Core[],
@@ -35,52 +42,49 @@ export const loadDiffs = async (
   return maps
 }
 
-export const mergeMaps = (
-  l: MyMap,
-  r: MyMap,
-  diffLocations: number[][]
-) => {
-
+export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
   if (isEqual(diffLocations, [[0, 0]])) {
-    getNodeList(leftMap[0]).map(x => (x.data.treeId = WhichTree.Left))
-    getNodeList(rightMap[0]).map(x => (x.data.treeId = WhichTree.Right))
+    getNodeList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
+    getNodeList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
     const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
     newRoot.children = [leftMap[0], rightMap[0]]
     return { 0: newRoot }
   }
 
   diffLocations.forEach(array => {
-    if (!leftMap[array[0]].children) {
-      return
-    }
-
-    leftMap[array[0]].children!.forEach(kid => {
-      kid.treeId = WhichTree.Left
+    getNodeList(leftMap[array[0]]).forEach(x => {
+      x.data.treeId = WhichTree.Left
     })
   })
 
   diffLocations.forEach(array => {
-    if (!rightMap[array[1]].children) {
-      return
-    }
-
-    rightMap[array[1]].children!.forEach(kid => {
-      kid.treeId = WhichTree.Right
+    getNodeList(rightMap[array[1]]).forEach(x => {
+      x.data.treeId = WhichTree.Right
     })
   })
 
   for (const array of diffLocations) {
-    if (rightMap[array[1]].children && leftMap[array[0]].children!) {
+    if (rightMap[array[1]].children) {
+      if (!leftMap[array[0]].children) {
+        leftMap[array[0]].children = []
+      }
       leftMap[array[0]].children = leftMap[array[0]].children!.concat(
         rightMap[array[1]].children!
       )
     }
   }
 
-  // console.log(leftMap)
+  let map: MyMap = {}
+  getNodeList(leftMap[0]).forEach((x, i) => {
+    x.data.newId = i
+    map[i] = x.data
+  })
 
-  return leftMap
+  // console.log(map)
+
+  // return leftMap
+  return map
 }

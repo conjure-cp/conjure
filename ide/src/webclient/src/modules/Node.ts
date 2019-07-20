@@ -18,6 +18,7 @@ export default class Node {
   public parentId: number
   public children?: Node[]
   public _children?: Node[]
+  public newId?: number
   public x0: number | null
   public y0: number | null
   public depth: number
