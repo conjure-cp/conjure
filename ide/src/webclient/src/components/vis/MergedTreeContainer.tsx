@@ -84,12 +84,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         // --------------------------------------------------------------
 
         const currentSelected = this.state.selected
+        const currentTreeId = this.state.selectedTreeId
 
         let leftDiffIds = this.props.diffLocations.map(x => x[0])
 
         if (
           leftDiffIds.includes(currentSelected) &&
-          this.state.selectedTreeId !== WhichTree.Right
+          currentTreeId !== WhichTree.Right
         ) {
           console.log("leftDiffIds")
 
@@ -114,7 +115,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           return
         }
 
-        let isRightTree = this.state.selectedTreeId === WhichTree.Right
+        let isRightTree = currentTreeId === WhichTree.Right
 
         let path = this.props.leftPath
         let map = this.state.leftMap
