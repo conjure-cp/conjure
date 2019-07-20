@@ -175,6 +175,10 @@ export const goLeftBoyo = async (
     ) {
       Node.collapseNode(newMap[grandParent.children![0].id])
     }
+
+    // console.log("prevId", selected)
+    // console.log("nextId", nextId)
+
     return { id2Node: map, selected: nextId }
   }
 

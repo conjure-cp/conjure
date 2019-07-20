@@ -17,6 +17,7 @@ export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
   const current = nodes.find(
     x => x.data.id === startId && x.data.treeId === treeId
   )!
+
   return current.ancestors()
 }
 

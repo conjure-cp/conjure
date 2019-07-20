@@ -78,14 +78,19 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     this.handlers = {
       goLeft: async () => {
-        // console.log("here")
+        console.log("goLeft <-")
         // console.log(this.state.selectedTreeId)
 
         // --------------------------------------------------------------
 
         let leftDiffIds = this.props.diffLocations.map(x => x[0])
 
-        if (leftDiffIds.includes(this.state.selected)) {
+        if (
+          leftDiffIds.includes(this.state.selected) &&
+          this.state.selectedTreeId !== WhichTree.Right
+        ) {
+          console.log("leftDiffIds")
+
           let mergedMap = mergeMaps(
             this.state.leftMap!,
             this.state.rightMap!,
@@ -102,7 +107,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             selectedTreeId: nextNode.treeId
           })
 
-          console.log(nextNode)
+          // console.log(nextNode)
 
           return
         }
@@ -131,56 +136,40 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           treeId
         )
 
+        let leftMap = this.state.leftMap!
+        let rightMap = this.state.rightMap!
+
         if (onTheRightTree) {
-          let mergedMap = mergeMaps(
-            this.state.leftMap!,
-            res.id2Node,
-            this.props.diffLocations
-          )
+          rightMap = res.id2Node
+        } else {
+          leftMap = res.id2Node
+        }
 
-          let selected = res.selected
+        console.log("res.selected", res.selected)
 
-          console.log("----")
-          if (
-            !mergedMap[res.selected] ||
-            mergedMap[res.selected].treeId !== treeId
-          ) {
-            let ancestorIds = getAncList(
-              mergedMap[0],
-              this.state.selected,
-              WhichTree.Right
-            ).map(y => y.data.id)
+        let mergedMap = mergeMaps(leftMap, rightMap, this.props.diffLocations)
 
-            let aboveDiffPoint = this.props.diffLocations.find(x =>
-              ancestorIds.includes(x[0])
-            )!
-            console.log(this.state.selected)
-            console.log(ancestorIds)
-            console.log(aboveDiffPoint)
-            console.log(aboveDiffPoint[0] - 1)
-            selected = mergedMap[aboveDiffPoint[0] - 1].children![1].id
-            treeId = WhichTree.Both
+        let revision = this.reviseGoLeft(
+          mergedMap,
+          leftMap,
+          rightMap,
+          res.selected,
+          treeId,
+          onTheRightTree
+        )
 
-            console.log(selected)
-            console.log("!!!!!!!!")
-          }
-
+        if (onTheRightTree) {
           this.setState({
-            // rightMap: res.id2Node,
-            selected: selected,
-            selectedTreeId: treeId,
+            selected: revision.selected,
+            selectedTreeId: revision.treeId,
             mergedMap: mergedMap
           })
         } else {
           this.setState({
             // leftMap: res.id2Node,
-            selected: res.selected,
-            selectedTreeId: treeId,
-            mergedMap: mergeMaps(
-              res.id2Node,
-              this.state.rightMap!,
-              this.props.diffLocations
-            )
+            selected: revision.selected,
+            selectedTreeId: revision.treeId,
+            mergedMap: mergedMap
           })
         }
       },
@@ -195,6 +184,88 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       //   expand: this.expand,
       //   showCore: this.showCore
     }
+  }
+
+  reviseGoLeft = (
+    mergedMap: MyMap,
+    leftMap: MyMap,
+    rightMap: MyMap,
+    selected: number,
+    treeId: WhichTree,
+    isRightTree: boolean
+  ): { selected: number; treeId: WhichTree } => {
+    // console.log("======================")
+    // console.log(selected)
+    // console.log(mergedMap[selected])
+    // console.log(treeId)
+
+    if (leftMap[selected] && !isRightTree) {
+      console.log("here0")
+      return { selected, treeId }
+    }
+
+    // If there is also a node with the same ID in the both section, then choose the one from the right tree
+
+    if (
+      leftMap[selected] &&
+      leftMap[selected].treeId === WhichTree.Both &&
+      isRightTree
+    ) {
+      console.log("here1")
+      return { selected, treeId: WhichTree.Right }
+    }
+
+    // If it aint in the left or both but is in the right then go right
+    let rightDiffIds = this.props.diffLocations.map(x => x[1])
+    // rightDiffIds.find(x => x === selected + 1)!
+    // let intersection = getAncList(
+    //   rightMap[0],
+    //   WhichTree.Right
+    // ).filter(k => this.props.diffLocations.map(x => x[1]).includes(k.data.id))
+
+    if (
+      !leftMap[selected] &&
+      rightMap[selected] &&
+      isRightTree &&
+      !rightDiffIds.includes(selected + 1)
+    ) {
+      console.log("here2")
+      return { selected, treeId: WhichTree.Right }
+    }
+
+    if (
+      leftMap[selected] &&
+      leftMap[selected].treeId === WhichTree.Both &&
+      isRightTree
+    ) {
+      console.log("here3")
+      console.log(treeId)
+      console.log("---")
+      return { selected, treeId }
+    }
+
+    console.log("Revising")
+
+    let ancestorIds = getAncList(mergedMap[0], this.state.selected, treeId).map(
+      y => y.data.id
+    )
+
+    let aboveDiffPoint = this.props.diffLocations.find(x =>
+      ancestorIds.includes(x[0])
+    )
+    if (!aboveDiffPoint) {
+      return { selected, treeId }
+    }
+    // console.log(ancestorIds)
+    // console.log(aboveDiffPoint)
+    // console.log(aboveDiffPoint[0] - 1)
+    selected = mergedMap[aboveDiffPoint[0] - 1].children![1].id
+    treeId = WhichTree.Both
+
+    // console.log(selected)
+    // console.log("!!!!!!!!")
+    return { selected, treeId }
+    // }
   }
 
   nodeClickHandler = (d: Node) => {
@@ -231,7 +302,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     // console.log(this.state.selected)
 
-    console.log("selected", this.state.selected, this.state.selectedTreeId)
+    // console.log("selected", this.state.selected, this.state.selectedTreeId)
 
     return (
       <HotKeys keyMap={this.map} handlers={this.handlers}>
