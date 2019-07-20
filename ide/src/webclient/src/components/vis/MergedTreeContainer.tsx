@@ -109,9 +109,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             selected: nextNode.id,
             selectedTreeId: nextNode.treeId
           })
-
-          // console.log(nextNode)
-
           return
         }
 
