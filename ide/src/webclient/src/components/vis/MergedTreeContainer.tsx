@@ -83,10 +83,12 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
         // --------------------------------------------------------------
 
+        const currentSelected = this.state.selected
+
         let leftDiffIds = this.props.diffLocations.map(x => x[0])
 
         if (
-          leftDiffIds.includes(this.state.selected) &&
+          leftDiffIds.includes(currentSelected) &&
           this.state.selectedTreeId !== WhichTree.Right
         ) {
           console.log("leftDiffIds")
@@ -97,7 +99,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.props.diffLocations
           )
 
-          let currentNode = mergedMap[this.state.selected]
+          let currentNode = mergedMap[currentSelected]
           // let nextIndex = Math.floor(currentNode.children!.length / 2)
           let nextIndex = 0
           let nextNode = currentNode.children![nextIndex]
@@ -112,13 +114,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           return
         }
 
-        let onTheRightTree = this.state.selectedTreeId === WhichTree.Right
+        let isRightTree = this.state.selectedTreeId === WhichTree.Right
 
         let path = this.props.leftPath
         let map = this.state.leftMap
         let treeId = WhichTree.Left
 
-        if (onTheRightTree) {
+        if (isRightTree) {
           // if (this.props.diffLocations.selected === origState.selected) {
           path = this.props.rightPath
           map = this.state.rightMap
@@ -126,7 +128,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         }
 
         let res = await MovementHelper.goLeftBoyo(
-          this.state.selected,
+          currentSelected,
           map!,
           false,
           false,
@@ -139,7 +141,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         let leftMap = this.state.leftMap!
         let rightMap = this.state.rightMap!
 
-        if (onTheRightTree) {
+        if (isRightTree) {
           rightMap = res.id2Node
         } else {
           leftMap = res.id2Node
@@ -155,10 +157,11 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           rightMap,
           res.selected,
           treeId,
-          onTheRightTree
+          isRightTree,
+          currentSelected
         )
 
-        if (onTheRightTree) {
+        if (isRightTree) {
           this.setState({
             selected: revision.selected,
             selectedTreeId: revision.treeId,
@@ -192,7 +195,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     rightMap: MyMap,
     selected: number,
     treeId: WhichTree,
-    isRightTree: boolean
+    isRightTree: boolean,
+    currentSelected: number
   ): { selected: number; treeId: WhichTree } => {
     // console.log("======================")
     // console.log(selected)
@@ -215,14 +219,9 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       return { selected, treeId: WhichTree.Right }
     }
 
-    // If it aint in the left or both but is in the right then go right
     let rightDiffIds = this.props.diffLocations.map(x => x[1])
-    // rightDiffIds.find(x => x === selected + 1)!
-    // let intersection = getAncList(
-    //   rightMap[0],
-    //   WhichTree.Right
-    // ).filter(k => this.props.diffLocations.map(x => x[1]).includes(k.data.id))
 
+    // If it aint in the left or both but is in the right then go right
     if (
       !leftMap[selected] &&
       rightMap[selected] &&
@@ -246,7 +245,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     console.log("Revising")
 
-    let ancestorIds = getAncList(mergedMap[0], this.state.selected, treeId).map(
+    let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
       y => y.data.id
     )
 
