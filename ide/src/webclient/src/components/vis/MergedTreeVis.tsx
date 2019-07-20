@@ -245,7 +245,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
 
     nodeList = nodeList.filter(x => x.data.id !== -1)
 
-    console.log(nodeList)
+    // console.log(nodeList)
 
     let g = svg.selectAll("g.node")
     let node = g.data(nodeList, (d: any) => {
@@ -414,8 +414,8 @@ export default class MergedTreeVis extends React.Component<Props, State> {
       .concat(toHighlightRight)
       .reverse()
 
-    console.log(toHighlightLeft)
-    console.log(toHighlightRight)
+    // console.log(toHighlightLeft)
+    // console.log(toHighlightRight)
     // console.log(linkList.filter(x => x.source.data.treeId !== WhichTree.Both))
     // console.log(toHighlight)
     // console.log(nodeList.filter(x => x.data.treeID !== WhichTree.Both))

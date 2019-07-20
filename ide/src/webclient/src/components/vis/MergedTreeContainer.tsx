@@ -5,7 +5,7 @@ import { HotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max, isEqual } from "lodash"
 import * as MovementHelper from "../../modules/MovementHelper"
 import * as d3 from "d3"
-import { mergeMaps, loadDiffs } from "../../modules/ForestHelper"
+import { mergeMaps, loadDiffs, getAncList } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import { isTSImportEqualsDeclaration } from "@babel/types"
 
@@ -130,17 +130,57 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           this.props.nimServerPort,
           treeId
         )
+
         if (onTheRightTree) {
+          let mergedMap = mergeMaps(
+            this.state.leftMap!,
+            res.id2Node,
+            this.props.diffLocations
+          )
+
+          let selected = res.selected
+
+          console.log("----")
+          if (
+            !mergedMap[res.selected] ||
+            mergedMap[res.selected].treeId !== treeId
+          ) {
+            let ancestorIds = getAncList(
+              mergedMap[0],
+              this.state.selected,
+              WhichTree.Right
+            ).map(y => y.data.id)
+
+            let aboveDiffPoint = this.props.diffLocations.find(x =>
+              ancestorIds.includes(x[0])
+            )!
+            console.log(this.state.selected)
+            console.log(ancestorIds)
+            console.log(aboveDiffPoint)
+            console.log(aboveDiffPoint[0] - 1)
+            selected = mergedMap[aboveDiffPoint[0] - 1].children![1].id
+            treeId = WhichTree.Both
+
+            console.log(selected)
+            console.log("!!!!!!!!")
+          }
+
           this.setState({
-            rightMap: res.id2Node,
-            selected: res.selected,
-            selectedTreeId: treeId
+            // rightMap: res.id2Node,
+            selected: selected,
+            selectedTreeId: treeId,
+            mergedMap: mergedMap
           })
         } else {
           this.setState({
-            leftMap: res.id2Node,
+            // leftMap: res.id2Node,
             selected: res.selected,
-            selectedTreeId: treeId
+            selectedTreeId: treeId,
+            mergedMap: mergeMaps(
+              res.id2Node,
+              this.state.rightMap!,
+              this.props.diffLocations
+            )
           })
         }
       },

@@ -1,5 +1,5 @@
 import Node, { WhichTree } from "../src/modules/Node"
-import { loadDiffs, mergeMaps, getNodeList } from "../src/modules/ForestHelper"
+import { loadDiffs, mergeMaps, getDescList } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
 import { cloneDeep } from "lodash"
@@ -44,7 +44,7 @@ describe("testing mergeMaps", () => {
     let res = await mergeMaps(cloneDeep(leftTree), cloneDeep(rightTree), [
       [0, 0]
     ])
-    const nodeList = getNodeList(res[0])
+    const nodeList = getDescList(res[0])
     const bothNodes = nodeList.find(x => x.data.treeId === WhichTree.Both)
 
     expect(bothNodes!.data.id).toEqual(-1)
@@ -52,13 +52,13 @@ describe("testing mergeMaps", () => {
 
   it("Should merge the maps the ancestors of each tree into their maps", async () => {
     let res = await mergeMaps(leftTree, rightTree, diffLocations)
-    let diff1 = getNodeList(res[0]).find(
+    let diff1 = getDescList(res[0]).find(
       x => x.data.id === diffLocations[0][0]
     )!
-    let diff2 = getNodeList(res[0]).find(
+    let diff2 = getDescList(res[0]).find(
       x => x.data.id === diffLocations[1][0]
     )!
-    let diff3 = getNodeList(res[0]).find(
+    let diff3 = getDescList(res[0]).find(
       x => x.data.id === diffLocations[2][0]
     )!
 
