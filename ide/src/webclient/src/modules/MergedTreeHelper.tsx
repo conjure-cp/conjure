@@ -44,3 +44,35 @@ export const reviseGoLeft = (
     treeId: WhichTree.Both
   }
 }
+
+export const shouldBeRightTree = (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  nextSelected: number,
+  isRightTree: boolean,
+  diffLocations: number[][]
+): boolean => {
+  if (
+    leftMap[nextSelected] &&
+    leftMap[nextSelected].treeId === WhichTree.Both &&
+    isRightTree
+  ) {
+    return true
+  }
+
+  let rightDiffIds = diffLocations.map(x => x[1])
+
+  // If it aint in the left or both but is in the right then go right
+
+  if (
+    !leftMap[nextSelected] &&
+    rightMap[nextSelected] &&
+    isRightTree &&
+    !rightDiffIds.includes(nextSelected + 1)
+    // !getAncList(rightMap[0], nextSelected + 1, WhichTree.Right).includes()
+  ) {
+    return true
+  }
+
+  return false
+}

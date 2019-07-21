@@ -183,7 +183,11 @@ export const sleep = (ms: number) => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const insertNodesBoyo = (nodes: FromServerNode[], map: MyMap, treeId: WhichTree): MyMap => {
+export const insertNodesBoyo = (
+  nodes: FromServerNode[],
+  map: MyMap,
+  treeId: WhichTree
+): MyMap => {
   // console.log(JSON.stringify(nodes))
 
   nodes.map((node: FromServerNode) => {
@@ -230,6 +234,9 @@ export const insertNodes = (
 ) => {
   instance.setState((prevState: State) => {
     let newMap = cloneDeep(prevState.id2Node)
-    return { id2Node: insertNodesBoyo(nodes, newMap, WhichTree.Both), selected: nextId }
+    return {
+      id2Node: insertNodesBoyo(nodes, newMap, WhichTree.Both),
+      selected: nextId
+    }
   })
 }

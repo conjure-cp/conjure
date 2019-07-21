@@ -1,0 +1,1 @@
+export const diffLocations = [[3, 3], [17, 6], [27, 9]]

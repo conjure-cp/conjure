@@ -8,7 +8,11 @@ import * as d3 from "d3"
 import { mergeMaps, loadDiffs, getAncList } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import { isTSImportEqualsDeclaration } from "@babel/types"
-import { goLeftAtDiffingPoint } from "../../modules/MergedTreeHelper"
+import {
+  goLeftAtDiffingPoint,
+  reviseGoLeft
+} from "../../modules/MergedTreeHelper"
+import { tree } from "d3"
 
 export type MyMap = Record<number, Node>
 
@@ -119,7 +123,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           false,
           false,
           path,
-          1,
+          10,
           this.props.nimServerPort,
           treeId
         )
@@ -211,28 +215,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     console.log("Revising")
 
-    let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
-      y => y.data.id
+    return reviseGoLeft(
+      mergedMap,
+      currentSelected,
+      selected,
+      treeId,
+      this.props.diffLocations
     )
-
-    let aboveDiffPoint = this.props.diffLocations.find(x =>
-      ancestorIds.includes(x[0])
-    )
-
-    // Near the end of the tree
-    if (!aboveDiffPoint) {
-      return { selected, treeId }
-    }
-    // console.log(ancestorIds)
-    // console.log(aboveDiffPoint)
-    // console.log(aboveDiffPoint[0] - 1)
-    selected = mergedMap[aboveDiffPoint[0] - 1].children![1].id
-    treeId = WhichTree.Both
-
-    // console.log(selected)
-    // console.log("!!!!!!!!")
-    return { selected, treeId }
-    // }
   }
 
   nodeClickHandler = (d: Node) => {
