@@ -8,6 +8,7 @@ import * as d3 from "d3"
 import { mergeMaps, loadDiffs, getAncList } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import { isTSImportEqualsDeclaration } from "@babel/types"
+import { goLeftAtDiffingPoint } from "../../modules/MergedTreeHelper"
 
 export type MyMap = Record<number, Node>
 
@@ -93,22 +94,9 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           currentTreeId !== WhichTree.Right
         ) {
           console.log("leftDiffIds")
-
-          let mergedMap = mergeMaps(
-            this.state.leftMap!,
-            this.state.rightMap!,
-            this.props.diffLocations
+          this.setState(
+            goLeftAtDiffingPoint(this.state.mergedMap!, currentSelected)
           )
-
-          let currentNode = mergedMap[currentSelected]
-          // let nextIndex = Math.floor(currentNode.children!.length / 2)
-          let nextIndex = 0
-          let nextNode = currentNode.children![nextIndex]
-
-          this.setState({
-            selected: nextNode.id,
-            selectedTreeId: nextNode.treeId
-          })
           return
         }
 
@@ -145,7 +133,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           leftMap = res.id2Node
         }
 
-        console.log("res.selected", res.selected)
+        // console.log("res.selected", res.selected)
 
         let mergedMap = mergeMaps(leftMap, rightMap, this.props.diffLocations)
 
@@ -159,20 +147,11 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           currentSelected
         )
 
-        if (isRightTree) {
-          this.setState({
-            selected: revision.selected,
-            selectedTreeId: revision.treeId,
-            mergedMap: mergedMap
-          })
-        } else {
-          this.setState({
-            // leftMap: res.id2Node,
-            selected: revision.selected,
-            selectedTreeId: revision.treeId,
-            mergedMap: mergedMap
-          })
-        }
+        this.setState({
+          selected: revision.selected,
+          selectedTreeId: revision.treeId,
+          mergedMap: mergedMap
+        })
       },
       //   goUp: () => MovementHelper.goUp(this),
       //   goRight: () => MovementHelper.goRight(this),
@@ -230,17 +209,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       return { selected, treeId: WhichTree.Right }
     }
 
-    if (
-      leftMap[selected] &&
-      leftMap[selected].treeId === WhichTree.Both &&
-      isRightTree
-    ) {
-      console.log("here3")
-      console.log(treeId)
-      console.log("---")
-      return { selected, treeId }
-    }
-
     console.log("Revising")
 
     let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
@@ -250,6 +218,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     let aboveDiffPoint = this.props.diffLocations.find(x =>
       ancestorIds.includes(x[0])
     )
+
+    // Near the end of the tree
     if (!aboveDiffPoint) {
       return { selected, treeId }
     }

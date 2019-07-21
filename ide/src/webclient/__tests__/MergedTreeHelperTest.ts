@@ -5,7 +5,64 @@ import { fetchAncestors } from "../src/modules/MovementHelper"
 import { cloneDeep } from "lodash"
 import * as d3 from "d3"
 import { node } from "prop-types"
-import { goLeftAtDiffingPoint } from "../src/modules/MergedTreeHelper"
+import {
+  goLeftAtDiffingPoint,
+  reviseGoLeft
+} from "../src/modules/MergedTreeHelper"
+import { flipDiffLocations } from "../src/modules/Helper"
+
+const diffLocations = [[3, 3], [17, 6], [27, 9]]
+
+describe("test revise goleft, it redirects to a node to the right of the next diff location", () => {
+  let bigTree: any
+  let smallTree: any
+  let flipped = flipDiffLocations(diffLocations)
+
+  beforeEach(async () => {
+    fetchMock.resetMocks()
+    fetchMock
+      .once(JSON.stringify(leftAncestors3))
+      .once(JSON.stringify(leftAncestors17))
+      .once(JSON.stringify(leftAncestors27))
+      .once(JSON.stringify(rightAncestors9))
+      .once(JSON.stringify(rightAncestors3))
+      .once(JSON.stringify(rightAncestors6))
+
+    let res = await loadDiffs(
+      ["", "s"],
+      [normal, sacBounds],
+      diffLocations,
+      5000
+    )
+
+    bigTree = res[0]
+    smallTree = res[1]
+  })
+
+  it("returns the correct ids small -> big", async () => {
+    const merged = mergeMaps(smallTree, bigTree, flipped)
+    let res = reviseGoLeft(merged, 4, 5, WhichTree.Left, flipped)
+    expect(res).toEqual({ selected: 5, treeId: WhichTree.Both })
+
+    res = reviseGoLeft(merged, 7, 8, WhichTree.Left, flipped)
+    expect(res).toEqual({ selected: 8, treeId: WhichTree.Both })
+
+    res = reviseGoLeft(merged, 10, 10, WhichTree.Left, flipped)
+    expect(res).toEqual({ selected: 10, treeId: WhichTree.Left })
+  })
+
+  it("returns the correct ids big -> small", async () => {
+    const merged = mergeMaps(bigTree, smallTree, diffLocations)
+    let res = reviseGoLeft(merged, 4, 5, WhichTree.Right, diffLocations)
+    expect(res).toEqual({ selected: 16, treeId: WhichTree.Both })
+
+    res = reviseGoLeft(merged, 7, 8, WhichTree.Right, diffLocations)
+    expect(res).toEqual({ selected: 26, treeId: WhichTree.Both })
+
+    res = reviseGoLeft(merged, 10, 10, WhichTree.Right, diffLocations)
+    expect(res).toEqual({ selected: 10, treeId: WhichTree.Right })
+  })
+})
 
 describe("test go left at diffing point", () => {
   let bigTree: any
@@ -31,9 +88,9 @@ describe("test go left at diffing point", () => {
     bigTree = res[0]
     smallTree = res[1]
   })
-    
- it("returns the correct ids small -> big", async () => {
-    let mergeMap = await mergeMaps( bigTree, smallTree, diffLocations)
+
+  it("returns the correct ids small -> big", async () => {
+    let mergeMap = await mergeMaps(bigTree, smallTree, diffLocations)
     expect(goLeftAtDiffingPoint(mergeMap, 3)).toEqual({
       selected: 4,
       selectedTreeId: WhichTree.Left
@@ -48,10 +105,14 @@ describe("test go left at diffing point", () => {
       selected: 28,
       selectedTreeId: WhichTree.Left
     })
- })
-    
+  })
+
   it("returns the correct ids big -> small", async () => {
-    let mergeMap = await mergeMaps(smallTree, bigTree, diffLocations.map(x => [x[1], x[0]]))
+    let mergeMap = await mergeMaps(
+      smallTree,
+      bigTree,
+      diffLocations.map(x => [x[1], x[0]])
+    )
     expect(goLeftAtDiffingPoint(mergeMap, 3)).toEqual({
       selected: 4,
       selectedTreeId: WhichTree.Left
@@ -68,8 +129,6 @@ describe("test go left at diffing point", () => {
     })
   })
 })
-
-const diffLocations = [[3, 3], [17, 6], [27, 9]]
 
 const rightAncestors9 = [
   {
