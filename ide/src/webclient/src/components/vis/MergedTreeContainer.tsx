@@ -194,15 +194,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     // If there is also a node with the same ID in the both section, then choose the one from the right tree
 
-    if (
-      shouldBeRightTree(
-        leftMap,
-        rightMap,
-        selected,
-        isRightTree,
-        this.props.diffLocations
-      )
-    ) {
+    if (shouldBeRightTree(leftMap, rightMap, selected, isRightTree)) {
       console.log("should be right Tree")
       return { selected, treeId: WhichTree.Right }
     }
@@ -212,7 +204,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     return reviseGoLeft(
       mergedMap,
       currentSelected,
-      selected,
       treeId,
       this.props.diffLocations
     )
