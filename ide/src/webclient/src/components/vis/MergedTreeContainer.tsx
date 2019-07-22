@@ -7,7 +7,10 @@ import * as MovementHelper from "../../modules/MovementHelper"
 import * as d3 from "d3"
 import { mergeMaps, loadDiffs, getAncList } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
-import { isTSImportEqualsDeclaration } from "@babel/types"
+import {
+  isTSImportEqualsDeclaration,
+  exportDefaultSpecifier
+} from "@babel/types"
 import {
   goLeftAtDiffingPoint,
   reviseGoLeft,
@@ -131,6 +134,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
         let leftMap = this.state.leftMap!
         let rightMap = this.state.rightMap!
+        let nextSelected = res.selected
 
         if (isRightTree) {
           rightMap = res.id2Node
@@ -142,19 +146,28 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
         let mergedMap = mergeMaps(leftMap, rightMap, this.props.diffLocations)
 
-        let revision = this.reviseGoLeft(
-          mergedMap,
-          leftMap,
-          rightMap,
-          res.selected,
-          treeId,
-          isRightTree,
-          currentSelected
-        )
+        if (isRightTree) {
+          // If there is also a node with the same ID in the both section, then choose the one from the right tree
+
+          if (shouldBeRightTree(leftMap, rightMap, nextSelected, isRightTree)) {
+            treeId = WhichTree.Right
+            // console.log("should be right Tree")
+            // return { selected: nextSelected, treeId: WhichTree.Right }
+          } else {
+            let revision = reviseGoLeft(
+              mergedMap,
+              currentSelected,
+              treeId,
+              this.props.diffLocations
+            )
+            nextSelected = revision.selected
+            treeId = revision.treeId
+          }
+        }
 
         this.setState({
-          selected: revision.selected,
-          selectedTreeId: revision.treeId,
+          selected: nextSelected,
+          selectedTreeId: treeId,
           mergedMap: mergedMap
         })
       },
@@ -171,7 +184,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     }
   }
 
-  reviseGoLeft = (
+  maybeRevise = (
     mergedMap: MyMap,
     leftMap: MyMap,
     rightMap: MyMap,

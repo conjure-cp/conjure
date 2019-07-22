@@ -1,6 +1,7 @@
 import { MyMap } from "../components/vis/MergedTreeContainer"
-import { getAncList } from "./ForestHelper"
+import { getAncList, mergeMaps, getDescList } from "./ForestHelper"
 import { WhichTree } from "./Node"
+import { goLeftBoyo } from "./MovementHelper"
 
 export const goLeftAtDiffingPoint = (
   mergedMap: MyMap,
@@ -71,13 +72,11 @@ export const shouldBeRightTree = (
     leftMap[nextSelected] &&
     rightMap[nextSelected] &&
     rightMap[nextSelected].treeId !== WhichTree.Both
-    // leftMap[nextSelected].treeId === WhichTree.Left
   ) {
     return true
   }
 
   // If it aint in the left or both but is in the right then go right
-
   if (
     !leftMap[nextSelected] &&
     rightMap[nextSelected] &&
@@ -87,4 +86,89 @@ export const shouldBeRightTree = (
   }
 
   return false
+}
+
+export const goLeft = async (
+  currentSelected: number,
+  currentTreeId: number,
+  leftPath: string,
+  rightPath: string,
+  leftMap: MyMap,
+  rightMap: MyMap,
+  diffLocations: number[][],
+  nimServerPort: number
+): Promise<{ selected: number; selectedTreeId: number; mergedMap: MyMap }> => {
+  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
+  let leftDiffIds = diffLocations.map(x => x[0])
+
+  if (
+    leftDiffIds.includes(currentSelected) &&
+    currentTreeId !== WhichTree.Right
+  ) {
+    return { ...goLeftAtDiffingPoint(mergedMap, currentSelected), mergedMap }
+  }
+
+  let isRightTree = currentTreeId === WhichTree.Right
+
+  let path = leftPath
+  let map = leftMap
+  let nextTreeId = currentTreeId
+
+  if (isRightTree) {
+    // if (this.props.diffLocations.selected === origState.selected) {
+    path = rightPath
+    map = rightMap
+    nextTreeId = WhichTree.Right
+  }
+
+  let res = await goLeftBoyo(
+    currentSelected,
+    map!,
+    false,
+    false,
+    path,
+    10,
+    nimServerPort,
+    nextTreeId
+  )
+
+  let nextSelected = res.selected
+
+  mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
+
+  if (isRightTree) {
+    rightMap = res.id2Node
+  } else {
+    leftMap = res.id2Node
+    if (
+      getDescList(leftMap[nextSelected]).filter(x =>
+        leftDiffIds.includes(x.data.id)
+      ).length > 0
+    ) {
+      nextTreeId = WhichTree.Both
+    }
+  }
+
+  if (isRightTree) {
+    // If there is also a node with the same ID in the both section, then choose the one from the right tree
+
+    if (shouldBeRightTree(leftMap, rightMap, nextSelected, isRightTree)) {
+      nextTreeId = WhichTree.Right
+    } else {
+      let revision = reviseGoLeft(
+        mergedMap,
+        currentSelected,
+        nextTreeId,
+        diffLocations
+      )
+      nextSelected = revision.selected
+      nextTreeId = revision.treeId
+    }
+  }
+
+  return {
+    selected: nextSelected,
+    selectedTreeId: nextTreeId,
+    mergedMap: mergedMap
+  }
 }
