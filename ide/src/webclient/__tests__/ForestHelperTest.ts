@@ -190,6 +190,10 @@ describe("testing ForestHelper", () => {
 
       let leftTree = res[0]
       let rightTree = res[1]
+      
+
+      // console.log(rightTree)
+      expect(leftTree[21].treeId).toEqual(WhichTree.Left)
 
       expect(4 in leftTree)
       expect(7 in leftTree)

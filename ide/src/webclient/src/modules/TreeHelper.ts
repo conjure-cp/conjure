@@ -191,6 +191,8 @@ export const insertNodesBoyo = (
   // console.log(JSON.stringify(nodes))
 
   nodes.map((node: FromServerNode) => {
+
+
     const newNode = new Node(
       node.id,
       node.label,
@@ -203,6 +205,8 @@ export const insertNodesBoyo = (
     )
 
     newNode.treeId = treeId
+
+    // console.log(newNode.parentId)
 
     if (map[newNode.parentId] && map[newNode.parentId]._children) {
       Node.showChildren(map[newNode.parentId])

@@ -18,7 +18,6 @@ export const goLeftAtDiffingPoint = (
 export const reviseGoLeft = (
   mergedMap: MyMap,
   currentSelected: number,
-  newSelected: number,
   treeId: WhichTree,
   diffLocations: number[][]
 ) => {
@@ -26,29 +25,29 @@ export const reviseGoLeft = (
     y => y.data.id
   )
   let diffPoint = diffLocations.find(x => ancestorIds.includes(x[0]))
-  console.log(diffPoint)
+  //   console.log(diffPoint)
 
   ancestorIds = getAncList(mergedMap[0], diffPoint![0], WhichTree.Both).map(
     y => y.data.id
   )
-  console.log(ancestorIds)
+  //   console.log(ancestorIds)
 
   let currentIndex = 0
   let currentNode = mergedMap[ancestorIds[currentIndex]]
 
-  console.log(currentNode)
+  //   console.log(currentNode)
   while (
     diffLocations.map(x => x[0]).includes(currentNode.id) ||
     currentNode.children!.length < 2 ||
     ancestorIds.includes(currentNode.children![1].id)
   ) {
-    console.log(currentNode.id)
-    console.log(currentNode)
+    // console.log(currentNode.id)
+    // console.log(currentNode)
+    currentIndex++
+    currentNode = mergedMap[ancestorIds[currentIndex]]
     if (!currentNode) {
       return { selected: currentSelected, treeId: treeId }
     }
-    currentIndex++
-    currentNode = mergedMap[ancestorIds[currentIndex]]
   }
 
   let id = currentNode.children![1].id
@@ -56,52 +55,18 @@ export const reviseGoLeft = (
     selected: id,
     treeId: WhichTree.Both
   }
-
-  //---------------------------------------------
-  //   let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
-  //     y => y.data.id
-  //   )
-  //   let aboveDiffPoint = diffLocations.find(x => ancestorIds.includes(x[0]))
-
-  //   //   Near the end of the tree
-  //   if (!aboveDiffPoint) {
-  //     return { selected: newSelected, treeId }
-  //   }
-
-  //   const nextNode = mergedMap[aboveDiffPoint[0] - 1].children![1]
-
-  //   if (!nextNode) {
-  //     return { selected: currentSelected, treeId }
-  //   }
-
-  //   console.log("here")
-  //   return {
-  //     selected: nextNode.id,
-  //     treeId: WhichTree.Both
-  //   }
 }
 
 export const shouldBeRightTree = (
   leftMap: MyMap,
   rightMap: MyMap,
   nextSelected: number,
-  isRightTree: boolean,
-  diffLocations: number[][]
+  isRightTree: boolean
 ): boolean => {
-  let rightDiffIds = diffLocations.map(x => x[1])
   if (!isRightTree) {
     return false
   }
 
-  //   if (
-  //     rightMap[nextSelected] &&
-  //     rightMap[nextSelected].treeId === WhichTree.Both &&
-  //     rightDiffIds.includes(rightMap[nextSelected].parentId)
-  //   ) {
-  //     return false
-  //   }
-
-  //   console.log("here")
   if (
     leftMap[nextSelected] &&
     rightMap[nextSelected] &&
@@ -117,7 +82,6 @@ export const shouldBeRightTree = (
     !leftMap[nextSelected] &&
     rightMap[nextSelected] &&
     rightMap[nextSelected].treeId === WhichTree.Right
-    // !rightDiffIds.includes(nextSelected + 1)
   ) {
     return true
   }

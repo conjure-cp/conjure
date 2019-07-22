@@ -13,10 +13,20 @@ export const getDescList = (root: Node) => {
 
 export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
   const h = d3.hierarchy<Node>(root)
+
   const nodes = h.descendants()
-  const current = nodes.find(
-    x => x.data.id === startId && x.data.treeId === treeId
-  )!
+
+  let current
+
+  if (treeId === WhichTree.Right) {
+    current = nodes.find(
+      x => x.data.id === startId && x.data.treeId === WhichTree.Right
+    )!
+  } else {
+    current = nodes.find(
+      x => x.data.id === startId && x.data.treeId !== WhichTree.Right
+    )!
+  }
 
   return current.ancestors()
 }
