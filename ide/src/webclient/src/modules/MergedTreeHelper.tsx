@@ -52,24 +52,35 @@ export const shouldBeRightTree = (
   isRightTree: boolean,
   diffLocations: number[][]
 ): boolean => {
+  let rightDiffIds = diffLocations.map(x => x[1])
+  if (!isRightTree) {
+    return false
+  }
+
+  //   if (
+  //     rightMap[nextSelected] &&
+  //     rightMap[nextSelected].treeId === WhichTree.Both &&
+  //     rightDiffIds.includes(rightMap[nextSelected].parentId)
+  //   ) {
+  //     return false
+  //   }
+
+  console.log("here")
   if (
     leftMap[nextSelected] &&
-    leftMap[nextSelected].treeId === WhichTree.Both &&
-    isRightTree
+    rightMap[nextSelected] &&
+    rightMap[nextSelected].treeId !== WhichTree.Both
+    // leftMap[nextSelected].treeId === WhichTree.Left
   ) {
     return true
   }
-
-  let rightDiffIds = diffLocations.map(x => x[1])
 
   // If it aint in the left or both but is in the right then go right
 
   if (
     !leftMap[nextSelected] &&
     rightMap[nextSelected] &&
-    isRightTree &&
     !rightDiffIds.includes(nextSelected + 1)
-    // !getAncList(rightMap[0], nextSelected + 1, WhichTree.Right).includes()
   ) {
     return true
   }

@@ -10,7 +10,8 @@ import { FromServerNode, Core } from "./TreeContainer"
 import { isTSImportEqualsDeclaration } from "@babel/types"
 import {
   goLeftAtDiffingPoint,
-  reviseGoLeft
+  reviseGoLeft,
+  shouldBeRightTree
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 
@@ -179,37 +180,30 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     isRightTree: boolean,
     currentSelected: number
   ): { selected: number; treeId: WhichTree } => {
-    // console.log("======================")
-    // console.log(selected)
-    // console.log(mergedMap[selected])
-    // console.log(treeId)
+    console.log("======================")
+    console.log(selected)
+    console.log(leftMap[selected])
+    console.log(rightMap[selected])
+    console.log(mergedMap[selected])
+    console.log(treeId)
+    console.log(isRightTree)
 
-    if (leftMap[selected] && !isRightTree) {
-      console.log("here0")
+    if (!isRightTree) {
       return { selected, treeId }
     }
 
     // If there is also a node with the same ID in the both section, then choose the one from the right tree
 
     if (
-      leftMap[selected] &&
-      leftMap[selected].treeId === WhichTree.Both &&
-      isRightTree
+      shouldBeRightTree(
+        leftMap,
+        rightMap,
+        selected,
+        isRightTree,
+        this.props.diffLocations
+      )
     ) {
-      console.log("here1")
-      return { selected, treeId: WhichTree.Right }
-    }
-
-    let rightDiffIds = this.props.diffLocations.map(x => x[1])
-
-    // If it aint in the left or both but is in the right then go right
-    if (
-      !leftMap[selected] &&
-      rightMap[selected] &&
-      isRightTree &&
-      !rightDiffIds.includes(selected + 1)
-    ) {
-      console.log("here2")
+      console.log("should be right Tree")
       return { selected, treeId: WhichTree.Right }
     }
 
@@ -256,7 +250,10 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   render = () => {
     // TODO move this it shouldnt be here
 
-    // console.log(this.state.selected)
+    if (this.state.rightMap) {
+      console.log(this.props.diffLocations)
+      console.log(this.state.rightMap[9])
+    }
 
     // console.log("selected", this.state.selected, this.state.selectedTreeId)
 

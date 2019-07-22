@@ -37,6 +37,15 @@ export const loadDiffs = async (
       )
     }
     maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
+
+    for (const array of diffLocations) {
+      let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
+      getDescList(maps[i][array[i]]).forEach(x => {
+        if (x.data.id !== array[i]) {
+          x.data.treeId = treeId
+        }
+      })
+    }
   }
 
   return maps

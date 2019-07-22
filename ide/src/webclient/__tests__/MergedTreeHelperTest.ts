@@ -156,6 +156,11 @@ describe("suite to test MergedTreeHelper", () => {
         shouldBeRightTree(bigTree, smallTree, 11, true, flipped)
       ).toBeFalsy()
     })
+    it("returns false for all nodes that are not strickly on the right", async () => {
+      expect(
+        shouldBeRightTree(bigTree, smallTree, 1, false, flipped)
+      ).toBeFalsy()
+    })
   })
   describe("test revise goleft, it redirects to a node to the right of the next diff location", () => {
     it("returns the correct ids small -> big", async () => {
@@ -166,20 +171,24 @@ describe("suite to test MergedTreeHelper", () => {
       res = reviseGoLeft(merged, 7, 8, WhichTree.Left, flipped)
       expect(res).toEqual({ selected: 8, treeId: WhichTree.Both })
 
-      res = reviseGoLeft(merged, 10, 10, WhichTree.Left, flipped)
+      res = reviseGoLeft(merged, 10, 11, WhichTree.Left, flipped)
       expect(res).toEqual({ selected: 10, treeId: WhichTree.Left })
     })
 
     it("returns the correct ids big -> small", async () => {
       const merged = mergeMaps(bigTree, smallTree, diffLocations)
+
       let res = reviseGoLeft(merged, 4, 5, WhichTree.Right, diffLocations)
       expect(res).toEqual({ selected: 16, treeId: WhichTree.Both })
 
       res = reviseGoLeft(merged, 7, 8, WhichTree.Right, diffLocations)
       expect(res).toEqual({ selected: 26, treeId: WhichTree.Both })
 
-      res = reviseGoLeft(merged, 10, 10, WhichTree.Right, diffLocations)
+      res = reviseGoLeft(merged, 10, 11, WhichTree.Right, diffLocations)
       expect(res).toEqual({ selected: 10, treeId: WhichTree.Right })
+
+      res = reviseGoLeft(merged, 0, 2, WhichTree.Both, diffLocations)
+      expect(res).toEqual({ selected: 2, treeId: WhichTree.Both })
     })
   })
 
@@ -203,11 +212,7 @@ describe("suite to test MergedTreeHelper", () => {
     })
 
     it("returns the correct ids big -> small", async () => {
-      let mergeMap = await mergeMaps(
-        smallTree,
-        bigTree,
-        diffLocations.map(x => [x[1], x[0]])
-      )
+      let mergeMap = await mergeMaps(smallTree, bigTree, flipped)
       expect(goLeftAtDiffingPoint(mergeMap, 3)).toEqual({
         selected: 4,
         selectedTreeId: WhichTree.Left

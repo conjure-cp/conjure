@@ -31,10 +31,6 @@ describe("test goleftboyo", () => {
       .once(JSON.stringify(coreOf3Sacbounds))
       .once(JSON.stringify(coreOf6Sacbounds))
       .once(JSON.stringify(coreOf9Sacbounds))
-      //   .once(JSON.stringify(loadLeft4))
-      //   .once(JSON.stringify(loadLeft5))
-      //   .once(JSON.stringify(loadLeft18))
-      //   .once(JSON.stringify(loadLeft21))
       .once(JSON.stringify(descendantsOf28Normal))
 
     let res = await loadDiffs(

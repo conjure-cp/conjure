@@ -13,11 +13,13 @@ import {
   coreOf6 as coreOf6Sacbounds,
   coreOf9 as coreOf9Sacbounds,
   core as coreSacbounds
-} from "./resources/sacbounds-8
+} from "./resources/sacbounds-8"
 import { cloneDeep } from "lodash"
 import { diffLocations } from "./resources/normalVSSacbounds-8";
+import { flipDiffLocations } from "../src/modules/Helper";
 
 describe("testing ForestHelper", () => {
+  const flipped = flipDiffLocations(diffLocations)
   let bigTree: any
   let smallTree: any
 
@@ -99,7 +101,7 @@ describe("testing ForestHelper", () => {
       let res = await mergeMaps(
         smallTree,
         bigTree,
-        diffLocations.map(x => [x[1], x[0]])
+        flipped
       )
       let diff1 = getDescList(res[0]).find(
         x => x.data.id === diffLocations[0][1]
