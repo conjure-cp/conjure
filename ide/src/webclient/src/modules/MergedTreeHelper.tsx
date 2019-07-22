@@ -25,24 +25,57 @@ export const reviseGoLeft = (
   let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
     y => y.data.id
   )
+  let diffPoint = diffLocations.find(x => ancestorIds.includes(x[0]))
+  console.log(diffPoint)
 
-  let aboveDiffPoint = diffLocations.find(x => ancestorIds.includes(x[0]))
+  ancestorIds = getAncList(mergedMap[0], diffPoint![0], WhichTree.Both).map(
+    y => y.data.id
+  )
+  console.log(ancestorIds)
 
-  // Near the end of the tree
-  if (!aboveDiffPoint) {
-    return { selected: newSelected, treeId }
+  let currentIndex = 0
+  let currentNode = mergedMap[ancestorIds[currentIndex]]
+
+  console.log(currentNode)
+  while (
+    diffLocations.map(x => x[0]).includes(currentNode.id) ||
+    currentNode.children!.length < 2 ||
+    ancestorIds.includes(currentNode.children![1].id)
+  ) {
+    console.log(currentNode.id)
+    console.log(currentNode)
+    currentIndex++
+    currentNode = mergedMap[ancestorIds[currentIndex]]
   }
 
-  const nextNode = mergedMap[aboveDiffPoint[0] - 1].children![1]
-
-  if (!nextNode) {
-    return { selected: currentSelected, treeId }
-  }
-
+  let id = currentNode.children![1].id
   return {
-    selected: nextNode.id,
+    selected: id,
     treeId: WhichTree.Both
   }
+
+  //---------------------------------------------
+  //   let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
+  //     y => y.data.id
+  //   )
+  //   let aboveDiffPoint = diffLocations.find(x => ancestorIds.includes(x[0]))
+
+  //   //   Near the end of the tree
+  //   if (!aboveDiffPoint) {
+  //     return { selected: newSelected, treeId }
+  //   }
+
+  //   const nextNode = mergedMap[aboveDiffPoint[0] - 1].children![1]
+
+  //   if (!nextNode) {
+  //     return { selected: currentSelected, treeId }
+  //   }
+
+  //   console.log("here")
+  //   return {
+  //     selected: nextNode.id,
+  //     treeId: WhichTree.Both
+  //   }
 }
 
 export const shouldBeRightTree = (
@@ -65,7 +98,7 @@ export const shouldBeRightTree = (
   //     return false
   //   }
 
-  console.log("here")
+  //   console.log("here")
   if (
     leftMap[nextSelected] &&
     rightMap[nextSelected] &&
