@@ -14,7 +14,8 @@ import {
 import {
   goLeftAtDiffingPoint,
   reviseGoLeft,
-  shouldBeRightTree
+  shouldBeRightTree,
+  goLeftMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 
@@ -83,93 +84,21 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     this.state = {
       ...origState
     }
-    // this.state = TreeHelper.makeState(props.core, props.selected)
 
     this.handlers = {
       goLeft: async () => {
-        console.log("goLeft <-")
-        // console.log(this.state.selectedTreeId)
-
-        // --------------------------------------------------------------
-
-        const currentSelected = this.state.selected
-        const currentTreeId = this.state.selectedTreeId
-
-        let leftDiffIds = this.props.diffLocations.map(x => x[0])
-
-        if (
-          leftDiffIds.includes(currentSelected) &&
-          currentTreeId !== WhichTree.Right
-        ) {
-          console.log("leftDiffIds")
-          this.setState(
-            goLeftAtDiffingPoint(this.state.mergedMap!, currentSelected)
+        this.setState(
+          await goLeftMerged(
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.leftPath,
+            this.props.rightPath,
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.props.diffLocations,
+            this.props.nimServerPort
           )
-          return
-        }
-
-        let isRightTree = currentTreeId === WhichTree.Right
-
-        let path = this.props.leftPath
-        let map = this.state.leftMap
-        let treeId = WhichTree.Left
-
-        if (isRightTree) {
-          // if (this.props.diffLocations.selected === origState.selected) {
-          path = this.props.rightPath
-          map = this.state.rightMap
-          treeId = WhichTree.Right
-        }
-
-        let res = await MovementHelper.goLeftBoyo(
-          currentSelected,
-          map!,
-          false,
-          false,
-          path,
-          10,
-          this.props.nimServerPort,
-          treeId
         )
-
-        let leftMap = this.state.leftMap!
-        let rightMap = this.state.rightMap!
-        let nextSelected = res.selected
-
-        if (isRightTree) {
-          rightMap = res.id2Node
-        } else {
-          leftMap = res.id2Node
-        }
-
-        // console.log("res.selected", res.selected)
-
-        let mergedMap = mergeMaps(leftMap, rightMap, this.props.diffLocations)
-
-        if (isRightTree) {
-          // If there is also a node with the same ID in the both section, then choose the one from the right tree
-
-          if (shouldBeRightTree(leftMap, rightMap, nextSelected, isRightTree)) {
-            treeId = WhichTree.Right
-            // console.log("should be right Tree")
-            // return { selected: nextSelected, treeId: WhichTree.Right }
-          } else {
-            let revision = reviseGoLeft(
-              mergedMap,
-              currentSelected,
-              treeId,
-              this.props.diffLocations
-            )
-            nextSelected = revision.selected
-            treeId = revision.treeId
-          }
-        }
-
-        this.setState({
-          selected: nextSelected,
-          selectedTreeId: treeId,
-          mergedMap: mergedMap
-        })
       },
       //   goUp: () => MovementHelper.goUp(this),
       //   goRight: () => MovementHelper.goRight(this),
@@ -182,44 +111,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       //   expand: this.expand,
       //   showCore: this.showCore
     }
-  }
-
-  maybeRevise = (
-    mergedMap: MyMap,
-    leftMap: MyMap,
-    rightMap: MyMap,
-    selected: number,
-    treeId: WhichTree,
-    isRightTree: boolean,
-    currentSelected: number
-  ): { selected: number; treeId: WhichTree } => {
-    console.log("======================")
-    console.log(selected)
-    console.log(leftMap[selected])
-    console.log(rightMap[selected])
-    console.log(mergedMap[selected])
-    console.log(treeId)
-    console.log(isRightTree)
-
-    if (!isRightTree) {
-      return { selected, treeId }
-    }
-
-    // If there is also a node with the same ID in the both section, then choose the one from the right tree
-
-    if (shouldBeRightTree(leftMap, rightMap, selected, isRightTree)) {
-      console.log("should be right Tree")
-      return { selected, treeId: WhichTree.Right }
-    }
-
-    console.log("Revising")
-
-    return reviseGoLeft(
-      mergedMap,
-      currentSelected,
-      treeId,
-      this.props.diffLocations
-    )
   }
 
   nodeClickHandler = (d: Node) => {

@@ -9,7 +9,7 @@ import {
   goLeftAtDiffingPoint,
   reviseGoLeft,
   shouldBeRightTree,
-  goLeft
+  goLeftMerged
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 import {
@@ -389,7 +389,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 0 -> 1 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             0,
             WhichTree.Both,
             "",
@@ -404,7 +404,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 1 -> 2 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             1,
             WhichTree.Both,
             "",
@@ -419,7 +419,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 2 -> 3 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             2,
             WhichTree.Both,
             "",
@@ -434,7 +434,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 3 -> 4 left ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             3,
             WhichTree.Both,
             "",
@@ -449,7 +449,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 4 Left -> 5 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             4,
             WhichTree.Left,
             "",
@@ -464,7 +464,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 5 -> 6 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             5,
             WhichTree.Both,
             "",
@@ -479,7 +479,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 6 -> 7 Left ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             6,
             WhichTree.Both,
             "",
@@ -494,7 +494,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 7 Left -> 8", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             7,
             WhichTree.Left,
             "",
@@ -509,7 +509,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 8 -> 9", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             8,
             WhichTree.Both,
             "",
@@ -524,7 +524,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 9 -> 10", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             9,
             WhichTree.Both,
             "",
@@ -541,7 +541,7 @@ describe("suite to test MergedTreeHelper", () => {
 
       describe("Right tree only", () => {
         it(" 4 Right -> 5 Right", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             4,
             WhichTree.Right,
             "",
@@ -556,7 +556,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 5 Right -> 6 Right", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             5,
             WhichTree.Right,
             "",
@@ -571,7 +571,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it("14 Right -> 15 Right", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             14,
             WhichTree.Right,
             "",
@@ -586,7 +586,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it("15 Right -> 5 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             15,
             WhichTree.Right,
             "",
@@ -600,7 +600,7 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
         it("20 Right -> 21 right", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             20,
             WhichTree.Right,
             "",
@@ -615,7 +615,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it("25 Right -> 8", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             25,
             WhichTree.Right,
             "",
@@ -630,7 +630,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it("29 Right -> 30 right", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             29,
             WhichTree.Right,
             "",
@@ -644,7 +644,7 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selectedTreeId).toEqual(WhichTree.Right)
         })
         it("31 Right -> 32 right", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             29,
             WhichTree.Right,
             "",
@@ -670,7 +670,7 @@ describe("suite to test MergedTreeHelper", () => {
 
       describe("Left tree only", () => {
         it(" 0 -> 1 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             0,
             WhichTree.Both,
             "",
@@ -685,7 +685,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 1 -> 2 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             1,
             WhichTree.Both,
             "",
@@ -699,7 +699,7 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
         it(" 2 -> 3 ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             2,
             WhichTree.Both,
             "",
@@ -714,7 +714,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 3 -> 4 Left ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             3,
             WhichTree.Both,
             "",
@@ -729,7 +729,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 6 Left -> 7 Left ", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             6,
             WhichTree.Left,
             "",
@@ -744,7 +744,7 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 15 Left ->  16", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             15,
             WhichTree.Left,
             "",
@@ -758,7 +758,7 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
         it(" 25 Left ->  26", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             25,
             WhichTree.Left,
             "",
@@ -772,7 +772,7 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
         it(" 29 Left -> 30", async () => {
-          let res = await goLeft(
+          let res = await goLeftMerged(
             29,
             WhichTree.Left,
             "",
@@ -788,7 +788,7 @@ describe("suite to test MergedTreeHelper", () => {
 
         describe("Right tree only", () => {
           it("4 Right -> 16", async () => {
-            let res = await goLeft(
+            let res = await goLeftMerged(
               4,
               WhichTree.Right,
               "",
@@ -802,7 +802,7 @@ describe("suite to test MergedTreeHelper", () => {
             expect(res.selectedTreeId).toEqual(WhichTree.Both)
           })
           it("7 Right -> 26", async () => {
-            let res = await goLeft(
+            let res = await goLeftMerged(
               7,
               WhichTree.Right,
               "",
@@ -817,7 +817,7 @@ describe("suite to test MergedTreeHelper", () => {
           })
 
           it("10 Right -> 10 Right", async () => {
-            let res = await goLeft(
+            let res = await goLeftMerged(
               10,
               WhichTree.Right,
               "",

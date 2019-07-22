@@ -88,7 +88,7 @@ export const shouldBeRightTree = (
   return false
 }
 
-export const goLeft = async (
+export const goLeftMerged = async (
   currentSelected: number,
   currentTreeId: number,
   leftPath: string,
