@@ -44,6 +44,9 @@ export const reviseGoLeft = (
   ) {
     console.log(currentNode.id)
     console.log(currentNode)
+    if (!currentNode) {
+      return { selected: currentSelected, treeId: treeId }
+    }
     currentIndex++
     currentNode = mergedMap[ancestorIds[currentIndex]]
   }
@@ -113,7 +116,8 @@ export const shouldBeRightTree = (
   if (
     !leftMap[nextSelected] &&
     rightMap[nextSelected] &&
-    !rightDiffIds.includes(nextSelected + 1)
+    rightMap[nextSelected].treeId === WhichTree.Right
+    // !rightDiffIds.includes(nextSelected + 1)
   ) {
     return true
   }
