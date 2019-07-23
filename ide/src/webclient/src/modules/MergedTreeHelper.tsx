@@ -2,6 +2,40 @@ import { MyMap } from "../components/vis/MergedTreeContainer"
 import { getAncList, mergeMaps, getDescList } from "./ForestHelper"
 import { WhichTree } from "./Node"
 import { goLeftBoyo } from "./MovementHelper"
+import d3 from "d3"
+
+export const goUpMerged = (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  currentTreeId: number,
+  diffLocations: number[][]
+) => {
+  let leftDiffIds = diffLocations.map(x => x[0])
+  let rightDiffIds = diffLocations.map(x => x[1])
+  let currentNode
+  let nextId
+
+  if (currentTreeId === WhichTree.Right) {
+    currentNode = rightMap[currentSelected]
+    nextId = currentNode.parentId
+    if (rightDiffIds.includes(currentNode.parentId)) {
+      currentTreeId = WhichTree.Both
+      nextId = leftDiffIds[rightDiffIds.indexOf(nextId)]
+    }
+  } else {
+    currentNode = leftMap[currentSelected]
+    nextId = currentNode.parentId
+    if (leftDiffIds.includes(currentNode.parentId)) {
+      currentTreeId = WhichTree.Both
+    }
+  }
+
+  return {
+    selected: nextId,
+    selectedTreeId: currentTreeId
+  }
+}
 
 export const goLeftAtDiffingPoint = (
   mergedMap: MyMap,
@@ -26,24 +60,19 @@ export const reviseGoLeft = (
     y => y.data.id
   )
   let diffPoint = diffLocations.find(x => ancestorIds.includes(x[0]))
-  //   console.log(diffPoint)
 
   ancestorIds = getAncList(mergedMap[0], diffPoint![0], WhichTree.Both).map(
     y => y.data.id
   )
-  //   console.log(ancestorIds)
 
   let currentIndex = 0
   let currentNode = mergedMap[ancestorIds[currentIndex]]
 
-  //   console.log(currentNode)
   while (
     diffLocations.map(x => x[0]).includes(currentNode.id) ||
     currentNode.children!.length < 2 ||
     ancestorIds.includes(currentNode.children![1].id)
   ) {
-    // console.log(currentNode.id)
-    // console.log(currentNode)
     currentIndex++
     currentNode = mergedMap[ancestorIds[currentIndex]]
     if (!currentNode) {
@@ -115,7 +144,6 @@ export const goLeftMerged = async (
   let nextTreeId = currentTreeId
 
   if (isRightTree) {
-    // if (this.props.diffLocations.selected === origState.selected) {
     path = rightPath
     map = rightMap
     nextTreeId = WhichTree.Right
@@ -150,8 +178,6 @@ export const goLeftMerged = async (
   }
 
   if (isRightTree) {
-    // If there is also a node with the same ID in the both section, then choose the one from the right tree
-
     if (shouldBeRightTree(leftMap, rightMap, nextSelected, isRightTree)) {
       nextTreeId = WhichTree.Right
     } else {

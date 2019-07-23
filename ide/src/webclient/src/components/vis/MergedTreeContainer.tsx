@@ -15,7 +15,8 @@ import {
   goLeftAtDiffingPoint,
   reviseGoLeft,
   shouldBeRightTree,
-  goLeftMerged
+  goLeftMerged,
+  goUpMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 
@@ -100,7 +101,23 @@ export class MergedTreeContainer extends React.Component<Props, State> {
           )
         )
       },
-      //   goUp: () => MovementHelper.goUp(this),
+      goUp: () => {
+        this.setState(
+          goUpMerged(
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffLocations
+          )
+        )
+        // let leftDiffIds = this.props.diffLocations.map(x => x[0])
+
+        // if (
+        //   leftDiffIds.includes(this.state.selected) &&
+        // //   this.state. !== WhichTree.Right
+        // )
+      },
       //   goRight: () => MovementHelper.goRight(this),
       goToRoot: () => {
         console.log("GOT OT ROOT")

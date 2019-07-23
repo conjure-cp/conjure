@@ -9,7 +9,8 @@ import {
   goLeftAtDiffingPoint,
   reviseGoLeft,
   shouldBeRightTree,
-  goLeftMerged
+  goLeftMerged,
+  goUpMerged
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 import {
@@ -831,6 +832,83 @@ describe("suite to test MergedTreeHelper", () => {
             expect(res.selectedTreeId).toEqual(WhichTree.Right)
           })
         })
+      })
+    })
+  })
+
+  describe("test go up", () => {
+    describe("Left: small | Right: big", () => {
+      beforeEach(async () => {
+        let res = await loadTreeSmallOnLeftBigOnRight()
+        bigTree = res.bigTree
+        smallTree = res.smallTree
+      })
+      it("4 Left -> 3", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 4, WhichTree.Left, flipped)
+        ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
+      })
+      it("3 -> 2", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 3, WhichTree.Both, flipped)
+        ).toEqual({ selected: 2, selectedTreeId: WhichTree.Both })
+      })
+      it("2 -> 1", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 2, WhichTree.Both, flipped)
+        ).toEqual({ selected: 1, selectedTreeId: WhichTree.Both })
+      })
+      it("1 -> 0", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 1, WhichTree.Both, flipped)
+        ).toEqual({ selected: 0, selectedTreeId: WhichTree.Both })
+      })
+
+      it("6 Right -> 5 Right", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 6, WhichTree.Right, flipped)
+        ).toEqual({ selected: 5, selectedTreeId: WhichTree.Right })
+      })
+
+      it("4 Right -> 3", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 4, WhichTree.Right, flipped)
+        ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
+      })
+      it("7 Right -> 3", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 7, WhichTree.Right, flipped)
+        ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
+      })
+      it("30 Right -> 9", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 30, WhichTree.Right, flipped)
+        ).toEqual({ selected: 9, selectedTreeId: WhichTree.Both })
+      })
+    })
+
+    describe("Left: big | Right: small", () => {
+      beforeEach(async () => {
+        let res = await loadTreeBigOnLeftSmallOnRight()
+        bigTree = res.bigTree
+        smallTree = res.smallTree
+      })
+      it("6 Left -> 5 Left", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 6, WhichTree.Left, flipped)
+        ).toEqual({ selected: 5, selectedTreeId: WhichTree.Left })
+      })
+
+      it("4 Left -> 3 ", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 4, WhichTree.Left, flipped)
+        ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
+      })
+
+      it("4 Right -> 3 ", async () => {
+        expect(
+          goUpMerged(smallTree, bigTree, 4, WhichTree.Right, flipped)
+        ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
       })
     })
   })
