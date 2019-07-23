@@ -5,7 +5,12 @@ import { HotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max, isEqual } from "lodash"
 import * as MovementHelper from "../../modules/MovementHelper"
 import * as d3 from "d3"
-import { mergeMaps, loadAllDiffs, getAncList, loadDiff } from "../../modules/ForestHelper"
+import {
+  mergeMaps,
+  loadAllDiffs,
+  getAncList,
+  loadDiff
+} from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import {
   isTSImportEqualsDeclaration,
@@ -21,7 +26,7 @@ import {
   goRightMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
-import { makeState } from "../../modules/TreeHelper";
+import { makeState } from "../../modules/TreeHelper"
 
 export type MyMap = Record<number, Node>
 
@@ -31,6 +36,7 @@ interface Props {
   leftSolAncestorIds: number[]
   rightSolAncestorIds: number[]
   diffLocations: number[][]
+  currentDiff: number[]
   rightPath: string
   leftPath: string
   hash: string
@@ -39,8 +45,8 @@ interface Props {
 }
 
 export interface State {
-  leftMap?: MyMap
-  rightMap?: MyMap
+  leftMap: MyMap
+  rightMap: MyMap
   mergedMap?: MyMap
   solveable: boolean
   selected: number
@@ -87,7 +93,9 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     }
 
     this.state = {
-      ...origState
+      ...origState,
+      leftMap: makeState(props.leftCore, 0).id2Node,
+      rightMap: makeState(props.leftCore, 0).id2Node
     }
 
     this.handlers = {
@@ -120,8 +128,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       goDown: async () => {
         this.setState(
           await goDownMerged(
-            this.state.leftMap!,
-            this.state.rightMap!,
+            this.state.leftMap,
+            this.state.rightMap,
             this.state.selected,
             this.state.selectedTreeId,
             this.props.diffLocations,
@@ -134,11 +142,11 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       goRight: async () => {
         this.setState(
           await goRightMerged(
-            this.state.leftMap!,
-            this.state.rightMap!,
+            this.state.leftMap,
+            this.state.rightMap,
             this.state.selected,
             this.state.selectedTreeId,
-            this.props.diffLocations,
+            this.props.diffLocations
           )
         )
       },
@@ -158,18 +166,25 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   loadAllDiffsIntoMaps = async () => {
+    let selected = this.state.selected
 
-    let maps = await loadDiff(
-      [this.props.leftPath, this.props.rightPath],
-      [makeState(this.props.leftCore, 0).id2Node, makeState(this.props.rightCore, 0).id2Node],
-      this.props.diffLocations[0],
-      this.props.nimServerPort
-    )
+    let maps = [this.state.leftMap, this.state.rightMap]
+
+    if (this.props.currentDiff !== []) {
+      maps = await loadDiff(
+        [this.props.leftPath, this.props.rightPath],
+        maps,
+        this.props.currentDiff,
+        this.props.nimServerPort
+      )
+      selected = this.props.currentDiff[0]
+    }
 
     this.setState({
       leftMap: maps[0],
       rightMap: maps[1],
-      mergedMap: mergeMaps(maps[0], maps[1], this.props.diffLocations)
+      mergedMap: mergeMaps(maps[0], maps[1], this.props.diffLocations),
+      selected: selected
     })
   }
 

@@ -36,7 +36,6 @@ interface State {
   diffReady: boolean
   splitScreen: boolean
   locked: boolean
-  mergedTree: MyMap | undefined
 }
 
 class Forest extends React.Component<Props, State> {
@@ -54,8 +53,7 @@ class Forest extends React.Component<Props, State> {
       currentDiffIndex: -1,
       diffReady: false,
       splitScreen: false,
-      locked: true,
-      mergedTree: undefined
+      locked: true
     }
   }
 
@@ -277,6 +275,13 @@ class Forest extends React.Component<Props, State> {
                   // <div>This is not a splitscreen</div>
                   <div style={{ width: "100%" }}>
                     <MergedTreeContainer
+                      currentDiff={
+                        this.state.currentDiffIndex !== -1
+                          ? this.state.diffLocations[
+                              this.state.currentDiffIndex
+                            ]
+                          : []
+                      }
                       leftCore={this.props.trees[0].core}
                       rightCore={this.props.trees[1].core}
                       leftPath={this.props.trees[0].path}

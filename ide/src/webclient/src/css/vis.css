@@ -4,6 +4,7 @@
   --link-stroke-width: 2;
   --different-colour: rgb(124, 255, 255);
   --changed-colour: coral;
+  --selected-colour: rgb(95, 218, 255);
   --circle-fill-colour: white;
   --circle-stroke-colour: cornflowerblue;
   --solution-colour: rgb(237, 240, 53);
@@ -51,7 +52,7 @@ circle.hasOthers.red {
 }
 
 circle.selected {
-  stroke: var(--changed-colour);
+  stroke: var(--selected-colour);
 }
 
 .link {
@@ -65,10 +66,10 @@ circle.selected {
 }
 
 .link.highlightLeft {
-  stroke: rgba(202, 156, 255, 0.5);
+  stroke: rgba(255, 107, 107, 0.5);
   stroke-width: 15px;
 }
 .link.highlightRight {
-  stroke: rgba(151, 255, 255, 0.8);
+  stroke: rgba(151, 255, 137, 0.5);
   stroke-width: 15px;
 }
