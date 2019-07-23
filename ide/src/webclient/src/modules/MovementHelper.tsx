@@ -123,17 +123,29 @@ export const prevSol = (instance: TreeContainer) => {
     return { selected: solId, id2Node: newMap }
   })
 }
+export const goRightBoyo = (map: MyMap, currentSelected: number) => {
+  const current = map[currentSelected]
+  if (!current.children) {
+    return { selected: currentSelected }
+  }
+  if (current.children.length < 2) {
+    return { selected: currentSelected }
+  }
+  return { selected: current.children[1].id }
+}
 
 export const goRight = (instance: TreeContainer) => {
   instance.setState((prev: State) => {
-    const current = prev.id2Node[prev.selected]
-    if (!current.children) {
-      return null
-    }
-    if (current.children.length < 2) {
-      return null
-    }
-    return { selected: current.children[1].id }
+    return goRightBoyo(prev.id2Node, prev.selected)
+
+    // const current = prev.id2Node[prev.selected]
+    // if (!current.children) {
+    //   return null
+    // }
+    // if (current.children.length < 2) {
+    //   return null
+    // }
+    // return { selected: current.children[1].id }
   })
 }
 

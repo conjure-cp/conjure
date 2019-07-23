@@ -17,7 +17,8 @@ import {
   shouldBeRightTree,
   goLeftMerged,
   goUpMerged,
-  goDownMerged
+  goDownMerged,
+  goRightMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 
@@ -126,6 +127,17 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.props.leftPath,
             this.props.rightPath,
             this.props.nimServerPort
+          )
+        )
+      },
+      goRight: async () => {
+        this.setState(
+          await goRightMerged(
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffLocations,
           )
         )
       },

@@ -1,17 +1,14 @@
 import { MyMap } from "../components/vis/MergedTreeContainer"
 import { getAncList, mergeMaps, getDescList } from "./ForestHelper"
 import { WhichTree } from "./Node"
-import { goLeftBoyo } from "./MovementHelper"
+import { goLeftBoyo, goRightBoyo } from "./MovementHelper"
 
-export const goDownMerged = async (
+const getDiffPointKids = (
   leftMap: MyMap,
   rightMap: MyMap,
   currentSelected: number,
   currentTreeId: number,
-  diffLocations: number[][],
-  leftPath: string,
-  rightPath: string,
-  nimServerPort: number
+  diffLocations: number[][]
 ) => {
   let leftDiffIds = diffLocations.map(x => x[0])
   let rightDiffIds = diffLocations.map(x => x[1])
@@ -36,10 +33,65 @@ export const goDownMerged = async (
       rightNode.children = []
     }
 
-    let kids = leftMap[leftDiffPoint].children!.concat(
+    return leftMap[leftDiffPoint].children!.concat(
       rightMap[rightDiffPoint].children!
     )
+  }
+  return undefined
+}
 
+export const goRightMerged = async (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  currentTreeId: number,
+  diffLocations: number[][]
+) => {
+  let kids = getDiffPointKids(
+    leftMap,
+    rightMap,
+    currentSelected,
+    currentTreeId,
+    diffLocations
+  )
+  if (kids) {
+    if (kids.length < 2) {
+      return { selected: kids[0].id, selectedTreeId: kids[0].treeId }
+    }
+
+    if (kids.length < 3) {
+      return { selected: kids[1].id, selectedTreeId: kids[1].treeId }
+    }
+
+    return { selected: kids[2].id, selectedTreeId: kids[2].treeId }
+  }
+
+  let map = currentTreeId === WhichTree.Right ? rightMap : leftMap
+
+  return {
+    ...goRightBoyo(map, currentSelected),
+    selectedTreeId: currentTreeId
+  }
+}
+export const goDownMerged = async (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  currentTreeId: number,
+  diffLocations: number[][],
+  leftPath: string,
+  rightPath: string,
+  nimServerPort: number
+) => {
+  let kids = getDiffPointKids(
+    leftMap,
+    rightMap,
+    currentSelected,
+    currentTreeId,
+    diffLocations
+  )
+
+  if (kids) {
     if (kids.length < 2) {
       return { selected: kids[0].id, selectedTreeId: kids[0].treeId }
     }
