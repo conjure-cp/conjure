@@ -16,7 +16,8 @@ import {
   reviseGoLeft,
   shouldBeRightTree,
   goLeftMerged,
-  goUpMerged
+  goUpMerged,
+  goDownMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 
@@ -65,6 +66,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     goLeft: ["left", "a"],
     goRight: ["right", "d"],
     goUp: ["up", "w"],
+    goDown: ["down", "s"],
     collapse: "c",
     expand: "e",
     pPressed: "p",
@@ -111,17 +113,25 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.props.diffLocations
           )
         )
-        // let leftDiffIds = this.props.diffLocations.map(x => x[0])
-
-        // if (
-        //   leftDiffIds.includes(this.state.selected) &&
-        // //   this.state. !== WhichTree.Right
-        // )
       },
-      //   goRight: () => MovementHelper.goRight(this),
+
+      goDown: async () => {
+        this.setState(
+          await goDownMerged(
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffLocations,
+            this.props.leftPath,
+            this.props.rightPath,
+            this.props.nimServerPort
+          )
+        )
+      },
       goToRoot: () => {
         console.log("GOT OT ROOT")
-        this.setState({ selected: 0 })
+        this.setState({ selected: 0, selectedTreeId: WhichTree.Both })
       }
       //   goPrev: () => MovementHelper.goToPreviousHandler(this),
       //   collapse: this.collapse,

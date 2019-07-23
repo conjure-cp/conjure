@@ -10,7 +10,8 @@ import {
   reviseGoLeft,
   shouldBeRightTree,
   goLeftMerged,
-  goUpMerged
+  goUpMerged,
+  goDownMerged
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 import {
@@ -895,20 +896,135 @@ describe("suite to test MergedTreeHelper", () => {
       })
       it("6 Left -> 5 Left", async () => {
         expect(
-          goUpMerged(smallTree, bigTree, 6, WhichTree.Left, flipped)
+          goUpMerged( bigTree, smallTree, 6, WhichTree.Left, diffLocations)
         ).toEqual({ selected: 5, selectedTreeId: WhichTree.Left })
       })
 
       it("4 Left -> 3 ", async () => {
         expect(
-          goUpMerged(smallTree, bigTree, 4, WhichTree.Left, flipped)
+          goUpMerged(bigTree, smallTree, 4, WhichTree.Left, diffLocations)
         ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
       })
 
       it("4 Right -> 3 ", async () => {
         expect(
-          goUpMerged(smallTree, bigTree, 4, WhichTree.Right, flipped)
+          goUpMerged(bigTree, smallTree, 4, WhichTree.Right, diffLocations)
         ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
+      })
+    })
+
+    describe("test go down", () => {
+      describe("Left: small | Right: big", () => {
+        beforeEach(async () => {
+          let res = await loadTreeSmallOnLeftBigOnRight()
+          bigTree = res.bigTree
+          smallTree = res.smallTree
+        })
+        it("3 -> 4 Right ", async () => {
+          let res = await goDownMerged(
+            smallTree,
+            bigTree,
+            3,
+            WhichTree.Both,
+            flipped,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(4)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+        it("4 Right -> 5 Right ", async () => {
+          let res = await goDownMerged(
+            smallTree,
+            bigTree,
+            4,
+            WhichTree.Right,
+            flipped,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(5)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+        it("6 Right -> 7 Right ", async () => {
+          let res = await goDownMerged(
+            smallTree,
+            bigTree,
+            6,
+            WhichTree.Right,
+            flipped,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(7)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+        describe("Left: big | Right: small", () => {
+          beforeEach(async () => {
+            let res = await loadTreeBigOnLeftSmallOnRight()
+            bigTree = res.bigTree
+            smallTree = res.smallTree
+          })
+          it("3 -> 7 left ", async () => {
+            let res = await goDownMerged(
+              bigTree,
+              smallTree,
+              3,
+              WhichTree.Both,
+              diffLocations,
+              "",
+              "",
+              5000
+            )
+            expect(res.selected).toEqual(7)
+            expect(res.selectedTreeId).toEqual(WhichTree.Left)
+          })
+          it("17 -> 21 left ", async () => {
+            let res = await goDownMerged(
+              bigTree,
+              smallTree,
+              17,
+              WhichTree.Both,
+              diffLocations,
+              "",
+              "",
+              5000
+            )
+            expect(res.selected).toEqual(21)
+            expect(res.selectedTreeId).toEqual(WhichTree.Left)
+          })
+          it("15 left -> 16 ", async () => {
+            let res = await goDownMerged(
+              bigTree,
+              smallTree,
+              15,
+              WhichTree.Left,
+              diffLocations,
+              "",
+              "",
+              5000
+            )
+            expect(res.selected).toEqual(16)
+            expect(res.selectedTreeId).toEqual(WhichTree.Both)
+          })
+          it("31 left -> 32 left ", async () => {
+            let res = await goDownMerged(
+              bigTree,
+              smallTree,
+              31,
+              WhichTree.Left,
+              diffLocations,
+              "",
+              "",
+              5000
+            )
+            expect(res.selected).toEqual(32)
+            expect(res.selectedTreeId).toEqual(WhichTree.Left)
+          })
+        })
       })
     })
   })

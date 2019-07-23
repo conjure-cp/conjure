@@ -2,7 +2,68 @@ import { MyMap } from "../components/vis/MergedTreeContainer"
 import { getAncList, mergeMaps, getDescList } from "./ForestHelper"
 import { WhichTree } from "./Node"
 import { goLeftBoyo } from "./MovementHelper"
-import d3 from "d3"
+
+export const goDownMerged = async (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  currentTreeId: number,
+  diffLocations: number[][],
+  leftPath: string,
+  rightPath: string,
+  nimServerPort: number
+) => {
+  let leftDiffIds = diffLocations.map(x => x[0])
+  let rightDiffIds = diffLocations.map(x => x[1])
+  let index = -1
+  if (
+    currentTreeId === WhichTree.Right &&
+    rightDiffIds.includes(currentSelected)
+  ) {
+    index = rightDiffIds.indexOf(currentSelected)
+  }
+
+  if (
+    currentTreeId !== WhichTree.Right &&
+    leftDiffIds.includes(currentSelected)
+  ) {
+    index = leftDiffIds.indexOf(currentSelected)
+  }
+
+  if (index !== -1) {
+    let leftDiffPoint = leftDiffIds[index]
+    let rightDiffPoint = rightDiffIds[index]
+    let leftNode = leftMap[leftDiffPoint]
+    let rightNode = rightMap[rightDiffPoint]
+    if (!leftNode.children) {
+      leftNode.children = []
+    }
+    if (!rightNode.children) {
+      rightNode.children = []
+    }
+
+    let kids = leftMap[leftDiffPoint].children!.concat(
+      rightMap[rightDiffPoint].children!
+    )
+
+    if (kids.length < 2) {
+      return { selected: kids[0].id, selectedTreeId: kids[0].treeId }
+    }
+
+    return { selected: kids[1].id, selectedTreeId: kids[1].treeId }
+  }
+
+  return await goLeftMerged(
+    currentSelected,
+    currentTreeId,
+    leftPath,
+    rightPath,
+    leftMap,
+    rightMap,
+    diffLocations,
+    nimServerPort
+  )
+}
 
 export const goUpMerged = (
   leftMap: MyMap,
