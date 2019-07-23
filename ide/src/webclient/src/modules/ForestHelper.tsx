@@ -44,8 +44,6 @@ export const loadDiff = async (
 
     let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
 
-    console.log(treeId)
-
     getDescList(maps[i][diffPoint[i]]).forEach(x => {
       if (x.data.id !== diffPoint[i]) {
         x.data.treeId = treeId

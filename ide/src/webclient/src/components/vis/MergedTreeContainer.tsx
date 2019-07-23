@@ -188,7 +188,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     if (this.state.rightMap) {
       console.log(this.props.diffLocations)
-      console.log(this.state.rightMap[9])
+      // console.log(this.state.rightMap[9])
     }
 
     // console.log("selected", this.state.selected, this.state.selectedTreeId)

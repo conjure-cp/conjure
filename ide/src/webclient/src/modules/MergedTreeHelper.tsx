@@ -26,6 +26,13 @@ const getDiffPointKids = (
     let rightDiffPoint = rightDiffIds[index]
     let leftNode = leftMap[leftDiffPoint]
     let rightNode = rightMap[rightDiffPoint]
+
+    // one of the diffpoint  nodes haven't been loaded yet
+
+    if (!leftNode || !rightNode) {
+      return undefined
+    }
+
     if (!leftNode.children) {
       leftNode.children = []
     }
@@ -179,7 +186,7 @@ export const goLeftAtDiffingPoint = async (
     selectedTreeId: nextNode.treeId,
     mergedMap: mergedMap,
     leftMap: maps[0],
-    rightMap: maps[1],
+    rightMap: maps[1]
   }
 }
 
@@ -259,21 +266,28 @@ export const goLeftMerged = async (
   rightMap: MyMap,
   diffLocations: number[][],
   nimServerPort: number
-): Promise<{ selected: number; selectedTreeId: number; mergedMap: MyMap, leftMap:MyMap, rightMap:MyMap }> => {
+): Promise<{
+  selected: number
+  selectedTreeId: number
+  mergedMap: MyMap
+  leftMap: MyMap
+  rightMap: MyMap
+}> => {
+
   let leftDiffIds = diffLocations.map(x => x[0])
   if (
     leftDiffIds.includes(currentSelected) &&
     currentTreeId !== WhichTree.Right
   ) {
     return await goLeftAtDiffingPoint(
-        leftMap,
-        rightMap,
-        currentSelected,
-        diffLocations,
-        leftPath,
-        rightPath,
-        nimServerPort
-      )
+      leftMap,
+      rightMap,
+      currentSelected,
+      diffLocations,
+      leftPath,
+      rightPath,
+      nimServerPort
+    )
   }
 
   let mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
@@ -302,6 +316,15 @@ export const goLeftMerged = async (
   )
 
   let nextSelected = res.selected
+
+  // We may have moved to a both node
+  if (
+    !getAncList(map[0], nextSelected, currentTreeId).find(
+      x => x.data.treeId === currentTreeId
+    )
+  ) {
+    nextTreeId = WhichTree.Both
+  }
 
   mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
 
@@ -338,6 +361,6 @@ export const goLeftMerged = async (
     selectedTreeId: nextTreeId,
     mergedMap: mergedMap,
     leftMap: leftMap,
-    rightMap: rightMap,
+    rightMap: rightMap
   }
 }
