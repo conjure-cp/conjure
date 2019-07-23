@@ -1,5 +1,5 @@
 import Node, { WhichTree } from "../src/modules/Node"
-import { loadDiffs, mergeMaps, getDescList } from "../src/modules/ForestHelper"
+import { loadAllDiffs, mergeMaps, getDescList } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 import {
   coreOf3 as coreOf3Normal,
@@ -27,13 +27,13 @@ describe("testing ForestHelper", () => {
     fetchMock.resetMocks()
     fetchMock
       .once(JSON.stringify(coreOf3Normal))
-      .once(JSON.stringify(coreOf17Normal))
-      .once(JSON.stringify(coreOf27Normal))
       .once(JSON.stringify(coreOf3Sacbounds))
+      .once(JSON.stringify(coreOf17Normal))
       .once(JSON.stringify(coreOf6Sacbounds))
+      .once(JSON.stringify(coreOf27Normal))
       .once(JSON.stringify(coreOf9Sacbounds))
 
-    let res = await loadDiffs(
+    let res = await loadAllDiffs(
       ["", "s"],
       [coreNormal, coreSacbounds],
       diffLocations,
@@ -175,13 +175,13 @@ describe("testing ForestHelper", () => {
 
     it("Should load the ancestors of each tree into their maps", async () => {
       fetchMock.once(JSON.stringify(coreOf3Normal))
-      .once(JSON.stringify(coreOf17Normal))
-      .once(JSON.stringify(coreOf27Normal))
       .once(JSON.stringify(coreOf3Sacbounds))
+      .once(JSON.stringify(coreOf17Normal))
       .once(JSON.stringify(coreOf6Sacbounds))
+      .once(JSON.stringify(coreOf27Normal))
       .once(JSON.stringify(coreOf9Sacbounds))
 
-      let res = await loadDiffs(
+      let res = await loadAllDiffs(
         ["", "s"],
         [coreNormal, coreSacbounds],
         diffLocations,

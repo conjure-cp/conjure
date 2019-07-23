@@ -8,7 +8,7 @@ import { isEqual } from "lodash"
 import VisualiserSettings from "./vis/VisualiserSettings"
 import PlaySettings from "./vis/PlaySettings"
 import DiffSettings from "./vis/DiffSettings"
-import { loadDiffs, mergeMaps } from "../modules/ForestHelper"
+import { loadAllDiffs, mergeMaps } from "../modules/ForestHelper"
 import { makeState } from "../modules/TreeHelper"
 
 export interface Tree {
@@ -93,7 +93,7 @@ class Forest extends React.Component<Props, State> {
 
     let paths = this.props.trees.map(x => x.path)
     let cores = this.props.trees.map(x => x.core)
-    let loadedMaps = await loadDiffs(
+    let loadedMaps = await loadAllDiffs(
       paths,
       cores,
       json,

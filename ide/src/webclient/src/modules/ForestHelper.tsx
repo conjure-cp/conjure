@@ -31,35 +31,42 @@ export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
   return current.ancestors()
 }
 
-export const loadDiffs = async (
+export const loadDiff = async (
+  paths: string[],
+  maps: MyMap[],
+  diffPoint: number[],
+  nimServerPort: number
+) => {
+  for (let i = 0; i < maps.length; i++) {
+    let ancestors = await fetchAncestors(paths[i], diffPoint[i], nimServerPort)
+
+    maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
+
+    let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
+    getDescList(maps[i][diffPoint[i]]).forEach(x => {
+      if (x.data.id !== diffPoint[i]) {
+        x.data.treeId = treeId
+      }
+    })
+  }
+
+  return maps
+}
+
+export const loadAllDiffs = async (
   paths: string[],
   cores: Core[],
   diffLocations: number[][],
   nimServerPort: number
 ) => {
-  const maps = [makeState(cores[0], 0).id2Node, makeState(cores[1], 0).id2Node]
+  let maps = [makeState(cores[0], 0).id2Node, makeState(cores[1], 0).id2Node]
 
-  for (let i = 0; i < maps.length; i++) {
-    let ancestors: Node[] = []
-    for (const array of diffLocations) {
-      ancestors = ancestors.concat(
-        await fetchAncestors(paths[i], array[i], nimServerPort)
-      )
-    }
-    maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
-
-    for (const array of diffLocations) {
-      let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
-      getDescList(maps[i][array[i]]).forEach(x => {
-        if (x.data.id !== array[i]) {
-          x.data.treeId = treeId
-        }
-      })
-    }
+  for (const array of diffLocations) {
+    maps = await loadDiff(paths, maps, array, nimServerPort)
   }
-
   return maps
 }
+
 
 export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   let leftMap = cloneDeep(l)

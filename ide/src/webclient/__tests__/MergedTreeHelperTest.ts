@@ -1,5 +1,5 @@
 import Node, { WhichTree } from "../src/modules/Node"
-import { loadDiffs, mergeMaps, getDescList } from "../src/modules/ForestHelper"
+import { loadAllDiffs, mergeMaps, getDescList } from "../src/modules/ForestHelper"
 import { fetchAncestors, goLeftBoyo } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
 import { cloneDeep } from "lodash"
@@ -43,10 +43,10 @@ async function loadTreeBigOnLeftSmallOnRight() {
   fetchMock.resetMocks()
   fetchMock
     .once(JSON.stringify(coreOf3Normal))
-    .once(JSON.stringify(coreOf17Normal))
-    .once(JSON.stringify(coreOf27Normal))
     .once(JSON.stringify(coreOf3Sacbounds))
+    .once(JSON.stringify(coreOf17Normal))
     .once(JSON.stringify(coreOf6Sacbounds))
+    .once(JSON.stringify(coreOf27Normal))
     .once(JSON.stringify(coreOf9Sacbounds))
     .once(JSON.stringify(descendantsOf4Normal))
     .once(JSON.stringify(descendantsOf7Normal))
@@ -55,7 +55,7 @@ async function loadTreeBigOnLeftSmallOnRight() {
     .once(JSON.stringify(descendantsOf28Normal))
     .once(JSON.stringify([]))
 
-  let res = await loadDiffs(
+  let res = await loadAllDiffs(
     ["", "s"],
     [coreNormal, coreSacbounds],
     diffLocations,
@@ -127,10 +127,10 @@ async function loadTreeSmallOnLeftBigOnRight() {
   fetchMock.resetMocks()
   fetchMock
     .once(JSON.stringify(coreOf3Sacbounds))
-    .once(JSON.stringify(coreOf6Sacbounds))
-    .once(JSON.stringify(coreOf9Sacbounds))
     .once(JSON.stringify(coreOf3Normal))
+    .once(JSON.stringify(coreOf6Sacbounds))
     .once(JSON.stringify(coreOf17Normal))
+    .once(JSON.stringify(coreOf9Sacbounds))
     .once(JSON.stringify(coreOf27Normal))
 
     .once(JSON.stringify(descendantsOf4Normal))
@@ -140,7 +140,7 @@ async function loadTreeSmallOnLeftBigOnRight() {
     .once(JSON.stringify(descendantsOf28Normal))
     .once(JSON.stringify([]))
 
-  let res = await loadDiffs(
+  let res = await loadAllDiffs(
     ["", "s"],
     [coreSacbounds, coreNormal],
     flipped,

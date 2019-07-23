@@ -5,7 +5,7 @@ import { HotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max, isEqual } from "lodash"
 import * as MovementHelper from "../../modules/MovementHelper"
 import * as d3 from "d3"
-import { mergeMaps, loadDiffs, getAncList } from "../../modules/ForestHelper"
+import { mergeMaps, loadAllDiffs, getAncList } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import {
   isTSImportEqualsDeclaration,
@@ -157,7 +157,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   loadAllDiffsIntoMaps = async () => {
-    let maps = await loadDiffs(
+    let maps = await loadAllDiffs(
       [this.props.leftPath, this.props.rightPath],
       [this.props.leftCore, this.props.rightCore],
       this.props.diffLocations,

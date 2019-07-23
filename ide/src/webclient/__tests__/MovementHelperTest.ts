@@ -12,7 +12,7 @@ import {
   coreOf9 as coreOf9Sacbounds,
   core as coreSacbounds
 } from "./resources/sacbounds-8"
-import { loadDiffs } from "../src/modules/ForestHelper"
+import { loadAllDiffs } from "../src/modules/ForestHelper"
 import { diffLocations } from "./resources/normalVSSacbounds-8"
 import { flipDiffLocations } from "../src/modules/Helper"
 import { goLeftBoyo } from "../src/modules/MovementHelper";
@@ -33,7 +33,7 @@ describe("test goleftboyo", () => {
       .once(JSON.stringify(coreOf9Sacbounds))
       .once(JSON.stringify(descendantsOf28Normal))
 
-    let res = await loadDiffs(
+    let res = await loadAllDiffs(
       ["", "s"],
       [coreNormal, coreSacbounds],
       diffLocations,
