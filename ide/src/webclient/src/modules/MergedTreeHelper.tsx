@@ -1,5 +1,5 @@
 import { MyMap } from "../components/vis/MergedTreeContainer"
-import { getAncList, mergeMaps, getDescList } from "./ForestHelper"
+import { getAncList, mergeMaps, getDescList, loadDiff } from "./ForestHelper"
 import { WhichTree } from "./Node"
 import { goLeftBoyo, goRightBoyo } from "./MovementHelper"
 
@@ -33,9 +33,11 @@ const getDiffPointKids = (
       rightNode.children = []
     }
 
-    return leftMap[leftDiffPoint].children!.concat(
+    let combined = leftMap[leftDiffPoint].children!.concat(
       rightMap[rightDiffPoint].children!
     )
+
+    return combined.length > 0 ? combined : undefined
   }
   return undefined
 }
@@ -92,6 +94,10 @@ export const goDownMerged = async (
   )
 
   if (kids) {
+    if (kids.length < 1) {
+      return { selected: currentSelected, selectedTreeId: currentTreeId }
+    }
+
     if (kids.length < 2) {
       return { selected: kids[0].id, selectedTreeId: kids[0].treeId }
     }
@@ -144,16 +150,36 @@ export const goUpMerged = (
   }
 }
 
-export const goLeftAtDiffingPoint = (
-  mergedMap: MyMap,
-  currentSelected: number
+export const goLeftAtDiffingPoint = async (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  diffLocations: number[][],
+  leftPath: string,
+  rightPath: string,
+  nimServerPort: number
 ) => {
+  const leftDiffIds = diffLocations.map(x => x[0])
+
+  let index = leftDiffIds.indexOf(currentSelected)
+
+  let maps = await loadDiff(
+    [leftPath, rightPath],
+    [leftMap, rightMap],
+    diffLocations[index],
+    nimServerPort
+  )
+
+  let mergedMap = mergeMaps(maps[0], maps[1], diffLocations)
   let currentNode = mergedMap[currentSelected]
   let nextNode = currentNode.children![0]
 
   return {
     selected: nextNode.id,
-    selectedTreeId: nextNode.treeId
+    selectedTreeId: nextNode.treeId,
+    mergedMap: mergedMap,
+    leftMap: maps[0],
+    rightMap: maps[1],
   }
 }
 
@@ -233,16 +259,24 @@ export const goLeftMerged = async (
   rightMap: MyMap,
   diffLocations: number[][],
   nimServerPort: number
-): Promise<{ selected: number; selectedTreeId: number; mergedMap: MyMap }> => {
-  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
+): Promise<{ selected: number; selectedTreeId: number; mergedMap: MyMap, leftMap:MyMap, rightMap:MyMap }> => {
   let leftDiffIds = diffLocations.map(x => x[0])
-
   if (
     leftDiffIds.includes(currentSelected) &&
     currentTreeId !== WhichTree.Right
   ) {
-    return { ...goLeftAtDiffingPoint(mergedMap, currentSelected), mergedMap }
+    return await goLeftAtDiffingPoint(
+        leftMap,
+        rightMap,
+        currentSelected,
+        diffLocations,
+        leftPath,
+        rightPath,
+        nimServerPort
+      )
   }
+
+  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
 
   let isRightTree = currentTreeId === WhichTree.Right
 
@@ -262,7 +296,7 @@ export const goLeftMerged = async (
     false,
     false,
     path,
-    10,
+    1,
     nimServerPort,
     nextTreeId
   )
@@ -302,6 +336,8 @@ export const goLeftMerged = async (
   return {
     selected: nextSelected,
     selectedTreeId: nextTreeId,
-    mergedMap: mergedMap
+    mergedMap: mergedMap,
+    leftMap: leftMap,
+    rightMap: rightMap,
   }
 }

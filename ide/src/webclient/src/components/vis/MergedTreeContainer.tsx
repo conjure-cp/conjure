@@ -5,7 +5,7 @@ import { HotKeys } from "react-hotkeys"
 import { cloneDeep, last, min, max, isEqual } from "lodash"
 import * as MovementHelper from "../../modules/MovementHelper"
 import * as d3 from "d3"
-import { mergeMaps, loadAllDiffs, getAncList } from "../../modules/ForestHelper"
+import { mergeMaps, loadAllDiffs, getAncList, loadDiff } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import {
   isTSImportEqualsDeclaration,
@@ -21,6 +21,7 @@ import {
   goRightMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
+import { makeState } from "../../modules/TreeHelper";
 
 export type MyMap = Record<number, Node>
 
@@ -157,10 +158,11 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   loadAllDiffsIntoMaps = async () => {
-    let maps = await loadAllDiffs(
+
+    let maps = await loadDiff(
       [this.props.leftPath, this.props.rightPath],
-      [this.props.leftCore, this.props.rightCore],
-      this.props.diffLocations,
+      [makeState(this.props.leftCore, 0).id2Node, makeState(this.props.rightCore, 0).id2Node],
+      this.props.diffLocations[0],
       this.props.nimServerPort
     )
 

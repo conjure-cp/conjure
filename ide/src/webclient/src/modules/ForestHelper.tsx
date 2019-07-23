@@ -43,6 +43,9 @@ export const loadDiff = async (
     maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
 
     let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
+
+    console.log(treeId)
+
     getDescList(maps[i][diffPoint[i]]).forEach(x => {
       if (x.data.id !== diffPoint[i]) {
         x.data.treeId = treeId
@@ -67,7 +70,6 @@ export const loadAllDiffs = async (
   return maps
 }
 
-
 export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
@@ -81,6 +83,10 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   }
 
   diffLocations.forEach(array => {
+    if (!leftMap[array[0]]) {
+      return
+    }
+
     getDescList(leftMap[array[0]])
       .filter(x => x.data.id !== array[0])
       .forEach(x => {
@@ -89,6 +95,10 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   })
 
   diffLocations.forEach(array => {
+    if (!rightMap[array[1]]) {
+      return
+    }
+
     getDescList(rightMap[array[1]])
       .filter(x => x.data.id !== array[1])
       .forEach(x => {
@@ -97,7 +107,7 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
   })
 
   for (const array of diffLocations) {
-    if (rightMap[array[1]].children) {
+    if (leftMap[array[0]] && rightMap[array[1]] && rightMap[array[1]].children) {
       if (!leftMap[array[0]].children) {
         leftMap[array[0]].children = []
       }
@@ -107,29 +117,5 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
     }
   }
 
-  let counter = 0
-  let map: MyMap = {}
-
-  let recurse = (insideNode: Node) => {
-    insideNode.newId = counter
-    map[insideNode.newId] = insideNode
-    counter++
-
-    if (!insideNode.children) return
-
-    insideNode.children!.forEach(kid => {
-      recurse(kid)
-    })
-  }
-
-  recurse(leftMap[0])
-  // getNodeList(leftMap[0]).forEach((x, i) => {
-  //   x.data.newId = x.value
-  //   map[i] = x.data
-  // })
-
-  // console.log(map)
-
   return leftMap
-  // return map
 }

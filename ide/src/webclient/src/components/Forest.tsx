@@ -91,26 +91,25 @@ class Forest extends React.Component<Props, State> {
       }
     ).then(data => data.json())
 
-    let paths = this.props.trees.map(x => x.path)
-    let cores = this.props.trees.map(x => x.core)
-    let loadedMaps = await loadAllDiffs(
-      paths,
-      cores,
-      json,
-      this.props.nimServerPort
-    )
-    let mergedTree = mergeMaps(loadedMaps[0], loadedMaps[1], json)
+    // let paths = this.props.trees.map(x => x.path)
+    // let cores = this.props.trees.map(x => x.core)
+    // let loadedMaps = await loadAllDiffs(
+    //   paths,
+    //   cores,
+    //   json,
+    //   this.props.nimServerPort
+    // )
+    // let mergedTree = mergeMaps(loadedMaps[0], loadedMaps[1], json)
     // console.log(mergedTree)
 
     this.setState({
       diffLocations: json,
-      diffReady: true,
-      mergedTree: mergedTree
+      diffReady: true
     })
   }
 
   render = () => {
-    // console.log(this.state.mergedTree)
+    console.log(this.state.diffLocations)
     return (
       <>
         {this.props.trees && (
@@ -274,7 +273,7 @@ class Forest extends React.Component<Props, State> {
                   ))}
                 </>
               ) : (
-                this.state.mergedTree && (
+                this.state.diffReady && (
                   // <div>This is not a splitscreen</div>
                   <div style={{ width: "100%" }}>
                     <MergedTreeContainer

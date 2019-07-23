@@ -13,14 +13,14 @@ import {
   core as coreSacbounds
 } from "./resources/sacbounds-8"
 import { loadAllDiffs } from "../src/modules/ForestHelper"
-import { diffLocations } from "./resources/normalVSSacbounds-8"
+import { bigToSmall } from "./resources/normalVSSacbounds-8"
 import { flipDiffLocations } from "../src/modules/Helper"
 import { goLeftBoyo } from "../src/modules/MovementHelper";
 
 describe("test goleftboyo", () => {
   let bigTree: any
   let smallTree: any
-  let flipped = flipDiffLocations(diffLocations)
+  let flipped = flipDiffLocations(bigToSmall)
 
   it("Checks that go left boyo inserts the nodes correctly into the tree", async () => {
     fetchMock.resetMocks()
@@ -36,7 +36,7 @@ describe("test goleftboyo", () => {
     let res = await loadAllDiffs(
       ["", "s"],
       [coreNormal, coreSacbounds],
-      diffLocations,
+      bigToSmall,
       5000
     )
 

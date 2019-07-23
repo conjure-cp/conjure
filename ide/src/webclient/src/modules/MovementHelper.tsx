@@ -296,6 +296,8 @@ export const fetchAncestors = async (
   })
 
   const json = await res.json()
+
+  // console.log(json)
   return json
 }
 

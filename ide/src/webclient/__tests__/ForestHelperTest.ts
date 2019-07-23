@@ -15,11 +15,11 @@ import {
   core as coreSacbounds
 } from "./resources/sacbounds-8"
 import { cloneDeep } from "lodash"
-import { diffLocations } from "./resources/normalVSSacbounds-8";
+import { bigToSmall } from "./resources/normalVSSacbounds-8";
 import { flipDiffLocations } from "../src/modules/Helper";
 
 describe("testing ForestHelper", () => {
-  const flipped = flipDiffLocations(diffLocations)
+  const flipped = flipDiffLocations(bigToSmall)
   let bigTree: any
   let smallTree: any
 
@@ -36,7 +36,7 @@ describe("testing ForestHelper", () => {
     let res = await loadAllDiffs(
       ["", "s"],
       [coreNormal, coreSacbounds],
-      diffLocations,
+      bigToSmall,
       5000
     )
 
@@ -47,7 +47,7 @@ describe("testing ForestHelper", () => {
     it("It should not modify the left or right rees", async () => {
       let copyLeft = cloneDeep(bigTree)
       let copyRight = cloneDeep(smallTree)
-      await mergeMaps(copyLeft, copyRight, diffLocations)
+      await mergeMaps(copyLeft, copyRight, bigToSmall)
 
       expect(copyLeft).toEqual(bigTree)
       expect(copyRight).toEqual(smallTree)
@@ -64,15 +64,15 @@ describe("testing ForestHelper", () => {
     })
 
     it("Should merge the maps the ancestors of each tree into their maps big->small", async () => {
-      let res = await mergeMaps(bigTree, smallTree, diffLocations)
+      let res = await mergeMaps(bigTree, smallTree, bigToSmall)
       let diff1 = getDescList(res[0]).find(
-        x => x.data.id === diffLocations[0][0]
+        x => x.data.id === bigToSmall[0][0]
       )!
       let diff2 = getDescList(res[0]).find(
-        x => x.data.id === diffLocations[1][0]
+        x => x.data.id === bigToSmall[1][0]
       )!
       let diff3 = getDescList(res[0]).find(
-        x => x.data.id === diffLocations[2][0]
+        x => x.data.id === bigToSmall[2][0]
       )!
 
       expect(diff1).toBeTruthy()
@@ -104,13 +104,13 @@ describe("testing ForestHelper", () => {
         flipped
       )
       let diff1 = getDescList(res[0]).find(
-        x => x.data.id === diffLocations[0][1]
+        x => x.data.id === bigToSmall[0][1]
       )!
       let diff2 = getDescList(res[0]).find(
-        x => x.data.id === diffLocations[1][1]
+        x => x.data.id === bigToSmall[1][1]
       )!
       let diff3 = getDescList(res[0]).find(
-        x => x.data.id === diffLocations[2][1]
+        x => x.data.id === bigToSmall[2][1]
       )!
 
       expect(diff1).toBeTruthy()
@@ -184,7 +184,7 @@ describe("testing ForestHelper", () => {
       let res = await loadAllDiffs(
         ["", "s"],
         [coreNormal, coreSacbounds],
-        diffLocations,
+        bigToSmall,
         5000
       )
 
