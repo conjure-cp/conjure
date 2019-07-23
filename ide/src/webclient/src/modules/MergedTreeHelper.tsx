@@ -16,12 +16,6 @@ export const goDownMerged = async (
   let leftDiffIds = diffLocations.map(x => x[0])
   let rightDiffIds = diffLocations.map(x => x[1])
   let index = -1
-  if (
-    currentTreeId === WhichTree.Right &&
-    rightDiffIds.includes(currentSelected)
-  ) {
-    index = rightDiffIds.indexOf(currentSelected)
-  }
 
   if (
     currentTreeId !== WhichTree.Right &&
