@@ -273,7 +273,6 @@ export const goLeftMerged = async (
   leftMap: MyMap
   rightMap: MyMap
 }> => {
-
   let leftDiffIds = diffLocations.map(x => x[0])
   if (
     leftDiffIds.includes(currentSelected) &&
@@ -317,15 +316,6 @@ export const goLeftMerged = async (
 
   let nextSelected = res.selected
 
-  // We may have moved to a both node
-  if (
-    !getAncList(map[0], nextSelected, currentTreeId).find(
-      x => x.data.treeId === currentTreeId
-    )
-  ) {
-    nextTreeId = WhichTree.Both
-  }
-
   mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
 
   if (isRightTree) {
@@ -353,6 +343,15 @@ export const goLeftMerged = async (
       )
       nextSelected = revision.selected
       nextTreeId = revision.treeId
+    }
+  } else {
+    // We may have moved to a both node
+    if (
+      !getAncList(leftMap[0], nextSelected, currentTreeId).find(
+        x => x.data.treeId === currentTreeId
+      )
+    ) {
+      nextTreeId = WhichTree.Both
     }
   }
 
