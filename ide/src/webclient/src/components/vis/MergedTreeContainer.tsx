@@ -99,6 +99,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     let leftMap = makeState(props.leftCore, 0).id2Node
     let rightMap = makeState(props.rightCore, 0).id2Node
 
+    console.log(props.augmentedIds)
+
     this.state = {
       ...origState,
       leftMap: leftMap,
@@ -181,7 +183,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     // let maps = [this.state.leftMap, this.state.rightMap]
 
     // if (this.props.currentDiff) {
-    //   console.log(this.props.currentDiff)
+    //   // console.log(this.props.currentDiff)
 
     //   maps = await loadDiff(
     //     [this.props.leftPath, this.props.rightPath],

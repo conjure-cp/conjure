@@ -125,9 +125,10 @@ export const mergeMaps = (
       )
     }
   }
-  if (lIsBigger) {
+
+  if (lIsBigger && diffLocations[0][0] === rightMap[0].descCount) {
     getDescList(leftMap[0])
-      .filter(x => x.data.id > r[0].descCount)
+      .filter(x => x.data.id > rightMap[0].descCount)
       .forEach(x => {
         x.data.treeId = WhichTree.Left
       })

@@ -93,6 +93,20 @@ describe("testing ForestHelper", () => {
 
     it("Should merge the maps the ancestors of each tree into their maps big->small", async () => {
       let res = await mergeMaps(bigTree, smallTree, bigToSmall, [])
+
+      expect(res[0].treeId).toBe(WhichTree.Both)
+      expect(res[1].treeId).toBe(WhichTree.Both)
+      expect(res[2].treeId).toBe(WhichTree.Both)
+      expect(res[3].treeId).toBe(WhichTree.Both)
+      expect(res[16].treeId).toBe(WhichTree.Both)
+      expect(res[17].treeId).toBe(WhichTree.Both)
+      expect(res[26].treeId).toBe(WhichTree.Both)
+      expect(res[27].treeId).toBe(WhichTree.Both)
+
+
+
+
+
       let diff1 = getDescList(res[0]).find(
         x => x.data.id === bigToSmall[0][0]
       )!

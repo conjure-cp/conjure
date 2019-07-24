@@ -4,10 +4,15 @@ import ../src/util/types
 import ../src/util/main
 
 suite "atEndOfTree":
-    test "aug":
+    test "aug1":
         let notFinishedTreePath = testDataPath & "/diff/default-findAllSols-8/findAllSols"
         discard init(notFinishedTreePath)
         check(atEndOfTree(notFinishedTreePath, 32) == @[33, 36])
+    test "aug3":
+        let notFinishedTreePath = testDataPath & "/diff/default-findAllSols-8/normal"
+        discard init(notFinishedTreePath)
+        echo atEndOfTree(notFinishedTreePath, 32)
+        # check(atEndOfTree(notFinishedTreePath, 32) == @[33, 36])
 
 
 suite "domainsAreEqual":
