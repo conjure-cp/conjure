@@ -23,10 +23,18 @@ proc init*(dirPath: string): (Core, string) =
 
 
 proc checkDomainsAreEqual*(paths: array[2, string],  nodeIds: array[2, int]) : bool =
-    let query = "select group_concat(name, storeDump) from domain where nodeId = ?"
+    let query = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
     let leftDB = dBTable[paths[0]]
     let rightDB = dBTable[paths[1]]
-    return leftDB.getValue(sql(query), nodeIds[0]) == rightDB.getValue(sql(query), nodeIds[1])
+
+    # echo "============================================="
+
+    let leftValue = leftDB.getValue(sql(query), nodeIds[0])
+    # echo leftValue
+    # echo ""
+    let rightValue = rightDB.getValue(sql(query), nodeIds[1])
+    # echo rightValue
+    return leftValue == rightValue
     
 
 proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
@@ -70,7 +78,7 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
     var db : DbConn
 
     if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-       return DiffResponse(diffLocations: @[@[0,0]], augmentedIds: @[])
+       return DiffResponse(diffLocations: @[@[-1,-1]], augmentedIds: @[])
 
     while true:
 

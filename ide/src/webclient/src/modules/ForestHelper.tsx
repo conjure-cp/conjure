@@ -79,7 +79,7 @@ export const mergeMaps = (
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
-  if (isEqual(diffLocations, [[0, 0]])) {
+  if (isEqual(diffLocations, [[-1, -1]])) {
     getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
     getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
     const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)

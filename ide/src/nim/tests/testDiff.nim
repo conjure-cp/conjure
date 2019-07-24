@@ -104,7 +104,7 @@ suite "diff":
         discard init(leftPath)
         discard init(rightPath)
         let d = diff(leftPath, rightPath)
-        check(d.diffLocations == @[@[0,0]])
+        check(d.diffLocations == @[@[-1,-1]])
         check(d.augmentedIds == newSeq[int]())
 
     test "findAllSols":
@@ -115,6 +115,18 @@ suite "diff":
         let d = diff(leftPath, rightPath, true)
         check(d.diffLocations == @[@[32,32]])
         check(d.augmentedIds == @[33,36])
+
+
+    test "symmBreak":
+        let leftPath = testDataPath & "/diff/default-symmBreak-8/normal"
+        let rightPath = testDataPath & "/diff/default-symmBreak-8/symmBreakNoOptimisation"
+        discard init(leftPath)
+        discard init(rightPath)
+        let d = diff(leftPath, rightPath, true)
+        echo d.diffLocations
+        echo d.augmentedIds
+        check(d.diffLocations == @[@[0,0]])
+        check(d.augmentedIds == newSeq[int]())
 
     # test "contrived":
     #     let leftPath = testDataPath & "/diff/contrived/normal"
