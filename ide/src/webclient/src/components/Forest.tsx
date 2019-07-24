@@ -31,6 +31,7 @@ interface State {
   showLabels: boolean
   playing: boolean
   collapseAsExploring: boolean
+  augmentedIds: number[]
   diffLocations: number[][]
   currentDiffIndex: number
   diffReady: boolean
@@ -50,6 +51,7 @@ class Forest extends React.Component<Props, State> {
       collapseAsExploring: false,
       showLabels: true,
       diffLocations: [],
+      augmentedIds: [],
       currentDiffIndex: -1,
       diffReady: false,
       splitScreen: false,
@@ -101,7 +103,8 @@ class Forest extends React.Component<Props, State> {
     // console.log(mergedTree)
 
     this.setState({
-      diffLocations: json,
+      augmentedIds: json.augmentedIds,
+      diffLocations: json.diffLocations,
       diffReady: true
     })
   }

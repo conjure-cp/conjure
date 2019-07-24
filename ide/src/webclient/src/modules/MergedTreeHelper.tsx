@@ -88,11 +88,12 @@ export const goDownMerged = async (
   currentSelected: number,
   currentTreeId: number,
   diffLocations: number[][],
+  augmentedIds: number[],
   leftPath: string,
   rightPath: string,
   nimServerPort: number
 ) => {
-  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
+  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations, augmentedIds)
 
   let kids = getDiffPointKids(
     leftMap,
@@ -140,6 +141,7 @@ export const goDownMerged = async (
     leftMap,
     rightMap,
     diffLocations,
+    augmentedIds,
     nimServerPort
   )
 }
@@ -182,6 +184,7 @@ export const goLeftAtDiffingPoint = async (
   rightMap: MyMap,
   currentSelected: number,
   diffLocations: number[][],
+  augmentedIds: number[],
   leftPath: string,
   rightPath: string,
   nimServerPort: number
@@ -197,7 +200,7 @@ export const goLeftAtDiffingPoint = async (
     nimServerPort
   )
 
-  let mergedMap = mergeMaps(maps[0], maps[1], diffLocations)
+  let mergedMap = mergeMaps(maps[0], maps[1], diffLocations, augmentedIds)
   let currentNode = mergedMap[currentSelected]
   let nextNode = currentNode.children![0]
 
@@ -285,6 +288,7 @@ export const goLeftMerged = async (
   leftMap: MyMap,
   rightMap: MyMap,
   diffLocations: number[][],
+  augmentedIds: number[],
   nimServerPort: number
 ): Promise<{
   selected: number
@@ -293,7 +297,7 @@ export const goLeftMerged = async (
   leftMap: MyMap
   rightMap: MyMap
 }> => {
-  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
+  let mergedMap = mergeMaps(leftMap, rightMap, diffLocations, augmentedIds)
 
   let leftDiffIds = diffLocations.map(x => x[0])
   if (
@@ -306,6 +310,7 @@ export const goLeftMerged = async (
         rightMap,
         currentSelected,
         diffLocations,
+        augmentedIds,
         leftPath,
         rightPath,
         nimServerPort
@@ -341,7 +346,7 @@ export const goLeftMerged = async (
 
   let nextSelected = res.selected
 
-  mergedMap = mergeMaps(leftMap, rightMap, diffLocations)
+  mergedMap = mergeMaps(leftMap, rightMap, diffLocations, augmentedIds)
 
   if (isRightTree) {
     rightMap = res.id2Node

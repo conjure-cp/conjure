@@ -47,7 +47,7 @@ describe("testing ForestHelper", () => {
     it("It should not modify the left or right rees", async () => {
       let copyLeft = cloneDeep(bigTree)
       let copyRight = cloneDeep(smallTree)
-      await mergeMaps(copyLeft, copyRight, bigToSmall)
+      await mergeMaps(copyLeft, copyRight, bigToSmall, [])
 
       expect(copyLeft).toEqual(bigTree)
       expect(copyRight).toEqual(smallTree)
@@ -56,7 +56,7 @@ describe("testing ForestHelper", () => {
     it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
       let res = await mergeMaps(cloneDeep(bigTree), cloneDeep(smallTree), [
         [0, 0]
-      ])
+      ], [])
       const nodeList = getDescList(res[0])
       const bothNodes = nodeList.find(x => x.data.treeId === WhichTree.Both)
 
@@ -64,7 +64,7 @@ describe("testing ForestHelper", () => {
     })
 
     it("Should merge the maps the ancestors of each tree into their maps big->small", async () => {
-      let res = await mergeMaps(bigTree, smallTree, bigToSmall)
+      let res = await mergeMaps(bigTree, smallTree, bigToSmall, [])
       let diff1 = getDescList(res[0]).find(
         x => x.data.id === bigToSmall[0][0]
       )!
@@ -101,7 +101,8 @@ describe("testing ForestHelper", () => {
       let res = await mergeMaps(
         smallTree,
         bigTree,
-        flipped
+        flipped,
+        []
       )
       let diff1 = getDescList(res[0]).find(
         x => x.data.id === bigToSmall[0][1]

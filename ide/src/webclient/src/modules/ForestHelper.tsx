@@ -68,7 +68,12 @@ export const loadAllDiffs = async (
   return maps
 }
 
-export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
+export const mergeMaps = (
+  l: MyMap,
+  r: MyMap,
+  diffLocations: number[][],
+  augmentedIds: number[]
+) => {
   const lIsBigger = l[0].descCount >= r[0].descCount
 
   let leftMap = cloneDeep(l)
@@ -120,21 +125,19 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffLocations: number[][]) => {
       )
     }
   }
-  // if (lIsBigger) {
-  //   getDescList(leftMap[0])
-  //     .filter(x => x.data.id > r[0].descCount)
-  //     .forEach(x => {
-  //       x.data.treeId = WhichTree.Left
-  //     })
-  // } else {
-  //   getDescList(rightMap[0])
-  //     .map(x => x.data)
-  //     .filter(x => x.id > l[0].descCount)
-  //     .forEach(x => {
-  //       x.treeId = WhichTree.Right
-  //       leftMap[x.parentId].children = leftMap[x.parentId].children!.concat(x)
-  //     })
-  // }
+  if (lIsBigger) {
+    getDescList(leftMap[0])
+      .filter(x => x.data.id > r[0].descCount)
+      .forEach(x => {
+        x.data.treeId = WhichTree.Left
+      })
+  } else {
+    augmentedIds.forEach(id => {
+      let node = rightMap[id]
+      node.treeId = WhichTree.Right
+      leftMap[node.parentId].children!.push(node)
+    })
+  }
 
   return leftMap
 }
