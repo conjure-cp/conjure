@@ -110,7 +110,7 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
-    // console.log(this.state.diffLocations)
+    console.log(this.state.currentDiffIndex)
 
     if (this.props.trees) {
       // console.log(JSON.stringify(this.props.trees[1].core))

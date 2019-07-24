@@ -177,33 +177,27 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   loadDiffsFromAbove = async () => {
-    // let selected = this.state.selected
+    let selected = this.state.selected
 
-    // let maps = [this.state.leftMap, this.state.rightMap]
+    let maps = [this.state.leftMap, this.state.rightMap]
 
-    // if (this.props.currentDiff) {
-    //   // console.log(this.props.currentDiff)
+    if (this.props.currentDiff) {
+      // console.log(this.props.currentDiff)
 
-    //   maps = await loadDiff(
-    //     [this.props.leftPath, this.props.rightPath],
-    //     maps,
-    //     this.props.currentDiff,
-    //     this.props.nimServerPort
-    //   )
-    //   selected = this.props.currentDiff[0]
-    // }
+      maps = await loadDiff(
+        [this.props.leftPath, this.props.rightPath],
+        maps,
+        this.props.currentDiff,
+        this.props.nimServerPort
+      )
+      selected = this.props.currentDiff[0]
+    }
 
-    // this.setState({
-    //   leftMap: maps[0],
-    //   rightMap: maps[1],
-    //   mergedMap: mergeMaps(
-    //     maps[0],
-    //     maps[1],
-    //     this.props.diffLocations,
-    //     this.props.augmentedIds
-    //   ),
-    //   selected: selected
-    // })
+    this.setState({
+      leftMap: maps[0],
+      rightMap: maps[1],
+      selected: selected
+    })
   }
 
   componentDidMount = () => {
@@ -221,12 +215,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       console.log("---------------------")
       console.log(this.state.leftMap)
       console.log(this.state.rightMap)
-      // console.log(this.state.mergedMap)
-      // console.log(this.props.diffLocations)
-      // console.log(this.state.rightMap[9])
     }
-
-    // console.log("selected", this.state.selected, this.state.selectedTreeId)
 
     return (
       <HotKeys keyMap={this.map} handlers={this.handlers}>

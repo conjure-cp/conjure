@@ -22,14 +22,13 @@ interface State {}
 class DiffSettings extends React.Component<Props, State> {
   constructor(props: any) {
     super(props)
-    this.state = {}
   }
 
   render = () => {
     const maybeSlider = this.props.diffLocations.length > 1 && (
       <MySlider
         values={[this.props.currentDiffIndex]}
-        domain={[0, this.props.diffLocations.length - 1]}
+        domain={[-1, this.props.diffLocations.length - 1]}
         sliderChangeHandler={this.props.diffChangeHandler}
       />
     )

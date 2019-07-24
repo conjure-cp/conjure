@@ -110,7 +110,6 @@ export const goDownMerged = async (
         selectedTreeId: currentTreeId,
         leftMap,
         rightMap,
-        // mergedMap
       }
     }
 
@@ -120,7 +119,6 @@ export const goDownMerged = async (
         selectedTreeId: kids[0].treeId,
         leftMap,
         rightMap,
-        // mergedMap
       }
     }
 
@@ -129,7 +127,6 @@ export const goDownMerged = async (
       selectedTreeId: kids[1].treeId,
       leftMap,
       rightMap,
-      // mergedMap
     }
   }
 
@@ -207,7 +204,6 @@ export const goLeftAtDiffingPoint = async (
   return {
     selected: nextNode.id,
     selectedTreeId: nextNode.treeId,
-    // mergedMap: mergedMap,
     leftMap: maps[0],
     rightMap: maps[1]
   }
@@ -315,7 +311,6 @@ export const goLeftMerged = async (
         rightPath,
         nimServerPort
       )),
-      // mergedMap,
       leftMap,
       rightMap
     }
@@ -388,7 +383,6 @@ export const goLeftMerged = async (
   return {
     selected: nextSelected,
     selectedTreeId: nextTreeId,
-    // mergedMap: mergedMap,
     leftMap: leftMap,
     rightMap: rightMap
   }
