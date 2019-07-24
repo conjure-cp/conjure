@@ -96,16 +96,18 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
                 if (res.len() == 0 and lCount == rCount):
                     return DiffResponse(diffLocations: newSeq[seq[int]](), augmentedIds: @[] )
 
+                nodeIds[0].dec()    
+                nodeIds[1].dec()    
 
                 var notEndedTreePath = leftPath
-                var endedTreeId = nodeIds[1]
+                var endedTreeId = nodeIds[1] 
                 if leftIsFinished:
                     notEndedTreePath = rightPath
                     endedTreeId = nodeIds[0]
 
                 let augIds = atEndOfTree(notEndedTreePath, endedTreeId)
 
-                res.add((nodeIds[0] - 1, nodeIds[1] - 1))
+                res.add((nodeIds[0], nodeIds[1]))
 
                 let diffLocations = res.map(s => @[s[0], s[1]])
 

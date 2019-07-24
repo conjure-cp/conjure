@@ -7,11 +7,7 @@ suite "atEndOfTree":
     test "aug":
         let notFinishedTreePath = testDataPath & "/diff/default-findAllSols-8/findAllSols"
         discard init(notFinishedTreePath)
-        echo atEndOfTree(notFinishedTreePath, 32)
-
-        
-    
-    
+        check(atEndOfTree(notFinishedTreePath, 32) == @[33, 36])
 
 
 suite "domainsAreEqual":
@@ -59,7 +55,7 @@ suite "diff":
 
         let d = diff(leftPath, rightPath)
         check(d.diffLocations == answer)
-        check(d.augmentedIds == @[66, 67, 86,120])
+        check(d.augmentedIds == @[65, 67, 86,120])
 
     test "12":
         let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
@@ -106,14 +102,14 @@ suite "diff":
         check(d.diffLocations == @[@[0,0]])
         check(d.augmentedIds == newSeq[int]())
 
-    test "findallsols":
+    test "findAllSols":
         let leftPath = testDataPath & "/diff/default-findAllSols-8/normal"
         let rightPath = testDataPath & "/diff/default-findAllSols-8/findAllSols"
         discard init(leftPath)
         discard init(rightPath)
         let d = diff(leftPath, rightPath, true)
         check(d.diffLocations == @[@[32,32]])
-        check(d.augmentedIds == @[34,36])
+        check(d.augmentedIds == @[33,36])
 
     # test "contrived":
     #     let leftPath = testDataPath & "/diff/contrived/normal"

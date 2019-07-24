@@ -14,9 +14,15 @@ import {
   coreOf9 as coreOf9Sacbounds,
   core as coreSacbounds
 } from "./resources/sacbounds-8"
+
+import {
+  core as coreFindAllSols
+} from "./resources/findAllSols-8"
+
 import { cloneDeep } from "lodash"
 import { bigToSmall } from "./resources/normalVSSacbounds-8";
 import { flipDiffLocations } from "../src/modules/Helper";
+import { makeState } from "../src/modules/TreeHelper";
 
 describe("testing ForestHelper", () => {
   const flipped = flipDiffLocations(bigToSmall)
@@ -51,6 +57,28 @@ describe("testing ForestHelper", () => {
 
       expect(copyLeft).toEqual(bigTree)
       expect(copyRight).toEqual(smallTree)
+    })
+
+    it("It should merge normal with findAllsols", async () => {
+      let normalMap = makeState(coreNormal, 0).id2Node
+      let findAllSolsMap = makeState(coreFindAllSols, 0).id2Node
+
+      let merged = mergeMaps(normalMap, findAllSolsMap, [[32,32]], [33, 36])
+      expect(merged[1].children!.map (x => x.id)).toEqual([2, 36])
+      expect(merged[26].children!.map (x => x.id)).toEqual([27, 33])
+      expect(merged[26].children![1].treeId).toEqual(WhichTree.Right)
+      expect(merged[1].children![1].treeId).toEqual(WhichTree.Right)
+    })
+
+  it("It should merge findAllSols with normal", async () => {
+      let normalMap = makeState(coreNormal, 0).id2Node
+      let findAllSolsMap = makeState(coreFindAllSols, 0).id2Node
+
+      let merged = mergeMaps( findAllSolsMap, normalMap, [[32, 32]], [] )
+      expect(merged[1].children!.map (x => x.id)).toEqual([2, 36])
+      expect(merged[26].children!.map (x => x.id)).toEqual([27, 33])
+      expect(merged[26].children![1].treeId).toEqual(WhichTree.Left)
+      expect(merged[1].children![1].treeId).toEqual(WhichTree.Left)
     })
 
     it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {

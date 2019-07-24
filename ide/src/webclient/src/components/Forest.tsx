@@ -110,7 +110,12 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
-    console.log(this.state.diffLocations)
+    // console.log(this.state.diffLocations)
+
+    if (this.props.trees) {
+      // console.log(JSON.stringify(this.props.trees[1].core))
+    }
+
     return (
       <>
         {this.props.trees && (
@@ -283,7 +288,7 @@ class Forest extends React.Component<Props, State> {
                           ? this.state.diffLocations[
                               this.state.currentDiffIndex
                             ]
-                          : []
+                          : undefined
                       }
                       leftCore={this.props.trees[0].core}
                       rightCore={this.props.trees[1].core}
@@ -292,6 +297,7 @@ class Forest extends React.Component<Props, State> {
                       loadDepth={this.state.loadDepth}
                       hash={"blahhash"}
                       diffLocations={this.state.diffLocations}
+                      augmentedIds={this.state.augmentedIds}
                       nimServerPort={this.props.nimServerPort}
                       leftSolAncestorIds={
                         this.props.trees[0].core.solAncestorIds

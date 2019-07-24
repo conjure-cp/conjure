@@ -36,7 +36,8 @@ interface Props {
   leftSolAncestorIds: number[]
   rightSolAncestorIds: number[]
   diffLocations: number[][]
-  currentDiff: number[]
+  augmentedIds: number[]
+  currentDiff?: number[]
   rightPath: string
   leftPath: string
   hash: string
@@ -50,7 +51,7 @@ interface Props {
 export interface State {
   leftMap: MyMap
   rightMap: MyMap
-  mergedMap?: MyMap
+  mergedMap: MyMap
   solveable: boolean
   selected: number
   selectedTreeId: WhichTree
@@ -95,10 +96,14 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       origState.selectedTreeId = WhichTree.Left
     }
 
+    let leftMap = makeState(props.leftCore, 0).id2Node
+    let rightMap = makeState(props.rightCore, 0).id2Node
+
     this.state = {
       ...origState,
-      leftMap: makeState(props.leftCore, 0).id2Node,
-      rightMap: makeState(props.leftCore, 0).id2Node,
+      leftMap: leftMap,
+      rightMap: rightMap,
+      mergedMap: mergeMaps(leftMap, rightMap, props.diffLocations, props.augmentedIds),
       solveable:
         props.leftCore.nodes
           .concat(props.rightCore.nodes)
@@ -116,6 +121,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.state.leftMap!,
             this.state.rightMap!,
             this.props.diffLocations,
+            this.props.augmentedIds,
             this.props.nimServerPort
           )
         )
@@ -140,6 +146,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.state.selected,
             this.state.selectedTreeId,
             this.props.diffLocations,
+            this.props.augmentedIds,
             this.props.leftPath,
             this.props.rightPath,
             this.props.nimServerPort
@@ -169,26 +176,33 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   loadDiffsFromAbove = async () => {
-    let selected = this.state.selected
+    // let selected = this.state.selected
 
-    let maps = [this.state.leftMap, this.state.rightMap]
+    // let maps = [this.state.leftMap, this.state.rightMap]
 
-    if (this.props.currentDiff !== []) {
-      maps = await loadDiff(
-        [this.props.leftPath, this.props.rightPath],
-        maps,
-        this.props.currentDiff,
-        this.props.nimServerPort
-      )
-      selected = this.props.currentDiff[0]
-    }
+    // if (this.props.currentDiff) {
+    //   console.log(this.props.currentDiff)
 
-    this.setState({
-      leftMap: maps[0],
-      rightMap: maps[1],
-      mergedMap: mergeMaps(maps[0], maps[1], this.props.diffLocations),
-      selected: selected
-    })
+    //   maps = await loadDiff(
+    //     [this.props.leftPath, this.props.rightPath],
+    //     maps,
+    //     this.props.currentDiff,
+    //     this.props.nimServerPort
+    //   )
+    //   selected = this.props.currentDiff[0]
+    // }
+
+    // this.setState({
+    //   leftMap: maps[0],
+    //   rightMap: maps[1],
+    //   mergedMap: mergeMaps(
+    //     maps[0],
+    //     maps[1],
+    //     this.props.diffLocations,
+    //     this.props.augmentedIds
+    //   ),
+    //   selected: selected
+    // })
   }
 
   componentDidMount = () => {
@@ -203,7 +217,11 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
   render = () => {
     if (this.state.rightMap) {
-      console.log(this.props.diffLocations)
+      console.log("---------------------")
+      console.log(this.state.leftMap)
+      console.log(this.state.rightMap)
+      console.log(this.state.mergedMap)
+      // console.log(this.props.diffLocations)
       // console.log(this.state.rightMap[9])
     }
 
@@ -220,11 +238,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             rightDiffIds={this.props.diffLocations.map(x => x[1])}
             identifier={"MergedTree"}
             rootNode={
-              mergeMaps(
-                this.state.leftMap,
-                this.state.rightMap,
-                this.props.diffLocations
-              )[0]
+              this.state.mergedMap[0]
+              // mergeMaps(
+              //   this.state.leftMap,
+              //   this.state.rightMap,
+              //   this.props.diffLocations,
+              //   this.props.augmentedIds
+              // )[0]
             }
             selected={this.state.selected}
             selectedTreeId={this.state.selectedTreeId}
