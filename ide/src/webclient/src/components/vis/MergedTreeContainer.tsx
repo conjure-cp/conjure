@@ -51,7 +51,6 @@ interface Props {
 export interface State {
   leftMap: MyMap
   rightMap: MyMap
-  mergedMap: MyMap
   solveable: boolean
   selected: number
   selectedTreeId: WhichTree
@@ -105,7 +104,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       ...origState,
       leftMap: leftMap,
       rightMap: rightMap,
-      mergedMap: mergeMaps(leftMap, rightMap, props.diffLocations, props.augmentedIds),
+      // mergedMap: mergeMaps(leftMap, rightMap, props.diffLocations, props.augmentedIds),
       solveable:
         props.leftCore.nodes
           .concat(props.rightCore.nodes)
@@ -222,7 +221,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       console.log("---------------------")
       console.log(this.state.leftMap)
       console.log(this.state.rightMap)
-      console.log(this.state.mergedMap)
+      // console.log(this.state.mergedMap)
       // console.log(this.props.diffLocations)
       // console.log(this.state.rightMap[9])
     }
