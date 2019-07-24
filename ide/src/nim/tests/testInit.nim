@@ -3,57 +3,56 @@ import ../src/util/types
 import ../src/util/init
 import ../src/util/main
 
-suite "findFiles":
-    test "everythingOkay":
-        let path = testDataPath & "sets/dummy"
-        discard findFiles(path)
+# suite "findFiles":
+#     test "everythingOkay":
+#         let path = testDataPath & "sets/dummy"
+#         discard findFiles(path)
 
-    test "Missing files":
-        expect(InitException):
-            let path = testDataPath & "extension/noDBFile"
-            discard findFiles(path)
+#     test "Missing files":
+#         expect(InitException):
+#             let path = testDataPath & "extension/noDBFile"
+#             discard findFiles(path)
 
-        expect(InitException):
-            let path = testDataPath & "extension/noEprimeFile"
-            discard findFiles(path)
+#         expect(InitException):
+#             let path = testDataPath & "extension/noEprimeFile"
+#             discard findFiles(path)
 
-        expect(InitException):
-            let path = testDataPath & "extension/noMinionFile"
-            discard findFiles(path)
+#         expect(InitException):
+#             let path = testDataPath & "extension/noMinionFile"
+#             discard findFiles(path)
 
-    test "Multiple DB":
-        expect(InitException):
-            let path = testDataPath & "extension/multipleDBFiles"
-            discard findFiles(path)
+#     test "Multiple DB":
+#         expect(InitException):
+#             let path = testDataPath & "extension/multipleDBFiles"
+#             discard findFiles(path)
 
-    test "Multiple Eprime":
-        expect(InitException):
-            let path = testDataPath & "extension/multipleEprimeFiles"
-            discard findFiles(path)
+#     test "Multiple Eprime":
+#         expect(InitException):
+#             let path = testDataPath & "extension/multipleEprimeFiles"
+#             discard findFiles(path)
 
-    test "Multiple Minion":
-        expect(InitException):
-            let path = testDataPath & "extension/multipleMinionFiles"
-            discard findFiles(path)
+#     test "Multiple Minion":
+#         expect(InitException):
+#             let path = testDataPath & "extension/multipleMinionFiles"
+#             discard findFiles(path)
 
-suite "path":
-    test "1":
-        let path = testDataPath & "gears1000"
-        let (db, _) = findFiles(path)
-        expect(DbError):
-            let val = db.getValue(sql"select path from Node where nodeId = 0")
-            echo "hello boyo"
+# suite "path":
+#     test "1":
+#         let path = testDataPath & "gears1000"
+#         let (db, _) = findFiles(path)
+#         expect(DbError):
+#             let val = db.getValue(sql"select path from Node where nodeId = 0")
+#             echo "hello boyo"
 
-        discard init(path)
-        let val = db.getValue(sql"select path from Node where nodeId = 0")
+#         discard init(path)
+#         let val = db.getValue(sql"select path from Node where nodeId = 0")
 
-suite "makePaths":
-    test "1":
-        # let path = testDataPath & "gears1000"
-        let path = "/home/tom/EssenceCatalog/problems/csplib-prob049/vscodeExtensionCache/Wed__10_Jul_2019_14:18:17_GMT_Config1_4ecgUyhgB"
-        let (db, _) = findFiles(path)
-        let table = makePaths(db)
-        writePaths(db, table)
+# suite "makePaths":
+#     test "1":
+#         # let path = testDataPath & "gears1000"
+#         let path = "/home/tom/EssenceCatalog/problems/csplib-prob049/vscodeExtensionCache/Wed__10_Jul_2019_14:18:17_GMT_Config1_4ecgUyhgB"
+#         let (db, _) = findFiles(path)
+#         writePaths(db )
 
 
 

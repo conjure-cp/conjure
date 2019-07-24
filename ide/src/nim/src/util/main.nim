@@ -1,4 +1,5 @@
-import jester, typetraits, sequtils, tables, db_sqlite, types, parseutils, strutils, json, strformat, sequtils, sugar
+import os, jester, typetraits, sequtils, tables, db_sqlite, types, parseutils,
+        strutils, json, strformat, sequtils, sugar
 
 import jsonify
 import init
@@ -8,10 +9,10 @@ import branchingCondition
 
 var dBTable: Table[string, DBconn]
 
-proc loadAncestors*(dirPath, nodeId: string): seq[Node] 
+proc loadAncestors*(dirPath, nodeId: string): seq[Node]
 
 proc init*(dirPath: string): (Core, string) =
-    ## Initialises data structures 
+    ## Initialises data structures
     var eprimeInfoFilePath: string
     var db: DbConn
     (db, eprimeInfoFilePath) = findFiles(dirPath)
@@ -22,7 +23,7 @@ proc init*(dirPath: string): (Core, string) =
     return (makeCore(db), infoFile)
 
 
-proc checkDomainsAreEqual*(paths: array[2, string],  nodeIds: array[2, int]) : bool =
+proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2, int]): bool =
     let query = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
     let leftDB = dBTable[paths[0]]
     let rightDB = dBTable[paths[1]]
@@ -35,14 +36,14 @@ proc checkDomainsAreEqual*(paths: array[2, string],  nodeIds: array[2, int]) : b
     let rightValue = rightDB.getValue(sql(query), nodeIds[1])
     # echo rightValue
     return leftValue == rightValue
-    
+
 
 proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
     if leftIsMore:
         return [current, other]
     return [other, current]
 
-proc atEndOfTree*(notFinishedTreePath: string, finishedTreeLastId: int): seq[int] = 
+proc atEndOfTree*(notFinishedTreePath: string, finishedTreeLastId: int): seq[int] =
     let ancestors = loadAncestors(notFinishedTreePath, $finishedTreeLastId)
     let augmentedIds = ancestors.filter(x => x.id > finishedTreeLastId).map(x => x.id)
     return augmentedIds
@@ -52,10 +53,9 @@ type DiffResponse* = ref object of RootObj
     augmentedIds*: seq[int]
 
 
-
 proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
 
-    var res : seq[(int, int)]
+    var res: seq[(int, int)]
 
     let leftDB = dBTable[leftPath]
     let rightDB = dBTable[rightPath]
@@ -67,23 +67,23 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
     var lCount: int
     var rCount: int
 
-    discard leftDB.getValue(sql(query)).parseInt(lCount) 
-    discard rightDB.getValue(sql(query)).parseInt(rCount) 
+    discard leftDB.getValue(sql(query)).parseInt(lCount)
+    discard rightDB.getValue(sql(query)).parseInt(rCount)
 
-    let lIsMore =  lCount > rCount
+    let lIsMore = lCount > rCount
 
-    var nodeIds = [0,0]
+    var nodeIds = [0, 0]
     var current: int
     var other: int
-    var db : DbConn
+    var db: DbConn
 
     if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-       return DiffResponse(diffLocations: @[@[-1,-1]], augmentedIds: @[])
+        return DiffResponse(diffLocations: @[@[-1, -1]], augmentedIds: @[])
 
     while true:
 
         if debug:
-            echo  ""
+            echo ""
             echo nodeIds[0], "     ", nodeIds[1]
 
         # Increment each tree until we get to a point where they differ
@@ -102,13 +102,14 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
                     echo "quiting"
 
                 if (res.len() == 0 and lCount == rCount):
-                    return DiffResponse(diffLocations: newSeq[seq[int]](), augmentedIds: @[] )
+                    return DiffResponse(diffLocations: newSeq[seq[int]](),
+                            augmentedIds: @[])
 
-                nodeIds[0].dec()    
-                nodeIds[1].dec()    
+                nodeIds[0].dec()
+                nodeIds[1].dec()
 
                 var notEndedTreePath = leftPath
-                var endedTreeId = nodeIds[1] 
+                var endedTreeId = nodeIds[1]
                 if leftIsFinished:
                     notEndedTreePath = rightPath
                     endedTreeId = nodeIds[0]
@@ -119,8 +120,9 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
 
                 let diffLocations = res.map(s => @[s[0], s[1]])
 
-                return DiffResponse(diffLocations: diffLocations, augmentedIds: augIds )
-                
+                return DiffResponse(diffLocations: diffLocations,
+                        augmentedIds: augIds)
+
         if debug:
             echo nodeIds[0], "     ", nodeIds[1]
 
@@ -141,7 +143,8 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
 
             for index, db in dbs:
 
-                let path = db.getValue(sql"select path from Node where nodeId = ?", nodeIds[index])
+                let path = db.getValue(sql"select path from Node where nodeId = ?",
+                        nodeIds[index])
                 var nextId: int
                 let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
                 couldParse = db.getValue(sql(query)).parseInt(nextId)
@@ -151,10 +154,11 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
                         echo "quitting 2"
                         echo index, " | ", query
                     let diffLocations = res.map(s => @[s[0], s[1]])
-                    return DiffResponse(diffLocations: diffLocations, augmentedIds: @[] )
+                    return DiffResponse(diffLocations: diffLocations,
+                            augmentedIds: @[])
 
                 nodeIds[index] = nextId
-                
+
             if debug:
                 echo nodeIds[0], "     ", nodeIds[1]
 
@@ -173,7 +177,8 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
             # is a node equal to that of the smaller tree
             # while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
 
-            while not checkDomainsAreEqual([leftPath, rightPath], nodeIdsToArray(current, other, lIsMore)):
+            while not checkDomainsAreEqual([leftPath, rightPath],
+                    nodeIdsToArray(current, other, lIsMore)):
 
                 if debug:
                     echo "start of botoom llop"
@@ -203,17 +208,22 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
         echo "end"
 
     let diffLocations = res.map(s => @[s[0], s[1]])
-    return DiffResponse(diffLocations: diffLocations, augmentedIds: @[] )
-
-
-import os
+    return DiffResponse(diffLocations: diffLocations, augmentedIds: @[])
 
 proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
     let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
     let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
+    let flipped = fmt"{diffCachesDir}/{rightHash}~{leftHash}.json"
 
     if fileExists(diffCacheFile):
         return parseJson(readAll(open(diffCacheFile)))
+
+    if fileExists(flipped):
+        var contents = parseJson(readAll(open(flipped)))
+        return %contents["diffLocations"]
+            .getElems()
+            .map(x => [x[1], x[0]])
+
 
     let res = diff(leftPath, rightPath)
     writeFile(diffCacheFile, $(%res))
@@ -223,7 +233,7 @@ proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
     ## Loads the children of a node
     let db = dBTable[dirPath]
 
-    var nId : int
+    var nId: int
     discard nodeId.parseInt(nId)
 
     let path = db.getValue(sql"select path from Node where nodeId = ?", nodeId)
@@ -231,7 +241,8 @@ proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
     let query = """select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where 
     ( nodeId in
         (WITH split(word, str) AS (
-                    SELECT '', '""" & path & """' ||'/'
+                    SELECT '', '""" & path &
+            """' ||'/'
                     UNION ALL SELECT
                     substr(str, 0, instr(str, '/')),
                     substr(str, instr(str, '/')+1)
@@ -272,12 +283,12 @@ proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
     discard depth.parseInt(limit)
     # limit += 1
 
-    var nId : int
+    var nId: int
     discard nodeId.parseInt(nId)
 
     let path = db.getValue(sql"select path from Node where nodeId = ?", nodeId)
 
-    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution, path as p from Node where path like '" & 
+    let query = "select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution, path as p from Node where path like '" &
         path & """%' and (select count(*) from
         (WITH split(word, str) AS (
                     SELECT '', p ||'/'
@@ -286,11 +297,13 @@ proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
                     substr(str, instr(str, '/')+1)
                     FROM split WHERE str!=''
                 ) SELECT word FROM split WHERE word!=''
-        ) ) <= """ & $(path.split("/").len() + limit) & " and nodeId != " & nodeId & " order by length(p)"
+        ) ) <= """ & $(path.split("/").len() + limit) & " and nodeId != " &
+                nodeId & " order by length(p)"
 
     discard processQuery(db, sql(query), result)
 
-proc loadSimpleDomains*(dirPath, nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
+proc loadSimpleDomains*(dirPath, nodeId: string,
+        wantExpressions: bool = false): SimpleDomainResponse =
     ## Returns the simple domains for a given node
 
     let db = dBTable[dirPath]
