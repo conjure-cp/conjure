@@ -83,7 +83,7 @@ describe("testing ForestHelper", () => {
 
     it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
       let res = await mergeMaps(cloneDeep(bigTree), cloneDeep(smallTree), [
-        [0, 0]
+        [-1, -1]
       ], [])
       const nodeList = getDescList(res[0])
       const bothNodes = nodeList.find(x => x.data.treeId === WhichTree.Both)
