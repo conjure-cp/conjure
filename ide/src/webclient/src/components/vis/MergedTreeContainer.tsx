@@ -240,13 +240,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             rightDiffIds={this.props.diffLocations.map(x => x[1])}
             identifier={"MergedTree"}
             rootNode={
-              this.state.mergedMap[0]
-              // mergeMaps(
-              //   this.state.leftMap,
-              //   this.state.rightMap,
-              //   this.props.diffLocations,
-              //   this.props.augmentedIds
-              // )[0]
+              // this.state.mergedMap[0]
+              mergeMaps(
+                this.state.leftMap,
+                this.state.rightMap,
+                this.props.diffLocations,
+                this.props.augmentedIds
+              )[0]
             }
             selected={this.state.selected}
             selectedTreeId={this.state.selectedTreeId}
