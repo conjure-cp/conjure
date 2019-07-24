@@ -42,6 +42,9 @@ interface Props {
   hash: string
   nimServerPort: number
   loadDepth: number
+  duration: number
+  interval: number
+  showLabels: boolean
 }
 
 export interface State {
@@ -95,7 +98,11 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     this.state = {
       ...origState,
       leftMap: makeState(props.leftCore, 0).id2Node,
-      rightMap: makeState(props.leftCore, 0).id2Node
+      rightMap: makeState(props.leftCore, 0).id2Node,
+      solveable:
+        props.leftCore.nodes
+          .concat(props.rightCore.nodes)
+          .find(x => x.isSolution) !== undefined
     }
 
     this.handlers = {
@@ -151,13 +158,9 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         )
       },
       goToRoot: () => {
-        console.log("GOT OT ROOT")
+        console.log("GOT TO ROOT")
         this.setState({ selected: 0, selectedTreeId: WhichTree.Both })
       }
-      //   goPrev: () => MovementHelper.goToPreviousHandler(this),
-      //   collapse: this.collapse,
-      //   expand: this.expand,
-      //   showCore: this.showCore
     }
   }
 
@@ -165,7 +168,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     this.setState({ selected: d.id, selectedTreeId: d.treeId })
   }
 
-  loadAllDiffsIntoMaps = async () => {
+  loadDiffsFromAbove = async () => {
     let selected = this.state.selected
 
     let maps = [this.state.leftMap, this.state.rightMap]
@@ -189,18 +192,16 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   }
 
   componentDidMount = () => {
-    this.loadAllDiffsIntoMaps()
+    this.loadDiffsFromAbove()
   }
 
   componentDidUpdate = async (prevProps: Props, prevState: State) => {
     if (!isEqual(prevProps, this.props)) {
-      await this.loadAllDiffsIntoMaps()
+      await this.loadDiffsFromAbove()
     }
   }
 
   render = () => {
-    // TODO move this it shouldnt be here
-
     if (this.state.rightMap) {
       console.log(this.props.diffLocations)
       // console.log(this.state.rightMap[9])
@@ -252,10 +253,10 @@ export class MergedTreeContainer extends React.Component<Props, State> {
                 return { leftMap, rightMap }
               })
             }}
-            duration={1000}
+            duration={this.props.duration}
             width={1200}
             height={500}
-            showLabels={true}
+            showLabels={this.props.showLabels}
             diffParentId={-1}
           />
         )}

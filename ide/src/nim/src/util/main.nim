@@ -8,6 +8,7 @@ import branchingCondition
 
 var dBTable: Table[string, DBconn]
 
+proc loadAncestors*(dirPath, nodeId: string): seq[Node] 
 
 proc init*(dirPath: string): (Core, string) =
     ## Initialises data structures 
@@ -33,8 +34,18 @@ proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
         return [current, other]
     return [other, current]
 
+proc atEndOfTree*(notFinishedTreePath: string, finishedTreeLastId: int): seq[int] = 
+    let ancestors = loadAncestors(notFinishedTreePath, $finishedTreeLastId)
+    let augmentedIds = ancestors.filter(x => x.id > finishedTreeLastId).map(x => x.id)
+    return augmentedIds
 
-proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
+type DiffResponse* = ref object of RootObj
+    diffLocations*: seq[seq[int]]
+    augmentedIds*: seq[int]
+
+
+
+proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
 
     var res : seq[(int, int)]
 
@@ -59,7 +70,7 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
     var db : DbConn
 
     if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-       return @[@[0,0]] 
+       return DiffResponse(diffLocations: @[@[0,0]], augmentedIds: @[])
 
     while true:
 
@@ -73,17 +84,32 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
             nodeIds[0].inc()
             nodeIds[1].inc()
 
+            let leftIsFinished = nodeIds[0] >= lCount
+            let rightIsFinished = nodeIds[1] >= rCount
+
             # If we get to the end of one of the trees then we've finished and need to return
-            if (nodeIds[0] >= lCount or nodeIds[1] >= rCount):
+            if (leftIsFinished or rightIsFinished):
                 if debug:
                     echo nodeIds[0], "     ", nodeIds[1]
                     echo "quiting"
 
                 if (res.len() == 0 and lCount == rCount):
-                    return result
+                    return DiffResponse(diffLocations: newSeq[seq[int]](), augmentedIds: @[] )
+
+
+                var notEndedTreePath = leftPath
+                var endedTreeId = nodeIds[1]
+                if leftIsFinished:
+                    notEndedTreePath = rightPath
+                    endedTreeId = nodeIds[0]
+
+                let augIds = atEndOfTree(notEndedTreePath, endedTreeId)
 
                 res.add((nodeIds[0] - 1, nodeIds[1] - 1))
-                return res.map(s => @[s[0], s[1]])
+
+                let diffLocations = res.map(s => @[s[0], s[1]])
+
+                return DiffResponse(diffLocations: diffLocations, augmentedIds: augIds )
                 
         if debug:
             echo nodeIds[0], "     ", nodeIds[1]
@@ -114,7 +140,8 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
                     if debug:
                         echo "quitting 2"
                         echo index, " | ", query
-                    return res.map(s => @[s[0], s[1]])
+                    let diffLocations = res.map(s => @[s[0], s[1]])
+                    return DiffResponse(diffLocations: diffLocations, augmentedIds: @[] )
 
                 nodeIds[index] = nextId
                 
@@ -164,7 +191,9 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): seq[seq[int]] =
 
     if debug:
         echo "end"
-    return res.map(s => @[s[0], s[1]])
+
+    let diffLocations = res.map(s => @[s[0], s[1]])
+    return DiffResponse(diffLocations: diffLocations, augmentedIds: @[] )
 
 
 import os
@@ -217,6 +246,10 @@ proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
 
     discard processQuery(db, sql(query), result)
 
+
+
+
+
 proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
     ## Loads the children of a node
     # echo "path ", dirPath
@@ -250,7 +283,6 @@ proc loadNodes*(dirPath, nodeId, depth: string): seq[Node] =
 proc loadSimpleDomains*(dirPath, nodeId: string, wantExpressions: bool = false): SimpleDomainResponse =
     ## Returns the simple domains for a given node
 
-
     let db = dBTable[dirPath]
 
     var list: seq[string]
@@ -268,93 +300,3 @@ proc loadSimpleDomains*(dirPath, nodeId: string, wantExpressions: bool = false):
                 list.add(domainsAtNode[i].name)
 
     return SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
-# proc getExpandedSetChild*(nodeId, path: string): Set =
-#     ## Finds the set belonging to a path
-
-#     result = Set(prettyLookup[nodeId][path.split(".")[0]])
-
-#     for name in path.split(".")[1..^1]:
-#         for kid in result.children:
-#             if kid.name == name:
-#                 result = kid
-#                 break;
-
-#     if result.name != path.split(".")[^1]:
-#         return nil
-
-
-# proc getChildSets(paths, nodeId: string): seq[Set] =
-#     ## Returns all child sets belonging to paths
-#     if paths != "":
-#         for path in paths.split(":"):
-#             result.add(getExpandedSetChild(nodeId, path))
-
-
-# proc getJsonVarList*(domainsAtNode: seq[Variable], nodeId: string): JsonNode =
-#     ## Returns a json list of variables 
-#     result = %*[]
-
-#     for v in domainsAtNode:
-#         if (v != nil):
-#             if (v of Set):
-#                 result.add(setToJson(Set(v), nodeId, true))
-#             else:
-#                 result.add(%v)
-
-# proc loadSetChild*(nodeId, path: string): JsonNode =
-#     ## Returns a nested set response
-#     let s = getExpandedSetChild(nodeId, path)
-#     let update = setToJson(s, nodeId, true)
-#     return %*{"structure": %setToTreeView(s), "update": update, "path": path}
-
-
-# proc prettifyDomains(db: DbConn, nodeId, paths: string, wantExpressions: bool = false): PrettyDomainResponse =
-#     ## Returns the pretty domains for the given node
-
-#     new result
-#     var domainsAtNode: seq[Variable]
-#     var domainsAtPrev: seq[Variable]
-#     var changedExpressions: seq[Expression]
-#     var changedList: seq[string]
-#     var id: int
-#     discard parseInt(nodeId, id)
-
-#     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId, wantExpressions))
-
-#     for kid in getChildSets(paths, nodeId):
-#         if kid != nil:
-#             domainsAtNode.add(kid)
-
-#     if (id != rootNodeId):
-#         let oldId = $(id - 1)
-#         domainsAtPrev = getPrettyDomainsOfNode(db, oldId, wantExpressions)
-
-#         for kid in getChildSets(paths, oldId):
-#             if kid != nil:
-#                 domainsAtPrev.add(kid)
-
-#         (changedList, changedExpressions) = getPrettyChanges(domainsAtNode, domainsAtPrev)
-
-#     return PrettyDomainResponse(vars: getJsonVarList(domainsAtNode, nodeId), changed: changedList, changedExpressions: expressionsToJson(changedExpressions))
-
-# proc getSkeleton*(): TreeViewNode =
-#     ## Returns the skeleton for the treeview
-#     return prettyDomainsToTreeView(getPrettyDomainsOfNode(db, "0", true))
-
-# proc loadPrettyDomains*(nodeId: string,  paths: string, wantExpressions: bool = false): PrettyDomainResponse =
-#     ## Wrapper for prettifyDomains
-#     prettifyDomains(db, nodeId, paths, wantExpressions)
-
-
-
-# proc getLongestBranchingVarName*(): string =
-#     ## Returns the length of longest branching variable name
-#     return db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
-#     # return "1000"
-
-# proc getSet*(nodeId: string): Set =
-#     ## Returns the first set found in the pretty domains of a node
-#     for d in getPrettyDomainsOfNode(db, nodeId):
-#         if d of Set:
-#             return Set(d)
-#     return nil

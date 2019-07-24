@@ -296,6 +296,9 @@ class Forest extends React.Component<Props, State> {
                       rightSolAncestorIds={
                         this.props.trees[1].core.solAncestorIds
                       }
+                      duration={this.state.duration}
+                      interval={this.state.interval}
+                      showLabels={this.state.showLabels}
                     />
                   </div>
                 )
