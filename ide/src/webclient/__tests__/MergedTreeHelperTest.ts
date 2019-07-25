@@ -1052,6 +1052,28 @@ describe("suite to test MergedTreeHelper", () => {
     })
 
     describe("test go down", () => {
+      it("Must be able to go down when the node 0 is the only Both node ", async () => {
+        let leftMap = makeState(coreNoOpt, 0).id2Node
+        let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
+
+        assignTreeIds(leftMap, rightMap, [[0, 0]], [])
+
+        let res = await goDownMerged(
+          leftMap,
+          rightMap,
+          0,
+          WhichTree.Both,
+          [[0, 0]],
+          [],
+          "",
+          "",
+          5000
+        )
+
+        expect(res.selected).toBe(1)
+        expect(res.selectedTreeId).toBe(WhichTree.Left)
+      })
+
       describe("Left: small | Right: big", () => {
         beforeEach(async () => {
           let res = await loadTreeSmallOnLeftBigOnRight()
@@ -1177,7 +1199,7 @@ describe("suite to test MergedTreeHelper", () => {
           let leftMap = makeState(coreNoOpt, 0).id2Node
           let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
 
-          assignTreeIds(leftMap, rightMap, [[0,0]],[])
+          assignTreeIds(leftMap, rightMap, [[0, 0]], [])
 
           let res = await goRightMerged(leftMap, rightMap, 0, WhichTree.Both, [
             [0, 0]

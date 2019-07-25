@@ -9,7 +9,8 @@ import {
   mergeMaps,
   loadAllDiffs,
   getAncList,
-  loadDiff
+  loadDiff,
+  assignTreeIds
 } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import {
@@ -98,7 +99,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     let leftMap = makeState(props.leftCore, 0).id2Node
     let rightMap = makeState(props.rightCore, 0).id2Node
 
-    console.log(props.augmentedIds)
+    assignTreeIds(leftMap, rightMap, props.diffLocations, props.augmentedIds)
 
     this.state = {
       ...origState,

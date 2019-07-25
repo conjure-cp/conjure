@@ -120,7 +120,7 @@ export const goDownMerged = async (
       }
     }
 
-    if (kids.length < 2) {
+    if (kids.length <= 2) {
       return {
         selected: kids[0].id,
         selectedTreeId: kids[0].treeId,
