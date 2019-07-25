@@ -1,9 +1,7 @@
 import { makeState, insertNodesBoyo } from "./TreeHelper"
-import { Tree } from "../components/Forest"
 import Node, { WhichTree } from "./Node"
 import { Core, MyMap } from "../components/vis/TreeContainer"
 import { fetchAncestors } from "./MovementHelper"
-import { isTSImportEqualsDeclaration } from "@babel/types"
 import { isEqual, cloneDeep } from "lodash"
 import * as d3 from "d3"
 

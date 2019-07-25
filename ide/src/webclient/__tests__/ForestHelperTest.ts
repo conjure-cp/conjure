@@ -103,10 +103,6 @@ describe("testing ForestHelper", () => {
       expect(res[26].treeId).toBe(WhichTree.Both)
       expect(res[27].treeId).toBe(WhichTree.Both)
 
-
-
-
-
       let diff1 = getDescList(res[0]).find(
         x => x.data.id === bigToSmall[0][0]
       )!

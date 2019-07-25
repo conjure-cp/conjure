@@ -212,9 +212,9 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
   render = () => {
     if (this.state.rightMap) {
-      console.log("---------------------")
-      console.log(this.state.leftMap)
-      console.log(this.state.rightMap)
+      // console.log("---------------------")
+      // console.log(this.state.leftMap)
+      // console.log(this.state.rightMap)
     }
 
     return (

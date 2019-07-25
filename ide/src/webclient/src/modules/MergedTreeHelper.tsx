@@ -21,11 +21,16 @@ const getDiffPointKids = (
     index = leftDiffIds.indexOf(currentSelected)
   }
 
+  console.log("HERE")
+
   if (index !== -1) {
     let leftDiffPoint = leftDiffIds[index]
     let rightDiffPoint = rightDiffIds[index]
     let leftNode = leftMap[leftDiffPoint]
     let rightNode = rightMap[rightDiffPoint]
+
+    // console.log(leftNode)
+    // console.log(rightNode)
 
     // one of the diffpoint  nodes haven't been loaded yet
 
@@ -64,11 +69,15 @@ export const goRightMerged = async (
     diffLocations
   )
   if (kids) {
+
+      console.log(kids)
+
     if (kids.length < 2) {
       return { selected: kids[0].id, selectedTreeId: kids[0].treeId }
     }
 
     if (kids.length < 3) {
+
       return { selected: kids[1].id, selectedTreeId: kids[1].treeId }
     }
 
