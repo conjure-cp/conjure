@@ -13,7 +13,7 @@ export const assignTreeIds = (
 ) => {
   const lIsBigger = leftMap[0].descCount >= rightMap[0].descCount
 
-  if (isEqual(diffLocations,[[-1, -1]])) {
+  if (isEqual(diffLocations, [[-1, -1]])) {
     leftMap[0].treeId = WhichTree.Left
     rightMap[0].treeId = WhichTree.Right
     getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
@@ -35,12 +35,15 @@ export const assignTreeIds = (
     }
   })
 
-  if (lIsBigger && diffLocations[0][0] === rightMap[0].descCount) {
-    getDescList(leftMap[0])
-      .filter(x => x.data.id > rightMap[0].descCount)
-      .forEach(x => {
-        x.data.treeId = WhichTree.Left
-      })
+  if (lIsBigger) {
+    if (diffLocations[0][0] === rightMap[0].descCount) {
+      // if (lIsBigger) {
+      getDescList(leftMap[0])
+        .filter(x => x.data.id > rightMap[0].descCount)
+        .forEach(x => {
+          x.data.treeId = WhichTree.Left
+        })
+    }
   } else {
     augmentedIds.forEach(id => {
       let node = rightMap[id]
@@ -124,38 +127,6 @@ export const mergeMaps = (
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
-  // if (isEqual(diffLocations, [[-1, -1]])) {
-  //   getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
-  //   getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
-  //   const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
-  //   newRoot.children = [leftMap[0], rightMap[0]]
-  //   return { 0: newRoot }
-  // }
-
-  // diffLocations.forEach(array => {
-  //   if (!leftMap[array[0]]) {
-  //     return
-  //   }
-
-  //   getDescList(leftMap[array[0]])
-  //     .filter(x => x.data.id !== array[0])
-  //     .forEach(x => {
-  //       x.data.treeId = WhichTree.Left
-  //     })
-  // })
-
-  // diffLocations.forEach(array => {
-  //   if (!rightMap[array[1]]) {
-  //     return
-  //   }
-
-  //   getDescList(rightMap[array[1]])
-  //     .filter(x => x.data.id !== array[1])
-  //     .forEach(x => {
-  //       x.data.treeId = WhichTree.Right
-  //     })
-  // })
-
   if (isEqual(diffLocations, [[-1, -1]])) {
     const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
     newRoot.children = [leftMap[0], rightMap[0]]
@@ -177,7 +148,11 @@ export const mergeMaps = (
     }
   }
 
-  if (!(lIsBigger && diffLocations[0][0] === rightMap[0].descCount)) {
+  // if (lIsBigger) {
+  //   if (diffLocations[0][0] === rightMap[0].descCount) {
+
+  if ((!lIsBigger && diffLocations[0][0] === leftMap[0].descCount)) {
+    // if (!lIsBigger) {
     augmentedIds.forEach(id => {
       let node = rightMap[id]
 

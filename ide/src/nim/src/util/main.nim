@@ -48,6 +48,42 @@ proc atEndOfTree*(notFinishedTreePath: string, finishedTreeLastId: int): seq[int
     let augmentedIds = ancestors.filter(x => x.id > finishedTreeLastId).map(x => x.id)
     return augmentedIds
 
+proc findAugNodes*(leftPath, rightPath: string, 
+                    diffLocations: seq[seq[ int]]): seq[seq[int]] =
+
+    result = newSeq[seq[int]](2)
+
+    for i in countUp(0, 1):
+
+        let diffIds = diffLocations.map(x => x[i])
+
+        for loc in diffLocations:
+            # if (loc[0] == 227):
+            var path = leftPath
+            if (i == 1):
+                path = rightPath
+
+            let leftAncestors = loadAncestors(path, $loc[i])
+                .filter(x => x.id > loc[i])
+                .filter(x => x.parentId != loc[i]).map(x => x.id)
+
+            for id in leftAncestors:
+                var clean = true
+
+                for row in dBTable[path].rows(sql(
+                        fmt"select nodeId from Node where path like '%{id}%'")):
+                    var num: int
+                    discard row[0].parseInt(num)
+                    if diffIds.contains(num):
+                        clean = false
+                        break
+
+                if clean and not result[i].contains(id):
+                    result[i].add(id)
+
+        # let rightAncestors = loadAncestors(rightPath, $loc[1])
+        #     .filter(x => x.id > loc[1]).map(x => x.id)
+
 type DiffResponse* = ref object of RootObj
     diffLocations*: seq[seq[int]]
     augmentedIds*: seq[int]
@@ -113,6 +149,8 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
                 if leftIsFinished:
                     notEndedTreePath = rightPath
                     endedTreeId = nodeIds[0]
+
+                # echo notEndedTreePath
 
                 let augIds = atEndOfTree(notEndedTreePath, endedTreeId)
 

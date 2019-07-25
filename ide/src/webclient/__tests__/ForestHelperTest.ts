@@ -11,16 +11,18 @@ import {
   coreOf17 as coreOf17Normal,
   coreOf27 as coreOf27Normal,
   descendantsOf28 as descendantsOf28Normal,
-  core as coreNormal
+  core as coreNormal8
 } from "./resources/normal-8"
 import {
   coreOf3 as coreOf3Sacbounds,
   coreOf6 as coreOf6Sacbounds,
   coreOf9 as coreOf9Sacbounds,
-  core as coreSacbounds
+  core as coreSacbounds8
 } from "./resources/sacbounds-8"
 
 import { core as coreFindAllSols } from "./resources/findAllSols-8"
+import { core as coreNormal10 } from "./resources/normal-10"
+import { core as coreSacbounds10 } from "./resources/sacbounds-10"
 
 import { cloneDeep } from "lodash"
 import { bigToSmall } from "./resources/normalVSSacbounds-8"
@@ -28,7 +30,40 @@ import { flipDiffLocations } from "../src/modules/Helper"
 import { makeState } from "../src/modules/TreeHelper"
 
 describe("testing ForestHelper", () => {
-  const flipped = flipDiffLocations(bigToSmall)
+  describe("testing assignTreeIds", () => {
+    it("It should not crash", async () => {
+      let normalMap = makeState(coreNormal10, 0).id2Node
+      let findAllSolsMap = makeState(coreSacbounds10, 0).id2Node
+
+      let diffLocs = [
+        [4, 4],
+        [21, 8],
+        [34, 11],
+        [44, 13],
+        [54, 16],
+        [68, 19],
+        [78, 22],
+        [88, 25],
+        [98, 28],
+        [108, 31],
+        [123, 35],
+        [137, 38],
+        [147, 41],
+        [157, 44],
+        [167, 47],
+        [177, 50],
+        [192, 54],
+        [202, 57],
+        [212, 60],
+        [227, 64]
+      ]
+      let augs = [65, 67, 86, 120]
+
+      assignTreeIds(normalMap, findAllSolsMap, diffLocs, augs)
+    })
+  })
+
+  const smallToBig = flipDiffLocations(bigToSmall)
   let bigTree: any
   let smallTree: any
 
@@ -44,7 +79,7 @@ describe("testing ForestHelper", () => {
 
     let res = await loadAllDiffs(
       ["", "s"],
-      [coreNormal, coreSacbounds],
+      [coreNormal8, coreSacbounds8],
       bigToSmall,
       5000
     )
@@ -52,8 +87,6 @@ describe("testing ForestHelper", () => {
     bigTree = res[0]
     smallTree = res[1]
   })
-
-  describe("testing assignTreeIds", () => {})
 
   describe("testing mergeMaps", () => {
     it("It should not modify the left or right rees", async () => {
@@ -66,7 +99,7 @@ describe("testing ForestHelper", () => {
     })
 
     it("It should merge normal with findAllsols", async () => {
-      let normalMap = makeState(coreNormal, 0).id2Node
+      let normalMap = makeState(coreNormal8, 0).id2Node
       let findAllSolsMap = makeState(coreFindAllSols, 0).id2Node
 
       let diffLocs = [[32, 32]]
@@ -82,7 +115,7 @@ describe("testing ForestHelper", () => {
     })
 
     it("It should merge findAllSols with normal", async () => {
-      let normalMap = makeState(coreNormal, 0).id2Node
+      let normalMap = makeState(coreNormal8, 0).id2Node
       let findAllSolsMap = makeState(coreFindAllSols, 0).id2Node
 
       let diffLocs = [[32, 32]]
@@ -98,21 +131,15 @@ describe("testing ForestHelper", () => {
     })
 
     it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
-
-      let lMap= cloneDeep(bigTree)
-      let rMap= cloneDeep(smallTree)
+      let lMap = cloneDeep(bigTree)
+      let rMap = cloneDeep(smallTree)
 
       let diffLocs = [[-1, -1]]
       let augs: number[] = []
 
       assignTreeIds(lMap, rMap, diffLocs, augs)
 
-      let res = await mergeMaps(
-        lMap,
-        rMap,
-        diffLocs,
-        augs
-      )
+      let res = await mergeMaps(lMap, rMap, diffLocs, augs)
       const nodeList = getDescList(res[0])
       const bothNodes = nodeList.find(x => x.data.treeId === WhichTree.Both)
 
@@ -121,9 +148,8 @@ describe("testing ForestHelper", () => {
     })
 
     it("Should merge the maps the ancestors of each tree into their maps big->small", async () => {
-
-      let lMap= cloneDeep(bigTree)
-      let rMap= cloneDeep(smallTree)
+      let lMap = cloneDeep(bigTree)
+      let rMap = cloneDeep(smallTree)
       assignTreeIds(lMap, rMap, bigToSmall, [])
       let res = await mergeMaps(bigTree, smallTree, bigToSmall, [])
 
@@ -163,10 +189,10 @@ describe("testing ForestHelper", () => {
     })
 
     it("Should merge the maps the ancestors of each tree into their maps small->big", async () => {
-      let lMap= cloneDeep(smallTree)
-      let rMap= cloneDeep(bigTree)
-      assignTreeIds(lMap, rMap, flipped, [])
-      let res = await mergeMaps(lMap, rMap, flipped, [])
+      let lMap = cloneDeep(smallTree)
+      let rMap = cloneDeep(bigTree)
+      assignTreeIds(lMap, rMap, smallToBig, [])
+      let res = await mergeMaps(lMap, rMap, smallToBig, [])
       let diff1 = getDescList(res[0]).find(x => x.data.id === bigToSmall[0][1])!
       let diff2 = getDescList(res[0]).find(x => x.data.id === bigToSmall[1][1])!
       let diff3 = getDescList(res[0]).find(x => x.data.id === bigToSmall[2][1])!
@@ -242,7 +268,7 @@ describe("testing ForestHelper", () => {
 
       let res = await loadAllDiffs(
         ["", "s"],
-        [coreNormal, coreSacbounds],
+        [coreNormal8, coreSacbounds8],
         bigToSmall,
         5000
       )

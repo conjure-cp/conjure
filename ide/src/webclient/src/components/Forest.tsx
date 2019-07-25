@@ -54,7 +54,7 @@ class Forest extends React.Component<Props, State> {
       augmentedIds: [],
       currentDiffIndex: -1,
       diffReady: false,
-      splitScreen: false,
+      splitScreen: true,
       locked: true
     }
   }
@@ -113,8 +113,10 @@ class Forest extends React.Component<Props, State> {
     console.log(this.state.currentDiffIndex)
 
     if (this.props.trees) {
-      console.log(JSON.stringify(this.props.trees[0].core))
-      console.log(JSON.stringify(this.props.trees[1].core))
+      // console.log(JSON.stringify(this.props.trees[0].core))
+      // console.log(JSON.stringify(this.props.trees[1].core))
+      // console.log(JSON.stringify(this.state.diffLocations))
+      // console.log(JSON.stringify(this.state.augmentedIds))
     }
 
     return (
@@ -299,6 +301,7 @@ class Forest extends React.Component<Props, State> {
                       hash={"blahhash"}
                       diffLocations={this.state.diffLocations}
                       augmentedIds={this.state.augmentedIds}
+                      // augmentedIds={[]}
                       nimServerPort={this.props.nimServerPort}
                       leftSolAncestorIds={
                         this.props.trees[0].core.solAncestorIds
