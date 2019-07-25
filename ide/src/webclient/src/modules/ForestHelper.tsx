@@ -5,8 +5,55 @@ import { fetchAncestors } from "./MovementHelper"
 import { isEqual, cloneDeep } from "lodash"
 import * as d3 from "d3"
 
+export const assignTreeIds = (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  diffLocations: number[][],
+  augmentedIds: number[]
+) => {
+  const lIsBigger = leftMap[0].descCount >= rightMap[0].descCount
+
+  if (isEqual(diffLocations,[[-1, -1]])) {
+    leftMap[0].treeId = WhichTree.Left
+    rightMap[0].treeId = WhichTree.Right
+    getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
+    getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
+
+    return
+  }
+
+  diffLocations.forEach(array => {
+    if (leftMap[array[0]]) {
+      getDescList(leftMap[array[0]]).forEach(
+        x => (x.data.treeId = WhichTree.Left)
+      )
+    }
+    if (rightMap[array[1]]) {
+      getDescList(rightMap[array[1]]).forEach(
+        x => (x.data.treeId = WhichTree.Right)
+      )
+    }
+  })
+
+  if (lIsBigger && diffLocations[0][0] === rightMap[0].descCount) {
+    getDescList(leftMap[0])
+      .filter(x => x.data.id > rightMap[0].descCount)
+      .forEach(x => {
+        x.data.treeId = WhichTree.Left
+      })
+  } else {
+    augmentedIds.forEach(id => {
+      let node = rightMap[id]
+      node.treeId = WhichTree.Right
+    })
+  }
+}
+
 export const getDescList = (root: Node) => {
-  return d3.hierarchy<Node>(root).descendants()
+  return d3
+    .hierarchy<Node>(root)
+    .descendants()
+    .slice(1)
 }
 
 export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
@@ -77,37 +124,43 @@ export const mergeMaps = (
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
+  // if (isEqual(diffLocations, [[-1, -1]])) {
+  //   getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
+  //   getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
+  //   const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
+  //   newRoot.children = [leftMap[0], rightMap[0]]
+  //   return { 0: newRoot }
+  // }
+
+  // diffLocations.forEach(array => {
+  //   if (!leftMap[array[0]]) {
+  //     return
+  //   }
+
+  //   getDescList(leftMap[array[0]])
+  //     .filter(x => x.data.id !== array[0])
+  //     .forEach(x => {
+  //       x.data.treeId = WhichTree.Left
+  //     })
+  // })
+
+  // diffLocations.forEach(array => {
+  //   if (!rightMap[array[1]]) {
+  //     return
+  //   }
+
+  //   getDescList(rightMap[array[1]])
+  //     .filter(x => x.data.id !== array[1])
+  //     .forEach(x => {
+  //       x.data.treeId = WhichTree.Right
+  //     })
+  // })
+
   if (isEqual(diffLocations, [[-1, -1]])) {
-    getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
-    getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
     const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
     newRoot.children = [leftMap[0], rightMap[0]]
     return { 0: newRoot }
   }
-
-  diffLocations.forEach(array => {
-    if (!leftMap[array[0]]) {
-      return
-    }
-
-    getDescList(leftMap[array[0]])
-      .filter(x => x.data.id !== array[0])
-      .forEach(x => {
-        x.data.treeId = WhichTree.Left
-      })
-  })
-
-  diffLocations.forEach(array => {
-    if (!rightMap[array[1]]) {
-      return
-    }
-
-    getDescList(rightMap[array[1]])
-      .filter(x => x.data.id !== array[1])
-      .forEach(x => {
-        x.data.treeId = WhichTree.Right
-      })
-  })
 
   for (const array of diffLocations) {
     if (
@@ -124,16 +177,14 @@ export const mergeMaps = (
     }
   }
 
-  if (lIsBigger && diffLocations[0][0] === rightMap[0].descCount) {
-    getDescList(leftMap[0])
-      .filter(x => x.data.id > rightMap[0].descCount)
-      .forEach(x => {
-        x.data.treeId = WhichTree.Left
-      })
-  } else {
+  if (!(lIsBigger && diffLocations[0][0] === rightMap[0].descCount)) {
     augmentedIds.forEach(id => {
       let node = rightMap[id]
-      node.treeId = WhichTree.Right
+
+      if (!leftMap[node.parentId].children) {
+        leftMap[node.parentId].children = []
+      }
+
       leftMap[node.parentId].children!.push(node)
     })
   }

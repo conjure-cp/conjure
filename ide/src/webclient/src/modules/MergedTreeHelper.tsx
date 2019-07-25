@@ -21,8 +21,6 @@ const getDiffPointKids = (
     index = leftDiffIds.indexOf(currentSelected)
   }
 
-  console.log("HERE")
-
   if (index !== -1) {
     let leftDiffPoint = leftDiffIds[index]
     let rightDiffPoint = rightDiffIds[index]
@@ -61,27 +59,27 @@ export const goRightMerged = async (
   currentTreeId: number,
   diffLocations: number[][]
 ) => {
-  let kids = getDiffPointKids(
+  let diffPointKids = getDiffPointKids(
     leftMap,
     rightMap,
     currentSelected,
     currentTreeId,
     diffLocations
   )
-  if (kids) {
+  if (diffPointKids) {
 
-      console.log(kids)
+      // console.log(kids)
 
-    if (kids.length < 2) {
-      return { selected: kids[0].id, selectedTreeId: kids[0].treeId }
+    if (diffPointKids.length < 2) {
+      return { selected: diffPointKids[0].id, selectedTreeId: diffPointKids[0].treeId }
     }
 
-    if (kids.length < 3) {
+    if (diffPointKids.length < 3) {
 
-      return { selected: kids[1].id, selectedTreeId: kids[1].treeId }
+      return { selected: diffPointKids[1].id, selectedTreeId: diffPointKids[1].treeId }
     }
 
-    return { selected: kids[2].id, selectedTreeId: kids[2].treeId }
+    return { selected: diffPointKids[2].id, selectedTreeId: diffPointKids[2].treeId }
   }
 
   let map = currentTreeId === WhichTree.Right ? rightMap : leftMap

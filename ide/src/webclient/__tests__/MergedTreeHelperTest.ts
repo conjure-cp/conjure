@@ -2,7 +2,8 @@ import Node, { WhichTree } from "../src/modules/Node"
 import {
   loadAllDiffs,
   mergeMaps,
-  getDescList
+  getDescList,
+  assignTreeIds
 } from "../src/modules/ForestHelper"
 import { fetchAncestors, goLeftBoyo } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
@@ -36,6 +37,10 @@ import {
   coreOf9 as coreOf9Sacbounds,
   core as coreSacbounds
 } from "./resources/sacbounds-8"
+
+import { core as coreNoOpt } from "./resources/noOpt-8"
+import { core as coreNoOptSymmBreak } from "./resources/noOptSymmBreak-8"
+
 import { bigToSmall } from "./resources/normalVSSacbounds-8"
 import { makeState } from "../src/modules/TreeHelper"
 
@@ -210,22 +215,6 @@ async function loadTreeSmallOnLeftBigOnRight() {
   return { smallTree: res[0], bigTree: res[1] }
 }
 
-// async function noDiffsBigSmall() {
-//   fetchMock.resetMocks()
-//   fetchMock
-//     .once(JSON.stringify(coreOf3Normal))
-//     .once(JSON.stringify(coreOf3Sacbounds))
-//     .once(JSON.stringify(coreOf17Normal))
-//     .once(JSON.stringify(coreOf6Sacbounds))
-//     .once(JSON.stringify(coreOf27Normal))
-//     .once(JSON.stringify(coreOf9Sacbounds))
-
-//   return {
-//     smallTree: makeState(coreSacbounds, 0).id2Node,
-//     bigTree: makeState(coreNormal, 0).id2Node
-//   }
-// }
-
 describe("suite to test MergedTreeHelper", () => {
   let bigTree: any
   let smallTree: any
@@ -291,55 +280,62 @@ describe("suite to test MergedTreeHelper", () => {
   })
 
   describe("test revise goleft, it redirects to a node to the right of the next diff location", () => {
+    let lMap
+    let rMap
+    let merged: Record<number, Node>
+
     describe("Left: small | Right: big", () => {
       beforeEach(async () => {
         let res = await loadTreeSmallOnLeftBigOnRight()
         bigTree = res.bigTree
         smallTree = res.smallTree
+        lMap = cloneDeep(smallTree)
+        rMap = cloneDeep(bigTree)
+        assignTreeIds(lMap, rMap, smallToBig, [])
+        merged = mergeMaps(lMap, rMap, smallToBig, [])
+      })
+
+      it("redirects 4 -> 5 from the left tree", async () => {
+        let res = reviseGoLeft(merged, 4, WhichTree.Left, smallToBig)
+        expect(res).toEqual({ selected: 5, treeId: WhichTree.Both })
+      })
+
+      it("redirects 7 -> 8 from the left tree", async () => {
+        let res = reviseGoLeft(merged, 7, WhichTree.Left, smallToBig)
+        expect(res).toEqual({ selected: 8, treeId: WhichTree.Both })
+      })
+
+      it("redirects 10 -> 10 from the left tree", async () => {
+        let res = reviseGoLeft(merged, 10, WhichTree.Both, smallToBig)
+        expect(res).toEqual({ selected: 10, treeId: WhichTree.Both })
       })
     })
 
-    it("redirects 4 -> 5 from the left tree", async () => {
-      const merged = mergeMaps(smallTree, bigTree, smallToBig, [])
-      let res = reviseGoLeft(merged, 4, WhichTree.Left, smallToBig)
-      expect(res).toEqual({ selected: 5, treeId: WhichTree.Both })
-    })
+    describe("Left: big | right: small", () => {
+      beforeEach(async () => {
+        let res = await loadTreeBigOnLeftSmallOnRight()
+        bigTree = res.bigTree
+        smallTree = res.smallTree
+        lMap = cloneDeep(bigTree)
+        rMap = cloneDeep(smallTree)
+        assignTreeIds(lMap, rMap, bigToSmall, [])
+        merged = mergeMaps(lMap, rMap, bigToSmall, [])
+      })
 
-    it("redirects 7 -> 8 from the left tree", async () => {
-      const merged = mergeMaps(smallTree, bigTree, smallToBig, [])
-      let res = reviseGoLeft(merged, 7, WhichTree.Left, smallToBig)
-      expect(res).toEqual({ selected: 8, treeId: WhichTree.Both })
-    })
+      it("redirects 4 -> 16", async () => {
+        let res = reviseGoLeft(merged, 4, WhichTree.Right, bigToSmall)
+        expect(res).toEqual({ selected: 16, treeId: WhichTree.Both })
+      })
 
-    it("redirects 10 -> 10 from the left tree", async () => {
-      const merged = mergeMaps(smallTree, bigTree, smallToBig, [])
-      let res = reviseGoLeft(merged, 10, WhichTree.Both, smallToBig)
-      expect(res).toEqual({ selected: 10, treeId: WhichTree.Both })
-    })
-  })
-  describe("Left: big | right: small", () => {
-    beforeEach(async () => {
-      let res = await loadTreeBigOnLeftSmallOnRight()
-      bigTree = res.bigTree
-      smallTree = res.smallTree
-    })
+      it("redirects 7 -> 26", async () => {
+        let res = reviseGoLeft(merged, 7, WhichTree.Right, bigToSmall)
+        expect(res).toEqual({ selected: 26, treeId: WhichTree.Both })
+      })
 
-    it("redirects 4 -> 16", async () => {
-      const merged = mergeMaps(bigTree, smallTree, bigToSmall, [])
-      let res = reviseGoLeft(merged, 4, WhichTree.Right, bigToSmall)
-      expect(res).toEqual({ selected: 16, treeId: WhichTree.Both })
-    })
-
-    it("redirects 7 -> 26", async () => {
-      const merged = mergeMaps(bigTree, smallTree, bigToSmall, [])
-      let res = reviseGoLeft(merged, 7, WhichTree.Right, bigToSmall)
-      expect(res).toEqual({ selected: 26, treeId: WhichTree.Both })
-    })
-
-    it("redirects 10 ->  10", async () => {
-      const merged = mergeMaps(bigTree, smallTree, bigToSmall, [])
-      let res = reviseGoLeft(merged, 10, WhichTree.Right, bigToSmall)
-      expect(res).toEqual({ selected: 10, treeId: WhichTree.Right })
+      it("redirects 10 ->  10", async () => {
+        let res = reviseGoLeft(merged, 10, WhichTree.Right, bigToSmall)
+        expect(res).toEqual({ selected: 10, treeId: WhichTree.Right })
+      })
     })
   })
 
@@ -1177,6 +1173,20 @@ describe("suite to test MergedTreeHelper", () => {
       })
 
       describe("test go right", () => {
+        it("Must be able to go right when the node 0 is the only Both node ", async () => {
+          let leftMap = makeState(coreNoOpt, 0).id2Node
+          let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
+
+          assignTreeIds(leftMap, rightMap, [[0,0]],[])
+
+          let res = await goRightMerged(leftMap, rightMap, 0, WhichTree.Both, [
+            [0, 0]
+          ])
+
+          expect(res.selected).toBe(1)
+          expect(res.selectedTreeId).toBe(WhichTree.Right)
+        })
+
         describe("Left: small | Right: big", () => {
           beforeEach(async () => {
             let res = await loadTreeSmallOnLeftBigOnRight()
