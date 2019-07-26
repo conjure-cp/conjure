@@ -24,18 +24,25 @@ proc init*(dirPath: string): (Core, string) =
 
 
 proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2, int]): bool =
-    let query = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
+    let query1 = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
     let leftDB = dBTable[paths[0]]
     let rightDB = dBTable[paths[1]]
 
-    # echo "============================================="
+    var leftValue = leftDB.getValue(sql(query1), nodeIds[0])
+    var rightValue = rightDB.getValue(sql(query1), nodeIds[1])
 
-    let leftValue = leftDB.getValue(sql(query), nodeIds[0])
-    # echo leftValue
-    # echo ""
-    let rightValue = rightDB.getValue(sql(query), nodeIds[1])
-    # echo rightValue
     return leftValue == rightValue
+
+    # if leftValue != rightValue:
+    #     return false
+
+    # let query2 = "select nodeId from Node where parentId = ?"
+    # let leftRows = leftDB.getAllRows(sql(query2), nodeIds[0])
+    # let rightRows = rightDB.getAllRows(sql(query2), nodeIds[1])
+
+    # echo leftRows, " , ", rightRows
+
+    # return leftRows.len() == rightRows.len()
 
 
 proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
@@ -48,8 +55,8 @@ proc atEndOfTree*(notFinishedTreePath: string, finishedTreeLastId: int): seq[int
     let augmentedIds = ancestors.filter(x => x.id > finishedTreeLastId).map(x => x.id)
     return augmentedIds
 
-proc findAugNodes*(leftPath, rightPath: string, 
-                    diffLocations: seq[seq[ int]]): seq[seq[int]] =
+proc getAugs*(leftPath, rightPath: string,
+                    diffLocations: seq[seq[int]]): seq[seq[int]] =
 
     result = newSeq[seq[int]](2)
 
@@ -59,37 +66,79 @@ proc findAugNodes*(leftPath, rightPath: string,
 
         for loc in diffLocations:
             # if (loc[0] == 227):
+
             var path = leftPath
+            var db = dBTable[leftPath]
+
             if (i == 1):
                 path = rightPath
+                db = dBTable[rightPath]
 
-            let leftAncestors = loadAncestors(path, $loc[i])
-                .filter(x => x.id > loc[i])
-                .filter(x => x.parentId != loc[i]).map(x => x.id)
+            let nodePath = db.getValue(sql(
+                    fmt"select path from Node where nodeId = {loc[i]}"))
 
-            for id in leftAncestors:
-                var clean = true
+            let query = fmt"""
+            select nodeId as n from  
 
-                for row in dBTable[path].rows(sql(
-                        fmt"select nodeId from Node where path like '%{id}%'")):
-                    var num: int
-                    discard row[0].parseInt(num)
-                    if diffIds.contains(num):
-                        clean = false
-                        break
+                ( select nodeId, path from Node where  
+                    nodeId > {loc[i]} and parentId != {loc[i]} and (
+                    
+                    ( nodeId in
+                        (WITH split(word, str) AS (
+                                    SELECT '', '{nodePath}' ||'/'
+                                    UNION ALL SELECT
+                                    substr(str, 0, instr(str, '/')),
+                                    substr(str, instr(str, '/')+1)
+                                    FROM split WHERE str!=''
+                                ) SELECT word FROM split WHERE word!=''
+                        ) 
+                    )
 
-                if clean and not result[i].contains(id):
+                    or
+                        
+                    ( parentId in
+                        (WITH split(word, str) AS (
+                                    SELECT '', '{nodePath}' ||'/'
+                                    UNION ALL SELECT
+                                    substr(str, 0, instr(str, '/')),
+                                    substr(str, instr(str, '/')+1)
+                                    FROM split WHERE str!=''
+                                ) SELECT word FROM split WHERE word!=''
+                        ) 
+                    )
+                )
+            )
+            where not exists
+            (
+            select nodeId, path from Node where path like '%' || n || '%' 
+            and nodeId in ({($diffIds)[2..^2]}) 
+            )
+            """
+
+            var id: int
+            for row in db.fastRows(sql(query)):
+                discard row[0].parseInt(id)
+                if not result[i].contains(id):
                     result[i].add(id)
 
-        # let rightAncestors = loadAncestors(rightPath, $loc[1])
-        #     .filter(x => x.id > loc[1]).map(x => x.id)
+
+
 
 type DiffResponse* = ref object of RootObj
     diffLocations*: seq[seq[int]]
-    augmentedIds*: seq[int]
+    augmentedIds*: seq[seq[int]]
 
 
-proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
+proc loopWhileEqual(paths: array[2, string], nodeIds: var array[2, int], lCount, rCount: int) =
+    while checkDomainsAreEqual(paths, nodeIds) and nodeIds[0] < lCount and
+            nodeIds[1] < rCount:
+        # echo nodeIds
+        nodeIds[0].inc()
+        nodeIds[1].inc()
+
+
+proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
+        seq[int]] =
 
     var res: seq[(int, int)]
 
@@ -106,7 +155,7 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
     discard leftDB.getValue(sql(query)).parseInt(lCount)
     discard rightDB.getValue(sql(query)).parseInt(rCount)
 
-    let lIsMore = lCount > rCount
+    var lIsMore = lCount >= rCount
 
     var nodeIds = [0, 0]
     var current: int
@@ -114,7 +163,7 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
     var db: DbConn
 
     if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-        return DiffResponse(diffLocations: @[@[-1, -1]], augmentedIds: @[])
+        return @[@[-1, -1]]
 
     while true:
 
@@ -124,42 +173,22 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
 
         # Increment each tree until we get to a point where they differ
 
-        while checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-            nodeIds[0].inc()
-            nodeIds[1].inc()
+        loopWhileEqual([leftPath, rightPath], nodeIds, lCount, rCount)
 
-            let leftIsFinished = nodeIds[0] >= lCount
-            let rightIsFinished = nodeIds[1] >= rCount
+        let leftIsFinished = nodeIds[0] >= lCount
+        let rightIsFinished = nodeIds[1] >= rCount
 
-            # If we get to the end of one of the trees then we've finished and need to return
-            if (leftIsFinished or rightIsFinished):
-                if debug:
-                    echo nodeIds[0], "     ", nodeIds[1]
-                    echo "quiting"
+        # If we get to the end of one of the trees then we've finished and need to return
+        if (leftIsFinished or rightIsFinished):
+            if debug:
+                echo nodeIds[0], "     ", nodeIds[1]
+                echo "quiting"
 
-                if (res.len() == 0 and lCount == rCount):
-                    return DiffResponse(diffLocations: newSeq[seq[int]](),
-                            augmentedIds: @[])
+            if res.len() > 0 or not (lCount == rCount):
+                res.add((nodeIds[0] - 1, nodeIds[1] - 1))
 
-                nodeIds[0].dec()
-                nodeIds[1].dec()
+            return res.map(s => @[s[0], s[1]])
 
-                var notEndedTreePath = leftPath
-                var endedTreeId = nodeIds[1]
-                if leftIsFinished:
-                    notEndedTreePath = rightPath
-                    endedTreeId = nodeIds[0]
-
-                # echo notEndedTreePath
-
-                let augIds = atEndOfTree(notEndedTreePath, endedTreeId)
-
-                res.add((nodeIds[0], nodeIds[1]))
-
-                let diffLocations = res.map(s => @[s[0], s[1]])
-
-                return DiffResponse(diffLocations: diffLocations,
-                        augmentedIds: augIds)
 
         if debug:
             echo nodeIds[0], "     ", nodeIds[1]
@@ -175,7 +204,7 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
 
         var advanceBothTrees = true
 
-        # Advance both trees to the next branch that is not descended from the last diff point
+        # Advance both trees to the next branch that is not descended from the last findDiffLocations point
         while advanceBothTrees:
             var couldParse = 1
 
@@ -192,8 +221,8 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
                         echo "quitting 2"
                         echo index, " | ", query
                     let diffLocations = res.map(s => @[s[0], s[1]])
-                    return DiffResponse(diffLocations: diffLocations,
-                            augmentedIds: @[])
+                    return diffLocations
+
 
                 nodeIds[index] = nextId
 
@@ -246,7 +275,15 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
         echo "end"
 
     let diffLocations = res.map(s => @[s[0], s[1]])
-    return DiffResponse(diffLocations: diffLocations, augmentedIds: @[])
+    return diffLocations
+
+
+proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
+    let diffLocations = findDiffLocations(leftPath, rightPath, debug)
+    # let augs = newSeq[seq[int]](2)
+    let augs = findAugNodes(leftPath, rightPath, diffLocations)
+    let augs = getAugs(leftPath, rightPath, diffLocations)
+    return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
 
 proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
     let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
@@ -276,11 +313,11 @@ proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
 
     let path = db.getValue(sql"select path from Node where nodeId = ?", nodeId)
 
-    let query = """select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where 
+    let query = fmt"""
+    select nodeId, parentId, branchingVariable, isLeftChild, value, isSolution from Node where 
     ( nodeId in
         (WITH split(word, str) AS (
-                    SELECT '', '""" & path &
-            """' ||'/'
+                    SELECT '', '{path}' ||'/'
                     UNION ALL SELECT
                     substr(str, 0, instr(str, '/')),
                     substr(str, instr(str, '/')+1)
@@ -293,7 +330,7 @@ proc loadAncestors*(dirPath, nodeId: string): seq[Node] =
         
     ( parentId in
         (WITH split(word, str) AS (
-                    SELECT '', '""" & path & """' ||'/'
+                    SELECT '', '{path}' ||'/'
                     UNION ALL SELECT
                     substr(str, 0, instr(str, '/')),
                     substr(str, instr(str, '/')+1)

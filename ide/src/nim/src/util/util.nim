@@ -1,4 +1,4 @@
-import intsets, algorithm, sequtils, json
+import intsets, algorithm, sequtils, json, strformat
 
 
 proc getPrettyRange*(lowerBound: string, upperBound: string): string =
@@ -17,9 +17,9 @@ proc prettifyMinionStoreDump*(dump: string): string =
 
     for inner in list:
         if inner[0] == inner[1]:
-            result &= $inner[0] & ", "
+            result &= fmt"{inner[0]}, "
         else:
-            result &= $inner[0] & ".." & $inner[1] & ", "
+            result &= fmt"{inner[0]}..{inner[1]}, "
 
     result = result[0..result.len()-3] & ")"
 
