@@ -23,7 +23,8 @@ proc init*(dirPath: string): (Core, string) =
     return (makeCore(db), infoFile)
 
 
-proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2, int]): bool =
+proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2,
+        string]): bool =
     # let query1 = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
     let query1 = "select group_concat(name || ' - ' || storeDump, ' , ') from Domain where nodeId = ? and name not like 'aux%'"
     let leftDB = dBTable[paths[0]]
@@ -119,162 +120,259 @@ type DiffResponse* = ref object of RootObj
     augmentedIds*: seq[seq[int]]
 
 
-proc loopWhileEqual(paths: array[2, string], nodeIds: var array[2, int], lCount, rCount: int) =
-    while checkDomainsAreEqual(paths, nodeIds) and nodeIds[0] < lCount and
-            nodeIds[1] < rCount:
-        # echo nodeIds
-        nodeIds[0].inc()
-        nodeIds[1].inc()
+# proc loopWhileEqual(paths: array[2, string], nodeIds: var array[2, int], lCount, rCount: int) =
+#     while checkDomainsAreEqual(paths, nodeIds) and nodeIds[0] < lCount and
+#             nodeIds[1] < rCount:
+#         # echo nodeIds
+#         nodeIds[0].inc()
+#         nodeIds[1].inc()
+
+proc findDiffLocationsBoyo*(leftPath, rightPath: string,
+        debug: bool = false): seq[((string, string), (string, string))] =
+
+    #Concept of the diff point is wrong, what we need is a way of keeping track of different branches
+
+    let leftDB = dBTable[leftPath]
+    let rightDB = dBTable[rightPath]
+    let dbs = [leftDB, rightDb]
+
+    let kidsQuery = "select nodeId from Node where parentId = ?"
+
+    var res = newSeq[((string, string), (string, string))]()
+
+    proc recursive(ids: array[2, string], prevIds: array[2, string]) =
+
+        echo ids[0], " - ", ids[1]
+
+        if not checkDomainsAreEqual([leftPath, rightPath], ids):
+            echo "diff point => ", prevIds[0], " ", prevIds[1]
+            res.add(((prevIds[0], ids[0]), (prevIds[1], ids[1])))
+            return
+
+        var kids: array[2, seq[string]]
+
+        for i in countUp(0, 1):
+            for row in dbs[i].fastRows(sql(kidsQuery), ids[i]):
+                kids[i].add(row[0])
+
+        let maxKids = kids.map(x => x.len()).max() - 1
+
+        for i in countUp(0, maxKids):
+
+            var tuples: array[2, (string, string)]
+
+            var useTuples = false
+
+            for j in countUp(0, 1):
+                if kids[j].len() - 1 < i:
+                    useTuples = true
+                    tuples[j] = (ids[j], ids[j])
+                else:
+                    tuples[j] = (ids[j], kids[j][i])
+
+            
+            if useTuples:
+                let t = (tuples[0], tuples[1])
+                if not res.contains(t):
+                    res.add((t))
+            else:
+                recursive([kids[0][i], kids[1][i]], ids)
+
+    recursive(["0", "0"], ["-1", "-1"])
+
+    return res
+
+    # return res.map(x => @[x[0], x[1]])
+
+    # let query = "select nodeId, parentId from Node;"
+    # var id2Childrens = [initTable[string, (string, string)](), initTable[string, (string, string)]()]
+
+    # for i in countUp(0, 1):
+
+    #     let db = dbs[i]
+    #     # var nodeId, parentId: int
+
+    #     echo "Loading Node Table"
+
+    #     for res in db.fastRows(sql(query)):
+
+    #         let nodeId = res[0]
+    #         let parentId = res[1]
+
+    #         if (not id2Childrens[i].haskey(parentId)):
+    #             id2Childrens[i][parentId] = ("-1", "-1")
+
+    #         let (kid1, kid2) = id2Childrens[i][parentId]
+
+    #         if kid1 == "-1":
+    #             id2Childrens[i][parentId] = ($nodeId, "-1")
+    #         else:
+    #             id2Childrens[i][parentId] = (kid1, $nodeId)
+
+    #     echo "Calculating Node Paths"
+
+
+
+
 
 
 proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
         seq[int]] =
 
-    var res: seq[(int, int)]
+    return @[@["0", "0"]].map(proc(x: seq[string]): seq[int] =
+            var leftNum: int
+            var rightNum: int
+            discard x[0].parseInt(leftNum)
+            discard x[1].parseInt(rightNum)
 
-    let leftDB = dBTable[leftPath]
-    let rightDB = dBTable[rightPath]
+            @[leftNum, rightNum]
+        )
 
-    let dbs = [leftDB, rightDb]
+    # var res: seq[(int, int)]
 
-    let query = "select count(nodeId) from Node"
+    # let leftDB = dBTable[leftPath]
+    # let rightDB = dBTable[rightPath]
 
-    var lCount: int
-    var rCount: int
+    # let dbs = [leftDB, rightDb]
 
-    discard leftDB.getValue(sql(query)).parseInt(lCount)
-    discard rightDB.getValue(sql(query)).parseInt(rCount)
+    # let query = "select count(nodeId) from Node"
 
-    var lIsMore = lCount >= rCount
+    # var lCount: int
+    # var rCount: int
 
-    var nodeIds = [0, 0]
-    var current: int
-    var other: int
-    var db: DbConn
+    # discard leftDB.getValue(sql(query)).parseInt(lCount)
+    # discard rightDB.getValue(sql(query)).parseInt(rCount)
 
-    if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-        return @[@[-1, -1]]
+    # var lIsMore = lCount >= rCount
 
-    while true:
+    # var nodeIds = [0, 0]
+    # var current: int
+    # var other: int
+    # var db: DbConn
 
-        if debug:
-            echo ""
-            echo nodeIds[0], "     ", nodeIds[1]
+    # if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
+    #     return @[@[-1, -1]]
 
-        # Increment each tree until we get to a point where they differ
+    # while true:
 
-        loopWhileEqual([leftPath, rightPath], nodeIds, lCount, rCount)
+    #     if debug:
+    #         echo ""
+    #         echo nodeIds[0], "     ", nodeIds[1]
 
-        let leftIsFinished = nodeIds[0] >= lCount
-        let rightIsFinished = nodeIds[1] >= rCount
+    #     # Increment each tree until we get to a point where they differ
 
-        # If we get to the end of one of the trees then we've finished and need to return
-        if (leftIsFinished or rightIsFinished):
-            if debug:
-                echo nodeIds[0], "     ", nodeIds[1]
-                echo "quiting"
+    #     loopWhileEqual([leftPath, rightPath], nodeIds, lCount, rCount)
 
-            if res.len() > 0 or not (lCount == rCount):
-                res.add((nodeIds[0] - 1, nodeIds[1] - 1))
+    #     let leftIsFinished = nodeIds[0] >= lCount
+    #     let rightIsFinished = nodeIds[1] >= rCount
 
-            return res.map(s => @[s[0], s[1]])
+    #     # If we get to the end of one of the trees then we've finished and need to return
+    #     if (leftIsFinished or rightIsFinished):
+    #         if debug:
+    #             echo nodeIds[0], "     ", nodeIds[1]
+    #             echo "quiting"
 
+    #         if res.len() > 0 or not (lCount == rCount):
+    #             res.add((nodeIds[0] - 1, nodeIds[1] - 1))
 
-        if debug:
-            echo nodeIds[0], "     ", nodeIds[1]
-
-        nodeIds[0].dec()
-        nodeIds[1].dec()
-
-        if debug:
-            echo nodeIds[0], "     ", nodeIds[1]
-
-        # Add the first firr point to the res
-        res.add((nodeIds[0], nodeIds[1]))
-
-        # set the currentId to the last node in the subtree that just got added, for both trees
-
-        var advanceBothTrees = true
-
-        # Advance both trees to the next branch that is not descended from the last findDiffLocations point
-        while advanceBothTrees:
-            var couldParse = 1
-
-            for index, db in dbs:
-
-                let path = db.getValue(sql"select path from Node where nodeId = ?",
-                        nodeIds[index])
-                var nextId: int
-                let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
-                couldParse = db.getValue(sql(query)).parseInt(nextId)
-
-                if couldParse == 0:
-                    if debug:
-                        echo "quitting 2"
-                        echo index, " | ", query
-                    let diffLocations = res.map(s => @[s[0], s[1]])
-                    return diffLocations
+    #         return res.map(s => @[s[0], s[1]])
 
 
-                nodeIds[index] = nextId
+    #     if debug:
+    #         echo nodeIds[0], "     ", nodeIds[1]
 
-            if debug:
-                echo "Advanced both trees to:"
-                echo nodeIds[0], "     ", nodeIds[1]
+    #     nodeIds[0].dec()
+    #     nodeIds[1].dec()
 
-            # Initialise the variables such that they refer to the largest tree
+    #     if debug:
+    #         echo nodeIds[0], "     ", nodeIds[1]
 
-            if lIsMore:
-                current = nodeIds[0]
-                other = nodeIds[1]
-                db = leftDB
-            else:
-                current = nodeIds[1]
-                other = nodeIds[0]
-                db = rightDB
+    #     # Add the first firr point to the res
+    #     res.add((nodeIds[0], nodeIds[1]))
 
-            #  Go through all the subsequent branches of the tree with the most nodes to see if there
-            # is a node equal to that of the smaller tree
-            # while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
+    #     # set the currentId to the last node in the subtree that just got added, for both trees
 
-            while not checkDomainsAreEqual([leftPath, rightPath],
-                    nodeIdsToArray(current, other, lIsMore)):
+    #     var advanceBothTrees = true
 
-                if debug:
-                    echo "start of botoom loop"
-                    echo fmt"current: {current}, other: {other}"
+    #     # Advance both trees to the next branch that is not descended from the last findDiffLocations point
+    #     while advanceBothTrees:
+    #         var couldParse = 1
 
-                let path = db.getValue(sql"select path from Node where nodeId = ?", current)
+    #         for index, db in dbs:
 
-                var nextId: int
+    #             let path = db.getValue(sql"select path from Node where nodeId = ?",
+    #                     nodeIds[index])
+    #             var nextId: int
+    #             let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
+    #             couldParse = db.getValue(sql(query)).parseInt(nextId)
 
-                let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {current} limit 1"
-
-                couldParse = db.getValue(sql(query)).parseInt(nextId)
-
-                if couldParse == 0:
-                    break
-
-                current = nextId
-
-            if couldParse != 0:
-                nodeIds = nodeIdsToArray(current, other, lIsMore)
-                advanceBothTrees = false
-
-            if debug:
-                echo "end of bottom loop: "
-                echo nodeIds[0], "     ", nodeIds[1]
+    #             if couldParse == 0:
+    #                 if debug:
+    #                     echo "quitting 2"
+    #                     echo index, " | ", query
+    #                 let diffLocations = res.map(s => @[s[0], s[1]])
+    #                 return diffLocations
 
 
+    #             nodeIds[index] = nextId
 
-        if (res.contains((567, 146))):
-            return res.map(s => @[s[0], s[1]])
+    #         if debug:
+    #             echo "Advanced both trees to:"
+    #             echo nodeIds[0], "     ", nodeIds[1]
 
-    if debug:
-        echo "end"
+    #         # Initialise the variables such that they refer to the largest tree
 
-    let diffLocations = res.map(s => @[s[0], s[1]])
-    return diffLocations
+    #         if lIsMore:
+    #             current = nodeIds[0]
+    #             other = nodeIds[1]
+    #             db = leftDB
+    #         else:
+    #             current = nodeIds[1]
+    #             other = nodeIds[0]
+    #             db = rightDB
+
+    #         #  Go through all the subsequent branches of the tree with the most nodes to see if there
+    #         # is a node equal to that of the smaller tree
+    #         # while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
+
+    #         while not checkDomainsAreEqual([leftPath, rightPath],
+    #                 nodeIdsToArray(current, other, lIsMore)):
+
+    #             if debug:
+    #                 echo "start of botoom loop"
+    #                 echo fmt"current: {current}, other: {other}"
+
+    #             let path = db.getValue(sql"select path from Node where nodeId = ?", current)
+
+    #             var nextId: int
+
+    #             let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {current} limit 1"
+
+    #             couldParse = db.getValue(sql(query)).parseInt(nextId)
+
+    #             if couldParse == 0:
+    #                 break
+
+    #             current = nextId
+
+    #         if couldParse != 0:
+    #             nodeIds = nodeIdsToArray(current, other, lIsMore)
+    #             advanceBothTrees = false
+
+    #         if debug:
+    #             echo "end of bottom loop: "
+    #             echo nodeIds[0], "     ", nodeIds[1]
+
+
+
+    #     if (res.contains((567, 146))):
+    #         return res.map(s =>x[ @[s[0], s[1]])
+
+    # if debug:
+    #     echo "end"
+
+    # let diffLocations = res.map(s => @[s[0], s[1]])
+    # return diffLocations
 
 
 proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
