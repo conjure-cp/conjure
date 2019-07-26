@@ -33,17 +33,6 @@ proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2, int]): boo
 
     return leftValue == rightValue
 
-    # if leftValue != rightValue:
-    #     return false
-
-    # let query2 = "select nodeId from Node where parentId = ?"
-    # let leftRows = leftDB.getAllRows(sql(query2), nodeIds[0])
-    # let rightRows = rightDB.getAllRows(sql(query2), nodeIds[1])
-
-    # echo leftRows, " , ", rightRows
-
-    # return leftRows.len() == rightRows.len()
-
 
 proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
     if leftIsMore:
@@ -281,7 +270,6 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
 proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
     let diffLocations = findDiffLocations(leftPath, rightPath, debug)
     # let augs = newSeq[seq[int]](2)
-    let augs = findAugNodes(leftPath, rightPath, diffLocations)
     let augs = getAugs(leftPath, rightPath, diffLocations)
     return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
 

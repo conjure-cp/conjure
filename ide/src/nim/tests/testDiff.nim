@@ -1,5 +1,18 @@
-import unittest, json, constants, strutils, sequtils, sugar, os, strformat
+import unittest, json, constants, strutils, sequtils, sugar, os, times, strformat
 import ../src/util/main
+
+template benchmark(benchmarkName: string, code: untyped) =
+  block:
+    let t0 = epochTime()
+    code
+    let elapsed = epochTime() - t0
+    let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
+    echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
+
+# benchmark "my benchmark":
+#   sleep 300
+
+
 
 suite "diffHandler":
     # test "handleNotCached":
@@ -178,8 +191,9 @@ suite "diff":
                 2365, 627], @[2380, 631], @[2390, 634], @[2400, 637], @[2410,
                 640], @[2420, 643]]
 
-        let d = diff(leftPath, rightPath)
-        check(d.diffLocations == answer)
+        benchmark "poop":
+            let d = diff(leftPath, rightPath)
+            check(d.diffLocations == answer)
         # check(d.augmentedIds == newSeq[int]())
 
     test "flipped":
