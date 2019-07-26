@@ -31,7 +31,7 @@ interface State {
   showLabels: boolean
   playing: boolean
   collapseAsExploring: boolean
-  augmentedIds: number[]
+  augmentedIds: number[][]
   diffLocations: number[][]
   currentDiffIndex: number
   diffReady: boolean
@@ -110,7 +110,7 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
-    console.log(this.state.currentDiffIndex)
+    console.log(this.state.augmentedIds)
 
     if (this.props.trees) {
       // console.log(JSON.stringify(this.props.trees[0].core))

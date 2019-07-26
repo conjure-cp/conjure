@@ -24,7 +24,8 @@ proc init*(dirPath: string): (Core, string) =
 
 
 proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2, int]): bool =
-    let query1 = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
+    # let query1 = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
+    let query1 = "select group_concat(name || ' - ' || storeDump, ' , ') from Domain where nodeId = ? and name not like 'aux%'"
     let leftDB = dBTable[paths[0]]
     let rightDB = dBTable[paths[1]]
 
@@ -99,7 +100,7 @@ proc getAugs*(leftPath, rightPath: string,
             )
             where not exists
             (
-            select nodeId, path from Node where path like '%' || n || '%' 
+            select nodeId, path from Node where path like '%/' || n || '/%' 
             and nodeId in ({($diffIds)[2..^2]}) 
             )
             """
@@ -191,6 +192,8 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
         # Add the first firr point to the res
         res.add((nodeIds[0], nodeIds[1]))
 
+        # set the currentId to the last node in the subtree that just got added, for both trees
+
         var advanceBothTrees = true
 
         # Advance both trees to the next branch that is not descended from the last findDiffLocations point
@@ -216,6 +219,7 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
                 nodeIds[index] = nextId
 
             if debug:
+                echo "Advanced both trees to:"
                 echo nodeIds[0], "     ", nodeIds[1]
 
             # Initialise the variables such that they refer to the largest tree
@@ -237,8 +241,8 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
                     nodeIdsToArray(current, other, lIsMore)):
 
                 if debug:
-                    echo "start of botoom llop"
-                    echo nodeIds[0], "     ", nodeIds[1]
+                    echo "start of botoom loop"
+                    echo fmt"current: {current}, other: {other}"
 
                 let path = db.getValue(sql"select path from Node where nodeId = ?", current)
 
@@ -258,7 +262,13 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
                 advanceBothTrees = false
 
             if debug:
-                echo "end of bottom loop ", nodeIds[0], "     ", nodeIds[1]
+                echo "end of bottom loop: "
+                echo nodeIds[0], "     ", nodeIds[1]
+
+
+
+        if (res.contains((567, 146))):
+            return res.map(s => @[s[0], s[1]])
 
     if debug:
         echo "end"
@@ -269,8 +279,8 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
 
 proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
     let diffLocations = findDiffLocations(leftPath, rightPath, debug)
-    # let augs = newSeq[seq[int]](2)
-    let augs = getAugs(leftPath, rightPath, diffLocations)
+    let augs = newSeq[seq[int]](2)
+    # let augs = getAugs(leftPath, rightPath, diffLocations)
     return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
 
 proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =

@@ -95,7 +95,7 @@ export const goDownMerged = async (
   currentSelected: number,
   currentTreeId: number,
   diffLocations: number[][],
-  augmentedIds: number[],
+  augmentedIds: number[][],
   leftPath: string,
   rightPath: string,
   nimServerPort: number
@@ -188,7 +188,7 @@ export const goLeftAtDiffingPoint = async (
   rightMap: MyMap,
   currentSelected: number,
   diffLocations: number[][],
-  augmentedIds: number[],
+  augmentedIds: number[][],
   leftPath: string,
   rightPath: string,
   nimServerPort: number
@@ -291,7 +291,7 @@ export const goLeftMerged = async (
   leftMap: MyMap,
   rightMap: MyMap,
   diffLocations: number[][],
-  augmentedIds: number[],
+  augmentedIds: number[][],
   nimServerPort: number
 ): Promise<{
   selected: number

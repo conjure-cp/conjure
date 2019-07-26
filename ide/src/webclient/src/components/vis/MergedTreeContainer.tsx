@@ -37,7 +37,7 @@ interface Props {
   leftSolAncestorIds: number[]
   rightSolAncestorIds: number[]
   diffLocations: number[][]
-  augmentedIds: number[]
+  augmentedIds: number[][]
   currentDiff?: number[]
   rightPath: string
   leftPath: string
