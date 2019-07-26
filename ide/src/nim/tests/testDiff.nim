@@ -9,25 +9,24 @@ template benchmark(benchmarkName: string, code: untyped) =
     let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
     echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
 
-# benchmark "my benchmark":
-#   sleep 300
-
-
 
 suite "diffHandler":
-    # test "handleNotCached":
-    #     let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
-    #     let rightPath = testDataPath & "diff/default-sacbounds-8/sacbounds"
-    #     discard init(leftPath)
-    #     discard init(rightPath)
-    #     let leftHash = "leftHash"
-    #     let rightHash = "rightHash"
-    #     discard diffHandler(leftPath, rightPath, leftHash, rightHash)
-    #     let fileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{leftHash}~{rightHash}.json"
-    #     check(fileExists(fileName))
-    #     check (parseJson(readAll(open(fileName))) == %*{"diffLocations": [[3,
-    #             3], [17, 6], [27, 9]], "augmentedIds": []})
-    #     removeFile(fileName)
+    test "handleNotCached":
+        let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
+        let rightPath = testDataPath & "diff/default-sacbounds-8/sacbounds"
+        discard init(leftPath)
+        discard init(rightPath)
+        let leftHash = "leftHash"
+        let rightHash = "rightHash"
+        discard diffHandler(leftPath, rightPath, leftHash, rightHash)
+        let fileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{leftHash}~{rightHash}.json"
+        check(fileExists(fileName))
+
+        let json = parseJson(readAll(open(fileName)))
+        # echo json
+        check (json == %*{"diffLocations": [[3, 3], [17, 6], [27, 9]], "augmentedIds": [[], []]})
+
+        removeFile(fileName)
 
     test "handleCachedFlipped":
         let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
