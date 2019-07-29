@@ -34,90 +34,12 @@ proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2,
 
     var rightValue = rightDB.getValue(sql(query1), nodeIds[1])
 
-    return leftValue == rightValue
 
+    result =  leftValue == rightValue
 
-proc nodeIdsToArray(current, other: int, leftIsMore: bool): array[2, int] =
-    if leftIsMore:
-        return [current, other]
-    return [other, current]
+    # echo nodeIds
+    # echo result
 
-proc atEndOfTree*(notFinishedTreePath: string, finishedTreeLastId: int): seq[int] =
-    let ancestors = loadAncestors(notFinishedTreePath, $finishedTreeLastId)
-    let augmentedIds = ancestors.filter(x => x.id > finishedTreeLastId).map(x => x.id)
-    return augmentedIds
-
-proc getAugs*(leftPath, rightPath: string,
-                    diffLocations: seq[seq[int]]): seq[seq[int]] =
-
-    result = newSeq[seq[int]](2)
-
-    for i in countUp(0, 1):
-
-        let diffIds = diffLocations.map(x => x[i])
-
-        for loc in diffLocations:
-            # if (loc[0] == 227):
-
-            var path = leftPath
-            var db = dBTable[leftPath]
-
-            if (i == 1):
-                path = rightPath
-                db = dBTable[rightPath]
-
-            let nodePath = db.getValue(sql(
-                    fmt"select path from Node where nodeId = {loc[i]}"))
-
-            let query = fmt"""
-            select nodeId as n from  
-
-                ( select nodeId, path from Node where  
-                    nodeId > {loc[i]} and parentId != {loc[i]} and (
-                    
-                    ( nodeId in
-                        (WITH split(word, str) AS (
-                                    SELECT '', '{nodePath}' ||'/'
-                                    UNION ALL SELECT
-                                    substr(str, 0, instr(str, '/')),
-                                    substr(str, instr(str, '/')+1)
-                                    FROM split WHERE str!=''
-                                ) SELECT word FROM split WHERE word!=''
-                        ) 
-                    )
-
-                    or
-                        
-                    ( parentId in
-                        (WITH split(word, str) AS (
-                                    SELECT '', '{nodePath}' ||'/'
-                                    UNION ALL SELECT
-                                    substr(str, 0, instr(str, '/')),
-                                    substr(str, instr(str, '/')+1)
-                                    FROM split WHERE str!=''
-                                ) SELECT word FROM split WHERE word!=''
-                        ) 
-                    )
-                )
-            )
-            where not exists
-            (
-            select nodeId, path from Node where path like '%/' || n || '/%' 
-            and nodeId in ({($diffIds)[2..^2]}) 
-            )
-            """
-
-            var id: int
-            for row in db.fastRows(sql(query)):
-                discard row[0].parseInt(id)
-                if not result[i].contains(id):
-                    result[i].add(id)
-
-
-
-
-# type DiffResponse* = ref object of RootObj
-#     diffLocations*: seq[seq[int]]
 #     augmentedIds*: seq[seq[int]]
 
 type DiffPoint* = object of RootObj
@@ -158,23 +80,18 @@ proc removeDuplicates*(leftPath: string, rightPath: string,
                         kids: array[2, seq[string]]):
                         array[2, seq[string]] =
 
-    let allKids = kids[0].concat(kids[1])
 
     var leftKidsToSkip = newSeq[string]()
     var rightKidsToSkip = newSeq[string]()
 
     for i, kid in kids[0]:
-        for k in allKids:
-            if kid == k:
-                continue
+        for k in kids[1]:
 
             if checkDomainsAreEqual([leftPath, rightPath], [kid, k]):
                 leftKidsToSkip.add(kid)
 
     for i, kid in kids[1]:
-        for k in allKids:
-            if kid == k:
-                continue
+        for k in kids[0]:
 
             if checkDomainsAreEqual([leftPath, rightPath], [k, kid]):
                 rightKidsToSkip.add(kid)
@@ -280,25 +197,24 @@ proc diff*(leftPath, rightPath: string, debug: bool = false): seq[DiffPoint] =
     # let augs = newSeq[seq[int]](2)
     # let augs = getAugs(leftPath, rightPath, diffLocations)
     # return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
-    return findDiffLocationsBoyo(leftPath, rightPath)
+    return findDiffLocationsBoyo(leftPath, rightPath, debug)
 
 proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
-    # let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
-    # let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
-    # let flipped = fmt"{diffCachesDir}/{rightHash}~{leftHash}.json"
+    let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
+    let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
+    let flipped = fmt"{diffCachesDir}/{rightHash}~{leftHash}.json"
 
-    # if fileExists(diffCacheFile):
-    #     return parseJson(readAll(open(diffCacheFile)))
+    if fileExists(diffCacheFile):
+        return parseJson(readAll(open(diffCacheFile)))
 
-    # if fileExists(flipped):
-    #     var contents = parseJson(readAll(open(flipped)))
-    #     return %contents["diffLocations"]
-    #         .getElems()
-    #         .map(x => [x[1], x[0]])
-
+    if fileExists(flipped):
+        return %(parseJson(readAll(open(flipped))).getElems()
+            .map(x => newDiffPoint($x["rightTreeId"], $x["leftTreeId"], 
+                                    x["highlightRight"].getElems().map(y => $y),
+                                    x["highlightLeft"].getElems().map(y => $y))))
 
     let res = diff(leftPath, rightPath)
-    # writeFile(diffCacheFile, $(%res))
+    writeFile(diffCacheFile, $(%res))
     return %res
 
 proc loadAncestors*(dirPath, nodeId: string): seq[Node] =

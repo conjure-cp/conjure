@@ -106,7 +106,6 @@ class Forest extends React.Component<Props, State> {
   }
 
   render = () => {
-
     if (this.props.trees) {
       // console.log(JSON.stringify(this.props.trees[0].core))
       // console.log(JSON.stringify(this.props.trees[1].core))
@@ -241,22 +240,19 @@ class Forest extends React.Component<Props, State> {
                           : { width: "100%" }
                       }
                     >
-
-                      {/* <TreeContainer
-                        // diffParentId={
-                        //   this.state.currentDiffIndex !== -1
-                        //     ? this.state.diffPoints.map(x => x[i])[
-                        //         this.state.currentDiffIndex
-                        //       ]
-                        //     : -1
-                        // }
-                        // selected={
-                        //   this.state.currentDiffIndex !== -1
-                        //     ? this.state.diffPoints[
-                        //         this.state.currentDiffIndex
-                        //       ][i]
-                        //     : 0
-                        // }
+                      <TreeContainer
+                        diffParentId={
+                          this.state.currentDiffIndex !== -1
+                            ? this.state.diffPoints[this.state.currentDiffIndex]
+                                .leftTreeId
+                            : -1
+                        }
+                        selected={
+                          this.state.currentDiffIndex !== -1
+                            ? this.state.diffPoints[this.state.currentDiffIndex]
+                                .leftTreeId
+                            : -1
+                        }
                         hash={this.props.trees[i].hash}
                         path={this.props.trees[i].path}
                         nimServerPort={this.props.nimServerPort}
@@ -273,7 +269,7 @@ class Forest extends React.Component<Props, State> {
                         }
                         collapseAsExploring={this.state.collapseAsExploring}
                         showLabels={this.state.showLabels}
-                      /> */}
+                      />
                     </div>
                   ))}
                 </>
@@ -284,9 +280,7 @@ class Forest extends React.Component<Props, State> {
                     <MergedTreeContainer
                       currentDiff={
                         this.state.currentDiffIndex !== -1
-                          ? this.state.diffPoints[
-                              this.state.currentDiffIndex
-                            ]
+                          ? this.state.diffPoints[this.state.currentDiffIndex]
                           : undefined
                       }
                       leftCore={this.props.trees[0].core}

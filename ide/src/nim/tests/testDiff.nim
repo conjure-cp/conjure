@@ -9,8 +9,6 @@ template benchmark(benchmarkName: string, code: untyped) =
     let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
     echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
 
-
-
 suite "diffHandler":
   test "handleNotCached":
     let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
@@ -24,9 +22,15 @@ suite "diffHandler":
     check(fileExists(fileName))
 
     let json = parseJson(readAll(open(fileName)))
-    # echo json
-    check (json == %*{"diffLocations": [[3, 3], [17, 6], [27, 9]],
-        "augmentedIds": [[], []]})
+
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "highlightLeft": [4],
+        "highlightRight": []}, {"leftTreeId": 7, "rightTreeId": 4,
+        "highlightLeft": [8, 11], "highlightRight": []}, {"leftTreeId": 17,
+        "rightTreeId": 6, "highlightLeft": [18], "highlightRight": []}, {
+        "leftTreeId": 21, "rightTreeId": 7, "highlightLeft": [22, 24],
+        "highlightRight": []}, {"leftTreeId": 27, "rightTreeId": 9,
+        "highlightLeft": [28, 30], "highlightRight": [10]}]
+    check (json == answer)
 
     removeFile(fileName)
 
@@ -42,11 +46,15 @@ suite "diffHandler":
 
     check(fileExists(fileName))
 
-    let expected = %*{"diffLocations": [[3, 3], [6, 17], [9, 27]],
-            "augmentedIds": []}
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "highlightLeft": [],
+      "highlightRight": [4]}, {"leftTreeId": 4, "rightTreeId": 7,
+      "highlightLeft": [], "highlightRight": [8, 11]}, {"leftTreeId": 6,
+      "rightTreeId": 17, "highlightLeft": [], "highlightRight": [18]}, {
+      "leftTreeId": 7, "rightTreeId": 21, "highlightLeft": [],
+      "highlightRight": [22, 24]}, {"leftTreeId": 9, "rightTreeId": 27,
+      "highlightLeft": [10], "highlightRight": [28, 30]}]
 
-    check(expected["diffLocations"] == diffHandler(leftPath, rightPath,
-            rightHash, leftHash))
+    check(answer == diffHandler(leftPath, rightPath, rightHash, leftHash))
 
     let flippedFileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{rightHash}~{leftHash}.json"
     check(not fileExists(flippedFileName))
@@ -76,37 +84,24 @@ suite "domainsAreEqual":
     discard init(rightPath)
     check checkDomainsAreEqual([leftPath, rightPath], [$4, $4]) == false
 
-suite "findAugNodes":
-  test "10aug":
-    let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
-    let rightPath = testDataPath & "/diff/default-sacbounds-10/sacbounds"
-    discard init(leftPath)
-    discard init(rightPath)
-
-    let diffLocs = @[@[4, 4], @[21, 8], @[34, 11], @[44, 13], @[54, 16], @[
-            68, 19], @[78, 22], @[88, 25], @[98, 28], @[108, 31], @[123,
-                    35], @[
-            137, 38], @[147, 41], @[157, 44], @[167, 47], @[177, 50], @[192,
-            54], @[202, 57], @[212, 60], @[227, 64]]
-
-
-    let res = getAugs(leftPath, rightPath, diffLocs)
-    echo res
-
-    check(res[0] == @[49, 83, 103, 113, 116, 152, 172, 182, 185, 207, 217, 220,
-        232, 235, 239])
-    check(res[1].len() == 0)
-
 
 
 suite "diffHandler":
-  test "remove duplicates":
+
+  test "rd8":
     let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
     let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
     discard init(leftPath)
     discard init(rightPath)
-    echo removeDuplicates(leftPath, rightPath, [@["4", "7"], @["4"]])
+    check removeDuplicates(leftPath, rightPath, [@["4", "7"], @["4"]]) == @[@[
+        "4"], @[]]
 
+  test "rdfa":
+    let leftPath = testDataPath & "/diff/default-findAllSols-8/normal"
+    let rightPath = testDataPath & "/diff/default-findAllSols-8/findAllSols"
+    discard init(leftPath)
+    discard init(rightPath)
+    echo removeDuplicates(leftPath, rightPath, [@["27"], @["27", "33"]])
 
 suite "diff":
 
@@ -399,39 +394,39 @@ suite "diff":
 
       let highlightRight = d.map(x => x.highlightRight)
 
-      let hR = @[@[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[86], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[143], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[
-          178], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[309], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[343], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
-          @[], @[644]]
+      let hR = @[@[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[
+        ], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[86], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[143], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[
+        178], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[309], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[343], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[], @[],
+        @[], @[644]]
 
       check highlightRight == hR
 
@@ -442,7 +437,8 @@ suite "diff":
     discard init(rightPath)
 
     let d = diff(leftPath, rightPath)
-    let flipped = d.map(x => newDiffPoint($x.rightTreeId, $x.leftTreeId, x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y)))
+    let flipped = d.map(x => newDiffPoint($x.rightTreeId, $x.leftTreeId,
+        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y)))
 
     let rTL = diff(rightPath, leftPath)
 
@@ -465,24 +461,29 @@ suite "diff":
     discard init(leftPath)
     discard init(rightPath)
 
-    let d = diff(leftPath, rightPath, true)
-    echo d
-    # check(d.diffLocations == @[@[32, 32]])
+    let d = diff(leftPath, rightPath, false)
 
+    check(d[0].leftTreeId == 26)
+    check(d[0].rightTreeId == 26)
+    check(d[0].highlightLeft.len() == 0)
+    check(d[0].highlightRight == @[33])
+    # check(d.diffLocations == @[@[32, 32]])
+    check(d[1].leftTreeId == 1)
+    check(d[1].rightTreeId == 1)
+    check(d[1].highlightLeft.len() == 0)
+    check(d[1].highlightRight == @[36])
 
   test "symmBreak":
     let leftPath = testDataPath & "/diff/default-symmBreak-8/normal"
     let rightPath = testDataPath & "/diff/default-symmBreak-8/symmBreakNoOptimisation"
     discard init(leftPath)
     discard init(rightPath)
-    echo diff(leftPath, rightPath, false)
-    # let d = diff(leftPath, rightPath, true)
-    # echo d.diffLocations
-    # echo d.augmentedIds
-    # check(d.diffLocations == @[@[0, 0]])
-    # check(d.augmentedIds == newSeq[seq[int]](2))
+    let d = diff(leftPath, rightPath, false)
 
-    # check(d.augmentedIds == newSeq[int]())
+    check(d[0].leftTreeId == 0)
+    check(d[0].rightTreeId == 0)
+    check(d[0].highlightLeft == @[1])
+    check(d[0].highlightRight == @[1])
 
   # test "contrived":
   #     let leftPath = testDataPath & "/diff/contrived/normal"

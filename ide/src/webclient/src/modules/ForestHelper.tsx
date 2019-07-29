@@ -92,13 +92,16 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
-  // if (isEqual(diffPoints, [[-1, -1]])) {
-  //   const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
-  //   newRoot.children = [leftMap[0], rightMap[0]]
-  //   return { 0: newRoot }
-  // }
+  if (diffPoints[0].leftTreeId === -1 && diffPoints[0].rightTreeId === -1){
+    const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
+    leftMap[0].treeId = WhichTree.Left
+    rightMap[0].treeId = WhichTree.Right
+    newRoot.children = [leftMap[0], rightMap[0]]
+    return { 0: newRoot }
+  }
 
   for (const diffPoint of diffPoints) {
+
     diffPoint.highlightLeft.forEach(nodeId => {
       if (leftMap[nodeId]) {
         leftMap[nodeId].treeId = WhichTree.Left
@@ -115,5 +118,8 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
     }
   }
 
+  console.log(diffPoints)
+  console.log(leftMap)
+  console.log(rightMap)
   return leftMap
 }
