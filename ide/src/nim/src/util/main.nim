@@ -154,7 +154,8 @@ proc `$`*(d: DiffPoint): string =
     result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
 
 
-proc removeDuplicates*(leftPath: string, rightPath: string, kids: array[2, seq[string]]): array[2, seq[string]] =  
+proc removeDuplicates*(leftPath: string, rightPath: string, kids: array[2, seq[
+        string]]): array[2, seq[string]] =
 
     let allKids = kids[0].concat(kids[1])
 
@@ -179,7 +180,7 @@ proc removeDuplicates*(leftPath: string, rightPath: string, kids: array[2, seq[s
                 rightKidsToSkip.add(kid)
 
 
-    return [kids[0].filter(x => not leftKidsToSkip.contains(x)), 
+    return [kids[0].filter(x => not leftKidsToSkip.contains(x)),
     kids[1].filter(x => not rightKidstoSkip.contains(x))]
 
 proc findDiffLocationsBoyo*(leftPath, rightPath: string,
@@ -216,11 +217,11 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
             let cleanKids = removeDuplicates(leftPath, rightPath, kids)
 
-            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], cleanKids[0], cleanKids[1])
+            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], cleanKids[0],
+                    cleanKids[1])
 
             diffPoints.add(diffPoint)
             tuples.add((prevIds[0], prevIds[1]))
-            echo "HERRRRE"
             return
 
         var grandKids: array[2, seq[string]]
@@ -231,20 +232,7 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
         let maxGrandKids = grandKids.map(x => x.len()).max() - 1
 
-        # var numOfKidsIsDifferent = false
-
-        # for i in countUp(0, maxGrandKids):
-        #     for j in countUp(0, 1):
-        #         if grandKids[j].len() - 1 < i:
-        #             numOfKidsIsDifferent = true
-
-
-        # if numOfKidsIsDifferent:
-        #     echo "@ ", ids, "                      grandkids0: ", grandKids[0], "   kids1: ", grandKids[1]
-
-        #     let diffPoint = newDiffPoint(ids[0], ids[1], grandKids[0], grandKids[1])
-        #     diffPoints.add(diffPoint)
-        # else:
+        echo maxGrandKids
 
         for i in countUp(0, maxGrandKids):
             # echo fmt"Recursing on {i}", [grandKids[0][i], grandKids[1][i]]
@@ -252,14 +240,23 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
             var nextRight: string
 
             if i >= grandKids[0].len():
-                nextLeft = ids[0]
+                if grandKids[0].len() > 0:
+                    nextLeft = grandKids[0][0]
+                else:
+                    nextLeft = ids[0]
             else:
                 nextLeft = grandKids[0][i]
 
             if i >= grandKids[1].len():
-                nextRight = ids[1]
+                if grandKids[1].len() > 0:
+                    nextRight = grandKids[1][0]
+                else:
+                    nextRight = ids[1]
             else:
                 nextRight = grandKids[1][i]
+            
+            echo nextLeft
+            echo nextRight
 
             recursive([nextLeft, nextRight], ids)
 
@@ -268,8 +265,9 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     recursive(["0", "0"], ["-1", "-1"])
 
-    for d in diffPoints
+    for d in diffPoints:
         echo d
+
     return diffPoints
 
     # return res
