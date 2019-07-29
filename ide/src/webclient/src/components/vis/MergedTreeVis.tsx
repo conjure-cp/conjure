@@ -26,8 +26,6 @@ interface Props {
   selectedTreeId: WhichTree
   leftSolAncestorIds: number[]
   rightSolAncestorIds: number[]
-  leftDiffIds: number[]
-  rightDiffIds: number[]
   solveable: boolean
   linScale: any
   minsize: number

@@ -1,7 +1,7 @@
 import * as React from "react"
 import StageHeader from "../common/StageHeader"
 import { Check } from "../common/Check"
-import { Tree } from "../Forest"
+import { Tree, DiffPoint } from "../Forest"
 import { MySlider } from "../common/Slider"
 import FlickThru from "../common/FlickThu"
 
@@ -9,7 +9,7 @@ interface Props {
   trees: Tree[]
   splitScreen: boolean
   diffReady: boolean
-  diffLocations: number[][]
+  diffPoints: DiffPoint[]
   currentDiffIndex: number
   splitScreenChangeHandler: () => void
   diffChangeHandler: (value: number) => void
@@ -25,24 +25,24 @@ class DiffSettings extends React.Component<Props, State> {
   }
 
   render = () => {
-    const maybeSlider = this.props.diffLocations.length > 1 && (
+    const maybeSlider = this.props.diffPoints.length > 1 && (
       <MySlider
         values={[this.props.currentDiffIndex]}
-        domain={[-1, this.props.diffLocations.length - 1]}
+        domain={[-1, this.props.diffPoints.length - 1]}
         sliderChangeHandler={this.props.diffChangeHandler}
       />
     )
 
     const message =
-      this.props.diffLocations.length > 0 ? (
+      this.props.diffPoints.length > 0 ? (
         <>
-          <div>Trees differ in {this.props.diffLocations.length} places</div>
+          <div>Trees differ in {this.props.diffPoints.length} places</div>
         </>
       ) : (
         <div>Trees are identical</div>
       )
 
-    const flickThrough = this.props.diffLocations.length > 0 && (
+    const flickThrough = this.props.diffPoints.length > 0 && (
       <FlickThru
         nextHandler={this.props.nextDiffHandler}
         prevHandler={this.props.prevDiffHandler}

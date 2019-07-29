@@ -121,10 +121,26 @@ suite "diff":
     let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
     discard init(leftPath)
     discard init(rightPath)
+    
 
-    let answers = @[@[3, 3], @[17, 6], @[27, 9]]
-    let d = findDiffLocationsBoyo(leftPath, rightPath)
+    let d = diff(leftPath, rightPath)
     echo d
+
+    let diffNodeIds =d.map(x => @[x.leftTreeId, x.rightTreeId])
+    let answers = @[@[3, 3], @[7, 4], @[17, 6], @[21, 7], @[27, 9]]
+
+    check diffNodeIds == answers
+  
+    let highlightLeft = d.map(x => x.highlightLeft)
+    let hL = @[@[4], @[8, 11], @[18], @[22, 24], @[28, 30]]
+
+    check highlightLeft == hL
+
+    let highlightRight = d.map(x => x.highlightRight)
+
+    check highlightRight == @[@[], @[], @[], @[], @[10]]
+
+
     # echo d.diffLocations
 
     # check(d.diffLocations == answers)
@@ -277,6 +293,7 @@ suite "diff":
     let rightPath = testDataPath & "/diff/default-symmBreak-8/symmBreakNoOptimisation"
     discard init(leftPath)
     discard init(rightPath)
+    echo diff(leftPath, rightPath, false)
     # let d = diff(leftPath, rightPath, true)
     # echo d.diffLocations
     # echo d.augmentedIds

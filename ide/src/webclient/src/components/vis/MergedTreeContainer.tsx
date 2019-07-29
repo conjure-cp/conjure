@@ -28,6 +28,7 @@ import {
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 import { makeState } from "../../modules/TreeHelper"
+import { DiffPoint } from "../Forest";
 
 export type MyMap = Record<number, Node>
 
@@ -36,9 +37,8 @@ interface Props {
   rightCore: Core
   leftSolAncestorIds: number[]
   rightSolAncestorIds: number[]
-  diffLocations: number[][]
-  augmentedIds: number[][]
-  currentDiff?: number[]
+  diffPoints: DiffPoint[]
+  currentDiff?: DiffPoint
   rightPath: string
   leftPath: string
   hash: string
@@ -92,14 +92,14 @@ export class MergedTreeContainer extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
-    if (isEqual(props.diffLocations, [[0, 0]])) {
+    if (isEqual(props.diffPoints, [[0, 0]])) {
       origState.selectedTreeId = WhichTree.Left
     }
 
     let leftMap = makeState(props.leftCore, 0).id2Node
     let rightMap = makeState(props.rightCore, 0).id2Node
 
-    assignTreeIds(leftMap, rightMap, props.diffLocations, props.augmentedIds)
+    assignTreeIds(leftMap, rightMap, props.diffPoints)
 
     this.state = {
       ...origState,
@@ -114,57 +114,55 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     this.handlers = {
       goLeft: async () => {
-        this.setState(
-          await goLeftMerged(
-            this.state.selected,
-            this.state.selectedTreeId,
-            this.props.leftPath,
-            this.props.rightPath,
-            this.state.leftMap!,
-            this.state.rightMap!,
-            this.props.diffLocations,
-            this.props.augmentedIds,
-            this.props.nimServerPort
-          )
-        )
+        // this.setState(
+        //   await goLeftMerged(
+        //     this.state.selected,
+        //     this.state.selectedTreeId,
+        //     this.props.leftPath,
+        //     this.props.rightPath,
+        //     this.state.leftMap!,
+        //     this.state.rightMap!,
+        //     this.props.diffPoints,
+        //     this.props.nimServerPort
+        //   )
+        // )
       },
       goUp: () => {
-        this.setState(
-          goUpMerged(
-            this.state.leftMap!,
-            this.state.rightMap!,
-            this.state.selected,
-            this.state.selectedTreeId,
-            this.props.diffLocations
-          )
-        )
+        // this.setState(
+        //   goUpMerged(
+        //     this.state.leftMap!,
+        //     this.state.rightMap!,
+        //     this.state.selected,
+        //     this.state.selectedTreeId,
+        //     this.props.diffPoints
+        //   )
+        // )
       },
 
       goDown: async () => {
-        this.setState(
-          await goDownMerged(
-            this.state.leftMap,
-            this.state.rightMap,
-            this.state.selected,
-            this.state.selectedTreeId,
-            this.props.diffLocations,
-            this.props.augmentedIds,
-            this.props.leftPath,
-            this.props.rightPath,
-            this.props.nimServerPort
-          )
-        )
+        // this.setState(
+          // await goDownMerged(
+          //   this.state.leftMap,
+          //   this.state.rightMap,
+          //   this.state.selected,
+          //   this.state.selectedTreeId,
+          //   this.props.diffPoints,
+          //   this.props.leftPath,
+          //   this.props.rightPath,
+          //   this.props.nimServerPort
+          // )
+        // )
       },
       goRight: async () => {
-        this.setState(
-          await goRightMerged(
-            this.state.leftMap,
-            this.state.rightMap,
-            this.state.selected,
-            this.state.selectedTreeId,
-            this.props.diffLocations
-          )
-        )
+        // this.setState(
+        //   await goRightMerged(
+        //     this.state.leftMap,
+        //     this.state.rightMap,
+        //     this.state.selected,
+        //     this.state.selectedTreeId,
+        //     this.props.diffPoints
+        //   )
+        // )
       },
       goToRoot: () => {
         console.log("GOT TO ROOT")
@@ -191,7 +189,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         this.props.currentDiff,
         this.props.nimServerPort
       )
-      selected = this.props.currentDiff[0]
+      selected = this.props.currentDiff.leftTreeId
     }
 
     this.setState({
@@ -225,16 +223,13 @@ export class MergedTreeContainer extends React.Component<Props, State> {
         {this.state.leftMap && this.state.rightMap && (
           <MergedTreeVis
             hash={this.props.hash}
-            leftDiffIds={this.props.diffLocations.map(x => x[0])}
-            rightDiffIds={this.props.diffLocations.map(x => x[1])}
             identifier={"MergedTree"}
             rootNode={
               // this.state.mergedMap[0]
               mergeMaps(
                 this.state.leftMap,
                 this.state.rightMap,
-                this.props.diffLocations,
-                this.props.augmentedIds
+                this.props.diffPoints,
               )[0]
             }
             selected={this.state.selected}

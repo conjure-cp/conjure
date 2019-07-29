@@ -154,8 +154,9 @@ proc `$`*(d: DiffPoint): string =
     result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
 
 
-proc removeDuplicates*(leftPath: string, rightPath: string, kids: array[2, seq[
-        string]]): array[2, seq[string]] =
+proc removeDuplicates*(leftPath: string, rightPath: string, 
+                        kids: array[2, seq[ string]]): 
+                        array[2, seq[string]] =
 
     let allKids = kids[0].concat(kids[1])
 
@@ -176,17 +177,20 @@ proc removeDuplicates*(leftPath: string, rightPath: string, kids: array[2, seq[
                 continue
 
             if checkDomainsAreEqual([leftPath, rightPath], [k, kid]):
-                # kids[1].delete(i)
                 rightKidsToSkip.add(kid)
 
 
-    return [kids[0].filter(x => not leftKidsToSkip.contains(x)),
-    kids[1].filter(x => not rightKidstoSkip.contains(x))]
+    return [
+        kids[0].filter(x => not leftKidsToSkip.contains(x)),
+        kids[1].filter(x => not rightKidstoSkip.contains(x))
+    ]
 
 proc findDiffLocationsBoyo*(leftPath, rightPath: string,
         debug: bool = false): seq[DiffPoint] =
 
 #Concept of the diff point is wrong, what we need is a way of keeping track of different branches
+
+    var res: type(result) = @[]
 
     let leftDB = dBTable[leftPath]
     let rightDB = dBTable[rightPath]
@@ -194,14 +198,15 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     let kidsQuery = "select nodeId from Node where parentId = ?"
 
-    # var diffPoints = newSeq[seq[string]]()
     var tuples = newSeq[(string, string)]()
-    var diffPoints = newSeq[DiffPoint]()
+
 
     proc recursive(ids: array[2, string], prevIds: array[2, string]) =
+        var kids: array[2, seq[string]]
 
-        echo fmt"Current ", ids
-        echo checkDomainsAreEqual([leftPath, rightPath], ids)
+        if debug:
+            echo fmt"Current ", ids
+            echo checkDomainsAreEqual([leftPath, rightPath], ids)
 
         if not checkDomainsAreEqual([leftPath, rightPath], ids):
 
@@ -209,7 +214,6 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
             if tuples.contains(t):
                 return
 
-            var kids: array[2, seq[string]]
 
             for i in countUp(0, 1):
                 for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
@@ -217,254 +221,58 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
             let cleanKids = removeDuplicates(leftPath, rightPath, kids)
 
-            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], cleanKids[0],
-                    cleanKids[1])
+            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], 
+                                        cleanKids[0], cleanKids[1])
 
-            diffPoints.add(diffPoint)
-            tuples.add((prevIds[0], prevIds[1]))
+            res.add(diffPoint)
+            tuples.add(t)
             return
 
-        var grandKids: array[2, seq[string]]
 
         for i in countUp(0, 1):
             for row in dbs[i].fastRows(sql(kidsQuery), ids[i]):
-                grandKids[i].add(row[0])
+                kids[i].add(row[0])
 
-        let maxGrandKids = grandKids.map(x => x.len()).max() - 1
+        let maxKids = kids.map(x => x.len()).max() - 1
 
-        echo maxGrandKids
+        if debug:
+            echo maxKids
 
-        for i in countUp(0, maxGrandKids):
-            # echo fmt"Recursing on {i}", [grandKids[0][i], grandKids[1][i]]
+        for i in countUp(0, maxKids):
+            # echo fmt"Recursing on {i}", [kids[0][i], kids[1][i]]
             var nextLeft: string
             var nextRight: string
 
-            if i >= grandKids[0].len():
-                if grandKids[0].len() > 0:
-                    nextLeft = grandKids[0][0]
+            if i >= kids[0].len():
+                if kids[0].len() > 0:
+                    nextLeft = kids[0][0]
                 else:
                     nextLeft = ids[0]
             else:
-                nextLeft = grandKids[0][i]
+                nextLeft = kids[0][i]
 
-            if i >= grandKids[1].len():
-                if grandKids[1].len() > 0:
-                    nextRight = grandKids[1][0]
+            if i >= kids[1].len():
+                if kids[1].len() > 0:
+                    nextRight = kids[1][0]
                 else:
                     nextRight = ids[1]
             else:
-                nextRight = grandKids[1][i]
+                nextRight = kids[1][i]
             
-            echo nextLeft
-            echo nextRight
+            if debug:
+                echo nextLeft
+                echo nextRight
 
             recursive([nextLeft, nextRight], ids)
 
-
-
-
     recursive(["0", "0"], ["-1", "-1"])
 
-    for d in diffPoints:
-        echo d
-
-    return diffPoints
-
-    # return res
-
-    # return res.map(x => @[x[0], x[1]])
-
-    # let query = "select nodeId, parentId from Node;"
-    # var id2Childrens = [initTable[string, (string, string)](), initTable[string, (string, string)]()]
-
-    # for i in countUp(0, 1):
-
-    #     let db = dbs[i]
-    #     # var nodeId, parentId: int
-
-    #     echo "Loading Node Table"
-
-    #     for res in db.fastRows(sql(query)):
-
-    #         let nodeId = res[0]
-    #         let parentId = res[1]
-
-    #         if (not id2Childrens[i].haskey(parentId)):
-    #             id2Childrens[i][parentId] = ("-1", "-1")
-
-    #         let (kid1, kid2) = id2Childrens[i][parentId]
-
-    #         if kid1 == "-1":
-    #             id2Childrens[i][parentId] = ($nodeId, "-1")
-    #         else:
-    #             id2Childrens[i][parentId] = (kid1, $nodeId)
-
-    #     echo "Calculating Node Paths"
-
-
-
-
-
-
-# proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
-#         seq[int]] =
-
-
-    # return findDiffLocationsBoyo(leftPath, rightPath).map(proc(x: seq[
-    #         string]): seq[int] =
-    #     var leftNum: int
-    #     var rightNum: int
-    #     discard x[0].parseInt(leftNum)
-    #     discard x[1].parseInt(rightNum)
-
-    #     @[leftNum, rightNum]
-    # )
-
-    # var res: seq[(int, int)]
-
-    # let leftDB = dBTable[leftPath]
-    # let rightDB = dBTable[rightPath]
-
-    # let dbs = [leftDB, rightDb]
-
-    # let query = "select count(nodeId) from Node"
-
-    # var lCount: int
-    # var rCount: int
-
-    # discard leftDB.getValue(sql(query)).parseInt(lCount)
-    # discard rightDB.getValue(sql(query)).parseInt(rCount)
-
-    # var lIsMore = lCount >= rCount
-
-    # var nodeIds = [0, 0]
-    # var current: int
-    # var other: int
-    # var db: DbConn
-
-    # if not checkDomainsAreEqual([leftPath, rightPath], nodeIds):
-    #     return @[@[-1, -1]]
-
-    # while true:
-
-    #     if debug:
-    #         echo ""
-    #         echo nodeIds[0], "     ", nodeIds[1]
-
-    #     # Increment each tree until we get to a point where they differ
-
-    #     loopWhileEqual([leftPath, rightPath], nodeIds, lCount, rCount)
-
-    #     let leftIsFinished = nodeIds[0] >= lCount
-    #     let rightIsFinished = nodeIds[1] >= rCount
-
-    #     # If we get to the end of one of the trees then we've finished and need to return
-    #     if (leftIsFinished or rightIsFinished):
-    #         if debug:
-    #             echo nodeIds[0], "     ", nodeIds[1]
-    #             echo "quiting"
-
-    #         if res.len() > 0 or not (lCount == rCount):
-    #             res.add((nodeIds[0] - 1, nodeIds[1] - 1))
-
-    #         return res.map(s => @[s[0], s[1]])
-
-
-    #     if debug:
-    #         echo nodeIds[0], "     ", nodeIds[1]
-
-    #     nodeIds[0].dec()
-    #     nodeIds[1].dec()
-
-    #     if debug:
-    #         echo nodeIds[0], "     ", nodeIds[1]
-
-    #     # Add the first firr point to the res
-    #     res.add((nodeIds[0], nodeIds[1]))
-
-    #     # set the currentId to the last node in the subtree that just got added, for both trees
-
-    #     var advanceBothTrees = true
-
-    #     # Advance both trees to the next branch that is not descended from the last findDiffLocations point
-    #     while advanceBothTrees:
-    #         var couldParse = 1
-
-    #         for index, db in dbs:
-
-    #             let path = db.getValue(sql"select path from Node where nodeId = ?",
-    #                     nodeIds[index])
-    #             var nextId: int
-    #             let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {nodeIds[index]} limit 1"
-    #             couldParse = db.getValue(sql(query)).parseInt(nextId)
-
-    #             if couldParse == 0:
-    #                 if debug:
-    #                     echo "quitting 2"
-    #                     echo index, " | ", query
-    #                 let diffLocations = res.map(s => @[s[0], s[1]])
-    #                 return diffLocations
-
-
-    #             nodeIds[index] = nextId
-
-    #         if debug:
-    #             echo "Advanced both trees to:"
-    #             echo nodeIds[0], "     ", nodeIds[1]
-
-    #         # Initialise the variables such that they refer to the largest tree
-
-    #         if lIsMore:
-    #             current = nodeIds[0]
-    #             other = nodeIds[1]
-    #             db = leftDB
-    #         else:
-    #             current = nodeIds[1]
-    #             other = nodeIds[0]
-    #             db = rightDB
-
-    #         #  Go through all the subsequent branches of the tree with the most nodes to see if there
-    #         # is a node equal to that of the smaller tree
-    #         # while lRes[nodeIds[0]] != rRes[nodeIds[1]] and couldParse != 0:
-
-    #         while not checkDomainsAreEqual([leftPath, rightPath],
-    #                 nodeIdsToArray(current, other, lIsMore)):
-
-    #             if debug:
-    #                 echo "start of botoom loop"
-    #                 echo fmt"current: {current}, other: {other}"
-
-    #             let path = db.getValue(sql"select path from Node where nodeId = ?", current)
-
-    #             var nextId: int
-
-    #             let query = fmt"select nodeId from Node where path not like '{path}%' and nodeId > {current} limit 1"
-
-    #             couldParse = db.getValue(sql(query)).parseInt(nextId)
-
-    #             if couldParse == 0:
-    #                 break
-
-    #             current = nextId
-
-    #         if couldParse != 0:
-    #             nodeIds = nodeIdsToArray(current, other, lIsMore)
-    #             advanceBothTrees = false
-
-    #         if debug:
-    #             echo "end of bottom loop: "
-    #             echo nodeIds[0], "     ", nodeIds[1]
-
-
-
-    #     if (res.contains((567, 146))):
-    #         return res.map(s =>x[ @[s[0], s[1]])
-
-    # if debug:
-    #     echo "end"
-
-    # let diffLocations = res.map(s => @[s[0], s[1]])
-    # return diffLocations
+    result = res
+
+    if debug: 
+        for d in result:
+            echo d
+    
 
 
 proc diff*(leftPath, rightPath: string, debug: bool = false): seq[DiffPoint] =

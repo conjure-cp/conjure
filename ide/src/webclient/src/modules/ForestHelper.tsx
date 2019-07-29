@@ -5,70 +5,21 @@ import { fetchAncestors } from "./MovementHelper"
 import { isEqual, cloneDeep } from "lodash"
 import * as d3 from "d3"
 import { array } from "yup"
+import { DiffPoint } from "../components/Forest"
 
 export const assignTreeIds = (
   leftMap: MyMap,
   rightMap: MyMap,
-  diffLocations: number[][],
-  augmentedIds: number[][]
+  diffPoints: DiffPoint[]
 ) => {
-  if (isEqual(diffLocations, [[-1, -1]])) {
-    leftMap[0].treeId = WhichTree.Left
-    rightMap[0].treeId = WhichTree.Right
-    getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
-    getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
-
-    return
-  }
-
-  diffLocations.forEach(array => {
-    if (leftMap[array[0]]) {
-      getDescList(leftMap[array[0]]).forEach(
-        x => (x.data.treeId = WhichTree.Left)
-      )
-    }
-    if (rightMap[array[1]]) {
-      getDescList(rightMap[array[1]]).forEach(
-        x => (x.data.treeId = WhichTree.Right)
-      )
-    }
-  })
-
-  console.log(augmentedIds)
-
-  augmentedIds[0].forEach(augId => {
-    if (!(augId in leftMap)) {
-      return
-    }
-    getDescList(leftMap[augId]).forEach(x => {
-      x.data.treeId = WhichTree.Left
-    })
-  })
-
-  augmentedIds[1].forEach(augId => {
-    if (!(augId in rightMap)) {
-      return
-    }
-    getDescList(rightMap[augId]).forEach(x => {
-      x.data.treeId = WhichTree.Right
-    })
-  })
-
-  // if (lIsBigger) {
-  //   if (diffLocations[0][0] === rightMap[0].descCount) {
-  //     // if (lIsBigger) {
-  //     getDescList(leftMap[0])
-  //       .filter(x => x.data.id > rightMap[0].descCount)
-  //       .forEach(x => {
-  //         x.data.treeId = WhichTree.Left
-  //       })
-  //   }
-  // } else {
-  //   augmentedIds.forEach(id => {
-  //     let node = rightMap[id]
-  //     node.treeId = WhichTree.Right
-  //   })
+  // if (isEqual(diffPoints, [[-1, -1]])) {
+  //   leftMap[0].treeId = WhichTree.Left
+  //   rightMap[0].treeId = WhichTree.Right
+  //   getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
+  //   getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
+  //   return
   // }
+
 }
 
 export const getDescList = (root: Node) => {
@@ -101,21 +52,23 @@ export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
 export const loadDiff = async (
   paths: string[],
   maps: MyMap[],
-  diffPoint: number[],
+  diffPoint: DiffPoint,
   nimServerPort: number
 ) => {
   for (let i = 0; i < maps.length; i++) {
-    let ancestors = await fetchAncestors(paths[i], diffPoint[i], nimServerPort)
+    let diffPointId = i === 0 ? diffPoint.leftTreeId : diffPoint.rightTreeId
+
+    let ancestors = await fetchAncestors(paths[i], diffPointId, nimServerPort)
 
     maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
 
-    let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
+    // let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
 
-    getDescList(maps[i][diffPoint[i]]).forEach(x => {
-      if (x.data.id !== diffPoint[i]) {
-        x.data.treeId = treeId
-      }
-    })
+    // getDescList(maps[i][diffPointId]).forEach(x => {
+    //   if (x.data.id !== diffPointId) {
+    //     x.data.treeId = treeId
+    //   }
+    // })
   }
 
   return maps
@@ -124,68 +77,43 @@ export const loadDiff = async (
 export const loadAllDiffs = async (
   paths: string[],
   cores: Core[],
-  diffLocations: number[][],
+  diffPoints: DiffPoint[],
   nimServerPort: number
 ) => {
   let maps = [makeState(cores[0], 0).id2Node, makeState(cores[1], 0).id2Node]
 
-  for (const array of diffLocations) {
-    maps = await loadDiff(paths, maps, array, nimServerPort)
+  for (const diffPoint of diffPoints) {
+    maps = await loadDiff(paths, maps, diffPoint, nimServerPort)
   }
   return maps
 }
 
-export const mergeMaps = (
-  l: MyMap,
-  r: MyMap,
-  diffLocations: number[][],
-  augmentedIds: number[][]
-) => {
+export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
-  if (isEqual(diffLocations, [[-1, -1]])) {
-    const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
-    newRoot.children = [leftMap[0], rightMap[0]]
-    return { 0: newRoot }
-  }
+  // if (isEqual(diffPoints, [[-1, -1]])) {
+  //   const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
+  //   newRoot.children = [leftMap[0], rightMap[0]]
+  //   return { 0: newRoot }
+  // }
 
-  for (const array of diffLocations) {
-    if (
-      leftMap[array[0]] &&
-      rightMap[array[1]] &&
-      rightMap[array[1]].children
-    ) {
-      if (!leftMap[array[0]].children) {
-        leftMap[array[0]].children = []
+  for (const diffPoint of diffPoints) {
+    diffPoint.highlightLeft.forEach(nodeId => {
+      if (leftMap[nodeId]) {
+        leftMap[nodeId].treeId = WhichTree.Left
       }
-      leftMap[array[0]].children = leftMap[array[0]].children!.concat(
-        rightMap[array[1]].children!
-      )
+    })
+
+    if (leftMap[diffPoint.leftTreeId]) {
+      diffPoint.highlightRight.forEach(nodeId => {
+        if (rightMap[nodeId]) {
+          rightMap[nodeId].treeId = WhichTree.Right
+          leftMap[diffPoint.leftTreeId].children!.push(rightMap[nodeId])
+        }
+      })
     }
   }
-
-  augmentedIds[0].forEach(augId => {
-    if (!(augId in leftMap)) {
-      return
-    }
-    let node = leftMap[augId]
-    node.treeId = WhichTree.Left
-  })
-
-  augmentedIds[1].forEach(augId => {
-    if (!(augId in rightMap)) {
-      return
-    }
-    let node = rightMap[augId]
-    node.treeId = WhichTree.Right
-
-    if (!leftMap[node.parentId].children) {
-      leftMap[node.parentId].children = []
-    }
-
-    leftMap[node.parentId].children!.push(node)
-  })
 
   return leftMap
 }

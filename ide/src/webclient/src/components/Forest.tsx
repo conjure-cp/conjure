@@ -10,6 +10,12 @@ import PlaySettings from "./vis/PlaySettings"
 import DiffSettings from "./vis/DiffSettings"
 import { loadAllDiffs, mergeMaps } from "../modules/ForestHelper"
 import { makeState } from "../modules/TreeHelper"
+export interface DiffPoint {
+  leftTreeId: number
+  rightTreeId: number
+  highlightLeft: number[]
+  highlightRight: number[]
+}
 
 export interface Tree {
   hash: string
@@ -31,8 +37,7 @@ interface State {
   showLabels: boolean
   playing: boolean
   collapseAsExploring: boolean
-  augmentedIds: number[][]
-  diffLocations: number[][]
+  diffPoints: DiffPoint[]
   currentDiffIndex: number
   diffReady: boolean
   splitScreen: boolean
@@ -50,8 +55,7 @@ class Forest extends React.Component<Props, State> {
       playing: false,
       collapseAsExploring: false,
       showLabels: true,
-      diffLocations: [],
-      augmentedIds: [],
+      diffPoints: [],
       currentDiffIndex: -1,
       diffReady: false,
       splitScreen: true,
@@ -91,26 +95,17 @@ class Forest extends React.Component<Props, State> {
       }
     ).then(data => data.json())
 
-    // let paths = this.props.trees.map(x => x.path)
-    // let cores = this.props.trees.map(x => x.core)
-    // let loadedMaps = await loadAllDiffs(
-    //   paths,
-    //   cores,
-    //   json,
-    //   this.props.nimServerPort
-    // )
-    // let mergedTree = mergeMaps(loadedMaps[0], loadedMaps[1], json)
-    // console.log(mergedTree)
+    // json = json as DiffPoint[]
+
+    // let diffLocations = json.map((x: DiffPoint) => [x.leftTreeId, x.rightTreeId])
 
     this.setState({
-      augmentedIds: json.augmentedIds,
-      diffLocations: json.diffLocations,
+      diffPoints: json,
       diffReady: true
     })
   }
 
   render = () => {
-    console.log(this.state.augmentedIds)
 
     if (this.props.trees) {
       // console.log(JSON.stringify(this.props.trees[0].core))
@@ -185,7 +180,7 @@ class Forest extends React.Component<Props, State> {
             <DiffSettings
               splitScreen={this.state.splitScreen}
               diffReady={this.state.diffReady}
-              diffLocations={this.state.diffLocations}
+              diffPoints={this.state.diffPoints}
               currentDiffIndex={this.state.currentDiffIndex}
               trees={this.props.trees}
               splitScreenChangeHandler={() => {
@@ -199,16 +194,16 @@ class Forest extends React.Component<Props, State> {
                 this.setState({ currentDiffIndex: value })
               }}
               nextDiffHandler={() => {
-                if (this.state.diffLocations.length === 1) {
+                if (this.state.diffPoints.length === 1) {
                   this.setState({ currentDiffIndex: 0 })
                 }
 
                 if (
                   this.state.currentDiffIndex + 1 >
-                  this.state.diffLocations.length - 1
+                  this.state.diffPoints.length - 1
                 ) {
                   this.setState({
-                    currentDiffIndex: this.state.diffLocations.length - 1
+                    currentDiffIndex: this.state.diffPoints.length - 1
                   })
                 }
 
@@ -217,7 +212,7 @@ class Forest extends React.Component<Props, State> {
                 })
               }}
               prevDiffHandler={() => {
-                if (this.state.diffLocations.length === 1) {
+                if (this.state.diffPoints.length === 1) {
                   this.setState({ currentDiffIndex: 0 })
                 }
 
@@ -246,21 +241,22 @@ class Forest extends React.Component<Props, State> {
                           : { width: "100%" }
                       }
                     >
-                      <TreeContainer
-                        diffParentId={
-                          this.state.currentDiffIndex !== -1
-                            ? this.state.diffLocations.map(x => x[i])[
-                                this.state.currentDiffIndex
-                              ]
-                            : -1
-                        }
-                        selected={
-                          this.state.currentDiffIndex !== -1
-                            ? this.state.diffLocations[
-                                this.state.currentDiffIndex
-                              ][i]
-                            : 0
-                        }
+
+                      {/* <TreeContainer
+                        // diffParentId={
+                        //   this.state.currentDiffIndex !== -1
+                        //     ? this.state.diffPoints.map(x => x[i])[
+                        //         this.state.currentDiffIndex
+                        //       ]
+                        //     : -1
+                        // }
+                        // selected={
+                        //   this.state.currentDiffIndex !== -1
+                        //     ? this.state.diffPoints[
+                        //         this.state.currentDiffIndex
+                        //       ][i]
+                        //     : 0
+                        // }
                         hash={this.props.trees[i].hash}
                         path={this.props.trees[i].path}
                         nimServerPort={this.props.nimServerPort}
@@ -277,7 +273,7 @@ class Forest extends React.Component<Props, State> {
                         }
                         collapseAsExploring={this.state.collapseAsExploring}
                         showLabels={this.state.showLabels}
-                      />
+                      /> */}
                     </div>
                   ))}
                 </>
@@ -288,7 +284,7 @@ class Forest extends React.Component<Props, State> {
                     <MergedTreeContainer
                       currentDiff={
                         this.state.currentDiffIndex !== -1
-                          ? this.state.diffLocations[
+                          ? this.state.diffPoints[
                               this.state.currentDiffIndex
                             ]
                           : undefined
@@ -299,9 +295,7 @@ class Forest extends React.Component<Props, State> {
                       rightPath={this.props.trees[1].path}
                       loadDepth={this.state.loadDepth}
                       hash={"blahhash"}
-                      diffLocations={this.state.diffLocations}
-                      augmentedIds={this.state.augmentedIds}
-                      // augmentedIds={[]}
+                      diffPoints={this.state.diffPoints}
                       nimServerPort={this.props.nimServerPort}
                       leftSolAncestorIds={
                         this.props.trees[0].core.solAncestorIds
