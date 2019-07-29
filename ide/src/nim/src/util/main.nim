@@ -153,6 +153,35 @@ proc newDiffPoint(l, r: string, highlightLeft, highlightRight: seq[
 proc `$`*(d: DiffPoint): string =
     result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
 
+
+proc removeDuplicates*(leftPath: string, rightPath: string, kids: array[2, seq[string]]): array[2, seq[string]] =  
+
+    let allKids = kids[0].concat(kids[1])
+
+    var leftKidsToSkip = newSeq[string]()
+    var rightKidsToSkip = newSeq[string]()
+
+    for i, kid in kids[0]:
+        for k in allKids:
+            if kid == k:
+                continue
+
+            if checkDomainsAreEqual([leftPath, rightPath], [kid, k]):
+                leftKidsToSkip.add(kid)
+
+    for i, kid in kids[1]:
+        for k in allKids:
+            if kid == k:
+                continue
+
+            if checkDomainsAreEqual([leftPath, rightPath], [k, kid]):
+                # kids[1].delete(i)
+                rightKidsToSkip.add(kid)
+
+
+    return [kids[0].filter(x => not leftKidsToSkip.contains(x)), 
+    kids[1].filter(x => not rightKidstoSkip.contains(x))]
+
 proc findDiffLocationsBoyo*(leftPath, rightPath: string,
         debug: bool = false): seq[DiffPoint] =
 
@@ -185,26 +214,10 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
                 for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
                     kids[i].add(row[0])
 
-            let allKids = kids[0].concat(kids[1])
+            let cleanKids = removeDuplicates(leftPath, rightPath, kids)
 
-            for i, kid in kids[0]:
-                for k in allKids:
-                    if kid == k:
-                        continue
+            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], cleanKids[0], cleanKids[1])
 
-                    if checkDomainsAreEqual([leftPath, rightPath], [kid, k]):
-                        kids[0].delete(i)
-
-            for i, kid in kids[1]:
-                for k in allKids:
-                    if kid == k:
-                        continue
-
-                    if checkDomainsAreEqual([rightPath, leftPath], [k, kid]):
-                        kids[1].delete(i)
-
-
-            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], kids[0], kids[1])
             diffPoints.add(diffPoint)
             tuples.add((prevIds[0], prevIds[1]))
             echo "HERRRRE"

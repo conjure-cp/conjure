@@ -10,6 +10,7 @@ template benchmark(benchmarkName: string, code: untyped) =
     echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
 
 
+
 suite "diffHandler":
   test "handleNotCached":
     let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
@@ -68,6 +69,13 @@ suite "domainsAreEqual":
     for i in countup(1, 100):
       check checkDomainsAreEqual([leftPath, rightPath], [$i, $i]) == false
 
+  test "eq":
+    let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
+    let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
+    discard init(leftPath)
+    discard init(rightPath)
+    check checkDomainsAreEqual([leftPath, rightPath], [$4, $4]) == false
+
 suite "findAugNodes":
   test "10aug":
     let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
@@ -88,6 +96,16 @@ suite "findAugNodes":
     check(res[0] == @[49, 83, 103, 113, 116, 152, 172, 182, 185, 207, 217, 220,
         232, 235, 239])
     check(res[1].len() == 0)
+
+
+
+suite "diffHandler":
+  test "remove duplicates":
+    let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
+    let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
+    discard init(leftPath)
+    discard init(rightPath)
+    echo removeDuplicates(leftPath, rightPath, [@["4","7"], @["4"]])
 
 
 suite "diff":
