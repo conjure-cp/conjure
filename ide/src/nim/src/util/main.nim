@@ -120,13 +120,13 @@ proc getAugs*(leftPath, rightPath: string,
 #     diffLocations*: seq[seq[int]]
 #     augmentedIds*: seq[seq[int]]
 
-type DiffPoint* = ref object of RootObj
+type DiffPoint* = object of RootObj
     leftTreeId*: int
     rightTreeId*: int
     highlightLeft*: seq[int]
     highlightRight*: seq[int]
 
-proc newDiffPoint(l, r: string, highlightLeft, highlightRight: seq[
+proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[
         string]): DiffPoint =
 
     var lNum, rNum: int
@@ -154,8 +154,8 @@ proc `$`*(d: DiffPoint): string =
     result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
 
 
-proc removeDuplicates*(leftPath: string, rightPath: string, 
-                        kids: array[2, seq[ string]]): 
+proc removeDuplicates*(leftPath: string, rightPath: string,
+                        kids: array[2, seq[string]]):
                         array[2, seq[string]] =
 
     let allKids = kids[0].concat(kids[1])
@@ -221,7 +221,7 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
             let cleanKids = removeDuplicates(leftPath, rightPath, kids)
 
-            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], 
+            let diffPoint = newDiffPoint(prevIds[0], prevIds[1],
                                         cleanKids[0], cleanKids[1])
 
             res.add(diffPoint)
@@ -258,7 +258,7 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
                     nextRight = ids[1]
             else:
                 nextRight = kids[1][i]
-            
+
             if debug:
                 echo nextLeft
                 echo nextRight
@@ -269,10 +269,10 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     result = res
 
-    if debug: 
+    if debug:
         for d in result:
             echo d
-    
+
 
 
 proc diff*(leftPath, rightPath: string, debug: bool = false): seq[DiffPoint] =
