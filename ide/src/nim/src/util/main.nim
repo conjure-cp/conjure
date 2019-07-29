@@ -268,7 +268,8 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     recursive(["0", "0"], ["-1", "-1"])
 
-    # echo diffPoints
+    for d in diffPoints
+        echo d
     return diffPoints
 
     # return res
