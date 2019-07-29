@@ -184,6 +184,26 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
             for i in countUp(0, 1):
                 for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
                     kids[i].add(row[0])
+
+            let allKids = kids[0].concat(kids[1])
+
+            for i, kid in kids[0]:
+                for k in allKids:
+                    if kid == k:
+                        continue
+
+                    if checkDomainsAreEqual([leftPath, rightPath], [kid, k]):
+                        kids[0].delete(i)
+
+            for i, kid in kids[1]:
+                for k in allKids:
+                    if kid == k:
+                        continue
+
+                    if checkDomainsAreEqual([rightPath, leftPath], [k, kid]):
+                        kids[1].delete(i)
+
+
             let diffPoint = newDiffPoint(prevIds[0], prevIds[1], kids[0], kids[1])
             diffPoints.add(diffPoint)
             tuples.add((prevIds[0], prevIds[1]))
