@@ -31,6 +31,7 @@ proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2,
     let rightDB = dBTable[paths[1]]
 
     var leftValue = leftDB.getValue(sql(query1), nodeIds[0])
+
     var rightValue = rightDB.getValue(sql(query1), nodeIds[1])
 
     return leftValue == rightValue
@@ -163,22 +164,29 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     let kidsQuery = "select nodeId from Node where parentId = ?"
 
-    var res = newSeq[((string, string), (string, string))]()
-
     # var diffPoints = newSeq[seq[string]]()
+    var tuples = newSeq[(string, string)]()
     var diffPoints = newSeq[DiffPoint]()
 
     proc recursive(ids: array[2, string], prevIds: array[2, string]) =
 
-        var kids: array[2, seq[string]]
-
-        for i in countUp(0, 1):
-            for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
-                kids[i].add(row[0])
+        echo fmt"Current ", ids
+        echo checkDomainsAreEqual([leftPath, rightPath], ids)
 
         if not checkDomainsAreEqual([leftPath, rightPath], ids):
+
+            let t = (prevIds[0], prevIds[1])
+            if tuples.contains(t):
+                return
+
+            var kids: array[2, seq[string]]
+
+            for i in countUp(0, 1):
+                for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
+                    kids[i].add(row[0])
             let diffPoint = newDiffPoint(prevIds[0], prevIds[1], kids[0], kids[1])
             diffPoints.add(diffPoint)
+            tuples.add((prevIds[0], prevIds[1]))
             echo "HERRRRE"
             return
 
@@ -190,46 +198,37 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
         let maxGrandKids = grandKids.map(x => x.len()).max() - 1
 
-        var numOfKidsIsDifferent = false
+        # var numOfKidsIsDifferent = false
+
+        # for i in countUp(0, maxGrandKids):
+        #     for j in countUp(0, 1):
+        #         if grandKids[j].len() - 1 < i:
+        #             numOfKidsIsDifferent = true
+
+
+        # if numOfKidsIsDifferent:
+        #     echo "@ ", ids, "                      grandkids0: ", grandKids[0], "   kids1: ", grandKids[1]
+
+        #     let diffPoint = newDiffPoint(ids[0], ids[1], grandKids[0], grandKids[1])
+        #     diffPoints.add(diffPoint)
+        # else:
 
         for i in countUp(0, maxGrandKids):
-            for j in countUp(0, 1):
-                if grandKids[j].len() - 1 < i:
-                    numOfKidsIsDifferent = true
+            # echo fmt"Recursing on {i}", [grandKids[0][i], grandKids[1][i]]
+            var nextLeft: string
+            var nextRight: string
 
-        # grandKids[0].filter(x => checkDomainsAreEqual([leftPath, rightPath], [x]))
+            if i >= grandKids[0].len():
+                nextLeft = ids[0]
+            else:
+                nextLeft = grandKids[0][i]
 
-        # var distinctGrandKids: array[2, seq[string]]
-        
-        # for i in countup(0, 1):
+            if i >= grandKids[1].len():
+                nextRight = ids[1]
+            else:
+                nextRight = grandKids[1][i]
 
-        # for gKid in grandKids[i][0]:
-        #     var dis = true
-
-        #     for other in grandKids[i][1]:
-        #         if checkDomainsAreEqual([leftPath, rightPath], [gKid, other]):
-        #             dis = false
-        #             break
-        #     if dis:
-        #         distinctLeftGrandKids.add(gKid)
-            
-
-
-
-
-
-        if numOfKidsIsDifferent:
-            echo "@ ", ids, "                      grandkids0: ", grandKids[0], "   kids1: ", grandKids[1]
-
-            let diffPoint = newDiffPoint(ids[0], ids[1], grandKids[0], grandKids[1])
-
-            # if not diffPoints.map(x => ($x.leftTreeId, $x.rightTreeId)).contains((prevIds[0], prevIds[1])):
-            diffPoints.add(diffPoint)
-        else:
-
-            for i in countUp(0, maxGrandKids):
-                echo fmt"Recursing on {i}", [grandKids[0][i], grandKids[1][i]]
-                recursive([grandKids[0][i], grandKids[1][i]], ids)
+            recursive([nextLeft, nextRight], ids)
 
 
 
