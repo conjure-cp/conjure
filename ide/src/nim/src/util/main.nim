@@ -115,22 +115,47 @@ proc getAugs*(leftPath, rightPath: string,
 
 
 
-type DiffResponse* = ref object of RootObj
-    diffLocations*: seq[seq[int]]
-    augmentedIds*: seq[seq[int]]
+# type DiffResponse* = ref object of RootObj
+#     diffLocations*: seq[seq[int]]
+#     augmentedIds*: seq[seq[int]]
 
+type DiffPoint* = ref object of RootObj
+    leftTreeId*: int
+    rightTreeId*: int
+    highlightLeft*: seq[int]
+    highlightRight*: seq[int]
 
-# proc loopWhileEqual(paths: array[2, string], nodeIds: var array[2, int], lCount, rCount: int) =
-#     while checkDomainsAreEqual(paths, nodeIds) and nodeIds[0] < lCount and
-#             nodeIds[1] < rCount:
-#         # echo nodeIds
-#         nodeIds[0].inc()
-#         nodeIds[1].inc()
+proc newDiffPoint(l, r: string, highlightLeft, highlightRight: seq[
+        string]): DiffPoint =
+
+    var lNum, rNum: int
+    discard l.parseInt(lNum)
+    discard r.parseInt(rNum)
+
+    let hL = highlightLeft.map(
+        proc (x: string): int =
+        var num: int
+        discard x.parseInt(num)
+        return num
+        )
+
+    let hR = highlightRight.map(
+        proc (x: string): int =
+        var num: int
+        discard x.parseInt(num)
+        return num
+        )
+
+    return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL,
+            highlightRight: hR)
+
+proc `$`*(d: DiffPoint): string =
+    result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
 
 proc findDiffLocationsBoyo*(leftPath, rightPath: string,
-        debug: bool = false): seq[((string, string), (string, string))] =
+        debug: bool = false): seq[DiffPoint] =
 
-    #Concept of the diff point is wrong, what we need is a way of keeping track of different branches
+#Concept of the diff point is wrong, what we need is a way of keeping track of different branches
 
     let leftDB = dBTable[leftPath]
     let rightDB = dBTable[rightPath]
@@ -140,47 +165,81 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     var res = newSeq[((string, string), (string, string))]()
 
+    # var diffPoints = newSeq[seq[string]]()
+    var diffPoints = newSeq[DiffPoint]()
+
     proc recursive(ids: array[2, string], prevIds: array[2, string]) =
-
-        echo ids[0], " - ", ids[1]
-
-        if not checkDomainsAreEqual([leftPath, rightPath], ids):
-            echo "diff point => ", prevIds[0], " ", prevIds[1]
-            res.add(((prevIds[0], ids[0]), (prevIds[1], ids[1])))
-            return
 
         var kids: array[2, seq[string]]
 
         for i in countUp(0, 1):
-            for row in dbs[i].fastRows(sql(kidsQuery), ids[i]):
+            for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
                 kids[i].add(row[0])
 
-        let maxKids = kids.map(x => x.len()).max() - 1
+        if not checkDomainsAreEqual([leftPath, rightPath], ids):
+            let diffPoint = newDiffPoint(prevIds[0], prevIds[1], kids[0], kids[1])
+            diffPoints.add(diffPoint)
+            echo "HERRRRE"
+            return
 
-        for i in countUp(0, maxKids):
+        var grandKids: array[2, seq[string]]
 
-            var tuples: array[2, (string, string)]
+        for i in countUp(0, 1):
+            for row in dbs[i].fastRows(sql(kidsQuery), ids[i]):
+                grandKids[i].add(row[0])
 
-            var useTuples = false
+        let maxGrandKids = grandKids.map(x => x.len()).max() - 1
 
+        var numOfKidsIsDifferent = false
+
+        for i in countUp(0, maxGrandKids):
             for j in countUp(0, 1):
-                if kids[j].len() - 1 < i:
-                    useTuples = true
-                    tuples[j] = (ids[j], ids[j])
-                else:
-                    tuples[j] = (ids[j], kids[j][i])
+                if grandKids[j].len() - 1 < i:
+                    numOfKidsIsDifferent = true
 
+        # grandKids[0].filter(x => checkDomainsAreEqual([leftPath, rightPath], [x]))
+
+        # var distinctGrandKids: array[2, seq[string]]
+        
+        # for i in countup(0, 1):
+
+        # for gKid in grandKids[i][0]:
+        #     var dis = true
+
+        #     for other in grandKids[i][1]:
+        #         if checkDomainsAreEqual([leftPath, rightPath], [gKid, other]):
+        #             dis = false
+        #             break
+        #     if dis:
+        #         distinctLeftGrandKids.add(gKid)
             
-            if useTuples:
-                let t = (tuples[0], tuples[1])
-                if not res.contains(t):
-                    res.add((t))
-            else:
-                recursive([kids[0][i], kids[1][i]], ids)
+
+
+
+
+
+        if numOfKidsIsDifferent:
+            echo "@ ", ids, "                      grandkids0: ", grandKids[0], "   kids1: ", grandKids[1]
+
+            let diffPoint = newDiffPoint(ids[0], ids[1], grandKids[0], grandKids[1])
+
+            # if not diffPoints.map(x => ($x.leftTreeId, $x.rightTreeId)).contains((prevIds[0], prevIds[1])):
+            diffPoints.add(diffPoint)
+        else:
+
+            for i in countUp(0, maxGrandKids):
+                echo fmt"Recursing on {i}", [grandKids[0][i], grandKids[1][i]]
+                recursive([grandKids[0][i], grandKids[1][i]], ids)
+
+
+
 
     recursive(["0", "0"], ["-1", "-1"])
 
-    return res
+    # echo diffPoints
+    return diffPoints
+
+    # return res
 
     # return res.map(x => @[x[0], x[1]])
 
@@ -216,17 +275,19 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
 
 
-proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
-        seq[int]] =
+# proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
+#         seq[int]] =
 
-    return @[@["0", "0"]].map(proc(x: seq[string]): seq[int] =
-            var leftNum: int
-            var rightNum: int
-            discard x[0].parseInt(leftNum)
-            discard x[1].parseInt(rightNum)
 
-            @[leftNum, rightNum]
-        )
+    # return findDiffLocationsBoyo(leftPath, rightPath).map(proc(x: seq[
+    #         string]): seq[int] =
+    #     var leftNum: int
+    #     var rightNum: int
+    #     discard x[0].parseInt(leftNum)
+    #     discard x[1].parseInt(rightNum)
+
+    #     @[leftNum, rightNum]
+    # )
 
     # var res: seq[(int, int)]
 
@@ -375,29 +436,30 @@ proc findDiffLocations*(leftPath, rightPath: string, debug: bool = false): seq[
     # return diffLocations
 
 
-proc diff*(leftPath, rightPath: string, debug: bool = false): DiffResponse =
-    let diffLocations = findDiffLocations(leftPath, rightPath, debug)
-    let augs = newSeq[seq[int]](2)
+proc diff*(leftPath, rightPath: string, debug: bool = false): seq[DiffPoint] =
+    # let diffLocations = findDiffLocations(leftPath, rightPath, debug)
+    # let augs = newSeq[seq[int]](2)
     # let augs = getAugs(leftPath, rightPath, diffLocations)
-    return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
+    # return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
+    return findDiffLocationsBoyo(leftPath, rightPath)
 
 proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
-    let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
-    let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
-    let flipped = fmt"{diffCachesDir}/{rightHash}~{leftHash}.json"
+    # let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"
+    # let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
+    # let flipped = fmt"{diffCachesDir}/{rightHash}~{leftHash}.json"
 
-    if fileExists(diffCacheFile):
-        return parseJson(readAll(open(diffCacheFile)))
+    # if fileExists(diffCacheFile):
+    #     return parseJson(readAll(open(diffCacheFile)))
 
-    if fileExists(flipped):
-        var contents = parseJson(readAll(open(flipped)))
-        return %contents["diffLocations"]
-            .getElems()
-            .map(x => [x[1], x[0]])
+    # if fileExists(flipped):
+    #     var contents = parseJson(readAll(open(flipped)))
+    #     return %contents["diffLocations"]
+    #         .getElems()
+    #         .map(x => [x[1], x[0]])
 
 
     let res = diff(leftPath, rightPath)
-    writeFile(diffCacheFile, $(%res))
+    # writeFile(diffCacheFile, $(%res))
     return %res
 
 proc loadAncestors*(dirPath, nodeId: string): seq[Node] =

@@ -1,11 +1,11 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.0.1"
 author        = "Tom"
 description   = "Server for minion search tree visualiser"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["nim"]
+bin           = @["server"]
 
 # Dependencies
 
