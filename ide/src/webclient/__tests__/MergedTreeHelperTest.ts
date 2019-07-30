@@ -20,22 +20,27 @@ import {
   goRightMerged
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
+
 import {
   coreOf3 as coreOf3Normal,
+  coreOf7 as coreOf7Normal,
   coreOf17 as coreOf17Normal,
+  coreOf21 as coreOf21Normal,
   coreOf27 as coreOf27Normal,
   descendantsOf4 as descendantsOf4Normal,
   descendantsOf7 as descendantsOf7Normal,
   descendantsOf18 as descendantsOf18Normal,
   descendantsOf21 as descendantsOf21Normal,
   descendantsOf28 as descendantsOf28Normal,
-  core as coreNormal
+  core as coreNormal8
 } from "./resources/normal-8"
 import {
   coreOf3 as coreOf3Sacbounds,
+  coreOf4 as coreOf4Sacbounds,
   coreOf6 as coreOf6Sacbounds,
+  coreOf7 as coreOf7Sacbounds,
   coreOf9 as coreOf9Sacbounds,
-  core as coreSacbounds
+  core as coreSacbounds8
 } from "./resources/sacbounds-8"
 
 import { core as coreNoOpt } from "./resources/noOpt-8"
@@ -54,10 +59,15 @@ async function loadTreeBigOnLeftSmallOnRight() {
   fetchMock
     .once(JSON.stringify(coreOf3Normal))
     .once(JSON.stringify(coreOf3Sacbounds))
+    .once(JSON.stringify(coreOf7Normal))
+    .once(JSON.stringify(coreOf4Sacbounds))
     .once(JSON.stringify(coreOf17Normal))
     .once(JSON.stringify(coreOf6Sacbounds))
+    .once(JSON.stringify(coreOf21Normal))
+    .once(JSON.stringify(coreOf7Sacbounds))
     .once(JSON.stringify(coreOf27Normal))
     .once(JSON.stringify(coreOf9Sacbounds))
+
     .once(JSON.stringify(descendantsOf4Normal))
     .once(JSON.stringify(descendantsOf7Normal))
     .once(JSON.stringify(descendantsOf18Normal))
@@ -67,7 +77,7 @@ async function loadTreeBigOnLeftSmallOnRight() {
 
   let res = await loadAllDiffs(
     ["", "s"],
-    [coreNormal, coreSacbounds],
+    [coreNormal8, coreSacbounds8],
     bigToSmall,
     5000
   )
@@ -138,8 +148,12 @@ async function loadTreeSmallOnLeftBigOnRight() {
   fetchMock
     .once(JSON.stringify(coreOf3Sacbounds))
     .once(JSON.stringify(coreOf3Normal))
+    .once(JSON.stringify(coreOf4Sacbounds))
+    .once(JSON.stringify(coreOf7Normal))
     .once(JSON.stringify(coreOf6Sacbounds))
     .once(JSON.stringify(coreOf17Normal))
+    .once(JSON.stringify(coreOf7Sacbounds))
+    .once(JSON.stringify(coreOf21Normal))
     .once(JSON.stringify(coreOf9Sacbounds))
     .once(JSON.stringify(coreOf27Normal))
 
@@ -152,7 +166,7 @@ async function loadTreeSmallOnLeftBigOnRight() {
 
   let res = await loadAllDiffs(
     ["", "s"],
-    [coreSacbounds, coreNormal],
+    [coreSacbounds8, coreNormal8],
     smallToBig,
     5000
   )

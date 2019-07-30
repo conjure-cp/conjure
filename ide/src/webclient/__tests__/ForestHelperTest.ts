@@ -151,27 +151,34 @@ describe("testing ForestHelper", () => {
       expect(diff1).toBeTruthy()
 
       expect(diff1.children!.map(x => x.data.id)).toEqual([4, 7])
-      // expect(diff1.children!.map(x => x.data.treeId)).toEqual([
-      //   WhichTree.Left,
-      //   WhichTree.Left,
-      //   WhichTree.Right
-      // ])
+      expect(diff1.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Left,
+        WhichTree.Both
+      ])
       expect(diff2.children!.map(x => x.data.id)).toEqual([8, 11])
-      // expect(diff2.children!.map(x => x.data.treeId)).toEqual([
-      //   WhichTree.Left,
-      //   WhichTree.Left,
-      //   WhichTree.Right
-      // ])
+      expect(diff2.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Left,
+        WhichTree.Left,
+      ])
       expect(diff3.children!.map(x => x.data.id)).toEqual([18, 21])
-      // expect(diff3.children!.map(x => x.data.treeId)).toEqual([
-      //   WhichTree.Left,
-      //   WhichTree.Left,
-      //   WhichTree.Right
-      // ])
+      expect(diff3.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Left,
+        WhichTree.Both
+      ])
 
       expect(diff4.children!.map(x => x.data.id)).toEqual([22, 24])
+      expect(diff4.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Left,
+        WhichTree.Left
+      ])
 
       expect(diff5.children!.map(x => x.data.id)).toEqual([28, 30, 10])
+
+      expect(diff5.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Left,
+        WhichTree.Left,
+        WhichTree.Right,
+      ])
     })
 
     it("Should merge the maps the ancestors of each tree into their maps small->big", async () => {
@@ -198,26 +205,32 @@ describe("testing ForestHelper", () => {
       expect(diff1).toBeTruthy()
 
       expect(diff1.children!.map(x => x.data.id)).toEqual([4, 4])
-      // expect(diff1.children!.map(x => x.data.treeId)).toEqual([
-      //   WhichTree.Left,
-      //   WhichTree.Right,
-      //   WhichTree.Right
-      // ])
+      expect(diff1.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Both,
+        WhichTree.Right
+      ])
       expect(diff2.children!.map(x => x.data.id)).toEqual([8, 11])
-      // expect(diff2.children!.map(x => x.data.treeId)).toEqual([
-      //   WhichTree.Left,
-      //   WhichTree.Right,
-      //   WhichTree.Right
-      // ])
+      expect(diff2.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Right,
+        WhichTree.Right
+      ])
       expect(diff3.children!.map(x => x.data.id)).toEqual([7, 18])
-      // expect(diff3.children!.map(x => x.data.treeId)).toEqual([
-      //   WhichTree.Left,
-      //   WhichTree.Right,
-      //   WhichTree.Right
-      // ])
+      expect(diff3.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Both,
+        WhichTree.Right
+      ])
 
       expect(diff4.children!.map(x => x.data.id)).toEqual([22, 24])
+      expect(diff4.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Right,
+        WhichTree.Right
+      ])
       expect(diff5.children!.map(x => x.data.id)).toEqual([10, 28, 30])
+      expect(diff5.children!.map(x => x.data.treeId)).toEqual([
+        WhichTree.Left,
+        WhichTree.Right,
+        WhichTree.Right
+      ])
     })
   })
 
@@ -283,7 +296,7 @@ describe("testing ForestHelper", () => {
       let rightTree = res[1]
 
       // console.log(rightTree)
-      // expect(leftTree[21].treeId).toEqual(WhichTree.Left)
+      expect(leftTree[21].treeId).toEqual(WhichTree.Both)
 
       expect(4 in leftTree)
       expect(7 in leftTree)

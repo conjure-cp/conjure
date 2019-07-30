@@ -274,7 +274,7 @@ export const shouldBeRightTree = (
   // If it aint in the left or both but is in the right then go right
   if (
     !leftMap[nextSelected] &&
-    rightMap[nextSelected] &&
+    rightMap[nextSelected] && 
     rightMap[nextSelected].treeId === WhichTree.Right
   ) {
     return true

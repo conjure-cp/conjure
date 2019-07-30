@@ -12,14 +12,31 @@ export const assignTreeIds = (
   rightMap: MyMap,
   diffPoints: DiffPoint[]
 ) => {
-  // if (isEqual(diffPoints, [[-1, -1]])) {
-  //   leftMap[0].treeId = WhichTree.Left
-  //   rightMap[0].treeId = WhichTree.Right
-  //   getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
-  //   getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
-  //   return
-  // }
+  if (diffPoints[0].leftTreeId === -1 && diffPoints[0].rightTreeId === -1) {
+    leftMap[0].treeId = WhichTree.Left
+    rightMap[0].treeId = WhichTree.Right
+    getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
+    getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
+    return
+  }
 
+  diffPoints.forEach(diffPoint => {
+    diffPoint.highlightLeft.forEach(leftId => {
+      if (leftId in leftMap) {
+        getDescList(leftMap[leftId]).forEach(
+          x => (x.data.treeId = WhichTree.Left)
+        )
+      }
+    })
+
+    diffPoint.highlightRight.forEach(rightId => {
+      if (rightId in rightMap) {
+        getDescList(rightMap[rightId]).forEach(
+          x => (x.data.treeId = WhichTree.Right)
+        )
+      }
+    })
+  })
 }
 
 export const getDescList = (root: Node) => {
@@ -92,16 +109,15 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
   let leftMap = cloneDeep(l)
   let rightMap = cloneDeep(r)
 
-  if (diffPoints[0].leftTreeId === -1 && diffPoints[0].rightTreeId === -1){
+  assignTreeIds(leftMap, rightMap, diffPoints)
+
+  if (diffPoints[0].leftTreeId === -1 && diffPoints[0].rightTreeId === -1) {
     const newRoot = new Node(-1, "", "", -2, 0, true, 2, false)
-    leftMap[0].treeId = WhichTree.Left
-    rightMap[0].treeId = WhichTree.Right
     newRoot.children = [leftMap[0], rightMap[0]]
     return { 0: newRoot }
   }
 
   for (const diffPoint of diffPoints) {
-
     diffPoint.highlightLeft.forEach(nodeId => {
       if (leftMap[nodeId]) {
         leftMap[nodeId].treeId = WhichTree.Left
