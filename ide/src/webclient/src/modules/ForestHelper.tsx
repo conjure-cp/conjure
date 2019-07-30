@@ -2,11 +2,11 @@ import { makeState, insertNodesBoyo } from "./TreeHelper"
 import Node, { WhichTree } from "./Node"
 import { Core, MyMap } from "../components/vis/TreeContainer"
 import { fetchAncestors, fetchDescendants } from "./MovementHelper"
-import { isEqual, cloneDeep } from "lodash"
+import { isEqual, cloneDeep, sumBy, sum } from "lodash"
 import * as d3 from "d3"
 import { array } from "yup"
 import { DiffPoint } from "../components/Forest"
-import { listenerCount } from "cluster";
+import { listenerCount } from "cluster"
 
 export const assignTreeIds = (
   leftMap: MyMap,
@@ -24,7 +24,6 @@ export const assignTreeIds = (
   diffPoints.forEach(diffPoint => {
     diffPoint.highlightLeft.forEach(leftId => {
       if (leftId in leftMap) {
-
         leftMap[leftId].treeId = WhichTree.Left
 
         let descList = getDescList(leftMap[leftId])
@@ -36,7 +35,6 @@ export const assignTreeIds = (
 
     diffPoint.highlightRight.forEach(rightId => {
       if (rightId in rightMap) {
-
         rightMap[rightId].treeId = WhichTree.Right
 
         let descList = getDescList(rightMap[rightId])
@@ -52,7 +50,8 @@ export const getDescList = (root: Node) => {
   return d3
     .hierarchy<Node>(root)
     .descendants()
-    .slice(1).map(x => x.data)
+    .slice(1)
+    .map(x => x.data)
 }
 
 export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
@@ -72,7 +71,11 @@ export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
     )!
   }
 
-  return current.ancestors().map(x => x.data).reverse().slice(1)
+  return current
+    .ancestors()
+    .map(x => x.data)
+    .reverse()
+    .slice(1)
 }
 
 export const loadDiff = async (
@@ -135,18 +138,10 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
     return { 0: newRoot }
   }
 
-  for (const diffPoint of diffPoints) {
-    diffPoint.highlightLeft.forEach(nodeId => {
-      if (leftMap[nodeId]) {
-        leftMap[nodeId].treeId = WhichTree.Left
-      }
-    })
-
+  for (const diffPoint of cloneDeep(diffPoints).reverse()) {
     if (leftMap[diffPoint.leftTreeId]) {
       diffPoint.highlightRight.forEach(nodeId => {
         if (rightMap[nodeId]) {
-          rightMap[nodeId].treeId = WhichTree.Right
-
           if (!leftMap[diffPoint.leftTreeId].children) {
             leftMap[diffPoint.leftTreeId].children = []
           }
@@ -154,6 +149,10 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
           leftMap[diffPoint.leftTreeId].children!.push(rightMap[nodeId])
         }
       })
+
+      leftMap[diffPoint.leftTreeId].descCount =
+        sumBy(leftMap[diffPoint.leftTreeId].children, x => x.descCount) +
+        diffPoint.highlightRight.length + leftMap[diffPoint.leftTreeId].childCount
     }
   }
 

@@ -114,55 +114,57 @@ export class MergedTreeContainer extends React.Component<Props, State> {
 
     this.handlers = {
       goLeft: async () => {
-        // this.setState(
-        //   await goLeftMerged(
-        //     this.state.selected,
-        //     this.state.selectedTreeId,
-        //     this.props.leftPath,
-        //     this.props.rightPath,
-        //     this.state.leftMap!,
-        //     this.state.rightMap!,
-        //     this.props.diffPoints,
-        //     this.props.nimServerPort
-        //   )
-        // )
+        this.setState(
+          await goLeftMerged(
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.leftPath,
+            this.props.rightPath,
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.props.diffPoints,
+            this.props.nimServerPort,
+            false
+          )
+        )
       },
       goUp: () => {
-        // this.setState(
-        //   goUpMerged(
-        //     this.state.leftMap!,
-        //     this.state.rightMap!,
-        //     this.state.selected,
-        //     this.state.selectedTreeId,
-        //     this.props.diffPoints
-        //   )
-        // )
+        this.setState(
+          goUpMerged(
+            this.state.leftMap!,
+            this.state.rightMap!,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffPoints
+          )
+        )
       },
 
       goDown: async () => {
-        // this.setState(
-          // await goDownMerged(
-          //   this.state.leftMap,
-          //   this.state.rightMap,
-          //   this.state.selected,
-          //   this.state.selectedTreeId,
-          //   this.props.diffPoints,
-          //   this.props.leftPath,
-          //   this.props.rightPath,
-          //   this.props.nimServerPort
-          // )
-        // )
+        this.setState(
+          await goDownMerged(
+            this.state.leftMap,
+            this.state.rightMap,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffPoints,
+            this.props.leftPath,
+            this.props.rightPath,
+            this.props.nimServerPort,
+            false
+          )
+        )
       },
       goRight: async () => {
-        // this.setState(
-        //   await goRightMerged(
-        //     this.state.leftMap,
-        //     this.state.rightMap,
-        //     this.state.selected,
-        //     this.state.selectedTreeId,
-        //     this.props.diffPoints
-        //   )
-        // )
+        this.setState(
+          await goRightMerged(
+            this.state.leftMap,
+            this.state.rightMap,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffPoints
+          )
+        )
       },
       goToRoot: () => {
         console.log("GOT TO ROOT")

@@ -184,7 +184,7 @@ describe("testing ForestHelper", () => {
     it("Should merge the maps the ancestors of each tree into their maps small->big", async () => {
       let lMap = cloneDeep(smallTree)
       let rMap = cloneDeep(bigTree)
-      assignTreeIds(lMap, rMap, smallToBig)
+
       let res = mergeMaps(lMap, rMap, smallToBig)
       let diff1 = getDescList(res[0]).find(
         x => x.id === normalToSacbounds[0].rightTreeId
@@ -201,6 +201,8 @@ describe("testing ForestHelper", () => {
       let diff5 = getDescList(res[0]).find(
         x => x.id === normalToSacbounds[4].rightTreeId
       )!
+
+      expect(res[3].descCount).toEqual(12)
 
       expect(diff1).toBeTruthy()
 
