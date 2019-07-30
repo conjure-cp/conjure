@@ -202,6 +202,7 @@ describe("suite to test MergedTreeHelper", () => {
       it("should be false for going to 9", async () => {
         expect(shouldBeRightTree(smallTree, bigTree, 9, false)).toBeFalsy()
       })
+
       it("should be true for going from 4 to 6", async () => {
         for (let i = 4; i < 7; i++) {
           expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
@@ -241,7 +242,6 @@ describe("suite to test MergedTreeHelper", () => {
           expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
         }
       })
-
     })
     describe("Left: big | Right: small", () => {
       beforeEach(async () => {
@@ -278,19 +278,24 @@ describe("suite to test MergedTreeHelper", () => {
         merged = mergeMaps(lMap, rMap, smallToBig)
       })
 
-      it("redirects 4 -> 5 from the left tree", async () => {
-        let res = reviseGoLeft(merged, 4, WhichTree.Left, smallToBig)
+      it("redirects 15 -> 4 ", async () => {
+        let res = reviseGoLeft(merged, 15, WhichTree.Right, smallToBig)
+        expect(res).toEqual({ selected: 4, treeId: WhichTree.Right })
+      })
+
+      it("redirects 6 -> 5 ", async () => {
+        let res = reviseGoLeft(merged, 6, WhichTree.Right, smallToBig)
         expect(res).toEqual({ selected: 5, treeId: WhichTree.Both })
       })
 
-      it("redirects 7 -> 8 from the left tree", async () => {
-        let res = reviseGoLeft(merged, 7, WhichTree.Left, smallToBig)
-        expect(res).toEqual({ selected: 8, treeId: WhichTree.Both })
+      it("redirects 25 -> 18 ", async () => {
+        let res = reviseGoLeft(merged, 25, WhichTree.Right, smallToBig)
+        expect(res).toEqual({ selected: 18, treeId: WhichTree.Right })
       })
 
-      it("redirects 10 -> 10 from the left tree", async () => {
-        let res = reviseGoLeft(merged, 10, WhichTree.Both, smallToBig)
-        expect(res).toEqual({ selected: 10, treeId: WhichTree.Both })
+      it("redirects 20 -> 8 ", async () => {
+        let res = reviseGoLeft(merged, 20, WhichTree.Right, smallToBig)
+        expect(res).toEqual({ selected: 8, treeId: WhichTree.Both })
       })
     })
 
@@ -305,20 +310,20 @@ describe("suite to test MergedTreeHelper", () => {
         merged = mergeMaps(lMap, rMap, bigToSmall)
       })
 
-      it("redirects 4 -> 16", async () => {
-        let res = reviseGoLeft(merged, 4, WhichTree.Right, bigToSmall)
-        expect(res).toEqual({ selected: 16, treeId: WhichTree.Both })
-      })
+      // it("redirects 15 -> 16", async () => {
+      //   let res = reviseGoLeft(merged, 15, WhichTree.Right, bigToSmall)
+      //   expect(res).toEqual({ selected: 16, treeId: WhichTree.Both })
+      // })
 
-      it("redirects 7 -> 26", async () => {
-        let res = reviseGoLeft(merged, 7, WhichTree.Right, bigToSmall)
-        expect(res).toEqual({ selected: 26, treeId: WhichTree.Both })
-      })
+      // it("redirects 7 -> 26", async () => {
+      //   let res = reviseGoLeft(merged, 7, WhichTree.Right, bigToSmall)
+      //   expect(res).toEqual({ selected: 26, treeId: WhichTree.Both })
+      // })
 
-      it("redirects 10 ->  10", async () => {
-        let res = reviseGoLeft(merged, 10, WhichTree.Right, bigToSmall)
-        expect(res).toEqual({ selected: 10, treeId: WhichTree.Right })
-      })
+      // it("redirects 10 ->  10", async () => {
+      //   let res = reviseGoLeft(merged, 10, WhichTree.Right, bigToSmall)
+      //   expect(res).toEqual({ selected: 10, treeId: WhichTree.Right })
+      // })
     })
   })
 

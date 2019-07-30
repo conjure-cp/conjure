@@ -6,6 +6,7 @@ import { isEqual, cloneDeep } from "lodash"
 import * as d3 from "d3"
 import { array } from "yup"
 import { DiffPoint } from "../components/Forest"
+import { listenerCount } from "cluster";
 
 export const assignTreeIds = (
   leftMap: MyMap,
@@ -15,8 +16,8 @@ export const assignTreeIds = (
   if (diffPoints[0].leftTreeId === -1 && diffPoints[0].rightTreeId === -1) {
     leftMap[0].treeId = WhichTree.Left
     rightMap[0].treeId = WhichTree.Right
-    getDescList(leftMap[0]).forEach(x => (x.data.treeId = WhichTree.Left))
-    getDescList(rightMap[0]).forEach(x => (x.data.treeId = WhichTree.Right))
+    getDescList(leftMap[0]).forEach(x => (x.treeId = WhichTree.Left))
+    getDescList(rightMap[0]).forEach(x => (x.treeId = WhichTree.Right))
     return
   }
 
@@ -26,7 +27,7 @@ export const assignTreeIds = (
 
         leftMap[leftId].treeId = WhichTree.Left
 
-        let descList = getDescList(leftMap[leftId]).map(x => x.data)
+        let descList = getDescList(leftMap[leftId])
         for (const des of descList) {
           leftMap[des.id].treeId = WhichTree.Left
         }
@@ -38,7 +39,7 @@ export const assignTreeIds = (
 
         rightMap[rightId].treeId = WhichTree.Right
 
-        let descList = getDescList(rightMap[rightId]).map(x => x.data)
+        let descList = getDescList(rightMap[rightId])
         for (const des of descList) {
           rightMap[des.id].treeId = WhichTree.Right
         }
@@ -51,7 +52,7 @@ export const getDescList = (root: Node) => {
   return d3
     .hierarchy<Node>(root)
     .descendants()
-    .slice(1)
+    .slice(1).map(x => x.data)
 }
 
 export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
@@ -71,7 +72,7 @@ export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
     )!
   }
 
-  return current.ancestors()
+  return current.ancestors().map(x => x.data).reverse().slice(1)
 }
 
 export const loadDiff = async (

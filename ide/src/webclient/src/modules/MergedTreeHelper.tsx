@@ -2,7 +2,9 @@ import { MyMap } from "../components/vis/MergedTreeContainer"
 import { getAncList, mergeMaps, getDescList, loadDiff } from "./ForestHelper"
 import { WhichTree } from "./Node"
 import { goLeftBoyo, goRightBoyo } from "./MovementHelper"
-import { DiffPoint } from "../components/Forest";
+import { DiffPoint } from "../components/Forest"
+import { min, max, maxBy } from "lodash"
+import { findDOMNode } from "react-dom"
 
 const getDiffPointKids = (
   leftMap: MyMap,
@@ -65,19 +67,26 @@ export const goRightMerged = async (
     diffPoints
   )
   if (diffPointKids) {
-
-      // console.log(kids)
+    // console.log(kids)
 
     if (diffPointKids.length < 2) {
-      return { selected: diffPointKids[0].id, selectedTreeId: diffPointKids[0].treeId }
+      return {
+        selected: diffPointKids[0].id,
+        selectedTreeId: diffPointKids[0].treeId
+      }
     }
 
     if (diffPointKids.length < 3) {
-
-      return { selected: diffPointKids[1].id, selectedTreeId: diffPointKids[1].treeId }
+      return {
+        selected: diffPointKids[1].id,
+        selectedTreeId: diffPointKids[1].treeId
+      }
     }
 
-    return { selected: diffPointKids[2].id, selectedTreeId: diffPointKids[2].treeId }
+    return {
+      selected: diffPointKids[2].id,
+      selectedTreeId: diffPointKids[2].treeId
+    }
   }
 
   let map = currentTreeId === WhichTree.Right ? rightMap : leftMap
@@ -97,7 +106,6 @@ export const goDownMerged = async (
   rightPath: string,
   nimServerPort: number
 ) => {
-
   let kids = getDiffPointKids(
     leftMap,
     rightMap,
@@ -112,7 +120,7 @@ export const goDownMerged = async (
         selected: currentSelected,
         selectedTreeId: currentTreeId,
         leftMap,
-        rightMap,
+        rightMap
       }
     }
 
@@ -121,7 +129,7 @@ export const goDownMerged = async (
         selected: kids[0].id,
         selectedTreeId: kids[0].treeId,
         leftMap,
-        rightMap,
+        rightMap
       }
     }
 
@@ -129,7 +137,7 @@ export const goDownMerged = async (
       selected: kids[1].id,
       selectedTreeId: kids[1].treeId,
       leftMap,
-      rightMap,
+      rightMap
     }
   }
 
@@ -216,36 +224,44 @@ export const reviseGoLeft = (
   treeId: WhichTree,
   diffPoints: DiffPoint[]
 ) => {
-  let ancestorIds = getAncList(mergedMap[0], currentSelected, treeId).map(
-    y => y.data.id
+  let ancestors = getAncList(mergedMap[0], currentSelected, treeId)
+  let ancestorIds = ancestors.map(y => y.id)
+  let diffAncs = diffPoints.filter(
+    x =>
+      ancestorIds.includes(x.leftTreeId) &&
+      ancestors.find(y => y.id === x.leftTreeId)!.treeId === WhichTree.Both
   )
-  let diffPoint = diffPoints.find(x => ancestorIds.includes(x.leftTreeId))
 
-  ancestorIds = getAncList(mergedMap[0], diffPoint!.leftTreeId, WhichTree.Both).map(
-    y => y.data.id
-  )
+  let diffPoint = maxBy(diffAncs, x => x.leftTreeId)!
 
-  let currentIndex = 0
-  let currentNode = mergedMap[ancestorIds[currentIndex]]
+  ancestorIds = getAncList(
+    mergedMap[0],
+    diffPoint!.leftTreeId,
+    WhichTree.Both
+  ).map(y => y.id)
 
-  const leftDiffIds = diffPoints.map(x => x.leftTreeId)
+  let diffPointIndex = ancestorIds.indexOf(diffPoint.leftTreeId)
 
-  while (
-    leftDiffIds.includes(currentNode.id) ||
-    currentNode.children!.length < 2 ||
-    ancestorIds.includes(currentNode.children![1].id)
-  ) {
-    currentIndex++
-    currentNode = mergedMap[ancestorIds[currentIndex]]
-    if (!currentNode) {
-      return { selected: currentSelected, treeId: treeId }
-    }
-  }
+  let currentNode = mergedMap[ancestorIds[diffPointIndex - 1]]
+
+  // let currentIndex = 0
+  // let currentNode = mergedMap[ancestorIds[currentIndex]]
+
+  // while (
+  //   currentNode.children!.length < 2 ||
+  //   ancestorIds.includes(currentNode.children![1].id)
+  // ) {
+  //   currentIndex++
+  //   currentNode = mergedMap[ancestorIds[currentIndex]]
+  //   if (!currentNode) {
+  //     return { selected: currentSelected, treeId: treeId }
+  //   }
+  // }
 
   let id = currentNode.children![1].id
   return {
     selected: id,
-    treeId: WhichTree.Both
+    treeId: currentNode.children![1].treeId
   }
 }
 
@@ -270,7 +286,7 @@ export const shouldBeRightTree = (
   // If it aint in the left or both but is in the right then go right
   if (
     !leftMap[nextSelected] &&
-    rightMap[nextSelected] && 
+    rightMap[nextSelected] &&
     rightMap[nextSelected].treeId === WhichTree.Right
   ) {
     return true
@@ -348,9 +364,8 @@ export const goLeftMerged = async (
   } else {
     leftMap = res.id2Node
     if (
-      getDescList(leftMap[nextSelected]).filter(x =>
-        leftDiffIds.includes(x.data.id)
-      ).length > 0
+      getDescList(leftMap[nextSelected]).filter(x => leftDiffIds.includes(x.id))
+        .length > 0
     ) {
       nextTreeId = WhichTree.Both
     }
@@ -373,7 +388,7 @@ export const goLeftMerged = async (
     // We may have moved to a both node
     if (
       !getAncList(leftMap[0], nextSelected, currentTreeId).find(
-        x => x.data.treeId === currentTreeId
+        x => x.treeId === currentTreeId
       )
     ) {
       nextTreeId = WhichTree.Both
