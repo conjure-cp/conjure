@@ -112,6 +112,11 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
       diffPoint.highlightRight.forEach(nodeId => {
         if (rightMap[nodeId]) {
           rightMap[nodeId].treeId = WhichTree.Right
+
+          if (!leftMap[diffPoint.leftTreeId].children) {
+            leftMap[diffPoint.leftTreeId].children = []
+          }
+
           leftMap[diffPoint.leftTreeId].children!.push(rightMap[nodeId])
         }
       })

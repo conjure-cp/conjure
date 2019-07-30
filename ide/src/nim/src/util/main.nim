@@ -35,7 +35,7 @@ proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2,
     var rightValue = rightDB.getValue(sql(query1), nodeIds[1])
 
 
-    result =  leftValue == rightValue
+    result = leftValue == rightValue
 
     # echo nodeIds
     # echo result
@@ -48,8 +48,7 @@ type DiffPoint* = object of RootObj
     highlightLeft*: seq[int]
     highlightRight*: seq[int]
 
-proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[
-        string]): DiffPoint =
+proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[ string]): DiffPoint =
 
     var lNum, rNum: int
     discard l.parseInt(lNum)
@@ -69,8 +68,7 @@ proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[
         return num
         )
 
-    return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL,
-            highlightRight: hR)
+    return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL, highlightRight: hR)
 
 proc `$`*(d: DiffPoint): string =
     result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
@@ -102,8 +100,10 @@ proc removeDuplicates*(leftPath: string, rightPath: string,
         kids[1].filter(x => not rightKidstoSkip.contains(x))
     ]
 
-proc findDiffLocationsBoyo*(leftPath, rightPath: string,
-        debug: bool = false): seq[DiffPoint] =
+proc findDiffLocationsBoyo*(leftPath,
+                            rightPath: string,
+                            debug: bool = false):
+                             seq[DiffPoint] =
 
 #Concept of the diff point is wrong, what we need is a way of keeping track of different branches
 
@@ -117,7 +117,6 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
 
     var tuples = newSeq[(string, string)]()
 
-
     proc recursive(ids: array[2, string], prevIds: array[2, string]) =
         var kids: array[2, seq[string]]
 
@@ -130,7 +129,6 @@ proc findDiffLocationsBoyo*(leftPath, rightPath: string,
             let t = (prevIds[0], prevIds[1])
             if tuples.contains(t):
                 return
-
 
             for i in countUp(0, 1):
                 for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
@@ -209,7 +207,7 @@ proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
 
     if fileExists(flipped):
         return %(parseJson(readAll(open(flipped))).getElems()
-            .map(x => newDiffPoint($x["rightTreeId"], $x["leftTreeId"], 
+            .map(x => newDiffPoint($x["rightTreeId"], $x["leftTreeId"],
                                     x["highlightRight"].getElems().map(y => $y),
                                     x["highlightLeft"].getElems().map(y => $y))))
 

@@ -117,8 +117,7 @@ suite "diff":
     discard init(leftPath)
     discard init(rightPath)
 
-
-    let d = diff(leftPath, rightPath)
+    let d = diff(leftPath, rightPath, true)
     echo d
 
     let diffNodeIds = d.map(x => @[x.leftTreeId, x.rightTreeId])

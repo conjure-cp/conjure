@@ -109,7 +109,7 @@ class Forest extends React.Component<Props, State> {
     if (this.props.trees) {
       // console.log(JSON.stringify(this.props.trees[0].core))
       // console.log(JSON.stringify(this.props.trees[1].core))
-      // console.log(JSON.stringify(this.state.diffLocations))
+      console.log(JSON.stringify(this.state.diffPoints))
       // console.log(JSON.stringify(this.state.augmentedIds))
     }
 
@@ -243,14 +243,24 @@ class Forest extends React.Component<Props, State> {
                       <TreeContainer
                         diffParentId={
                           this.state.currentDiffIndex !== -1
-                            ? this.state.diffPoints[this.state.currentDiffIndex]
-                                .leftTreeId
+                            ? i === 0
+                              ? this.state.diffPoints[
+                                  this.state.currentDiffIndex
+                                ].leftTreeId
+                              : this.state.diffPoints[
+                                  this.state.currentDiffIndex
+                                ].rightTreeId
                             : -1
                         }
                         selected={
                           this.state.currentDiffIndex !== -1
-                            ? this.state.diffPoints[this.state.currentDiffIndex]
-                                .leftTreeId
+                            ? i === 0
+                              ? this.state.diffPoints[
+                                  this.state.currentDiffIndex
+                                ].leftTreeId
+                              : this.state.diffPoints[
+                                  this.state.currentDiffIndex
+                                ].rightTreeId
                             : -1
                         }
                         hash={this.props.trees[i].hash}
