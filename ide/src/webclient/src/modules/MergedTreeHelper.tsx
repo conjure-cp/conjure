@@ -44,7 +44,7 @@ const getDiffPointKids = (
     }
 
     let combined = leftMap[leftDiffPoint].children!.concat(
-      rightMap[rightDiffPoint].children!
+      rightMap[rightDiffPoint].children!.filter(x => diffPoints[index].highlightRight.includes(x.id))
     )
 
     return combined.length > 0 ? combined : undefined
@@ -158,10 +158,10 @@ export const goUpMerged = (
   rightMap: MyMap,
   currentSelected: number,
   currentTreeId: number,
-  diffLocations: number[][]
+  diffPoints: DiffPoint[]
 ) => {
-  let leftDiffIds = diffLocations.map(x => x[0])
-  let rightDiffIds = diffLocations.map(x => x[1])
+  let leftDiffIds = diffPoints.map(x => x.leftTreeId)
+  let rightDiffIds = diffPoints.map(x => x.rightTreeId)
   let currentNode
   let nextId
 
@@ -199,12 +199,16 @@ export const goLeftAtDiffingPoint = async (
 
   let index = leftDiffIds.indexOf(currentSelected)
 
-  let maps = await loadDiff(
-    [leftPath, rightPath],
-    [leftMap, rightMap],
-    diffPoints[index],
-    nimServerPort
-  )
+  let maps = [leftMap, rightMap]
+
+  if (!leftMap[diffPoints[index].leftTreeId] && !rightMap[diffPoints[index].rightTreeId]) {
+    maps = await loadDiff(
+      [leftPath, rightPath],
+      [leftMap, rightMap],
+      diffPoints[index],
+      nimServerPort
+    )
+  }
 
   let mergedMap = mergeMaps(maps[0], maps[1], diffPoints)
   let currentNode = mergedMap[currentSelected]
@@ -310,8 +314,6 @@ export const goLeftMerged = async (
   leftMap: MyMap
   rightMap: MyMap
 }> => {
-  let mergedMap = mergeMaps(leftMap, rightMap, diffPoints)
-
   let leftDiffIds = diffPoints.map(x => x.leftTreeId)
   if (
     leftDiffIds.includes(currentSelected) &&
@@ -357,7 +359,7 @@ export const goLeftMerged = async (
 
   let nextSelected = res.selected
 
-  mergedMap = mergeMaps(leftMap, rightMap, diffPoints)
+  let mergedMap = mergeMaps(leftMap, rightMap, diffPoints)
 
   if (isRightTree) {
     rightMap = res.id2Node

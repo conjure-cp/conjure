@@ -21,6 +21,8 @@ import {
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 
+import { diffPoints as differAt0 } from "./resources/differAt0"
+
 import {
   coreOf3 as coreOf3Normal,
   coreOf7 as coreOf7Normal,
@@ -84,63 +86,9 @@ async function loadTreeBigOnLeftSmallOnRight() {
   bigTree = insertNodesBoyo(descendantsOf17Normal, bigTree, WhichTree.Both)
   bigTree = insertNodesBoyo(descendantsOf28Normal, bigTree, WhichTree.Both)
 
-  // bigTree = (await goLeftBoyo(
-  //   4,
-  //   bigTree,
-  //   false,
-  //   false,
-  //   "",
-  //   10,
-  //   5000,
-  //   WhichTree.Right
-  // )).id2Node
-
-  // bigTree = (await goLeftBoyo(
-  //   7,
-  //   bigTree,
-  //   false,
-  //   false,
-  //   "",
-  //   10,
-  //   5000,
-  //   WhichTree.Right
-  // )).id2Node
-
-  // bigTree = (await goLeftBoyo(
-  //   18,
-  //   bigTree,
-  //   false,
-  //   false,
-  //   "",
-  //   10,
-  //   5000,
-  //   WhichTree.Right
-  // )).id2Node
-
-  // bigTree = (await goLeftBoyo(
-  //   21,
-  //   bigTree,
-  //   false,
-  //   false,
-  //   "",
-  //   10,
-  //   5000,
-  //   WhichTree.Right
-  // )).id2Node
-
-  // bigTree = (await goLeftBoyo(
-  //   28,
-  //   bigTree,
-  //   false,
-  //   false,
-  //   "",
-  //   10,
-  //   5000,
-  //   WhichTree.Right
-  // )).id2Node
-
   smallTree = res[1]
 
+  assignTreeIds(bigTree, smallTree, bigToSmall)
   return { smallTree, bigTree }
 }
 async function loadTreeSmallOnLeftBigOnRight() {
@@ -156,13 +104,6 @@ async function loadTreeSmallOnLeftBigOnRight() {
     .once(JSON.stringify(coreOf21Normal))
     .once(JSON.stringify(coreOf9Sacbounds))
     .once(JSON.stringify(coreOf27Normal))
-
-  // .once(JSON.stringify(descendantsOf4Normal))
-  // .once(JSON.stringify(descendantsOf7Normal))
-  // .once(JSON.stringify(descendantsOf18Normal))
-  // .once(JSON.stringify(descendantsOf21Normal))
-  // .once(JSON.stringify(descendantsOf28Normal))
-  // .once(JSON.stringify([]))
 
   let res = await loadAllDiffs(
     ["", "s"],
@@ -330,63 +271,46 @@ describe("suite to test MergedTreeHelper", () => {
   describe("test go left at diffing point", () => {
     describe("Left: small | Right: big", () => {
       beforeEach(async () => {
-        bigTree = makeState(coreNormal, 0).id2Node
-        smallTree = makeState(coreSacbounds, 0).id2Node
+        bigTree = makeState(coreNormal8, 0).id2Node
+        smallTree = makeState(coreSacbounds8, 0).id2Node
       })
     })
     it("redirects from 3 -> 4 on the left tree", async () => {
       // await noDiffsSmallBig()
-      fetchMock.resetMocks()
-      fetchMock
-        .once(JSON.stringify(coreOf3Sacbounds))
-        .once(JSON.stringify(coreOf3Normal))
 
       let res = await goLeftAtDiffingPoint(
         smallTree,
         bigTree,
         3,
         smallToBig,
-        [],
         "",
         "",
         5000
       )
       expect(res.selected).toEqual(4)
-      expect(res.selectedTreeId).toEqual(WhichTree.Left)
+      expect(res.selectedTreeId).toEqual(WhichTree.Both)
     })
     it("redirects from 6 -> 7 on the left tree", async () => {
       // await noDiffsSmallBig()
-      fetchMock.resetMocks()
-      fetchMock
-        .once(JSON.stringify(coreOf6Sacbounds))
-        .once(JSON.stringify(coreOf17Normal))
 
       let res = await goLeftAtDiffingPoint(
         smallTree,
         bigTree,
         6,
         smallToBig,
-        [],
         "",
         "",
         5000
       )
       expect(res.selected).toEqual(7)
-      expect(res.selectedTreeId).toEqual(WhichTree.Left)
+      expect(res.selectedTreeId).toEqual(WhichTree.Both)
     })
     it("redirects from 9 -> 10 on the left tree", async () => {
-      // await noDiffsSmallBig()
-      fetchMock.resetMocks()
-      fetchMock
-        .once(JSON.stringify(coreOf9Sacbounds))
-        .once(JSON.stringify(coreOf27Normal))
-
       let res = await goLeftAtDiffingPoint(
         smallTree,
         bigTree,
         9,
         smallToBig,
-        [],
         "",
         "",
         5000
@@ -397,22 +321,21 @@ describe("suite to test MergedTreeHelper", () => {
 
     describe("Left: Big | Right: small", () => {
       beforeEach(async () => {
-        bigTree = makeState(coreNormal, 0).id2Node
-        smallTree = makeState(coreSacbounds, 0).id2Node
+        // bigTree = makeState(coreNormal8, 0).id2Node
+        // smallTree = makeState(coreSacbounds8, 0).id2Node
+
+        let res = await loadTreeBigOnLeftSmallOnRight()
+        bigTree = res.bigTree
+        smallTree = res.smallTree
       })
       it("redirects from 3 -> 4 on the left tree", async () => {
         // await noDiffsBigSmall()
-        fetchMock.resetMocks()
-        fetchMock
-          .once(JSON.stringify(coreOf3Normal))
-          .once(JSON.stringify(coreOf3Sacbounds))
 
         let res = await goLeftAtDiffingPoint(
           bigTree,
           smallTree,
           3,
           bigToSmall,
-          [],
           "",
           "",
           5000
@@ -421,16 +344,11 @@ describe("suite to test MergedTreeHelper", () => {
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
       })
       it("redirects from 17 -> 18 on the left tree", async () => {
-        fetchMock.resetMocks()
-        fetchMock
-          .once(JSON.stringify(coreOf17Normal))
-          .once(JSON.stringify(coreOf6Sacbounds))
         let res = await goLeftAtDiffingPoint(
           bigTree,
           smallTree,
           17,
           bigToSmall,
-          [],
           "",
           "",
           5000
@@ -440,17 +358,11 @@ describe("suite to test MergedTreeHelper", () => {
       })
 
       it("redirects from 27 -> 28 on the left tree", async () => {
-        fetchMock.resetMocks()
-        fetchMock
-          .once(JSON.stringify(coreOf27Normal))
-          .once(JSON.stringify(coreOf9Sacbounds))
-
         let res = await goLeftAtDiffingPoint(
           bigTree,
           smallTree,
           27,
           bigToSmall,
-          [],
           "",
           "",
           5000
@@ -463,313 +375,160 @@ describe("suite to test MergedTreeHelper", () => {
 
   describe("test go left", () => {
     describe("Left: small | Right: big", () => {
-      describe("Left tree only", () => {
-        beforeEach(async () => {
-          let res = await loadTreeSmallOnLeftBigOnRight()
-          bigTree = res.bigTree
-          smallTree = res.smallTree
-        })
-
-        it(" 0 -> 1 ", async () => {
-          let res = await goLeftMerged(
-            0,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(1)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 1 -> 2 ", async () => {
-          let res = await goLeftMerged(
-            1,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(2)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 2 -> 3 ", async () => {
-          let res = await goLeftMerged(
-            2,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(3)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 3 -> 4 left ", async () => {
-          fetchMock.resetMocks()
-          fetchMock
-            .once(JSON.stringify(coreOf3Sacbounds))
-            .once(JSON.stringify(coreOf3Normal))
-
-          let res = await goLeftMerged(
-            3,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(4)
-          expect(res.selectedTreeId).toEqual(WhichTree.Left)
-        })
-
-        it(" 4 Left -> 5 ", async () => {
-          let res = await goLeftMerged(
-            4,
-            WhichTree.Left,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(5)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 5 -> 6 ", async () => {
-          let res = await goLeftMerged(
-            5,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(6)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 6 -> 7 Left ", async () => {
-          fetchMock.resetMocks()
-          fetchMock
-            .once(JSON.stringify(coreOf6Sacbounds))
-            .once(JSON.stringify(coreOf17Normal))
-          let res = await goLeftMerged(
-            6,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(7)
-          expect(res.selectedTreeId).toEqual(WhichTree.Left)
-        })
-
-        it(" 7 Left -> 8", async () => {
-          let res = await goLeftMerged(
-            7,
-            WhichTree.Left,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(8)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 8 -> 9", async () => {
-          let res = await goLeftMerged(
-            8,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(9)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-
-        it(" 9 -> 10", async () => {
-          fetchMock.resetMocks()
-          fetchMock
-            .once(JSON.stringify(coreOf9Sacbounds))
-            .once(JSON.stringify(coreOf27Normal))
-          let res = await goLeftMerged(
-            9,
-            WhichTree.Both,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(10)
-          expect(res.selectedTreeId).toEqual(WhichTree.Left)
-        })
+      beforeEach(async () => {
+        let res = await loadTreeSmallOnLeftBigOnRight()
+        bigTree = res.bigTree
+        smallTree = res.smallTree
       })
 
-      describe("Right tree only", () => {
-        it(" 4 Right -> 5 Right", async () => {
-          let res = await goLeftMerged(
-            4,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(5)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
-        })
+      it(" 0 -> 1 ", async () => {
+        let res = await goLeftMerged(
+          0,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(1)
+        expect(res.selectedTreeId).toEqual(WhichTree.Both)
+      })
 
-        it(" 5 Right -> 6 Right", async () => {
-          let res = await goLeftMerged(
-            5,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(6)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
-        })
+      it(" 1 -> 2 ", async () => {
+        let res = await goLeftMerged(
+          1,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(2)
+        expect(res.selectedTreeId).toEqual(WhichTree.Both)
+      })
 
-        it("14 Right -> 15 Right", async () => {
-          let res = await goLeftMerged(
-            14,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(15)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
-        })
+      it(" 2 -> 3 ", async () => {
+        let res = await goLeftMerged(
+          2,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(3)
+        expect(res.selectedTreeId).toEqual(WhichTree.Both)
+      })
 
-        it("15 Right -> 5 ", async () => {
-          let res = await goLeftMerged(
-            15,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(5)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
-        it("20 Right -> 21 right", async () => {
-          let res = await goLeftMerged(
-            20,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(21)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
-        })
+      it(" 3 -> 4 left ", async () => {
+        let res = await goLeftMerged(
+          3,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(4)
+        expect(res.selectedTreeId).toEqual(WhichTree.Both)
+      })
 
-        it("25 Right -> 8", async () => {
-          let res = await goLeftMerged(
-            25,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(8)
-          expect(res.selectedTreeId).toEqual(WhichTree.Both)
-        })
+      it(" 4 -> 8 Left ", async () => {
+        let res = await goLeftMerged(
+          4,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(8)
+        expect(res.selectedTreeId).toEqual(WhichTree.Right)
+      })
 
-        it("29 Right -> 30 right", async () => {
-          let res = await goLeftMerged(
-            29,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(30)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
-        })
-        it("31 Right -> 32 right", async () => {
-          let res = await goLeftMerged(
-            29,
-            WhichTree.Right,
-            "",
-            "",
-            smallTree,
-            bigTree,
-            smallToBig,
-            [],
-            5000
-          )
-          expect(res.selected).toEqual(30)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
-        })
+      it(" 8 -> 9 ", async () => {
+        let res = await goLeftMerged(
+          8,
+          WhichTree.Right,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(9)
+        expect(res.selectedTreeId).toEqual(WhichTree.Right)
+      })
+
+      it(" 7 -> 22 Right ", async () => {
+        let res = await goLeftMerged(
+          7,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(22)
+        expect(res.selectedTreeId).toEqual(WhichTree.Right)
+      })
+
+      it(" 6 Left -> 7", async () => {
+        let res = await goLeftMerged(
+          6,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(7)
+        expect(res.selectedTreeId).toEqual(WhichTree.Both)
+      })
+
+      it(" 8 -> 9", async () => {
+        let res = await goLeftMerged(
+          8,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(9)
+        expect(res.selectedTreeId).toEqual(WhichTree.Both)
+      })
+
+      it(" 9 -> 10", async () => {
+        let res = await goLeftMerged(
+          9,
+          WhichTree.Both,
+          "",
+          "",
+          smallTree,
+          bigTree,
+          smallToBig,
+          5000
+        )
+        expect(res.selected).toEqual(10)
+        expect(res.selectedTreeId).toEqual(WhichTree.Left)
       })
     })
 
@@ -791,7 +550,6 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(1)
@@ -807,7 +565,6 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(2)
@@ -822,7 +579,6 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(3)
@@ -830,10 +586,6 @@ describe("suite to test MergedTreeHelper", () => {
         })
 
         it(" 3 -> 4 Left ", async () => {
-          fetchMock.resetMocks()
-          fetchMock
-            .once(JSON.stringify(coreOf3Normal))
-            .once(JSON.stringify(coreOf3Sacbounds))
           let res = await goLeftMerged(
             3,
             WhichTree.Both,
@@ -842,14 +594,13 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(4)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)
         })
 
-        it(" 6 Left -> 7 Left ", async () => {
+        it(" 6 Left -> 7 Both ", async () => {
           let res = await goLeftMerged(
             6,
             WhichTree.Left,
@@ -858,11 +609,10 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(7)
-          expect(res.selectedTreeId).toEqual(WhichTree.Left)
+          expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
 
         it(" 15 Left ->  16", async () => {
@@ -874,12 +624,12 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(16)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
+
         it(" 25 Left ->  26", async () => {
           let res = await goLeftMerged(
             25,
@@ -889,7 +639,6 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(26)
@@ -904,60 +653,10 @@ describe("suite to test MergedTreeHelper", () => {
             bigTree,
             smallTree,
             bigToSmall,
-            [],
             5000
           )
           expect(res.selected).toEqual(30)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)
-        })
-
-        describe("Right tree only", () => {
-          it("4 Right -> 16", async () => {
-            let res = await goLeftMerged(
-              4,
-              WhichTree.Right,
-              "",
-              "",
-              bigTree,
-              smallTree,
-              bigToSmall,
-              [],
-              5000
-            )
-            expect(res.selected).toEqual(16)
-            expect(res.selectedTreeId).toEqual(WhichTree.Both)
-          })
-          it("7 Right -> 26", async () => {
-            let res = await goLeftMerged(
-              7,
-              WhichTree.Right,
-              "",
-              "",
-              bigTree,
-              smallTree,
-              bigToSmall,
-              [],
-              5000
-            )
-            expect(res.selected).toEqual(26)
-            expect(res.selectedTreeId).toEqual(WhichTree.Both)
-          })
-
-          it("10 Right -> 10 Right", async () => {
-            let res = await goLeftMerged(
-              10,
-              WhichTree.Right,
-              "",
-              "",
-              bigTree,
-              smallTree,
-              bigToSmall,
-              [],
-              5000
-            )
-            expect(res.selected).toEqual(10)
-            expect(res.selectedTreeId).toEqual(WhichTree.Right)
-          })
         })
       })
     })
@@ -970,9 +669,9 @@ describe("suite to test MergedTreeHelper", () => {
         bigTree = res.bigTree
         smallTree = res.smallTree
       })
-      it("4 Left -> 3", async () => {
+      it("4 -> 3", async () => {
         expect(
-          goUpMerged(smallTree, bigTree, 4, WhichTree.Left, smallToBig)
+          goUpMerged(smallTree, bigTree, 4, WhichTree.Both, smallToBig)
         ).toEqual({ selected: 3, selectedTreeId: WhichTree.Both })
       })
       it("3 -> 2", async () => {
@@ -1044,15 +743,23 @@ describe("suite to test MergedTreeHelper", () => {
         let leftMap = makeState(coreNoOpt, 0).id2Node
         let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
 
-        assignTreeIds(leftMap, rightMap, [[0, 0]], [])
+        let diffPoints = [
+          {
+            leftTreeId: 0,
+            rightTreeId: 0,
+            highlightLeft: [1],
+            highlightRight: [1]
+          }
+        ]
+
+        assignTreeIds(leftMap, rightMap, diffPoints)
 
         let res = await goDownMerged(
           leftMap,
           rightMap,
           0,
           WhichTree.Both,
-          [[0, 0]],
-          [],
+          diffPoints,
           "",
           "",
           5000
@@ -1075,14 +782,14 @@ describe("suite to test MergedTreeHelper", () => {
             3,
             WhichTree.Both,
             smallToBig,
-            [],
             "",
             "",
             5000
           )
           expect(res.selected).toEqual(4)
-          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+          expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
+
         it("4 Right -> 5 Right ", async () => {
           let res = await goDownMerged(
             smallTree,
@@ -1090,7 +797,6 @@ describe("suite to test MergedTreeHelper", () => {
             4,
             WhichTree.Right,
             smallToBig,
-            [],
             "",
             "",
             5000
@@ -1105,239 +811,230 @@ describe("suite to test MergedTreeHelper", () => {
             6,
             WhichTree.Right,
             smallToBig,
-            [],
             "",
             "",
             5000
           )
-          expect(res.selected).toEqual(7)
+          expect(res.selected).toEqual(5)
+          expect(res.selectedTreeId).toEqual(WhichTree.Both)
+        })
+
+        it("9 -> 28 Right ", async () => {
+          let res = await goDownMerged(
+            smallTree,
+            bigTree,
+            9,
+            WhichTree.Both,
+            smallToBig,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(28)
           expect(res.selectedTreeId).toEqual(WhichTree.Right)
         })
+      })
+
+      describe("Left: big | Right: small", () => {
+        beforeEach(async () => {
+          let res = await loadTreeBigOnLeftSmallOnRight()
+          bigTree = res.bigTree
+          smallTree = res.smallTree
+        })
+        it("3 -> 4 left ", async () => {
+          let res = await goDownMerged(
+            bigTree,
+            smallTree,
+            3,
+            WhichTree.Both,
+            bigToSmall,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(4)
+          expect(res.selectedTreeId).toEqual(WhichTree.Left)
+        })
+        it("17 -> 18 left ", async () => {
+          let res = await goDownMerged(
+            bigTree,
+            smallTree,
+            17,
+            WhichTree.Both,
+            bigToSmall,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(18)
+          expect(res.selectedTreeId).toEqual(WhichTree.Left)
+        })
+        it("15 left -> 16 ", async () => {
+          let res = await goDownMerged(
+            bigTree,
+            smallTree,
+            15,
+            WhichTree.Left,
+            bigToSmall,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(16)
+          expect(res.selectedTreeId).toEqual(WhichTree.Both)
+        })
+        it("31 left -> 32 left ", async () => {
+          let res = await goDownMerged(
+            bigTree,
+            smallTree,
+            31,
+            WhichTree.Left,
+            bigToSmall,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(32)
+          expect(res.selectedTreeId).toEqual(WhichTree.Left)
+        })
+      })
+    })
+
+    describe("test go right", () => {
+      it("Must be able to go right when the node 0 is the only Both node ", async () => {
+        let leftMap = makeState(coreNoOpt, 0).id2Node
+        let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
+
+        assignTreeIds(leftMap, rightMap, differAt0)
+
+        let res = await goRightMerged(
+          leftMap,
+          rightMap,
+          0,
+          WhichTree.Both,
+          differAt0
+        )
+
+        expect(res.selected).toBe(1)
+        expect(res.selectedTreeId).toBe(WhichTree.Right)
+      })
+
+      describe("Left: small | Right: big", () => {
+        beforeEach(async () => {
+          let res = await loadTreeSmallOnLeftBigOnRight()
+          bigTree = res.bigTree
+          smallTree = res.smallTree
+        })
+
+        it("2 -> 5 ", async () => {
+          let res = await goRightMerged(
+            smallTree,
+            bigTree,
+            2,
+            WhichTree.Both,
+            smallToBig
+          )
+          expect(res.selected).toEqual(5)
+          expect(res.selectedTreeId).toEqual(WhichTree.Both)
+        })
+
+        it("3 -> 4 Right ", async () => {
+          let res = await goRightMerged(
+            smallTree,
+            bigTree,
+            3,
+            WhichTree.Both,
+            smallToBig
+          )
+          expect(res.selected).toEqual(4)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+        it("6 -> 21 Right ", async () => {
+          let res = await goRightMerged(
+            smallTree,
+            bigTree,
+            6,
+            WhichTree.Both,
+            smallToBig
+          )
+          expect(res.selected).toEqual(18)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+        it("9 -> 30 Right ", async () => {
+          let res = await goRightMerged(
+            smallTree,
+            bigTree,
+            9,
+            WhichTree.Both,
+            smallToBig
+          )
+          expect(res.selected).toEqual(30)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+
+        it("15 right -> 15 Right ", async () => {
+          let res = await goRightMerged(
+            smallTree,
+            bigTree,
+            15,
+            WhichTree.Right,
+            smallToBig
+          )
+          expect(res.selected).toEqual(15)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+
         describe("Left: big | Right: small", () => {
           beforeEach(async () => {
             let res = await loadTreeBigOnLeftSmallOnRight()
             bigTree = res.bigTree
             smallTree = res.smallTree
           })
-          it("3 -> 7 left ", async () => {
-            let res = await goDownMerged(
+          it("3 -> 7 ", async () => {
+            let res = await goRightMerged(
               bigTree,
               smallTree,
               3,
               WhichTree.Both,
-              bigToSmall,
-              [],
-              "",
-              "",
-              5000
+              bigToSmall
             )
             expect(res.selected).toEqual(7)
-            expect(res.selectedTreeId).toEqual(WhichTree.Left)
+            expect(res.selectedTreeId).toEqual(WhichTree.Both)
           })
-          it("17 -> 21 left ", async () => {
-            let res = await goDownMerged(
+          it("17 -> 21 Right ", async () => {
+            let res = await goRightMerged(
               bigTree,
               smallTree,
               17,
               WhichTree.Both,
-              bigToSmall,
-              [],
-              "",
-              "",
-              5000
+              bigToSmall
             )
             expect(res.selected).toEqual(21)
-            expect(res.selectedTreeId).toEqual(WhichTree.Left)
-          })
-          it("15 left -> 16 ", async () => {
-            let res = await goDownMerged(
-              bigTree,
-              smallTree,
-              15,
-              WhichTree.Left,
-              bigToSmall,
-              [],
-              "",
-              "",
-              5000
-            )
-            expect(res.selected).toEqual(16)
             expect(res.selectedTreeId).toEqual(WhichTree.Both)
           })
-          it("31 left -> 32 left ", async () => {
-            let res = await goDownMerged(
-              bigTree,
-              smallTree,
-              31,
-              WhichTree.Left,
-              bigToSmall,
-              [],
-              "",
-              "",
-              5000
-            )
-            expect(res.selected).toEqual(32)
-            expect(res.selectedTreeId).toEqual(WhichTree.Left)
-          })
-        })
-      })
-
-      describe("test go right", () => {
-        it("Must be able to go right when the node 0 is the only Both node ", async () => {
-          let leftMap = makeState(coreNoOpt, 0).id2Node
-          let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
-
-          assignTreeIds(leftMap, rightMap, [[0, 0]], [])
-
-          let res = await goRightMerged(leftMap, rightMap, 0, WhichTree.Both, [
-            [0, 0]
-          ])
-
-          expect(res.selected).toBe(1)
-          expect(res.selectedTreeId).toBe(WhichTree.Right)
-        })
-
-        describe("Left: small | Right: big", () => {
-          beforeEach(async () => {
-            let res = await loadTreeSmallOnLeftBigOnRight()
-            bigTree = res.bigTree
-            smallTree = res.smallTree
-          })
-
-          it("2 -> 5 ", async () => {
+          it("27 -> 10 Right ", async () => {
             let res = await goRightMerged(
-              smallTree,
               bigTree,
-              2,
+              smallTree,
+              27,
               WhichTree.Both,
-              smallToBig
+              bigToSmall
             )
-            expect(res.selected).toEqual(5)
+            expect(res.selected).toEqual(10)
+            expect(res.selectedTreeId).toEqual(WhichTree.Right)
+          })
+
+          it("10 Right -> 10 Right ", async () => {
+            let res = await goRightMerged(
+              bigTree,
+              smallTree,
+              10,
+              WhichTree.Both,
+              bigToSmall
+            )
+            expect(res.selected).toEqual(10)
             expect(res.selectedTreeId).toEqual(WhichTree.Both)
           })
-
-          it("3 -> 7 Right ", async () => {
-            let res = await goRightMerged(
-              smallTree,
-              bigTree,
-              3,
-              WhichTree.Both,
-              smallToBig
-            )
-            expect(res.selected).toEqual(7)
-            expect(res.selectedTreeId).toEqual(WhichTree.Right)
-          })
-          it("6 -> 21 Right ", async () => {
-            let res = await goRightMerged(
-              smallTree,
-              bigTree,
-              6,
-              WhichTree.Both,
-              smallToBig
-            )
-            expect(res.selected).toEqual(21)
-            expect(res.selectedTreeId).toEqual(WhichTree.Right)
-          })
-          it("9 -> 30 Right ", async () => {
-            let res = await goRightMerged(
-              smallTree,
-              bigTree,
-              9,
-              WhichTree.Both,
-              smallToBig
-            )
-            expect(res.selected).toEqual(30)
-            expect(res.selectedTreeId).toEqual(WhichTree.Right)
-          })
-
-          it("15 right -> 15 Right ", async () => {
-            let res = await goRightMerged(
-              smallTree,
-              bigTree,
-              15,
-              WhichTree.Right,
-              smallToBig
-            )
-            expect(res.selected).toEqual(15)
-            expect(res.selectedTreeId).toEqual(WhichTree.Right)
-          })
-
-          describe("Left: big | Right: small", () => {
-            beforeEach(async () => {
-              let res = await loadTreeBigOnLeftSmallOnRight()
-              bigTree = res.bigTree
-              smallTree = res.smallTree
-            })
-            it("3 -> 4 Right ", async () => {
-              let res = await goRightMerged(
-                bigTree,
-                smallTree,
-                3,
-                WhichTree.Both,
-                bigToSmall
-              )
-              expect(res.selected).toEqual(4)
-              expect(res.selectedTreeId).toEqual(WhichTree.Right)
-            })
-            it("17 -> 7 Right ", async () => {
-              let res = await goRightMerged(
-                bigTree,
-                smallTree,
-                17,
-                WhichTree.Both,
-                bigToSmall
-              )
-              expect(res.selected).toEqual(7)
-              expect(res.selectedTreeId).toEqual(WhichTree.Right)
-            })
-            it("27 -> 10 Right ", async () => {
-              let res = await goRightMerged(
-                bigTree,
-                smallTree,
-                27,
-                WhichTree.Both,
-                bigToSmall
-              )
-              expect(res.selected).toEqual(10)
-              expect(res.selectedTreeId).toEqual(WhichTree.Right)
-            })
-
-            it("10 Right -> 10 Right ", async () => {
-              let res = await goRightMerged(
-                bigTree,
-                smallTree,
-                10,
-                WhichTree.Both,
-                bigToSmall
-              )
-              expect(res.selected).toEqual(10)
-              expect(res.selectedTreeId).toEqual(WhichTree.Both)
-            })
-          })
-        })
-      })
-    })
-  })
-
-  describe("No diffs loaded", () => {
-    describe("goleft", () => {
-      describe("Left: small | Right: big", () => {
-        beforeEach(async () => {
-          fetchMock.resetMocks()
-          fetchMock
-            .once(JSON.stringify(coreOf3Sacbounds))
-            .once(JSON.stringify(coreOf3Normal))
-            .once(JSON.stringify(coreOf6Sacbounds))
-            .once(JSON.stringify(coreOf17Normal))
-            .once(JSON.stringify(coreOf9Sacbounds))
-            .once(JSON.stringify(coreOf27Normal))
-
-            .once(JSON.stringify(descendantsOf4Normal))
-            .once(JSON.stringify(descendantsOf7Normal))
-            .once(JSON.stringify(descendantsOf18Normal))
-            .once(JSON.stringify(descendantsOf21Normal))
-            .once(JSON.stringify(descendantsOf28Normal))
-            .once(JSON.stringify([]))
         })
       })
     })
