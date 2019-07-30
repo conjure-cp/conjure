@@ -180,6 +180,89 @@ export const descendantsOf21 = [
   }
 ]
 
+export const descendantsOf17 = [
+  {
+    id: 18,
+    parentId: 17,
+    label: "setA_Occurrence_00004 = 0",
+    prettyLabel: "setA_Occurrence_00004 = 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: true,
+    descCount: 2
+  },
+  {
+    id: 21,
+    parentId: 17,
+    label: "setA_Occurrence_00004 != 0",
+    prettyLabel: "setA_Occurrence_00004 != 0",
+    childCount: 2,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 4
+  },
+  {
+    id: 19,
+    parentId: 18,
+    label: "setA_Occurrence_00005 != 0",
+    prettyLabel: "setA_Occurrence_00005 != 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 1
+  },
+  {
+    id: 22,
+    parentId: 21,
+    label: "setA_Occurrence_00005 = 0",
+    prettyLabel: "setA_Occurrence_00005 = 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: true,
+    descCount: 1
+  },
+  {
+    id: 24,
+    parentId: 21,
+    label: "setA_Occurrence_00005 != 0",
+    prettyLabel: "setA_Occurrence_00005 != 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 1
+  },
+  {
+    id: 20,
+    parentId: 19,
+    label: "setA_Occurrence_00006 != 0",
+    prettyLabel: "setA_Occurrence_00006 != 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 0
+  },
+  {
+    id: 23,
+    parentId: 22,
+    label: "setA_Occurrence_00006 != 0",
+    prettyLabel: "setA_Occurrence_00006 != 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 0
+  },
+  {
+    id: 25,
+    parentId: 24,
+    label: "setA_Occurrence_00006 = 0",
+    prettyLabel: "setA_Occurrence_00006 = 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: true,
+    descCount: 0
+  }
+]
+
 export const descendantsOf18 = [
   {
     id: 19,
@@ -305,6 +388,129 @@ export const descendantsOf4 = [
     childCount: 0,
     isSolution: false,
     isLeftChild: false,
+    descCount: 0
+  }
+]
+
+export const descendantsOf3 = [
+  {
+    id: 4,
+    parentId: 3,
+    label: "setA_Occurrence_00003 = 0",
+    prettyLabel: "setA_Occurrence_00003 = 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: true,
+    descCount: 2
+  },
+  {
+    id: 7,
+    parentId: 3,
+    label: "setA_Occurrence_00003 != 0",
+    prettyLabel: "setA_Occurrence_00003 != 0",
+    childCount: 2,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 8
+  },
+  {
+    id: 5,
+    parentId: 4,
+    label: "setA_Occurrence_00004 != 0",
+    prettyLabel: "setA_Occurrence_00004 != 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 1
+  },
+  {
+    id: 8,
+    parentId: 7,
+    label: "setA_Occurrence_00004 = 0",
+    prettyLabel: "setA_Occurrence_00004 = 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: true,
+    descCount: 2
+  },
+  {
+    id: 11,
+    parentId: 7,
+    label: "setA_Occurrence_00004 != 0",
+    prettyLabel: "setA_Occurrence_00004 != 0",
+    childCount: 2,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 4
+  },
+  {
+    id: 6,
+    parentId: 5,
+    label: "setA_Occurrence_00005 != 0",
+    prettyLabel: "setA_Occurrence_00005 != 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 0
+  },
+  {
+    id: 9,
+    parentId: 8,
+    label: "setA_Occurrence_00005 != 0",
+    prettyLabel: "setA_Occurrence_00005 != 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 1
+  },
+  {
+    id: 12,
+    parentId: 11,
+    label: "setA_Occurrence_00005 = 0",
+    prettyLabel: "setA_Occurrence_00005 = 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: true,
+    descCount: 1
+  },
+  {
+    id: 14,
+    parentId: 11,
+    label: "setA_Occurrence_00005 != 0",
+    prettyLabel: "setA_Occurrence_00005 != 0",
+    childCount: 1,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 1
+  },
+  {
+    id: 10,
+    parentId: 9,
+    label: "setA_Occurrence_00006 != 0",
+    prettyLabel: "setA_Occurrence_00006 != 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 0
+  },
+  {
+    id: 13,
+    parentId: 12,
+    label: "setA_Occurrence_00006 != 0",
+    prettyLabel: "setA_Occurrence_00006 != 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: false,
+    descCount: 0
+  },
+  {
+    id: 15,
+    parentId: 14,
+    label: "setA_Occurrence_00006 = 0",
+    prettyLabel: "setA_Occurrence_00006 = 0",
+    childCount: 0,
+    isSolution: false,
+    isLeftChild: true,
     descCount: 0
   }
 ]

@@ -27,11 +27,14 @@ import {
   coreOf17 as coreOf17Normal,
   coreOf21 as coreOf21Normal,
   coreOf27 as coreOf27Normal,
-  descendantsOf4 as descendantsOf4Normal,
-  descendantsOf7 as descendantsOf7Normal,
-  descendantsOf18 as descendantsOf18Normal,
-  descendantsOf21 as descendantsOf21Normal,
+  descendantsOf3 as descendantsOf3Normal,
+  descendantsOf17 as descendantsOf17Normal,
   descendantsOf28 as descendantsOf28Normal,
+  // descendantsOf4 as descendantsOf4Normal,
+  // descendantsOf7 as descendantsOf7Normal,
+  // descendantsOf18 as descendantsOf18Normal,
+  // descendantsOf21 as descendantsOf21Normal,
+  // descendantsOf28 as descendantsOf28Normal,
   core as coreNormal8
 } from "./resources/normal-8"
 import {
@@ -47,7 +50,7 @@ import { core as coreNoOpt } from "./resources/noOpt-8"
 import { core as coreNoOptSymmBreak } from "./resources/noOptSymmBreak-8"
 
 import { bigToSmall } from "./resources/normalVSSacbounds-8"
-import { makeState } from "../src/modules/TreeHelper"
+import { makeState, insertNodesBoyo } from "../src/modules/TreeHelper"
 
 const smallToBig = flipDiffLocations(bigToSmall)
 
@@ -68,13 +71,6 @@ async function loadTreeBigOnLeftSmallOnRight() {
     .once(JSON.stringify(coreOf27Normal))
     .once(JSON.stringify(coreOf9Sacbounds))
 
-    .once(JSON.stringify(descendantsOf4Normal))
-    .once(JSON.stringify(descendantsOf7Normal))
-    .once(JSON.stringify(descendantsOf18Normal))
-    .once(JSON.stringify(descendantsOf21Normal))
-    .once(JSON.stringify(descendantsOf28Normal))
-    .once(JSON.stringify([]))
-
   let res = await loadAllDiffs(
     ["", "s"],
     [coreNormal8, coreSacbounds8],
@@ -84,60 +80,64 @@ async function loadTreeBigOnLeftSmallOnRight() {
 
   bigTree = res[0]
 
-  bigTree = (await goLeftBoyo(
-    4,
-    bigTree,
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  bigTree = insertNodesBoyo(descendantsOf3Normal, bigTree, WhichTree.Both)
+  bigTree = insertNodesBoyo(descendantsOf17Normal, bigTree, WhichTree.Both)
+  bigTree = insertNodesBoyo(descendantsOf28Normal, bigTree, WhichTree.Both)
 
-  bigTree = (await goLeftBoyo(
-    7,
-    bigTree,
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  // bigTree = (await goLeftBoyo(
+  //   4,
+  //   bigTree,
+  //   false,
+  //   false,
+  //   "",
+  //   10,
+  //   5000,
+  //   WhichTree.Right
+  // )).id2Node
 
-  bigTree = (await goLeftBoyo(
-    18,
-    bigTree,
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  // bigTree = (await goLeftBoyo(
+  //   7,
+  //   bigTree,
+  //   false,
+  //   false,
+  //   "",
+  //   10,
+  //   5000,
+  //   WhichTree.Right
+  // )).id2Node
 
-  bigTree = (await goLeftBoyo(
-    21,
-    bigTree,
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  // bigTree = (await goLeftBoyo(
+  //   18,
+  //   bigTree,
+  //   false,
+  //   false,
+  //   "",
+  //   10,
+  //   5000,
+  //   WhichTree.Right
+  // )).id2Node
 
-  bigTree = (await goLeftBoyo(
-    28,
-    bigTree,
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  // bigTree = (await goLeftBoyo(
+  //   21,
+  //   bigTree,
+  //   false,
+  //   false,
+  //   "",
+  //   10,
+  //   5000,
+  //   WhichTree.Right
+  // )).id2Node
+
+  // bigTree = (await goLeftBoyo(
+  //   28,
+  //   bigTree,
+  //   false,
+  //   false,
+  //   "",
+  //   10,
+  //   5000,
+  //   WhichTree.Right
+  // )).id2Node
 
   smallTree = res[1]
 
@@ -157,12 +157,12 @@ async function loadTreeSmallOnLeftBigOnRight() {
     .once(JSON.stringify(coreOf9Sacbounds))
     .once(JSON.stringify(coreOf27Normal))
 
-    .once(JSON.stringify(descendantsOf4Normal))
-    .once(JSON.stringify(descendantsOf7Normal))
-    .once(JSON.stringify(descendantsOf18Normal))
-    .once(JSON.stringify(descendantsOf21Normal))
-    .once(JSON.stringify(descendantsOf28Normal))
-    .once(JSON.stringify([]))
+  // .once(JSON.stringify(descendantsOf4Normal))
+  // .once(JSON.stringify(descendantsOf7Normal))
+  // .once(JSON.stringify(descendantsOf18Normal))
+  // .once(JSON.stringify(descendantsOf21Normal))
+  // .once(JSON.stringify(descendantsOf28Normal))
+  // .once(JSON.stringify([]))
 
   let res = await loadAllDiffs(
     ["", "s"],
@@ -171,62 +171,14 @@ async function loadTreeSmallOnLeftBigOnRight() {
     5000
   )
 
-  res[1] = (await goLeftBoyo(
-    4,
-    res[1],
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  let bigTree = res[1]
+  bigTree = insertNodesBoyo(descendantsOf3Normal, bigTree, WhichTree.Both)
+  bigTree = insertNodesBoyo(descendantsOf17Normal, bigTree, WhichTree.Both)
+  bigTree = insertNodesBoyo(descendantsOf28Normal, bigTree, WhichTree.Both)
 
-  res[1] = (await goLeftBoyo(
-    7,
-    res[1],
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
+  assignTreeIds(res[0], bigTree, smallToBig)
 
-  res[1] = (await goLeftBoyo(
-    18,
-    res[1],
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
-
-  res[1] = (await goLeftBoyo(
-    21,
-    res[1],
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
-
-  res[1] = (await goLeftBoyo(
-    28,
-    res[1],
-    false,
-    false,
-    "",
-    10,
-    5000,
-    WhichTree.Right
-  )).id2Node
-
-  return { smallTree: res[0], bigTree: res[1] }
+  return { smallTree: res[0], bigTree }
 }
 
 describe("suite to test MergedTreeHelper", () => {
@@ -250,29 +202,46 @@ describe("suite to test MergedTreeHelper", () => {
       it("should be false for going to 9", async () => {
         expect(shouldBeRightTree(smallTree, bigTree, 9, false)).toBeFalsy()
       })
+      it("should be true for going from 4 to 6", async () => {
+        for (let i = 4; i < 7; i++) {
+          expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
+        }
+      })
 
-      it("should be false for going from 4 to 15", async () => {
-        for (let i = 4; i < 16; i++) {
+      it("should be false for going to 7", async () => {
+        expect(shouldBeRightTree(smallTree, bigTree, 7, true)).toBeFalsy()
+      })
+
+      it("should be true for going from 8 to 15", async () => {
+        for (let i = 8; i < 16; i++) {
           expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
         }
       })
       it("should be false for going to 16", async () => {
         expect(shouldBeRightTree(smallTree, bigTree, 16, true)).toBeFalsy()
       })
-      it("should be false for going from 18 to 25", async () => {
-        for (let i = 18; i < 26; i++) {
+      it("should be true for going from 18 to 20", async () => {
+        for (let i = 18; i < 21; i++) {
+          expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
+        }
+      })
+      it("should be false for going to 21", async () => {
+        expect(shouldBeRightTree(smallTree, bigTree, 21, true)).toBeFalsy()
+      })
+      it("should be true for going from 22 to 25", async () => {
+        for (let i = 22; i < 26; i++) {
           expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
         }
       })
       it("should be false for going to 26", async () => {
         expect(shouldBeRightTree(smallTree, bigTree, 26, true)).toBeFalsy()
       })
-
-      it("should be false for going from 28 to 32", async () => {
+      it("should be true for going from 28 to 32", async () => {
         for (let i = 28; i < 33; i++) {
           expect(shouldBeRightTree(smallTree, bigTree, i, true)).toBeTruthy()
         }
       })
+
     })
     describe("Left: big | Right: small", () => {
       beforeEach(async () => {
@@ -305,8 +274,8 @@ describe("suite to test MergedTreeHelper", () => {
         smallTree = res.smallTree
         lMap = cloneDeep(smallTree)
         rMap = cloneDeep(bigTree)
-        assignTreeIds(lMap, rMap, smallToBig, [])
-        merged = mergeMaps(lMap, rMap, smallToBig, [])
+        assignTreeIds(lMap, rMap, smallToBig)
+        merged = mergeMaps(lMap, rMap, smallToBig)
       })
 
       it("redirects 4 -> 5 from the left tree", async () => {
@@ -332,8 +301,8 @@ describe("suite to test MergedTreeHelper", () => {
         smallTree = res.smallTree
         lMap = cloneDeep(bigTree)
         rMap = cloneDeep(smallTree)
-        assignTreeIds(lMap, rMap, bigToSmall, [])
-        merged = mergeMaps(lMap, rMap, bigToSmall, [])
+        assignTreeIds(lMap, rMap, bigToSmall)
+        merged = mergeMaps(lMap, rMap, bigToSmall)
       })
 
       it("redirects 4 -> 16", async () => {

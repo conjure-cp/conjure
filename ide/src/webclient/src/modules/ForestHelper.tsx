@@ -1,7 +1,7 @@
 import { makeState, insertNodesBoyo } from "./TreeHelper"
 import Node, { WhichTree } from "./Node"
 import { Core, MyMap } from "../components/vis/TreeContainer"
-import { fetchAncestors } from "./MovementHelper"
+import { fetchAncestors, fetchDescendants } from "./MovementHelper"
 import { isEqual, cloneDeep } from "lodash"
 import * as d3 from "d3"
 import { array } from "yup"
@@ -23,17 +23,25 @@ export const assignTreeIds = (
   diffPoints.forEach(diffPoint => {
     diffPoint.highlightLeft.forEach(leftId => {
       if (leftId in leftMap) {
-        getDescList(leftMap[leftId]).forEach(
-          x => (x.data.treeId = WhichTree.Left)
-        )
+
+        leftMap[leftId].treeId = WhichTree.Left
+
+        let descList = getDescList(leftMap[leftId]).map(x => x.data)
+        for (const des of descList) {
+          leftMap[des.id].treeId = WhichTree.Left
+        }
       }
     })
 
     diffPoint.highlightRight.forEach(rightId => {
       if (rightId in rightMap) {
-        getDescList(rightMap[rightId]).forEach(
-          x => (x.data.treeId = WhichTree.Right)
-        )
+
+        rightMap[rightId].treeId = WhichTree.Right
+
+        let descList = getDescList(rightMap[rightId]).map(x => x.data)
+        for (const des of descList) {
+          rightMap[des.id].treeId = WhichTree.Right
+        }
       }
     })
   })
@@ -78,6 +86,15 @@ export const loadDiff = async (
     let ancestors = await fetchAncestors(paths[i], diffPointId, nimServerPort)
 
     maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
+
+    // maps[i] = await fetchDescendants(
+    //   diffPointId,
+    //   maps[i],
+    //   paths[i],
+    //   100,
+    //   nimServerPort,
+    //   WhichTree.Both
+    // )
 
     // let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
 
@@ -139,8 +156,8 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
     }
   }
 
-  console.log(diffPoints)
-  console.log(leftMap)
-  console.log(rightMap)
+  // console.log(diffPoints)
+  // console.log(leftMap)
+  // console.log(rightMap)
   return leftMap
 }

@@ -159,6 +159,30 @@ export const goUp = (instance: TreeContainer) => {
   })
 }
 
+export const fetchDescendants = async (
+  selected: number,
+  map: MyMap,
+  path: string,
+  loadDepth: number,
+  nimServerPort: number,
+  treeId: WhichTree
+) => {
+  const payload = {
+    path: path,
+    nodeId: selected,
+    depth: loadDepth
+  }
+  map = await fetch(`http://localhost:${nimServerPort}/loadNodes`, {
+    method: "post",
+    headers: headers,
+    body: JSON.stringify(payload)
+  })
+    .then(data => data.json())
+    .then(nodes => TreeHelper.insertNodesBoyo(nodes, map, treeId))
+
+  return map 
+}
+
 export const goLeftBoyo = async (
   selected: number,
   map: MyMap,
@@ -297,7 +321,7 @@ export const fetchAncestors = async (
 
   const json = await res.json()
 
-  console.log(JSON.stringify(json))
+  // console.log(JSON.stringify(json))
   return json
 }
 
