@@ -841,9 +841,7 @@ parseQuantifiedExpr = do
 parseQuantifiedName :: Parser Text
 parseQuantifiedName = do
     let
-        isIdentifier (LIdentifier "forAll") = True
-        isIdentifier (LIdentifier "exists") = True
-        isIdentifier (LIdentifier "sum") = True
+        isIdentifier (LIdentifier q) = q `elem` ["forAll", "exists", "sum", "product"]
         isIdentifier _ = False
     LIdentifier n <- satisfyT isIdentifier
     return n
