@@ -225,7 +225,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     // recurse(this.props.rootNode)
 
 
-    console.log(this.props.rootNode)
+    // console.log(this.props.rootNode)
 
     const hierarchy = d3.hierarchy<Node>(this.props.rootNode)
 

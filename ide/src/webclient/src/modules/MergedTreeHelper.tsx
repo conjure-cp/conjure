@@ -1,5 +1,11 @@
 import { MyMap } from "../components/vis/MergedTreeContainer"
-import { getAncList, mergeMaps, getDescList, loadDiff } from "./ForestHelper"
+import {
+  getAncList,
+  mergeMaps,
+  getDescList,
+  loadDiff,
+  assignTreeIds
+} from "./ForestHelper"
 import { WhichTree } from "./Node"
 import { goLeftBoyo, goRightBoyo } from "./MovementHelper"
 import { DiffPoint } from "../components/Forest"
@@ -106,7 +112,7 @@ export const goDownMerged = async (
   diffPoints: DiffPoint[],
   leftPath: string,
   rightPath: string,
-  nimServerPort: number,
+  nimServerPort: number
 ) => {
   let kids = getDiffPointKids(
     leftMap,
@@ -115,6 +121,10 @@ export const goDownMerged = async (
     currentTreeId,
     diffPoints
   )
+
+  console.log(kids)
+
+  assignTreeIds(leftMap, rightMap, diffPoints)
 
   if (kids) {
     if (kids.length < 1) {
@@ -151,7 +161,7 @@ export const goDownMerged = async (
     leftMap,
     rightMap,
     diffPoints,
-    nimServerPort,
+    nimServerPort
   )
 }
 
@@ -201,9 +211,9 @@ export const goLeftAtDiffingPoint = async (
 
   let index = leftDiffIds.indexOf(currentSelected)
 
-  let maps = [leftMap, rightMap]
+  let oldMerged = mergeMaps(leftMap, rightMap, diffPoints)
 
-  maps = await loadDiff(
+  let maps = await loadDiff(
     [leftPath, rightPath],
     [leftMap, rightMap],
     diffPoints[index],
@@ -213,6 +223,10 @@ export const goLeftAtDiffingPoint = async (
   let mergedMap = mergeMaps(maps[0], maps[1], diffPoints)
   let currentNode = mergedMap[currentSelected]
   let nextNode = currentNode.children![0]
+
+  if (oldMerged[currentSelected].children!.length === 0) {
+    nextNode = currentNode
+  }
 
   return {
     selected: nextNode.id,
@@ -307,7 +321,7 @@ export const goLeftMerged = async (
   leftMap: MyMap,
   rightMap: MyMap,
   diffPoints: DiffPoint[],
-  nimServerPort: number,
+  nimServerPort: number
 ): Promise<{
   selected: number
   selectedTreeId: number
@@ -327,7 +341,7 @@ export const goLeftMerged = async (
         diffPoints,
         leftPath,
         rightPath,
-        nimServerPort,
+        nimServerPort
       )),
       leftMap,
       rightMap

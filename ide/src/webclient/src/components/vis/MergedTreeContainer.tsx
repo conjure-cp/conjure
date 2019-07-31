@@ -124,7 +124,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.state.rightMap!,
             this.props.diffPoints,
             this.props.nimServerPort,
-            false
           )
         )
       },
@@ -141,6 +140,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       },
 
       goDown: async () => {
+        console.log("calling go down")
         this.setState(
           await goDownMerged(
             this.state.leftMap,
@@ -151,7 +151,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.props.leftPath,
             this.props.rightPath,
             this.props.nimServerPort,
-            false
           )
         )
       },
