@@ -25,7 +25,8 @@ import {
   goLeftMerged,
   goUpMerged,
   goDownMerged,
-  goRightMerged
+  goRightMerged,
+  collapseMerged
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 import { makeState } from "../../modules/TreeHelper"
@@ -171,6 +172,17 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       goToRoot: () => {
         console.log("GOT TO ROOT")
         this.setState({ selected: 0, selectedTreeId: WhichTree.Both })
+      },
+      collapse: () => {
+        this.setState(
+          collapseMerged(
+            this.state.leftMap,
+            this.state.rightMap,
+            this.state.selected,
+            this.state.selectedTreeId,
+            this.props.diffPoints
+          )
+        )
       }
     }
   }

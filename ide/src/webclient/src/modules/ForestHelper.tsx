@@ -29,7 +29,6 @@ export const collapseUnwantedDiffs = (
       leftMap[diffPoint.leftTreeId].children &&
       leftMap[diffPoint.leftTreeId].children!.length + rightChildCount < 2
     ) {
-
       leftMap[diffPoint.leftTreeId].children!.forEach(x => delete leftMap[x.id])
       leftMap[diffPoint.leftTreeId].children = undefined
       leftMap[diffPoint.leftTreeId]._children = undefined
@@ -164,7 +163,11 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
   for (const diffPoint of diffPoints) {
     if (leftMap[diffPoint.leftTreeId]) {
       diffPoint.highlightRight.forEach(nodeId => {
-        if (rightMap[nodeId]) {
+        if (
+          rightMap[diffPoint.rightTreeId] &&
+          rightMap[diffPoint.rightTreeId].children &&
+          rightMap[nodeId]
+        ) {
           if (!leftMap[diffPoint.leftTreeId].children) {
             leftMap[diffPoint.leftTreeId].children = []
           }

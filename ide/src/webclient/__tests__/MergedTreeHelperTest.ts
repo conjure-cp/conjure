@@ -17,7 +17,8 @@ import {
   goLeftMerged,
   goUpMerged,
   goDownMerged,
-  goRightMerged
+  goRightMerged,
+  collapseMerged
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 
@@ -335,7 +336,7 @@ describe("suite to test MergedTreeHelper", () => {
         smallToBig,
         "",
         "",
-        5000,
+        5000
       )
       expect(res.selected).toEqual(10)
       expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -360,7 +361,7 @@ describe("suite to test MergedTreeHelper", () => {
           bigToSmall,
           "",
           "",
-          5000,
+          5000
         )
         expect(res.selected).toEqual(4)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -373,7 +374,7 @@ describe("suite to test MergedTreeHelper", () => {
           bigToSmall,
           "",
           "",
-          5000,
+          5000
         )
         expect(res.selected).toEqual(18)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -387,7 +388,7 @@ describe("suite to test MergedTreeHelper", () => {
           bigToSmall,
           "",
           "",
-          5000,
+          5000
         )
         expect(res.selected).toEqual(28)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -412,7 +413,7 @@ describe("suite to test MergedTreeHelper", () => {
           smallTree,
           bigTree,
           smallToBig,
-          5000,
+          5000
         )
         expect(res.selected).toEqual(1)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -457,7 +458,7 @@ describe("suite to test MergedTreeHelper", () => {
           smallTree,
           bigTree,
           smallToBig,
-          5000,
+          5000
         )
         expect(res.selected).toEqual(4)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -472,7 +473,7 @@ describe("suite to test MergedTreeHelper", () => {
           smallTree,
           bigTree,
           smallToBig,
-          5000,
+          5000
         )
         expect(res.selected).toEqual(8)
         expect(res.selectedTreeId).toEqual(WhichTree.Right)
@@ -818,7 +819,6 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selectedTreeId).toEqual(WhichTree.Right)
         })
 
-
         it("4 -> 8 Right ", async () => {
           let res = await goDownMerged(
             smallTree,
@@ -1065,6 +1065,125 @@ describe("suite to test MergedTreeHelper", () => {
             expect(res.selected).toEqual(10)
             expect(res.selectedTreeId).toEqual(WhichTree.Both)
           })
+        })
+
+        describe("test collapse", () => {
+          let lMap
+          let rMap
+
+          describe("Left: small | Right: big", () => {
+            beforeEach(async () => {
+              let res = await loadTreeSmallOnLeftBigOnRight()
+              bigTree = res.bigTree
+              smallTree = res.smallTree
+              lMap = cloneDeep(smallTree)
+              rMap = cloneDeep(bigTree)
+              assignTreeIds(lMap, rMap, smallToBig)
+            })
+          })
+
+          it("Collapsing 2", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              2,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[2].children).toBeUndefined()
+          })
+
+          it("Collapsing 3 ", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              3,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[3].children).toBeUndefined()
+          })
+
+          it("Collapsing 4 ", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[4].children).toBeUndefined()
+          })
+
+          it("Collapsing 8 Right", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              8,
+              WhichTree.Right,
+              smallToBig
+            )
+            expect(res.rightMap[8].children).toBeUndefined()
+          })
+        })
+        describe("Left: Big | Right: small", () => {
+          beforeEach(async () => {
+            let res = await loadTreeBigOnLeftSmallOnRight()
+            bigTree = res.bigTree
+            smallTree = res.smallTree
+            assignTreeIds(bigTree, smallTree, smallToBig)
+          })
+        })
+
+        it("Collapsing 2", async () => {
+          let res = collapseMerged(
+            smallTree,
+            bigTree,
+            2,
+            WhichTree.Both,
+            smallToBig
+          )
+          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+          expect(merged[2].children).toBeUndefined()
+        })
+
+        it("Collapsing 3 ", async () => {
+          let res = collapseMerged(
+            smallTree,
+            bigTree,
+            3,
+            WhichTree.Both,
+            smallToBig
+          )
+          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+          expect(merged[3].children).toBeUndefined()
+        })
+
+        it("Collapsing 4 ", async () => {
+          let res = collapseMerged(
+            smallTree,
+            bigTree,
+            4,
+            WhichTree.Both,
+            smallToBig
+          )
+          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+          expect(merged[4].children).toBeUndefined()
+        })
+
+        it("Collapsing 4 Left ", async () => {
+          let res = collapseMerged(
+            smallTree,
+            bigTree,
+            4,
+            WhichTree.Left,
+            smallToBig
+          )
+          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+          expect(merged[4].children).toBeUndefined()
         })
       })
     })

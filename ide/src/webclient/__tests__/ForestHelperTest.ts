@@ -83,6 +83,7 @@ describe("testing ForestHelper", () => {
       expect(merged[62].children!).toBeUndefined()
     })
   })
+
   describe("testing mergeMaps", () => {
     it("It should not modify the left or right rees", async () => {
       let copyLeft = cloneDeep(bigTree)
@@ -91,6 +92,19 @@ describe("testing ForestHelper", () => {
 
       expect(copyLeft).toEqual(bigTree)
       expect(copyRight).toEqual(smallTree)
+    })
+
+    it("It should not createChildrenRandomly", async () => {
+
+      let copyLeft = cloneDeep(bigTree)
+      let copyRight = cloneDeep(smallTree)
+
+      copyLeft[3].children = undefined
+      copyRight[3].children = undefined
+
+      let merged = mergeMaps(copyLeft, copyRight, sacboundsToNormal)
+
+      expect(merged[3].children).toBeUndefined()
     })
 
     it("It should merge normal with findAllsols", async () => {
