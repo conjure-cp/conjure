@@ -228,7 +228,8 @@ proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
         return %(parseJson(readAll(open(flipped))).getElems()
             .map(x => newDiffPoint($x["rightTreeId"], $x["leftTreeId"],
                                     x["highlightRight"].getElems().map(y => $y),
-                                    x["highlightLeft"].getElems().map(y => $y))))
+                                    x["highlightLeft"].getElems().map(y => $y),
+                                    x["descCount"].getInt())))
 
     let res = diff(leftPath, rightPath)
     writeFile(diffCacheFile, $(%res))

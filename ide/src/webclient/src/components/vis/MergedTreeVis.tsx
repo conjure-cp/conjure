@@ -60,7 +60,6 @@ export default class MergedTreeVis extends React.Component<Props, State> {
         )
       })
       .extent([[0, 0], [props.width, props.height]])
-    console.log(props.rootNode)
   }
 
   focusNode(node: HierarchyPointNode<Node>) {
@@ -224,6 +223,9 @@ export default class MergedTreeVis extends React.Component<Props, State> {
     // }
 
     // recurse(this.props.rootNode)
+
+
+    console.log(this.props.rootNode)
 
     const hierarchy = d3.hierarchy<Node>(this.props.rootNode)
 

@@ -49,14 +49,14 @@ suite "diffHandler":
 
     check(fileExists(fileName))
 
-    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "descCount": 0,
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "descCount": 12,
         "highlightLeft": [], "highlightRight": [4]}, {"leftTreeId": 4,
-        "rightTreeId": 7, "descCount": 0, "highlightLeft": [],
+        "rightTreeId": 7, "descCount": 8, "highlightLeft": [],
         "highlightRight": [8, 11]}, {"leftTreeId": 6, "rightTreeId": 17,
-        "descCount": 0, "highlightLeft": [], "highlightRight": [18]}, {
-        "leftTreeId": 7, "rightTreeId": 21, "descCount": 0, "highlightLeft": [],
+        "descCount": 8, "highlightLeft": [], "highlightRight": [18]}, {
+        "leftTreeId": 7, "rightTreeId": 21, "descCount": 4, "highlightLeft": [],
         "highlightRight": [22, 24]}, {"leftTreeId": 9, "rightTreeId": 27,
-        "descCount": 0, "highlightLeft": [10], "highlightRight": [28, 30]}]
+        "descCount": 6, "highlightLeft": [10], "highlightRight": [28, 30]}]
 
     check(answer == diffHandler(leftPath, rightPath, rightHash, leftHash))
 
