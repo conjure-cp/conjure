@@ -130,23 +130,6 @@ export const loadDiff = async (
     let ancestors = await fetchAncestors(paths[i], diffPointId, nimServerPort)
 
     maps[i] = insertNodesBoyo(ancestors, maps[i], WhichTree.Both)
-
-    // maps[i] = await fetchDescendants(
-    //   diffPointId,
-    //   maps[i],
-    //   paths[i],
-    //   100,
-    //   nimServerPort,
-    //   WhichTree.Both
-    // )
-
-    // let treeId = i === 0 ? WhichTree.Left : WhichTree.Right
-
-    // getDescList(maps[i][diffPointId]).forEach(x => {
-    //   if (x.data.id !== diffPointId) {
-    //     x.data.treeId = treeId
-    //   }
-    // })
   }
 
   return maps
@@ -178,7 +161,7 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
     return { 0: newRoot }
   }
 
-  for (const diffPoint of cloneDeep(diffPoints).reverse()) {
+  for (const diffPoint of diffPoints) {
     if (leftMap[diffPoint.leftTreeId]) {
       diffPoint.highlightRight.forEach(nodeId => {
         if (rightMap[nodeId]) {
@@ -192,17 +175,6 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
 
       leftMap[diffPoint.leftTreeId].descCount = diffPoint.descCount
       leftMap[diffPoint.leftTreeId].childCount = 2
-
-      // For the n = 10 case
-
-      // if (
-      //   leftMap[diffPoint.leftTreeId].children &&
-      //   leftMap[diffPoint.leftTreeId].childCount >
-      //     leftMap[diffPoint.leftTreeId].children!.length
-      // ) {
-      //   leftMap[diffPoint.leftTreeId].children = undefined
-      //   leftMap[diffPoint.leftTreeId]._children = undefined
-      // }
     }
   }
 

@@ -135,8 +135,6 @@ export class TreeContainer extends React.Component<Props, State> {
     this.setState((prevState: State) => {
       const toCollapse = prevState.selected
 
-      console.log("Collapsing ", toCollapse)
-
       let newMap = cloneDeep(prevState.id2Node)
       Node.collapseNode(newMap[toCollapse])
       // Node.hideChildren(newMap[toCollapse])

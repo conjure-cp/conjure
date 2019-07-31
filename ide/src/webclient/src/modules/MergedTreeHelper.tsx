@@ -7,10 +7,37 @@ import {
   assignTreeIds
 } from "./ForestHelper"
 import { WhichTree } from "./Node"
+import Node from "./Node"
 import { goLeftBoyo, goRightBoyo } from "./MovementHelper"
 import { DiffPoint } from "../components/Forest"
-import { min, max, maxBy } from "lodash"
-import { findDOMNode } from "react-dom"
+import { min, max, maxBy, cloneDeep } from "lodash"
+
+export const collapseMerged = (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  currentTreeId: number,
+  diffPoints: DiffPoint[]
+) => {
+  let leftCopy = cloneDeep(leftMap)
+  let rightCopy = cloneDeep(rightMap)
+
+  if (currentTreeId === WhichTree.Both) {
+    let diffPoint = diffPoints.find(x => x.leftTreeId === currentSelected)!
+    Node.collapseNode(leftCopy[currentSelected])
+    Node.collapseNode(rightCopy[diffPoint.rightTreeId])
+  }
+
+  if (currentTreeId === WhichTree.Left) {
+    Node.collapseNode(leftCopy[currentSelected])
+  }
+
+  if (currentTreeId === WhichTree.Right) {
+    Node.collapseNode(rightCopy[currentSelected])
+  }
+
+  return {leftCopy, rightCopy}
+}
 
 const getDiffPointKids = (
   leftMap: MyMap,
@@ -122,8 +149,6 @@ export const goDownMerged = async (
     diffPoints
   )
 
-  // console.log(kids)
-
   assignTreeIds(leftMap, rightMap, diffPoints)
 
   if (kids) {
@@ -224,7 +249,10 @@ export const goLeftAtDiffingPoint = async (
   let currentNode = mergedMap[currentSelected]
   let nextNode = currentNode.children![0]
 
-  if (!oldMerged[currentSelected].children || oldMerged[currentSelected].children!.length === 0) {
+  if (
+    !oldMerged[currentSelected].children ||
+    oldMerged[currentSelected].children!.length === 0
+  ) {
     nextNode = currentNode
   }
 
@@ -261,20 +289,6 @@ export const reviseGoLeft = (
   let diffPointIndex = ancestorIds.indexOf(diffPoint.leftTreeId)
 
   let currentNode = mergedMap[ancestorIds[diffPointIndex - 1]]
-
-  // let currentIndex = 0
-  // let currentNode = mergedMap[ancestorIds[currentIndex]]
-
-  // while (
-  //   currentNode.children!.length < 2 ||
-  //   ancestorIds.includes(currentNode.children![1].id)
-  // ) {
-  //   currentIndex++
-  //   currentNode = mergedMap[ancestorIds[currentIndex]]
-  //   if (!currentNode) {
-  //     return { selected: currentSelected, treeId: treeId }
-  //   }
-  // }
 
   let id = currentNode.children![1].id
   return {
