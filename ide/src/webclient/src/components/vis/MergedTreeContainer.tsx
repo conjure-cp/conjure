@@ -28,7 +28,7 @@ import {
 } from "../../modules/MergedTreeHelper"
 import { tree } from "d3"
 import { makeState } from "../../modules/TreeHelper"
-import { DiffPoint } from "../Forest";
+import { DiffPoint } from "../Forest"
 
 export type MyMap = Record<number, Node>
 
@@ -231,7 +231,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
               mergeMaps(
                 this.state.leftMap,
                 this.state.rightMap,
-                this.props.diffPoints,
+                this.props.diffPoints
               )[0]
             }
             selected={this.state.selected}

@@ -23,13 +23,16 @@ suite "diffHandler":
 
     let json = parseJson(readAll(open(fileName)))
 
-    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "highlightLeft": [4],
-        "highlightRight": []}, {"leftTreeId": 7, "rightTreeId": 4,
-        "highlightLeft": [8, 11], "highlightRight": []}, {"leftTreeId": 17,
-        "rightTreeId": 6, "highlightLeft": [18], "highlightRight": []}, {
-        "leftTreeId": 21, "rightTreeId": 7, "highlightLeft": [22, 24],
-        "highlightRight": []}, {"leftTreeId": 27, "rightTreeId": 9,
-        "highlightLeft": [28, 30], "highlightRight": [10]}]
+    echo json
+
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "descCount": 12,
+        "highlightLeft": [4], "highlightRight": []}, {"leftTreeId": 7,
+        "rightTreeId": 4, "descCount": 8, "highlightLeft": [8, 11],
+        "highlightRight": []}, {"leftTreeId": 17, "rightTreeId": 6,
+        "descCount": 8, "highlightLeft": [18], "highlightRight": []}, {
+        "leftTreeId": 21, "rightTreeId": 7, "descCount": 4, "highlightLeft": [
+        22, 24], "highlightRight": []}, {"leftTreeId": 27, "rightTreeId": 9,
+        "descCount": 6, "highlightLeft": [28, 30], "highlightRight": [10]}]
     check (json == answer)
 
     removeFile(fileName)
@@ -46,13 +49,14 @@ suite "diffHandler":
 
     check(fileExists(fileName))
 
-    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "highlightLeft": [],
-      "highlightRight": [4]}, {"leftTreeId": 4, "rightTreeId": 7,
-      "highlightLeft": [], "highlightRight": [8, 11]}, {"leftTreeId": 6,
-      "rightTreeId": 17, "highlightLeft": [], "highlightRight": [18]}, {
-      "leftTreeId": 7, "rightTreeId": 21, "highlightLeft": [],
-      "highlightRight": [22, 24]}, {"leftTreeId": 9, "rightTreeId": 27,
-      "highlightLeft": [10], "highlightRight": [28, 30]}]
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "descCount": 0,
+        "highlightLeft": [], "highlightRight": [4]}, {"leftTreeId": 4,
+        "rightTreeId": 7, "descCount": 0, "highlightLeft": [],
+        "highlightRight": [8, 11]}, {"leftTreeId": 6, "rightTreeId": 17,
+        "descCount": 0, "highlightLeft": [], "highlightRight": [18]}, {
+        "leftTreeId": 7, "rightTreeId": 21, "descCount": 0, "highlightLeft": [],
+        "highlightRight": [22, 24]}, {"leftTreeId": 9, "rightTreeId": 27,
+        "descCount": 0, "highlightLeft": [10], "highlightRight": [28, 30]}]
 
     check(answer == diffHandler(leftPath, rightPath, rightHash, leftHash))
 
@@ -117,7 +121,7 @@ suite "diff":
     discard init(leftPath)
     discard init(rightPath)
 
-    let d = diff(leftPath, rightPath, true)
+    let d = diff(leftPath, rightPath, false)
     echo d
 
     let diffNodeIds = d.map(x => @[x.leftTreeId, x.rightTreeId])
@@ -134,6 +138,11 @@ suite "diff":
 
     check highlightRight == @[@[], @[], @[], @[], @[10]]
 
+    check d[0].descCount == 12
+    check d[1].descCount == 8
+    check d[2].descCount == 8
+    check d[3].descCount == 4
+    check d[4].descCount == 6
 
   test "10":
     let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
@@ -437,7 +446,7 @@ suite "diff":
 
     let d = diff(leftPath, rightPath)
     let flipped = d.map(x => newDiffPoint($x.rightTreeId, $x.leftTreeId,
-        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y)))
+        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y), x.descCount))
 
     let rTL = diff(rightPath, leftPath)
 

@@ -60,6 +60,7 @@ export default class MergedTreeVis extends React.Component<Props, State> {
         )
       })
       .extent([[0, 0], [props.width, props.height]])
+    console.log(props.rootNode)
   }
 
   focusNode(node: HierarchyPointNode<Node>) {

@@ -152,12 +152,35 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
 
       leftMap[diffPoint.leftTreeId].descCount =
         sumBy(leftMap[diffPoint.leftTreeId].children, x => x.descCount) +
-        diffPoint.highlightRight.length + leftMap[diffPoint.leftTreeId].childCount
+        diffPoint.highlightRight.length +
+        leftMap[diffPoint.leftTreeId].childCount
+
+      console.log("-----")
+      console.log(diffPoint.leftTreeId)
+      console.log(leftMap[diffPoint.leftTreeId].descCount)
+      // console.log(
+      //   sumBy(leftMap[diffPoint.leftTreeId].children, x => x.descCount) +
+      //     sumBy(diffPoint.highlightRight.map(x => rightMap[x]), x => x.descCount) +
+      //     leftMap[diffPoint.leftTreeId].childCount
+      // )
+      console.log(diffPoint)
     }
   }
 
-  // console.log(diffPoints)
-  // console.log(leftMap)
-  // console.log(rightMap)
+  // function recurse(node: Node) {
+  //   if (node.children) {
+  //     node.children.forEach(x => recurse(x))
+  //     node.descCount = sumBy(node.children, x => x.descCount) + node.children.length
+  //     console.log("-----")
+  //     console.log(node.id)
+  //     console.log(node.descCount)
+  //   }
+  //   // node.descCount = sumBy(node.children, x => x.descCount)
+  // }
+
+  // recurse(leftMap[0])
+
+  console.log(getDescList(leftMap[0]))
+
   return leftMap
 }

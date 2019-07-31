@@ -42,13 +42,21 @@ proc checkDomainsAreEqual*(paths: array[2, string], nodeIds: array[2,
 
 #     augmentedIds*: seq[seq[int]]
 
-type DiffPoint* = object of RootObj
+type DiffPoint* = ref object of RootObj
     leftTreeId*: int
     rightTreeId*: int
+    descCount*: int
     highlightLeft*: seq[int]
     highlightRight*: seq[int]
 
-proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[ string]): DiffPoint =
+proc `==`*(a, b: DiffPoint): bool =
+    return a.leftTreeId == b.leftTreeId and 
+    a.rightTreeId == b.rightTreeId and
+    a.descCount == b.descCount and
+    a.highlightLeft == b.highlightLeft and
+    a.highlightRight == b.highlightRight 
+
+proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[ string], dC: int = 0): DiffPoint =
 
     var lNum, rNum: int
     discard l.parseInt(lNum)
@@ -68,10 +76,10 @@ proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[ string]): D
         return num
         )
 
-    return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL, highlightRight: hR)
+    return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL, highlightRight: hR, descCount: dC)
 
 proc `$`*(d: DiffPoint): string =
-    result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight}>"
+    result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} {d.descCount}>"
 
 
 proc removeDuplicates*(leftPath: string, rightPath: string,
@@ -93,7 +101,6 @@ proc removeDuplicates*(leftPath: string, rightPath: string,
 
             if checkDomainsAreEqual([leftPath, rightPath], [k, kid]):
                 rightKidsToSkip.add(kid)
-
 
     return [
         kids[0].filter(x => not leftKidsToSkip.contains(x)),
@@ -183,6 +190,18 @@ proc findDiffLocationsBoyo*(leftPath,
     recursive(["0", "0"], ["-1", "-1"])
 
     result = res
+
+    for diffPoint in result:
+        var temp1: int
+        var temp2: int
+        var path = leftDB.getValue(sql"select path from Node where nodeId = ?", diffPoint.leftTreeId)
+        discard leftDB.getValue(sql("select count(nodeId) from Node where path like '" & path & "/%'")).parseInt(temp1)
+        path = rightDB.getValue(sql"select path from Node where nodeId = ?", diffPoint.rightTreeId)
+        discard rightDB.getValue(sql("select count(nodeId) from Node where path like '" & path & "/%'")).parseInt(temp2)
+        diffPoint.descCount = temp1 + temp2 
+
+        if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() < 2:
+            diffPoint.descCount.dec()
 
     if debug:
         for d in result:

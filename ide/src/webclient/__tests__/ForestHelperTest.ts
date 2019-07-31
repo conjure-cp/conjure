@@ -37,7 +37,7 @@ import { flipDiffLocations } from "../src/modules/Helper"
 import { makeState } from "../src/modules/TreeHelper"
 
 describe("testing ForestHelper", () => {
-  const smallToBig = flipDiffLocations(normalToSacbounds)
+  const sacboundsToNormal = flipDiffLocations(normalToSacbounds)
   let bigTree: any
   let smallTree: any
 
@@ -148,6 +148,7 @@ describe("testing ForestHelper", () => {
         x => x.id === normalToSacbounds[4].leftTreeId
       )!
 
+      expect(res[3].descCount).toEqual(12)
       expect(diff1).toBeTruthy()
 
       expect(diff1.children!.map(x => x.id)).toEqual([4, 7])
@@ -185,7 +186,7 @@ describe("testing ForestHelper", () => {
       let lMap = cloneDeep(smallTree)
       let rMap = cloneDeep(bigTree)
 
-      let res = mergeMaps(lMap, rMap, smallToBig)
+      let res = mergeMaps(lMap, rMap, sacboundsToNormal)
       let diff1 = getDescList(res[0]).find(
         x => x.id === normalToSacbounds[0].rightTreeId
       )!

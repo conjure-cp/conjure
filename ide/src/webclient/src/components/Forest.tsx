@@ -58,7 +58,7 @@ class Forest extends React.Component<Props, State> {
       diffPoints: [],
       currentDiffIndex: -1,
       diffReady: false,
-      splitScreen: true,
+      splitScreen: false,
       locked: true
     }
   }
