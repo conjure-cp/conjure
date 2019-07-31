@@ -156,10 +156,10 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
       //   diffPoint.highlightRight.length +
       //   leftMap[diffPoint.leftTreeId].childCount
 
-      console.log("-----")
-      console.log(diffPoint.leftTreeId)
-      console.log(diffPoint.descCount)
-      console.log(leftMap[diffPoint.leftTreeId].descCount)
+      // console.log("-----")
+      // console.log(diffPoint.leftTreeId)
+      // console.log(diffPoint.descCount)
+      // console.log(leftMap[diffPoint.leftTreeId].descCount)
       // console.log(
       //   sumBy(leftMap[diffPoint.leftTreeId].children, x => x.descCount) +
       //     sumBy(diffPoint.highlightRight.map(x => rightMap[x]), x => x.descCount) +

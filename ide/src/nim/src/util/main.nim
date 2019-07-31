@@ -50,11 +50,14 @@ type DiffPoint* = ref object of RootObj
     highlightRight*: seq[int]
 
 proc `==`*(a, b: DiffPoint): bool =
-    return a.leftTreeId == b.leftTreeId and 
-    a.rightTreeId == b.rightTreeId and
-    a.descCount == b.descCount and
-    a.highlightLeft == b.highlightLeft and
-    a.highlightRight == b.highlightRight 
+    return %a == %b
+
+proc `$`*(d: DiffPoint): string =
+    result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} {d.descCount}>"
+
+proc `$`*(list: seq[DiffPoint]): string =
+    for d in list:
+        result &= fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} : {d.descCount}>{'\n'}"
 
 proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[ string], dC: int = 0): DiffPoint =
 
@@ -78,8 +81,6 @@ proc newDiffPoint*(l, r: string, highlightLeft, highlightRight: seq[ string], dC
 
     return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL, highlightRight: hR, descCount: dC)
 
-proc `$`*(d: DiffPoint): string =
-    result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} {d.descCount}>"
 
 
 proc removeDuplicates*(leftPath: string, rightPath: string,

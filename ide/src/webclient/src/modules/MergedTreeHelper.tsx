@@ -107,7 +107,6 @@ export const goDownMerged = async (
   leftPath: string,
   rightPath: string,
   nimServerPort: number,
-  testing: boolean,
 ) => {
   let kids = getDiffPointKids(
     leftMap,
@@ -153,7 +152,6 @@ export const goDownMerged = async (
     rightMap,
     diffPoints,
     nimServerPort,
-    testing
   )
 }
 
@@ -197,8 +195,7 @@ export const goLeftAtDiffingPoint = async (
   diffPoints: DiffPoint[],
   leftPath: string,
   rightPath: string,
-  nimServerPort: number,
-  testing: boolean,
+  nimServerPort: number
 ) => {
   const leftDiffIds = diffPoints.map(x => x.leftTreeId)
 
@@ -206,16 +203,12 @@ export const goLeftAtDiffingPoint = async (
 
   let maps = [leftMap, rightMap]
 
-  if (
-    !testing
-  ) {
-    maps = await loadDiff(
-      [leftPath, rightPath],
-      [leftMap, rightMap],
-      diffPoints[index],
-      nimServerPort
-    )
-  }
+  maps = await loadDiff(
+    [leftPath, rightPath],
+    [leftMap, rightMap],
+    diffPoints[index],
+    nimServerPort
+  )
 
   let mergedMap = mergeMaps(maps[0], maps[1], diffPoints)
   let currentNode = mergedMap[currentSelected]
@@ -315,7 +308,6 @@ export const goLeftMerged = async (
   rightMap: MyMap,
   diffPoints: DiffPoint[],
   nimServerPort: number,
-  testing: boolean
 ): Promise<{
   selected: number
   selectedTreeId: number
@@ -336,7 +328,6 @@ export const goLeftMerged = async (
         leftPath,
         rightPath,
         nimServerPort,
-        testing
       )),
       leftMap,
       rightMap

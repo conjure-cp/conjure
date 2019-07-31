@@ -73,6 +73,17 @@ async function loadTreeBigOnLeftSmallOnRight() {
     .once(JSON.stringify(coreOf27Normal))
     .once(JSON.stringify(coreOf9Sacbounds))
 
+    .once(JSON.stringify(coreOf3Normal))
+    .once(JSON.stringify(coreOf3Sacbounds))
+    .once(JSON.stringify(coreOf7Normal))
+    .once(JSON.stringify(coreOf4Sacbounds))
+    .once(JSON.stringify(coreOf17Normal))
+    .once(JSON.stringify(coreOf6Sacbounds))
+    .once(JSON.stringify(coreOf21Normal))
+    .once(JSON.stringify(coreOf7Sacbounds))
+    .once(JSON.stringify(coreOf27Normal))
+    .once(JSON.stringify(coreOf9Sacbounds))
+
   let res = await loadAllDiffs(
     ["", "s"],
     [coreNormal8, coreSacbounds8],
@@ -94,6 +105,17 @@ async function loadTreeBigOnLeftSmallOnRight() {
 async function loadTreeSmallOnLeftBigOnRight() {
   fetchMock.resetMocks()
   fetchMock
+    .once(JSON.stringify(coreOf3Sacbounds))
+    .once(JSON.stringify(coreOf3Normal))
+    .once(JSON.stringify(coreOf4Sacbounds))
+    .once(JSON.stringify(coreOf7Normal))
+    .once(JSON.stringify(coreOf6Sacbounds))
+    .once(JSON.stringify(coreOf17Normal))
+    .once(JSON.stringify(coreOf7Sacbounds))
+    .once(JSON.stringify(coreOf21Normal))
+    .once(JSON.stringify(coreOf9Sacbounds))
+    .once(JSON.stringify(coreOf27Normal))
+
     .once(JSON.stringify(coreOf3Sacbounds))
     .once(JSON.stringify(coreOf3Normal))
     .once(JSON.stringify(coreOf4Sacbounds))
@@ -285,8 +307,7 @@ describe("suite to test MergedTreeHelper", () => {
         smallToBig,
         "",
         "",
-        5000,
-        true
+        5000
       )
       expect(res.selected).toEqual(4)
       expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -301,8 +322,7 @@ describe("suite to test MergedTreeHelper", () => {
         smallToBig,
         "",
         "",
-        5000,
-        true
+        5000
       )
       expect(res.selected).toEqual(7)
       expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -316,7 +336,6 @@ describe("suite to test MergedTreeHelper", () => {
         "",
         "",
         5000,
-        true
       )
       expect(res.selected).toEqual(10)
       expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -342,7 +361,6 @@ describe("suite to test MergedTreeHelper", () => {
           "",
           "",
           5000,
-          true
         )
         expect(res.selected).toEqual(4)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -356,7 +374,6 @@ describe("suite to test MergedTreeHelper", () => {
           "",
           "",
           5000,
-          true
         )
         expect(res.selected).toEqual(18)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -371,7 +388,6 @@ describe("suite to test MergedTreeHelper", () => {
           "",
           "",
           5000,
-          true
         )
         expect(res.selected).toEqual(28)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -397,7 +413,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000,
-          true
         )
         expect(res.selected).toEqual(1)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -413,7 +428,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(2)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -429,7 +443,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(3)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -445,13 +458,12 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000,
-          true
         )
         expect(res.selected).toEqual(4)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
       })
 
-      it(" 4 -> 8 Left ", async () => {
+      it(" 4 -> 8 Right ", async () => {
         let res = await goLeftMerged(
           4,
           WhichTree.Both,
@@ -460,8 +472,7 @@ describe("suite to test MergedTreeHelper", () => {
           smallTree,
           bigTree,
           smallToBig,
-          5000
-          ,true
+          5000,
         )
         expect(res.selected).toEqual(8)
         expect(res.selectedTreeId).toEqual(WhichTree.Right)
@@ -477,7 +488,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(9)
         expect(res.selectedTreeId).toEqual(WhichTree.Right)
@@ -493,7 +503,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(22)
         expect(res.selectedTreeId).toEqual(WhichTree.Right)
@@ -509,7 +518,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(7)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -525,7 +533,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(9)
         expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -541,7 +548,6 @@ describe("suite to test MergedTreeHelper", () => {
           bigTree,
           smallToBig,
           5000
-          ,true
         )
         expect(res.selected).toEqual(10)
         expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -567,7 +573,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(1)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -583,7 +588,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(2)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -598,7 +602,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(3)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -614,7 +617,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(4)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -630,7 +632,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(7)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -646,7 +647,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(16)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -662,7 +662,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(26)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -677,7 +676,6 @@ describe("suite to test MergedTreeHelper", () => {
             smallTree,
             bigToSmall,
             5000
-            ,true
           )
           expect(res.selected).toEqual(30)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -767,27 +765,17 @@ describe("suite to test MergedTreeHelper", () => {
         let leftMap = makeState(coreNoOpt, 0).id2Node
         let rightMap = makeState(coreNoOptSymmBreak, 0).id2Node
 
-        let diffPoints = [
-          {
-            leftTreeId: 0,
-            rightTreeId: 0,
-            highlightLeft: [1],
-            highlightRight: [1]
-          }
-        ]
-
-        assignTreeIds(leftMap, rightMap, diffPoints)
+        assignTreeIds(leftMap, rightMap, differAt0)
 
         let res = await goDownMerged(
           leftMap,
           rightMap,
           0,
           WhichTree.Both,
-          diffPoints,
+          differAt0,
           "",
           "",
           5000
-          ,true
         )
 
         expect(res.selected).toBe(1)
@@ -810,7 +798,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(4)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -826,11 +813,27 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(5)
           expect(res.selectedTreeId).toEqual(WhichTree.Right)
         })
+
+
+        it("4 -> 8 Right ", async () => {
+          let res = await goDownMerged(
+            smallTree,
+            bigTree,
+            4,
+            WhichTree.Both,
+            smallToBig,
+            "",
+            "",
+            5000
+          )
+          expect(res.selected).toEqual(8)
+          expect(res.selectedTreeId).toEqual(WhichTree.Right)
+        })
+
         it("6 Right -> 7 Right ", async () => {
           let res = await goDownMerged(
             smallTree,
@@ -841,7 +844,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(5)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -857,7 +859,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(28)
           expect(res.selectedTreeId).toEqual(WhichTree.Right)
@@ -880,7 +881,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(4)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -895,7 +895,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(18)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)
@@ -910,7 +909,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(16)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
@@ -925,7 +923,6 @@ describe("suite to test MergedTreeHelper", () => {
             "",
             "",
             5000
-            ,true
           )
           expect(res.selected).toEqual(32)
           expect(res.selectedTreeId).toEqual(WhichTree.Left)

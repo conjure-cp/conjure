@@ -114,7 +114,7 @@ describe("testing ForestHelper", () => {
       const bothNodes = nodeList.find(x => x.treeId === WhichTree.Both)
 
       expect(res[0].treeId).toEqual(WhichTree.Both)
-      // expect(bothNodes).toBeUndefined()
+      expect(bothNodes).toBeUndefined()
     })
 
     it("Should merge the maps the ancestors of each tree into their maps big->small", async () => {

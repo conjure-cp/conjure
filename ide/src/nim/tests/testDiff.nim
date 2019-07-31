@@ -112,8 +112,8 @@ suite "diff":
   test "same":
     let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
     discard init(leftPath)
-    # let nodeIds = diff(leftPath, leftPath).diffLocations
-    # check(nodeIds == newSeq[seq[int]]())
+    let d = diff(leftPath, leftPath)
+    check(d.len() == 0)
 
   test "8":
     let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
