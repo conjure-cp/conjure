@@ -11,7 +11,9 @@ export const flipDiffLocations = (diffLocations: DiffPoint[]) => {
       leftTreeId: x.rightTreeId,
       rightTreeId: x.leftTreeId,
       highlightLeft: x.highlightRight,
-      highlightRight: x.highlightLeft
+      highlightRight: x.highlightLeft,
+      descCount: x.descCount
+      
     }
   })
 }
