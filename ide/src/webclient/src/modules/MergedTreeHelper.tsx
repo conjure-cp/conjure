@@ -122,7 +122,7 @@ export const goDownMerged = async (
     diffPoints
   )
 
-  console.log(kids)
+  // console.log(kids)
 
   assignTreeIds(leftMap, rightMap, diffPoints)
 
@@ -224,7 +224,7 @@ export const goLeftAtDiffingPoint = async (
   let currentNode = mergedMap[currentSelected]
   let nextNode = currentNode.children![0]
 
-  if (oldMerged[currentSelected].children!.length === 0) {
+  if (!oldMerged[currentSelected].children || oldMerged[currentSelected].children!.length === 0) {
     nextNode = currentNode
   }
 

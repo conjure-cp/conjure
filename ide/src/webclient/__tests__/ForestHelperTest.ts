@@ -3,7 +3,8 @@ import {
   loadAllDiffs,
   mergeMaps,
   getDescList,
-  assignTreeIds
+  assignTreeIds,
+  collapseUnwantedDiffs
 } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 import {
@@ -29,6 +30,7 @@ import { core as coreNormal10 } from "./resources/normal-10"
 import { core as coreSacbounds10 } from "./resources/sacbounds-10"
 
 import { diffPoints as completelyDifferent } from "./resources/completelyDifferent"
+import { diffPoints as normalVSSacbounds10 } from "./resources/normalVSSacbounds-10"
 
 import { cloneDeep } from "lodash"
 import { bigToSmall as normalToSacbounds } from "./resources/normalVSSacbounds-8"
@@ -66,6 +68,21 @@ describe("testing ForestHelper", () => {
     smallTree = res[1]
   })
 
+  describe("testing collapseUnwantedDiffs", () => {
+    it("It should merge sacbounds10 with normal10 properly", async () => {
+      let normalMap = makeState(coreNormal10, 0).id2Node
+      let sacboundsMap = makeState(coreSacbounds10, 0).id2Node
+
+      let sacboundsVSNormal10 = flipDiffLocations(normalVSSacbounds10)
+
+      collapseUnwantedDiffs(sacboundsMap, normalMap, sacboundsVSNormal10)
+
+      let merged = mergeMaps(sacboundsMap, normalMap, sacboundsVSNormal10)
+
+      expect(merged[61].children!.map(x => x.id)).toEqual([62, 239])
+      expect(merged[62].children!).toBeUndefined()
+    })
+  })
   describe("testing mergeMaps", () => {
     it("It should not modify the left or right rees", async () => {
       let copyLeft = cloneDeep(bigTree)
@@ -159,7 +176,7 @@ describe("testing ForestHelper", () => {
       expect(diff2.children!.map(x => x.id)).toEqual([8, 11])
       expect(diff2.children!.map(x => x.treeId)).toEqual([
         WhichTree.Left,
-        WhichTree.Left,
+        WhichTree.Left
       ])
       expect(diff3.children!.map(x => x.id)).toEqual([18, 21])
       expect(diff3.children!.map(x => x.treeId)).toEqual([
@@ -178,7 +195,7 @@ describe("testing ForestHelper", () => {
       expect(diff5.children!.map(x => x.treeId)).toEqual([
         WhichTree.Left,
         WhichTree.Left,
-        WhichTree.Right,
+        WhichTree.Right
       ])
     })
 

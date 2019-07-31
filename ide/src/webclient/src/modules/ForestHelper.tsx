@@ -8,6 +8,46 @@ import { array } from "yup"
 import { DiffPoint } from "../components/Forest"
 import { listenerCount } from "cluster"
 
+export const collapseUnwantedDiffs = (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  // map: MyMap,
+  diffPoints: DiffPoint[]
+) => {
+  diffPoints.forEach(diffPoint => {
+    let rightChildCount = 0
+
+    if (
+      rightMap[diffPoint.rightTreeId] &&
+      rightMap[diffPoint.rightTreeId].children
+    ) {
+      rightChildCount = rightMap[diffPoint.rightTreeId].children!.length
+    }
+
+    if (
+      diffPoint.leftTreeId in leftMap &&
+      leftMap[diffPoint.leftTreeId].children &&
+      leftMap[diffPoint.leftTreeId].children!.length + rightChildCount < 2
+    ) {
+
+      leftMap[diffPoint.leftTreeId].children!.forEach(x => delete leftMap[x.id])
+      leftMap[diffPoint.leftTreeId].children = undefined
+      leftMap[diffPoint.leftTreeId]._children = undefined
+
+      if (
+        diffPoint.rightTreeId in rightMap &&
+        rightMap[diffPoint.rightTreeId].children
+      ) {
+        rightMap[diffPoint.rightTreeId].children!.forEach(
+          x => delete rightMap[x.id]
+        )
+        rightMap[diffPoint.rightTreeId].children = undefined
+        rightMap[diffPoint.rightTreeId]._children = undefined
+      }
+    }
+  })
+}
+
 export const assignTreeIds = (
   leftMap: MyMap,
   rightMap: MyMap,
@@ -152,37 +192,19 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
 
       leftMap[diffPoint.leftTreeId].descCount = diffPoint.descCount
       leftMap[diffPoint.leftTreeId].childCount = 2
-      //   sumBy(leftMap[diffPoint.leftTreeId].children, x => x.descCount) +
-      //   diffPoint.highlightRight.length +
-      //   leftMap[diffPoint.leftTreeId].childCount
 
-      // console.log("-----")
-      // console.log(diffPoint.leftTreeId)
-      // console.log(diffPoint.descCount)
-      // console.log(leftMap[diffPoint.leftTreeId].descCount)
-      // console.log(
-      //   sumBy(leftMap[diffPoint.leftTreeId].children, x => x.descCount) +
-      //     sumBy(diffPoint.highlightRight.map(x => rightMap[x]), x => x.descCount) +
-      //     leftMap[diffPoint.leftTreeId].childCount
-      // )
-      // console.log(diffPoint)
+      // For the n = 10 case
+
+      // if (
+      //   leftMap[diffPoint.leftTreeId].children &&
+      //   leftMap[diffPoint.leftTreeId].childCount >
+      //     leftMap[diffPoint.leftTreeId].children!.length
+      // ) {
+      //   leftMap[diffPoint.leftTreeId].children = undefined
+      //   leftMap[diffPoint.leftTreeId]._children = undefined
+      // }
     }
   }
-
-  // function recurse(node: Node) {
-  //   if (node.children) {
-  //     node.children.forEach(x => recurse(x))
-  //     node.descCount = sumBy(node.children, x => x.descCount) + node.children.length
-  //     console.log("-----")
-  //     console.log(node.id)
-  //     console.log(node.descCount)
-  //   }
-  //   // node.descCount = sumBy(node.children, x => x.descCount)
-  // }
-
-  // recurse(leftMap[0])
-
-  // console.log(getDescList(leftMap[0]))
 
   return leftMap
 }

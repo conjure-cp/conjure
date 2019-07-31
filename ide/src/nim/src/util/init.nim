@@ -247,3 +247,24 @@ proc makeCore*(db: DbConn): Core =
     discard processQuery(db, failedQuery, nodeList)
 
     return Core(nodes: nodeList, solAncestorIds: solAncestorIds)
+
+
+# proc makeCore*(db: DbConn): Core =
+#     ## Returns data required for building the core of the tree
+#     var coreQuery : SqlQuery
+#     var failedQuery : SqlQuery
+#     var solAncestorIds : seq[int]
+#     var nodeList: seq[Node]
+
+#     let firstQuery = "select nodeId from Node where isSolution = 1 limit 1"
+
+#     if db.getValue(sql(firstQuery)) == "":
+#         coreQuery = noSolutionQuery
+#     else:
+#         failedQuery = solutionFailedQuery
+#         coreQuery = solutionQuery
+
+#     solAncestorIds = processQuery(db, coreQuery, nodeList)
+#     discard processQuery(db, failedQuery, nodeList)
+
+#     return Core(nodes: nodeList, solAncestorIds: solAncestorIds)

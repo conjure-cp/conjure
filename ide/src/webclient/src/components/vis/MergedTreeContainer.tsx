@@ -10,7 +10,8 @@ import {
   loadAllDiffs,
   getAncList,
   loadDiff,
-  assignTreeIds
+  assignTreeIds,
+  collapseUnwantedDiffs
 } from "../../modules/ForestHelper"
 import { FromServerNode, Core } from "./TreeContainer"
 import {
@@ -99,6 +100,8 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     let leftMap = makeState(props.leftCore, 0).id2Node
     let rightMap = makeState(props.rightCore, 0).id2Node
 
+    collapseUnwantedDiffs(leftMap, rightMap, props.diffPoints)
+
     assignTreeIds(leftMap, rightMap, props.diffPoints)
 
     this.state = {
@@ -123,7 +126,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.state.leftMap!,
             this.state.rightMap!,
             this.props.diffPoints,
-            this.props.nimServerPort,
+            this.props.nimServerPort
           )
         )
       },
@@ -150,7 +153,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
             this.props.diffPoints,
             this.props.leftPath,
             this.props.rightPath,
-            this.props.nimServerPort,
+            this.props.nimServerPort
           )
         )
       },
