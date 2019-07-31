@@ -11,7 +11,35 @@ import Node from "./Node"
 import { goLeftBoyo, goRightBoyo } from "./MovementHelper"
 import { DiffPoint } from "../components/Forest"
 import { min, max, maxBy, cloneDeep } from "lodash"
-import { exportDefaultSpecifier } from "@babel/types"
+
+export const expandMerged = (
+  leftMap: MyMap,
+  rightMap: MyMap,
+  currentSelected: number,
+  currentTreeId: number,
+  diffPoints: DiffPoint[]
+) => {
+  let leftCopy = cloneDeep(leftMap)
+  let rightCopy = cloneDeep(rightMap)
+
+  let diffPoint = diffPoints.find(x => x.leftTreeId === currentSelected)!
+
+  if (diffPoint) {
+    Node.expandNode(leftCopy[currentSelected])
+    Node.expandNode(rightCopy[diffPoint.rightTreeId])
+  } else {
+    if (currentTreeId !== WhichTree.Right) {
+      Node.expandNode(leftCopy[currentSelected])
+    }
+
+    if (currentTreeId === WhichTree.Right) {
+      Node.expandNode(rightCopy[currentSelected])
+    }
+  }
+
+  return { leftMap: leftCopy, rightMap: rightCopy }
+}
+
 
 export const collapseMerged = (
   leftMap: MyMap,

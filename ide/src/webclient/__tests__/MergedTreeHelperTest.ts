@@ -18,7 +18,8 @@ import {
   goUpMerged,
   goDownMerged,
   goRightMerged,
-  collapseMerged
+  collapseMerged,
+  expandMerged
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 
@@ -1128,62 +1129,255 @@ describe("suite to test MergedTreeHelper", () => {
             )
             expect(res.rightMap[8].children).toBeUndefined()
           })
-        })
-        describe("Left: Big | Right: small", () => {
-          beforeEach(async () => {
-            let res = await loadTreeBigOnLeftSmallOnRight()
-            bigTree = res.bigTree
-            smallTree = res.smallTree
-            assignTreeIds(bigTree, smallTree, smallToBig)
+
+          describe("Left: Big | Right: small", () => {
+            beforeEach(async () => {
+              let res = await loadTreeBigOnLeftSmallOnRight()
+              bigTree = res.bigTree
+              smallTree = res.smallTree
+              assignTreeIds(bigTree, smallTree, smallToBig)
+            })
+          })
+
+          it("Collapsing 2", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              2,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[2].children).toBeUndefined()
+          })
+
+          it("Collapsing 3 ", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              3,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[3].children).toBeUndefined()
+          })
+
+          it("Collapsing 4 ", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[4].children).toBeUndefined()
+          })
+
+          it("Collapsing 4 Left ", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              4,
+              WhichTree.Left,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[4].children).toBeUndefined()
           })
         })
 
-        it("Collapsing 2", async () => {
-          let res = collapseMerged(
-            smallTree,
-            bigTree,
-            2,
-            WhichTree.Both,
-            smallToBig
-          )
-          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
-          expect(merged[2].children).toBeUndefined()
-        })
+        describe("test expand", () => {
+          let lMap
+          let rMap
 
-        it("Collapsing 3 ", async () => {
-          let res = collapseMerged(
-            smallTree,
-            bigTree,
-            3,
-            WhichTree.Both,
-            smallToBig
-          )
-          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
-          expect(merged[3].children).toBeUndefined()
-        })
+          describe("Left: small | Right: big", () => {
+            beforeEach(async () => {
+              let res = await loadTreeSmallOnLeftBigOnRight()
+              bigTree = res.bigTree
+              smallTree = res.smallTree
+              lMap = cloneDeep(smallTree)
+              rMap = cloneDeep(bigTree)
+              assignTreeIds(lMap, rMap, smallToBig)
+            })
+          })
 
-        it("Collapsing 4 ", async () => {
-          let res = collapseMerged(
-            smallTree,
-            bigTree,
-            4,
-            WhichTree.Both,
-            smallToBig
-          )
-          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
-          expect(merged[4].children).toBeUndefined()
-        })
+          it("expanding 2", async () => {
+            let oldMerged = mergeMaps(smallTree, bigTree, smallToBig)
 
-        it("Collapsing 4 Left ", async () => {
-          let res = collapseMerged(
-            smallTree,
-            bigTree,
-            4,
-            WhichTree.Left,
-            smallToBig
-          )
-          let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
-          expect(merged[4].children).toBeUndefined()
+            let res1 = collapseMerged(
+              smallTree,
+              bigTree,
+              2,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              2,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res2.leftMap, res2.rightMap, smallToBig)
+
+            expect(merged[2].children).toEqual(oldMerged[2].children)
+          })
+
+          it("Collapsing 3 ", async () => {
+            let oldMerged = mergeMaps(smallTree, bigTree, smallToBig)
+
+            let res1 = collapseMerged(
+              smallTree,
+              bigTree,
+              3,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              3,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res2.leftMap, res2.rightMap, smallToBig)
+
+            expect(merged[3].children).toEqual(oldMerged[3].children)
+          })
+
+          it("Collapsing 4 ", async () => {
+            let oldMerged = mergeMaps(smallTree, bigTree, smallToBig)
+
+            let res1 = collapseMerged(
+              smallTree,
+              bigTree,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res2.leftMap, res2.rightMap, smallToBig)
+
+            expect(merged[4].children).toEqual(oldMerged[4].children)
+          })
+
+          it("Collapsing 8 Right", async () => {
+            let res1 = collapseMerged(
+              smallTree,
+              bigTree,
+              8,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              8,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            expect(res2.rightMap[8].children).toEqual(bigTree[8].children)
+          })
+
+          describe("Left: Big | Right: small", () => {
+            beforeEach(async () => {
+              let res = await loadTreeBigOnLeftSmallOnRight()
+              bigTree = res.bigTree
+              smallTree = res.smallTree
+              assignTreeIds(bigTree, smallTree, smallToBig)
+            })
+          })
+
+          it("expanding 2", async () => {
+            let oldMerged = mergeMaps(bigTree, smallTree, smallToBig)
+
+            let res1 = collapseMerged(
+              bigTree,
+              smallTree,
+              2,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              2,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res2.leftMap, res2.rightMap, smallToBig)
+
+            expect(merged[2].children).toEqual(oldMerged[2].children)
+          })
+
+          it("Collapsing 3 ", async () => {
+            let oldMerged = mergeMaps(bigTree, smallTree, smallToBig)
+
+            let res1 = collapseMerged(
+              bigTree,
+              smallTree,
+              3,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              3,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res2.leftMap, res2.rightMap, smallToBig)
+
+            expect(merged[3].children).toEqual(oldMerged[3].children)
+          })
+
+          it("Collapsing 4 ", async () => {
+            let res = collapseMerged(
+              smallTree,
+              bigTree,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+            let merged = mergeMaps(res.leftMap, res.rightMap, smallToBig)
+            expect(merged[4].children).toBeUndefined()
+          })
+
+          it("expanding 4 Left ", async () => {
+            let res1 = collapseMerged(
+              smallTree,
+              bigTree,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            let res2 = expandMerged(
+              res1.leftMap,
+              res1.rightMap,
+              4,
+              WhichTree.Both,
+              smallToBig
+            )
+
+            expect(res2.rightMap[4].children).toEqual(bigTree[4].children)
+          })
         })
       })
     })
