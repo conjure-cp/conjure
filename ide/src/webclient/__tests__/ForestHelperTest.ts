@@ -102,7 +102,11 @@ describe("testing ForestHelper", () => {
       copyLeft[3].children = undefined
       copyRight[3].children = undefined
 
-      let merged = mergeMaps(copyLeft, copyRight, sacboundsToNormal)
+      for (let i = 4; i < 16; i++){
+        delete(copyLeft[i])
+      }
+
+      let merged = mergeMaps(copyLeft, copyRight, normalToSacbounds)
 
       expect(merged[3].children).toBeUndefined()
     })
@@ -180,6 +184,9 @@ describe("testing ForestHelper", () => {
       )!
 
       expect(res[3].descCount).toEqual(12)
+      expect(res[27].descCount).toEqual(6)
+      expect(res[26].descCount).toEqual(7)
+
       expect(diff1).toBeTruthy()
 
       expect(diff1.children!.map(x => x.id)).toEqual([4, 7])
@@ -235,6 +242,8 @@ describe("testing ForestHelper", () => {
       )!
 
       expect(res[3].descCount).toEqual(12)
+      expect(res[9].descCount).toEqual(6)
+      expect(res[8].descCount).toEqual(7)
 
       expect(diff1).toBeTruthy()
 

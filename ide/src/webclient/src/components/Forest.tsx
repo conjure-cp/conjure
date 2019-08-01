@@ -179,6 +179,14 @@ class Forest extends React.Component<Props, State> {
             />
 
             <DiffSettings
+              loadAllDiffsHandler={() =>
+                loadAllDiffs(
+                  this.props.trees.map(x => x.path),
+                  this.props.trees.map(x => x.core),
+                  this.state.diffPoints,
+                  this.props.nimServerPort
+                )
+              }
               splitScreen={this.state.splitScreen}
               diffReady={this.state.diffReady}
               diffPoints={this.state.diffPoints}

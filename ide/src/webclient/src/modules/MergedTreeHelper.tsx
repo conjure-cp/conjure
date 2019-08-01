@@ -40,7 +40,6 @@ export const expandMerged = (
   return { leftMap: leftCopy, rightMap: rightCopy }
 }
 
-
 export const collapseMerged = (
   leftMap: MyMap,
   rightMap: MyMap,
@@ -301,20 +300,18 @@ export const reviseGoLeft = (
   diffPoints: DiffPoint[]
 ) => {
   let ancestors = getAncList(mergedMap[0], currentSelected, treeId)
-  let ancestorIds = ancestors.map(y => y.id)
+  let ancestorIds = ancestors!.map(y => y.id)
   let diffAncs = diffPoints.filter(
     x =>
       ancestorIds.includes(x.leftTreeId) &&
-      ancestors.find(y => y.id === x.leftTreeId)!.treeId === WhichTree.Both
+      ancestors!.find(y => y.id === x.leftTreeId)!.treeId === WhichTree.Both
   )
 
   let diffPoint = maxBy(diffAncs, x => x.leftTreeId)!
 
-  ancestorIds = getAncList(
-    mergedMap[0],
-    diffPoint!.leftTreeId,
-    WhichTree.Both
-  ).map(y => y.id)
+  ancestorIds = getAncList(mergedMap[0], diffPoint!.leftTreeId, WhichTree.Both)!
+    .map(y => y.id)
+    .concat(diffPoint.leftTreeId)
 
   let diffPointIndex = ancestorIds.indexOf(diffPoint.leftTreeId)
 
@@ -446,10 +443,14 @@ export const goLeftMerged = async (
     }
   } else {
     // We may have moved to a both node
+
+    let ancestors = getAncList(leftMap[0], nextSelected, currentTreeId)
+
     if (
-      !getAncList(leftMap[0], nextSelected, currentTreeId).find(
-        x => x.treeId === currentTreeId
-      )
+      ancestors &&
+      !ancestors
+        .concat(leftMap[nextSelected])
+        .find(x => x.treeId === currentTreeId)
     ) {
       nextTreeId = WhichTree.Both
     }

@@ -668,6 +668,7 @@ describe("suite to test MergedTreeHelper", () => {
           expect(res.selected).toEqual(26)
           expect(res.selectedTreeId).toEqual(WhichTree.Both)
         })
+        
         it(" 29 Left -> 30", async () => {
           let res = await goLeftMerged(
             29,

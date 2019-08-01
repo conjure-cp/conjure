@@ -94,6 +94,9 @@ export const getDescList = (root: Node) => {
 }
 
 export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
+  // let root = cloneDeep(r)
+  // getDescList(root).forEach(x => Node.showChildren(x))
+
   const h = d3.hierarchy<Node>(root)
 
   const nodes = h.descendants()
@@ -110,11 +113,15 @@ export const getAncList = (root: Node, startId: number, treeId: WhichTree) => {
     )!
   }
 
+  if (!current) {
+    return undefined
+  }
+
   return current
     .ancestors()
     .map(x => x.data)
-    .reverse()
     .slice(1)
+    .reverse()
 }
 
 export const loadDiff = async (
@@ -175,11 +182,30 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
           leftMap[diffPoint.leftTreeId].children!.push(rightMap[nodeId])
         }
       })
-
-      leftMap[diffPoint.leftTreeId].descCount = diffPoint.descCount
-      leftMap[diffPoint.leftTreeId].childCount = 2
     }
   }
+
+  const reversed = cloneDeep(diffPoints).reverse()
+
+  reversed.forEach(diffPoint => {
+    if (
+      !(diffPoint.leftTreeId in leftMap && diffPoint.rightTreeId in rightMap)
+    ) {
+      return
+    }
+
+    let increase = diffPoint.descCount - leftMap[diffPoint.leftTreeId].descCount
+    let ancestors = getAncList(leftMap[0], diffPoint.leftTreeId, WhichTree.Both)
+
+    if (!ancestors) {
+      return
+    }
+
+    ancestors.forEach(x => (x.descCount += increase))
+
+    leftMap[diffPoint.leftTreeId].descCount = diffPoint.descCount
+    leftMap[diffPoint.leftTreeId].childCount = 2
+  })
 
   return leftMap
 }

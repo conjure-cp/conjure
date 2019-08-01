@@ -4,6 +4,7 @@ import { Check } from "../common/Check"
 import { Tree, DiffPoint } from "../Forest"
 import { MySlider } from "../common/Slider"
 import FlickThru from "../common/FlickThu"
+import { loadAllDiffs } from "../../modules/ForestHelper";
 
 interface Props {
   trees: Tree[]
@@ -15,6 +16,7 @@ interface Props {
   diffChangeHandler: (value: number) => void
   prevDiffHandler: () => void
   nextDiffHandler: () => void
+  loadAllDiffsHandler: () => void
 }
 
 interface State {}
@@ -72,6 +74,9 @@ class DiffSettings extends React.Component<Props, State> {
               )}
 
               {this.props.diffReady && <div className="col">{maybeSlider}</div>}
+            <button className="btn btn-primary btn-lg btn-block" onClick={this.props.loadAllDiffsHandler}>
+              Load all diff locations
+            </button>
               {!this.props.diffReady && <div className="col">{waiting}</div>}
             </div>
           </StageHeader>

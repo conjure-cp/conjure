@@ -110,7 +110,6 @@ export class MergedTreeContainer extends React.Component<Props, State> {
       ...origState,
       leftMap: leftMap,
       rightMap: rightMap,
-      // mergedMap: mergeMaps(leftMap, rightMap, props.diffLocations, props.augmentedIds),
       solveable:
         props.leftCore.nodes
           .concat(props.rightCore.nodes)
