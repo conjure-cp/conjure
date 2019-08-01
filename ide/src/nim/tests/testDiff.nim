@@ -138,11 +138,20 @@ suite "diff":
 
     check highlightRight == @[@[], @[], @[], @[], @[10]]
 
-    check d[0].descCount == 12
-    check d[1].descCount == 8
-    check d[2].descCount == 8
-    check d[3].descCount == 4
-    check d[4].descCount == 6
+    check d[0].descCount == 0
+    check d[1].descCount == 0
+    check d[2].descCount == 0
+    check d[3].descCount == 0
+    check d[4].descCount == 1
+
+
+    let flipped = diff(rightPath, leftPath, false)
+
+    check flipped[0].descCount == 3
+    check flipped[1].descCount == 8
+    check flipped[2].descCount == 3
+    check flipped[3].descCount == 4
+    check flipped[4].descCount == 5
 
   test "10":
     let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
@@ -439,16 +448,18 @@ suite "diff":
       check highlightRight == hR
 
   test "flipped":
-    let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
-    let rightPath = testDataPath & "/diff/default-sacbounds-12/sacbounds"
+    let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
+    let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
     discard init(leftPath)
     discard init(rightPath)
 
     let d = diff(leftPath, rightPath)
     let flipped = d.map(x => newDiffPoint($x.rightTreeId, $x.leftTreeId,
-        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y), x.descCount))
+        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y), x.descCount, x.path))
 
     let rTL = diff(rightPath, leftPath)
+
+    echo rTL
 
     for i in countUp(0, rTL.len() - 1):
       check rTL[i] == flipped[i]
@@ -461,6 +472,8 @@ suite "diff":
     let d = diff(leftPath, rightPath)
     check(d[0].leftTreeId == -1)
     check(d[0].rightTreeId == -1)
+
+    echo  d[0].descCount == 0
     # check(d.augmentedIds == newSeq[seq[int]](2))
 
   test "findAllSols":
@@ -481,6 +494,10 @@ suite "diff":
     check(d[1].highlightLeft.len() == 0)
     check(d[1].highlightRight == @[36])
 
+
+    check d[0].descCount == 3
+    check d[1].descCount == 35
+
   test "symmBreak":
     let leftPath = testDataPath & "/diff/default-symmBreak-8/normal"
     let rightPath = testDataPath & "/diff/default-symmBreak-8/symmBreakNoOptimisation"
@@ -492,6 +509,8 @@ suite "diff":
     check(d[0].rightTreeId == 0)
     check(d[0].highlightLeft == @[1])
     check(d[0].highlightRight == @[1])
+
+    check d[0].descCount == 10
 
   # test "contrived":
   #     let leftPath = testDataPath & "/diff/contrived/normal"

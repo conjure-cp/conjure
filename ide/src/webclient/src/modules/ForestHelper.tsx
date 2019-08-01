@@ -185,27 +185,59 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
     }
   }
 
-  const reversed = cloneDeep(diffPoints).reverse()
+  // const reversed = cloneDeep(diffPoints).reverse()
 
-  reversed.forEach(diffPoint => {
-    if (
-      !(diffPoint.leftTreeId in leftMap && diffPoint.rightTreeId in rightMap)
-    ) {
-      return
-    }
+  // reversed.forEach(diffPoint => {
+  //   if (
+  //     !(diffPoint.leftTreeId in leftMap && diffPoint.rightTreeId in rightMap)
+  //   ) {
+  //     return
+  //   }
 
-    let increase = diffPoint.descCount - leftMap[diffPoint.leftTreeId].descCount
-    let ancestors = getAncList(leftMap[0], diffPoint.leftTreeId, WhichTree.Both)
+  //   let increase = diffPoint.descCount - leftMap[diffPoint.leftTreeId].descCount
+  //   let ancestors = getAncList(leftMap[0], diffPoint.leftTreeId, WhichTree.Both)
 
-    if (!ancestors) {
-      return
-    }
+  //   if (!ancestors) {
+  //     return
+  //   }
 
-    ancestors.forEach(x => (x.descCount += increase))
+  //   ancestors.forEach(x => (x.descCount += increase))
 
-    leftMap[diffPoint.leftTreeId].descCount = diffPoint.descCount
-    leftMap[diffPoint.leftTreeId].childCount = 2
-  })
+  //   leftMap[diffPoint.leftTreeId].descCount = diffPoint.descCount
+  //   leftMap[diffPoint.leftTreeId].childCount = 2
+  // })
+
+  assignNewDescCounts(leftMap, diffPoints)
 
   return leftMap
+}
+
+export const assignNewDescCounts = (merged: MyMap, diffPoints: DiffPoint[]) => {
+  // let paths = [
+  //   "0/1/2/3",
+  //   "0/1/2/3/7",
+  //   "0/1/2/16/17",
+  //   "0/1/2/16/17/21",
+  //   "0/1/2/16/26/27"
+  // ]
+
+  let paths = diffPoints.map(x => x.path)
+
+  let nodeList = [merged[0]]
+    .concat(getDescList(merged[0]))
+    .reverse()
+    .filter(x => x.treeId === WhichTree.Both)
+
+  nodeList
+    .filter(x => diffPoints.map(y => y.leftTreeId).includes(x.id))
+    .forEach(x => (x.childCount = 2))
+
+  for (let node of nodeList) {
+    for (const path of paths) {
+      if (path.includes(String(node.id))) {
+        let index = paths.indexOf(path)
+        node.descCount += diffPoints[index].descCount
+      }
+    }
+  }
 }

@@ -4,7 +4,8 @@ import {
   mergeMaps,
   getDescList,
   assignTreeIds,
-  collapseUnwantedDiffs
+  collapseUnwantedDiffs,
+  assignNewDescCounts
 } from "../src/modules/ForestHelper"
 import { fetchAncestors } from "../src/modules/MovementHelper"
 import {
@@ -33,15 +34,15 @@ import { diffPoints as completelyDifferent } from "./resources/completelyDiffere
 import { diffPoints as normalVSSacbounds10 } from "./resources/normalVSSacbounds-10"
 
 import { cloneDeep } from "lodash"
-import { bigToSmall as normalToSacbounds } from "./resources/normalVSSacbounds-8"
+import { bigToSmall as normalVSSacbounds } from "./resources/normalVSSacbounds-8"
 import { diffPoints as normalToFindAllSols } from "./resources/normalVSFindAllSols-8"
 import { flipDiffLocations } from "../src/modules/Helper"
 import { makeState } from "../src/modules/TreeHelper"
 
 describe("testing ForestHelper", () => {
-  const sacboundsToNormal = flipDiffLocations(normalToSacbounds)
-  let bigTree: any
-  let smallTree: any
+  const sacboundsVSNormal = flipDiffLocations(normalVSSacbounds)
+  let normal: any
+  let sacbounds: any
 
   beforeEach(async () => {
     fetchMock.resetMocks()
@@ -60,12 +61,21 @@ describe("testing ForestHelper", () => {
     let res = await loadAllDiffs(
       ["", "s"],
       [coreNormal8, coreSacbounds8],
-      normalToSacbounds,
+      normalVSSacbounds,
       5000
     )
 
-    bigTree = res[0]
-    smallTree = res[1]
+    normal = res[0]
+    sacbounds = res[1]
+  })
+
+  describe("testing assignNewDescCounts", () => {
+    it("It should assign the correct desc counts", async () => {
+      let merged = mergeMaps(normal, sacbounds, normalVSSacbounds)
+      assignNewDescCounts(merged, normalVSSacbounds)
+
+      expect(merged[26].descCount).toEqual(7)
+    })
   })
 
   describe("testing collapseUnwantedDiffs", () => {
@@ -86,18 +96,18 @@ describe("testing ForestHelper", () => {
 
   describe("testing mergeMaps", () => {
     it("It should not modify the left or right rees", async () => {
-      let copyLeft = cloneDeep(bigTree)
-      let copyRight = cloneDeep(smallTree)
-      mergeMaps(copyLeft, copyRight, normalToSacbounds)
+      let copyLeft = cloneDeep(normal)
+      let copyRight = cloneDeep(sacbounds)
+      mergeMaps(copyLeft, copyRight, normalVSSacbounds)
 
-      expect(copyLeft).toEqual(bigTree)
-      expect(copyRight).toEqual(smallTree)
+      expect(copyLeft).toEqual(normal)
+      expect(copyRight).toEqual(sacbounds)
     })
 
     it("It should not createChildrenRandomly", async () => {
 
-      let copyLeft = cloneDeep(bigTree)
-      let copyRight = cloneDeep(smallTree)
+      let copyLeft = cloneDeep(normal)
+      let copyRight = cloneDeep(sacbounds)
 
       copyLeft[3].children = undefined
       copyRight[3].children = undefined
@@ -106,7 +116,7 @@ describe("testing ForestHelper", () => {
         delete(copyLeft[i])
       }
 
-      let merged = mergeMaps(copyLeft, copyRight, normalToSacbounds)
+      let merged = mergeMaps(copyLeft, copyRight, normalVSSacbounds)
 
       expect(merged[3].children).toBeUndefined()
     })
@@ -139,8 +149,8 @@ describe("testing ForestHelper", () => {
     })
 
     it("When the trees differ at the root there should not be any both for the treeid on any node", async () => {
-      let lMap = cloneDeep(bigTree)
-      let rMap = cloneDeep(smallTree)
+      let lMap = cloneDeep(normal)
+      let rMap = cloneDeep(sacbounds)
 
       assignTreeIds(lMap, rMap, completelyDifferent)
 
@@ -153,10 +163,10 @@ describe("testing ForestHelper", () => {
     })
 
     it("Should merge the maps the ancestors of each tree into their maps big->small", async () => {
-      let lMap = cloneDeep(bigTree)
-      let rMap = cloneDeep(smallTree)
-      assignTreeIds(lMap, rMap, normalToSacbounds)
-      let res = mergeMaps(bigTree, smallTree, normalToSacbounds)
+      let lMap = cloneDeep(normal)
+      let rMap = cloneDeep(sacbounds)
+      assignTreeIds(lMap, rMap, normalVSSacbounds)
+      let res = mergeMaps(normal, sacbounds, normalVSSacbounds)
 
       expect(res[0].treeId).toBe(WhichTree.Both)
       expect(res[1].treeId).toBe(WhichTree.Both)
@@ -168,19 +178,19 @@ describe("testing ForestHelper", () => {
       expect(res[27].treeId).toBe(WhichTree.Both)
 
       let diff1 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[0].leftTreeId
+        x => x.id === normalVSSacbounds[0].leftTreeId
       )!
       let diff2 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[1].leftTreeId
+        x => x.id === normalVSSacbounds[1].leftTreeId
       )!
       let diff3 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[2].leftTreeId
+        x => x.id === normalVSSacbounds[2].leftTreeId
       )!
       let diff4 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[3].leftTreeId
+        x => x.id === normalVSSacbounds[3].leftTreeId
       )!
       let diff5 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[4].leftTreeId
+        x => x.id === normalVSSacbounds[4].leftTreeId
       )!
 
       expect(res[3].descCount).toEqual(12)
@@ -221,24 +231,24 @@ describe("testing ForestHelper", () => {
     })
 
     it("Should merge the maps the ancestors of each tree into their maps small->big", async () => {
-      let lMap = cloneDeep(smallTree)
-      let rMap = cloneDeep(bigTree)
+      let lMap = cloneDeep(sacbounds)
+      let rMap = cloneDeep(normal)
 
-      let res = mergeMaps(lMap, rMap, sacboundsToNormal)
+      let res = mergeMaps(lMap, rMap, sacboundsVSNormal)
       let diff1 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[0].rightTreeId
+        x => x.id === normalVSSacbounds[0].rightTreeId
       )!
       let diff2 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[1].rightTreeId
+        x => x.id === normalVSSacbounds[1].rightTreeId
       )!
       let diff3 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[2].rightTreeId
+        x => x.id === normalVSSacbounds[2].rightTreeId
       )!
       let diff4 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[3].rightTreeId
+        x => x.id === normalVSSacbounds[3].rightTreeId
       )!
       let diff5 = getDescList(res[0]).find(
-        x => x.id === normalToSacbounds[4].rightTreeId
+        x => x.id === normalVSSacbounds[4].rightTreeId
       )!
 
       expect(res[3].descCount).toEqual(12)
@@ -331,7 +341,7 @@ describe("testing ForestHelper", () => {
       let res = await loadAllDiffs(
         ["", "s"],
         [coreNormal8, coreSacbounds8],
-        normalToSacbounds,
+        normalVSSacbounds,
         5000
       )
 
