@@ -156,6 +156,12 @@ suite "diff":
     check d[3].descCount == 0
     check d[4].descCount == 1
 
+    check d[0].path == "0/1/2/3"
+    check d[1].path == "0/1/2/3/7"
+    check d[2].path == "0/1/2/16/17"
+    check d[3].path == "0/1/2/16/17/21"
+    check d[4].path == "0/1/2/16/26/27"
+
     let flipped = diff(rightPath, leftPath, false)
 
     check flipped[0].descCount == 3
@@ -163,6 +169,12 @@ suite "diff":
     check flipped[2].descCount == 3
     check flipped[3].descCount == 4
     check flipped[4].descCount == 5
+
+    check flipped[0].path == "0/1/2/3"
+    check flipped[1].path == "0/1/2/3/4"
+    check flipped[2].path == "0/1/2/5/6"
+    check flipped[3].path == "0/1/2/5/6/7"
+    check flipped[4].path == "0/1/2/5/8/9"
 
   test "10":
     let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
@@ -198,6 +210,10 @@ suite "diff":
 
     for x in highlightRight:
       check x.len() == 0
+
+    check d[0].descCount == 4
+    check d[1].descCount == 3
+    check d[2].descCount == 0
 
 
   test "12":
@@ -513,6 +529,8 @@ suite "diff":
     check d[0].descCount == 3
     check d[1].descCount == 35
 
+    echo d
+
   test "symmBreak":
     let leftPath = testDataPath & "/diff/default-symmBreak-8/normal"
     let rightPath = testDataPath & "/diff/default-symmBreak-8/symmBreakNoOptimisation"
@@ -526,11 +544,3 @@ suite "diff":
     check(d[0].highlightRight == @[1])
 
     check d[0].descCount == 10
-
-  # test "contrived":
-  #     let leftPath = testDataPath & "/diff/contrived/normal"
-  #     let rightPath = testDataPath & "/diff/contrived/modified"
-  #     discard init(leftPath)
-  #     discard init(rightPath)
-  #     let nodeIds = diff(leftPath, rightPath)
-  #     check(nodeIds == @[@[32,32]])

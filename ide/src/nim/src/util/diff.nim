@@ -31,8 +31,10 @@ proc `$`*(d: DiffPoint): string =
   result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} : {d.descCount}> | {d.path}>"
 
 proc `$`*(list: seq[DiffPoint]): string =
+  result &= "["
   for d in list:
     result &= fmt"{$d}{'\n'}"
+  result &= "]"
 
 proc newDiffPoint*(l, r: string; highlightLeft, highlightRight: seq[string];
 dC: int = 0, path: string = ""): DiffPoint =
@@ -84,11 +86,12 @@ proc removeDuplicates*(leftDB: DBconn; rightDB: DbConn;
   ]
 
 
-proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint]) =
+proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint], debug: bool = false) =
 
   let sorted = list.sortedByIt( -it.leftTreeId)
 
-#   echo sorted
+  if debug: 
+    echo sorted
 
   for diffPoint in sorted:
 
@@ -100,16 +103,19 @@ proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint]) =
     diffPoint.path = path
     var countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
     discard leftDB.getValue(sql(countQuery)).parseInt(temp1)
-    # echo countQuery
+
+    if debug: 
+      echo countQuery
 
     pathQuery = fmt"select path from Node where nodeId = {diffPoint.rightTreeId}"
     path = rightDB.getValue(sql(pathQuery))
     countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
     discard rightDB.getValue(sql(countQuery)).parseInt(temp2)
 
-    # echo diffPoint
-    # echo "temp1: ", temp1
-    # echo "temp2: ", temp2
+    if debug: 
+      echo diffPoint
+      echo "temp1: ", temp1
+      echo "temp2: ", temp2
 
     # var difference = abs(temp2 - temp1)
     var difference = temp2 < temp1 ? temp2 | (temp2 - temp1)
@@ -126,7 +132,8 @@ proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint]) =
       if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() > 2:
         difference.inc()
 
-    # echo "difference: ", difference
+    if debug: 
+      echo "difference: ", difference
 
     diffPoint.descCount = difference
 
@@ -216,7 +223,7 @@ proc findDiffLocationsBoyo*(leftDB,
 
   result = res
 
-  assignDescCountIncreases(leftDB, rightDB, result)
+  assignDescCountIncreases(leftDB, rightDB, result, debug)
 
   if debug:
     for d in result:

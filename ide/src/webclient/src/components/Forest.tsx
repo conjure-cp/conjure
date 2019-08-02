@@ -16,6 +16,7 @@ export interface DiffPoint {
   highlightLeft: number[]
   highlightRight: number[]
   descCount: number
+  path: string
 }
 
 export interface Tree {
