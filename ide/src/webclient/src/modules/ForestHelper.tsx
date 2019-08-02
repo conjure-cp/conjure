@@ -221,7 +221,9 @@ export const assignNewDescCounts = (merged: MyMap, diffPoints: DiffPoint[]) => {
   //   "0/1/2/16/26/27"
   // ]
 
-  let paths = diffPoints.map(x => x.leftPath)
+  let copy = cloneDeep(diffPoints)
+
+  let paths = copy.map(x => x.leftPath)
 
   let nodeList = [merged[0]]
     .concat(getDescList(merged[0]))
@@ -229,14 +231,14 @@ export const assignNewDescCounts = (merged: MyMap, diffPoints: DiffPoint[]) => {
     .filter(x => x.treeId === WhichTree.Both)
 
   nodeList
-    .filter(x => diffPoints.map(y => y.leftTreeId).includes(x.id))
+    .filter(x => copy.map(y => y.leftTreeId).includes(x.id))
     .forEach(x => (x.childCount = 2))
 
   for (let node of nodeList) {
     for (const path of paths) {
       if (path.includes(String(node.id))) {
         let index = paths.indexOf(path)
-        node.descCount += diffPoints[index].descCount
+        node.descCount += copy[index].descCount
       }
     }
   }
