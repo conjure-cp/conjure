@@ -5,21 +5,26 @@ import jsonify
 import init
 import process
 import branchingCondition
+import diff
 
 
-type
-  BranchPair[T] = object
-    then, otherwise: T
+# type
+#   BranchPair[T] = object
+#     then, otherwise: T
 
-# This cannot be a template yet, buggy compiler...
-proc `|`*[T](a, b: T): BranchPair[T] {.inline.} = BranchPair[T](then: a, otherwise: b)
+# # This cannot be a template yet, buggy compiler...
+# proc `|`*[T](a, b: T): BranchPair[T] {.inline.} = BranchPair[T](then: a, otherwise: b)
 
-template `?`*[T](cond: bool; p: BranchPair[T]): T =
-  (if cond: p.then else: p.otherwise)
+# template `?`*[T](cond: bool; p: BranchPair[T]): T =
+#   (if cond: p.then else: p.otherwise)
 
 var dBTable: Table[string, DBconn]
 
 proc loadAncestors*(dirPath, nodeId: string): seq[Node]
+
+proc getDB*(dirPath: string): DbConn =
+  let (db, eprimeInfoFilePath) = findFiles(dirPath)
+  return db
 
 proc init*(dirPath: string): (Core, string) =
   ## Initialises data structures
@@ -33,233 +38,234 @@ proc init*(dirPath: string): (Core, string) =
   return (makeCore(db), infoFile)
 
 
-proc checkDomainsAreEqual*(paths: array[2, string]; nodeIds: array[2,
-        string]): bool =
-  # let query1 = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
-  let query1 = "select group_concat(name || ' - ' || storeDump, ' , ') from Domain where nodeId = ? and name not like 'aux%'"
-  let leftDB = dBTable[paths[0]]
-  let rightDB = dBTable[paths[1]]
+# proc checkDomainsAreEqual*(paths: array[2, string]; nodeIds: array[2,
+#         string]): bool =
+#   # let query1 = "select group_concat(name, storeDump) from domain where nodeId = ? and name not like 'aux%'"
+#   let query1 = "select group_concat(name || ' - ' || storeDump, ' , ') from Domain where nodeId = ? and name not like 'aux%'"
+#   let leftDB = dBTable[paths[0]]
+#   let rightDB = dBTable[paths[1]]
 
-  var leftValue = leftDB.getValue(sql(query1), nodeIds[0])
+#   var leftValue = leftDB.getValue(sql(query1), nodeIds[0])
 
-  var rightValue = rightDB.getValue(sql(query1), nodeIds[1])
+#   var rightValue = rightDB.getValue(sql(query1), nodeIds[1])
 
 
-  result = leftValue == rightValue
+#   result = leftValue == rightValue
 
-  # echo nodeIds
-  # echo result
+#   # echo nodeIds
+#   # echo result
 
-#     augmentedIds*: seq[seq[int]]
+# #     augmentedIds*: seq[seq[int]]
 
-type DiffPoint* = ref object of RootObj
-  path*: string
-  leftTreeId*: int
-  rightTreeId*: int
-  descCount*: int
-  highlightLeft*: seq[int]
-  highlightRight*: seq[int]
+# type DiffPoint* = ref object of RootObj
+#   path*: string
+#   leftTreeId*: int
+#   rightTreeId*: int
+#   descCount*: int
+#   highlightLeft*: seq[int]
+#   highlightRight*: seq[int]
 
-proc `==`*(a, b: DiffPoint): bool =
-  return %a == %b
+# proc `==`*(a, b: DiffPoint): bool =
+#   return %a == %b
 
-proc `$`*(d: DiffPoint): string =
-  result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} : {d.descCount}> | {d.path}>"
+# proc `$`*(d: DiffPoint): string =
+#   result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} : {d.descCount}> | {d.path}>"
 
-proc `$`*(list: seq[DiffPoint]): string =
-  for d in list:
-    result &= fmt"{$d}{'\n'}"
+# proc `$`*(list: seq[DiffPoint]): string =
+#   for d in list:
+#     result &= fmt"{$d}{'\n'}"
 
-proc newDiffPoint*(l, r: string; highlightLeft, highlightRight: seq[string];
-dC: int = 0, path: string = ""): DiffPoint =
+# proc newDiffPoint*(l, r: string; highlightLeft, highlightRight: seq[string];
+# dC: int = 0, path: string = ""): DiffPoint =
 
-  var lNum, rNum: int
-  discard l.parseInt(lNum)
-  discard r.parseInt(rNum)
+#   var lNum, rNum: int
+#   discard l.parseInt(lNum)
+#   discard r.parseInt(rNum)
 
-  let hL = highlightLeft.map(
-      proc (x: string): int =
-    var num: int
-    discard x.parseInt(num)
-    return num
-    )
+#   let hL = highlightLeft.map(
+#       proc (x: string): int =
+#     var num: int
+#     discard x.parseInt(num)
+#     return num
+#     )
 
-  let hR = highlightRight.map(
-      proc (x: string): int =
-    var num: int
-    discard x.parseInt(num)
-    return num
-    )
+#   let hR = highlightRight.map(
+#       proc (x: string): int =
+#     var num: int
+#     discard x.parseInt(num)
+#     return num
+#     )
 
-  return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL,
-          highlightRight: hR, descCount: dC, path: path)
+#   return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL,
+#           highlightRight: hR, descCount: dC, path: path)
 
 
 
-proc removeDuplicates*(leftPath: string; rightPath: string;
-                        kids: array[2, seq[string]]):
-                        array[2, seq[string]] =
+# proc removeDuplicates*(leftPath: string; rightPath: string;
+#                         kids: array[2, seq[string]]):
+#                         array[2, seq[string]] =
 
 
-  var leftKidsToSkip = newSeq[string]()
-  var rightKidsToSkip = newSeq[string]()
+#   var leftKidsToSkip = newSeq[string]()
+#   var rightKidsToSkip = newSeq[string]()
 
-  for i, kid in kids[0]:
-    for k in kids[1]:
+#   for i, kid in kids[0]:
+#     for k in kids[1]:
 
-      if checkDomainsAreEqual([leftPath, rightPath], [kid, k]):
-        leftKidsToSkip.add(kid)
+#       if checkDomainsAreEqual([leftPath, rightPath], [kid, k]):
+#         leftKidsToSkip.add(kid)
 
-  for i, kid in kids[1]:
-    for k in kids[0]:
+#   for i, kid in kids[1]:
+#     for k in kids[0]:
 
-      if checkDomainsAreEqual([leftPath, rightPath], [k, kid]):
-        rightKidsToSkip.add(kid)
+#       if checkDomainsAreEqual([leftPath, rightPath], [k, kid]):
+#         rightKidsToSkip.add(kid)
 
-  return [
-      kids[0].filter(x => not leftKidsToSkip.contains(x)),
-      kids[1].filter(x => not rightKidstoSkip.contains(x))
-  ]
+#   return [
+#       kids[0].filter(x => not leftKidsToSkip.contains(x)),
+#       kids[1].filter(x => not rightKidstoSkip.contains(x))
+#   ]
 
-proc reverse[T](xs: openarray[T]): seq[T] =
-  result = newSeq[T](xs.len)
-  for i, x in xs:
-    result[(xs.len - i - 1)] = x
 
+# proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint]) =
 
-proc findDiffLocationsBoyo*(leftPath,
-                            rightPath: string;
-                            debug: bool = false):
-                             seq[DiffPoint] =
+#   let sorted = list.sortedByIt( -it.leftTreeId)
 
-#Concept of the diff point is wrong, what we need is a way of keeping track of different branches
+#   echo sorted
 
-  var res: type(result) = @[]
+#   for diffPoint in sorted:
 
-  let leftDB = dBTable[leftPath]
-  let rightDB = dBTable[rightPath]
-  let dbs = [leftDB, rightDb]
+#     var temp1: int
+#     var temp2: int
 
-  let kidsQuery = "select nodeId from Node where parentId = ?"
+#     var pathQuery = fmt"select path from Node where nodeId = {diffPoint.leftTreeId}"
+#     var path = leftDB.getValue(sql(pathQuery))
+#     diffPoint.path = path
+#     var countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
+#     discard leftDB.getValue(sql(countQuery)).parseInt(temp1)
+#     # echo countQuery
 
-  var tuples = newSeq[(string, string)]()
+#     pathQuery = fmt"select path from Node where nodeId = {diffPoint.rightTreeId}"
+#     path = rightDB.getValue(sql(pathQuery))
+#     countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
+#     discard rightDB.getValue(sql(countQuery)).parseInt(temp2)
 
-  proc recursive(ids: array[2, string]; prevIds: array[2, string]) =
-    var kids: array[2, seq[string]]
+#     echo diffPoint
+#     echo "temp1: ", temp1
+#     echo "temp2: ", temp2
 
-    if debug:
-      echo fmt"Current ", ids
-      echo checkDomainsAreEqual([leftPath, rightPath], ids)
+#     # var difference = abs(temp2 - temp1)
+#     var difference = temp2 < temp1 ? temp2 | (temp2 - temp1)
 
-    if not checkDomainsAreEqual([leftPath, rightPath], ids):
+#     let pointsBelow = list.filter(x => x.path.contains(diffPoint.path))
 
-      let t = (prevIds[0], prevIds[1])
-      if tuples.contains(t):
-        return
+#     difference -= pointsBelow.map(x => x.descCount).foldl(a + b)
+#     # (temp2 - temp1 - result.map(x => x.descCount).foldl(a + b))
 
-      for i in countUp(0, 1):
-        for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
-          kids[i].add(row[0])
+#     if temp2 < temp1:
+#       if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() < 2:
+#         difference.dec()
+#     else:
+#       if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() > 2:
+#         difference.inc()
 
-      let cleanKids = removeDuplicates(leftPath, rightPath, kids)
+#     echo "difference: ", difference
 
-      let diffPoint = newDiffPoint(prevIds[0], prevIds[1],
-                                  cleanKids[0], cleanKids[1])
+#     diffPoint.descCount = difference
 
-      res.add(diffPoint)
-      tuples.add(t)
-      return
 
 
-    for i in countUp(0, 1):
-      for row in dbs[i].fastRows(sql(kidsQuery), ids[i]):
-        kids[i].add(row[0])
 
-    let maxKids = kids.map(x => x.len()).max() - 1
 
-    if debug:
-      echo maxKids
+# proc findDiffLocationsBoyo*(leftPath,
+#                             rightPath: string;
+#                             debug: bool = false):
+#                              seq[DiffPoint] =
 
-    for i in countUp(0, maxKids):
-      # echo fmt"Recursing on {i}", [kids[0][i], kids[1][i]]
-      var nextLeft: string
-      var nextRight: string
+# #Concept of the diff point is wrong, what we need is a way of keeping track of different branches
 
-      if i >= kids[0].len():
-        if kids[0].len() > 0:
-          nextLeft = kids[0][0]
-        else:
-          nextLeft = ids[0]
-      else:
-        nextLeft = kids[0][i]
+#   var res: type(result) = @[]
 
-      if i >= kids[1].len():
-        if kids[1].len() > 0:
-          nextRight = kids[1][0]
-        else:
-          nextRight = ids[1]
-      else:
-        nextRight = kids[1][i]
+#   let leftDB = dBTable[leftPath]
+#   let rightDB = dBTable[rightPath]
+#   let dbs = [leftDB, rightDb]
 
-      if debug:
-        echo nextLeft
-        echo nextRight
+#   let kidsQuery = "select nodeId from Node where parentId = ?"
 
-      recursive([nextLeft, nextRight], ids)
+#   var tuples = newSeq[(string, string)]()
 
-  recursive(["0", "0"], ["-1", "-1"])
+#   proc recursive(ids: array[2, string]; prevIds: array[2, string]) =
+#     var kids: array[2, seq[string]]
 
-  result = res
+#     if debug:
+#       echo fmt"Current ", ids
+#       echo checkDomainsAreEqual([leftPath, rightPath], ids)
 
+#     if not checkDomainsAreEqual([leftPath, rightPath], ids):
 
-  let sorted = result.sortedByIt( -it.leftTreeId)
+#       let t = (prevIds[0], prevIds[1])
+#       if tuples.contains(t):
+#         return
 
-  echo sorted
+#       for i in countUp(0, 1):
+#         for row in dbs[i].fastRows(sql(kidsQuery), prevIds[i]):
+#           kids[i].add(row[0])
 
-  for diffPoint in sorted:
+#       let cleanKids = removeDuplicates(leftPath, rightPath, kids)
 
-    var temp1: int
-    var temp2: int
+#       let diffPoint = newDiffPoint(prevIds[0], prevIds[1],
+#                                   cleanKids[0], cleanKids[1])
 
-    var pathQuery = fmt"select path from Node where nodeId = {diffPoint.leftTreeId}"
-    var path = leftDB.getValue(sql(pathQuery))
-    diffPoint.path = path
-    var countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
-    discard leftDB.getValue(sql(countQuery)).parseInt(temp1)
-    # echo countQuery
+#       res.add(diffPoint)
+#       tuples.add(t)
+#       return
 
-    pathQuery = fmt"select path from Node where nodeId = {diffPoint.rightTreeId}"
-    path = rightDB.getValue(sql(pathQuery))
-    countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
-    discard rightDB.getValue(sql(countQuery)).parseInt(temp2)
 
-    echo diffPoint
-    echo "temp1: ", temp1
-    echo "temp2: ", temp2
+#     for i in countUp(0, 1):
+#       for row in dbs[i].fastRows(sql(kidsQuery), ids[i]):
+#         kids[i].add(row[0])
 
-    # var difference = abs(temp2 - temp1)
-    var difference = temp2 < temp1 ? temp2 | (temp2 - temp1)
+#     let maxKids = kids.map(x => x.len()).max() - 1
 
-    let pointsBelow = result.filter(x => x.path.contains(diffPoint.path))
+#     if debug:
+#       echo maxKids
 
-    difference -= pointsBelow.map(x => x.descCount).foldl(a + b)
-    # (temp2 - temp1 - result.map(x => x.descCount).foldl(a + b))
+#     for i in countUp(0, maxKids):
+#       # echo fmt"Recursing on {i}", [kids[0][i], kids[1][i]]
+#       var nextLeft: string
+#       var nextRight: string
 
-    if temp2 < temp1:
-      if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() < 2:
-        difference.dec()
-    else:
-      if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() > 2:
-        difference.inc()
+#       if i >= kids[0].len():
+#         if kids[0].len() > 0:
+#           nextLeft = kids[0][0]
+#         else:
+#           nextLeft = ids[0]
+#       else:
+#         nextLeft = kids[0][i]
 
-    echo "difference: ", difference
+#       if i >= kids[1].len():
+#         if kids[1].len() > 0:
+#           nextRight = kids[1][0]
+#         else:
+#           nextRight = ids[1]
+#       else:
+#         nextRight = kids[1][i]
 
-    diffPoint.descCount = difference
+#       if debug:
+#         echo nextLeft
+#         echo nextRight
 
+#       recursive([nextLeft, nextRight], ids)
 
-  if debug:
-    for d in result:
-      echo d
+#   recursive(["0", "0"], ["-1", "-1"])
+
+#   result = res
+
+#   assignDescCountIncreases(leftDB, rightDB, result)
+
+#   if debug:
+#     for d in result:
+#       echo d
 
 
 
@@ -268,7 +274,9 @@ proc diff*(leftPath, rightPath: string; debug: bool = false): seq[DiffPoint] =
   # let augs = newSeq[seq[int]](2)
   # let augs = getAugs(leftPath, rightPath, diffLocations)
   # return DiffResponse(diffLocations: diffLocations, augmentedIds: augs)
-  return findDiffLocationsBoyo(leftPath, rightPath, debug)
+  let leftDB = dBTable[leftPath]
+  let rightDB = dBTable[rightPath]
+  return findDiffLocationsBoyo(leftDB, rightDB, debug)
 
 proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
   let diffCachesDir = fmt"{parentDir(leftPath)}/diffCaches"

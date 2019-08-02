@@ -1,5 +1,6 @@
 import unittest, json, constants, strutils, sequtils, sugar, os, times, strformat
 import ../src/util/main
+import ../src/util/diff
 
 template benchmark(benchmarkName: string, code: untyped) =
   block:
@@ -25,14 +26,16 @@ suite "diffHandler":
 
     echo json
 
-    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "descCount": 12,
-        "highlightLeft": [4], "highlightRight": []}, {"leftTreeId": 7,
-        "rightTreeId": 4, "descCount": 8, "highlightLeft": [8, 11],
-        "highlightRight": []}, {"leftTreeId": 17, "rightTreeId": 6,
-        "descCount": 8, "highlightLeft": [18], "highlightRight": []}, {
-        "leftTreeId": 21, "rightTreeId": 7, "descCount": 4, "highlightLeft": [
-        22, 24], "highlightRight": []}, {"leftTreeId": 27, "rightTreeId": 9,
-        "descCount": 6, "highlightLeft": [28, 30], "highlightRight": [10]}]
+    let answer = %*[{"path": "0/1/2/3", "leftTreeId": 3, "rightTreeId": 3,
+        "descCount": 0, "highlightLeft": [4], "highlightRight": []}, {
+        "path": "0/1/2/3/7", "leftTreeId": 7, "rightTreeId": 4, "descCount": 0,
+        "highlightLeft": [8, 11], "highlightRight": []}, {"path": "0/1/2/16/17",
+        "leftTreeId": 17, "rightTreeId": 6, "descCount": 0, "highlightLeft": [
+        18], "highlightRight": []}, {"path": "0/1/2/16/17/21", "leftTreeId": 21,
+        "rightTreeId": 7, "descCount": 0, "highlightLeft": [22, 24],
+        "highlightRight": []}, {"path": "0/1/2/16/26/27", "leftTreeId": 27,
+        "rightTreeId": 9, "descCount": 1, "highlightLeft": [28, 30],
+        "highlightRight": [10]}]
     check (json == answer)
 
     removeFile(fileName)
@@ -49,14 +52,16 @@ suite "diffHandler":
 
     check(fileExists(fileName))
 
-    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3, "descCount": 12,
-        "highlightLeft": [], "highlightRight": [4]}, {"leftTreeId": 4,
-        "rightTreeId": 7, "descCount": 8, "highlightLeft": [],
-        "highlightRight": [8, 11]}, {"leftTreeId": 6, "rightTreeId": 17,
-        "descCount": 8, "highlightLeft": [], "highlightRight": [18]}, {
-        "leftTreeId": 7, "rightTreeId": 21, "descCount": 4, "highlightLeft": [],
-        "highlightRight": [22, 24]}, {"leftTreeId": 9, "rightTreeId": 27,
-        "descCount": 6, "highlightLeft": [10], "highlightRight": [28, 30]}]
+    let answer = %*[{"path": "", "leftTreeId": 3, "rightTreeId": 3,
+        "descCount": 0, "highlightLeft": [], "highlightRight": [4]}, {
+        "path": "", "leftTreeId": 4, "rightTreeId": 7, "descCount": 0,
+        "highlightLeft": [], "highlightRight": [8, 11]}, {"path": "",
+        "leftTreeId": 6, "rightTreeId": 17, "descCount": 0, "highlightLeft": [],
+        "highlightRight": [18]}, {"path": "", "leftTreeId": 7,
+        "rightTreeId": 21, "descCount": 0, "highlightLeft": [],
+        "highlightRight": [22, 24]}, {"path": "", "leftTreeId": 9,
+        "rightTreeId": 27, "descCount": 1, "highlightLeft": [10],
+        "highlightRight": [28, 30]}]
 
     check(answer == diffHandler(leftPath, rightPath, rightHash, leftHash))
 
@@ -70,42 +75,49 @@ suite "domainsAreEqual":
   test "equal":
     let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
     discard init(leftPath)
+    let db = getDB(leftPath)
     for i in countup(1, 100):
-      check checkDomainsAreEqual([leftPath, leftPath], [$i, $i]) == true
+      check checkDomainsAreEqual([db, db], [$i, $i]) == true
 
   test "notequal":
     let leftPath = testDataPath & "/diff/default-sacbounds-12/normal"
     let rightPath = testDataPath & "/diff/default-sacbounds-10/normal"
     discard init(leftPath)
+    let leftDB = getDB(leftPath)
     discard init(rightPath)
+    let rightDB = getDB(rightPath)
     for i in countup(1, 100):
-      check checkDomainsAreEqual([leftPath, rightPath], [$i, $i]) == false
+      check checkDomainsAreEqual([leftDB, rightDB], [$i, $i]) == false
 
-  test "eq":
+  test "neq":
     let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
     let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
     discard init(leftPath)
+    let leftDB = getDB(leftPath)
     discard init(rightPath)
-    check checkDomainsAreEqual([leftPath, rightPath], [$4, $4]) == false
+    let rightDB = getDB(rightPath)
+    check checkDomainsAreEqual([leftDB, rightDB], [$4, $4]) == false
 
 
 
-suite "diffHandler":
+suite "removeDuplicates":
 
   test "rd8":
     let leftPath = testDataPath & "/diff/default-sacbounds-8/normal"
     let rightPath = testDataPath & "/diff/default-sacbounds-8/sacbounds"
-    discard init(leftPath)
+    let leftDB = getDB(leftPath)
     discard init(rightPath)
-    check removeDuplicates(leftPath, rightPath, [@["4", "7"], @["4"]]) == @[@[
-        "4"], @[]]
+    let rightDB = getDB(rightPath)
+    check removeDuplicates(leftDB, rightDB, [@["4", "7"], @["4"]]) == @[@["4"], @[]]
 
   test "rdfa":
     let leftPath = testDataPath & "/diff/default-findAllSols-8/normal"
     let rightPath = testDataPath & "/diff/default-findAllSols-8/findAllSols"
-    discard init(leftPath)
+    let leftDB = getDB(leftPath)
     discard init(rightPath)
-    echo removeDuplicates(leftPath, rightPath, [@["27"], @["27", "33"]])
+    let rightDB = getDB(rightPath)
+    check removeDuplicates(leftDB, rightDB, [@["27"], @["27", "33"]]) == [@[],
+        @["33"]]
 
 suite "diff":
 
@@ -143,7 +155,6 @@ suite "diff":
     check d[2].descCount == 0
     check d[3].descCount == 0
     check d[4].descCount == 1
-
 
     let flipped = diff(rightPath, leftPath, false)
 
@@ -455,14 +466,18 @@ suite "diff":
 
     let d = diff(leftPath, rightPath)
     let flipped = d.map(x => newDiffPoint($x.rightTreeId, $x.leftTreeId,
-        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y), x.descCount, x.path))
+        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y),
+            x.descCount, x.path))
 
     let rTL = diff(rightPath, leftPath)
 
     echo rTL
 
     for i in countUp(0, rTL.len() - 1):
-      check rTL[i] == flipped[i]
+      check rTL[i].leftTreeId == flipped[i].leftTreeId
+      check rTL[i].rightTreeId == flipped[i].rightTreeId
+      check rTL[i].highlightLeft == flipped[i].highlightLeft
+      check rTL[i].highlightRight == flipped[i].highlightRight
 
   test "reps":
     let leftPath = testDataPath & "/diff/differentReps/ex-8"
@@ -473,7 +488,7 @@ suite "diff":
     check(d[0].leftTreeId == -1)
     check(d[0].rightTreeId == -1)
 
-    echo  d[0].descCount == 0
+    echo d[0].descCount == 0
     # check(d.augmentedIds == newSeq[seq[int]](2))
 
   test "findAllSols":
