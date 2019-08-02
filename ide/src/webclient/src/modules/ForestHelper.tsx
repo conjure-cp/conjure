@@ -221,7 +221,7 @@ export const assignNewDescCounts = (merged: MyMap, diffPoints: DiffPoint[]) => {
   //   "0/1/2/16/26/27"
   // ]
 
-  let paths = diffPoints.map(x => x.path)
+  let paths = diffPoints.map(x => x.leftPath)
 
   let nodeList = [merged[0]]
     .concat(getDescList(merged[0]))

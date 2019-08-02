@@ -1,10 +1,10 @@
-import os,   sequtils, tables, db_sqlite, types, parseutils,
+import os, sequtils, tables, db_sqlite, types, parseutils,
         strutils, json, strformat, sequtils, sugar, algorithm
 
 import meta
 
 
-proc checkDomainsAreEqual*(dbs: array[2, DbConn], 
+proc checkDomainsAreEqual*(dbs: array[2, DbConn],
                     nodeIds: array[2, string]): bool =
   let query1 = "select group_concat(name || ' - ' || storeDump, ' , ') from Domain where nodeId = ? and name not like 'aux%'"
   let leftDB = dbs[0]
@@ -17,7 +17,8 @@ proc checkDomainsAreEqual*(dbs: array[2, DbConn],
   result = leftValue == rightValue
 
 type DiffPoint* = ref object of RootObj
-  path*: string
+  leftPath*: string
+  rightPath*: string
   descCount*: int
   leftTreeId*: int
   rightTreeId*: int
@@ -28,7 +29,7 @@ proc `==`*(a, b: DiffPoint): bool =
   return %a == %b
 
 proc `$`*(d: DiffPoint): string =
-  result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} : {d.descCount}> | {d.path}>"
+  result = fmt"<({d.leftTreeId}, {d.rightTreeId}) {d.highlightLeft} {d.highlightRight} : {d.descCount}> | {d.leftPath} {d.rightPath}>"
 
 proc `$`*(list: seq[DiffPoint]): string =
   result &= "["
@@ -58,7 +59,7 @@ dC: int = 0, path: string = ""): DiffPoint =
     )
 
   return DiffPoint(leftTreeId: lNum, rightTreeId: rNum, highlightLeft: hL,
-          highlightRight: hR, descCount: dC, path: path)
+          highlightRight: hR, descCount: dC, leftPath: path)
 
 proc removeDuplicates*(leftDB: DBconn; rightDB: DbConn;
                         kids: array[2, seq[string]]):
@@ -86,44 +87,70 @@ proc removeDuplicates*(leftDB: DBconn; rightDB: DbConn;
   ]
 
 
-proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint], debug: bool = false) =
+proc getNotLikeQuery(i: int, sorted: seq[DiffPoint], isLeft: bool): string =
+  var notLike = ""
+  if i > 0:
+    if isLeft:
+      notLike = fmt"and path not like '{sorted[i-1].leftPath}/%'"
+    else:
+      notLike = fmt"and path not like '{sorted[i-1].rightPath}/%'"
+  return notLike
 
-  let sorted = list.sortedByIt( -it.leftTreeId)
+proc getPathQuery(diffPoint: DiffPoint, isLeft: bool): string =
+  if (isLeft):
+    return fmt"select path from Node where nodeId = {diffPoint.leftTreeId}"
+  return fmt"select path from Node where nodeId = {diffPoint.rightTreeId}"
 
-  if debug: 
+
+proc getCountQuery(path, notLikeQuery: string): string =
+  return fmt"select count(nodeId) from Node where path like '{path}/%' {notLikeQuery}"
+
+
+proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint],
+    debug: bool = false) =
+
+  let sorted = list.sortedByIt(-it.leftTreeId)
+
+  if debug:
     echo sorted
 
-  for diffPoint in sorted:
+  for i, diffPoint in sorted:
 
     var temp1: int
     var temp2: int
 
-    var pathQuery = fmt"select path from Node where nodeId = {diffPoint.leftTreeId}"
-    var path = leftDB.getValue(sql(pathQuery))
-    diffPoint.path = path
-    var countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
+    var pathQuery: string
+    var notLikeQuery: string
+    var countQuery: string
+
+    pathQuery = getPathQuery(diffPoint, true)
+    notLikeQuery = getNotLikeQuery(i, sorted, true)
+
+    diffPoint.leftPath = leftDB.getValue(sql(pathQuery))
+
+    countQuery = getCountQuery(diffPoint.leftPath, notLikeQuery)
+
+    # echo countQuery
+
     discard leftDB.getValue(sql(countQuery)).parseInt(temp1)
+  
 
-    if debug: 
-      echo countQuery
+    pathQuery = getPathQuery(diffPoint, false)
+    notLikeQuery = getNotLikeQuery(i, sorted, false)
 
-    pathQuery = fmt"select path from Node where nodeId = {diffPoint.rightTreeId}"
-    path = rightDB.getValue(sql(pathQuery))
-    countQuery = fmt"select count(nodeId) from Node where path like '{path}/%'"
+    diffPoint.rightPath = rightDB.getValue(sql(pathQuery))
+
+    countQuery = getCountQuery(diffPoint.rightPath, notLikeQuery)
+
     discard rightDB.getValue(sql(countQuery)).parseInt(temp2)
 
-    if debug: 
-      echo diffPoint
-      echo "temp1: ", temp1
-      echo "temp2: ", temp2
+
+    # if debug:
+    #   echo "temp1: ", temp1
+    #   echo "temp2: ", temp2
 
     # var difference = abs(temp2 - temp1)
     var difference = temp2 < temp1 ? temp2 | (temp2 - temp1)
-
-    let pointsBelow = list.filter(x => x.path.contains(diffPoint.path))
-
-    difference -= pointsBelow.map(x => x.descCount).foldl(a + b)
-    # (temp2 - temp1 - result.map(x => x.descCount).foldl(a + b))
 
     if temp2 < temp1:
       if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() < 2:
@@ -132,7 +159,7 @@ proc assignDescCountIncreases*(leftDB, rightDB: DbConn, list: seq[DiffPoint], de
       if diffPoint.highlightLeft.len() + diffPoint.highlightRight.len() > 2:
         difference.inc()
 
-    if debug: 
+    if debug:
       echo "difference: ", difference
 
     diffPoint.descCount = difference
@@ -177,7 +204,6 @@ proc findDiffLocationsBoyo*(leftDB,
 
       let diffPoint = newDiffPoint(prevIds[0], prevIds[1],
                                   cleanKids[0], cleanKids[1])
-
       res.add(diffPoint)
       tuples.add(t)
       return
@@ -228,6 +254,3 @@ proc findDiffLocationsBoyo*(leftDB,
   if debug:
     for d in result:
       echo d
-
-
-
