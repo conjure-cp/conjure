@@ -5,15 +5,16 @@ import * as path from "path"
 
 export type RepMap = Record<string, VarRepresentation[]>
 
+export interface VarRepresentation {
+  name: string;
+  representations: RepOption[];
+}
+
 export interface RepOption {
   answer: number;
   description: string;
 }
 
-export interface VarRepresentation {
-  name: string;
-  representations: RepOption[];
-}
 export interface ToProcess {
   args: string[];
   hash: string;

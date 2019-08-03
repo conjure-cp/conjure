@@ -89,6 +89,7 @@
     "lint": "tslint \"src/**/*.{ts,tsx,js,jsx}\" --quiet"
   },
   "devDependencies": {
+    "@testing-library/react": "^8.0.7",
     "@types/jest": "^24.0.15",
     "@types/jquery": "^3.3.29",
     "@types/node": "^8.10.49",
@@ -109,6 +110,7 @@
     "webpack-cli": "^3.1.2"
   },
   "dependencies": {
+    "@testing-library/jest-dom": "^4.0.0",
     "@types/cors": "^2.8.5",
     "@types/d3": "^5.7.2",
     "@types/express": "^4.17.0",
@@ -128,6 +130,7 @@
     "express": "^4.17.1",
     "find-free-port": "^2.0.0",
     "formik": "^1.5.7",
+    "jest-dom": "^4.0.0",
     "lodash": "^4.17.11",
     "node-fetch": "^2.6.0",
     "node-object-hash": "^1.4.2",

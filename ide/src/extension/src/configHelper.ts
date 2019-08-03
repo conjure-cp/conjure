@@ -5,7 +5,7 @@ import { spawn, ChildProcess } from "child_process"
 import apiConstructor = require("node-object-hash")
 import rimraf = require("rimraf")
 import { noop } from "react-select/lib/utils"
-import { VarRepresentation, ToProcess, Cache, Separation } from "./utils";
+import { VarRepresentation, ToProcess, Cache, Separation, cacheToArgs } from "./utils";
 import { RepMap } from "./utils";
 
 const createHTML = require("create-html")
@@ -208,7 +208,7 @@ export default class ConfigureHelper {
       const cache = list[i]
 
       const hash = hasher(cache.config)
-      const args = this.configToArgs(cache.config, cache.name)
+      const args = cacheToArgs(cache, this.cacheFolderPath)
 
       const obj = {
         args: args,
@@ -256,118 +256,6 @@ export default class ConfigureHelper {
     pid2JobId: any
   ): string {
     return `[${doneCount + 1}/${jobCount}] - Config ${pid2JobId[proc.pid]} - `
-  }
-  public static configToArgs(config: any, name: string): string[] {
-    console.error(config)
-
-
-    const outputPath = path.join(this.cacheFolderPath, name)
-
-    const fullPathToModel = path.join(
-      vscode.workspace.rootPath!,
-      config.essenceFile
-    )
-    const fullPathToParam = path.join(
-      vscode.workspace.rootPath!,
-      config.paramFile
-    )
-
-    let conjureOptions = [
-      "solve",
-      fullPathToModel,
-      fullPathToParam,
-      "-o",
-      outputPath
-    ]
-
-    if ("conjureTime" in config) {
-      conjureOptions.push(`--limit-time=${config.conjureTime}`)
-    }
-
-    if ("strategy" in config) {
-      conjureOptions.push("-a")
-      conjureOptions.push(config.strategy)
-    }
-
-    if ("answers" in config) {
-      conjureOptions.push("-aai")
-      conjureOptions.push("--channelling=no")
-      conjureOptions.push("--smart-filenames")
-      conjureOptions.push("--responses-representation")
-      conjureOptions.push(`${config.answers.join(",")}`)
-    }
-
-    let savileRowOptions = ["--savilerow-options", '"']
-
-    if ("optimisation" in config) {
-      savileRowOptions.push(config.optimisation)
-    }
-
-    if ("symmetry" in config) {
-      savileRowOptions.push(config.symmetry)
-    }
-
-    if ("translation" in config) {
-      savileRowOptions.push(config.translation)
-    }
-
-    if ("srTime" in config) {
-      savileRowOptions.push("-timelimit")
-      savileRowOptions.push(config.srTime)
-    }
-
-    if ("cnfLimit" in config) {
-      savileRowOptions.push("-cnflimit")
-      savileRowOptions.push(config.cnfLimit)
-    }
-
-    savileRowOptions.push('"')
-
-    let minionOptions = [
-      "--solver-options",
-      '"-dumptreesql',
-      path.join(outputPath, "/out.db")
-    ]
-
-    if ("minionSwitches" in config) {
-      minionOptions = minionOptions.concat(config.minionSwitches)
-    }
-
-    if ("nodeLimit" in config) {
-      minionOptions.push("-nodelimit")
-      minionOptions.push(config.nodeLimit)
-    }
-
-    if ("solLimit" in config) {
-      minionOptions.push("-sollimit")
-      minionOptions.push(config.solLimit)
-    }
-
-    if ("minionTime" in config) {
-      minionOptions.push("-cpulimit")
-      minionOptions.push(config.minionTime)
-    }
-
-    if ("preprocessing" in config) {
-      minionOptions.push("-preprocess")
-      minionOptions.push(config.preprocessing)
-    }
-
-    if ("consistency" in config) {
-      minionOptions.push("-prop-node")
-      minionOptions.push(config.consistency)
-    }
-
-    minionOptions.push('"')
-
-    conjureOptions = conjureOptions
-      .concat(savileRowOptions)
-      .concat(minionOptions)
-
-    // console.log("conjure " + conjureOptions.join(" "))
-    console.log(JSON.stringify(conjureOptions))
-
-    return conjureOptions
   }
 
   public static async invalidateCaches() {

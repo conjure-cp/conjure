@@ -1,8 +1,7 @@
 import * as Yup from "yup"
-import { RepMap } from "../../../../extension/src/configHelper"
-import { Cache } from "../../../../extension/src/utils";
-import { State, Values } from "./FormikConjure";
-import { isEqual } from "lodash";
+import { Cache, RepMap } from "../../../../extension/src/utils"
+import { State, Values } from "./FormikConjure"
+import { isEqual } from "lodash"
 
 const positiveInt = Yup.number()
   .positive()
@@ -41,59 +40,37 @@ export const validationSchema = Yup.object().shape({
   namedCaches: Yup.array().of(Yup.object().shape(namedConfigSchema))
 })
 
+export const cleanCache = (cache: Cache, reps: RepMap, index: number) => {
+  let cleaned = cache.config
 
+  cleaned.answers = cache.config.answers.map(
+    (answer: string | undefined, i: number) => {
+      let variable = reps[cleaned.essenceFile][i]
 
-export const cleanCache = (cache: Cache, state: State, values: Values, reps: RepMap,  index: number) => {
-    const config = cache.config
-
-    let cleaned: any = {}
-
-    Object.keys(config).map((key: string) => {
-      if (config[key] !== "" && config[key] !== "Default") {
-        cleaned[key] = config[key]
+      if (!answer) {
+        return `${variable.name}:${1}`
       }
-    })
 
-    if (config.minionSwitches) {
-      cleaned["minionSwitches"] = config.minionSwitches
+      return `${variable.name}:${answer}`
     }
+  )
 
-    // console.log(config.answers)
+  let name =
+    cache.name !== ""
+      ? cache.name
+      : `${new Date()
+          .toLocaleTimeString()
+          .replace(/ /g, "_")
+          .replace(/,/g, "_")}_Config${index + 1}`
 
-    cleaned.answers = config.answers.map(
-      (answer: number | string, i: number) => {
-        let variable = reps[cleaned.essenceFile][i]
-
-        if (!answer) {
-          return `${variable.name}:${1}`
-        }
-
-        return `${variable.name}:${answer}`
-      }
-    )
-
-    if (!state.showReps[index]) {
-      delete cleaned["answers"]
-    }
-
-    let name =
-      cache.name !== ""
-        ? cache.name
-        : `${new Date()
-            .toLocaleTimeString()
-            .replace(/ /g, "_")
-            .replace(/,/g, "_")}_Config`
-
-    if (isEqual(values.namedCaches[0], values.namedCaches[1])) {
-      name += "1+2"
-    } else {
-      name += `${index + 1}`
-    }
-
-    let newNamedConfig: Cache = {
-      config: cleaned,
-      name: name
-    }
-
-    return newNamedConfig
+  if (cache.name.includes("_Config")) {
+    name = cache.name.replace("_Config", `_Config${index + 1}`)
   }
+
+  let newNamedConfig: Cache = {
+    config: cleaned,
+    name: name
+  }
+
+  return newNamedConfig
+}

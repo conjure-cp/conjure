@@ -12,8 +12,8 @@ import StageHeader from "../common/StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "../common/Check"
 import NewSelect from "./NewSelect"
-import { Cache, RepMap } from "../../../../extension/src/utils";
-import { validationSchema } from "./Validation"
+import { Cache, RepMap } from "../../../../extension/src/utils"
+import { validationSchema, cleanCache } from "./Validation"
 
 type RepChoices = Record<string, string>
 
@@ -92,74 +92,10 @@ class ConfigForm extends React.Component<Props, State> {
     this.state = { showReps: [false, false] }
   }
 
-  cleanCache = (cache: Cache, state: State, values: Values, index: number) => {
-
-    console.log(JSON.stringify(cache))
-
-    const config = cache.config
-
-    let cleaned: any = {}
-
-    Object.keys(config).map((key: string) => {
-      if (config[key] !== "" && config[key] !== "Default") {
-        cleaned[key] = config[key]
-      }
-    })
-
-    if (config.minionSwitches) {
-      cleaned["minionSwitches"] = config.minionSwitches
-    }
-
-    // console.log(config.answers)
-
-    cleaned.answers = config.answers.map(
-      (answer: number | string, i: number) => {
-        let variable = this.props.reps[cleaned.essenceFile][i]
-
-        if (!answer) {
-          return `${variable.name}:${1}`
-        }
-
-        return `${variable.name}:${answer}`
-      }
-    )
-
-    if (!state.showReps[index]) {
-      delete cleaned["answers"]
-    }
-
-    let name =
-      cache.name !== ""
-        ? cache.name
-        : `${new Date()
-            // .toUTCString()
-            .toLocaleTimeString()
-            .replace(/ /g, "_")
-            .replace(/,/g, "_")}_Config`
-
-    if (isEqual(values.namedCaches[0], values.namedCaches[1])) {
-      name += "1+2"
-    } else {
-      name += `${index + 1}`
-    }
-
-    let newNamedConfig: Cache = {
-      config: cleaned,
-      name: name
-    }
-
-    return newNamedConfig
-  }
-
-  submissionHandler = (values: Values, props: Props, state: State) => {
-    // console.log("!!!!!!!!!!!!!")
-    // console.log(values)
-
+  submissionHandler = (values: Values, props: Props) => {
     let cleaned = values.namedCaches.map((namedCache, index) =>
-      this.cleanCache(namedCache, state, values, index)
+      cleanCache(namedCache, props.reps, index)
     )
-
-    console.log("cleaned", cleaned)
 
     fetch(`http://localhost:${this.props.vscodeServerPort}/config/solve`, {
       method: "post",
@@ -179,44 +115,46 @@ class ConfigForm extends React.Component<Props, State> {
   renderArrayElements = (props: Props, values: Values, setFieldValue: any) => {
     // console.log(values)
 
-    return values.namedCaches.map((_config, index) => {
+    return values.namedCaches.map((cache, index) => {
       const currentEssenceFile = values.namedCaches[index].config.essenceFile
 
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
-      const repSelectBoxes = varReps.map((vR, i) => {
-        // values.namedCaches[index].config.answers[i] =
-        //   values.namedCaches[index].config.answers[i] === ""
-        //     ? vR.representations[0].answer
-        //     : values.namedCaches[index].config.answers[i]
+      // const repSelectBoxes = varReps.map((vR, i) => {
+      // values.namedCaches[index].config.answers[i] =
+      //   values.namedCaches[index].config.answers[i] === ""
+      //     ? vR.representations[0].answer
+      //     : values.namedCaches[index].config.answers[i]
 
-        const cachedChoice = vR.representations.find(
-          x => x.answer === values.namedCaches[index].config.answers[i]
-        )
+      // const cachedChoice = vR.representations.find(
+      //   x => x.answer === values.namedCaches[index].config.answers[i]
+      // )
 
-        return (
-          <NewSelect
-            name={`namedCaches[${index}].config.answers[${i}]`}
-            key={vR.name}
-            title={vR.name}
-            value={
-              cachedChoice
-                ? {
-                    label: cachedChoice.description,
-                    value: cachedChoice.answer
-                  }
-                : ""
-            }
-            onChange={setFieldValue}
-            options={vR.representations.map(o => {
-              return {
-                value: o.answer,
-                label: o.description
-              }
-            })}
-          />
-        )
-      })
+      // let cachedChoice = cache.config.answers[i]
+
+      // return (
+      //   <NewSelect
+      //     name={`namedCaches[${index}].config.answers[${i}]`}
+      //     key={vR.name}
+      //     title={vR.name}
+      //     value={
+      //       cachedChoice
+      //         ? {
+      //             label: cachedChoice.description,
+      //             value: cachedChoice.answer
+      //           }
+      //         : ""
+      //     }
+      //     onChange={setFieldValue}
+      //     options={vR.representations.map(o => {
+      //       return {
+      //         value: o.answer,
+      //         label: o.description
+      //       }
+      //     })}
+      //   />
+      // )
+      // })
 
       return (
         <div className="col" key={index}>
@@ -291,7 +229,7 @@ class ConfigForm extends React.Component<Props, State> {
                   })
                 }
               />
-              {this.state.showReps[index] && repSelectBoxes}
+              {/* {this.state.showReps[index] && repSelectBoxes} */}
               {/*  */}
             </StageHeader>
             <StageHeader
@@ -546,7 +484,7 @@ class ConfigForm extends React.Component<Props, State> {
       <Formik
         initialValues={{ namedCaches: list }}
         onSubmit={values => {
-          this.submissionHandler(values, this.props, this.state)
+          this.submissionHandler(values, this.props)
         }}
         validationSchema={validationSchema}
         enableReinitialize={true}
@@ -557,7 +495,7 @@ class ConfigForm extends React.Component<Props, State> {
               checked={this.props.diff}
               onChange={() => {
                 this.props.diffCheckHandler(
-                  this.cleanCache(values.namedCaches[0], this.state, values, 0)
+                  cleanCache(values.namedCaches[0], this.props.reps, 0)
                 )
               }}
             />
