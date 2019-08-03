@@ -13,14 +13,15 @@ import Checkbox from "./Checkbox"
 import { Check } from "../common/Check"
 import NewSelect from "./NewSelect"
 import { Cache, RepMap } from "../../../../configHelper"
+import { validationSchema } from "./Validation";
 
 type RepChoices = Record<string, string>
 
-interface Values {
+export interface Values {
   namedCaches: Cache[]
 }
 
-interface Config {
+export interface Config {
   answers: (number | undefined)[]
   essenceFile: string
   paramFile: string
@@ -40,7 +41,7 @@ interface Config {
   [key: string]: any
 }
 
-interface Props {
+export interface Props {
   vscodeServerPort: number
   diff: boolean
   caches: Cache[]
@@ -53,46 +54,9 @@ interface Props {
   diffCheckHandler: (namedCache1: Cache) => void
 }
 
-interface State {
+export interface State {
   showReps: boolean[]
 }
-
-const positiveInt = Yup.number()
-  .positive()
-  .integer()
-  .moreThan(0)
-
-const intOrNothing = Yup.mixed().test(
-  "Is a valid number or empty string",
-  "Leave empty or specify an integer > 0",
-  (value: any) => {
-    if (value === "") {
-      return true
-    }
-    return positiveInt.isValidSync(value)
-  }
-)
-
-const configSchema = {
-  conjureTime: intOrNothing,
-  srTime: intOrNothing,
-  minionTime: intOrNothing,
-  cnfLimit: intOrNothing,
-  nodeLimit: intOrNothing,
-  solLimit: intOrNothing
-}
-
-const namedConfigSchema = {
-  config: Yup.object().shape(configSchema),
-  name: Yup.string().matches(
-    /^$|^[a-z_:0-9]+$/i,
-    "Name nust be alphanumeric(underscore/colons allowed), leave blank for timestamp"
-  )
-}
-
-const validationSchema = Yup.object().shape({
-  namedCaches: Yup.array().of(Yup.object().shape(namedConfigSchema))
-})
 
 class ConfigForm extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -437,6 +401,7 @@ class ConfigForm extends React.Component<Props, State> {
       )
     })
   }
+
   makeNamedConfig = (props: Props, index: number, reps: RepMap): Cache => {
     const getName = (caches?: (Cache | undefined)[]) => {
       if (!caches) {
