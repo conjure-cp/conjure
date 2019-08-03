@@ -12,8 +12,8 @@ import StageHeader from "../common/StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "../common/Check"
 import NewSelect from "./NewSelect"
-import { Cache, RepMap } from "../../../../configHelper"
-import { validationSchema } from "./Validation";
+import { Cache, RepMap } from "../../../../extension/src/utils";
+import { validationSchema } from "./Validation"
 
 type RepChoices = Record<string, string>
 
@@ -22,7 +22,7 @@ export interface Values {
 }
 
 export interface Config {
-  answers: (number | undefined)[]
+  answers: (string | undefined)[]
   essenceFile: string
   paramFile: string
   strategy: string
@@ -39,6 +39,34 @@ export interface Config {
   consistency: string
   preprocessing: string
   [key: string]: any
+}
+
+export const newCache = (): Cache => {
+  return {
+    name: "",
+    config: newConfig()
+  }
+}
+
+export const newConfig = (): Config => {
+  return {
+    paramFile: "",
+    essenceFile: "",
+    conjureTime: "",
+    strategy: "",
+    optimisation: "",
+    symmetry: "",
+    translation: "",
+    srTime: "",
+    minionTime: "",
+    cnfLimit: "",
+    minionSwitches: [],
+    nodeLimit: "",
+    solLimit: "",
+    consistency: "",
+    preprocessing: "",
+    answers: []
+  }
 }
 
 export interface Props {
@@ -65,6 +93,9 @@ class ConfigForm extends React.Component<Props, State> {
   }
 
   cleanCache = (cache: Cache, state: State, values: Values, index: number) => {
+
+    console.log(JSON.stringify(cache))
+
     const config = cache.config
 
     let cleaned: any = {}
@@ -469,7 +500,7 @@ class ConfigForm extends React.Component<Props, State> {
 
     if (selectedCache.config.answers) {
       initialConfig.answers = initialConfig.answers.map((str: any) => {
-        return Number(str.split(":")[1])
+        return str.split(":")[1]
       })
     }
 

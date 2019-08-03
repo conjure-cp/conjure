@@ -18,8 +18,8 @@ import * as init from "./init"
 import cors from "cors";
 const fetch = require("node-fetch")
 
-import ConfigHelper, { RepMap, hasher } from "../configHelper"
-import { Cache } from "../configHelper"
+import ConfigHelper, { hasher } from "../extension/src/configHelper"
+import { Cache, RepMap } from "../extension/src/utils";
 import { execSync } from "child_process"
 import { Core } from "../webclient/src/components/vis/TreeContainer"
 

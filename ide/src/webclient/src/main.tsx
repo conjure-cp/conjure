@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom"
 import StageHeader from "./components/common/StageHeader"
 import FormikConjure from "./components/config/FormikConjure"
 import { Check } from "./components/common/Check"
-import { Cache, RepMap } from "../../configHelper"
+import { Cache, RepMap } from "../../extension/src/utils";
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
 import "./css/styles.css"

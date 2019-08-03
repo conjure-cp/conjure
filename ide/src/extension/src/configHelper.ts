@@ -5,39 +5,14 @@ import { spawn, ChildProcess } from "child_process"
 import apiConstructor = require("node-object-hash")
 import rimraf = require("rimraf")
 import { noop } from "react-select/lib/utils"
+import { VarRepresentation, ToProcess, Cache, Separation } from "./utils";
+import { RepMap } from "./utils";
+
 const createHTML = require("create-html")
 const kill = require("tree-kill")
 
 export const hasher = apiConstructor({ sort: true, coerce: true }).hash
 
-export type RepMap = Record<string, VarRepresentation[]>
-
-export interface RepOption {
-  answer: number
-  description: string
-}
-
-export interface VarRepresentation {
-  name: string
-  representations: RepOption[]
-}
-
-interface ToProcess {
-  args: string[]
-  hash: string
-  config: any
-  name: string
-}
-
-interface Separation {
-  needToGenerate: ToProcess[]
-  loadFromCache: ToProcess[]
-}
-
-export interface Cache {
-  name: string
-  config: any
-}
 
 export default class ConfigureHelper {
   private static context: vscode.ExtensionContext
@@ -228,6 +203,7 @@ export default class ConfigureHelper {
     let loadFromCache: ToProcess[] = []
     let needToGenerate: ToProcess[] = []
 
+
     for (let i = 0; i < list.length; i++) {
       const cache = list[i]
 
@@ -282,6 +258,9 @@ export default class ConfigureHelper {
     return `[${doneCount + 1}/${jobCount}] - Config ${pid2JobId[proc.pid]} - `
   }
   public static configToArgs(config: any, name: string): string[] {
+    console.error(config)
+
+
     const outputPath = path.join(this.cacheFolderPath, name)
 
     const fullPathToModel = path.join(
@@ -366,7 +345,7 @@ export default class ConfigureHelper {
 
     if ("minionTime" in config) {
       minionOptions.push("-cpulimit")
-      minionOptions.push(config.cpuLimit)
+      minionOptions.push(config.minionTime)
     }
 
     if ("preprocessing" in config) {
@@ -385,7 +364,8 @@ export default class ConfigureHelper {
       .concat(savileRowOptions)
       .concat(minionOptions)
 
-    console.log("conjure " + conjureOptions.join(" "))
+    // console.log("conjure " + conjureOptions.join(" "))
+    console.log(JSON.stringify(conjureOptions))
 
     return conjureOptions
   }
@@ -485,3 +465,5 @@ export default class ConfigureHelper {
     return htmlFile
   }
 }
+
+

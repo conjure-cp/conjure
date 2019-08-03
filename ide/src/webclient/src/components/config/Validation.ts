@@ -1,5 +1,6 @@
 import * as Yup from "yup"
-import { Cache, RepMap } from "../../../../configHelper"
+import { RepMap } from "../../../../extension/src/configHelper"
+import { Cache } from "../../../../extension/src/utils";
 import { State, Values } from "./FormikConjure";
 import { isEqual } from "lodash";
 
