@@ -28,9 +28,9 @@ describe("Test the stages components", () => {
         nodeLimit: 1,
         solLimit: 1,
         minionTime: 1,
-        preprocessing: 1,
-        consistency: 1,
-        minionSwitches: ["-findallsols", "-randomiseorder"]
+        minionSwitches: ["-findallsols", "-randomiseorder"],
+        preprocessing: "GAC",
+        consistency: "GAC"
       }
     }
 
@@ -55,6 +55,8 @@ describe("Test the stages components", () => {
     const { queryByText, getByLabelText, getByText, getByTestId } = rendered
 
     expect(queryByText("Minion")).toBeTruthy()
+
+
 
     test("node limit", () => {
       expect(
@@ -92,6 +94,15 @@ describe("Test the stages components", () => {
         selector: "input"
       })
       expect(checkBox).toHaveAttribute("checked", "")
+    })
+
+
+    test("Preprocessing", () => {
+        expect(getByLabelText(/Preprocessing/)).toHaveValue("GAC")
+    })
+
+    test("Consistency", () => {
+        expect(getByLabelText(/Consistency/)).toHaveValue("GAC")
     })
   })
 })

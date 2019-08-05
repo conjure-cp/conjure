@@ -59,7 +59,7 @@ describe("Test the stages components", () => {
         expect(getByLabelText(/Optimisation/)).toHaveValue("-O0")
     })
 
-    test("Optimisation", () => {
+    test("Symmetry", () => {
         expect(getByLabelText(/Symmetry/)).toHaveValue("-S0")
     })
 

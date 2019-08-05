@@ -28,9 +28,9 @@ interface MinionConfig {
   nodeLimit: number
   solLimit: number
   minionTime: number
-  preprocessing: number
-  consistency: number
-  minionSwitches: []
+  preprocessing: string
+  consistency: string
+  minionSwitches: string[]
 }
 
 interface Values {
@@ -94,7 +94,7 @@ export const MinionStage = (
       <Field
         name={`${name}.preprocessing`}
         component={SelectWithLabel}
-        title="preprocessing"
+        title="Preprocessing"
         values={values.config.preprocessing}
         options={consistencyOptions}
       />
