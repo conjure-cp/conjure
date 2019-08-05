@@ -1,6 +1,6 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import { FormikProps, FieldProps, Field } from "formik";
+import * as React from "react"
+import * as ReactDOM from "react-dom"
+import { FormikProps, FieldProps, Field } from "formik"
 
 const Checkbox = (props: any) => {
   return (
@@ -17,11 +17,11 @@ const Checkbox = (props: any) => {
                   if (field.value.includes(props.value)) {
                     const nextValue = field.value.filter(
                       (value: string) => value !== props.value
-                    );
-                    form.setFieldValue(props.name, nextValue);
+                    )
+                    form.setFieldValue(props.name, nextValue)
                   } else {
-                    const nextValue = field.value.concat(props.value);
-                    form.setFieldValue(props.name, nextValue);
+                    const nextValue = field.value.concat(props.value)
+                    form.setFieldValue(props.name, nextValue)
                   }
                 }}
               />
@@ -31,7 +31,7 @@ const Checkbox = (props: any) => {
         </div>
       )}
     </Field>
-  );
-};
+  )
+}
 
-export default Checkbox;
+export default Checkbox

@@ -2,7 +2,14 @@ import * as React from "react"
 import { Caches } from "./Caches"
 import * as ReactDOM from "react-dom"
 
-import { Form, Field, FieldArray, FieldProps, Formik, FormikProps } from "formik"
+import {
+  Form,
+  Field,
+  FieldArray,
+  FieldProps,
+  Formik,
+  FormikProps
+} from "formik"
 import * as Yup from "yup"
 
 import { maxBy, times, isEqual, cloneDeep } from "lodash"
@@ -11,24 +18,36 @@ import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "../common/StageHeader"
 import Checkbox from "./Checkbox"
 import { Check } from "../common/Check"
-import { defaultProps } from "react-select/lib/Creatable";
+import { defaultProps } from "react-select/lib/Creatable"
 
 interface Props {
   index: number
 }
 
-interface Values{
+interface MinionConfig {
   nodeLimit: number
+  solLimit: number
+  minionTime: number
+  preprocessing: number
+  consistency: number
+  minionSwitches: []
 }
 
-export default TextWithLabel;
+interface Values {
+  config: MinionConfig
+}
 
-export const MinionStage = (props: Props & FormikProps<Values> & FieldProps<any>) => {
+
+
+export default TextWithLabel
+
+export const MinionStage = (
+  props: Props & FormikProps<Values> & FieldProps<any>
+) => {
   // export class MinionStage extends React.Component<Props, any> {
   // render() {
   const { index, values } = props
-  const { name } = props.field;
-  
+  const { name } = props.field
 
   let consistencyOptions = [
     { value: "", label: "Default" },
@@ -39,49 +58,55 @@ export const MinionStage = (props: Props & FormikProps<Values> & FieldProps<any>
     { value: "SSAC", label: "SSAC" }
   ]
 
-  console.log("IN MINION ",props.values)
+  // console.log("IN MINION ", props.values)
 
   return (
     <StageHeader title="Minion" id={`minion${index + 1}`} isCollapsed={true}>
-      {/* <Checkbox
-        name={`namedCaches[${index}].config.minionSwitches`}
+      <Checkbox
+        name={`${name}.minionSwitches`}
         value="-findallsols"
         label="Find all solutions"
+        values={values.config.minionSwitches}
       />
       <Checkbox
-        name={`namedCaches[${index}].config.minionSwitches`}
+        name={`${name}.minionSwitches`}
         value="-randomiseorder"
         label="Randomise Var Order"
-      /> */}
+        values={values.config.minionSwitches}
+      />
       <Field
         name={`${name}.nodeLimit`}
         component={TextWithLabel}
-        values={values.nodeLimit} 
+        values={values.config.nodeLimit}
         label="Node Limit"
       />
-      {/* <Field
-        name={`namedCaches[${index}].config.solLimit`}
+      <Field
+        name={`${name}.solLimit`}
         component={TextWithLabel}
+        values={values.config.solLimit}
         label="Solution Limit"
       />
       <Field
-        name={`namedCaches[${index}].config.minionTime`}
+        name={`${name}.minionTime`}
         component={TextWithLabel}
+        values={values.config.minionTime}
         label="CPU Limit"
       />
 
       <Field
-        name={`namedCaches[${index}].config.preprocessing`}
+        name={`${name}.preprocessing`}
         component={SelectWithLabel}
-        title="Preprocessing"
+        title="preprocessing"
+        values={values.config.preprocessing}
         options={consistencyOptions}
       />
       <Field
-        name={`namedCaches[${index}].config.consistency`}
+        name={`${name}.consistency`}
         component={SelectWithLabel}
         title="Consistency"
+        values={values.config.consistency}
         options={consistencyOptions}
-      /> */}
+      />
     </StageHeader>
   )
 }

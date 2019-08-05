@@ -11,7 +11,7 @@ const TextWithLabel = (props: Props & FormikProps<any> & FieldProps<any>) => {
   const { touched, errors } = props.form
   const { name } = props.field
 
-  console.log("In text with label!!", props.values)
+  // console.log("In text with label!!", props.values)
 
   return (
     <div className="row">

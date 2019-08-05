@@ -6,9 +6,7 @@ interface Props {
   options: { value: string; label: string }[]
 }
 
-const SelectWithLabel = (
-  props: Props & FormikProps<any> & FieldProps<any>
-) => {
+const SelectWithLabel = (props: Props & FormikProps<any> & FieldProps<any>) => {
   const { touched, errors } = props.form
   const { name } = props.field
 
@@ -20,14 +18,18 @@ const SelectWithLabel = (
 
   return (
     <div>
-      <label>{props.title}</label>
-      <Field
-        className="browser-default custom-select mb-4"
-        component="select"
-        {...props.field}
-      >
-        {opts}
-      </Field>
+      <label>
+        {props.title}
+        <Field
+          data-testid={props.title}
+          className="browser-default custom-select mb-4"
+          component="select"
+          {...props.field}
+          value={props.values}
+        >
+          {opts}
+        </Field>
+      </label>
     </div>
   )
 }

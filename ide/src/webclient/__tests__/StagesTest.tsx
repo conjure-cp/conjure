@@ -9,23 +9,35 @@ import {
   Formik,
   FormikProps
 } from "formik"
-import { render, fireEvent, queryByLabelText } from "@testing-library/react"
+import {
+  render,
+  fireEvent,
+  queryByLabelText,
+  getByTestId
+} from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { MinionStage } from "../src/components/config/Stages"
 
 describe("Test the stages components", () => {
-  describe("Test the minion stage", () => {
+  describe("Test the minion stage with values", () => {
     // const minionStage = getMinionStage(0)
     const index = 0
 
     const initialValues = {
-      nodeLimit: 500
+      config: {
+        nodeLimit: 1,
+        solLimit: 1,
+        minionTime: 1,
+        preprocessing: 1,
+        consistency: 1,
+        minionSwitches: []
+      }
     }
 
     const minionStage = (
       <Formik
         initialValues={initialValues}
-        onSubmit={values => {}}
+        onSubmit={_values => {}}
         render={({ values }) => (
           <Form>
             <Field
@@ -40,23 +52,32 @@ describe("Test the stages components", () => {
     )
 
     const rendered = render(minionStage)
-    const { queryByText, getByLabelText, getByText } = rendered
+    const { queryByText, getByLabelText, getByText, getByTestId } = rendered
 
-    test("blah", () => {
-      expect(queryByText("Minion")).toBeTruthy()
+    expect(queryByText("Minion")).toBeTruthy()
 
-      console.log(
-        getByLabelText("Node Limit", {
-          selector: "input"
-        }).outerHTML
-      )
-      // expect(queryByText("Node Limit")).toHave
-
+    test("node limit", () => {
       expect(
         getByLabelText("Node Limit", {
           selector: "input"
         })
-      ).toHaveValue("500")
+      ).toHaveValue(String(initialValues.config.nodeLimit))
+    })
+
+    test("sol limit", () => {
+      expect(
+        getByLabelText("Solution Limit", {
+          selector: "input"
+        })
+      ).toHaveValue(String(initialValues.config.solLimit))
+    })
+
+    test("minion time", () => {
+      expect(
+        getByLabelText("CPU Limit", {
+          selector: "input"
+        })
+      ).toHaveValue(String(initialValues.config.minionTime))
     })
   })
 })
