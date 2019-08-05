@@ -78,39 +78,5 @@ describe("Test the stages components", () => {
         })
       ).toHaveValue(String(initialValues.config.cnfLimit))
     })
-
-    // test("sol limit", () => {
-    //   expect(
-    //     getByLabelText("Solution Limit", {
-    //       selector: "input"
-    //     })
-    //   ).toHaveValue(String(initialValues.config.solLimit))
-    // })
-
-    // test("minion time", () => {
-    //   expect(
-    //     getByLabelText("CPU Limit", {
-    //       selector: "input"
-    //     })
-    //   ).toHaveValue(String(initialValues.config.minionTime))
-    // })
-
-    // test("findallsols", () => {
-    //   const checkBox = getByLabelText("Find all solutions", {
-    //     selector: "input"
-    //   })
-
-    //   console.log(checkBox.outerHTML)
-    //   expect(checkBox).toHaveAttribute("checked", "")
-    // })
-
-    // test("randomiseorder", () => {
-    //   const checkBox = getByLabelText("Randomise Var Order", {
-    //     selector: "input"
-    //   })
-
-    //   console.log(checkBox.outerHTML)
-    //   expect(checkBox).toHaveAttribute("checked", "")
-    // })
   })
 })

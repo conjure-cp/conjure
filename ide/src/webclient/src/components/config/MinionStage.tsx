@@ -37,15 +37,11 @@ interface Values {
   config: MinionConfig
 }
 
-
-
 export default TextWithLabel
 
 export const MinionStage = (
   props: Props & FormikProps<Values> & FieldProps<any>
 ) => {
-  // export class MinionStage extends React.Component<Props, any> {
-  // render() {
   const { index, values } = props
   const { name } = props.field
 

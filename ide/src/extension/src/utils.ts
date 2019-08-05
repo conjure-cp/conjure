@@ -1,35 +1,33 @@
-import { Config } from "../../webclient/src/components/config/FormikConjure";
+import { Config } from "../../webclient/src/components/config/FormikConjure"
 
 import * as path from "path"
-
 
 export type RepMap = Record<string, VarRepresentation[]>
 
 export interface VarRepresentation {
-  name: string;
-  representations: RepOption[];
+  name: string
+  representations: RepOption[]
 }
 
 export interface RepOption {
-  answer: number;
-  description: string;
+  answer: number
+  description: string
 }
 
 export interface ToProcess {
-  args: string[];
-  hash: string;
-  config: any;
-  name: string;
+  args: string[]
+  hash: string
+  config: any
+  name: string
 }
 export interface Separation {
-  needToGenerate: ToProcess[];
-  loadFromCache: ToProcess[];
+  needToGenerate: ToProcess[]
+  loadFromCache: ToProcess[]
 }
 export interface Cache {
-  name: string;
-  config: Config;
+  name: string
+  config: Config
 }
-
 
 export const cacheToArgs = (
   cache: Cache,

@@ -12,13 +12,16 @@ export const Check = (props: Props) => {
       <div className="input-group-prepend">
         <div className="input-group-text">
           <input
+            id={`${props.title}-Check`}
             type="checkbox"
             checked={props.checked}
             onChange={props.onChange}
           />
         </div>
       </div>
-      <label className="form-control">{props.title}</label>
+      <label className="form-control" htmlFor={`${props.title}-Check`}>
+        {props.title}
+      </label>
     </div>
   )
 }
