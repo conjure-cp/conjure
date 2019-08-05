@@ -30,7 +30,7 @@ describe("Test the stages components", () => {
         minionTime: 1,
         preprocessing: 1,
         consistency: 1,
-        minionSwitches: []
+        minionSwitches: ["-findallsols", "-randomiseorder"]
       }
     }
 
@@ -78,6 +78,24 @@ describe("Test the stages components", () => {
           selector: "input"
         })
       ).toHaveValue(String(initialValues.config.minionTime))
+    })
+
+    test("findallsols", () => {
+      const checkBox = getByLabelText("Find all solutions", {
+        selector: "input"
+      })
+
+      console.log(checkBox.outerHTML)
+      expect(checkBox).toHaveAttribute("checked", "")
+    })
+
+    test("randomiseorder", () => {
+      const checkBox = getByLabelText("Randomise Var Order", {
+        selector: "input"
+      })
+
+      console.log(checkBox.outerHTML)
+      expect(checkBox).toHaveAttribute("checked", "")
     })
   })
 })
