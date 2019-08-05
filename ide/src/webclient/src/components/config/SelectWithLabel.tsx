@@ -18,18 +18,16 @@ const SelectWithLabel = (props: Props & FormikProps<any> & FieldProps<any>) => {
 
   return (
     <div>
-      <label>
-        {props.title}
-        <Field
-          data-testid={props.title}
-          className="browser-default custom-select mb-4"
-          component="select"
-          {...props.field}
-          value={props.values}
-        >
-          {opts}
-        </Field>
-      </label>
+      <label htmlFor={`${props.title}-select`}>{props.title}</label>
+      <Field
+        id={`${props.title}-select`}
+        className="browser-default custom-select mb-4"
+        component="select"
+        {...props.field}
+        value={props.values}
+      >
+        {opts}
+      </Field>
     </div>
   )
 }

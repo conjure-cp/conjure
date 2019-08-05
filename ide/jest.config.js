@@ -8,7 +8,7 @@ module.exports = {
       tsConfig: "tsconfig.json"
     }
   },
-  testMatch: ["**/__tests__/*.+(ts|tsx|js)"],
+  testMatch: ["**/__tests__/*.+(ts|tsx)"],
   automock: false,
   setupFiles: ["./src/webclient/src/setupJest.ts"],
   globals: {

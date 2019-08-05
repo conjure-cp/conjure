@@ -16,7 +16,7 @@ import {
   getByTestId
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
-import { MinionStage } from "../src/components/config/Stages"
+import { MinionStage } from "../src/components/config/MinionStage"
 
 describe("Test the stages components", () => {
   describe("Test the minion stage with values", () => {
@@ -66,7 +66,7 @@ describe("Test the stages components", () => {
 
     test("sol limit", () => {
       expect(
-        getByLabelText("Solution Limit", {
+        getByLabelText(/Solution/, {
           selector: "input"
         })
       ).toHaveValue(String(initialValues.config.solLimit))
@@ -74,7 +74,7 @@ describe("Test the stages components", () => {
 
     test("minion time", () => {
       expect(
-        getByLabelText("CPU Limit", {
+        getByLabelText(/CPU/, {
           selector: "input"
         })
       ).toHaveValue(String(initialValues.config.minionTime))
@@ -84,8 +84,6 @@ describe("Test the stages components", () => {
       const checkBox = getByLabelText("Find all solutions", {
         selector: "input"
       })
-
-      console.log(checkBox.outerHTML)
       expect(checkBox).toHaveAttribute("checked", "")
     })
 
@@ -93,8 +91,6 @@ describe("Test the stages components", () => {
       const checkBox = getByLabelText("Randomise Var Order", {
         selector: "input"
       })
-
-      console.log(checkBox.outerHTML)
       expect(checkBox).toHaveAttribute("checked", "")
     })
   })

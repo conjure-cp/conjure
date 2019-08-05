@@ -58,39 +58,37 @@ export const MinionStage = (
     { value: "SSAC", label: "SSAC" }
   ]
 
-  // console.log("IN MINION ", props.values)
-
   return (
     <StageHeader title="Minion" id={`minion${index + 1}`} isCollapsed={true}>
       <Checkbox
         name={`${name}.minionSwitches`}
         value="-findallsols"
-        label="Find all solutions"
+        title="Find all solutions"
         values={values.config.minionSwitches}
       />
       <Checkbox
         name={`${name}.minionSwitches`}
         value="-randomiseorder"
-        label="Randomise Var Order"
+        title="Randomise Var Order"
         values={values.config.minionSwitches}
       />
       <Field
         name={`${name}.nodeLimit`}
         component={TextWithLabel}
         values={values.config.nodeLimit}
-        label="Node Limit"
+        title="Node Limit"
       />
       <Field
         name={`${name}.solLimit`}
         component={TextWithLabel}
         values={values.config.solLimit}
-        label="Solution Limit"
+        title="Solution Limit"
       />
       <Field
         name={`${name}.minionTime`}
         component={TextWithLabel}
         values={values.config.minionTime}
-        label="CPU Limit"
+        title="CPU Limit"
       />
 
       <Field
