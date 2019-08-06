@@ -1,22 +1,10 @@
 import * as React from "react"
-import TextWithLabel from "./TextWithLabel"
-import SelectWithLabel from "./SelectWithLabel"
-import StageHeader from "../common/StageHeader"
 import { Check } from "../common/Check"
 import { validationSchema } from "./Validation"
 import { Cache, RepMap } from "../../../../extension/src/utils"
 
-import {
-  Form,
-  Field,
-  FieldArray,
-  FieldProps,
-  Formik,
-  FormikProps
-} from "formik"
-import { MinionConfig, MinionStage } from "./MinionStage"
-import { SRConfig, SRStage } from "./SRStage"
-import { ConjureConfig, ConjureStage } from "./ConjureStage"
+import { Form, Field, Formik, FormikProps } from "formik"
+
 import { cloneDeep } from "lodash"
 import { ConfigArrayElement } from "./ConfigArrayElement"
 
@@ -29,12 +17,6 @@ interface Props {
 
 interface State {
   diff: boolean
-}
-
-export interface CombinedConfig {
-  conjureConfig: ConjureConfig
-  srConfig: SRConfig
-  minionConfig: MinionConfig
 }
 
 interface Values {
@@ -116,20 +98,9 @@ export class ConfigForm extends React.Component<Props, State> {
 
               <div className="row">{array}</div>
 
-              {/* <Field
-                name={`caches[${index}]`}
-                component={ConfigArrayElement}
-                modelToReps={this.props.modelToReps}
-                essenceFiles={this.props.essenceFiles}
-                paramFiles={this.props.paramFiles}
-                index={0}
-                values={{ cache: values.caches[0] }}
-              /> */}
-
               <button
                 type="submit"
                 className="btn btn-primary btn-lg btn-block"
-                // onClick={() => console.log("Clicked submit button")}
               >
                 Solve
               </button>

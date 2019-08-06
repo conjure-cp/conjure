@@ -70,19 +70,19 @@ export const MinionStage = (
         name={`${name}.nodeLimit`}
         component={TextWithLabel}
         values={values.config.nodeLimit}
-        title="Node Limit"
+        title="Node limit"
       />
       <Field
         name={`${name}.solLimit`}
         component={TextWithLabel}
         values={values.config.solLimit}
-        title="Solution Limit"
+        title="Solution limit"
       />
       <Field
         name={`${name}.minionTime`}
         component={TextWithLabel}
         values={values.config.minionTime}
-        title="CPU Limit"
+        title="CPU limit"
       />
 
       <Field
