@@ -1,6 +1,7 @@
 import { Config } from "../../webclient/src/components/config/FormikConjure"
 
 import * as path from "path"
+import { CombinedConfig } from "../../webclient/src/components/config/ConfigForm";
 
 export type RepMap = Record<string, VarRepresentation[]>
 
@@ -26,7 +27,9 @@ export interface Separation {
 }
 export interface Cache {
   name: string
-  config: Config
+  essenceFile: string
+  paramFile: string
+  config: CombinedConfig
 }
 
 export const cacheToArgs = (

@@ -22,8 +22,8 @@ interface Props {
   showRepsHandler: () => void
 }
 
-interface ConjureConfig {
-  conjureTime: number
+export interface ConjureConfig {
+  conjureTime: number | string
   strategy: string
   answers: (string | undefined)[]
 }

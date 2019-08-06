@@ -17,19 +17,19 @@ interface Props {
   index: number
 }
 
-interface SRConfig {
+export interface SRConfig {
   optimisation: string
   symmetry: string
   translation: string
-  srTime: number
-  cnfLimit: number
+  srTime: number | string
+  cnfLimit: number | string
 }
 
 interface Values {
   config: SRConfig
 }
 
-export const SavileRowStage = (
+export const SRStage = (
   props: Props & FormikProps<Values> & FieldProps<any>
 ) => {
   const { index, values } = props

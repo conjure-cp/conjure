@@ -24,10 +24,10 @@ interface Props {
   index: number
 }
 
-interface MinionConfig {
-  nodeLimit: number
-  solLimit: number
-  minionTime: number
+export interface MinionConfig {
+  nodeLimit: number | string
+  solLimit: number | string
+  minionTime: number | string
   preprocessing: string
   consistency: string
   minionSwitches: string[]
@@ -36,8 +36,6 @@ interface MinionConfig {
 interface Values {
   config: MinionConfig
 }
-
-export default TextWithLabel
 
 export const MinionStage = (
   props: Props & FormikProps<Values> & FieldProps<any>
@@ -104,122 +102,3 @@ export const MinionStage = (
     </StageHeader>
   )
 }
-
-// export const getSRStage = (index: number) => {
-//   return (
-//     <StageHeader title="Savilerow" id={`sr${index + 1}`} isCollapsed={true}>
-//       <Field
-//         name={`namedCaches[${index}].config.optimisation`}
-//         component={SelectWithLabel}
-//         title="Optimisation"
-//         options={[
-//           { value: "", label: "Default" },
-//           { value: "-O0", label: "0" },
-//           { value: "-O1", label: "1" },
-//           { value: "-O2", label: "2" },
-//           { value: "-O3", label: "3" }
-//         ]}
-//       />
-
-//       <Field
-//         name={`namedCaches[${index}].config.symmetry`}
-//         component={SelectWithLabel}
-//         title="Symmetry Breaking"
-//         options={[
-//           { value: "", label: "Default" },
-//           { value: "-S0", label: "0" },
-//           { value: "-S1", label: "1" },
-//           { value: "-S2", label: "2" }
-//         ]}
-//       />
-
-//       <Field
-//         name={`namedCaches[${index}].config.translation`}
-//         component={SelectWithLabel}
-//         title="Translation"
-//         options={[
-//           { value: "", label: "Default" },
-//           { value: "-no-cse", label: "No CSE" },
-//           { value: "-identical-cse", label: "Identical CSE" },
-//           { value: "-ac-cse", label: "AC CSE" },
-//           { value: "-active-cse", label: "Active CSE" },
-//           { value: "-active-ac-cse", label: "Active AC CSE" },
-//           { value: "-deletevars", label: "Delete Vars" },
-//           { value: "-reduce-domains", label: "Reduce Domains" },
-//           {
-//             value: "-reduce-domains-extend",
-//             label: "Reduce Domains Extend"
-//           },
-//           { value: "-aggregate", label: "Aggregate" },
-//           { value: "-tabulate", label: "Tabulate" },
-//           { value: "-nomappers", label: "No Mappers" },
-//           { value: "-minionmappers", label: "Minion Mappers" },
-//           { value: "-no-bound-vars", label: "No Bound Variables" },
-//           {
-//             value: "-remove-redundant-vars",
-//             label: "Remove Redundant Vars"
-//           },
-//           {
-//             value: "-var-sym-breaking",
-//             label: "Variable Symmetry Breaking"
-//           }
-//         ]}
-//       />
-//       <Field
-//         name={`namedCaches[${index}].config.srTime`}
-//         component={TextWithLabel}
-//         label="Time limit"
-//       />
-//       <Field
-//         name={`namedCaches[${index}].config.cnfLimit`}
-//         component={TextWithLabel}
-//         label="CNF clause limit"
-//       />
-//     </StageHeader>
-//   )
-// }
-
-// export const getConjureStage = (index: number, showReps: boolean[]) => {
-//   return (
-
-//   <StageHeader
-//               title="Conjure"
-//               id={`conjure${index + 1}`}
-//               isCollapsed={true}
-//             >
-//               <Field
-//                 name={`namedCaches[${index}].config.conjureTime`}
-//                 component={TextWithLabel}
-//                 label={"Time limit"}
-//               />
-//               <>
-//                 {!showReps[index] && (
-//                   <Field
-//                     name={`namedCaches[${index}].config.strategy`}
-//                     component={SelectWithLabel}
-//                     title="Strategy"
-//                     options={[
-//                       { value: "", label: "Default" },
-//                       { value: "c", label: "compact" },
-//                       { value: "s", label: "sparse" }
-//                     ]}
-//                   />
-//                 )}
-//               </>
-//               <Check
-//                 title={"Choose Representation"}
-//                 checked={showReps[index]}
-//                 onChange={() =>
-//                   this.setState((prevState: State) => {
-//                     let copy = cloneDeep(prevState.showReps)
-//                     copy[index] = !prevState.showReps[index]
-//                     return {
-//                       showReps: copy
-//                     }
-//                   })
-//                 }
-//               />
-//               {/* {this.state.showReps[index] && repSelectBoxes} */}
-//               {/*  */}
-//             </StageHeader>
-//   )

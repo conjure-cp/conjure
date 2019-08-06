@@ -16,7 +16,7 @@ import {
   getByTestId
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
-import { SavileRowStage } from "../src/components/config/SRStage"
+import { SRStage } from "../src/components/config/SRStage"
 
 describe("Test the stages components", () => {
   describe("Test the saville row stage with values", () => {
@@ -40,7 +40,7 @@ describe("Test the stages components", () => {
           <Form data-test-id="form">
             <Field
               name={`config`}
-              component={SavileRowStage}
+              component={SRStage}
               index={index}
               values={values}
             />
