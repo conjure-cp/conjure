@@ -41,12 +41,12 @@ export interface Config {
   [key: string]: any
 }
 
-export const newCache = (): Cache => {
-  return {
-    name: "",
-    config: newConfig()
-  }
-}
+// export const newCache = (): Cache => {
+//   return {
+//     name: "",
+//     config: newConfig()
+//   }
+// }
 
 export const newConfig = (): Config => {
   return {

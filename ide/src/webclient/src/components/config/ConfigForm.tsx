@@ -1,9 +1,9 @@
 import * as React from "react"
 import { Check } from "../common/Check"
 import { validationSchema } from "./Validation"
-import { Cache, RepMap } from "../../../../extension/src/utils"
+import { Cache, RepMap, newCache } from "../../../../extension/src/utils"
 
-import { Form, Field, Formik, FormikProps } from "formik"
+import { Form, Field, Formik, FormikProps, validateYupSchema } from "formik"
 
 import { cloneDeep } from "lodash"
 import { ConfigArrayElement } from "./ConfigArrayElement"
@@ -30,45 +30,33 @@ export class ConfigForm extends React.Component<Props, State> {
 
   render = () => {
     const initialCache = {
-      name: "",
+      ...newCache(),
       essenceFile: this.props.essenceFiles[0],
-      paramFile: this.props.paramFiles[0],
-      config: {
-        conjureConfig: { conjureTime: "", strategy: "", answers: [] },
-        srConfig: {
-          optimisation: "",
-          symmetry: "",
-          translation: "",
-          srTime: "",
-          cnfLimit: ""
-        },
-        minionConfig: {
-          nodeLimit: "",
-          solLimit: "",
-          minionTime: "",
-          preprocessing: "",
-          consistency: "",
-          minionSwitches: []
-        }
-      }
+      paramFile: this.props.paramFiles[0]
     }
 
-    const initialCaches = [initialCache, cloneDeep(initialCache)]
+    const initialValues = { caches: [initialCache, cloneDeep(initialCache)] }
 
     return (
       <Formik
-        initialValues={{
-          caches: initialCaches
+        initialValues={initialValues}
+        onSubmit={values => {
+          this.props.submitHandler(values)
         }}
-        onSubmit={this.props.submitHandler}
         validationSchema={validationSchema}
+        isInitialValid={() =>
+          validateYupSchema(initialValues, validationSchema, true) !== undefined
+        }
         enableReinitialize={true}
         render={(renderProps: FormikProps<Values>) => {
           const values = renderProps.values
 
-          const arrayIndexes = this.state.diff ? [0, 1] : [0]
+          const submitButtonMessage = renderProps.isValid
+            ? "Solve"
+            : "Fix the errors first!"
 
-          console.log(values.caches)
+          const colourClass = renderProps.isValid ? "primary" : "warning"
+          const arrayIndexes = this.state.diff ? [0, 1] : [0]
 
           const array = arrayIndexes.map(index => (
             <div className="col" key={index}>
@@ -100,9 +88,9 @@ export class ConfigForm extends React.Component<Props, State> {
 
               <button
                 type="submit"
-                className="btn btn-primary btn-lg btn-block"
+                className={`btn btn-${colourClass} btn-lg btn-block`}
               >
-                Solve
+                {submitButtonMessage}
               </button>
             </Form>
           )
