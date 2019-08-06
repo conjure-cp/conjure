@@ -48,11 +48,10 @@ export class ConfigArrayElement extends React.Component<
     showReps: false
   }
   render = () => {
-
-    //   console.log(this.state)
-      
     const { values, index } = this.props
     const { name } = this.props.field
+
+    // console.log(values)
     return (
       <StageHeader
         isCollapsed={false}

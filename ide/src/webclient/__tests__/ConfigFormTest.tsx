@@ -72,6 +72,15 @@ describe("Test the configure element", () => {
     expect(rendered.queryByText("Solve")).toBeTruthy()
   })
 
+  test("Click diff check", async () => {
+    expect(rendered.queryByText("Config 2")).toBeFalsy()
+
+    fireEvent.click(rendered.getByText("Compare trees"))
+    await wait(() => {})
+
+    expect(rendered.queryByText("Config 1")).toBeTruthy()
+    expect(rendered.queryByText("Config 2")).toBeTruthy()
+  })
 
   test("Click Solve button", async () => {
     // fireEvent.change(rendered.getByLabelText("Time limit"), {target: {value: 'a'}})
@@ -84,8 +93,7 @@ describe("Test the configure element", () => {
     // fireEvent.click(rendered.getByText("Solve"))
 
     fireEvent.click(rendered.getByText("Solve"))
-     await wait(() =>{})
-
+    await wait(() => {})
     expect(mockHandler.mock.calls.length).toEqual(1)
   })
 })

@@ -170,6 +170,8 @@ class Root extends React.Component<any, State> {
             modelToReps={essenceFileToReps}
             essenceFiles={[essenceFile]}
             paramFiles={[paramFile]}
+            submitHandler={(values) => console.log(values)
+            }
           />
           {/* <FormikConjure
             diffCheckHandler={this.diffCheckHandler}

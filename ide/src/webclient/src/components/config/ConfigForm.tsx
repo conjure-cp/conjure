@@ -47,50 +47,76 @@ export class ConfigForm extends React.Component<Props, State> {
   }
 
   render = () => {
+    const initialCache = {
+      name: "",
+      essenceFile: this.props.essenceFiles[0],
+      paramFile: this.props.paramFiles[0],
+      config: {
+        conjureConfig: { conjureTime: "", strategy: "", answers: [] },
+        srConfig: {
+          optimisation: "",
+          symmetry: "",
+          translation: "",
+          srTime: "",
+          cnfLimit: ""
+        },
+        minionConfig: {
+          nodeLimit: "",
+          solLimit: "",
+          minionTime: "",
+          preprocessing: "",
+          consistency: "",
+          minionSwitches: []
+        }
+      }
+    }
+
+    const initialCaches = [initialCache, cloneDeep(initialCache)]
+
     return (
       <Formik
         initialValues={{
-          caches: [
-            {
-              name: "",
-              essenceFile: this.props.essenceFiles[0],
-              paramFile: this.props.paramFiles[0],
-              config: {
-                conjureConfig: { conjureTime: "", strategy: "", answers: [] },
-                srConfig: {
-                  optimisation: "",
-                  symmetry: "",
-                  translation: "",
-                  srTime: "",
-                  cnfLimit: ""
-                },
-                minionConfig: {
-                  nodeLimit: "",
-                  solLimit: "",
-                  minionTime: "",
-                  preprocessing: "",
-                  consistency: "",
-                  minionSwitches: []
-                }
-              }
-            }
-          ]
+          caches: initialCaches
         }}
         onSubmit={this.props.submitHandler}
         validationSchema={validationSchema}
         enableReinitialize={true}
         render={(renderProps: FormikProps<Values>) => {
           const values = renderProps.values
-          const index = 0
+
+          const arrayIndexes = this.state.diff ? [0, 1] : [0]
+
+          console.log(values.caches)
+
+          const array = arrayIndexes.map(index => (
+            <div className="col" key={index}>
+              <Field
+                name={`caches[${index}]`}
+                component={ConfigArrayElement}
+                modelToReps={this.props.modelToReps}
+                essenceFiles={this.props.essenceFiles}
+                paramFiles={this.props.paramFiles}
+                index={index}
+                values={{ cache: values.caches[index] }}
+              />
+            </div>
+          ))
 
           return (
             <Form>
               <Check
                 title={"Compare trees"}
                 checked={this.state.diff}
-                onChange={() => {}}
+                onChange={() => {
+                  this.setState((prevState: State) => {
+                    return { diff: !prevState.diff }
+                  })
+                }}
               />
-              <Field
+
+              <div className="row">{array}</div>
+
+              {/* <Field
                 name={`caches[${index}]`}
                 component={ConfigArrayElement}
                 modelToReps={this.props.modelToReps}
@@ -98,7 +124,8 @@ export class ConfigForm extends React.Component<Props, State> {
                 paramFiles={this.props.paramFiles}
                 index={0}
                 values={{ cache: values.caches[0] }}
-              />
+              /> */}
+
               <button
                 type="submit"
                 className="btn btn-primary btn-lg btn-block"
