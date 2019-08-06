@@ -3,12 +3,14 @@ import * as ReactDOM from "react-dom"
 import StageHeader from "./components/common/StageHeader"
 import FormikConjure from "./components/config/FormikConjure"
 import { Check } from "./components/common/Check"
-import { Cache, RepMap } from "../../extension/src/utils";
+import { Cache, RepMap } from "../../extension/src/utils"
 import { cloneDeep } from "lodash"
 import Forest from "./components/Forest"
 import "./css/styles.css"
 import "./css/vis.css"
 import { InitResponse } from "../../server/server"
+import { Config } from "@jest/types"
+import { ConfigForm } from "./components/config/ConfigForm"
 
 if (process.env.NODE_ENV !== "production") {
   const whyDidYouRender = require("@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js")
@@ -120,6 +122,28 @@ class Root extends React.Component<any, State> {
   }
 
   render = () => {
+    const varReps = [
+      {
+        name: "setA",
+        representations: [
+          { answer: "setA:1", description: "occurrence" },
+          { answer: "setA:2", description: "explicit" }
+        ]
+      },
+      {
+        name: "setB",
+        representations: [
+          { answer: "setB:1", description: "occurrence" },
+          { answer: "setB:2", description: "explicit" }
+        ]
+      }
+    ]
+
+    let essenceFileToReps: RepMap = {}
+    const essenceFile = "blah.essence"
+    const paramFile = "p.param"
+
+    essenceFileToReps[essenceFile] = varReps
     return (
       <div>
         <StageHeader
@@ -142,8 +166,12 @@ class Root extends React.Component<any, State> {
           >
             Invalidate Caches
           </button>
-
-          <FormikConjure
+          <ConfigForm
+            modelToReps={essenceFileToReps}
+            essenceFiles={[essenceFile]}
+            paramFiles={[paramFile]}
+          />
+          {/* <FormikConjure
             diffCheckHandler={this.diffCheckHandler}
             vscodeServerPort={this.state.vscodeServerPort}
             reps={this.state.reps}
@@ -154,7 +182,7 @@ class Root extends React.Component<any, State> {
             essenceFiles={this.state.essenceFiles}
             cacheChangeHandler={this.cacheChangeHandler}
             caches={this.state.allCaches}
-          />
+          /> */}
         </StageHeader>
 
         <Forest
