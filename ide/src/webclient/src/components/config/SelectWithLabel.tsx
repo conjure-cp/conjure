@@ -10,8 +10,11 @@ const SelectWithLabel = (props: Props & FormikProps<any> & FieldProps<any>) => {
   const { touched, errors } = props.form
   const { name } = props.field
 
-  let opts = props.options.map((option: Props["options"][0]) => (
-    <option key={option.value} value={option.value}>
+  // console.log(props.values)
+  // console.log(props.field.value)
+
+  let opts = props.options.map((option: Props["options"][0], i) => (
+    <option key={i} value={option.value}>
       {option.label}
     </option>
   ))

@@ -38,27 +38,32 @@ export const ConjureStage = (
   const { index, showReps, showRepsHandler, varRepresentations, values } = props
   const { name } = props.field
 
-  const repSelectBoxes = varRepresentations.map(x => {
-    const options = x.representations.map(x => {
+  //   console.log(values.config.answers)
+
+  const repSelectBoxes = varRepresentations.map((x, i) => {
+    const options = x.representations.map(y => {
       return {
-        value: x.answer,
-        label: x.description
+        value: y.answer,
+        label: y.description
       }
     })
 
+    // console.log(values.config.answers[i])
     return (
       <Field
-        name={`${name}.answers[${index}]`}
+        key={i}
+        name={`${name}.answers[${i}]`}
         component={SelectWithLabel}
         title={x.name}
         options={options}
-        values={values.config.answers[index]}
+        values={values.config.answers[i]}
       />
     )
   })
 
   return (
     <StageHeader title="Conjure" id={`conjure${index + 1}`} isCollapsed={true}>
+
       <Field
         name={`${name}.conjureTime`}
         component={TextWithLabel}
@@ -86,7 +91,7 @@ export const ConjureStage = (
         onChange={showRepsHandler}
       />
       {showReps[index] && repSelectBoxes}
-      {}
+      {/* {} */}
     </StageHeader>
   )
 }

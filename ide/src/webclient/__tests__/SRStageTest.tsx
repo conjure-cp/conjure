@@ -27,7 +27,7 @@ describe("Test the stages components", () => {
       config: {
         srTime: 1,
         cnfLimit: 1,
-        optimisation: "-O0",
+        optimisation: "-O1",
         symmetry: "-S0"
       }
     }
@@ -56,7 +56,7 @@ describe("Test the stages components", () => {
 
 
     test("Optimisation", () => {
-        expect(getByLabelText(/Optimisation/)).toHaveValue("-O0")
+        expect(getByLabelText(/Optimisation/)).toHaveValue("-O1")
     })
 
     test("Symmetry", () => {
