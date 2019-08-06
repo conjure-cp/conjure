@@ -18,7 +18,7 @@ import { VarRepresentation } from "../../../../extension/src/utils"
 interface Props {
   varRepresentations: VarRepresentation[]
   index: number
-  showReps: boolean[]
+  showReps: boolean
   showRepsHandler: () => void
 }
 
@@ -71,7 +71,7 @@ export const ConjureStage = (
         values={values.config.conjureTime}
       />
       <>
-        {!showReps[index] && (
+        {!showReps && (
           <Field
             name={`${name}.strategy`}
             component={SelectWithLabel}
@@ -87,10 +87,10 @@ export const ConjureStage = (
       </>
       <Check
         title={"Choose Representation"}
-        checked={showReps[index]}
+        checked={showReps}
         onChange={showRepsHandler}
       />
-      {showReps[index] && repSelectBoxes}
+      {showReps && repSelectBoxes}
       {/* {} */}
     </StageHeader>
   )
