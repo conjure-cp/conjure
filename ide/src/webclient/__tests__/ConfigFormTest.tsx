@@ -1,14 +1,4 @@
 import React from "react"
-import * as ReactDOM from "react-dom"
-
-import {
-  Form,
-  Field,
-  FieldArray,
-  FieldProps,
-  Formik,
-  FormikProps
-} from "formik"
 import {
   render,
   fireEvent,
@@ -17,7 +7,8 @@ import {
   getByTestId,
   cleanup,
   RenderResult,
-  wait
+  wait,
+  queryByText
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { ConfigForm } from "../src/components/config/ConfigForm"
@@ -144,5 +135,36 @@ describe("Test the configure element", () => {
     expect(minionConfig.minionSwitches).toContain("-findallsols")
     expect(minionConfig.solLimit).toEqual(solLimit)
     expect(minionConfig.consistency).toEqual(consistency)
+  })
+
+
+  test("Validation non numeric", async () => {
+    const conjureTime = "abc"
+    fireEvent.change(rendered.queryByLabelText("Time limit")!, {
+      target: { value: conjureTime }
+    })
+
+    await wait(() => {})
+    expect(rendered.getByText("Leave empty or specify an integer > 0")).toBeTruthy()
+  })
+
+  test("Validation zero", async () => {
+    const conjureTime = "0"
+    fireEvent.change(rendered.queryByLabelText("Time limit")!, {
+      target: { value: conjureTime }
+    })
+
+    await wait(() => {})
+    expect(rendered.getByText("Leave empty or specify an integer > 0")).toBeTruthy()
+  })
+
+  test("Validation no problem", async () => {
+    const conjureTime = "1"
+    fireEvent.change(rendered.queryByLabelText("Time limit")!, {
+      target: { value: conjureTime }
+    })
+
+    await wait(() => {})
+    expect(rendered.queryByText("Leave empty or specify an integer > 0")).toBeFalsy()
   })
 })

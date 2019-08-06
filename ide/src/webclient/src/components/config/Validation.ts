@@ -28,17 +28,34 @@ const configSchema = {
   solLimit: intOrNothing
 }
 
-const namedConfigSchema = {
-  config: Yup.object().shape(configSchema),
-  name: Yup.string().matches(
-    /^$|^[a-z_:0-9]+$/i,
-    "Name nust be alphanumeric(underscore/colons allowed), leave blank for timestamp"
-  )
-}
-
 export const validationSchema = Yup.object().shape({
-  namedCaches: Yup.array().of(Yup.object().shape(namedConfigSchema))
+  caches: Yup.array().of(
+    Yup.object().shape({
+      name: Yup.string().matches(
+        /^$|^[a-z_:0-9]+$/i,
+        "Name nust be alphanumeric(underscore/colons allowed), leave blank for timestamp"
+      ),
+      config: Yup.object().shape({
+        conjureConfig: Yup.object().shape({
+          conjureTime: intOrNothing
+        }),
+        srConfig: Yup.object().shape({
+          srTime: intOrNothing,
+          cnfLimit: intOrNothing
+        }),
+        minionConfig: Yup.object().shape({
+          minionTime: intOrNothing,
+          solLimit: intOrNothing,
+          nodeLimit: intOrNothing
+        })
+      })
+    })
+  )
 })
+
+// export const validationSchema = Yup.object().shape({
+//   namedCaches: Yup.array().of(Yup.object().shape(namedConfigSchema))
+// })
 
 export const cleanCache = (cache: Cache, reps: RepMap, index: number) => {
   let cleaned = cache.config
