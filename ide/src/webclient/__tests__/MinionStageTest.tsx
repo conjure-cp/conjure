@@ -60,7 +60,7 @@ describe("Test the stages components", () => {
 
     test("node limit", () => {
       expect(
-        getByLabelText("Node Limit", {
+        getByLabelText("Node limit", {
           selector: "input"
         })
       ).toHaveValue(String(initialValues.config.nodeLimit))

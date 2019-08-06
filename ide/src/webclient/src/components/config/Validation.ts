@@ -19,15 +19,6 @@ const intOrNothing = Yup.mixed().test(
   }
 )
 
-const configSchema = {
-  conjureTime: intOrNothing,
-  srTime: intOrNothing,
-  minionTime: intOrNothing,
-  cnfLimit: intOrNothing,
-  nodeLimit: intOrNothing,
-  solLimit: intOrNothing
-}
-
 export const validationSchema = Yup.object().shape({
   caches: Yup.array().of(
     Yup.object().shape({
@@ -53,25 +44,8 @@ export const validationSchema = Yup.object().shape({
   )
 })
 
-// export const validationSchema = Yup.object().shape({
-//   namedCaches: Yup.array().of(Yup.object().shape(namedConfigSchema))
-// })
 
-export const cleanCache = (cache: Cache, reps: RepMap, index: number) => {
-  let cleaned = cache.config
-
-  cleaned.answers = cache.config.answers.map(
-    (answer: string | undefined, i: number) => {
-      let variable = reps[cleaned.essenceFile][i]
-
-      if (!answer) {
-        return `${variable.name}:${1}`
-      }
-
-      return `${variable.name}:${answer}`
-    }
-  )
-
+export const cleanCache = (cache: Cache, index: number) => {
   let name =
     cache.name !== ""
       ? cache.name
@@ -85,8 +59,8 @@ export const cleanCache = (cache: Cache, reps: RepMap, index: number) => {
   }
 
   let newNamedConfig: Cache = {
-    config: cleaned,
-    name: name
+    ...cache,
+    name
   }
 
   return newNamedConfig

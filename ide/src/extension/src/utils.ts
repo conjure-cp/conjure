@@ -1,7 +1,8 @@
 import { Config } from "../../webclient/src/components/config/FormikConjure"
 
 import * as path from "path"
-import { CombinedConfig } from "../../webclient/src/components/config/ConfigForm";
+import { CombinedConfig } from "../../webclient/src/components/config/ConfigArrayElement"
+import { min } from "d3"
 
 export type RepMap = Record<string, VarRepresentation[]>
 
@@ -32,110 +33,140 @@ export interface Cache {
   config: CombinedConfig
 }
 
-// export const cacheToArgs = (
-//   cache: Cache,
-//   cacheFolderPath: string
-// ): string[] => {
-//   const config = cache.config
+export const newCache = () : Cache => {
+  return {
+    name: "",
+    essenceFile: "",
+    paramFile: "",
+    config: {
+      conjureConfig: { conjureTime: "", strategy: "", answers: [] },
+      srConfig: {
+        optimisation: "",
+        symmetry: "",
+        translation: "",
+        srTime: "",
+        cnfLimit: ""
+      },
+      minionConfig: {
+        nodeLimit: "",
+        solLimit: "",
+        minionTime: "",
+        preprocessing: "",
+        consistency: "",
+        minionSwitches: []
+      }
+    }
+  }
+}
 
-//   const outputPath = path.join(cacheFolderPath, cache.name)
+export const cacheToArgs = (
+  cache: Cache,
+  cacheFolderPath: string
+): string[] => {
+  const config = cache.config
+  const { conjureConfig, srConfig, minionConfig } = config
 
-//   const fullPathToModel = path.join(
-//     path.dirname(cacheFolderPath),
-//     cache.essenceFile
-//   )
-//   const fullPathToParam = path.join(
-//     path.dirname(cacheFolderPath),
-//     cache.paramFile
-//   )
+  const outputPath = path.join(cacheFolderPath, cache.name)
 
-//   let conjureOptions = [
-//     "solve",
-//     fullPathToModel,
-//     fullPathToParam,
-//     "-o",
-//     outputPath
-//   ]
+  const fullPathToModel = path.join(
+    path.dirname(cacheFolderPath),
+    cache.essenceFile
+  )
+  const fullPathToParam = path.join(
+    path.dirname(cacheFolderPath),
+    cache.paramFile
+  )
 
-//   if (config.conjureTime !== "") {
-//     conjureOptions.push(`--limit-time=${config.conjureTime}`)
-//   }
+  let conjureOptions = [
+    "solve",
+    fullPathToModel,
+    fullPathToParam,
+    "-o",
+    outputPath
+  ]
 
-//   if (config.strategy !== "") {
-//     conjureOptions.push("-a")
-//     conjureOptions.push(config.strategy)
-//   }
+  if (conjureConfig.conjureTime !== "") {
+    conjureOptions.push(`--limit-time=${conjureConfig.conjureTime}`)
+  }
 
-//   if (!config.answers.find(x => x === undefined) && config.answers.length > 0) {
-//     conjureOptions.push("-aai")
-//     conjureOptions.push("--channelling=no")
-//     conjureOptions.push("--smart-filenames")
-//     conjureOptions.push("--responses-representation")
-//     conjureOptions.push(`${config.answers.join(",")}`)
-//   }
+  if (conjureConfig.strategy !== "") {
+    conjureOptions.push("-a")
+    conjureOptions.push(conjureConfig.strategy)
+  }
 
-//   let savileRowOptions = ["--savilerow-options", '"']
+  if (
+    !conjureConfig.answers.find(x => x === undefined) &&
+    conjureConfig.answers.length > 0
+  ) {
+    conjureOptions.push("-aai")
+    conjureOptions.push("--channelling=no")
+    conjureOptions.push("--smart-filenames")
+    conjureOptions.push("--responses-representation")
+    conjureOptions.push(`${conjureConfig.answers.join(",")}`)
+  }
 
-//   if (config.optimisation !== "") {
-//     savileRowOptions.push(config.optimisation)
-//   }
+  let savileRowOptions = ["--savilerow-options", '"']
 
-//   if (config.symmetry !== "") {
-//     savileRowOptions.push(config.symmetry)
-//   }
+  if (srConfig.optimisation !== "") {
+    savileRowOptions.push(srConfig.optimisation)
+  }
 
-//   if (config.translation !== "") {
-//     savileRowOptions.push(config.translation)
-//   }
+  if (srConfig.symmetry !== "") {
+    savileRowOptions.push(srConfig.symmetry)
+  }
 
-//   if (config.srTime !== "") {
-//     savileRowOptions.push("-timelimit")
-//     savileRowOptions.push(String(config.srTime))
-//   }
+  if (srConfig.translation !== "") {
+    savileRowOptions.push(srConfig.translation)
+  }
 
-//   if (config.cnfLimit !== "") {
-//     savileRowOptions.push("-cnflimit")
-//     savileRowOptions.push(String(config.cnfLimit))
-//   }
+  if (srConfig.srTime !== "") {
+    savileRowOptions.push("-timelimit")
+    savileRowOptions.push(String(srConfig.srTime))
+  }
 
-//   savileRowOptions.push('"')
+  if (srConfig.cnfLimit !== "") {
+    savileRowOptions.push("-cnflimit")
+    savileRowOptions.push(String(srConfig.cnfLimit))
+  }
 
-//   let minionOptions = [
-//     "--solver-options",
-//     '"-dumptreesql',
-//     path.join(outputPath, "/out.db")
-//   ]
+  savileRowOptions.push('"')
 
-//   minionOptions = minionOptions.concat(config.minionSwitches)
+  let minionOptions = [
+    "--solver-options",
+    '"-dumptreesql',
+    path.join(outputPath, "/out.db")
+  ]
 
-//   if (config.nodeLimit !== "") {
-//     minionOptions.push("-nodelimit")
-//     minionOptions.push(String(config.nodeLimit))
-//   }
+  minionOptions = minionOptions.concat(minionConfig.minionSwitches)
 
-//   if (config.solLimit !== "") {
-//     minionOptions.push("-sollimit")
-//     minionOptions.push(String(config.solLimit))
-//   }
+  if (minionConfig.nodeLimit !== "") {
+    minionOptions.push("-nodelimit")
+    minionOptions.push(String(minionConfig.nodeLimit))
+  }
 
-//   if (config.minionTime !== "") {
-//     minionOptions.push("-cpulimit")
-//     minionOptions.push(String(config.minionTime))
-//   }
+  if (minionConfig.solLimit !== "") {
+    minionOptions.push("-sollimit")
+    minionOptions.push(String(minionConfig.solLimit))
+  }
 
-//   if (config.preprocessing !== "") {
-//     minionOptions.push("-preprocess")
-//     minionOptions.push(config.preprocessing)
-//   }
+  if (minionConfig.minionTime !== "") {
+    minionOptions.push("-cpulimit")
+    minionOptions.push(String(minionConfig.minionTime))
+  }
 
-//   if (config.consistency !== "") {
-//     minionOptions.push("-prop-node")
-//     minionOptions.push(config.consistency)
-//   }
+  if (minionConfig.preprocessing !== "") {
+    minionOptions.push("-preprocess")
+    minionOptions.push(minionConfig.preprocessing)
+  }
 
-//   minionOptions.push('"')
+  if (minionConfig.consistency !== "") {
+    minionOptions.push("-prop-node")
+    minionOptions.push(minionConfig.consistency)
+  }
 
-//   conjureOptions = conjureOptions.concat(savileRowOptions).concat(minionOptions)
+  minionOptions.push('"')
 
-//   return conjureOptions
-// }
+  conjureOptions = conjureOptions.concat(savileRowOptions).concat(minionOptions)
+
+  return conjureOptions
+}

@@ -1,6 +1,4 @@
-import { cacheToArgs } from "../src/utils"
-import { newCache } from "../../webclient/src/components/config/FormikConjure"
-import { configure } from "react-hotkeys";
+import { cacheToArgs, newCache } from "../src/utils"
 
 describe("Test the config helper module", () => {
 
@@ -27,8 +25,8 @@ describe("Test the config helper module", () => {
       let cache = newCache()
 
       cache.name = "10:55:47_Config1"
-      cache.config.essenceFile = "set_partition_simple.essence"
-      cache.config.paramFile = "set_partition_simple-params/8.param"
+      cache.essenceFile = "set_partition_simple.essence"
+      cache.paramFile = "set_partition_simple-params/8.param"
 
       let res = cacheToArgs(cache, folderPath)
 
@@ -79,21 +77,21 @@ describe("Test the config helper module", () => {
       let cache = newCache()
 
       cache.name = "11:21:19_Config1"
-      cache.config.conjureTime = 99999
-      cache.config.essenceFile = "set_partition_simple.essence"
-      cache.config.paramFile = "set_partition_simple-params/8.param"
-      cache.config.answers = ["n:1", "setA:2", "setB:2"]
-      cache.config.optimisation = "-O2"
-      cache.config.symmetry = "-S2"
-      cache.config.translation = "-active-cse"
-      cache.config.srTime = 1111
-      cache.config.cnfLimit = 3333
-      cache.config.minionSwitches = ["-findallsols", "-randomiseorder"]
-      cache.config.nodeLimit = 4444
-      cache.config.solLimit = 5555
-      cache.config.minionTime = 6666
-      cache.config.preprocessing = "SSAC"
-      cache.config.consistency = "SSAC"
+      cache.config.conjureConfig.conjureTime = 99999
+      cache.essenceFile = "set_partition_simple.essence"
+      cache.paramFile = "set_partition_simple-params/8.param"
+      cache.config.conjureConfig.answers = ["n:1", "setA:2", "setB:2"]
+      cache.config.srConfig.optimisation = "-O2"
+      cache.config.srConfig.symmetry = "-S2"
+      cache.config.srConfig.translation = "-active-cse"
+      cache.config.srConfig.srTime = 1111
+      cache.config.srConfig.cnfLimit = 3333
+      cache.config.minionConfig.minionSwitches = ["-findallsols", "-randomiseorder"]
+      cache.config.minionConfig.nodeLimit = 4444
+      cache.config.minionConfig.solLimit = 5555
+      cache.config.minionConfig.minionTime = 6666
+      cache.config.minionConfig.preprocessing = "SSAC"
+      cache.config.minionConfig.consistency = "SSAC"
 
       let res = cacheToArgs(cache, folderPath)
 
@@ -141,21 +139,21 @@ describe("Test the config helper module", () => {
       let cache = newCache()
 
       cache.name = "11:21:19_Config1"
-      cache.config.conjureTime = 99999
-      cache.config.essenceFile = "set_partition_simple.essence"
-      cache.config.paramFile = "set_partition_simple-params/8.param"
-      cache.config.strategy = "c"
-      cache.config.optimisation = "-O2"
-      cache.config.symmetry = "-S2"
-      cache.config.translation = "-active-cse"
-      cache.config.srTime = 1111
-      cache.config.cnfLimit = 3333
-      cache.config.minionSwitches = ["-findallsols", "-randomiseorder"]
-      cache.config.nodeLimit = 4444
-      cache.config.solLimit = 5555
-      cache.config.minionTime = 6666
-      cache.config.preprocessing = "SSAC"
-      cache.config.consistency = "SSAC"
+      cache.config.conjureConfig.conjureTime = 99999
+      cache.config.conjureConfig.strategy = "c"
+      cache.essenceFile = "set_partition_simple.essence"
+      cache.paramFile = "set_partition_simple-params/8.param"
+      cache.config.srConfig.optimisation = "-O2"
+      cache.config.srConfig.symmetry = "-S2"
+      cache.config.srConfig.translation = "-active-cse"
+      cache.config.srConfig.srTime = 1111
+      cache.config.srConfig.cnfLimit = 3333
+      cache.config.minionConfig.minionSwitches = ["-findallsols", "-randomiseorder"]
+      cache.config.minionConfig.nodeLimit = 4444
+      cache.config.minionConfig.solLimit = 5555
+      cache.config.minionConfig.minionTime = 6666
+      cache.config.minionConfig.preprocessing = "SSAC"
+      cache.config.minionConfig.consistency = "SSAC"
 
       let res = cacheToArgs(cache, folderPath)
 

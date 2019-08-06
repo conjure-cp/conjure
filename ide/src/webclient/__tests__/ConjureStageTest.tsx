@@ -73,7 +73,7 @@ describe("Test the stages components", () => {
                 index={index}
                 values={values}
                 varRepresentations={varReps}
-                showReps={[false]}
+                showReps={false}
                 showRepsHandler={mockHandler}
               />
             </Form>
@@ -135,7 +135,7 @@ describe("Test the stages components", () => {
                 index={index}
                 values={values}
                 varRepresentations={varReps}
-                showReps={[true]}
+                showReps={true}
                 showRepsHandler={() => {}}
               />
             </Form>
