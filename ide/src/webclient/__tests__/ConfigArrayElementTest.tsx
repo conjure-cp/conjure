@@ -16,17 +16,23 @@ import {
   queryByLabelText,
   getByTestId,
   cleanup,
-  RenderResult
+  RenderResult,
+  getByLabelText,
+  wait
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import {
   ConfigArrayElement,
   Values
 } from "../src/components/config/ConfigArrayElement"
-import { RepMap } from "../../extension/src/utils"
+import { RepMap, newCache } from "../../extension/src/utils"
 
 describe("Test the configure element", () => {
-  afterEach(cleanup)
+  const findAllCache = newCache()
+  findAllCache.name = "16all"
+  findAllCache.config.minionConfig.minionSwitches = ["-findallsols"]
+  findAllCache.essenceFile = "PartitionProblem.essence"
+  findAllCache.paramFile = "16.param"
 
   const varReps = [
     {
@@ -82,6 +88,10 @@ describe("Test the configure element", () => {
     }
   }
 
+  const mockHandler = jest.fn(() => {
+    console.log("mock handler called!")
+  })
+
   let rendered: RenderResult
 
   beforeEach(() => {
@@ -101,6 +111,8 @@ describe("Test the configure element", () => {
               paramFiles={[paramFile]}
               index={0}
               values={values}
+              caches={[findAllCache]}
+              changeHandler={mockHandler}
             />
           </Form>
         )}
@@ -120,5 +132,21 @@ describe("Test the configure element", () => {
     expect(rendered.queryByLabelText("Strategy")).toBeFalsy()
     expect(rendered.queryByLabelText("setA")).toBeTruthy()
     expect(rendered.queryByLabelText("setB")).toBeTruthy()
+  })
+
+  test("load cache", async () => {
+    fireEvent.change(rendered.getByTestId("Caches-select"), {
+      target: { value: findAllCache.name }
+    })
+
+    await wait(() => {})
+
+    expect(mockHandler.mock.calls.length).toEqual(1)
+
+    // expect(
+    //   rendered.getByLabelText(/Model/, {
+    //     selector: "input"
+    //   })
+    // ).toHaveValue(findAllCache.essenceFile)
   })
 })

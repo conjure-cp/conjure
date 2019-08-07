@@ -14,14 +14,19 @@ import {
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { ConfigForm } from "../src/components/config/ConfigForm"
-import { RepMap } from "../../extension/src/utils"
+import { RepMap, newCache } from "../../extension/src/utils"
 import { ConjureConfig } from "../src/components/config/ConjureStage"
 import { SRConfig } from "../src/components/config/SRStage"
 import { MinionConfig } from "../src/components/config/MinionStage"
-import { debug } from "util";
 
 describe("Test the configure element", () => {
   afterEach(cleanup)
+
+  const findAllCache = newCache()
+  findAllCache.name = "16all"
+  findAllCache.config.minionConfig.minionSwitches = ["-findallsols"]
+  findAllCache.essenceFile = "PartitionProblem.essence"
+  findAllCache.paramFile = "16.param"
 
   const varReps = [
     {
@@ -59,6 +64,7 @@ describe("Test the configure element", () => {
 
     rendered = render(
       <ConfigForm
+        caches={[]}
         waiting={false}
         modelToReps={essenceFileToReps}
         essenceFiles={[essenceFile]}
@@ -185,6 +191,7 @@ describe("Test the configure element", () => {
     cleanup()
     let r = render(
       <ConfigForm
+        caches={[]}
         waiting={true}
         modelToReps={essenceFileToReps}
         essenceFiles={[essenceFile]}
@@ -197,5 +204,21 @@ describe("Test the configure element", () => {
     await wait(() => {})
     expect(r.queryByText("Solve")).toBeFalsy()
     expect(r.queryByRole("progressbar")).toBeTruthy()
+  })
+
+
+  test("choose cache", async () => {
+    fireEvent.change(rendered.getByTestId("Caches-select"), {
+      target: { value: findAllCache.name }
+    })
+
+    await wait(() => {})
+
+    // expect(mockHandler.mock.calls.length).toEqual(1)
+    expect(
+      rendered.getByLabelText(/Model/, {
+        selector: "input"
+      })
+    ).toHaveValue(findAllCache.essenceFile)
   })
 })

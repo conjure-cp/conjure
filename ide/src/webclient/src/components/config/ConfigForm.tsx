@@ -16,6 +16,7 @@ var Loader = require("react-loader")
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 
 interface Props {
+  caches: Cache[]
   waiting: boolean
   modelToReps: RepMap
   essenceFiles: string[]
@@ -25,6 +26,7 @@ interface Props {
 
 interface State {
   diff: boolean
+  // currentCache?: Cache
 }
 
 interface Values {
@@ -33,7 +35,8 @@ interface Values {
 
 export class ConfigForm extends React.Component<Props, State> {
   state = {
-    diff: false
+    diff: false,
+    currentCache: undefined
   }
 
   render = () => {
@@ -66,35 +69,43 @@ export class ConfigForm extends React.Component<Props, State> {
           const colourClass = renderProps.isValid ? "primary" : "warning"
           const arrayIndexes = this.state.diff ? [0, 1] : [0]
 
-          const array = arrayIndexes.map(index => (
-            <div className="col" key={index}>
-              <Field
-                name={`caches[${index}]`}
-                component={ConfigArrayElement}
-                modelToReps={this.props.modelToReps}
-                essenceFiles={this.props.essenceFiles}
-                paramFiles={this.props.paramFiles}
-                index={index}
-                values={{ cache: values.caches[index] }}
-              />
-            </div>
-          ))
+          const array = arrayIndexes.map(index => {
+            let currentCache: Cache
+            if (this.state.currentCache) {
+              currentCache = this.state.currentCache!
+            } else {
+              currentCache = values.caches[index]
+            }
+            console.log("currentCahces is ", currentCache)
 
-          // const buttonOrSpinner = this.props.waiting ? (
-          //   <div data-test-id="spinner">
-          //     {/* <MDBSpinner /> */}
-          //     <Loader loaded={false} />
-          //   </div>
-          // ) : (
-          //   <button
-          //     type="submit"
-          //     className={`btn btn-${colourClass} btn-lg btn-block`}
-          //   >
-          //     {submitButtonMessage}
-          //   </button>
-          // )
+            return (
+              <div className="col" key={index}>
+                <Field
+                  name={`caches[${index}]`}
+                  component={ConfigArrayElement}
+                  modelToReps={this.props.modelToReps}
+                  essenceFiles={this.props.essenceFiles}
+                  paramFiles={this.props.paramFiles}
+                  index={index}
+                  caches={this.props.caches}
+                  values={{ cache: currentCache }}
+                  // changeHandler={(event: any) => {
+                  //   const cacheName = event.target.value
+                  //   const chosen = this.props.caches.find(
+                  //     x => x.name === cacheName
+                  //   )!
 
-          // console.log(buttonOrSpinner)
+                  //   // console.log(event.target.value)
+                  //   // console.log(cacheName)
+                  //   // console.log(chosen)
+                  //   currentCache = chosen
+                  //   console.log(currentCache)
+                  //   // this.setState({ currentCache })
+                  // }}
+                />
+              </div>
+            )
+          })
 
           return (
             <Form>

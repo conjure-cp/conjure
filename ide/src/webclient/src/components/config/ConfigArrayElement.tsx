@@ -18,12 +18,18 @@ import { MinionConfig, MinionStage } from "./MinionStage"
 import { SRConfig, SRStage } from "./SRStage"
 import { ConjureConfig, ConjureStage } from "./ConjureStage"
 import { cloneDeep } from "lodash"
+import { Caches } from "./Caches"
+import Select from "../common/Select"
+import { SelectField } from "./SelectField"
+import { ChangeEvent } from "react";
 
 interface Props {
   modelToReps: RepMap
   essenceFiles: string[]
   paramFiles: string[]
   index: number
+  caches: Cache[]
+  changeHandler: (e: ChangeEvent<HTMLSelectElement>) => void
 }
 
 interface State {
@@ -48,7 +54,7 @@ export class ConfigArrayElement extends React.Component<
     showReps: false
   }
   render = () => {
-    const { values, index } = this.props
+    const { values, index, setFieldValue } = this.props
     const { name } = this.props.field
 
     // console.log(values)
@@ -58,6 +64,32 @@ export class ConfigArrayElement extends React.Component<
         title={`Config ${index + 1}`}
         id={`config${index + 1}`}
       >
+        <Field
+          name={`${name}.name`}
+          component={TextWithLabel}
+          label={"Save as:"}
+        />
+        <Field
+          component={Select}
+          title={"Caches"}
+          options={this.props.caches.map(x => {
+            return { value: x.name, label: x.name }
+          })}
+                  // changeHandler={(event: any) => {
+                  //   const cacheName = event.target.value
+                  //   const chosen = this.props.caches.find(
+                  //     x => x.name === cacheName
+                  //   )!
+
+                  //   // console.log(event.target.value)
+                  //   // console.log(cacheName)
+                  //   // console.log(chosen)
+                  //   currentCache = chosen
+                  //   console.log(currentCache)
+                  //   // this.setState({ currentCache })
+                  // }}
+        />
+
         <Field
           name={`${name}.essenceFile`}
           component={SelectWithLabel}

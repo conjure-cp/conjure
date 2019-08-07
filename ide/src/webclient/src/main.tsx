@@ -167,7 +167,8 @@ class Root extends React.Component<any, State> {
             Invalidate Caches
           </button>
           <ConfigForm
-            waiting={true}
+            caches={this.state.allCaches}
+            waiting={false}
             modelToReps={essenceFileToReps}
             essenceFiles={[essenceFile]}
             paramFiles={[paramFile]}
