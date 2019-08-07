@@ -8,7 +8,9 @@ import {
   cleanup,
   RenderResult,
   wait,
-  queryByText
+  queryByText,
+  queryByTestId,
+  prettyDOM
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
 import { ConfigForm } from "../src/components/config/ConfigForm"
@@ -16,6 +18,7 @@ import { RepMap } from "../../extension/src/utils"
 import { ConjureConfig } from "../src/components/config/ConjureStage"
 import { SRConfig } from "../src/components/config/SRStage"
 import { MinionConfig } from "../src/components/config/MinionStage"
+import { debug } from "util";
 
 describe("Test the configure element", () => {
   afterEach(cleanup)
@@ -56,6 +59,7 @@ describe("Test the configure element", () => {
 
     rendered = render(
       <ConfigForm
+        waiting={false}
         modelToReps={essenceFileToReps}
         essenceFiles={[essenceFile]}
         paramFiles={[paramFile]}
@@ -63,9 +67,12 @@ describe("Test the configure element", () => {
       />
     )
   })
+  
+  afterEach(cleanup)
 
   test("Solve button is displayed", () => {
     expect(rendered.queryByText("Solve")).toBeTruthy()
+    expect(rendered.queryByTestId("spinner")).toBeFalsy()
   })
 
   test("Click diff check", async () => {
@@ -79,7 +86,6 @@ describe("Test the configure element", () => {
   })
 
   test("Click Solve button", async () => {
-
     const conjureTime = "1234"
     fireEvent.change(rendered.queryByLabelText("Time limit")!, {
       target: { value: conjureTime }
@@ -137,7 +143,6 @@ describe("Test the configure element", () => {
     expect(minionConfig.consistency).toEqual(consistency)
   })
 
-
   test("Validation non numeric", async () => {
     const conjureTime = "abc"
     fireEvent.change(rendered.queryByLabelText("Time limit")!, {
@@ -145,7 +150,10 @@ describe("Test the configure element", () => {
     })
 
     await wait(() => {})
-    expect(rendered.getByText("Leave empty or specify an integer > 0")).toBeTruthy()
+    expect(rendered.queryByText("Solve")).toBeFalsy()
+    expect(
+      rendered.getByText("Leave empty or specify an integer > 0")
+    ).toBeTruthy()
   })
 
   test("Validation zero", async () => {
@@ -155,7 +163,10 @@ describe("Test the configure element", () => {
     })
 
     await wait(() => {})
-    expect(rendered.getByText("Leave empty or specify an integer > 0")).toBeTruthy()
+    expect(rendered.queryByText("Solve")).toBeFalsy()
+    expect(
+      rendered.getByText("Leave empty or specify an integer > 0")
+    ).toBeTruthy()
   })
 
   test("Validation no problem", async () => {
@@ -165,6 +176,26 @@ describe("Test the configure element", () => {
     })
 
     await wait(() => {})
-    expect(rendered.queryByText("Leave empty or specify an integer > 0")).toBeFalsy()
+    expect(
+      rendered.queryByText("Leave empty or specify an integer > 0")
+    ).toBeFalsy()
+  })
+
+  test("Spinner when loading ", async () => {
+    cleanup()
+    let r = render(
+      <ConfigForm
+        waiting={true}
+        modelToReps={essenceFileToReps}
+        essenceFiles={[essenceFile]}
+        paramFiles={[paramFile]}
+        submitHandler={mockHandler}
+      />
+    )
+    // await waitForElement(() => r.getByTestId("spinner"))
+
+    await wait(() => {})
+    expect(r.queryByText("Solve")).toBeFalsy()
+    expect(r.queryByRole("progressbar")).toBeTruthy()
   })
 })

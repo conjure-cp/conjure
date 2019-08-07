@@ -8,7 +8,15 @@ import { Form, Field, Formik, FormikProps, validateYupSchema } from "formik"
 import { cloneDeep } from "lodash"
 import { ConfigArrayElement } from "./ConfigArrayElement"
 
+var Loader = require("react-loader")
+
+// import { MDBSpinner } from "mdbreact"
+
+// import Loader from "react-loader-spinner"
+// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
+
 interface Props {
+  waiting: boolean
   modelToReps: RepMap
   essenceFiles: string[]
   paramFiles: string[]
@@ -72,6 +80,22 @@ export class ConfigForm extends React.Component<Props, State> {
             </div>
           ))
 
+          // const buttonOrSpinner = this.props.waiting ? (
+          //   <div data-test-id="spinner">
+          //     {/* <MDBSpinner /> */}
+          //     <Loader loaded={false} />
+          //   </div>
+          // ) : (
+          //   <button
+          //     type="submit"
+          //     className={`btn btn-${colourClass} btn-lg btn-block`}
+          //   >
+          //     {submitButtonMessage}
+          //   </button>
+          // )
+
+          // console.log(buttonOrSpinner)
+
           return (
             <Form>
               <Check
@@ -86,12 +110,14 @@ export class ConfigForm extends React.Component<Props, State> {
 
               <div className="row">{array}</div>
 
-              <button
-                type="submit"
-                className={`btn btn-${colourClass} btn-lg btn-block`}
-              >
-                {submitButtonMessage}
-              </button>
+              <Loader loaded={!this.props.waiting}>
+                <button
+                  type="submit"
+                  className={`btn btn-${colourClass} btn-lg btn-block`}
+                >
+                  {submitButtonMessage}
+                </button>
+              </Loader>
             </Form>
           )
         }}

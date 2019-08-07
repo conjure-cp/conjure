@@ -8,6 +8,7 @@ module.exports = {
       tsConfig: "tsconfig.json"
     }
   },
+  preset: "ts-jest",
   testMatch: ["**/__tests__/*.+(ts|tsx)"],
   automock: false,
   setupFiles: ["./src/webclient/src/setupJest.ts"],
@@ -15,5 +16,8 @@ module.exports = {
     "ts-jest": {
       diagnostics: { warnOnly: true }
     }
+  },
+  moduleNameMapper: {
+    "\\.(css|less)$": "identity-obj-proxy"
   }
 }
