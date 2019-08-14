@@ -37,6 +37,5 @@ such that
               var1_RelationAsSetR5R9_ExplicitR5R9_1_ExplicitVarSizeWithMarker_Values[q2, q4] = false
                   | q4 : int(1..2)])
              | q2 : int(1..2)]),
-    and([0 <= var1_RelationAsSetR5R9_ExplicitR5R9_2_ExplicitWithRepetition_Flag[q2] | q2 : int(1..2)]),
-    and([var1_RelationAsSetR5R9_ExplicitR5R9_2_ExplicitWithRepetition_Flag[q2] <= 0 | q2 : int(1..2)])
+    and([0 = var1_RelationAsSetR5R9_ExplicitR5R9_2_ExplicitWithRepetition_Flag[q2] | q2 : int(1..2)])
 
