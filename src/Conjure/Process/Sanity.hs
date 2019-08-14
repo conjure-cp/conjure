@@ -52,7 +52,7 @@ sanityChecks model = do
                             _ -> return ()
                 _ -> return ()
             mapM_ checkFactorial (universeBi $ mStatements m)
-            statements2 <- transformBiM checkLit (mStatements m)
+            statements2 <- transformBiM updateSizeAttr =<< transformBiM checkLit (mStatements m)
             return m { mStatements = statements2 }
 
         -- check for mset attributes
@@ -106,6 +106,12 @@ sanityChecks model = do
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
             _ -> return ()
+
+
+        updateSizeAttr :: Monad m => SizeAttr Expression -> m (SizeAttr Expression)
+        updateSizeAttr (SizeAttr_MinMaxSize a b) | a == b = return (SizeAttr_Size a)
+        updateSizeAttr s = return s
+
 
         -- check for function literals
         --     they cannot contain anything > CatParameter
