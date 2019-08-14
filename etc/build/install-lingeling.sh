@@ -11,7 +11,7 @@ pushd ${BIN_DIR}/tmp-install-lingeling
 
 function download {
     if which curl 2> /dev/null > /dev/null; then
-        curl $1 -O
+        curl -L -O $1
     elif which wget 2> /dev/null > /dev/null; then
         wget --no-check-certificate -c $1
     else
