@@ -21,12 +21,8 @@ instance ToJSON    x => ToJSON    (OpAttributeAsConstraint x) where toJSON = gen
 instance FromJSON  x => FromJSON  (OpAttributeAsConstraint x) where parseJSON = genericParseJSON jsonOptions
 
 instance TypeOf (OpAttributeAsConstraint x) where
-    -- TODO
+    -- can check more here
     typeOf OpAttributeAsConstraint{} = return TypeBool
-
-instance EvaluateOp OpAttributeAsConstraint where
-    -- TODO
-    evaluateOp _ = return (ConstantBool True)
 
 instance SimplifyOp OpAttributeAsConstraint x where
     simplifyOp _ = na "simplifyOp{OpAttributeAsConstraint}"

@@ -20,10 +20,13 @@ we use the "#" character to denote comments,
 we use double-quotes for terminal strings,
 and we use a ``list`` construct to indicate a list of syntax elements.
 
-The ``list`` construct has two variants:
+The ``list`` construct has three arguments:
 
-#. First variant takes two arguments where the first argument is the syntax of the items of the list and second argument is the item separator.
-#. Second variant takes an additional third argument which indicates the surrounding bracket for the list. The third argument can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
+#. First argument is the syntax of the items of the list.
+#. Second argument is the item separator.
+#. Third argument indicates the surrounding bracket for the list. It can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
+
+Only the first argument is mandatory, the rest of the arguments are optional when an item separator or surrounding brackets are not required.
 
 .. code-block:: bnf
 
@@ -995,7 +998,9 @@ Examples:
 
 These semantics follow the original Essence definition.
 In contrast, in older versions of Conjure the relationship
-  ``apart(L,P) = !together(L,P)``
+
+ | ``apart(L,P) = !together(L,P)``
+
 held for all lists ``L`` and partitions ``P``.
 
 
@@ -1038,7 +1043,7 @@ The following snippets illustrate the use of quantifiers.
    find b : bool such that b = exists i : int(0..4) . i*i=i $ true
 
 The same variable can be reused for multiple quantifications, as a quantified variable has scope that is local to its quantifier.
-However, avoid using the same name both for quantification and as a global decision variable in a ``find``, as this is treated as an error by Savile Row.
+Older versions of Savile Row do not support using the same name both for quantification and as a global decision variable in a ``find``.
 
 An alternative quantifier-like syntax
 
@@ -1051,10 +1056,13 @@ Comprehensions
 ~~~~~~~~~~~~~~
 
 A list can be constructed by means of a comprehension.
-A list comprehension is declared by using the usual square brackets ``[`` and ``]``, inside which is a generator expression possibly involving some parameter variables, followed by ``|``, followed by a comma (``,``) separated sequence of conditions defining the values that all the parameter variables may take, or Boolean expressions.
-The value of a list comprehension is a list containing all the values of the generator expression corresponding to those values of the parameter variables for which all the Boolean expressions evaluate to ``true``.
+A list comprehension is declared by using square brackets ``[`` and ``]`` as for other lists, inside which is a generator expression possibly involving some parameter variables, followed by ``|``, followed by a comma (``,``) separated sequence of conditions.
+Each condition is a Boolean expression.
+The value of a list comprehension is a list containing all the values of the generator expression corresponding to those values of the parameter variables for which all the conditions evaluate to ``true``.
+Comprehension conditions may include ``letting`` statements, which have local scope within the comprehension.
 
 In a Boolean expression controlling a comprehension, if ``L`` is a list then ``v <- L`` behaves similarly to how the expression ``v in toMSet(L)`` is treated in a quantification.
+If ``c`` is a list comprehension, then ``|c|`` denotes the number of values in ``c``.
 
 Examples of list comprehensions:
 
@@ -1065,5 +1073,9 @@ Examples of list comprehensions:
    letting I be domain int(1..5)
    find y : int(0..9) such that y = sum( [toInt((i=j) /\ (M[j]>0)) | i : I, j <- M] ) $ 2
    find a : bool such that a = and([u<v | (u,v) <- [(0,1),(2**10,2**11),(-1,1)] ]) $ true
+   find m : int(0..999) such that m = | [M[i] | i : I, M[i] != 0] | $ 2
+   find n : int(0..999) such that n = | toSet([M[i] | i : I, M[i] != 0]) | $ 1
+   find b : bool such that b =
+       or([ (x=y) | i : I, letting x be i, letting y be M[i] ]) $ true
 
 

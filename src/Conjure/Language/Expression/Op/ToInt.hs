@@ -29,12 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToInt x) where
                 , "But got:" <+> pretty ty
                 ]
 
-instance EvaluateOp OpToInt where
-    evaluateOp (OpToInt (ConstantBool False)) = return (ConstantInt TagInt 0)
-    evaluateOp (OpToInt (ConstantBool True )) = return (ConstantInt TagInt 1)
-    evaluateOp (OpToInt ConstantUndefined{})  = return (ConstantInt TagInt 0)
-    evaluateOp op = na $ "evaluateOp{OpToInt}:" <++> pretty (show op)
-
 instance SimplifyOp OpToInt x where
     simplifyOp _ = na "simplifyOp{OpToInt}"
 

@@ -383,7 +383,8 @@ instance DomainOf (OpEq x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpFactorial x) where
     domainOf op = mkDomainAny ("OpFactorial:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpFlatten x) where
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpFlatten x) where
+    domainOf (OpFlatten (Just 1) x) = domainOf x >>= innerDomainOf
     domainOf op = mkDomainAny ("OpFlatten:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) where
@@ -401,8 +402,13 @@ instance (Pretty x, TypeOf x) => DomainOf (OpHist x) where
 instance DomainOf (OpIff x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpImage x) where
-    domainOf op = mkDomainAny ("OpImage:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpImage x) where
+    domainOf (OpImage f _) = do
+        fDomain <- domainOf f
+        case fDomain of
+            DomainFunction _ _ _ to -> return to
+            DomainSequence _ _ to -> return to
+            _ -> fail "domainOf, OpImage, not a function or sequence"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where
     domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op
@@ -466,7 +472,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         let low  = [essence| max(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
         let upp  = [essence| max(&upps) |]
-        TypeInt t <- typeOf (head doms)
+        TypeInt t <- typeOfDomain (head doms)
         return (DomainInt t [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
 
@@ -479,7 +485,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         let low  = [essence| min(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
         let upp  = [essence| min(&upps) |]
-        TypeInt t <- typeOf (head doms)
+        TypeInt t <- typeOfDomain (head doms)
         return (DomainInt t [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMin:" <++> pretty op) <$> typeOf op
 
@@ -640,7 +646,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpTransform x) where
 instance DomainOf (OpTrue x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) where
+instance (Pretty x, TypeOf x, Domain () x :< x) => DomainOf (OpTwoBars x) where
     domainOf op = mkDomainAny ("OpTwoBars:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpUnion x) where

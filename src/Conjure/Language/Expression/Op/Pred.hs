@@ -28,16 +28,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPred x) where
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
 
-instance EvaluateOp OpPred where
-    evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpPred (ConstantBool _)) = return (ConstantBool False)          -- True --> False
-                                                                                -- False --> undef, hence False
-    evaluateOp (OpPred (ConstantInt TagInt x)) = return (ConstantInt TagInt (pred x))
-    evaluateOp (OpPred (ConstantInt (TagEnum t) x))
-        = return (ConstantInt (TagEnum t) (pred x))
-    evaluateOp op = na $ "evaluateOp{OpPred}" <+> pretty (show op)
-
 instance SimplifyOp OpPred x where
     simplifyOp _ = na "simplifyOp{OpPred}"
 

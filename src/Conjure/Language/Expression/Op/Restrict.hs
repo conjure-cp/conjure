@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Restrict where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+-- import {-# SOURCE #-} Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -18,25 +20,14 @@ instance Hashable  x => Hashable  (OpRestrict x)
 instance ToJSON    x => ToJSON    (OpRestrict x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpRestrict x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
-    typeOf p@(OpRestrict f dom) = do
+instance (TypeOf x, Pretty x, Domain () x :< x) => TypeOf (OpRestrict x) where
+    typeOf p@(OpRestrict f domX) = do
+        dom :: Domain () x   <- project domX
         TypeFunction from to <- typeOf f
-        from'                <- typeOf dom
+        from'                <- typeOfDomain dom
         if typesUnify [from, from']
             then return (TypeFunction (mostDefined [from', from]) to)
             else raiseTypeError p
-
-instance EvaluateOp OpRestrict where
-    evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
-        dom       <- domainOut domX
-        return $ ConstantAbstract $ AbsLitFunction $ sortNub
-            [ x
-            | x@(a,_) <- xs
-            , case validateConstantForDomain "<in memory>" a (dom :: Domain () Constant) of
-                Nothing -> False
-                Just{}  -> True
-            ]
-    evaluateOp op = na $ "evaluateOp{OpRestrict}:" <++> pretty (show op)
 
 instance SimplifyOp OpRestrict x where
     simplifyOp _ = na "simplifyOp{OpRestrict}"

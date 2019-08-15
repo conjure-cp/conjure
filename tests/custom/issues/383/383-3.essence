@@ -1,0 +1,12 @@
+language Essence 1.3
+given n : int
+letting vertices be domain int(1..n)
+given G : set of set (size 2) of vertices
+
+letting colours be new type of size n
+find f : function vertices --> colours
+such that forAll e in G . f(min(e)) != f(max(e))
+
+find c : colours such that c = |toSet([ f(u) | u : vertices ])|
+minimising c
+

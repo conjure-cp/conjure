@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Conjure.Process.FiniteGivens
     ( finiteGivens
     , finiteGivensParam
@@ -20,7 +22,6 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
 finiteGivens ::
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -44,7 +45,6 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam ::
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -69,10 +69,10 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
             (_, Nothing) -> return []
             (Just domain', Just expr) -> do
                 logDebugVerbose $ "finiteGivensParam domain' " <+> pretty domain'
-                domain  <- fmap Constant <$> instantiateDomain essenceLettings domain'
+                domain  <- failToUserError $ fmap Constant <$> instantiateDomain essenceLettings domain'
                 logDebugVerbose $ "finiteGivensParam domain  " <+> pretty domain
                 logDebugVerbose $ "finiteGivensParam expr    " <+> pretty expr
-                constant <- instantiateExpression essenceLettings expr
+                constant <- failToUserError $ instantiateExpression essenceLettings expr
                 logDebugVerbose $ "finiteGivensParam constant" <+> pretty constant
                 (_, _, f) <- mkFinite domain
                 outs <- f constant
@@ -101,7 +101,6 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
 --   and adding a maxSize attribute at the inner levels.
 mkFinite ::
     MonadState Int m =>
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -127,7 +126,6 @@ mkFinite d = return (d, [], const (return []))
 
 mkFiniteOutermost ::
     MonadState Int m =>
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -150,7 +148,7 @@ mkFiniteOutermost (DomainTuple inners) = do
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
                 return (concat innerValues)
         )
-mkFiniteOutermost (DomainRecord inners) = do
+mkFiniteOutermost (DomainRecord (sortOn fst -> inners)) = do
     mids <- mapM (mkFiniteInner . snd) inners
     return
         ( DomainRecord (zip (map fst inners) (map fst3 mids))
@@ -160,7 +158,7 @@ mkFiniteOutermost (DomainRecord inners) = do
                 xs' <- failToUserError $ viewConstantRecord constant
                 let
                     xs :: [Constant]
-                    xs = map snd xs'
+                    xs = map snd $ sortOn fst xs'
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
                 return (concat innerValues)
@@ -176,7 +174,7 @@ mkFiniteOutermost (DomainVariant inners) = do
                 xs :: [Constant] <- sequence
                     [ case xs' of
                         (_, nm', c') | nm == nm' -> return c'
-                        _ -> instantiateDomain [] d >>= zeroVal
+                        _ -> failToUserError $ instantiateDomain [] d >>= zeroVal
                     | (nm, d) <- inners ]
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
@@ -272,7 +270,7 @@ mkFiniteOutermost (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) inn
         ( DomainFunction () attr innerFr' innerTo'
         , innerFrExtras ++ innerToExtras
         , \ constant -> do
-                logDebug $ "mkFiniteOutermost DomainFunction" <+> pretty constant
+                logDebug $ "mkFiniteOutermost DomainFunction" <+-> pretty constant
                 function <- failToUserError $ viewConstantFunction constant
                 innerFrValues <- innerFrF (map fst function)
                 innerToValues <- innerToF (map snd function)
@@ -288,7 +286,7 @@ mkFiniteOutermost (DomainFunction () (FunctionAttr _ partialityAttr jectivityAtt
                 innerFr' innerTo'
         , s : innerFrExtras ++ innerToExtras
         , \ constant -> do
-                logDebug $ "mkFiniteOutermost DomainFunction" <+> pretty constant
+                logDebug $ "mkFiniteOutermost DomainFunction" <+-> pretty constant
                 function <- failToUserError $ viewConstantFunction constant
                 let functionSize = genericLength function
                 innerFrValues <- innerFrF (map fst function)
@@ -358,7 +356,6 @@ mkFiniteOutermost d = return (d, [], const (return []))
 
 mkFiniteInner ::
     MonadState Int m =>
-    MonadFail m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -376,9 +373,9 @@ mkFiniteInner (DomainInt t []) = do
         ( DomainInt t [RangeBounded (fromName fr) (fromName to)]
         , [fr, to]
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainInt 1" <+-> fsep (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (fr, ConstantInt t (minimum ints))
+                return [ (fr, ConstantInt t (minimum0 ints))
                        , (to, ConstantInt t (maximum0 ints))
                        ]
         )
@@ -388,7 +385,7 @@ mkFiniteInner (DomainInt t [RangeLowerBounded low]) = do
         ( DomainInt t [RangeBounded low (fromName new)]
         , [new]
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainInt 2" <+-> fsep (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
                 return [ (new, ConstantInt t (maximum0 ints)) ]
         )
@@ -398,9 +395,9 @@ mkFiniteInner (DomainInt t [RangeUpperBounded upp]) = do
         ( DomainInt t [RangeBounded (fromName new) upp]
         , [new]
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainInt 3" <+-> fsep (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (new, ConstantInt t (minimum ints)) ]
+                return [ (new, ConstantInt t (minimum0 ints)) ]
         )
 mkFiniteInner (DomainTuple inners) = do
     mids <- mapM mkFiniteInner inners
@@ -408,23 +405,23 @@ mkFiniteInner (DomainTuple inners) = do
         ( DomainTuple (map fst3 mids)
         , concatMap snd3 mids
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainTuple" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainTuple" <+-> vcat (map pretty constants)
                 xss <- failToUserError $ mapM viewConstantTuple constants
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
         )
-mkFiniteInner (DomainRecord inners) = do
+mkFiniteInner (DomainRecord (sortOn fst -> inners)) = do
     mids <- mapM (mkFiniteInner . snd) inners
     return
         ( DomainRecord (zip (map fst inners) (map fst3 mids))
         , concatMap snd3 mids
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainRecord" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainRecord" <+-> vcat (map pretty constants)
                 xss' :: [[(Name, Constant)]] <- failToUserError $ mapM viewConstantRecord constants
                 let
                     xss :: [[Constant]]
-                    xss = map (map snd) xss'
+                    xss = map (map snd . sortOn fst) xss'
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
@@ -435,14 +432,14 @@ mkFiniteInner (DomainVariant inners) = do
         ( DomainVariant (zip (map fst inners) (map fst3 mids))
         , concatMap snd3 mids
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainVariant" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainVariant" <+-> vcat (map pretty constants)
                 xss' <- failToUserError $ mapM viewConstantVariant constants
                 xss :: [[Constant]]
                     <- sequence
                             [ sequence
                                 [ case xs' of
                                     (_, nm', c') | nm == nm' -> return c'
-                                    _ -> instantiateDomain [] d >>= zeroVal
+                                    _ -> failToUserError $ instantiateDomain [] d >>= zeroVal
                                 | (nm, d) <- inners ]
                             | xs' <- xss' ]
                 let innerFs = map thd3 mids
@@ -455,7 +452,7 @@ mkFiniteInner (DomainMatrix index inner) = do
         ( DomainMatrix index inner'
         , innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainMatrix" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainMatrix" <+-> vcat (map pretty constants)
                 xss <- failToUserError $ mapM viewConstantMatrix constants
                 innerF (concatMap snd xss)
         )
@@ -465,7 +462,7 @@ mkFiniteInner (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
         ( DomainSet () attr inner'
         , innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainSet" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainSet" <+-> vcat (map pretty constants)
                 sets <- failToUserError $ mapM viewConstantSet constants
                 innerF (concat sets)
         )
@@ -476,7 +473,7 @@ mkFiniteInner (DomainSet () _ inner) = do
         ( DomainSet () (SetAttr (SizeAttr_MaxSize (fromName s))) inner'
         , s:innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainSet" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainSet" <+-> vcat (map pretty constants)
                 sets <- failToUserError $ mapM viewConstantSet constants
                 let setMaxSize = maximum0 $ map genericLength sets
                 innerValues <- innerF (concat sets)
@@ -488,7 +485,7 @@ mkFiniteInner (DomainMSet () attr@(MSetAttr SizeAttr_Size{} _) inner) = do
         ( DomainMSet () attr inner'
         , innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainMSet" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainMSet" <+-> vcat (map pretty constants)
                 sets <- failToUserError $ mapM viewConstantMSet constants
                 innerF (concat sets)
         )
@@ -499,7 +496,7 @@ mkFiniteInner (DomainMSet () (MSetAttr _ occurAttr) inner) = do
         ( DomainMSet () (MSetAttr (SizeAttr_MaxSize (fromName s)) occurAttr) inner'
         , s:innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainMSet" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainMSet" <+-> vcat (map pretty constants)
                 sets <- failToUserError $ mapM viewConstantMSet constants
                 let setMaxSize = maximum0 $ map genericLength sets
                 innerValues <- innerF (concat sets)
@@ -511,7 +508,7 @@ mkFiniteInner (DomainSequence () attr@(SequenceAttr SizeAttr_Size{} _) inner) = 
         ( DomainSequence () attr inner'
         , innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainSequence" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainSequence" <+-> vcat (map pretty constants)
                 seqs <- failToUserError $ mapM viewConstantSequence constants
                 innerF (concat seqs)
         )
@@ -522,7 +519,7 @@ mkFiniteInner (DomainSequence () (SequenceAttr _ jectivityAttr) inner) = do
         ( DomainSequence () (SequenceAttr (SizeAttr_MaxSize (fromName s)) jectivityAttr) inner'
         , s:innerExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainSequence" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainSequence" <+-> vcat (map pretty constants)
                 seqs <- failToUserError $ mapM viewConstantSequence constants
                 let seqMaxSize = maximum0 $ map genericLength seqs
                 innerValues <- innerF (concat seqs)
@@ -535,7 +532,7 @@ mkFiniteInner (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr
         ( DomainFunction () attr innerFr' innerTo'
         , innerFrExtras ++ innerToExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainFunction" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainFunction" <+-> vcat (map pretty constants)
                 functions <- failToUserError $ mapM viewConstantFunction constants
                 innerFrValues <- innerFrF (map fst (concat functions))
                 innerToValues <- innerToF (map snd (concat functions))
@@ -551,7 +548,7 @@ mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) i
                 innerFr' innerTo'
         , s : innerFrExtras ++ innerToExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainFunction" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainFunction" <+-> vcat (map pretty constants)
                 functions <- failToUserError $ mapM viewConstantFunction constants
                 let functionMaxSize = maximum0 $ map genericLength functions
                 innerFrValues <- innerFrF (map fst (concat functions))
@@ -564,7 +561,7 @@ mkFiniteInner (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) =
         ( DomainRelation () attr inners'
         , concat innersExtras
         , \ constants -> do
-                logDebug $ "mkFiniteInner DomainRelation" <+> vcat (map pretty constants)
+                logDebug $ "mkFiniteInner DomainRelation" <+-> vcat (map pretty constants)
                 relations <- failToUserError $ mapM viewConstantRelation constants
                 innersValues <- zipWithM ($) innersF (transpose $ concat relations)
                 return $ concat innersValues
@@ -619,7 +616,12 @@ mkFiniteInner (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) = do
 mkFiniteInner d = return (d, [], const (return []))
 
 
--- specialised the type for maximum0, to avoid possible bugs
+-- specialised the type for minimum0 and maximum0, to avoid possible bugs
 -- this function is always intended to be used with Integers
+minimum0 :: [Integer] -> Integer
+minimum0 [] = 0
+minimum0 xs = minimum xs
+
 maximum0 :: [Integer] -> Integer
-maximum0 xs = maximum (0:xs)
+maximum0 [] = 0
+maximum0 xs = maximum xs

@@ -10,7 +10,7 @@ import Conjure.Bug
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer
-import Conjure.Language.Expression.Op.Internal.Common ( evaluateOp, simplifyOp
+import Conjure.Language.Expression.Op.Internal.Common ( simplifyOp
                                                       , Fixity(..), operators, functionals
                                                       , EssenceOperatorParsingDescr(..) )
 import Conjure.Language.Expression.Op.Internal.Generated

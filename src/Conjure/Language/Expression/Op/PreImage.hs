@@ -33,15 +33,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
                     else raiseTypeError p
             _ -> raiseTypeError p
 
-instance EvaluateOp OpPreImage where
-    evaluateOp (OpPreImage (viewConstantFunction -> Just xs) a) =
-        return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
-    evaluateOp (OpPreImage (viewConstantSequence -> Just xs) a) =
-        return $ ConstantAbstract $ AbsLitSet [ x | (n,y) <- zip allNats xs
-                                                  , let x = ConstantInt TagInt n
-                                                  , a == y ]
-    evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
-
 instance SimplifyOp OpPreImage x where
     simplifyOp _ = na "simplifyOp{OpPreImage}"
 

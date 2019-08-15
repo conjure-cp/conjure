@@ -38,23 +38,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
         ty <- typeOf m
         TypeList <$> flattenType n ty
 
-instance EvaluateOp OpFlatten where
-    evaluateOp (OpFlatten Nothing m) = do
-        let flat (viewConstantMatrix -> Just (_, xs)) = concatMap flat xs
-            flat c = [c]
-        let flattened = flat m
-        return (ConstantAbstract $ AbsLitMatrix
-                    (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength flattened))])
-                    flattened)
-    evaluateOp (OpFlatten (Just n) m) = do
-        let flat lvl c | lvl < 0 = return [c]
-            flat lvl (viewConstantMatrix -> Just (_, xs)) = concatMapM (flat (lvl-1)) xs
-            flat _ _ = fail $ "Cannot flatten" <+> pretty n <+> "levels."
-        flattened <- flat n m
-        return (ConstantAbstract $ AbsLitMatrix
-                    (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength flattened))])
-                    flattened)
-
 instance SimplifyOp OpFlatten x where
     simplifyOp _ = na "simplifyOp{OpFlatten}"
 

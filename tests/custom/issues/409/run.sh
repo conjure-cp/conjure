@@ -1,0 +1,1 @@
+conjure type-check *.essence

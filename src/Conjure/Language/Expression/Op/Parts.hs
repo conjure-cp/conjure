@@ -27,11 +27,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
 
-instance EvaluateOp OpParts where
-    evaluateOp (OpParts (viewConstantPartition -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) xs
-    evaluateOp op = na $ "evaluateOp{OpParts}:" <++> pretty (show op)
-
 instance SimplifyOp OpParts x where
     simplifyOp _ = na "simplifyOp{OpParts}"
 

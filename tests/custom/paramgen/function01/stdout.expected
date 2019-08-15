@@ -35,7 +35,7 @@ such that
     s <= s_middle + s_delta
 given f_range_middle: int(1..100)
 given f_range_delta: int(0..49)
-find f: function (maxSize 100, injective) int(1..10) --> int(1..100)
+find f: function (injective) int(1..10) --> int(1..100)
 such that
     and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
     and([q1[2] >= f_range_middle - f_range_delta | q1 <- f]),
@@ -181,7 +181,7 @@ such that
     s <= s_middle + s_delta
 given f_range_middle: int(1..50)
 given f_range_delta: int(0..24)
-find f: function (maxSize 50, injective) int(1..10) --> int(1..50)
+find f: function (injective) int(1..10) --> int(1..50)
 such that
     and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
     and([q1[2] >= f_range_middle - f_range_delta | q1 <- f]),

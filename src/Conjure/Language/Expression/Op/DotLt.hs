@@ -24,9 +24,6 @@ instance BinaryOperator (OpDotLt x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpDotLt x) where
     typeOf p@(OpDotLt a b) = sameToSameToBool p a b [] (const True)
 
-instance EvaluateOp OpDotLt where
-    evaluateOp (OpDotLt x y) = return $ ConstantBool $ x < y
-
 instance SimplifyOp OpDotLt x where
     simplifyOp _ = na "simplifyOp{OpDotLt}"
 

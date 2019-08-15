@@ -162,6 +162,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , outputFormat                  = UI.Plain
             , lineWidth                     = 120
             , responses                     = ""
+            , responsesRepresentation       = ""
             , generateStreamliners          = ""
             }
     -- catching the (SR timeout) error, and raising a user error

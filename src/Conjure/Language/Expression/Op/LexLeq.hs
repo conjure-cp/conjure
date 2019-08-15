@@ -25,17 +25,12 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLeq x) where
     typeOf p@(OpLexLeq a b) = do
         tyA <- typeOf a
         tyB <- typeOf b
-        if typesUnify [TypeList TypeAny, tyA, tyB]
+        if typesUnify [tyA, tyB]
             then return TypeBool
             else raiseTypeError $ vcat [ pretty p
                                        , "LHS has type:" <+> pretty tyA
                                        , "RHS has type:" <+> pretty tyB
                                        ]
-
-instance EvaluateOp OpLexLeq where
-    evaluateOp (OpLexLeq (viewConstantMatrix -> Just (_, xs)) (viewConstantMatrix -> Just (_, ys))) =
-        return $ ConstantBool $ xs <= ys
-    evaluateOp op = na $ "evaluateOp{OpLexLeq}:" <++> pretty (show op)
 
 instance SimplifyOp OpLexLeq x where
     simplifyOp _ = na "simplifyOp{OpLexLeq}"

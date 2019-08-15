@@ -52,6 +52,8 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
+    pretty (TypeInt (TagEnum n)) = pretty n
+    pretty (TypeInt (TagUnnamed n)) = pretty n
     pretty TypeInt{} = "int"
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
@@ -136,15 +138,17 @@ typeUnify (TypeVariant as) (TypeVariant bs)
                       | (n,a) <- as
                       ]
 typeUnify (TypeList a) (TypeList b) = typeUnify a b
-typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeList a) (TypeMatrix _ b) = typeUnify a b
-typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
 typeUnify (TypeList a) (TypeSequence b) = typeUnify a b
+typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
+typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
+typeUnify (TypeMatrix _ a) (TypeSequence b) = typeUnify a b
+typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
 typeUnify (TypeSequence a) (TypeList b) = typeUnify a b
+typeUnify (TypeSequence a) (TypeMatrix _ b) = typeUnify a b
 typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
-typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
 typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- hack to make sameToSameToBool work
 typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = (length as == length bs) && and (zipWith typeUnify as bs)

@@ -5,7 +5,7 @@ module Conjure.Language.ModelStats
     , lettings
     , domainNeedsRepresentation
     , modelInfo
-    , modelDomainsJSON
+    , modelDeclarationsJSON
     ) where
 
 import Conjure.Prelude
@@ -80,12 +80,36 @@ modelInfo m = vcat
     ]
 
 
-modelDomainsJSON :: Model -> JSONValue
-modelDomainsJSON m = toJSON
-    [ M.fromList [ ( "kind"   :: String , show forg                )
-                 , ( "name"   :: String , render 100000 (pretty name) )
-                 , ( "domain" :: String , render 100000 (pretty dom)  )
-                 ]
-    | Declaration (FindOrGiven forg name dom) <- mStatements m
+modelDeclarationsJSON :: Model -> JSONValue
+modelDeclarationsJSON m = toJSON
+    [ M.fromList $ case d of
+        FindOrGiven forg name dom ->
+            [ "kind"   ~~ show forg
+            , "name"   ~~ r name
+            , "domain" ~~ r dom
+            ]
+        Letting name x ->
+            [ "kind"   ~~ "letting"
+            , "name"   ~~ r name
+            , "value"  ~~ r x
+            ]
+        GivenDomainDefnEnum name ->
+            [ "kind"   ~~ "enumerated type"
+            , "name"   ~~ r name
+            ]
+        LettingDomainDefnEnum name vals ->
+            [ "kind"   ~~ "enumerated type"
+            , "name"   ~~ r name
+            , "values" ~~ r (prettyList id "," vals)
+            ]
+        LettingDomainDefnUnnamed name size ->
+            [ "kind"   ~~ "unnamed type"
+            , "name"   ~~ r name
+            , "size"   ~~ r size
+            ]
+    | Declaration d <- mStatements m
     ]
-
+    where
+        (~~) :: String -> String -> (String, String)
+        x ~~ y = (x, y)
+        r s = render 100000 (pretty s)

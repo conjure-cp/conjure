@@ -25,11 +25,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParticipants x) where
             TypePartition pTyInner -> return (TypeSet pTyInner)
             _ -> raiseTypeError inp
 
-instance EvaluateOp OpParticipants where
-    evaluateOp (OpParticipants (viewConstantPartition -> Just xss)) =
-        return $ ConstantAbstract $ AbsLitSet $ sort $ concat xss
-    evaluateOp op = na $ "evaluateOp{OpParticipants}:" <++> pretty (show op)
-
 instance SimplifyOp OpParticipants x where
     simplifyOp _ = na "simplifyOp{OpParticipants}"
 

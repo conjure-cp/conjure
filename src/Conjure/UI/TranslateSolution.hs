@@ -16,6 +16,9 @@ import Conjure.Representations ( up )
 -- text
 import Data.Text as T ( pack )
 
+-- unordered-containers
+import qualified Data.HashMap.Strict as M
+
 
 translateSolution ::
     MonadFail m =>
@@ -75,8 +78,8 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
         return (name, origDomain, constant)
 
     let
-        intToEnumConstant :: [((Integer, Name), Constant)]
-        intToEnumConstant = concat
+        intToEnumConstant :: M.HashMap (Integer, Name) Constant
+        intToEnumConstant = M.fromList $ concat
             [ [ ((i,ename), ConstantEnum ename vals v)
               | (i,v) <- zip allNats vals
               ]

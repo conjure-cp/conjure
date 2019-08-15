@@ -10,18 +10,18 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel )
-import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
+import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
@@ -34,7 +34,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
-import Conjure.Language.ModelStats ( modelDomainsJSON )
+import Conjure.Language.ModelStats ( modelDeclarationsJSON )
+
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -73,10 +74,6 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
-    case savedChoices of
-        Just f  -> refAnswers f
-        Nothing -> return ()
-
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
@@ -97,6 +94,7 @@ mainWithArgs Modelling{..} = do
             _       -> return ()
 
         let
+            parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
             parseCommaSeparated flag str =
                 if null str
                     then return Nothing
@@ -112,6 +110,27 @@ mainWithArgs Modelling{..} = do
 
         responsesList <- parseCommaSeparated "--responses" responses
         generateStreamlinersList <- parseCommaSeparated "--generate-streamliners" generateStreamliners
+
+        responsesRepresentationList <- do
+            if null responsesRepresentation
+                then return Nothing
+                else do
+                    let parts =
+                            [ case splitOn ":" pair of
+                                [nm, val] ->
+                                    case readMay val of
+                                        Just i -> Just (Name (stringToText nm), i)
+                                        Nothing -> Nothing
+                                _ -> Nothing
+                            | pair <- splitOn "," responsesRepresentation
+                            ]
+                    let partsJust = catMaybes parts
+                    if length parts == length partsJust
+                        then return (Just partsJust)
+                        else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
+                                             , "Expected a comma separated list of variable name : integer pairs."
+                                             , "But got:" <+> pretty responsesRepresentation
+                                             ]
 
         return Config.Config
             { Config.outputDirectory            = outputDirectory
@@ -137,6 +156,7 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             , Config.responses                  = responsesList
+            , Config.responsesRepresentation    = responsesRepresentationList
             , Config.generateStreamliners       = generateStreamlinersList
             , Config.estimateNumberOfModels     = estimateNumberOfModels
             }
@@ -181,9 +201,12 @@ mainWithArgs IDE{..} = do
             then readModelFromStdin
             else readModelFromFile essence
     void $ runNameGen () $ typeCheckModel_StandAlone essence2
-    if dumpDomains
-        then liftIO $ putStrLn $ render lineWidth (modelDomainsJSON essence2)
-        else writeModel lineWidth JSON Nothing essence2
+    if
+        | dumpDeclarations    -> liftIO $ putStrLn $ render lineWidth (modelDeclarationsJSON essence2)
+        | dumpRepresentations -> do
+            json <- runNameGen () $ modelRepresentationsJSON essence2
+            liftIO $ putStrLn $ render lineWidth json
+        | otherwise           -> writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
@@ -237,7 +260,8 @@ mainWithArgs config@Solve{..} = do
     let executables = [ ( "minion"          , "minion" )
                       , ( "gecode"          , "fzn-gecode" )
                       , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "glucose"         , "glucose-syrup" )
+                      , ( "glucose"         , "glucose" )
+                      , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
                       , ( "minisat"         , "minisat" )
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
@@ -259,6 +283,9 @@ mainWithArgs config@Solve{..} = do
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
+    unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
+        when (nbSolutions == "all" || nbSolutions /= "1") $
+            userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readParamOrSolutionFromFile f
         return (f, p)
@@ -523,20 +550,31 @@ srMkArgs Solve{..} outBase modelPath =
         "chuffed"           -> [ "-chuffed"]
         "glucose"           -> [ "-sat"
                                , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose"
+                               ]
+        "glucose-syrup"     -> [ "-sat"
+                               , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose-syrup"
                                ]
         "lingeling"         -> [ "-sat"
                                , "-sat-family", "lingeling"
+                               , "-satsolver-bin", "lingeling"
                                ]
         "minisat"           -> [ "-sat"
                                , "-sat-family", "minisat"
+                               , "-satsolver-bin", "minisat"
                                ]
         "bc_minisat_all"    -> [ "-sat"
                                , "-sat-family", "bc_minisat_all"
+                               , "-satsolver-bin", "bc_minisat_all_release"
                                ]
         "nbc_minisat_all"   -> [ "-sat"
                                , "-sat-family", "nbc_minisat_all"
+                               , "-satsolver-bin", "nbc_minisat_all_release"
                                ]
-        "open-wbo"          -> [ "-maxsat" ]
+        "open-wbo"          -> [ "-maxsat"
+                               , "-satsolver-bin", "open-wbo"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
@@ -563,7 +601,7 @@ srStdoutHandler
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
                         then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output file" line
+                        else if isPrefixOf "Created output" line
                             then pp logLevel $ hsep ["Running solver:", pretty solver]
                             else return ()
                     fmap (Left line :)
@@ -637,10 +675,7 @@ validateSolutionNoParam Solve{..} solutionPath = do
     essenceM <- readModelFromFile essence
     solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
-    case result of
-        Left err -> bug err
-        Right () -> return ()
+    failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
@@ -653,11 +688,7 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     param    <- readParamOrSolutionFromFile paramPath
     solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen ()
-                                $ validateSolution essenceM2 param2 solution2
-    case result of
-        Left err -> bug err
-        Right () -> return ()
+    failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 param2 solution2
 validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
 
 

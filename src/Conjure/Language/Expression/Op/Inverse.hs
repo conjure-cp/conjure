@@ -26,13 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpInverse x) where
             then return TypeBool
             else raiseTypeError p
 
-instance EvaluateOp OpInverse where
-    evaluateOp (OpInverse (viewConstantFunction -> Just xs) (viewConstantFunction -> Just ys)) =
-        return $ ConstantBool $ and $ concat [ [ (j,i) `elem` ys | (i,j) <- xs ]
-                                             , [ (j,i) `elem` xs | (i,j) <- ys ]
-                                             ]
-    evaluateOp op = na $ "evaluateOp{OpInverse}:" <++> pretty (show op)
-
 instance SimplifyOp OpInverse x where
     simplifyOp _ = na "simplifyOp{OpInverse}"
 

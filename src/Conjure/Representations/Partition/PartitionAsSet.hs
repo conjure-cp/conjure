@@ -13,7 +13,6 @@ import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Language.Type
-import Conjure.Language.TypeOf
 import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
@@ -79,7 +78,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
 
                 exactlyOnce :: Expression -> m [Expression]
                 exactlyOnce rel = do
-                    innerType <- typeOf innerDomain
+                    innerType <- typeOfDomain innerDomain
                     let useAllDiff =
                             case r of
                                 -- we use a sum when the inner set is occurrence

@@ -50,7 +50,8 @@ RUN apt-get install -y --no-install-recommends \
      make \
      netbase \
      wget \
-     zlib1g-dev
+     zlib1g-dev \
+     xz-utils
 
 WORKDIR $WORK
 
@@ -76,7 +77,7 @@ ENV BIN_DIR     /root/.local/bin
 RUN git clone https://github.com/conjure-cp/conjure.git
 WORKDIR $WORK/conjure
 RUN git pull
-RUN git checkout 85af98abff5da363329853c27fd5f310c41d65e1
+RUN git checkout v2.3.0
 
 RUN make
 RUN make solvers

@@ -23,7 +23,7 @@ instance ( TypeOf x, Pretty x
          , Domain () x :< x
          ) => TypeOf (OpMin x) where
     typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
-        ty <- typeOf dom
+        ty <- typeOfDomain dom
         case ty of
             TypeInt TagInt -> return ty
             TypeInt (TagEnum _) -> return ty
@@ -48,57 +48,6 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside min:" <+> pretty ty
                                        ]
         return tyInner
-
-instance EvaluateOp OpMin where
-    evaluateOp p | any isUndef (childrenBi p) =
-            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpMin x)
-        | Just xs <- listOut x
-        , any isUndef xs =
-            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
-    evaluateOp (OpMin (DomainInConstant (DomainInt t rs))) = do
-        is <- rangesInts rs
-        return $ if null is
-            then mkUndef (TypeInt TagInt) "Empty collection in min"
-            else ConstantInt t (minimum is)
-    evaluateOp (OpMin coll@(viewConstantMatrix -> Just (_, xs))) = do
-        case xs of
-            [] -> do
-                tyInner <- typeOf coll >>= innerTypeOf
-                return $ mkUndef tyInner "Empty collection in min"
-            (x:_) -> do
-                tyInner <- typeOf x
-                case tyInner of
-                    TypeInt t -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt t (minimum is)
-                    _ -> na "evaluateOp{OpMin}"
-    evaluateOp (OpMin coll@(viewConstantSet -> Just xs)) = do
-        case xs of
-            [] -> do
-                tyInner <- typeOf coll >>= innerTypeOf
-                return $ mkUndef tyInner "Empty collection in min"
-            (x:_) -> do
-                tyInner <- typeOf x
-                case tyInner of
-                    TypeInt t -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt t (minimum is)
-                    _ -> na "evaluateOp{OpMin}"
-    evaluateOp (OpMin coll@(viewConstantMSet -> Just xs)) = do
-        case xs of
-            [] -> do
-                tyInner <- typeOf coll >>= innerTypeOf
-                return $ mkUndef tyInner "Empty collection in min"
-            (x:_) -> do
-                tyInner <- typeOf x
-                case tyInner of
-                    TypeInt t -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt t (minimum is)
-                    _ -> na "evaluateOp{OpMin}"
-    evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 
 instance SimplifyOp OpMin x where
     simplifyOp _ = na "simplifyOp{OpMin}"

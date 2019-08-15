@@ -41,6 +41,11 @@
       --responses=ITEM                        A comma separated list of integers.
                                               If provided, these will be used as the answers during interactive model
                                               generation instead of prompting the user.
+      --responses-representation=ITEM         A comma separated list of variable name : integer pairs.
+                                              If provided, these will be used as the answers during interactive model
+                                              generation instead of prompting the user for the variable representation
+                                              questions.
+                                              See --dump-representations for a list of available representation options.
       --estimate-number-of-models             Calculate (a lower bound on) the number of models, instead of running
                                               the usual modelling mode.
    -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
@@ -184,6 +189,11 @@
       --responses=ITEM                        A comma separated list of integers.
                                               If provided, these will be used as the answers during interactive model
                                               generation instead of prompting the user.
+      --responses-representation=ITEM         A comma separated list of variable name : integer pairs.
+                                              If provided, these will be used as the answers during interactive model
+                                              generation instead of prompting the user for the variable representation
+                                              questions.
+                                              See --dump-representations for a list of available representation options.
    -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
                                               first), i (for interactive), r (for random), x (for all). Prepend a (for
                                               auto) to automatically skip when there is only one option at any point.
@@ -224,6 +234,7 @@
                                                - gecode (CP solver)
                                                - chuffed (CP solver)
                                                - glucose (SAT solver)
+                                               - glucose-syrup (SAT solver)
                                                - lingeling (SAT solver)
                                                - minisat (SAT solver)
                                                - bc_minisat_all (AllSAT solver, only works with
@@ -249,7 +260,9 @@
  General:
       --limit-time=INT                        Limit in seconds of real time.
  IDE Features:
-      --dump-domains                          Print the domains of decision variables and parameters.
+      --dump-declarations                     Print information about top level declarations.
+      --dump-representations                  List the available representations for decision variables and
+                                              parameters.
  
  conjure pretty [OPTIONS] ESSENCE_FILE
    Pretty print as Essence file to stdout.

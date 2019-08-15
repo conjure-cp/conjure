@@ -6,7 +6,6 @@ module Conjure.Representations.Sequence.ExplicitBounded ( sequenceExplicitBounde
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
-import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
@@ -74,7 +73,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
             let
                 injectiveCons :: Expression -> m [Expression]
                 injectiveCons values = do
-                    innerType <- typeOf innerDomain
+                    innerType <- typeOfDomain innerDomain
                     case innerType of
                       TypeInt _ -> do
                             return $ return $ -- list
@@ -289,9 +288,9 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
-                    flatten([ [ &marker ]
-                            , flatten([ &soValues
-                                      | &iPat : &index
-                                      ])
-                            ])
+                    ( &marker
+                    , [ &soValues
+                      | &iPat : &index
+                      ]
+                    )
                 |]

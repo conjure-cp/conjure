@@ -40,11 +40,11 @@ data Question = Question
 
 data QuestionType
     = ChooseRepr
-    | ChooseRepr_Find
-    | ChooseRepr_Given
+    | ChooseRepr_Find Name
+    | ChooseRepr_Given Name
     | ChooseRepr_Auxiliary
     | ChooseRepr_Quantified
-    | ChooseRepr_Cut
+    | ChooseRepr_Cut Name
     | ExpressionRefinement
     deriving (Eq, Ord, Show)
 
@@ -105,10 +105,11 @@ data Config = Config
     , smartFilenames             :: Bool
     , lineWidth                  :: Int
     , responses                  :: Maybe [Int]
+    , responsesRepresentation    :: Maybe [(Name, Int)]
     , generateStreamliners       :: Maybe [Int]
     , estimateNumberOfModels     :: Bool
     }
-    deriving (Eq, Ord, Show, Read, Data, Typeable)
+    deriving (Eq, Ord, Show, Data, Typeable)
 
 instance Default Config where
     def = Config
@@ -135,6 +136,7 @@ instance Default Config where
         , smartFilenames             = False
         , lineWidth                  = 120
         , responses                  = Nothing
+        , responsesRepresentation    = Nothing
         , generateStreamliners       = Nothing
         , estimateNumberOfModels     = False
         }

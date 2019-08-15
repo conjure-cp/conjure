@@ -1,0 +1,6 @@
+letting R be domain record { a : int(1..5), b : set of int(1..5) }
+given r : R
+find s : R
+such that s[a] = r[a]
+such that s[b] = r[b]
+such that s = r

@@ -26,21 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
             TypePartition pTyInner | typesUnify [xTy, pTyInner] -> return $ TypeSet $ mostDefined [xTy, pTyInner]
             _ -> raiseTypeError inp
 
-instance EvaluateOp OpParty where
-    evaluateOp op@(OpParty x p@(viewConstantPartition -> Just xss)) = do
-        TypePartition tyInner <- typeOf p
-        let
-            outSet = [ xs
-                     | xs <- xss
-                     , x `elem` xs
-                     ]
-        case outSet of
-            [s] -> return $ ConstantAbstract (AbsLitSet s)
-            []  -> return $ TypedConstant (ConstantAbstract (AbsLitSet [])) (TypeSet tyInner)
-            _   -> return $ mkUndef (TypeSet tyInner) $ "Element found in multiple parts of the partition:"
-                                                                                                <++> pretty op
-    evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
-
 instance SimplifyOp OpParty x where
     simplifyOp _ = na "simplifyOp{OpParty}"
 

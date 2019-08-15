@@ -83,13 +83,15 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                 stderrG <- readIfExists (tBaseDir </> "stderr")
                 stderrE <- readIfExists (tBaseDir </> "stderr.expected")
                 unless (stderrE == stderrG) $
-                    assertFailure $ renderNormal $ vcat [ "unexpected stderr:" <++> pretty stderrG
-                                                        , "was expecting:    " <++> pretty stderrE ]
+                    assertFailure $ renderNormal $ vcat
+                        [ "unexpected stderr:" <++> vcat (map pretty (lines stderrG))
+                        , "was expecting:    " <++> vcat (map pretty (lines stderrE)) ]
                 step "Checking stdout"
                 stdoutG <- readIfExists (tBaseDir </> "stdout")
                 stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
                 unless (stdoutE == stdoutG) $
-                    assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
-                                                        , "was expecting:    " <++> pretty stdoutE ]
+                    assertFailure $ renderNormal $ vcat
+                        [ "unexpected stderr:" <++> vcat (map pretty (lines stdoutG))
+                        , "was expecting:    " <++> vcat (map pretty (lines stdoutE)) ]
             else []
 

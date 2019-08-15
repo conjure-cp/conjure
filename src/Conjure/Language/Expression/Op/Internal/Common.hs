@@ -3,10 +3,8 @@
 module Conjure.Language.Expression.Op.Internal.Common
     ( module X
 
-    , EvaluateOp(..)
     , SimplifyOp(..)
     , BinaryOperator(..)
-    , boolsOut, intsOut
 
     , prettyPrecBinOp
     , Fixity(..), operators, functionals
@@ -36,18 +34,14 @@ import Conjure.Language.AdHoc as X
 import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
 
 
--- | Assume: the input is already normalised.
---   Make sure the output is normalised.
-class EvaluateOp op where
-    evaluateOp :: ( MonadFail m, ?typeCheckerMode :: TypeCheckerMode) => op Constant -> m Constant
-
 class SimplifyOp op x where
-    simplifyOp :: ( MonadFail m
-                  , Eq x
-                  , Num x
-                  , ExpressionLike x
-                  ) => op x         -- the input
-                    -> m x          -- the simplified output (or failure if it cannot be simplified)
+    simplifyOp ::
+        MonadFail m =>
+        Eq x =>
+        Num x =>
+        ExpressionLike x =>
+        op x ->     -- the input
+        m x         -- the simplified output (or failure if it cannot be simplified)
 
 class BinaryOperator op where
     opLexeme :: proxy op -> Lexeme
@@ -298,17 +292,6 @@ functionals =
     , L_powerSet
 
     ]
-
-
-boolsOut :: MonadFail m => Constant -> m [Bool]
-boolsOut (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM boolsOut cs
-boolsOut b = return <$> boolOut b
-
-intsOut :: MonadFail m => Doc -> Constant -> m [Integer]
-intsOut doc (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM (intsOut doc) cs
-intsOut doc (viewConstantSet -> Just cs) = concat <$> mapM (intsOut doc) cs
-intsOut doc (viewConstantMSet -> Just cs) = concat <$> mapM (intsOut doc) cs
-intsOut doc b = return <$> intOut ("intsOut" <+> doc) b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b
 raiseTypeError p = fail ("Type error in" <+> pretty p)
