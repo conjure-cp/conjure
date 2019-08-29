@@ -1,0 +1,113 @@
+$ conjure parameter-generator problem.essence --essence-out problem-gen.essence
+Generating models for problem-gen.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime test.param
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: problem-gen-test.solution
+File: problem-gen.essence
+language Essence 1.3
+
+given r2_cardMiddle: int(-2..10)
+given r2_cardDelta: int(0..3)
+given r2_relation1_middle: int(-2..10)
+given r2_relation1_delta: int(0..6)
+given r2_relation2_middle: int(-2..10)
+given r2_relation2_delta: int(0..6)
+find r2: relation (maxSize 100) of (int(-2..10) * int(-2..10))
+such that
+    |r2| >= r2_cardMiddle - r2_cardDelta /\ |r2| <= r2_cardMiddle + r2_cardDelta,
+    and([q1[1] >= r2_relation1_middle - r2_relation1_delta | q1 <- r2]),
+    and([q1[1] <= r2_relation1_middle + r2_relation1_delta | q1 <- r2]),
+    and([q1[2] >= r2_relation2_middle - r2_relation2_delta | q1 <- r2]),
+    and([q1[2] <= r2_relation2_middle + r2_relation2_delta | q1 <- r2])
+given r3_cardMiddle: int(-2..10)
+given r3_cardDelta: int(0..3)
+given r3_relation1_middle: int(-2..10)
+given r3_relation1_delta: int(0..6)
+given r3_relation2_middle: int(-2..10)
+given r3_relation2_delta: int(0..6)
+given r3_relation3_middle: int(-2..10)
+given r3_relation3_delta: int(0..6)
+find r3: relation (maxSize 1000) of (int(-2..10) * int(-2..10) * int(-2..10))
+such that
+    |r3| >= r3_cardMiddle - r3_cardDelta /\ |r3| <= r3_cardMiddle + r3_cardDelta,
+    and([q2[1] >= r3_relation1_middle - r3_relation1_delta | q2 <- r3]),
+    and([q2[1] <= r3_relation1_middle + r3_relation1_delta | q2 <- r3]),
+    and([q2[2] >= r3_relation2_middle - r3_relation2_delta | q2 <- r3]),
+    and([q2[2] <= r3_relation2_middle + r3_relation2_delta | q2 <- r3]),
+    and([q2[3] >= r3_relation3_middle - r3_relation3_delta | q2 <- r3]),
+    and([q2[3] <= r3_relation3_middle + r3_relation3_delta | q2 <- r3])
+given r4_cardMiddle: int(-2..10)
+given r4_cardDelta: int(0..3)
+given r4_relation1_middle: int(-2..10)
+given r4_relation1_delta: int(0..6)
+given r4_relation2_middle: int(-2..10)
+given r4_relation2_delta: int(0..6)
+given r4_relation3_middle: int(-2..10)
+given r4_relation3_delta: int(0..6)
+given r4_relation4_middle: int(-2..10)
+given r4_relation4_delta: int(0..6)
+find r4: relation (maxSize 10000) of (int(-2..10) * int(-2..10) * int(-2..10) * int(-2..10))
+such that
+    |r4| >= r4_cardMiddle - r4_cardDelta /\ |r4| <= r4_cardMiddle + r4_cardDelta,
+    and([q3[1] >= r4_relation1_middle - r4_relation1_delta | q3 <- r4]),
+    and([q3[1] <= r4_relation1_middle + r4_relation1_delta | q3 <- r4]),
+    and([q3[2] >= r4_relation2_middle - r4_relation2_delta | q3 <- r4]),
+    and([q3[2] <= r4_relation2_middle + r4_relation2_delta | q3 <- r4]),
+    and([q3[3] >= r4_relation3_middle - r4_relation3_delta | q3 <- r4]),
+    and([q3[3] <= r4_relation3_middle + r4_relation3_delta | q3 <- r4]),
+    and([q3[4] >= r4_relation4_middle - r4_relation4_delta | q3 <- r4]),
+    and([q3[4] <= r4_relation4_middle + r4_relation4_delta | q3 <- r4])
+
+--------------------
+
+
+File: problem-gen.essence.irace
+r2_cardMiddle "-r2_cardMiddle " i (-2, 10)
+r2_cardDelta "-r2_cardDelta " i (0, 3)
+r2_relation1_middle "-r2_relation1_middle " i (-2, 10)
+r2_relation1_delta "-r2_relation1_delta " i (0, 6)
+r2_relation2_middle "-r2_relation2_middle " i (-2, 10)
+r2_relation2_delta "-r2_relation2_delta " i (0, 6)
+r3_cardMiddle "-r3_cardMiddle " i (-2, 10)
+r3_cardDelta "-r3_cardDelta " i (0, 3)
+r3_relation1_middle "-r3_relation1_middle " i (-2, 10)
+r3_relation1_delta "-r3_relation1_delta " i (0, 6)
+r3_relation2_middle "-r3_relation2_middle " i (-2, 10)
+r3_relation2_delta "-r3_relation2_delta " i (0, 6)
+r3_relation3_middle "-r3_relation3_middle " i (-2, 10)
+r3_relation3_delta "-r3_relation3_delta " i (0, 6)
+r4_cardMiddle "-r4_cardMiddle " i (-2, 10)
+r4_cardDelta "-r4_cardDelta " i (0, 3)
+r4_relation1_middle "-r4_relation1_middle " i (-2, 10)
+r4_relation1_delta "-r4_relation1_delta " i (0, 6)
+r4_relation2_middle "-r4_relation2_middle " i (-2, 10)
+r4_relation2_delta "-r4_relation2_delta " i (0, 6)
+r4_relation3_middle "-r4_relation3_middle " i (-2, 10)
+r4_relation3_delta "-r4_relation3_delta " i (0, 6)
+r4_relation4_middle "-r4_relation4_middle " i (-2, 10)
+r4_relation4_delta "-r4_relation4_delta " i (0, 6)
+--------------------
+
+
+File: problem-gen-test.solution
+language Essence 1.3
+
+letting r2 be relation((5, 5))
+$ Visualisation for r2
+$ 5 5
+
+letting r3 be relation((5, 5, 5))
+$ Visualisation for r3
+$ 5 5 5
+
+letting r4 be relation((5, 5, 5, 5))
+$ Visualisation for r4
+$ 5 5 5 5
+
+
+--------------------
+
+

@@ -566,7 +566,7 @@ pgOnDomain x nm dom =
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
+                                        return ( SizeAttr_MaxSize (maxIntTimes (genericLength innerDomains)), Nothing, Nothing
                                                , DomainInt TagInt [RangeBounded minInt maxInt]
                                                )
                                     SizeAttr_Size a -> do
@@ -577,7 +577,7 @@ pgOnDomain x nm dom =
                                                )
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
+                                        return ( SizeAttr_MinMaxSize lb (maxIntTimes (genericLength innerDomains)), Just a, Nothing
                                                , DomainInt TagInt [RangeBounded lb maxInt]
                                                )
                                     SizeAttr_MaxSize a -> do
@@ -639,6 +639,9 @@ minInt = Reference "MININT" Nothing
 
 maxInt :: Expression
 maxInt = Reference "MAXINT" Nothing
+
+maxIntTimes :: Integer -> Expression
+maxIntTimes n = let m = fromInt n in [essence| &maxInt ** &m |]
 
 
 minOfIntDomain :: MonadUserError m => Domain () Expression -> m Expression
