@@ -26,6 +26,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSucc x) where
             TypeInt TagInt  -> return ty
             TypeInt TaggedInt{} -> return ty 
             TypeInt (TagEnum _)  -> return ty
+            TypeInt t | ?typeCheckerMode == RelaxedIntegerTags -> return (TypeInt t)
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
 

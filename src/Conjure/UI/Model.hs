@@ -2471,8 +2471,8 @@ addUnnamedSymmetryBreaking mode model = do
     let
         allUnnamedTypes :: [(Domain () Expression, Expression)]
         allUnnamedTypes =
-            [ (DomainReference nm Nothing, x)
-            | Declaration (LettingDomainDefnUnnamed nm x) <- mStatements model
+            [ reTag (TagUnnamed nm') (DomainReference nm Nothing,  x) --x is a TagInt at this point so we must reTag it
+            | Declaration (LettingDomainDefnUnnamed nm@(Name nm') x) <- mStatements model
             ]
 
         allDecVars =
@@ -2524,7 +2524,7 @@ addUnnamedSymmetryBreaking mode model = do
                 mkGenerator_Consecutive _ _ [] = bug "must have at least one unnamed type"
                 mkGenerator_Consecutive auxSuffix perms [(u, uSize)] = do
                     (iPat, i) <- quantifiedVar
-                    let perm = [essence| permutation((&i, &i+1)) |]
+                    let perm = [essence| permutation((&i, succ(&i))) |]
                     let applied = combinedPermApply auxSuffix (perm:perms)
                     return [essence|
                                 and([ &applied
@@ -2534,7 +2534,7 @@ addUnnamedSymmetryBreaking mode model = do
                            |]
                 mkGenerator_Consecutive auxSuffix perms ((u, uSize):us) = do
                     (iPat, i) <- quantifiedVar
-                    let perm = [essence| permutation((&i, &i+1)) |]
+                    let perm = [essence| permutation((&i, succ(&i))) |]
                     applied <- mkGenerator_Consecutive auxSuffix (perm:perms) us
                     return [essence|
                                 and([ &applied
