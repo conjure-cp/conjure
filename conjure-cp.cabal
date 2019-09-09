@@ -283,6 +283,7 @@ Library
                      -- we do not directly depend on generic-deriving, but we need at least 1.10.6
                      -- see https://github.com/dreixel/generic-deriving/issues/41
                      , generic-deriving >= 1.10.6
+                     , ansi-terminal >= 0.8.2
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*
