@@ -50,7 +50,7 @@ resolveNames_ ::
 resolveNames_ model = do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
-    return model { mStatements = statements }
+    return model { mStatements = toTaggedInt statements }
 
 -- this is for when a name will shadow an already existing name that is outside of this expression
 -- we rename the new names to avoid name shadowing
@@ -86,6 +86,14 @@ resolveNamesX x = do
     x' <- evalStateT (resolveX x) []
     mapM_ check (universe x')
     return x'
+
+
+toTaggedInt :: Data a => a -> a
+toTaggedInt = transformBi f
+    where
+        f :: Type -> Type
+        f (TypeEnum (Name nm)) = TypeInt (TagEnum nm)
+        f ty = ty
 
 
 check :: MonadFail m => Expression -> m ()
