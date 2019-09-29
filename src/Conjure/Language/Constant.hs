@@ -152,6 +152,8 @@ instance DomainSizeOf Constant Constant where
 
 instance Pretty Constant where
 
+    pretty (TypedConstant (ConstantAbstract (AbsLitMatrix _ [])) ty) | TypeAny `elem` universe ty = "[]"
+
     -- hack, oh sweet hack!
     -- print a domain instead of a type when printing an empty matrix literal.
     -- this means we print "int()" instead of "int" inside the index of a matrix type
