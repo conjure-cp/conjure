@@ -33,7 +33,16 @@ translateParameter eprimeModel0 essenceParam0 = do
     (eprimeModel, essenceParam1) <- removeEnumsFromParam eprimeModel0 essenceParam0
     logDebug $ "[eprimeModel  1]" <+-> pretty eprimeModel
     logDebug $ "[essenceParam 1]" <+-> pretty essenceParam1
-    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
+
+    let eprimeLettingsForEnums =
+            [ (nm, fromInt (genericLength vals))
+            | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
+            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam0 |> mStatements
+            , nm1 == nm2
+            , let nm = nm1 `mappend` "_EnumSize"
+            ]
+
+    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1 eprimeLettingsForEnums
     logDebug $ "[essenceParam 2]" <+-> pretty essenceParam
 
     let essenceLettings   = extractLettings essenceParam
@@ -59,15 +68,6 @@ translateParameter eprimeModel0 essenceParam0 = do
             (essenceGivenNames ++ generatedLettingNames)
     unless (null extraLettings) $
         userErr1 $ "Too many letting statements in the parameter file:" <++> prettyList id "," extraLettings
-
-
-    let eprimeLettingsForEnums =
-            [ (nm, fromInt (genericLength vals))
-            | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
-            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam0 |> mStatements
-            , nm1 == nm2
-            , let nm = nm1 `mappend` "_EnumSize"
-            ]
 
     let allLettings = (eprimeModel |> mInfo |> miLettings)
                    ++ essenceLettings

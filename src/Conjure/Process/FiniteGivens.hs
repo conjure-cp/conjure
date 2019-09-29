@@ -52,12 +52,14 @@ finiteGivensParam ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model ->                                -- eprime
     Model ->                                -- essence-param
+    [(Name, Constant)] ->                   -- some additional lettings
     m (Model, [Name])                       -- essence-param
-finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
+finiteGivensParam eprimeModel essenceParam additionalLettings = flip evalStateT 1 $ do
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miOriginalDomains
     let essenceLettings   = extractLettings essenceParam
                          ++ eprimeModel |> mInfo |> miLettings
+                         ++ [ (nm, Constant c) | (nm, c) <- additionalLettings ]
     let nbExtraGivens     = eprimeModel |> mInfo |> miNbExtraGivens
     let expectedExtras    = [ MachineName "fin" extraGiven []
                             | extraGiven <- [1..nbExtraGivens]
