@@ -760,6 +760,7 @@ rangesInts = fmap (sortNub . concat) . mapM rangeInts
         rangeInts _ = fail "Infinite range (or not an integer range)"
 
 expandRanges :: ExpressionLike c => [Range c] -> [Range c]
+expandRanges [RangeBounded a b] = [RangeBounded a b]
 expandRanges r =
     case rangesInts r of
         Nothing -> r
