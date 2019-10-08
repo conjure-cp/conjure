@@ -894,6 +894,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
+                              <+> stringToDoc(show (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
@@ -904,6 +905,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                         | not (isPrimitiveDomain dom) ->
                         return $ ""
                                : ("Not refined:" <+> pretty (hole x))
+                                                 <+> stringToDoc(show (hole x))
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | (i, c) <- zip allNats (tail (ascendants x))
@@ -944,9 +946,11 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                            | (i, c) <- zip allNats (tail (ascendants x))
                                            ]
                     [essence| &_ .< &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))]
+                        return ["", ("Not refined:" <+> pretty (hole x))
+                                                    <+> stringToDoc(show (hole x))]
                     [essence| &_ .<= &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))]
+                        return ["", ("Not refined:" <+> pretty (hole x))
+                                                    <+> stringToDoc(show (hole x))]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -2502,6 +2506,22 @@ addUnnamedSymmetryBreaking mode model = do
     case mode of
         Nothing -> return model
         Just (UnnamedSymmetryBreaking quickOrComplete usbScope independentlyOrAltogether) -> do
+            let newDecls =
+                    case quickOrComplete of
+                        USBQuick -> []
+                        USBComplete ->
+                            case independentlyOrAltogether of
+                                USBIndependently ->
+                                    [ Declaration (FindOrGiven LocalFind nm' domain)
+                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                                    , (DomainReference uName _, _) <- allUnnamedTypes
+                                    , let nm' = mconcat [nm, "_auxFor_", uName]
+                                    ]
+                                USBAltogether ->
+                                    [ Declaration (FindOrGiven LocalFind nm' domain)
+                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                                    , let nm' = mconcat [nm, "_auxFor_all"]
+                                    ]
 
             let
 
@@ -2509,6 +2529,13 @@ addUnnamedSymmetryBreaking mode model = do
                 buildPermutationChain (p:ps) vars =
                         let applied = buildPermutationChain ps vars
                         in  [essence| image(&p, &applied) |]
+
+                nestInBubbles :: Expression -> Int -> [(Expression,Statement)] -> Expression -> Expression 
+                nestInBubbles _ _ [] expr = expr
+                nestInBubbles modl i (fv:auxVars) expr =
+                  let v = fst fv
+                      ii = fromInt (fromIntegral i)
+                   in WithLocals [essence| &modl[&ii] .<= &v |] (AuxiliaryVars ((snd fv):[SuchThat [nestInBubbles modl (i + 1) auxVars expr]]))
 
                 combinedPermApply auxSuffix perms =
                     case quickOrComplete of
@@ -2518,8 +2545,10 @@ addUnnamedSymmetryBreaking mode model = do
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
                                 thisAuxTuple = mkAuxTuple auxSuffix
-                            in  [essence| &varsTuple .<= &thisAuxTuple /\ &thisAuxTuple = &applied |]
-
+                             
+                                dVars = map fst (allDecVarsAux auxSuffix)
+                             in nestInBubbles varsTuple 1 (zip dVars newDecls) 
+                                              [essence| &thisAuxTuple = &applied |]
 
                 mkGenerator_Consecutive _ _ [] = bug "must have at least one unnamed type"
                 mkGenerator_Consecutive auxSuffix perms [(u, uSize)] = do
@@ -2595,38 +2624,20 @@ addUnnamedSymmetryBreaking mode model = do
                         USBConsecutive -> mkGenerator_Consecutive auxSuffix perms us
                         USBAllPairs -> mkGenerator_AllPairs auxSuffix perms us
                         USBAllPermutations -> mkGenerator_AllPermutations auxSuffix perms us
-
             newCons <-
                 case independentlyOrAltogether of
-                    USBIndependently ->
-                        sequence
+                    USBIndependently -> do
+                      xs <- (sequence
                             [ mkGenerator uName [] [(u, uSize)]
                             | (u@(DomainReference uName _), uSize) <- allUnnamedTypes
-                            ]
+                            ])
+                      return [SuchThat xs]
                     USBAltogether -> do
                         cons <- mkGenerator "all" [] allUnnamedTypes
-                        return [cons]
+                        return [SuchThat [cons]]
 
-            let newDecls =
-                    case quickOrComplete of
-                        USBQuick -> []
-                        USBComplete ->
-                            case independentlyOrAltogether of
-                                USBIndependently ->
-                                    [ Declaration (FindOrGiven Find nm' domain)
-                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
-                                    , (DomainReference uName _, _) <- allUnnamedTypes
-                                    , let nm' = mconcat [nm, "_auxFor_", uName]
-                                    ]
-                                USBAltogether ->
-                                    [ Declaration (FindOrGiven Find nm' domain)
-                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
-                                    , let nm' = mconcat [nm, "_auxFor_all"]
-                                    ]
-
-            let stmts = newDecls ++ [SuchThat newCons]
-
+            let stmts = newCons
             traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
                                  : map (nest 4 . pretty) stmts
-            return model { mStatements = mStatements model ++ stmts }
+            return model { mStatements = mStatements model ++ stmts}
 
