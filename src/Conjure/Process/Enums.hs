@@ -14,10 +14,14 @@ import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Type
 
+-- base
+import Data.List ( cycle )
+
 -- text
 import Data.Text as T ( pack )
 
-import Data.List (cycle)
+-- unordered-containers
+import qualified Data.HashMap.Strict as M
 
 
 -- | The argument is a model before nameResolution.
@@ -32,7 +36,7 @@ removeEnumsFromModel =
 
         removeEnumsFromModel_LettingEnums model = do
             (statements', ( enumDomainNames :: [(Name, Domain () Expression)]
-                          , nameToIntMapping :: [(Name, (Name, Integer))]
+                          , nameToIntMapping_ :: [(Name, (Name, Integer))]
                           )) <-
                 flip runStateT ([], []) $ forM (mStatements model) $ \ st ->
                     case st of
@@ -54,10 +58,12 @@ removeEnumsFromModel =
                             return (Declaration (Letting ename (Domain outDomain)))
                         _ -> return st
 
+            let nameToIntMapping = M.fromList nameToIntMapping_
+
             let
                 onX :: Monad m => Expression -> m Expression
                 onX (Reference nm Nothing)
-                    | Just (Name ename, i) <- lookup nm nameToIntMapping
+                    | Just (Name ename, i) <- M.lookup nm nameToIntMapping
                     = return (fromIntWithTag i (TagEnum ename))
                 onX p = return p
 
@@ -132,7 +138,7 @@ removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
                      ++ map (True,)  (mStatements param)
 
-    (statements', (enumDomainNames, nameToIntMapping)) <-
+    (statements', (enumDomainNames_, nameToIntMapping_)) <-
         flip runStateT ([], []) $ forM allStatements $ \ (keep,st) ->
             case st of
                 Declaration (LettingDomainDefnEnum ename@(Name enameText) names) -> do
@@ -153,22 +159,25 @@ removeEnumsFromParam model param = do
                     return (Just (Declaration (Letting ename (Domain outDomain))))
                 _ -> return (if keep then Just st else Nothing)
 
+    let enumDomainNames = M.fromList enumDomainNames_
+    let nameToIntMapping = M.fromList nameToIntMapping_
+
     let
         onX :: Monad m => Expression -> m Expression
         onX (Reference nm Nothing)
-            | Just (Name ename, i) <- lookup nm nameToIntMapping
+            | Just (Name ename, i) <- M.lookup nm nameToIntMapping
             = return (fromIntWithTag i (TagEnum ename))
         onX p = return p
 
         onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm@(Name nmText) (Just ranges) _)
-            | Just _ <- lookup nm enumDomainNames
+            | Just _ <- M.lookup nm enumDomainNames
             = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
         onD (DomainEnum nm Nothing _)
-            | Just d <- lookup nm enumDomainNames
+            | Just d <- M.lookup nm enumDomainNames
             = return (DomainReference nm (Just d))
         onD (DomainReference nm Nothing)
-            | Just d <- lookup nm enumDomainNames
+            | Just d <- M.lookup nm enumDomainNames
             = return (DomainReference nm (Just d))
         onD p = return p
 
@@ -183,11 +192,11 @@ removeEnumsFromParam model param = do
 
 addEnumsAndUnnamedsBack
     :: ( Pretty r, Pretty x )
-    => [Name]                           -- unnamed types
-    -> [((Integer, Name), Constant)]    -- a lookup table for enums
-    -> Domain r x                       -- the domain we are working on
-    -> Constant                         -- the constant with ints in place of enums & unnameds
-    -> Constant                         -- the constant with enums & unnameds again
+    => [Name]                               -- unnamed types
+    -> M.HashMap (Integer, Name) Constant   -- a lookup table for enums
+    -> Domain r x                           -- the domain we are working on
+    -> Constant                             -- the constant with ints in place of enums & unnameds
+    -> Constant                             -- the constant with enums & unnameds again
 addEnumsAndUnnamedsBack unnameds ctxt = helper
 
     where
@@ -202,7 +211,7 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
             (DomainEnum      ename _ _, ConstantInt _ i) ->
                 fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
-                          (lookup (i, ename) ctxt)
+                          (M.lookup (i, ename) ctxt)
 
             (DomainReference ename _  , ConstantInt _ i) ->
                 if ename `elem` unnameds
@@ -264,8 +273,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                                                              ])
 
 -- first Name is the value, the second Name is the name of the enum domain
-nameToX :: MonadFail m => [(Name, (Name, Integer))] -> Expression -> m Expression
-nameToX nameToIntMapping (Reference nm _) = case lookup nm nameToIntMapping of
+nameToX :: MonadFail m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
+nameToX nameToIntMapping (Reference nm _) = case M.lookup nm nameToIntMapping of
     Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
     Just (Name ename, i)  -> return (fromIntWithTag i (TagEnum ename))
     Just (ename, i) -> bug $ "nameToX, nm:" <+> vcat [pretty (show ename), pretty i]

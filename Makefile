@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=8.6 make"
-export GHC_VERSION?=8.4
+export GHC_VERSION?=8.6
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
@@ -19,6 +19,7 @@ install:
 	@echo "Set the environment variable BIN_DIR to change this"
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
+	@mkdir -p ${BIN_DIR}
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi

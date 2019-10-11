@@ -2,6 +2,8 @@ Generating models for slice.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
 Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
 Copying solution to: slice.solution
 File: conjure-output/model000001.eprime
 language ESSENCE' 1.0
@@ -9,11 +11,11 @@ language ESSENCE' 1.0
 find m: matrix indexed by [int(1..5), int(1..5)] of int(1..9)
 branching on [m]
 such that
-    allDiff(m[.., 1]),
-    allDiff(m[.., 2]),
-    allDiff(m[.., 3]),
-    allDiff(m[.., 4]),
-    allDiff(m[.., 5])
+    allDiff([m[q3, 1] | q3 : int(1..5)]),
+    allDiff([m[q4, 2] | q4 : int(1..5)]),
+    allDiff([m[q5, 3] | q5 : int(1..5)]),
+    allDiff([m[q6, 4] | q6 : int(1..5)]),
+    allDiff([m[q7, 5] | q7 : int(1..5)])
 
 --------------------
 

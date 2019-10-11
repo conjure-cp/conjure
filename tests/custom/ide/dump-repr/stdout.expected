@@ -1,0 +1,126 @@
+[{"name": "n",
+  "representations":
+      [{"answer": 1,
+        "description": "int(1..10)"}]},
+ {"name": "x",
+  "representations":
+      [{"answer": 1,
+        "description": "set {Occurrence} (maxSize n) of int(1..n)"},
+       {"answer": 2,
+        "description": "set {ExplicitVarSizeWithDummy} (maxSize n) of int(1..n)"},
+       {"answer": 3,
+        "description": "set {ExplicitVarSizeWithMarker} (maxSize n) of int(1..n)"},
+       {"answer": 4,
+        "description": "set {ExplicitVarSizeWithFlags} (maxSize n) of int(1..n)"}]},
+ {"name": "y",
+  "representations":
+      [{"answer": 1,
+        "description": "set {Occurrence} (minSize n) of int(1..n)"},
+       {"answer": 2,
+        "description": "set {ExplicitVarSizeWithDummy} (minSize n) of int(1..n)"},
+       {"answer": 3,
+        "description": "set {ExplicitVarSizeWithMarker} (minSize n) of int(1..n)"},
+       {"answer": 4,
+        "description": "set {ExplicitVarSizeWithFlags} (minSize n) of int(1..n)"}]},
+ {"name": "nested",
+  "representations":
+      [{"answer": 1,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 2,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 3,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 4,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 5,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 6,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 7,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 8,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 9,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 10,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 11,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 12,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 13,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 14,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 15,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 16,
+        "description":
+            "set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 17,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 18,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 19,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 20,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 21,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 22,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 23,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 24,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 25,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 26,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 27,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 28,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"},
+       {"answer": 29,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {Occurrence} (maxSize 1) of int(1..n)"},
+       {"answer": 30,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithDummy} (maxSize 1) of int(1..n)"},
+       {"answer": 31,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithMarker} (maxSize 1) of int(1..n)"},
+       {"answer": 32,
+        "description":
+            "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"}]},
+ {"name": "c_EnumSize",
+  "representations":
+      [{"answer": 1,
+        "description": "c"}]}]

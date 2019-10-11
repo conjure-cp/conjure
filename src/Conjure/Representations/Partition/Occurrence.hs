@@ -315,12 +315,11 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
                       , "ctxt:" <+> vcat (map pretty ctxt)
                       ]
 
-        -- not sure if this is correct...
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            -- [numPartsVar, whichPart, partSizesVar, firstIndexVar] <- downX1 inp
             xs <- downX1 inp
             Just xsDoms' <- downD ("SO", domain)
             let xsDoms = map snd xsDoms'
             soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
-            return (fromList soValues)
+            return $ AbstractLiteral $ AbsLitTuple soValues 
+

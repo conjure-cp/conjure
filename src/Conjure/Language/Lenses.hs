@@ -432,6 +432,24 @@ opImageSet _ =
                 _ -> na ("Lenses.opImageSet:" <++> pretty p)
     )
 
+opTransform
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x, x)
+       )
+opTransform _ =
+    ( \ x y -> inject $ MkOpTransform $ OpTransform x y
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpTransform (OpTransform x y) -> return (x,y)
+                _ -> na ("Lenses.opTransform:" <++> pretty p)
+    )
+
 
 opRelationProj
     :: ( Op x :< x
@@ -523,6 +541,50 @@ opMatrixIndexing _ =
                 (m,is) <- go x
                 return (m, is ++ [i])
             _ -> return (p, [])
+
+
+opMatrixIndexingSlicing
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       , TypeOf x
+       , ?typeCheckerMode :: TypeCheckerMode
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> [Either x (Maybe x, Maybe x)] -> x
+       , x -> m (x, [Either x (Maybe x, Maybe x)])           -- either an index or a slice
+       )
+opMatrixIndexingSlicing _ =
+    ( mk
+    , \ p -> do
+        (m, is, wasThereAnySlicing) <- go p
+        if not (null is) && wasThereAnySlicing
+            then return (m, is)
+            else na ("Lenses.opMatrixIndexingSlicing:" <+> pretty p)
+    )
+    where
+        mk m [] = m
+        mk m (Left i:is) = mk (make opIndexing m i) is
+        mk m (Right (lb, ub):is) = mk (make opSlicing m lb ub) is
+
+        go p = case project p of
+            Just (MkOpIndexing (OpIndexing x i)) -> do
+                ty <- typeOf x
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{} -> return ()
+                    _ -> na ("Lenses.opMatrixIndexingSlicing:" <+> pretty p)
+                (m, is, wasThereAnySlicing) <- go x
+                return (m, is ++ [Left i], wasThereAnySlicing)
+            Just (MkOpSlicing (OpSlicing x lb ub)) -> do
+                ty <- typeOf x
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{} -> return ()
+                    _ -> na ("Lenses.opMatrixIndexingSlicing:" <+> pretty p)
+                (m, is, _) <- go x
+                return (m, is ++ [Right (lb, ub)], True)
+            _ -> return (p, [], False)
 
 
 opSlicing
@@ -1059,7 +1121,7 @@ opSum _ =
     )
 
 
-data ReducerType = RepetitionIsFine | RepetitionIsNotFine
+data ReducerType = RepetitionIsNotSignificant | RepetitionIsSignificant
     deriving (Eq, Ord, Show)
 
 opReducer
@@ -1069,20 +1131,26 @@ opReducer
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
-       , x -> m (ReducerType, x -> x, x)
+       , x -> m ( ReducerType
+                , Bool              -- defined on []
+                , x -> x
+                , x
+                )
        )
 opReducer _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
             op <- project p
+            let is = RepetitionIsSignificant
+            let isn't = RepetitionIsNotSignificant
             case op of
-                MkOpAnd     (OpAnd     x) -> return (RepetitionIsNotFine, inject . MkOpAnd     . OpAnd     , x)
-                MkOpOr      (OpOr      x) -> return (RepetitionIsNotFine, inject . MkOpOr      . OpOr      , x)
-                MkOpXor     (OpXor     x) -> return (RepetitionIsNotFine, inject . MkOpXor     . OpXor     , x)
-                MkOpSum     (OpSum     x) -> return (RepetitionIsFine   , inject . MkOpSum     . OpSum     , x)
-                MkOpProduct (OpProduct x) -> return (RepetitionIsFine   , inject . MkOpProduct . OpProduct , x)
-                MkOpMax     (OpMax     x) -> return (RepetitionIsNotFine, inject . MkOpMax     . OpMax     , x)
-                MkOpMin     (OpMin     x) -> return (RepetitionIsNotFine, inject . MkOpMin     . OpMin     , x)
+                MkOpAnd     (OpAnd     x) -> return (isn't, True , inject . MkOpAnd     . OpAnd     , x)
+                MkOpOr      (OpOr      x) -> return (isn't, True , inject . MkOpOr      . OpOr      , x)
+                MkOpXor     (OpXor     x) -> return (is   , False, inject . MkOpXor     . OpXor     , x)
+                MkOpSum     (OpSum     x) -> return (is   , True , inject . MkOpSum     . OpSum     , x)
+                MkOpProduct (OpProduct x) -> return (is   , True , inject . MkOpProduct . OpProduct , x)
+                MkOpMax     (OpMax     x) -> return (isn't, False, inject . MkOpMax     . OpMax     , x)
+                MkOpMin     (OpMin     x) -> return (isn't, False, inject . MkOpMin     . OpMin     , x)
                 _ -> na ("Lenses.opReducer:" <++> pretty p)
     )
 

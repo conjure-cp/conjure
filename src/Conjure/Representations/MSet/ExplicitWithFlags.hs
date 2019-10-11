@@ -217,3 +217,4 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                     | &iPat : &index
                     ]
                 |]
+

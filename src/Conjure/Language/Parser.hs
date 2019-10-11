@@ -90,18 +90,15 @@ translateQnName qnName = case qnName of
 
 parseTopLevels :: Parser [Statement]
 parseTopLevels = do
-    let one = msum
-                [ do
-                    lexeme L_find
+    let one = satisfyL $ \case
+                L_find -> Just $ do
                     decls <- flip sepEndBy1 comma $ do
                         is <- commaSeparated parseNameOrMeta
                         j  <- colon >> parseDomain
                         return [ Declaration (FindOrGiven Find i j)
                                | i <- is ]
                     return $ concat decls
-                    <?> "find statement"
-                , do
-                    lexeme L_given
+                L_given -> Just $ do
                     decls <- commaSeparated $ do
                         is <- commaSeparated parseName
                         msum
@@ -122,9 +119,7 @@ parseTopLevels = do
                                     ]
                             ]
                     return $ concat decls
-                    <?> "given statement"
-                , do
-                    lexeme L_letting
+                L_letting -> Just $ do
                     decls <- commaSeparated $ do
                         is <- commaSeparated parseName
                         lexeme L_be
@@ -161,41 +156,28 @@ parseTopLevels = do
                                        ]
                             ]
                     return $ concat decls
-                    <?> "letting statement"
-                , do
-                    lexeme L_where
+                L_where -> Just $ do
                     xs <- commaSeparated parseExpr
                     return [Where xs]
-                    <?> "where statement"
-                , do
-                    lexeme L_such
+                L_such -> Just $ do
                     lexeme L_that
                     xs <- commaSeparated parseExpr
                     return [SuchThat xs]
-                    <?> "such that statement"
-                , do
-                    lexeme L_minimising
+                L_minimising -> Just $ do
                     x <- parseExpr
                     return [ Objective Minimising x ]
-                    <?> "objective"
-                , do
-                    lexeme L_maximising
+                L_maximising -> Just $ do
                     x <- parseExpr
                     return [ Objective Maximising x ]
-                    <?> "objective"
-                , do
-                    lexeme L_branching
+                L_branching -> Just $ do
                     lexeme L_on
                     xs <- brackets $ commaSeparated parseSearchOrder
                     return [ SearchOrder xs ]
-                    <?> "branching on"
-                , do
-                    lexeme L_heuristic
+                L_heuristic -> Just $ do
                     nm <- parseName
                     return [ SearchHeuristic nm ]
-                    <?> "heuristic"
-                ] <?> "statement"
-    concat <$> some one
+                _ -> Nothing
+    concat <$> some (one <?> "statement")
 
 parseSearchOrder :: Parser SearchOrder
 parseSearchOrder = msum [try pBranchingOn, pCut]
@@ -256,19 +238,21 @@ parseDomainWithRepr = pDomainAtom
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
-        parseRepr = msum [ braces parseReprInner
-                         , return NoRepresentation
-                         ]
-
-        parseReprInner = do
-            pos    <- getPosition
-            nm     <- identifierText
-            inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
-            case textToRepresentation nm inners of
-                Nothing -> do
-                    setPosition pos
-                    fail ("Not a valid representation:" <+> pretty nm)
-                Just r  -> return r
+        parseRepr = return NoRepresentation
+        -- -- Parsing set {representation} of ... notation if needed
+        -- parseRepr = msum [ braces parseReprInner
+        --                  , return NoRepresentation
+        --                  ]
+        --
+        -- parseReprInner = do
+        --     pos    <- getPosition
+        --     nm     <- identifierText
+        --     inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
+        --     case textToRepresentation nm inners of
+        --         Nothing -> do
+        --             setPosition pos
+        --             fail ("Not a valid representation:" <+> pretty nm)
+        --         Just r  -> return r
 
         pBool = do
             lexeme L_bool
@@ -753,10 +737,10 @@ parseComprehension = brackets $ do
         letting :: Parser [GeneratorOrCondition]
         letting = do
             lexeme L_letting
-            nm <- parseNameOrMeta
+            pat <- parseAbstractPattern
             lexeme L_be
-            x  <- parseExpr
-            return [ComprehensionLetting nm x]
+            x <- parseExpr
+            return [ComprehensionLetting pat x]
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain
@@ -866,7 +850,7 @@ parseReference = Reference <$> parseName <*> pure Nothing
 
 parseQuantifiedExpr :: Parser Expression
 parseQuantifiedExpr = do
-    Name qnName <- parseName
+    qnName      <- parseQuantifiedName
     qnPats      <- commaSeparated parseAbstractPattern
     qnOver      <- msum [ Left  <$> (colon *> parseDomain)
                         , Right <$> do
@@ -890,6 +874,15 @@ parseQuantifiedExpr = do
            $ Comprehension qnBody
            $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
              [ Condition g           | Just g <- [qnGuard] ]
+
+
+parseQuantifiedName :: Parser Text
+parseQuantifiedName = do
+    let
+        isIdentifier (LIdentifier q) = q `elem` ["forAll", "exists", "sum", "product"]
+        isIdentifier _ = False
+    LIdentifier n <- satisfyT isIdentifier
+    return n
 
 
 parseAbstractPattern :: Parser AbstractPattern
@@ -1070,7 +1063,10 @@ identifierText :: Parser T.Text
 identifierText = do
     LIdentifier i <- satisfyT isIdentifier
     return i
-    where isIdentifier LIdentifier {} = True
+    where 
+          isIdentifier (LIdentifier "forAll") = False
+          isIdentifier (LIdentifier "exists") = False
+          isIdentifier LIdentifier{} = True
           isIdentifier _ = False
 
 satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
@@ -1078,6 +1074,21 @@ satisfyT predicate = token nextPos testTok
     where
         testTok :: LexemePos -> Either [Message] Lexeme
         testTok (LexemePos tok _ _) = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
+        nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
+        nextPos _ _ (LexemePos _ _ pos) = pos
+
+satisfyL :: forall a . (Lexeme -> Maybe (Parser a)) -> Parser a
+satisfyL predicate = do
+    p <- token nextPos testTok
+    p
+    where
+        testTok :: LexemePos -> Either [Message] (Parser a)
+        testTok (LexemePos tok _ _) =
+            -- trace ("satisfyL: " ++ show pos ++ "\t" ++ show tok) $
+            case predicate tok of
+                Nothing  -> Left [Unexpected (showToken tok)]
+                Just res -> Right res
+
         nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
         nextPos _ _ (LexemePos _ _ pos) = pos
 

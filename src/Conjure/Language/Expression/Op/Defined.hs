@@ -27,16 +27,6 @@ instance (Pretty x, TypeOf x) => TypeOf (OpDefined x) where
             TypeSequence _    -> return (TypeSet (TypeInt TagInt))
             _                 -> raiseTypeError p
 
-instance EvaluateOp OpDefined where
-    evaluateOp p | any isUndef (childrenBi p) = do
-        ty <- typeOf p
-        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpDefined (viewConstantFunction -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitSet $ sortNub $ map fst xs
-    evaluateOp (OpDefined (viewConstantPermutation -> Just xss)) =
-        return $ ConstantAbstract $ AbsLitSet $ join xss 
-    evaluateOp op = na $ "evaluateOp{OpDefined}:" <++> pretty (show op)
-
 instance SimplifyOp OpDefined x where
     simplifyOp _ = na "simplifyOp{OpDefined}"
 

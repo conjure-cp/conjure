@@ -6,9 +6,23 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
 rm -rf ${BIN_DIR}/tmp-install-bc_minisat_all
-mkdir ${BIN_DIR}/tmp-install-bc_minisat_all
+mkdir -p ${BIN_DIR}/tmp-install-bc_minisat_all
 pushd ${BIN_DIR}/tmp-install-bc_minisat_all
-wget --no-check-certificate -c http://www.sd.is.uec.ac.jp/toda/code/bc_minisat_all-1.1.2.tar.gz
+
+function download {
+    if which curl 2> /dev/null > /dev/null; then
+        curl -L -O $1
+    elif which wget 2> /dev/null > /dev/null; then
+        wget --no-check-certificate -c $1
+    else
+        echo "You seem to have neither curl nor wget on this computer."
+        echo "Cannot download without one of them."
+        exit 1
+    fi
+}
+export -f download
+
+download http://www.sd.is.uec.ac.jp/toda/code/bc_minisat_all-1.1.2.tar.gz
 tar zxf bc_minisat_all-1.1.2.tar.gz
 cd bc_minisat_all-1.1.2/
 make -j bc_minisat_all_release

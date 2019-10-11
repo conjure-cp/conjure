@@ -172,3 +172,4 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
+

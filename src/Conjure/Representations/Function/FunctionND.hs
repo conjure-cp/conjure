@@ -66,7 +66,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             let
                 injectiveCons :: Expression -> m [Expression]
                 injectiveCons values = do
-                    tyTo <- typeOf innerDomainTo
+                    tyTo <- typeOfDomain innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
                             TypeInt{}  -> True
@@ -149,7 +149,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , value@(ConstantAbstract (AbsLitFunction vals))
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             let
@@ -171,8 +171,21 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                 unrollC [i] prevIndices = do
                     domVals <- domainValues i
                     let active val = check $ prevIndices ++ [val]
+
+                    missing <- concatForM domVals $ \ val ->
+                        case active val of
+                            Nothing -> return [ConstantAbstract $ AbsLitTuple $ prevIndices ++ [val]]
+                            Just {} -> return []
+
+                    unless (null missing) $
+                        fail $ vcat [ "Some points are undefined on a total function:" <++> prettyList id "," missing
+                                    , "    Function:" <+> pretty name
+                                    , "    Domain:" <++> pretty domain
+                                    , "    Value :" <++> pretty value
+                                    ]
+
                     return $ ConstantAbstract $ AbsLitMatrix i
-                                [ fromMaybe (bug "FunctionND downC") (active val)
+                                [ fromMaybe (bug $ "FunctionND downC" <+> pretty val) (active val)
                                 | val <- domVals ]
                 unrollC (i:is) prevIndices = do
                     domVals <- domainValues i
@@ -237,8 +250,6 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
-
-
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
 viewAsDomainTuple (DomainTuple doms) = Just doms

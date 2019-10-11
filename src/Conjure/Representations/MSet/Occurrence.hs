@@ -116,3 +116,4 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
+

@@ -1,0 +1,9 @@
+given test2: matrix indexed by [int(1..9),int(1..9)] of int(0..9)
+find x: int(0..100)
+find y: int(0..100)
+find z: int(0..100)
+
+such that
+	x = sum([i | i: int(1..9)]),
+	y=sum(test2[..,2]),
+	z = sum([1,2,3])

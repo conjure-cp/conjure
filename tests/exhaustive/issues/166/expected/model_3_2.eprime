@@ -1,0 +1,166 @@
+language ESSENCE' 1.0
+
+find y_1_1: matrix indexed by [int(1, 2)] of int(10, 11)
+find y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1, 2), int(1..3)] of int(0..2)
+find y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2)
+find y_1_3: matrix indexed by [int(1, 2)] of int(33, 55)
+find y_1_2_Function1DR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2, 3)
+branching on
+    [y_1_1, y_1_2_Function1DR6_ExplicitVarSizeWithDummy, y_1_3, y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker,
+     y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values]
+such that
+    and([and([y_1_1[q33] = [10, 11; int(1..2)][q33],
+              and([and([or([q42 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] /\
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q42] = 1
+                                | q42 : int(1..2)])
+                            | 1 = q33, 1 = q36])
+                   /\
+                   and([or([q44 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] /\
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q44] = 2
+                                | q44 : int(1..2)])
+                            | 1 = q33, 1 = q36])
+                   /\
+                   and([or([q46 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] /\
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q46] = 1
+                                | q46 : int(1..2)])
+                            | 1 = q33, 2 = q36])
+                   /\
+                   (and([or([q49 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] /\
+                             y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q49] = 1
+                                 | q49 : int(1..2)])
+                             | 2 = q33, 1 = q36])
+                    /\
+                    and([or([q51 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] /\
+                             y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q51] = 2
+                                 | q51 : int(1..2)])
+                             | 2 = q33, 1 = q36])
+                    /\
+                    and([or([q53 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] /\
+                             y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q53] = 1
+                                 | q53 : int(1..2)])
+                             | 2 = q33, 2 = q36]))
+                   /\
+                   and([q55 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, q36] ->
+                        or([1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q55] | 1 = q33, 1 = q36])
+                        \/
+                        or([2 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q55] | 1 = q33, 1 = q36])
+                        \/
+                        or([1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q55] | 1 = q33, 2 = q36])
+                        \/
+                        (or([1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q55] | 2 = q33, 1 = q36])
+                         \/
+                         or([2 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q55] | 2 = q33, 1 = q36])
+                         \/
+                         or([1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, q36, q55]
+                                 | 2 = q33, 2 = q36]))
+                            | q55 : int(1..2)])
+                       | q36 : int(1..3)])
+              /\
+              (and([and([and([q62 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 1] ->
+                              1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q62] \/
+                              2 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q62]
+                                  | q62 : int(1..2)])
+                         /\
+                         (or([q65 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 1] /\
+                              y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q65] = 1
+                                  | q65 : int(1..2)])
+                          /\
+                          or([q65 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 1] /\
+                              y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q65] = 2
+                                  | q65 : int(1..2)]))
+                             | 1 = q33]),
+                    and([and([q62 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 2] ->
+                              1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 2, q62]
+                                  | q62 : int(1..2)])
+                         /\
+                         or([q65 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 2] /\
+                             y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 2, q65] = 1
+                                 | q65 : int(1..2)])
+                             | 1 = q33]),
+                    and([and([q62 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 3] -> false
+                                  | q62 : int(1..2)])
+                             | 1 = q33]);
+                        int(1..3)])
+               /\
+               and([and([and([q67 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 1] ->
+                              1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q67] \/
+                              2 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q67]
+                                  | q67 : int(1..2)])
+                         /\
+                         (or([q70 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 1] /\
+                              y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q70] = 1
+                                  | q70 : int(1..2)])
+                          /\
+                          or([q70 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 1] /\
+                              y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 1, q70] = 2
+                                  | q70 : int(1..2)]))
+                             | 2 = q33]),
+                    and([and([q67 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 2] ->
+                              1 = y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 2, q67]
+                                  | q67 : int(1..2)])
+                         /\
+                         or([q70 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 2] /\
+                             y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q33, 2, q70] = 1
+                                 | q70 : int(1..2)])
+                             | 2 = q33]),
+                    and([and([q67 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q33, 3] -> false
+                                  | q67 : int(1..2)])
+                             | 2 = q33]);
+                        int(1..3)])),
+              y_1_3[q33] = [33, 55; int(1..2)][q33];
+                  int(1..3)])
+             | q33 : int(1, 2)]),
+    and([and([2 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q1, q2] ->
+              y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q1, q2, 1] <
+              y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q1, q2, 2]
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([and([q4 > y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q1, q2] ->
+                   y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q1, q2, q4] = 1
+                       | q4 : int(1..2)])
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q6, q7, 1] <
+              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q6, q7, 2]
+              \/ y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q6, q7, 1] = 3
+                  | q7 : int(1..3)])
+             | q6 : int(1, 2)]),
+    and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q6, q7, 1] = 3 ->
+              y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q6, q7, 2] = 3
+                  | q7 : int(1..3)])
+             | q6 : int(1, 2)]),
+    and([and([y_1_1[q12] = y_1_1[q12],
+              and([and([q17 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q12, q15] ->
+                        or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q15, q19] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q15, q19] =
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q12, q15, q17]
+                                | q19 : int(1..2)])
+                            | q17 : int(1..2)])
+                   /\
+                   and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q15, q21] != 3 ->
+                        or([q23 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q12, q15] /\
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q12, q15, q23] =
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q15, q21]
+                                | q23 : int(1..2)])
+                            | q21 : int(1..2)])
+                       | q15 : int(1..3)])
+              /\
+              and([and([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q24, q26] != 3 ->
+                        or([q28 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q12, q24] /\
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q12, q24, q28] =
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q24, q26]
+                                | q28 : int(1..2)])
+                            | q26 : int(1..2)])
+                   /\
+                   and([q30 <= y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Marker[q12, q24] ->
+                        or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q24, q32] != 3 /\
+                            y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q12, q24, q32] =
+                            y_1_2_Function1DR5_ExplicitVarSizeWithMarker_Values[q12, q24, q30]
+                                | q32 : int(1..2)])
+                            | q30 : int(1..2)])
+                       | q24 : int(1..3)]),
+              y_1_3[q12] = y_1_3[q12];
+                  int(1..3)])
+             | q12 : int(1, 2)])
+

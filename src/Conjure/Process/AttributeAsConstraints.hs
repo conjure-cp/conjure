@@ -164,6 +164,10 @@ attributeToConstraint domain@(DomainRelation _ _ [dom,dom2]) | dom == dom2 = gen
         (xP, x) <- quantifiedVar
         (yP, y) <- quantifiedVar
         return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
+    generator "connex" Nothing = return $ \ rel -> do
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
+        return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) \/ &x = &y |]
     generator "Euclidean" Nothing = return $ \ rel -> do
         (xP, x) <- quantifiedVar
         (yP, y) <- quantifiedVar

@@ -76,19 +76,19 @@ categoryChecking m = do
         then return m
         else userErr1 $ vcat
             $  [ "Category checking failed." ]
-            ++ concat [ [ "The domain   :" <+> pretty domain
-                        , "Its category :" <+> pretty cat
-                        , "In the definition of:" <+> pretty name
-                        , ""
-                        ]
-                      | (domain, (name, cat)) <- errors1
-                      ]
-            ++ concat [ [ "The domain   :" <+> pretty domain
-                        , "Its category :" <+> pretty cat
-                        , ""
-                        ]
-                      | (domain, cat) <- errors2
-                      ]
+            ++ concat ( nub [ [ "The domain   :" <+> pretty domain
+                              , "Its category :" <+> pretty cat
+                              , "In the definition of:" <+> pretty name
+                              , ""
+                              ]
+                            | (domain, (name, cat)) <- errors1
+                            ] )
+            ++ concat ( nub [ [ "The domain   :" <+> pretty domain
+                              , "Its category :" <+> pretty cat
+                              , ""
+                              ]
+                            | (domain, cat) <- errors2
+                            ] )
 
 initInfo_Lettings :: Model -> Model
 initInfo_Lettings model = model { mInfo = info }

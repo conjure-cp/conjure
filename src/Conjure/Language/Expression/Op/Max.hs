@@ -23,7 +23,7 @@ instance ( TypeOf x, Pretty x
          , Domain () x :< x
          ) => TypeOf (OpMax x) where
     typeOf p@(OpMax x) | Just (dom :: Domain () x) <- project x = do
-        ty <- typeOf dom
+        ty <- typeOfDomain dom
         case ty of
             TypeInt TagInt -> return ty
             TypeInt TaggedInt{} -> return ty
@@ -50,57 +50,6 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside max:" <+> pretty ty
                                        ]
         return tyInner
-
-instance EvaluateOp OpMax where
-    evaluateOp p | any isUndef (childrenBi p) =
-            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpMax x)
-        | Just xs <- listOut x
-        , any isUndef xs =
-            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
-    evaluateOp (OpMax (DomainInConstant (DomainInt t rs))) = do
-        is <- rangesInts rs
-        return $ if null is
-            then mkUndef (TypeInt TagInt) "Empty collection in max"
-            else ConstantInt t (maximum is)
-    evaluateOp (OpMax coll@(viewConstantMatrix -> Just (_, xs))) =
-        case xs of
-            [] -> do
-                tyInner <- typeOf coll >>= innerTypeOf
-                return $ mkUndef tyInner "Empty collection in max"
-            (x:_) -> do
-                tyInner <- typeOf x
-                case tyInner of
-                    TypeInt t -> do
-                        is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt t (maximum is)
-                    _ -> na "evaluateOp{OpMax}"
-    evaluateOp (OpMax coll@(viewConstantSet -> Just xs)) = do
-        case xs of
-            [] -> do
-                tyInner <- typeOf coll >>= innerTypeOf
-                return $ mkUndef tyInner "Empty collection in max"
-            (x:_) -> do
-                tyInner <- typeOf x
-                case tyInner of
-                    TypeInt t -> do
-                        is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt t (maximum is)
-                    _ -> na "evaluateOp{OpMax}"
-    evaluateOp (OpMax coll@(viewConstantMSet -> Just xs)) = do
-        case xs of
-            [] -> do
-                tyInner <- typeOf coll >>= innerTypeOf
-                return $ mkUndef tyInner "Empty collection in max"
-            (x:_) -> do
-                tyInner <- typeOf x
-                case tyInner of
-                    TypeInt t -> do
-                        is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt t (maximum is)
-                    _ -> na "evaluateOp{OpMax}"
-    evaluateOp _ = na "evaluateOp{OpMax}"
 
 instance SimplifyOp OpMax x where
     simplifyOp _ = na "simplifyOp{OpMax}"

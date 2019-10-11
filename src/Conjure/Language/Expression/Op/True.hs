@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = genericParseJSON 
 instance TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 
-instance EvaluateOp OpTrue where
-    evaluateOp _ = return (fromBool True)
-
 instance SimplifyOp OpTrue x where
     simplifyOp _ = na "simplifyOp{OpTrue}"
 

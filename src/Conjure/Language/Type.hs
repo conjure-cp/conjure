@@ -12,8 +12,9 @@ module Conjure.Language.Type
     , innerTypeOf
     , isPrimitiveType
     , typeCanIndexMatrix
-    , containsTypeComprehendable
-    , containsTypeIncomprehendable
+    , morphing
+    , containsTypeFunctorially
+    , containsProductType
     , containsType
     ) where
 
@@ -141,15 +142,17 @@ typeUnify (TypeVariant as) (TypeVariant bs)
                       | (n,a) <- as
                       ]
 typeUnify (TypeList a) (TypeList b) = typeUnify a b
-typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeList a) (TypeMatrix _ b) = typeUnify a b
-typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
 typeUnify (TypeList a) (TypeSequence b) = typeUnify a b
+typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
+typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
+typeUnify (TypeMatrix _ a) (TypeSequence b) = typeUnify a b
+typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
 typeUnify (TypeSequence a) (TypeList b) = typeUnify a b
+typeUnify (TypeSequence a) (TypeMatrix _ b) = typeUnify a b
 typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
-typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
 typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- hack to make sameToSameToBool work
 typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = (length as == length bs) && and (zipWith typeUnify as bs)
@@ -252,27 +255,34 @@ typeCanIndexMatrix TypeInt {} = True
 typeCanIndexMatrix TypeEnum{} = True
 typeCanIndexMatrix _          = False
 
+-- ||| Traversals that tell us if a type (of a certain form) is contained in a Type
+-- This allows us to abort transform early if we can see it will have no effect
 
--- | Types must not unify && type can be a generator in a comprehension 
-containsTypeComprehendable :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool 
-containsTypeComprehendable container containee =
-  if typesUnify [container, containee]
+typeComplex :: Type -> Bool
+typeComplex TypeSequence{}  = True
+typeComplex TypePartition{} = True
+typeComplex TypeList{}      = True
+typeComplex TypeMatrix{}    = True
+typeComplex _ = False
+
+containsTypeFunctorially :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool 
+containsTypeFunctorially container containee =
+  if typesUnify [container, containee] || typeComplex containee
     then False 
     else case innerTypeOf container of
            Nothing -> False
            Just so -> unifiesOrContains so containee 
 
--- | Types do not unify && type cannot be a generator in a comprehension
-containsTypeIncomprehendable :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
-containsTypeIncomprehendable ot@(TypeTuple ts) t =
+
+containsProductType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
+containsProductType ot@(TypeTuple ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains x t) <$> ts))
-containsTypeIncomprehendable ot@(TypeRecord ts) t =
+containsProductType ot@(TypeRecord ts) t =
   (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
-containsTypeIncomprehendable ot@(TypeVariant ts) t =  
-  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
-containsTypeIncomprehendable _ _ = False
+containsProductType _ _ = False
 
 
+-- Is the type
 containsType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 containsType container containee = containee `elem` universeBi container
 
@@ -280,3 +290,13 @@ containsType container containee = containee `elem` universeBi container
 unifiesOrContains :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 unifiesOrContains container containee =
   typesUnify [container, containee] || containsType container containee
+
+
+-- as in "this homomorphism is morphing"
+morphing :: (?typeCheckerMode :: TypeCheckerMode)
+         => (MonadFail m)
+         => Type -> m Type
+morphing (TypeFunction a _) = return a
+morphing (TypeSequence a)   = return a 
+morphing t = fail ("morphing:" <+> pretty (show t))
+

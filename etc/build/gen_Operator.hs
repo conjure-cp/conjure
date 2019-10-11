@@ -78,13 +78,6 @@ main = do
               ]
 
             , [ ""
-              , "instance EvaluateOp Op where"
-              ]
-            , [ "    evaluateOp (" ++ patModifier m ++ ") = evaluateOp x"
-              | m <- operators
-              ]
-
-            , [ ""
               , let context = intercalate "\n         , " [ "Op" ++ m ++ " x :< x" | m <- operators ]
                 in  "instance ( " ++ context ++ ") => SimplifyOp Op x where"
               ]

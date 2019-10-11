@@ -34,15 +34,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
                                                , pretty b <+> "has type" <+> pretty tyB
                                                ]
 
-instance EvaluateOp OpIn where
-    evaluateOp (OpIn c (viewConstantSet      -> Just cs)) = return $ ConstantBool $ elem c cs
-    evaluateOp (OpIn c (viewConstantMSet     -> Just cs)) = return $ ConstantBool $ elem c cs
-    evaluateOp (OpIn c (viewConstantFunction -> Just cs)) =
-        return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract $ AbsLitTuple [i,j] ) cs
-    evaluateOp (OpIn c (viewConstantRelation -> Just cs)) =
-        return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
-    evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
-
 instance SimplifyOp OpIn x where
     simplifyOp _ = na "simplifyOp{OpIn}"
 

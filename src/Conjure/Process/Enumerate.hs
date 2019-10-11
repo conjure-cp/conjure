@@ -130,6 +130,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                 [ "-cpulimit"      , show minionTimelimit
                 ]
             , solver                        = "minion"
+            , cgroups                       = False
             , nbSolutions                   = show enumerateDomainMax
             , copySolutions                 = False
             , solutionsInOneFile            = False
@@ -162,6 +163,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , outputFormat                  = UI.Plain
             , lineWidth                     = 120
             , responses                     = ""
+            , responsesRepresentation       = ""
             }
     -- catching the (SR timeout) error, and raising a user error
     catch solve $ \ (e :: SomeException) -> userErr1 $ vcat
@@ -172,7 +174,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     when (length solutions >= enumerateDomainMax) $ userErr1 $ vcat
         [ "Enumerate domain: too many."
-        , "Nb solutions found:" <+> pretty (length solutions)
+        , "Gave up after" <+> pretty (length solutions) <+> "solutions."
         , "When working on domain:" <++> pretty d
         ]
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do

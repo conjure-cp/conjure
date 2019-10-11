@@ -10,6 +10,9 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
+-- unordered-containers
+import qualified Data.HashMap.Strict as M
+
 
 function1DPartial :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 function1DPartial = Representation chck downD structuralCons downC up symmetryOrdering
@@ -131,14 +134,15 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , ConstantAbstract (AbsLitFunction vals_)
               ) | domainCanIndexMatrix innerDomainFr = do
+            let vals = M.fromList vals_
             z <- zeroVal innerDomainTo
             froms               <- domainValues innerDomainFr
             (flagsOut, valsOut) <- unzip <$> sequence
                 [ val
                 | fr <- froms
-                , let val = case lookup fr vals of
+                , let val = case M.lookup fr vals of
                                 Nothing -> return (ConstantBool False, z)
                                 Just v  -> return (ConstantBool True , v)
                 ]
@@ -219,3 +223,4 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                     | &iPat : &innerDomainFr
                     ]
                 |]
+

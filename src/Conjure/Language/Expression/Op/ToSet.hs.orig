@@ -1,0 +1,72 @@
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+
+module Conjure.Language.Expression.Op.ToSet where
+
+import Conjure.Prelude
+import Conjure.Language.Expression.Op.Internal.Common
+
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
+import Data.Permutation
+
+
+data OpToSet x = OpToSet
+                    Bool       -- True means we can assume there won't be any duplicates
+                    x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+
+instance Serialize x => Serialize (OpToSet x)
+instance Hashable  x => Hashable  (OpToSet x)
+instance ToJSON    x => ToJSON    (OpToSet x) where toJSON = genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpToSet x) where parseJSON = genericParseJSON jsonOptions
+
+instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
+    typeOf p@(OpToSet _ x) = do
+        tx <- typeOf x
+        case tx of
+            TypeRelation is  -> return (TypeSet (TypeTuple is))
+            TypePermutation is -> return (TypeSet (TypeTuple [is, is]))
+            TypeMSet i       -> return (TypeSet i)
+            TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
+            TypeMatrix _ i   -> return (TypeSet i)
+            TypeList i       -> return (TypeSet i)
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty tx
+                                       ]
+
+<<<<<<< HEAD
+instance EvaluateOp OpToSet where
+    evaluateOp (OpToSet _ (viewConstantMatrix -> Just (_, xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
+    evaluateOp (OpToSet _ (viewConstantSet -> Just xs)) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
+    evaluateOp (OpToSet _ (viewConstantMSet -> Just xs)) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
+    evaluateOp (OpToSet _ (viewConstantFunction -> Just xs)) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract $ AbsLitTuple [a,b] | (a,b) <- xs]
+    evaluateOp (OpToSet _ (viewConstantRelation -> Just xs)) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub $ map (ConstantAbstract . AbsLitTuple) xs
+    evaluateOp (OpToSet _ (viewConstantPermutation -> Just xs)) =
+        case toFunction <$> fromCycles xs of
+           Left (PermutationError e) -> na $ "evaluateOp{OpToSet}:" <++> pretty e 
+           Right fn -> return $ ConstantAbstract $ AbsLitSet $ (ConstantAbstract . AbsLitTuple) <$> ((\x -> [x, fn x]) <$> join xs)
+    evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
+
+=======
+>>>>>>> master
+instance SimplifyOp OpToSet x where
+    simplifyOp _ = na "simplifyOp{OpToSet}"
+
+instance Pretty x => Pretty (OpToSet x) where
+    prettyPrec _ (OpToSet _ a) = "toSet" <> prParens (pretty a)
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpToSet x) where
+    varSymBreakingDescription (OpToSet b x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpToSet")
+        , ("children", JSON.Array $ V.fromList
+            [ toJSON b
+            , varSymBreakingDescription x
+            ])
+        ]

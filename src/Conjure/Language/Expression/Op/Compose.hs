@@ -9,9 +9,6 @@ import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
-import Data.Permutation
-
-import qualified Data.Semigroup as SG
 
 
 data OpCompose x = OpCompose x x
@@ -32,16 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpCompose x) where
                     then return pTy
                     else raiseTypeError inp
           _ -> raiseTypeError inp
-
-instance EvaluateOp OpCompose where
-    evaluateOp (OpCompose (viewConstantPermutation -> Just gss)
-                             (viewConstantPermutation -> Just hss)) = do
-       case (fromCycles gss, fromCycles hss) of
-         (Right g, Right h) ->
-           return $ ConstantAbstract $ AbsLitPermutation $ toCycles $ g SG.<> h
-         (Left e, _) -> fail $ "evaluateOp{OpCompose}" <++> pretty (show e)
-         (_, Left e) -> fail $ "evaluateOp{OpCompose}" <++> pretty (show e)        
-    evaluateOp op = na $ "evaluateOp{OpCompose}:" <++> pretty (show op)
 
 instance SimplifyOp OpCompose x where
     simplifyOp _ = na "simplifyOp{OpCompose}"

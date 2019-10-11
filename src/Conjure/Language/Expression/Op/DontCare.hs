@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpDontCare x) where parseJSON = genericParseJ
 instance TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
 
-instance EvaluateOp OpDontCare where
-    evaluateOp op = na $ "evaluateOp{OpDontcare}:" <++> pretty (show op)
-
 instance SimplifyOp OpDontCare x where
     simplifyOp _ = na "simplifyOp{OpDontCare}"
 

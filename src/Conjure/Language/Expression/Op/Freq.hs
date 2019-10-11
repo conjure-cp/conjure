@@ -31,10 +31,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
                     ]
             _ -> raiseTypeError p
 
-instance EvaluateOp OpFreq where
-    evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
-    evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
-
 instance SimplifyOp OpFreq x where
     simplifyOp _ = na "simplifyOp{OpFreq}"
 

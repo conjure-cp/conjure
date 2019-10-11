@@ -27,13 +27,6 @@ instance (TypeOf x, Pretty x, Data x) => TypeOf (OpDiv x) where
          then intToIntToInt p a b
          else intToIntToIntStrict p a b
 
-instance EvaluateOp OpDiv where
-    evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpDiv x y)
-        | y /= 0    = ConstantInt TagInt <$> (div <$> intOut "div x" x <*> intOut "div y" y)
-        | otherwise = return $ mkUndef (TypeInt TagInt) $ "division by zero:" <+> pretty p
-
 instance SimplifyOp OpDiv x where
     simplifyOp _ = na "simplifyOp{OpDiv}"
 

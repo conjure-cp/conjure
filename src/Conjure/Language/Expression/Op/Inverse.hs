@@ -36,18 +36,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpInverse x) where
               else raiseTypeError p
           _ -> raiseTypeError p 
 
-instance EvaluateOp OpInverse where
-    evaluateOp (OpInverse (viewConstantFunction -> Just xs) (viewConstantFunction -> Just ys)) =
-        return $ ConstantBool $ and $ concat [ [ (j,i) `elem` ys | (i,j) <- xs ]
-                                             , [ (j,i) `elem` xs | (i,j) <- ys ]
-                                             ]
-    evaluateOp (OpInverse (viewConstantPermutation -> Just xs) (viewConstantPermutation -> Just ys)) =
-        case (toFunction <$> fromCycles xs, toFunction <$> fromCycles ys) of
-          (Right xfn, Right lfn) -> return $ ConstantBool $ and $ (\x -> x == lfn (xfn x)) <$> join xs
-          (Left (PermutationError e),_) -> na $ "evaluateOp{OpInverse}:" <++> pretty e 
-          (_,Left (PermutationError e)) -> na $ "evaluateOp{OpInverse}:" <++> pretty e 
-    evaluateOp op = na $ "evaluateOp{OpInverse}:" <++> pretty (show op)
-
 instance SimplifyOp OpInverse x where
     simplifyOp _ = na "simplifyOp{OpInverse}"
 

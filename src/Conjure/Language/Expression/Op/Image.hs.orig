@@ -27,12 +27,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
         tyX <- typeOf x
         (from, to) <- case tyF of
             TypeFunction from to -> return (from, to)
-<<<<<<< HEAD
-            TypeSequence      to -> return (TypeInt NoTag, to)
-            TypePermutation _    -> return (tyX, tyX)
-=======
             TypeSequence      to -> return (TypeInt TagInt, to)
->>>>>>> master
+            TypePermutation _    -> return (tyX, tyX)
             _ -> raiseTypeError $ "(function application)" <+> pretty p
         if typesUnify [tyX, from]
             then return to
@@ -44,6 +40,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
                 , "argument type:" <+> pretty tyX
                 ]
 
+<<<<<<< HEAD
 instance EvaluateOp OpImage where
     evaluateOp (OpImage f@(viewConstantFunction -> Just xs) a) =
         case [ y | (x,y) <- xs, a == x ] of
@@ -75,7 +72,7 @@ instance EvaluateOp OpImage where
                     [ "Sequence is multiply defined at this point:" <+> pretty a
                     , "Sequence value:" <+> pretty f
                     ]
-    evaluateOp op@(OpImage p@(viewConstantPermutation -> Just xss) i) = do
+    evaluateOp (OpImage p@(viewConstantPermutation -> Just xss) i) = do
       (TypePermutation ip) <- typeOf p
       ti <- typeOf i
       if typesUnify [ti, ip]
@@ -91,6 +88,8 @@ instance EvaluateOp OpImage where
                  else return i
     evaluateOp op = na $ "evaluateOp{OpImage}:" <++> pretty (show op)
 
+=======
+>>>>>>> master
 instance SimplifyOp OpImage x where
     simplifyOp _ = na "simplifyOp{OpImage}"
 

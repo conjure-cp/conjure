@@ -10,7 +10,6 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
-import Conjure.Language.TypeOf
 import Conjure.Language.Constant
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
@@ -18,6 +17,9 @@ import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
+
+-- unordered-containers
+import qualified Data.HashMap.Strict as M
 
 
 function1D :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
@@ -63,7 +65,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
             let
                 injectiveCons :: Expression -> m [Expression]
                 injectiveCons m = do
-                    tyTo <- typeOf innerDomainTo
+                    tyTo <- typeOfDomain innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
                             TypeInt{}  -> True
@@ -132,15 +134,16 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , ConstantAbstract (AbsLitFunction vals_)
               ) | domainCanIndexMatrix innerDomainFr = do
+            let vals = M.fromList vals_
             froms            <- domainValues innerDomainFr
             valsOut          <- sequence
                 [ val
                 | fr <- froms
-                , let val = case lookup fr vals of
+                , let val = case M.lookup fr vals of
                                 Nothing -> fail $ vcat [ "No value for" <+> pretty fr
-                                                       , "In:" <+> pretty (AbsLitFunction vals)
+                                                       , "In:" <+> pretty (AbsLitFunction vals_)
                                                        ]
                                 Just v  -> return v
                 ]
@@ -183,6 +186,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
+
 
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
 domainValues dom =

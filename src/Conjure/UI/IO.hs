@@ -1,5 +1,6 @@
 module Conjure.UI.IO
     ( readModelFromFile
+    , readModelFromStdin
     , readModelPreambleFromFile
     , readModelInfoFromFile
     , readParamOrSolutionFromFile
@@ -25,6 +26,7 @@ import qualified Data.Serialize ( decode, encode )
 
 -- text
 import qualified Data.Text as T
+import qualified Data.Text.IO as T ( getContents )
 import qualified Data.Text.Encoding as T ( encodeUtf8 )
 
 -- bytestring
@@ -32,7 +34,11 @@ import qualified Data.ByteString as BS ( readFile, writeFile )
 import qualified Data.ByteString.Char8 as BS ( putStrLn )
 
 
-readModelFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
+readModelFromFile ::
+    MonadIO m =>
+    MonadFail m =>
+    MonadUserError m =>
+    FilePath -> m Model
 readModelFromFile fp = do
     con <- liftIO $ BS.readFile fp
     case Data.Serialize.decode con of
@@ -42,7 +48,22 @@ readModelFromFile fp = do
             readModel Parser.parseModel (Just id) pair
 
 
-readParamOrSolutionFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
+readModelFromStdin ::
+    MonadIO m =>
+    MonadFail m =>
+    MonadUserError m =>
+    m Model
+readModelFromStdin = do
+    con2 <- liftIO $ T.getContents
+    let pair = ("stdin", con2)
+    readModel Parser.parseModel (Just id) pair
+
+
+readParamOrSolutionFromFile ::
+    MonadIO m =>
+    MonadFail m =>
+    MonadUserError m =>
+    FilePath -> m Model
 readParamOrSolutionFromFile fp = do
     con <- liftIO $ BS.readFile fp
     case Data.Serialize.decode con of
@@ -52,7 +73,11 @@ readParamOrSolutionFromFile fp = do
             readModel ParserC.parseModel (Just id) pair
 
 
-readModelPreambleFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
+readModelPreambleFromFile ::
+    MonadIO m =>
+    MonadFail m =>
+    MonadUserError m =>
+    FilePath -> m Model
 readModelPreambleFromFile fp = do
     con <- liftIO $ BS.readFile fp
     case Data.Serialize.decode con of
@@ -61,7 +86,11 @@ readModelPreambleFromFile fp = do
             pair <- liftIO $ pairWithContents fp
             readModel Parser.parseModel (Just onlyPreamble) pair
 
-readModelInfoFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
+readModelInfoFromFile ::
+    MonadIO m =>
+    MonadFail m =>
+    MonadUserError m =>
+    FilePath -> m Model
 readModelInfoFromFile fp = do
     con <- liftIO $ BS.readFile fp
     case Data.Serialize.decode con of
@@ -71,12 +100,13 @@ readModelInfoFromFile fp = do
             readModel Parser.parseModel Nothing pair
 
 
-readModel
-    :: (MonadUserError m, MonadFail m)
-    => Parser Model
-    -> Maybe (Text -> Text)
-    -> (FilePath, Text)
-    -> m Model
+readModel ::
+    MonadFail m =>
+    MonadUserError m =>
+    Parser Model ->
+    Maybe (Text -> Text) ->
+    (FilePath, Text) ->
+    m Model
 readModel modelParser preprocess (fp, con) = do
 
     model <- case preprocess of
@@ -101,7 +131,10 @@ readModel modelParser preprocess (fp, con) = do
         then return model
         else
             case infoJson of
-                Nothing -> fail "Malformed JSON"
+                Nothing -> userErr1 $ vcat
+                    [ "Malformed JSON in a cached Essence Prime model."
+                    , "It could be created by a different version of Conjure or modified by hand."
+                    ]
                 Just i  -> return model { mInfo = i }
 
 

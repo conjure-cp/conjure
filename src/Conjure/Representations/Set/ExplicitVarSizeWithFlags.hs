@@ -195,3 +195,4 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
                 [essence|
                     [ (&flags[&i], &soValues) | &iPat : &index]
                 |]
+

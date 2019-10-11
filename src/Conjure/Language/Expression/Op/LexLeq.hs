@@ -32,11 +32,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLeq x) where
                                        , "RHS has type:" <+> pretty tyB
                                        ]
 
-instance EvaluateOp OpLexLeq where
-    evaluateOp (OpLexLeq (viewConstantMatrix -> Just (_, xs)) (viewConstantMatrix -> Just (_, ys))) =
-        return $ ConstantBool $ xs <= ys
-    evaluateOp op = na $ "evaluateOp{OpLexLeq}:" <++> pretty (show op)
-
 instance SimplifyOp OpLexLeq x where
     simplifyOp _ = na "simplifyOp{OpLexLeq}"
 

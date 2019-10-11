@@ -116,11 +116,11 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
     typeOf   (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the type of variant literal."
     typeOf   (AbsLitVariant (Just t) _ _) = fmap TypeVariant $ forM t $ \ (n,d) -> do
-        dt <- typeOf d
+        dt <- typeOfDomain d
         return (n, dt)
 
     typeOf   (AbsLitMatrix _   []  ) = return (TypeMatrix TypeAny TypeAny)
-    typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) =<< mapM typeOf inn)
+    typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOfDomain ind <*> (homoType (pretty p) =<< mapM typeOf inn)
 
     typeOf   (AbsLitSet         [] ) = return (TypeSet TypeAny)
     typeOf p@(AbsLitSet         xs ) = TypeSet      <$> (homoType (pretty p) =<< mapM typeOf xs)

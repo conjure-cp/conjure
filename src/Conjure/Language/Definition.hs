@@ -226,7 +226,6 @@ data Strategy
     | AtRandom          -- ^ pick one option at random
     | Compact           -- ^ pick the compact option
     | Sparse            -- ^ pick the most sparse option, useful for parameters (otherwise identical to PickFirst)
-    | FollowLog         -- ^ Bilal's log follower
     | Auto Strategy
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -249,7 +248,6 @@ parseStrategy "i" = return Interactive
 parseStrategy "r" = return AtRandom
 parseStrategy "c" = return Compact
 parseStrategy "s" = return Sparse
-parseStrategy "l" = return FollowLog
 parseStrategy _ = Nothing
 
 

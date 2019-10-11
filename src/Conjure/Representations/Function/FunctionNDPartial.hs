@@ -303,3 +303,4 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                               )
                             |]
                     [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
+

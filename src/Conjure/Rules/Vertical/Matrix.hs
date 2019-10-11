@@ -4,32 +4,115 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
+import Conjure.Rules.Definition ( RuleResult(..), QuestionType(..) )
 import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
+
+-- uniplate
+import Data.Generics.Uniplate.Zipper ( hole )
+import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 
 rule_Comprehension_Literal :: Rule
-rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
+rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
+    theRule z (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+            Generator (GenInExpr pat expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
+        notInsideMinMax z
         tyInner <- typeOf body
         let ty = TypeMatrix (TypeInt TagInt) tyInner
         return
-            ( "Vertical rule for matrix-comprehension on matrix literal"
-            , return $ if null elems
-                then make matrixLiteral ty (mkDomainIntB 1 0) []
-                else make opConcatenate $ AbstractLiteral $ AbsLitMatrix
-                    (mkDomainIntB 1 (fromInt $ genericLength elems))
-                    [ Comprehension body
-                        $  gocBefore
-                        ++ [ComprehensionLetting pat el]
-                        ++ gocAfter
-                    | el <- elems
-                    ]
+            [ RuleResult
+                { ruleResultDescr = "Vertical rule for matrix-comprehension on matrix literal"
+                , ruleResultType  = ExpressionRefinement
+                , ruleResultHook  = Nothing
+                , ruleResult      = return $
+                    case elems of
+                        []   -> make matrixLiteral ty (mkDomainIntB 1 0) []
+                        [el] -> Comprehension body
+                                    $  gocBefore
+                                    ++ [ComprehensionLetting pat el]
+                                    ++ gocAfter
+                        _    -> make opConcatenate $ AbstractLiteral $ AbsLitMatrix
+                                    (mkDomainIntB 1 (fromInt $ genericLength elems))
+                                    [ Comprehension body
+                                        $  gocBefore
+                                        ++ [ComprehensionLetting pat el]
+                                        ++ gocAfter
+                                    | el <- elems
+                                    ]
+                } ]
+    theRule _ _ = na "rule_Comprehension_Literal"
+
+    notInsideMinMax z0 =
+        case Zipper.up z0 of
+            Nothing -> na "rule_Comprehension_Literal 1"
+            Just z1 -> do
+                let h = hole z1
+                case match opReducer h of
+                    Just (_, False, _, _) -> na "rule_Comprehension_Literal"
+                    Just (_, True , _, _) -> return ()
+                    Nothing               -> case Zipper.up z1 of
+                                                Nothing -> return ()
+                                                Just u  -> notInsideMinMax u
+
+
+rule_Comprehension :: Rule
+rule_Comprehension = "matrix-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension"
+        case match matrixLiteral expr of
+            Just{} -> na "rule_Comprehension" -- this case is handled in rule_Comprehension_Literal
+            Nothing -> return ()
+        indexDom:_ <- indexDomainsOf expr
+        case indexDom of
+            DomainAny{} -> na "rule_Comprehension"
+            _ -> return ()
+        return
+            ( "Comprehension on a matrix"
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ Comprehension body
+                            $ gocBefore
+                            ++ [ Generator (GenDomainNoRepr iPat indexDom)
+                               , ComprehensionLetting pat [essence| &expr[&i] |]
+                               ]
+                            ++ gocAfter
             )
-    theRule _ = na "rule_Comprehension_Literal"
+    theRule _ = na "rule_Comprehension"
+
+
+rule_Comprehension_Flatten :: Rule
+rule_Comprehension_Flatten = "matrix-comprehension-flatten" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Flatten"
+        m <- match opFlatten expr
+        indexDoms <- indexDomainsOf m
+        forM_ indexDoms $ \case
+            DomainAny{} -> na "rule_Comprehension_Flatten"
+            _ -> return ()
+        when (null indexDoms) $ na "rule_Comprehension_Flatten"
+        return
+            ( "Comprehension on a matrix flatten"
+            , do
+                (gens, is) <- unzip <$> sequence
+                                [ do
+                                    (iPat, i) <- quantifiedVar
+                                    return (Generator (GenDomainNoRepr iPat d), i)
+                                | d <- indexDoms
+                                ]
+                return $ Comprehension body
+                            $  gocBefore
+                            ++ gens
+                            ++ [ ComprehensionLetting pat (make opMatrixIndexing m is) ]
+                            ++ gocAfter
+            )
+    theRule _ = na "rule_Comprehension_Flatten"
 
 
 -- | input:  [ i | i <- m[j] ] with m = [a,b,c]
@@ -63,29 +146,6 @@ rule_ModifierAroundIndexedMatrixLiteral = "modifier-around-indexed-matrix-litera
             ( "Pushing a modifier inwards, through a matrix literal"
             , do
                 matrix' <- onMatrixLiteral Nothing (return . mkM) matrix
-                return $ make opMatrixIndexing matrix' indices
-            )
-
-
-rule_QuantifierAroundIndexedMatrixLiteral :: Rule
-rule_QuantifierAroundIndexedMatrixLiteral = "quantifier-around-indexed-matrix-literal" `namedRule` theRule where
-    theRule p = do
-        (_, mkM, p2)      <- match opReducer p
-        (matrix, indices) <- match opMatrixIndexing p2
-        case match opMatrixIndexing p of
-            Nothing -> return ()
-            Just{}  -> na "rule_ModifierAroundIndexedMatrixLiteral, no quantifier"
-        -- let
-        --     fullyMatrixLiteral 0 _ = return True
-        --     fullyMatrixLiteral n m =
-        --         case match matrixLiteral m of
-        --             Nothing            -> return False
-        --             Just (_, _, elems) -> and <$> mapM (fullyMatrixLiteral (n-1)) elems
-        -- True <- fullyMatrixLiteral (length indices) matrix
-        return
-            ( "Pushing a modifier inwards, through a matrix literal"
-            , do
-                matrix' <- onMatrixLiteral (Just (length indices)) (return . mkM) matrix
                 return $ make opMatrixIndexing matrix' indices
             )
 
@@ -217,9 +277,14 @@ rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `
 rule_Comprehension_Nested :: Rule
 rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, Comprehension innerBody innerGocs), gocAfter) <- matchFirst gensOrConds $ \case
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToMSet] expr)
             _ -> na "rule_Comprehension_Nested"
+        let
+            extract (isAlias -> Just x) = extract x
+            extract (Comprehension innerBody innerGocs) = return (innerBody, innerGocs)
+            extract _ = na "rule_Comprehension_Nested"
+        (innerBody, innerGocs) <- extract expr
         let upd val old = lambdaToFunction pat old val
         let
             -- update the quantified variable names inside innerBody&innerGocs_ here,
@@ -242,7 +307,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
                 Generator (GenDomainHasRepr nm _) -> [nm]
                 Generator (GenInExpr        pt _) -> universeBi pt
                 Condition _                       -> []
-                ComprehensionLetting nm _         -> [nm]
+                ComprehensionLetting pt _         -> universeBi pt
 
         (innerBody', innerGocs') <- updateQuantified innerBody innerGocs
         return
@@ -438,7 +503,7 @@ rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `na
 rule_Comprehension_Singleton :: Rule
 rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theRule where
     theRule p = do
-        (_, _mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opReducer p
+        (_, _, _mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opReducer p
         return
             ( "Removing quantifier of a single item"
             , return singleVal
@@ -486,3 +551,34 @@ rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
                     , return firstElem
                     )
             else na "rule_IndexingIdentical"
+
+
+rule_ExpandSlices :: Rule
+rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
+    theRule p = do
+        (m, is) <- match opMatrixIndexingSlicing p
+        indexDoms <- indexDomainsOf m
+        unless (length is == length indexDoms) $ na "rule_ExpandSlices"
+        (is', gocs) <- unzip <$> sequence
+            [ case index of
+                Left i -> -- indexing
+                    return
+                        ( Left i
+                        , []
+                        )
+                Right (mLowerBound, mUpperBound) -> do -- slicing
+                    (jPat, j) <- quantifiedVar
+                    return
+                        ( Left j
+                        , concat [ [ Generator (GenDomainNoRepr jPat indexDom) ]
+                                 , [ Condition [essence| &j >= &lb |] | Just lb <- [mLowerBound] ]
+                                 , [ Condition [essence| &j <= &ub |] | Just ub <- [mUpperBound] ]
+                                 ]
+                        )
+            | (index, indexDom) <- zip is indexDoms
+            ]
+        when (null gocs) $ na "rule_ExpandSlices: this was all indexing and no slicing"
+        return ( "Expanding a matrix slice"
+               , return $ Comprehension (make opMatrixIndexingSlicing m is') (concat gocs)
+               )
+
