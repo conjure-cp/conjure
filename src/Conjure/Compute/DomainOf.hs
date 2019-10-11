@@ -413,7 +413,7 @@ instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpImage x) where
         case fDomain of
             DomainFunction _ _ _ to -> return to
             DomainSequence _ _ to -> return to
-            DomainPermutation _ _ on -> return on
+            DomainPermutation _ _ ov -> return ov
             _ -> fail "domainOf, OpImage, not a function or sequence"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where

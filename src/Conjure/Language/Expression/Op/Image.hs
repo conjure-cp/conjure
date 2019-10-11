@@ -4,13 +4,10 @@ module Conjure.Language.Expression.Op.Image where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Bug
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
-
-import Data.List (cycle)
 
 
 data OpImage x = OpImage x x

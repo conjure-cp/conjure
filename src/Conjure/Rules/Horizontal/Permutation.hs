@@ -108,3 +108,34 @@ rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
   theRule _ = na "rule_Compose_Image"
 
 
+rule_Image_Literal :: Rule
+rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
+  theRule [essence| image(&p, &i) |] = do
+    (TypePermutation inner, elems) <- match permutationLiteral p
+    typeI <- typeOf i
+    let f' = toFunction <$> fromCycles elems 
+    case f' of
+      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+      Right f -> do 
+        if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
+          then do
+            let srtdel = sortBy compare (join elems) 
+                inperm = (\x -> [essence| toInt(&x) + 1 |])
+                         ((\o -> [essence| or(&o) |])
+                         ((fromList ((\q -> [essence| &q = &i |]) <$> srtdel))))
+                indexr = (\x -> [essence| sum(&x) |]) 
+                         (fromList ((\(n,q) -> [essence| toInt(&q = &i) * &n |])
+                          <$> (zip [1..] srtdel)))
+                matIdx = mkDomainIntB (fromInt 1)
+                                      (fromInt (fromIntegral (length srtdel)))
+                matLit = make matrixLiteral (TypeMatrix (TypeInt TagInt) inner)
+                                             matIdx (f <$> srtdel)
+            return
+               ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
+               , do
+                 return [essence| [&i, catchUndef(&matLit[&indexr],0)][&inperm] |]
+    
+               )
+          else fail $ "Permutation applied to a type its inner does not unify with" 
+  theRule _ = na "rule_Image_Literal"
+
