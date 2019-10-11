@@ -1,0 +1,11 @@
+sh ../../acceptOutput.sh enum/0040_find_permutation_find_permutations                  
+sh ../../acceptOutput.sh enum/0050_find_permutation_given_permutation_find_permutation 
+sh ../../acceptOutput.sh enum/0010_given_permutation_letting_permutation               
+sh ../../acceptOutput.sh enum/0020_given_permutation_find_permutations                 
+sh ../../acceptOutput.sh enum/0030_letting_permutation_find_permutations               
+sh ../../acceptOutput.sh int/0040_find_permutation_find_permutations                   
+sh ../../acceptOutput.sh int/0050_find_permutation_given_permutation_find_permutation  
+sh ../../acceptOutput.sh int/0010_given_permutation_letting_permutation                
+sh ../../acceptOutput.sh int/0020_given_permutation_find_permutations                  
+sh ../../acceptOutput.sh int/0030_letting_permutation_find_permutations                
+sh ../../acceptOutput.sh unnamed/0004_find_permutation_find_permutations               
