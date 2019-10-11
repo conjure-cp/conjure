@@ -298,5 +298,6 @@ morphing :: (?typeCheckerMode :: TypeCheckerMode)
          => Type -> m Type
 morphing (TypeFunction a _) = return a
 morphing (TypeSequence a)   = return a 
+morphing (TypePermutation a) = return a
 morphing t = fail ("morphing:" <+> pretty (show t))
 

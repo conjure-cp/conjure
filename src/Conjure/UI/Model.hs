@@ -1504,8 +1504,7 @@ horizontalRules =
 
 
 
-
-
+    , Horizontal.Permutation.rule_Defined_Literal
     , Horizontal.Permutation.rule_Image_Literal
     , Horizontal.Permutation.rule_In
     , Horizontal.Permutation.rule_Permutation_Inverse 

@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
-import Data.Permutation (size, fromCycles, toFunction)
+import Data.Permutation (size, toCycles, fromCycles, toFunction)
 
 rule_Cardinality_Literal :: Rule
 rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule where
@@ -13,6 +13,20 @@ rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule
       Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right i -> return
         ( "Vertical rule for permutation cardinality, AsFunction representation."
+        , do
+           return [essence| &i |]
+        )
+
+rule_Defined_Literal :: Rule
+rule_Defined_Literal = "permutation-defined-literal" `namedRule` theRule where
+  theRule p' = do
+    p                              <- match opDefined p'
+    (TypePermutation _, elems) <- match permutationLiteral p
+    let i' = (AbstractLiteral . AbsLitSet . nub . join . toCycles) <$> fromCycles elems
+    case i' of
+      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+      Right i -> return
+        ( "Vertical rule for permutation defined, AsFunction representation."
         , do
            return [essence| &i |]
         )
