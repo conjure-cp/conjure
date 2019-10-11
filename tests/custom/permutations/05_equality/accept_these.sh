@@ -1,0 +1,15 @@
+sh ../../acceptOutput.sh  enum/0002_given_permutations_in_param
+sh ../../acceptOutput.sh  enum/0004_letting_equal_given        
+sh ../../acceptOutput.sh  enum/0003_given_equal_letting        
+sh ../../acceptOutput.sh  enum/0005_find_eq_find               
+sh ../../acceptOutput.sh  enum/0006_in_comprehension           
+sh ../../acceptOutput.sh  enum/0001_given_permutations_in_param
+sh ../../acceptOutput.sh  int/0002_given_permutations_in_param 
+sh ../../acceptOutput.sh  int/0007_letting_equal_letting       
+sh ../../acceptOutput.sh  int/0004_letting_equal_given         
+sh ../../acceptOutput.sh  int/0003_given_equal_letting         
+sh ../../acceptOutput.sh  int/0005_find_eq_find                
+sh ../../acceptOutput.sh  int/0006_in_comprehension            
+sh ../../acceptOutput.sh  int/0001_given_permutations_in_param 
+sh ../../acceptOutput.sh  unnamed/0005_find_eq_find            
+sh ../../acceptOutput.sh  unnamed/0006_in_comprehension        
