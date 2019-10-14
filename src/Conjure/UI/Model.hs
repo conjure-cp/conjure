@@ -789,84 +789,6 @@ inlineDecVarLettings model =
     in
         model { mStatements = statements }
 
-flattenLex :: MonadFail m
-           => NameGen m
-           => (?typeCheckerMode :: TypeCheckerMode)
-           => Model -> m Model
-flattenLex m = do
-  let
-    flatten a = do
-      ta <- typeOf a
-      case ta of
-        TypeBool -> return [essence| [-toInt(&a)] |]
-        TypeInt{} -> return [essence| [&a] |]
-        TypeList TypeInt{} -> return a
-        TypeMatrix TypeInt{} TypeInt{} -> return a
-        _ ->
-          case a of
-            AbstractLiteral x -> do
-              case x of
-                AbsLitTuple xs -> do
-                  fxs <- sequence (flatten <$> xs)
-                  let flatxs = fromList fxs
-                  return [essence| flatten(&flatxs) |]
-                AbsLitMatrix _ xs -> do
-                  fxs <- sequence (flatten <$> xs)
-                  let flatxs = fromList fxs
-                  return [essence| flatten(&flatxs) |]
-                _ -> bug $ "epilogue: flattenLex: isn't defined for this abslit fellow..."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a] 
-            Constant c ->
-              case c of
-                ConstantAbstract ca -> 
-                  case ca of
-                    AbsLitTuple xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
-                      let flatxs = fromList fxs
-                      return [essence| flatten(&flatxs) |]
-                    AbsLitMatrix _ xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
-                      let flatxs = fromList fxs
-                      return [essence| flatten(&flatxs) |]
-                    _ -> bug $ "epilogue: flattenLex: isn't defined for this fellow..."
-                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-                TypedConstant tc _ -> flatten (Constant tc)
-                _ -> bug $ "epilogue: flattenLex: isn't defined for this constant fellow."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a] 
---            Op op -> do
---              case op of
---                MkOpIndexing (OpIndexing m i) -> 
---                  bug $ "epilogue: flattenLex: flatten not defined for this indexed fellow."
---                     <+> vcat [stringToDoc (show a)
---                              ,"fellow:" <+> stringToDoc (show m)
---                              ,"index:" <+> stringToDoc (show i)]
-            Reference nm ex -> 
-                  bug $ "epilogue: flattenLex: flatten not defined for this referenced fellow."
-                     <+> vcat [stringToDoc (show a)
-                              ,"reference:" <+> stringToDoc (show nm)
-                              ,"fellow:" <+> stringToDoc (show ex)]          
-            Comprehension body gocs -> do
-              fbody <- flatten body
-              let comp = Comprehension fbody gocs
---              return [essence| flatten(&comp) |]
-              return [essence| &comp |]
-            _ -> bug $ "epilogue: flattenLex: isn't defined for this expression fellow..."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-    
-
-    flattener [essence| &a <lex &b |] = do
-      fa <- flatten a
-      fb <- flatten b
-      return [essence| &fa <lex &fb |] 
-    flattener [essence| &a <=lex &b |] = do
-      fa <- flatten a
-      fb <- flatten b
-      return [essence| &fa <=lex &fb |] 
-    flattener x = return x
-  st <- transformBiM flattener (mStatements m)
-  return m { mStatements = st }
-
-
 dropTagForSR ::
     MonadFail m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -1257,7 +1179,6 @@ epilogue ::
     Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
-    >>= flattenLex                    >>= logDebugIdModel "[flattenLex]"
     >>= lexSingletons                 >>= logDebugIdModel "[lexSingletons]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
