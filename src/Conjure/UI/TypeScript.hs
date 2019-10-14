@@ -2,7 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Main where
+module Conjure.UI.TypeScript ( tsDef ) where
 
 import Conjure.Prelude hiding ( (<>) )
 import Conjure.Language -- ( Model, Expression )
@@ -128,8 +128,8 @@ deriveTypeScript defaultOptions ''Tree -- base
 deriveTypeScript defaultOptions ''Type
 
 
-main :: IO ()
-main = putStrLn $ formatTSDeclarations $ mconcat
+tsDef :: IO ()
+tsDef = putStrLn $ formatTSDeclarations $ mconcat
     [ getTypeScriptDeclarations (Proxy :: Proxy AbstractLiteral)
     , getTypeScriptDeclarations (Proxy :: Proxy AbstractPattern)
     , getTypeScriptDeclarations (Proxy :: Proxy AttrName)

@@ -1,1 +1,1 @@
-conjure-tsdef
+conjure tsdef

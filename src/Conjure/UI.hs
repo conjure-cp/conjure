@@ -194,6 +194,10 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | TSDEF -- generate TypeScript definitions
+        { logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize UI
@@ -1262,6 +1266,23 @@ ui = modes
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\
                     \which aims to make search faster."
+    , TSDEF
+        { logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Limit in seconds of real time."
+        }  &= name "tsdef"
+            &= explicit
+            &= help "Generate data type definitions in TypeScript.\n\
+                    \These can be used when interfacing with Conjure via JSON."
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
