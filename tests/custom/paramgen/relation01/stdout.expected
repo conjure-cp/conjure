@@ -9,8 +9,8 @@ Copying solution to: problem-gen-test.solution
 File: problem-gen.essence
 language Essence 1.3
 
-given r2_cardMiddle: int(-2..10)
-given r2_cardDelta: int(0..3)
+given r2_cardMiddle: int(-2..100)
+given r2_cardDelta: int(0..50)
 given r2_relation1_middle: int(-2..10)
 given r2_relation1_delta: int(0..6)
 given r2_relation2_middle: int(-2..10)
@@ -22,8 +22,8 @@ such that
     and([q1[1] <= r2_relation1_middle + r2_relation1_delta | q1 <- r2]),
     and([q1[2] >= r2_relation2_middle - r2_relation2_delta | q1 <- r2]),
     and([q1[2] <= r2_relation2_middle + r2_relation2_delta | q1 <- r2])
-given r3_cardMiddle: int(-2..10)
-given r3_cardDelta: int(0..3)
+given r3_cardMiddle: int(-2..1000)
+given r3_cardDelta: int(0..500)
 given r3_relation1_middle: int(-2..10)
 given r3_relation1_delta: int(0..6)
 given r3_relation2_middle: int(-2..10)
@@ -39,8 +39,8 @@ such that
     and([q2[2] <= r3_relation2_middle + r3_relation2_delta | q2 <- r3]),
     and([q2[3] >= r3_relation3_middle - r3_relation3_delta | q2 <- r3]),
     and([q2[3] <= r3_relation3_middle + r3_relation3_delta | q2 <- r3])
-given r4_cardMiddle: int(-2..10)
-given r4_cardDelta: int(0..3)
+given r4_cardMiddle: int(-2..10000)
+given r4_cardDelta: int(0..5000)
 given r4_relation1_middle: int(-2..10)
 given r4_relation1_delta: int(0..6)
 given r4_relation2_middle: int(-2..10)
@@ -65,22 +65,22 @@ such that
 
 
 File: problem-gen.essence.irace
-r2_cardMiddle "-r2_cardMiddle " i (-2, 10)
-r2_cardDelta "-r2_cardDelta " i (0, 3)
+r2_cardMiddle "-r2_cardMiddle " i (-2, 100)
+r2_cardDelta "-r2_cardDelta " i (0, 50)
 r2_relation1_middle "-r2_relation1_middle " i (-2, 10)
 r2_relation1_delta "-r2_relation1_delta " i (0, 6)
 r2_relation2_middle "-r2_relation2_middle " i (-2, 10)
 r2_relation2_delta "-r2_relation2_delta " i (0, 6)
-r3_cardMiddle "-r3_cardMiddle " i (-2, 10)
-r3_cardDelta "-r3_cardDelta " i (0, 3)
+r3_cardMiddle "-r3_cardMiddle " i (-2, 1000)
+r3_cardDelta "-r3_cardDelta " i (0, 500)
 r3_relation1_middle "-r3_relation1_middle " i (-2, 10)
 r3_relation1_delta "-r3_relation1_delta " i (0, 6)
 r3_relation2_middle "-r3_relation2_middle " i (-2, 10)
 r3_relation2_delta "-r3_relation2_delta " i (0, 6)
 r3_relation3_middle "-r3_relation3_middle " i (-2, 10)
 r3_relation3_delta "-r3_relation3_delta " i (0, 6)
-r4_cardMiddle "-r4_cardMiddle " i (-2, 10)
-r4_cardDelta "-r4_cardDelta " i (0, 3)
+r4_cardMiddle "-r4_cardMiddle " i (-2, 10000)
+r4_cardDelta "-r4_cardDelta " i (0, 5000)
 r4_relation1_middle "-r4_relation1_middle " i (-2, 10)
 r4_relation1_delta "-r4_relation1_delta " i (0, 6)
 r4_relation2_middle "-r4_relation2_middle " i (-2, 10)
