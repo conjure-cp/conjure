@@ -139,7 +139,6 @@ instance Pretty JSON.Object where
                     , "nameGenState", "nbExtraGivens"
                     , "representations", "representationsTree"
                     , "originalDomains"
-                    , "questionAnswered"
                     , "before", "after"
                     ] [1..]
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations
     ( downD, downC, up
@@ -124,6 +125,14 @@ onOp p@(MkOpIndexing (OpIndexing m i)) = do
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
+onOp (MkOpImage (OpImage (match functionLiteral -> Just (_, xs)) a)) | length xs > 0 = do
+    vals <- forM xs $ \ (_, value) -> do
+        ys <- downX1 value
+        return ys
+    let keys = map fst xs
+    let outs = map (zip keys) (transpose vals)
+    return [ Op $ MkOpImage $ OpImage (AbstractLiteral (AbsLitFunction out)) a
+           | out <- outs ]
 onOp op = fail ("downX1.onOp:" <++> pretty op)
 
 

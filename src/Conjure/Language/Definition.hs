@@ -18,7 +18,7 @@ module Conjure.Language.Definition
     , Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
     , Strategy(..)
-    , QuestionAnswered(..), viewAuto, parseStrategy
+    , viewAuto, parseStrategy
 
     , Name(..)
     , Expression(..), ReferenceTo(..), Region(..), InBubble(..)
@@ -60,10 +60,6 @@ import qualified Data.Vector as V               -- vector
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
-
--- containers
-import Data.IntSet ( IntSet )
-import qualified Data.IntSet as I
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -170,7 +166,6 @@ data ModelInfo = ModelInfo
                           ) ]
     , miTrailVerbose :: [Decision]
     , miTrailRewrites :: [TrailRewrites]
-    , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
     , miNbExtraGivens :: Int -- number of extra givens Conjure added to make the domains of original givens finite
     }
@@ -187,7 +182,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -249,33 +244,6 @@ parseStrategy "r" = return AtRandom
 parseStrategy "c" = return Compact
 parseStrategy "s" = return Sparse
 parseStrategy _ = Nothing
-
-
-data QuestionAnswered =
-      AnsweredRepr
-      { qHole_       :: Int
-      , qAscendants_ :: IntSet
-      , aDom_        :: Domain HasRepresentation Expression
-      , aRuleName_   :: String  -- Doc has no Data or Ord instance
-      }
-    | AnsweredReprStored
-      { qHole_       :: Int
-      , qAscendants_ :: IntSet
-      , aDomStored_  :: String
-      , aRuleName_   :: String  -- Doc has no Data or Ord instance
-      }
-    | AnsweredRule
-      { qHole_       :: Int
-      , qAscendants_ :: IntSet
-      , aRuleName_   :: String  -- Doc has no Data or Ord instance
-      } deriving (Eq, Ord, Show, Data, Typeable, Generic)
-
-instance ToJSON    QuestionAnswered where toJSON    = genericToJSON jsonOptions
-instance FromJSON  QuestionAnswered where parseJSON = genericParseJSON jsonOptions
-instance Serialize QuestionAnswered
-instance Hashable  QuestionAnswered
-instance Hashable  IntSet where
-    hashWithSalt s i = hashWithSalt s (I.toList i)
 
 
 ------------------------------------------------------------------------------------------------------------------------

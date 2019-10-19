@@ -20,6 +20,7 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
+import Conjure.UI.TypeScript ( tsDef )
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
@@ -70,6 +71,7 @@ mainWithArgs :: forall m .
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
+mainWithArgs TSDEF{} = liftIO tsDef
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering

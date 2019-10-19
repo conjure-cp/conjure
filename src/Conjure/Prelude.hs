@@ -180,6 +180,9 @@ import qualified Pipes
 -- shelly
 import Shelly ( Sh, shelly, print_stdout, print_stderr )
 
+-- ansi-terminal
+import System.Console.ANSI ( clearScreen, setCursorPosition )
+
 import System.Random ( StdGen, mkStdGen, setStdGen, randomRIO )
 
 import qualified Data.ByteString as ByteString
@@ -509,8 +512,13 @@ ignoreLogs = runIdentityT
 runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Doc) a) m r -> m r
 runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
     where
-        each (Left (lvl, msg)) = when (lvl <= l)
-            (liftIO $ putStrLn $ Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg)
+        each (Left (lvl, msg)) =
+            when (lvl <= l) $ do
+                let txt = Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg
+                when ("[" `isPrefixOf` txt) $ do
+                    liftIO clearScreen
+                    liftIO (setCursorPosition 0 0)
+                liftIO $ putStrLn txt
         each _ = return ()
 
 histogram :: Ord a => [a] -> [(a, Integer)]
