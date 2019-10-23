@@ -385,13 +385,17 @@ They are used when the decision variable or the problem parameter does not have 
 Using another kind of domain is more appropriate for most problem specifications in Essence.
 
 Matrix domains are not ordered, but matrices can be compared using the equality operators.
+Note that two matrices are only equal if their indices are the same.
 
 To explicitly specify a matrix, use a list of values inside square brackets.
+Optionally, the domain used to index the elements can be specified also.
 
 .. code-block:: essence
 
    letting M be [0,1,0,-1]
    letting N be [[0,1],[0,-1]]
+
+The matrix ``[0,1]`` is the same as ``[0,1; int(1..2)]``, but distinct from ``[0,1; int(0..1)]``.
 
 
 Set domains
