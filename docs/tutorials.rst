@@ -1,7 +1,7 @@
 
-.. _demonstrations:
+.. _tutorials:
 
-Demonstrations
+Tutorials
 ==============
 
 
