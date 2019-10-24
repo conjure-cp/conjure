@@ -1,6 +1,6 @@
 language Essence 1.3
 given n : int
-find s : sequence (size n) of int(1..n)
+find perm : sequence (size n) of int(1..n)
 such that
     and([ max(subs) - min(subs) + 1 != |subs| | 
         i : int(1..n-1), j : int(2..n), 
@@ -8,4 +8,4 @@ such that
         !(i = 1 /\ j = n),
         letting subs be [s(k) | k : int(i..j)]]
     ),
-    allDiff([ s(k) | k : int(1..n) ])
+    allDiff([perm(k) | k : int(1..n) ])
