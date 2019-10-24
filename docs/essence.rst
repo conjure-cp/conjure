@@ -723,6 +723,11 @@ The inline binary comparison operators
 
 test whether their arguments have the specified relative lexicographic order.
 
+.. code-block:: essence
+
+    find v : matrix indexed by [int(1..2)] of int(1..2)
+    such that v <lex [ v[3-i] | i : int(1..2) ] $ v = [1,2]
+
 
 Logical operators
 ~~~~~~~~~~~~~~~~~
