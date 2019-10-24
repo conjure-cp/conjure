@@ -1,0 +1,39 @@
+SCENARIO = n012w8
+
+WEEKS = 8
+
+SKILLS = 2
+HeadNurse
+Nurse
+
+SHIFT_TYPES = 4
+Early (2,5)
+Day (2,56)
+Late (2,3)
+Night (4,5)
+
+FORBIDDEN_SHIFT_TYPES_SUCCESSIONS
+Early 0
+Day 0
+Late 2 Early Day
+Night 3 Early Day Late
+
+CONTRACTS = 2
+FullTime (30,44) (3,5) (2,3) 3 1
+PartTime (14,22) (3,5) (3,5) 2 1
+
+NURSES = 12
+Alice FullTime 2 HeadNurse Nurse 
+Bob FullTime 2 HeadNurse Nurse
+John FullTime 1 Nurse
+Kate PartTime 2 HeadNurse Nurse
+Mary FullTime 1 Nurse
+Paul PartTime 1 Nurse
+Arthur PartTime 2 HeadNurse Nurse
+Pier FullTime 2 HeadNurse Nurse
+Lucy PartTime 1 Nurse
+Maggie FullTime 2 HeadNurse Nurse
+Patrick PartTime 2 HeadNurse Nurse
+Jane PartTime 1 Nurse
+
+

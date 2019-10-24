@@ -1,0 +1,70 @@
+{
+  "id" : "n005w4",
+  "numberOfWeeks" : 4,
+  "skills" : [ "HeadNurse", "Nurse" ],
+  "shiftTypes" : [ {
+    "id" : "Early",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  }, {
+    "id" : "Late",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 3
+  }, {
+    "id" : "Night",
+    "minimumNumberOfConsecutiveAssignments" : 4,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  } ],
+  "forbiddenShiftTypeSuccessions" : [ {
+    "precedingShiftType" : "Early",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Late",
+    "succeedingShiftTypes" : [ "Early" ]
+  }, {
+    "precedingShiftType" : "Night",
+    "succeedingShiftTypes" : [ "Early", "Late" ]
+  } ],
+  "contracts" : [ {
+    "id" : "FullTime",
+    "minimumNumberOfAssignments" : 15,
+    "maximumNumberOfAssignments" : 22,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 2,
+    "maximumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfWorkingWeekends" : 2,
+    "completeWeekends" : 1
+  }, {
+    "id" : "PartTime",
+    "minimumNumberOfAssignments" : 7,
+    "maximumNumberOfAssignments" : 11,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfConsecutiveDaysOff" : 5,
+    "maximumNumberOfWorkingWeekends" : 2,
+    "completeWeekends" : 1
+  } ],
+  "nurses" : [ {
+    "id" : "Patrick",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Andrea",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Stefaan",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Sara",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse" ]
+  }, {
+    "id" : "Nguyen",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse" ]
+  } ]
+}

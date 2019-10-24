@@ -1,0 +1,105 @@
+{
+  "id" : "n012w8",
+  "numberOfWeeks" : 8,
+  "skills" : [ "HeadNurse", "Nurse" ],
+  "shiftTypes" : [ {
+    "id" : "Early",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  }, {
+    "id" : "Day",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 56
+  }, {
+    "id" : "Late",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 3
+  }, {
+    "id" : "Night",
+    "minimumNumberOfConsecutiveAssignments" : 4,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  } ],
+  "forbiddenShiftTypeSuccessions" : [ {
+    "precedingShiftType" : "Early",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Day",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Late",
+    "succeedingShiftTypes" : [ "Early", "Day" ]
+  }, {
+    "precedingShiftType" : "Night",
+    "succeedingShiftTypes" : [ "Early", "Day", "Late" ]
+  } ],
+  "contracts" : [ {
+    "id" : "FullTime",
+    "minimumNumberOfAssignments" : 30,
+    "maximumNumberOfAssignments" : 44,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 2,
+    "maximumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfWorkingWeekends" : 3,
+    "completeWeekends" : 1
+  }, {
+    "id" : "PartTime",
+    "minimumNumberOfAssignments" : 14,
+    "maximumNumberOfAssignments" : 22,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfConsecutiveDaysOff" : 5,
+    "maximumNumberOfWorkingWeekends" : 2,
+    "completeWeekends" : 1
+  } ],
+  "nurses" : [ {
+    "id" : "Alice",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Bob",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "John",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse" ]
+  }, {
+    "id" : "Kate",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Mary",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse" ]
+  }, {
+    "id" : "Paul",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse" ]
+  }, {
+    "id" : "Arthur",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Pier",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Lucy",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse" ]
+  }, {
+    "id" : "Maggie",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Patrick",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse" ]
+  }, {
+    "id" : "Jane",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse" ]
+  } ]
+}

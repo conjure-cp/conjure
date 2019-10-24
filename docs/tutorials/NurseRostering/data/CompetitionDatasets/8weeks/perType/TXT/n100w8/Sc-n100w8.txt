@@ -1,0 +1,129 @@
+SCENARIO = n100w8
+
+WEEKS = 8
+
+SKILLS = 4
+HeadNurse
+Nurse
+Caretaker
+Trainee
+
+SHIFT_TYPES = 4
+Early (2,5)
+Day (2,56)
+Late (2,5)
+Night (4,5)
+
+FORBIDDEN_SHIFT_TYPES_SUCCESSIONS
+Early 0
+Day 0
+Late 2 Early Day
+Night 3 Early Day Late
+
+CONTRACTS = 4
+FullTime (25,37) (3,5) (2,3) 4 1
+PartTime (15,30) (4,7) (3,4) 3 1
+HalfTime (12,20) (3,5) (3,7) 2 1
+20Percent (6,10) (2,5) (2,7) 1 1
+
+NURSES = 100
+HN_0 HalfTime 2 HeadNurse Nurse
+HN_1 HalfTime 2 HeadNurse Nurse
+HN_2 PartTime 2 HeadNurse Nurse
+HN_3 HalfTime 2 HeadNurse Nurse
+HN_4 FullTime 2 HeadNurse Nurse
+HN_5 HalfTime 2 HeadNurse Nurse
+HN_6 PartTime 2 HeadNurse Nurse
+HN_7 HalfTime 2 HeadNurse Nurse
+HN_8 HalfTime 2 HeadNurse Nurse
+HN_9 FullTime 2 HeadNurse Nurse
+HN_10 20Percent 2 HeadNurse Nurse
+HN_11 HalfTime 2 HeadNurse Nurse
+HN_12 20Percent 2 HeadNurse Nurse
+HN_13 HalfTime 2 HeadNurse Nurse
+HN_14 FullTime 2 HeadNurse Nurse
+HN_15 FullTime 2 HeadNurse Nurse
+NU_16 PartTime 2 Nurse Caretaker
+NU_17 PartTime 2 Nurse Caretaker
+NU_18 FullTime 2 Nurse Caretaker
+NU_19 20Percent 2 Nurse Caretaker
+NU_20 FullTime 2 Nurse Caretaker
+NU_21 FullTime 2 Nurse Caretaker
+NU_22 20Percent 2 Nurse Caretaker
+NU_23 20Percent 2 Nurse Caretaker
+NU_24 20Percent 2 Nurse Caretaker
+NU_25 PartTime 2 Nurse Caretaker
+NU_26 PartTime 2 Nurse Caretaker
+NU_27 HalfTime 2 Nurse Caretaker
+NU_28 HalfTime 2 Nurse Caretaker
+NU_29 20Percent 2 Nurse Caretaker
+NU_30 FullTime 2 Nurse Caretaker
+NU_31 FullTime 2 Nurse Caretaker
+NU_32 PartTime 2 Nurse Caretaker
+NU_33 PartTime 2 Nurse Caretaker
+NU_34 HalfTime 2 Nurse Caretaker
+CT_35 FullTime 1 Caretaker
+CT_36 HalfTime 1 Caretaker
+CT_37 FullTime 1 Caretaker
+CT_38 FullTime 1 Caretaker
+CT_39 PartTime 1 Caretaker
+CT_40 FullTime 1 Caretaker
+CT_41 20Percent 1 Caretaker
+CT_42 FullTime 1 Caretaker
+CT_43 PartTime 1 Caretaker
+CT_44 FullTime 1 Caretaker
+CT_45 20Percent 1 Caretaker
+CT_46 FullTime 1 Caretaker
+CT_47 HalfTime 1 Caretaker
+CT_48 PartTime 1 Caretaker
+CT_49 20Percent 1 Caretaker
+CT_50 FullTime 1 Caretaker
+CT_51 PartTime 1 Caretaker
+CT_52 FullTime 1 Caretaker
+CT_53 20Percent 1 Caretaker
+CT_54 HalfTime 1 Caretaker
+CT_55 20Percent 1 Caretaker
+CT_56 HalfTime 1 Caretaker
+CT_57 PartTime 1 Caretaker
+CT_58 PartTime 1 Caretaker
+CT_59 20Percent 1 Caretaker
+CT_60 FullTime 1 Caretaker
+CT_61 PartTime 1 Caretaker
+CT_62 FullTime 1 Caretaker
+CT_63 HalfTime 1 Caretaker
+CT_64 PartTime 1 Caretaker
+CT_65 HalfTime 1 Caretaker
+CT_66 PartTime 1 Caretaker
+CT_67 20Percent 1 Caretaker
+CT_68 20Percent 1 Caretaker
+CT_69 HalfTime 1 Caretaker
+CT_70 HalfTime 1 Caretaker
+CT_71 20Percent 1 Caretaker
+CT_72 PartTime 1 Caretaker
+CT_73 PartTime 1 Caretaker
+CT_74 FullTime 1 Caretaker
+TR_75 PartTime 1 Trainee
+TR_76 PartTime 1 Trainee
+TR_77 HalfTime 1 Trainee
+TR_78 20Percent 1 Trainee
+TR_79 20Percent 1 Trainee
+TR_80 20Percent 1 Trainee
+TR_81 HalfTime 1 Trainee
+TR_82 PartTime 1 Trainee
+TR_83 FullTime 1 Trainee
+TR_84 HalfTime 1 Trainee
+TR_85 HalfTime 1 Trainee
+TR_86 20Percent 1 Trainee
+TR_87 20Percent 1 Trainee
+TR_88 FullTime 1 Trainee
+TR_89 HalfTime 1 Trainee
+TR_90 PartTime 1 Trainee
+TR_91 PartTime 1 Trainee
+TR_92 PartTime 1 Trainee
+TR_93 PartTime 1 Trainee
+TR_94 20Percent 1 Trainee
+TR_95 20Percent 1 Trainee
+TR_96 FullTime 1 Trainee
+TR_97 HalfTime 1 Trainee
+TR_98 20Percent 1 Trainee
+TR_99 HalfTime 1 Trainee

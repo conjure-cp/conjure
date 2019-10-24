@@ -1,0 +1,116 @@
+<Scenario 
+Id="n005w4" xsi:noNamespaceSchemaLocation="Scenario.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="">
+    <NumberOfWeeks>4</NumberOfWeeks>
+    <Skills>
+        <Skill>HeadNurse</Skill>
+        <Skill>Nurse</Skill>
+    </Skills>
+    <ShiftTypes>
+        <ShiftType Id="Early">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>2</Minimum>
+                <Maximum>5</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+        <ShiftType Id="Late">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>2</Minimum>
+                <Maximum>3</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+        <ShiftType Id="Night">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>4</Minimum>
+                <Maximum>5</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+    </ShiftTypes>
+    <ForbiddenShiftTypeSuccessions>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Early</PrecedingShiftType>
+            <SucceedingShiftTypes/>
+        </ShiftTypeSuccession>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Late</PrecedingShiftType>
+            <SucceedingShiftTypes>
+                <ShiftType>Early</ShiftType>
+            </SucceedingShiftTypes>
+        </ShiftTypeSuccession>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Night</PrecedingShiftType>
+            <SucceedingShiftTypes>
+                <ShiftType>Early</ShiftType>
+                <ShiftType>Late</ShiftType>
+            </SucceedingShiftTypes>
+        </ShiftTypeSuccession>
+    </ForbiddenShiftTypeSuccessions>
+    <Contracts>
+        <Contract Id="FullTime">
+            <NumberOfAssignments>
+                <Minimum>15</Minimum>
+                <Maximum>22</Maximum>
+            </NumberOfAssignments>
+            <ConsecutiveWorkingDays>
+                <Minimum>3</Minimum>
+                <Maximum>5</Maximum>
+            </ConsecutiveWorkingDays>
+            <ConsecutiveDaysOff>
+                <Minimum>2</Minimum>
+                <Maximum>3</Maximum>
+            </ConsecutiveDaysOff>
+            <MaximumNumberOfWorkingWeekends>3</MaximumNumberOfWorkingWeekends>
+            <CompleteWeekends>1</CompleteWeekends>
+        </Contract>
+        <Contract Id="PartTime">
+            <NumberOfAssignments>
+                <Minimum>7</Minimum>
+                <Maximum>11</Maximum>
+            </NumberOfAssignments>
+            <ConsecutiveWorkingDays>
+                <Minimum>3</Minimum>
+                <Maximum>5</Maximum>
+            </ConsecutiveWorkingDays>
+            <ConsecutiveDaysOff>
+                <Minimum>3</Minimum>
+                <Maximum>5</Maximum>
+            </ConsecutiveDaysOff>
+            <MaximumNumberOfWorkingWeekends>3</MaximumNumberOfWorkingWeekends>
+            <CompleteWeekends>1</CompleteWeekends>
+        </Contract>
+    </Contracts>
+    <Nurses>
+        <Nurse Id="Patrick">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="Andrea">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="Stefaan">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="Sara">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="Nguyen">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+            </Skills>
+        </Nurse>
+    </Nurses>
+</Scenario>
