@@ -1,0 +1,35 @@
+language Essence 1.3
+
+$ conjure solve generator.essence -randomiseorder && cat generator.solution
+
+$ initial items
+given number_items : int
+letting items be domain int(1..number_items)
+
+$ we associated a weight value to each item.
+$ The function is annotated as injective. In this way
+$ no two items can have the same weight assigned.
+find weight: function (total, injective) items --> int(1..1000)
+
+$and then a value to each item, as with weights.
+find gain: function (total, injective) items --> int(1..1000)
+
+$capacity of the knapsack
+find capacity: int(1..5000)
+
+$ the weight of all the elements must be greater than 
+$ twice the capacity of the sack.
+such that (sum ([w | (_,w) <- weight]) > capacity*2)
+
+$ but lower than three times.
+such that (sum ([w | (_,w) <- weight]) < capacity*3)
+
+$ The weight and gain of any individual element is less
+$ than one third of the total capacity.
+such that forAll (_,w) in weight .  w < capacity / 3
+
+$ the gain of an item cannot be more than three times
+$ the weight of it.
+such that forAll element : items .
+            gain(element) <= 3*weight(element)
+

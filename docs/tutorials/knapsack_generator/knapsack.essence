@@ -1,0 +1,7 @@
+given number_items : int
+letting items be domain int(1..number_items)
+given weight, gain : function (total) items --> int
+given capacity : int
+find picked : set of items
+maximising sum i in picked . gain(i)
+such that (sum i in picked . weight(i)) <= capacity
