@@ -117,7 +117,7 @@ prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
 instance Pretty JSON.Value where
     pretty (Object x) = pretty x
     pretty (Array x) = pretty x
-    pretty (String x) = pretty (show x)
+    pretty (String x) = "\"" <> pretty (T.unpack x) <> "\""
     pretty (Number x) = pretty x
     pretty (Bool False) = "false"
     pretty (Bool True) = "true"
