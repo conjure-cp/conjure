@@ -3,9 +3,8 @@
 
 BIBD
 ----
-- Demonstrate quantifier
 This tutorial discusses a classic constraint problem and introduces the use of quantifiers in Essence.
-- Describe the problem
+
 The Problem
 Balanced Incomplete Block Design (BIBD) is a problem from the field of experimental design. It is best explained with an example.
 
@@ -19,11 +18,17 @@ We need to specify the crops, the number of farms, the number of crops that can 
 
 Emily has decided that she wants each crop to be grown in 2 different farms, and that each pair of farmers will have 1 crop in common.
 
-Essence will take a .param file containing the values of the initial parameters.
+Essence will take a .param file containing the values of the initial parameters. We should define the parameters:
 
 .. code-block:: essence
 
-  letting crops be new type enum
+  letting crops be new type enum {🥔,🌽,🥦,🥕,🥒, 🍅}
+  letting farms be 4
+  letting crops_per_farm be 3
+  letting farms_per_crop be 2
+  letting overlap be 1
+
+The model should start by accessing
 
 - Build a model (step by step)
 - Make model better!
