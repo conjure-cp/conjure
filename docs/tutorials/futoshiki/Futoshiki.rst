@@ -20,6 +20,7 @@ Let us look at the model first.
 
 .. code-block:: essence
 
+    language Essence 1.3
     given n : int
     letting DOMAIN be domain int(1..n)
     given hints : function (DOMAIN, DOMAIN) --> DOMAIN
@@ -53,8 +54,11 @@ We start at 1 and go up to ``n`` (for both the elements of the cells and the cel
 
     given hints : function (DOMAIN, DOMAIN) --> DOMAIN
 
-Here we define which cells are already filled in using a function relation. 
-The first part of the function is the coordinates and the second part of it is the number that is in that cell.
+Here we define which cells are already filled in using a function. 
+We map the coordinates onto the number that is in that cell. 
+It is important to notice that functions in essence are partial functions not total. 
+This means that not everything gets mapped.
+
 
 .. code-block:: essence
 
