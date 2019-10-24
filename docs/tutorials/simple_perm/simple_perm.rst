@@ -6,11 +6,11 @@ Authors: Ruth Hoffmann and Gökberk Koçak
 Problem
 ~~~~~~~
 
-Let a permutation be a sequence of length ``n`` consisting of numbers between 1 and ``n``, in any order with each number occurring exactly once.
+Let a permutation be a sequence of length :math:`n` consisting of numbers between 1 and :math:`n`, in any order with each number occurring exactly once.
 
 An interval in a permutation :math:`{\sigma}` is a factor of contiguous values of σ such that their indices are consecutive.
 For example, in the permutation :math:`{\pi} = 346978215`, :math:`{\pi}(4){\pi}(5){\pi}(6) = 978` is an interval, whereas :math:`{\pi}(1){\pi}(2){\pi}(3){\pi}(4) = 3469` is not.
-It is easy to see that every permutation of length ``n`` has intervals of length 0, 1 and ``n`` , at least. The permutations of length n that **only** contain intervals of length 0, 1 and ``n`` are said to be simple.
+It is easy to see that every permutation of length :math:`n` has intervals of length 0, 1 and :math:`n` , at least. The permutations of length :math:`n` that **only** contain intervals of length 0, 1 and :math:`n` are said to be simple.
 So for example the permutation :math:`{\pi} = 346978215` is not simple as we have seen in the example above that it contains an interval, on the other hand :math:`{\sigma} = 526184937` is simple as there are no intervals of length strictly greater than 1, except the whole of :math:`{\sigma}`. 
 See :cite:`hoffmann2015thesis` for more information on permutation patterns and simple permutations.
 
