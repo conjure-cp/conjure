@@ -1,6 +1,4 @@
 
-.. _tut_cg:
-
 Labelled connected graphs
 -------------------------
 
