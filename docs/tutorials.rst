@@ -11,5 +11,6 @@ We demonstrate the use of Conjure for some small problems.
 .. include:: tutorials/NumberPuzzle.rst
 .. include:: tutorials/LabelledConnectedGraphs.rst
 .. include:: tutorials/BIBD.rst
+.. include:: tutorials/Groups.rst
 .. include:: tutorials/knapsack.rst
 .. include:: tutorials/simple_perm/simple_perm.rst
