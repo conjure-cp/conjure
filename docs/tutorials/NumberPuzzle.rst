@@ -1,7 +1,4 @@
 
-.. _tut_np:
-
-
 Number puzzle
 -------------
 
