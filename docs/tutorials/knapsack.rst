@@ -7,11 +7,11 @@ The Knapsack problem
 The Knapsack problem is a classical combinatorial optimisation problem, often used in areas of resource allocation. A basic variant of the Knapsack problem is defined as follows:
 
 - Given:
-  #. A set of items, each with a weight and a value,
-  #. A maximum weight which we call *capacity*,
+    #. A set of items, each with a weight and a value,
+    #. A maximum weight which we call *capacity*,
 - find a set of the items such that
-  #. The sum of the weights of the items in our set is less than or equal to the capacity,and 
-  #. Maximising the sum of the values of the items.
+    #. The sum of the weights of the items in our set is less than or equal to the capacity,and 
+    #. Maximising the sum of the values of the items.
 
 Informally, think about putting items in a sack such that we maximise the total value of the sack whilst not going over the sack's weight limit.
 
