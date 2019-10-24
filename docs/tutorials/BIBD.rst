@@ -4,6 +4,8 @@
 BIBD
 ----
 
+Authors: Chris Jefferson and Alice Lynch
+
 This tutorial discusses a classic constraint problem and introduces the use of quantifiers in Essence.
 
 The Problem
