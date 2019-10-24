@@ -2,6 +2,8 @@
 Number puzzle
 -------------
 
+Authors: András Salamon, Özgür Akgün
+
 We first show how to solve a classic `word addition <https://en.wikipedia.org/wiki/Verbal_arithmetic>`_ puzzle, due to Dudeney :cite:`dudeney1924puzzle`.
 This is a small toy example, but already illustrates some interesting features of Conjure.
 
