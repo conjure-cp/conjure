@@ -52,7 +52,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Conjure'
 copyright = u'2009-2019, Conjure developers'
-author = u'Özgür Akgün \\and András Salamon'
+author = u'Özgür Akgün, Saad Attieh, Juliana Bowles, Ngyuen Dang, Joan Espasa Arxer, Jordina Francès de Mas, Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, Ian Miguel, András Salamon and Christopher Stone'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -230,7 +230,10 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'Conjure.tex', u'Conjure Documentation',
-     u'Özgür Akgün \\and András Salamon', 'manual'),
+     u'''Özgür Akgün, Saad Attieh, Juliana Bowles,
+     Ngyuen Dang, Joan Espasa Arxer, Jordina Francès de Mas, 
+     Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, 
+     Ian Miguel, András Salamon and Christopher Stone''', 'manual'),
 ]
 
 
