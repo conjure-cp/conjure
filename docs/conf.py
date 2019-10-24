@@ -219,7 +219,15 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
+'preamble': '''
+\\usepackage{newunicodechar}
+\\newunicodechar{🥔}{potato}
+\\newunicodechar{🌽}{corn}
+\\newunicodechar{🥦}{broccoli}
+\\newunicodechar{🥕}{carrot}
+\\newunicodechar{🥒}{cucumber}
+\\newunicodechar{🍅}{tomato}
+''',
 
 # Latex figure (float) alignment
 #'figure_align': 'htbp',
