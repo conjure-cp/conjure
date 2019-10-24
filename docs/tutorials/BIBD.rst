@@ -1,4 +1,4 @@
-
+..  _BIBD:
 
 
 BIBD
@@ -165,7 +165,13 @@ Result::
    {🌽, 🥦, 🥒},
    {🌽, 🥕, 🍅}}
 
-This model produces a valid solution! But there is a nicer way to do the final constraint, instead of using a second ``forAll`` we can use ``{farm1, farm2}`` and ``subsetEq`` to generate all pairs that can be made up from a given set.
+This model produces a valid solution!
+
+Improvements
+~~~~~~~~~~~~~~~~~~
+Our model now works and produces a correct solution but the code could be improved in places.
+
+There is a nicer way to do the final constraint, instead of using a second ``forAll`` we can use ``{farm1, farm2}`` and ``subsetEq`` to generate all pairs that can be made up from a given set.
 
 .. code-block:: essence
 
@@ -178,5 +184,20 @@ This model produces a valid solution! But there is a nicer way to do the final c
 
   |crop_assignment| = farms,
   forAll farm in crop_assignment . |farm| = crops_per_farm,
+  forAll crop : crops . (sum farm in crop_assignment . toInt(crop in farm)) = farms_per_crop,
+  forAll {farm1, farm2} subsetEq crop_assignment . |farm1 intersect farm2| = overlap
+
+
+
+Providing information in the find statements rather than as constraints often leads to better perform. Essence provides :ref:`attributes<Domains>` which can be attached to find statements . One of them is size k, which tells Essence that a set is of size k. In our model the number of farms and the number of crops per farm are in effect the size of the crop_assignment set and the size of the sets within the crop_assignment set. Therefore we can move these definitions out of the list of constraints and into the find statement.
+
+.. code-block:: essence
+
+  given farms, crops_per_farm, farms_per_crop, overlap: int
+  given crops new type enum
+
+  find crop_assignment: set (size farms) of set (size crops_per_farm) of crops
+
+  such that
   forAll crop : crops . (sum farm in crop_assignment . toInt(crop in farm)) = farms_per_crop,
   forAll {farm1, farm2} subsetEq crop_assignment . |farm1 intersect farm2| = overlap
