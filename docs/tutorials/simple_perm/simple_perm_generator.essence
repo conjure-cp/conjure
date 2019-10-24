@@ -6,6 +6,6 @@ such that
         i : int(1..n-1), j : int(2..n), 
         i < j, 
         !(i = 1 /\ j = n),
-        letting subs be [s(k) | k : int(i..j)]]
+        letting subs be [perm(k) | k : int(i..j)]]
     ),
     allDiff([perm(k) | k : int(1..n) ])
