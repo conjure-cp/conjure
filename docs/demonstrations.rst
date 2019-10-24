@@ -36,13 +36,10 @@ There are only at most two digits and a carry digit being added at each step, so
    language Essence 1.3
    letting letters be new type enum {S,E,N,D,M,O,R,Y}
    find f : function letters --> int(0..9)
-   find carry1,carry2,carry3,carry4 : int(0..2)
    such that
-              f(D) + f(E) = f(Y) + 10*carry1,
-     carry1 + f(N) + f(R) = f(E) + 10*carry2,
-     carry2 + f(E) + f(O) = f(N) + 10*carry3,
-     carry3 + f(S) + f(M) = f(O) + 10*carry4,
-     carry4 = f(M)
+       f(S) + f(E) + f(N) + f(D) +
+       f(M) + f(O) + f(R) + f(E) =
+       f(M) + f(O) + f(N) + f(E) + f(Y)
 
 Each Essence specification can optionally contain a declaration of which dialect of Essence it is written in.
 The current version of Essence is 1.3.
