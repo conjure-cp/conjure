@@ -1,7 +1,7 @@
 Futoshiki 
 ---------
 
-Author: Ruth Hoffmann and Gökberk Koçak
+Authors: Ruth Hoffmann and Gökberk Koçak
 
 Problem
 ~~~~~~~
