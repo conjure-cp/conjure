@@ -20,6 +20,7 @@ Let us look at the model first.
 
 .. code-block:: essence
 
+    language Essence 1.3
     given n : int
     letting DOMAIN be domain int(1..n)
     given hints : function (DOMAIN, DOMAIN) --> DOMAIN
