@@ -14,6 +14,11 @@ It is easy to see that every permutation of length :math:`n` has intervals of le
 So for example the permutation :math:`{\pi} = 346978215` is not simple as we have seen in the example above that it contains an interval, on the other hand :math:`{\sigma} = 526184937` is simple as there are no intervals of length strictly greater than 1, except the whole of :math:`{\sigma}`. 
 See :cite:`hoffmann2015thesis` for more information on permutation patterns and simple permutations.
 
+Enumeration/Generation Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 
 Checking Model
 ~~~~~~~~~~~~~~
@@ -100,6 +105,9 @@ Using the ESSENCE pipeline, we can solve our sample instance by typing the follo
 
     conjure solve simple_perm-model.essence simple_perm-instance.essence-param
 
-The result will be saved into a ``.solution`` file which will look something like this:
+The result will be saved into a ``.solution`` file which will look something like this (or say ``false``):
 
 .. code-block:: essence
+    language Essence 1.3
+
+    letting result be true
