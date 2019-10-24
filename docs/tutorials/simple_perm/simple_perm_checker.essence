@@ -1,0 +1,7 @@
+language Essence 1.3
+given n : int
+given s : sequence (size n) of int
+find result : bool 
+such that
+    result = and([ max(subs) - min(subs) + 1 != |subs| | i : int(1..n), j : int(1..n), i < j, j - i + 1 < |s|, j - i + 1 > 1, 
+        letting subs be [s(k) | k : int(i..j)]])
