@@ -38,20 +38,58 @@ Each parameter is denoted with the *given* keyword.
 
     given items new type enum
 
-This line says that a list of items will be provided in the parameter file as an enum type.  Enums are good for labeling items where it makes no sense to attribute a value to each item.  So instead of using integers to represent each item, we use an enum. 
+This line says that a set of items will be provided in the parameter file as an enum type.  Enums are good for labeling items where it makes no sense to attribute a value to each item.  So instead of using integers to represent each item, we may just assign names to each item and group the names under an enum type.   Below is an example enum declaration, as it would be written in the parameter file:
+
+.. code-block:: essence
+
+    letting items be new type enum {a,b,c,d,e}
+
+``a``, ``b``, etc. are just names we have given, they could be anything ``bread``, ``whiskey``, ...  
+
 
 .. code-block:: essence
 
     given weight : function (total) items --> int
 
-Another parameter, a function that maps from each item to an integer, we will treat these integers as weights.  Since we are describing integers that will be given in the parameter file, no domain (lower/upper bound) is required.
+Another parameter, a function that maps from each item to an integer, we will treat these integers as weights.  Since we are describing integers that will be given in the parameter file, no domain (lower/upper bound) is required.  Here is an example function parameter as given in a parameter file:
 
+.. code-block:: essence
+
+    letting weight be function
+        ( a --> 15
+        , b --> 25
+        , c --> 45
+        , d --> 50
+        , e --> 60
+        )
+
+.. code-block:: essence
+
+    given gain : function (total) items --> int
+
+Just the same as the weight parameter, this parameter is used to denote a mapping from each item to a value.  An example value for this parameter as it would be defined in the parameter file is:
+
+.. code-block:: essence
+
+    letting gain be function
+        ( a --> 10
+        , b --> 20
+        , c --> 40
+        , d --> 40
+        , e --> 50
+        )
+
+The final given:
 
 .. code-block:: essence
 
     given capacity : int
 
-Another parameter -- a weight limit.
+The final parameter -- a weight limit.  Example value in parameter file:
+
+.. code-block:: essence
+
+    letting items be new type enum {a,b,c,d,e}
 
 
 .. code-block:: essence
