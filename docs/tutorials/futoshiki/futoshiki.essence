@@ -1,0 +1,15 @@
+given n : int
+letting DOMAIN be domain int(1..n)
+given locs : function (DOMAIN, DOMAIN) --> DOMAIN
+given less_than : relation of ((DOMAIN, DOMAIN) * (DOMAIN, DOMAIN))
+find board : matrix indexed by [DOMAIN, DOMAIN] of DOMAIN 
+such that
+    forAll (loc,num) in locs .
+        board[loc[1], loc[2]] = num,
+    forAll i: DOMAIN .
+        allDiff(board[..,i]),
+    forAll j: DOMAIN .
+        allDiff(board[j,..]),
+    forAll (l,g) in less_than .
+        board[l[1],l[2]] < board[g[1],g[2]]
+    
