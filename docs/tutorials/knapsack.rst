@@ -33,6 +33,7 @@ Going through the problem line by line:
 We begin by defining the parameters to the problem.  Parameters are given in a separate file, allowing different instances of the same problem to be solved without having to change the specification.
 
 Each parameter is denoted with the *given* keyword.
+
 .. code-block:: essence
 
     given items new type enum
@@ -72,3 +73,4 @@ The *maximising* keyword denotes the objective for the solver; a value for the s
 
 The ``such that`` keyword denotes a constraint.  Here the constraint is formulated in a similar manner to the objective.  We are quantifying over the set of chosen items ``picked``, looking up the value that the item maps to in the ``weights`` function and summing these values to together.  We enforce that the result of the sum must be less than or equal to the capacity ``<= capacity``.
 
+Note that you can post multiple constraints either by using commas between each constraint ``,`` or by reusing the keyword ``such that``.
