@@ -72,3 +72,34 @@ We extract ``i`` and ``j`` to be the beginning and the end of the interval, and 
 As we do not want to include the whole permutation as an interval, we restrict that ``i`` and ``j`` cannot be simultaneously at the respective ends of the permutation.
 The final line of the comprehension sets up the continuous subsequences. 
 On the left hand side of the matrix comprehension we use the interval property that when it is turned into a sorted set it is a complete range.
+
+
+Instances
+~~~~~~~~~
+
+.. code-block:: essence
+
+    letting n be 5
+    letting s be sequence( 1, 4, 2, 5, 3)
+
+This a non-simple permutation.
+
+.. code-block:: essence
+
+    letting n be 5
+    letting s be sequence(2, 4, 1, 5, 3)
+
+This is a simple permutation.
+
+Solving
+~~~~~~~
+
+Using the ESSENCE pipeline, we can solve our sample instance by typing the following:
+
+.. code-block:: bash
+
+    conjure solve simple_perm-model.essence simple_perm-instance.essence-param
+
+The result will be saved into a ``.solution`` file which will look something like this:
+
+.. code-block:: essence
