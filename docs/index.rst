@@ -15,7 +15,9 @@ Conjure: The Automated Constraint Modelling Tool
     cli
     features
     essence
-    demonstrations
+    tutorials
+    tutorials/LabelledConnectedGraphs
+    tutorials/NumberPuzzle
     zreferences
     contact
 
