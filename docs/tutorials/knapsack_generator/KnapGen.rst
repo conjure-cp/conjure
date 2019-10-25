@@ -1,6 +1,6 @@
 Instance Generators in Essence
 ------------------
-In modelling it is common to create an abstract model that expects some input parameters (Also known as "instances") which are then required to run and test the model.
+In modelling it is common to create an abstract model that expects some input parameters (Also known as "instances") which are required to run and test the model.
 In this tutorial we demonstrate how to use ESSENCE to handcraft a generator of instances that can be used to produce input parameters for a specific model.
 
 Instances for the Knapsack problem
@@ -29,8 +29,8 @@ by writing on a separate file (which we will call items.param):
     
     letting number_items be 20
 
-The remaining 3 parameters are more complex and labourious to be defined (too much work to be done by hand!) so we are going to write some ESSENCE code that will create them for us.
-The fundamental starting step is writing a find statement for each variable we wish to generate and ensure that the names of the variable (identifiers) are left unchanged. We create a new file called generator.essence and type:
+The remaining 3 parameters are more complex and labourious to be defined (too much work to be done by hand!) so we are going to write an ESSENCE specification that will create them for us.
+The fundamental starting step is writing find statements for each variable we wish to generate and ensure that the names of the variable (identifiers) are left unchanged. We can do so by creating a new file called generator.essence and write:
 
 .. code-block:: essence
 
@@ -40,11 +40,11 @@ The fundamental starting step is writing a find statement for each variable we w
     find gain: function (total) items --> int(1..1000)
     find capacity: int(1..5000)
 
-Solving the above model (by running 'conjure solve generator.essence items.param' on the console) will create a valid set of parameters for our knapsack model. However, these instances are not interesting enough yet.
+Solving the above model (by running 'conjure solve generator.essence items.param' on the console) will create a set of parameters for our knapsack model. However, these instances are not interesting enough yet.
 <output>
 We can make our instances more interesting by adding constraints into our generator's model.
 The first thing we notice is that all values assigned are identical, a bit TOO symmetrical for our taste.
-Once simple solution to this issue is ensuring that all weight and gain assignments are associated with distinct values. This can be done by imposing `injectivity <https://en.wikipedia.org/wiki/Injective_function>`_ as a property of the function.
+One simple solution to this issue is ensuring that all weights and gains assignments are associated with distinct values. This can be done by imposing `injectivity <https://en.wikipedia.org/wiki/Injective_function>`_ as a property of the function.
 
 .. code-block:: essence
     
