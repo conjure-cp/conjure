@@ -9,20 +9,20 @@ letting items be domain int(1..number_items)
 $ we associated a weight value to each item.
 $ The function is annotated as injective. In this way
 $ no two items can have the same weight assigned.
-find weight: function (total, injective) items --> int(1..1000)
+find weight: function (total, injective) items --> int(1..100)
 
 $and then a value to each item, as with weights.
-find gain: function (total, injective) items --> int(1..1000)
+find gain: function (total, injective) items --> int(1..100)
 
 $capacity of the knapsack
-find capacity: int(1..5000)
+find capacity: int(1..1000)
 
 $ the weight of all the elements must be greater than 
 $ twice the capacity of the sack.
 such that (sum ([w | (_,w) <- weight]) > capacity*2)
 
 $ but lower than three times.
-such that (sum ([w | (_,w) <- weight]) < capacity*3)
+such that (sum ([w | (_,w) <- weight]) < capacity*5)
 
 $ The weight and gain of any individual element is less
 $ than one third of the total capacity.
