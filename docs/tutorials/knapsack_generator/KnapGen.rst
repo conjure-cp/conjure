@@ -106,4 +106,4 @@ We can finally test our instance by running
 conjure solve knapsack.essence items.param
 **Tada! your model is being tested on some instance!**
 If your computer is powerful enough you can try larger values in "letting number_items be 20" (40-50 items will already produce substantially harder instances)
-Like for other form of modelling writing instance generators is in large part an art. If this is not your kind of thing and you would like a fully automated system that can produce instances you may check out `this method <https://link.springer.com/chapter/10.1007/978-3-030-30048-7_1>`_ [ code available `here <https://github.com/stacs-cp/CP2019-InstanceGen>`_ ]
+Like for other forms of modelling writing instance generators is in large part an art. If this is not your kind of thing and you would like a fully automated system that can produce instances you may check out `this method <https://link.springer.com/chapter/10.1007/978-3-030-30048-7_1>`_ [ code available `here <https://github.com/stacs-cp/CP2019-InstanceGen>`_ ]
