@@ -22,12 +22,7 @@ instance BinaryOperator (OpLeq x) where
     opLexeme _ = L_Leq
 
 instance (TypeOf x, Pretty x) => TypeOf (OpLeq x) where
-    typeOf p@(OpLeq a b) = sameToSameToBool p a b [] $ \case
-        TypeBool -> True
-        TypeInt{} | ?typeCheckerMode == RelaxedIntegerTags -> True
-        TypeInt TagInt -> True
-        TypeInt TagEnum{} -> True
-        _ -> False
+    typeOf p@(OpLeq a b) = sameToSameToBool p a b [] (const True) 
 
 instance SimplifyOp OpLeq x where
     simplifyOp _ = na "simplifyOp{OpLeq}"

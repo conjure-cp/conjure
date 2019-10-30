@@ -166,10 +166,13 @@ symmetryOrdering inp =
                 case mDom of
                     DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
                     _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
+            MkOpSum (OpSum m) -> return $ fromList [Op (MkOpSum (OpSum m))]    
             _ -> bug ("symmetryOrdering, unhandled Op:" <++> pretty (show op))
-        -- Comprehension body stmts -> do
-        --     xs <- downX1 body
-        --     return [Comprehension x stmts | x <- xs]
+        Comprehension body stmts -> do
+            xs <- symmetryOrdering body
+            let toflat = Comprehension xs stmts 
+            return [essence| flatten(&toflat) |]            
         -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
-        _ -> bug ("symmetryOrdering:" <++> pretty (show inp))
+        _ -> bug ("symmetryOrdering: this probably happened because we are missing a case: please report it"
+                  <++> pretty (show inp))
 

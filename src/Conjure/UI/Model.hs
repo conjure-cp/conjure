@@ -1122,6 +1122,20 @@ lexSingletons model = do
 logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
 logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
 
+replaceLtLeqWithDotLtLeq ::
+    Monad m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
+replaceLtLeqWithDotLtLeq model = do
+    let
+        onExpr :: Expression -> Expression
+        onExpr [essence| &a < &b  |] = [essence| &a .< &b |]
+        onExpr [essence| &a <= &b |] = [essence| &a .<= &b |]
+        onExpr e = e
+    let statements = descendBi onExpr (mStatements model)
+    return model { mStatements = statements }
+
+
 prologue ::
     MonadFail m =>
     MonadLog m =>
@@ -1141,6 +1155,7 @@ prologue model = do
     >>= return . initInfo             >>= logDebugIdModel "[initInfo]"
     >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
+    >>= replaceLtLeqWithDotLtLeq      >>= logDebugIdModel "[replaceLtLeqWithDotLtLeq]"
     >>= finiteGivens                  >>= logDebugIdModel "[finiteGivens]"
     >>= renameQuantifiedVarsToAvoidShadowing
                                       >>= logDebugIdModel "[renameQuantifiedVarsToAvoidShadowing]"
