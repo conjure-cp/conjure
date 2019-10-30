@@ -870,6 +870,7 @@ ui = modes
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
+                    \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \Default: minion"
         , cgroups
             = False

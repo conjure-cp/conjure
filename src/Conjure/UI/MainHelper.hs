@@ -249,6 +249,7 @@ mainWithArgs config@Solve{..} = do
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
                       , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
                       , ( "open-wbo"        , "open-wbo" )
+                      , ( "coin-or"         , "minizinc" )
                       ]
     -- some sanity checks
     case lookup solver executables of
@@ -516,6 +517,7 @@ srMkArgs Solve{..} outBase modelPath =
     , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
+    , "-out-minizinc"   , stringToText $ outputDirectory </> outBase ++ ".eprime.mzn"
     , "-run-solver"
     , "-S0"
     , "-solutions-to-stdout-one-line"
@@ -555,6 +557,9 @@ srMkArgs Solve{..} outBase modelPath =
                                ]
         "open-wbo"          -> [ "-maxsat"
                                , "-satsolver-bin", "open-wbo"
+                               ]
+        "coin-or"           -> [ "-minizinc"
+                               , "-solver-options", "--solver COIN-BC"
                                ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
