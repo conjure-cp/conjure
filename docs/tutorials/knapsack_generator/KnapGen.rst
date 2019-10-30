@@ -83,7 +83,7 @@ We can add some extra constraints to refine even more the values of the instance
 
     such that forAll (_,w) in weight .  w < capacity / 3
 
- on top of that we can enfore some constraint on the density of the values in each object by limiting the ratio between the weight and gain of each specific object with:
+On top of that we can enfore some constraint on the density of the values in each object by limiting the ratio between the weight and gain of each specific object with:
 
  .. code-block:: essence
 
