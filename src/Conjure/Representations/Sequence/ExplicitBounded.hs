@@ -286,11 +286,4 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
             Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
-            return
-                [essence|
-                    ( &marker
-                    , [ &soValues
-                      | &iPat : &index
-                      ]
-                    )
-                |]
+            return [essence| flatten( [&marker, flatten([ &soValues | &iPat : &index])]) |]

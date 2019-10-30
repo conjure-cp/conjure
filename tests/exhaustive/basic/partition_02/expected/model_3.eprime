@@ -15,11 +15,13 @@ such that
              | q17 : int(1..2), q18 : int(1..2)]),
     and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q19] >= 1 | q19 : int(1..2)]),
     flatten([[x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-             [x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q12] | q12 : int(1..6)];
+             flatten([[x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q12]; int(1)]
+                          | q12 : int(1..6)]);
                  int(1..2)])
     <lex
     flatten([[x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             [x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q13] | q13 : int(1..6)];
+             flatten([[x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q13]; int(1)]
+                          | q13 : int(1..6)]);
                  int(1..2)]),
     and([and([q8 + 1 <= x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q7] ->
               x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q8] <

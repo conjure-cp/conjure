@@ -1578,7 +1578,6 @@ delayedRules =
     ,   [ rule_ReducerToComprehension
         ]
     ,   [ rule_DotLtLeq
-        , rule_Flatten_Lex
         ]
     ]
 
@@ -1927,130 +1926,6 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
             )
-
-
-rule_Flatten_Lex :: Rule
-rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
-    theRule [essence| &a <lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
-      fa <- flatten a
-      fb <- flatten b
-      tfa <- typeOf fa
-      tfb <- typeOf fb
-      case (tfa, tfb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) -> return ()
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) -> return ()
-        _ -> bug $ "flattener: " <+> vcat [stringToDoc $ show tfa, stringToDoc $ show tfb]
-      return ( "Flatten Lex less"
-             , return [essence| &fa <lex &fb |]
-             )
-    theRule [essence| &a <=lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
-      fa <- flatten a
-      fb <- flatten b
-      tfa <- typeOf fa
-      tfb <- typeOf fb
-      case (tfa, tfb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) -> return ()
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) -> return ()
-        _ -> bug $ "flattener: " <+> vcat [stringToDoc $ show tfa, stringToDoc $ show tfb]
-      return ( "Flatten Lex Lt"
-             , return [essence| &fa <=lex &fb |]
-             )
-    theRule _ = na "rule_Flatten_Lex"  
-    flatten a = do
-      ta <- typeOf a
-      case ta of
-        TypeBool -> return [essence| [-toInt(&a)] |]
-        TypeInt{} -> return [essence| [&a] |]
-        TypeList TypeInt{} -> return a
-        TypeMatrix TypeInt{} TypeInt{} -> return a
-        TypeTuple ts -> do
-          case a of
-            AbstractLiteral x -> do
-              case x of
-                AbsLitTuple xs -> do
-                  fxs <- sequence (flatten <$> xs)
-                  let flatxs = fromList fxs
-                  return [essence| flatten(&flatxs) |]
-                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-            Constant c ->
-              case c of
-                ConstantAbstract ca ->
-                  case ca of
-                    AbsLitTuple xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
-                      let flatxs = fromList fxs
-                      return [essence| flatten(&flatxs) |]
-                    _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
-                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-            Op _ -> do
-              (oName, o) <- quantifiedVar
-              flatten $ Comprehension o [ComprehensionLetting oName a]
-            _ -> do
-              ps <- sequence $ (\(i,_) -> do
-                                  (Single nm, tm) <- quantifiedVar
-                                  return (i,nm,tm)) <$> (zip [1..] ts)
-              let lts = (\(i,nm,_tm) -> ComprehensionLetting (Single nm) [essence| &a[&i] |]) <$> ps
-                  tup = AbstractLiteral $ AbsLitTuple $ (\(_,_,tm) -> tm) <$> ps
-              flatten $ Comprehension tup lts
-        _ ->
-          case a of
-            AbstractLiteral x -> do
-              case x of
-                AbsLitMatrix _ xs -> do
-                  fxs <- sequence (flatten <$> xs)
-                  let flatxs = fromList fxs
-                  return [essence| flatten(&flatxs) |]
-                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-            Constant c ->
-              case c of
-                ConstantAbstract ca ->
-                  case ca of
-                    AbsLitMatrix _ [] ->
-                      return [essence| ([] : `matrix indexed by [int()] of int`) |]
-                    AbsLitMatrix _ xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
-                      let flatxs = fromList fxs
-                      return [essence| flatten(&flatxs) |]
-                    _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
-                        <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-                TypedConstant tc _ -> flatten (Constant tc)
-                _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
-            Op _ -> do
-              (oName, o) <- quantifiedVar
-              flatten $ Comprehension o [ComprehensionLetting oName a]
-            Reference nm ex ->
-                  bug $ "rule_FlattenLex: flatten isn't defined for this reference fellow..."
-                     <+> vcat [stringToDoc (show a)
-                              ,"reference:" <+> stringToDoc (show nm)
-                              ,"fellow:" <+> stringToDoc (show ex)]
-            Comprehension body gocs -> do
-              fbody <- flatten body
-              let comp = Comprehension fbody gocs
-              return [essence| flatten(&comp) |]
-            _ -> bug $ "rule_FlattenLex: flatten isn't defined for this expression fellow..."
-
-                    <+> vcat [pretty a, pretty ta, stringToDoc $ show a]
 
 
 rule_ReducerToComprehension :: Rule

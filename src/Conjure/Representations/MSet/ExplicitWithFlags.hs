@@ -209,12 +209,5 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
             Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
             soValues <- innerSO downX1 [essence| &values[&i] |] inner
-            return
-                [essence|
-                    [ ( -&flags[&i]
-                      , &soValues
-                      )
-                    | &iPat : &index
-                    ]
-                |]
+            return [essence| flatten([ flatten([ [-&flags[&i]], &soValues]) | &iPat : &index ]) |]
 

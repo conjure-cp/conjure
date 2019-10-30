@@ -121,5 +121,7 @@ variant = Representation chck downD structuralCons downC up symmetryOrdering
             Just xsDoms' <- downD ("SO", domain)
             let xsDoms = map snd xsDoms'
             soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
-            return (fromList soValues)
+            let toflat = (fromList soValues)
+            return [essence| flatten(&toflat) |]
+
 

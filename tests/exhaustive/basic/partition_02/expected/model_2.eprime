@@ -12,8 +12,8 @@ such that
              | q20 : int(1..2), q21 : int(1..2)]),
     and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q26, q28] != 7) | q28 : int(1..6)]) >= 1
              | q26 : int(1..2)]),
-    [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[1, q13] | q13 : int(1..6)] <lex
-    [x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[2, q14] | q14 : int(1..6)],
+    flatten([[x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[1, q13]; int(1)] | q13 : int(1..6)]) <lex
+    flatten([[x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[2, q14]; int(1)] | q14 : int(1..6)]),
     and([and([x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] <
               x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8 + 1]
               \/ x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] = 7

@@ -296,11 +296,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
 
             soValues <- innerSO downX1 valuesIndexed innerDomainTo
 
-            return $ 
-                Comprehension
-                    [essence| ( -&flagsIndexed
-                              , &soValues
-                              )
-                            |]
-                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
+            let toflat = Comprehension [essence| flatten([ -&flagsIndexed, &soValues]) |]
+                                  [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
+            return [essence| flatten(&toflat) |]
 

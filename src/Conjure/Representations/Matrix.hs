@@ -202,5 +202,5 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     (iPat, i) <- quantifiedVarOverDomain indexDom
                     let mi = [essence| &inp[&i] |]
                     res <- innerSO downX1 mi innerDom
-                    return [essence| [ &res | &iPat : &indexDom ] |]
+                    return [essence| flatten([ &res | &iPat : &indexDom ]) |]
                 _ -> bug $ "symmetryOrdering matrix" <+> pretty inp <+> pretty domain
