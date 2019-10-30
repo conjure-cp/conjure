@@ -18,10 +18,11 @@ Here is the model of the Knapsack Problem from (<link to other tutorial>) - knap
         such that (sum i in picked . weight(i)) <= capacity
 
 This model has 4 different "given" statements :
-number_items: an integer for number of items
-weight: a functions that associates an integer(weight) to each item
-gain: a function that associates an integer(value/profit) to each item
-capacity: an integer that defines the capacity of the knapsack
+- number_items: an integer for number of items
+- weight: a functions that associates an integer(weight) to each item
+- gain: a function that associates an integer(value/profit) to each item
+- capacity: an integer that defines the capacity of the knapsack
+
 The first parameter is fairly simple and we can even write this parameter with some value by hand
 by writing on a separate file (which we will call items.param):
 
@@ -53,11 +54,11 @@ One simple solution to this issue is ensuring that all weights and gains assignm
 
 <output>
 This gives us a slighly more interesting parameters set but it is not there yet
-The specific order that appears in the results is solver dependent. The default solver used by conjure is Minion and we can use an optional flat to have the variables assigned in a random order. This can be done with this command:
+The specific order that appears in the results is solver dependent. The default solver used by conjure is Minion and we can use an optional flag to have the variables assigned in a random order. This can be done with this command:
 conjure solve generator.essence items.param --solver-options=-randomiseorder
 Alternatively one can use another solver that uses randomness by default
 <output>
-Now it is starting to look more like a proper instance. At this point we can add some knowledge about the problem to formulate some constraints that will ensure that the instances are not trivial. ie if the sum of all the weights is smaller than the capacity than we can put all the objects in the knapsack or if all the objects are heavier of than the capacity no objects can be picked. Thefore we add constraints such as:
+Now it is starting to look more like a proper instance. At this point we can add some knowledge about the problem to formulate some constraints that will ensure that the instances are not trivial. ie when the sum of all the weights is smaller than the capacity than we can put all the objects in the knapsack or if all the objects are heavier of than the capacity no objects can be picked. Thefore we add constraints such as:
 
 .. code-block:: essence
 
@@ -71,7 +72,7 @@ To ensure that the solver does not take it too far we impose an upper bound usin
 
     such that (sum ([w | (_,w) <- weight]) < capacity*5)
 
- At this point it will be harder to see specific properties of the instances just by eyeballing the parameters but we can be confident that the properties we have imposed are there.
+At this point it will be harder to see specific properties of the instances just by eyeballing the parameters but we can be confident that the properties we have imposed are there.
 We can add some extra constraints to refine even more the values of the instances for practice/exercise by enforcing that no object is greater than a third of the capacity
 
 .. code-block:: essence
