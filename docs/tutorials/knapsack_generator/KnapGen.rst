@@ -18,9 +18,13 @@ Here is the model of the Knapsack Problem from (<link to other tutorial>) - knap
         such that (sum i in picked . weight(i)) <= capacity
 
 This model has 4 different "given" statements :
+
 - number_items: an integer for number of items
+
 - weight: a functions that associates an integer(weight) to each item
+
 - gain: a function that associates an integer(value/profit) to each item
+
 - capacity: an integer that defines the capacity of the knapsack
 
 The first parameter is fairly simple and we can even write this parameter with some value by hand
