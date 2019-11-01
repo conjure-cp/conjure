@@ -12,16 +12,16 @@ export const LANGID = "essence"
 var fp = require("find-free-port")
 
 function makeNimServer(context: vscode.ExtensionContext) {
-  console.log(
-    execSync(path.join(context.extensionPath, "/buildServer.sh"), {
-      cwd: context.extensionPath
-    }).toString()
-  )
+  // console.log(
+  //   execSync(path.join(context.extensionPath, "/buildServer.sh"), {
+  //     cwd: context.extensionPath
+  //   }).toString()
+  // )
 }
 
 function startNimServer(context: vscode.ExtensionContext, port: number) {
   const proc = exec(`./runServer.sh ${port}`, { cwd: context.extensionPath })
-  proc.stdout.on("data", function(data) {
+  proc.stdout.on("data", function (data) {
     console.error(data.toString())
   })
 
@@ -100,4 +100,4 @@ export function activate(context: vscode.ExtensionContext) {
   )
 }
 
-export function deactivate() {}
+export function deactivate() { }
