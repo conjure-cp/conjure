@@ -1,0 +1,377 @@
+<Scenario 
+Id="n040w4" xsi:noNamespaceSchemaLocation="Scenario.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="">
+    <NumberOfWeeks>4</NumberOfWeeks>
+    <Skills>
+        <Skill>HeadNurse</Skill>
+        <Skill>Nurse</Skill>
+        <Skill>Caretaker</Skill>
+        <Skill>Trainee</Skill>
+    </Skills>
+    <ShiftTypes>
+        <ShiftType Id="Early">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>2</Minimum>
+                <Maximum>5</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+        <ShiftType Id="Day">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>2</Minimum>
+                <Maximum>28</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+        <ShiftType Id="Late">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>2</Minimum>
+                <Maximum>5</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+        <ShiftType Id="Night">
+            <NumberOfConsecutiveAssignments>
+                <Minimum>4</Minimum>
+                <Maximum>5</Maximum>
+            </NumberOfConsecutiveAssignments>
+        </ShiftType>
+    </ShiftTypes>
+    <ForbiddenShiftTypeSuccessions>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Early</PrecedingShiftType>
+            <SucceedingShiftTypes/>
+        </ShiftTypeSuccession>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Day</PrecedingShiftType>
+            <SucceedingShiftTypes/>
+        </ShiftTypeSuccession>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Late</PrecedingShiftType>
+            <SucceedingShiftTypes>
+                <ShiftType>Early</ShiftType>
+                <ShiftType>Day</ShiftType>
+            </SucceedingShiftTypes>
+        </ShiftTypeSuccession>
+        <ShiftTypeSuccession>
+            <PrecedingShiftType>Night</PrecedingShiftType>
+            <SucceedingShiftTypes>
+                <ShiftType>Early</ShiftType>
+                <ShiftType>Day</ShiftType>
+                <ShiftType>Late</ShiftType>
+            </SucceedingShiftTypes>
+        </ShiftTypeSuccession>
+    </ForbiddenShiftTypeSuccessions>
+    <Contracts>
+        <Contract Id="FullTime">
+            <NumberOfAssignments>
+                <Minimum>15</Minimum>
+                <Maximum>20</Maximum>
+            </NumberOfAssignments>
+            <ConsecutiveWorkingDays>
+                <Minimum>3</Minimum>
+                <Maximum>5</Maximum>
+            </ConsecutiveWorkingDays>
+            <ConsecutiveDaysOff>
+                <Minimum>2</Minimum>
+                <Maximum>3</Maximum>
+            </ConsecutiveDaysOff>
+            <MaximumNumberOfWorkingWeekends>3</MaximumNumberOfWorkingWeekends>
+            <CompleteWeekends>1</CompleteWeekends>
+        </Contract>
+        <Contract Id="PartTime">
+            <NumberOfAssignments>
+                <Minimum>7</Minimum>
+                <Maximum>15</Maximum>
+            </NumberOfAssignments>
+            <ConsecutiveWorkingDays>
+                <Minimum>4</Minimum>
+                <Maximum>7</Maximum>
+            </ConsecutiveWorkingDays>
+            <ConsecutiveDaysOff>
+                <Minimum>3</Minimum>
+                <Maximum>4</Maximum>
+            </ConsecutiveDaysOff>
+            <MaximumNumberOfWorkingWeekends>4</MaximumNumberOfWorkingWeekends>
+            <CompleteWeekends>1</CompleteWeekends>
+        </Contract>
+        <Contract Id="HalfTime">
+            <NumberOfAssignments>
+                <Minimum>5</Minimum>
+                <Maximum>11</Maximum>
+            </NumberOfAssignments>
+            <ConsecutiveWorkingDays>
+                <Minimum>3</Minimum>
+                <Maximum>5</Maximum>
+            </ConsecutiveWorkingDays>
+            <ConsecutiveDaysOff>
+                <Minimum>3</Minimum>
+                <Maximum>5</Maximum>
+            </ConsecutiveDaysOff>
+            <MaximumNumberOfWorkingWeekends>3</MaximumNumberOfWorkingWeekends>
+            <CompleteWeekends>1</CompleteWeekends>
+        </Contract>
+    </Contracts>
+    <Nurses>
+        <Nurse Id="HN_0">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="HN_1">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="HN_2">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="HN_3">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="HN_4">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="HN_5">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>HeadNurse</Skill>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_6">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_7">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_8">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_9">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_10">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_11">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_12">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_13">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_14">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_15">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_16">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="NU_17">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Nurse</Skill>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_18">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_19">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_20">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_21">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_22">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_23">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_24">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_25">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_26">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_27">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_28">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_29">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_30">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="CT_31">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Caretaker</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_32">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_33">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_34">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_35">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_36">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_37">
+            <Contract>HalfTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_38">
+            <Contract>FullTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+        <Nurse Id="TR_39">
+            <Contract>PartTime</Contract>
+            <Skills>
+                <Skill>Trainee</Skill>
+            </Skills>
+        </Nurse>
+    </Nurses>
+</Scenario>

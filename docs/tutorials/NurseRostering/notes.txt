@@ -1,0 +1,23 @@
+########### Added in Conjure documentation:
+
+- Record examples (chapter 6)
+- Backwards need to be used for taking cardinality of a domain: 
+```
+given nurses new type enum
+letting nNurses be |`nurses`|
+```
+- Describe when to use `in` and when to use `:`
+- A set of design patterns for typical things we want to express:
+Example 1: see model2.essence of nurse rostering, constraint 2
+- Letting statement inside list comprehension
+- Space in enum names?
+
+############ Bug in Conjure:
+- Can’t refer to enum size in given statement:
+```
+given e new type enum
+given i: int(1..|`e`|)
+```
+
+
+

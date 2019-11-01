@@ -1,0 +1,14 @@
+letting nNurses be 5
+letting nDays be 7
+letting shifts be new type enum {Early, Day, Late, Night}
+letting forbiddenPatterns be {
+    (Late, Early),
+    (Night, Early),
+    (Night, Late)
+}
+letting minimumDemand be function (
+   (1,Early) --> 1, 
+   (1,Day) --> 0, 
+   (1,Late) --> 0, 
+   (1,Night) --> 0, 
+)

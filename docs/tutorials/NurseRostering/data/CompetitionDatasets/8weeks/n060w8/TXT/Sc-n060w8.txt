@@ -1,0 +1,88 @@
+SCENARIO = n060w8
+
+WEEKS = 8
+
+SKILLS = 4
+HeadNurse
+Nurse
+Caretaker
+Trainee
+
+SHIFT_TYPES = 4
+Early (2,5)
+Day (2,56)
+Late (2,5)
+Night (4,5)
+
+FORBIDDEN_SHIFT_TYPES_SUCCESSIONS
+Early 0
+Day 0
+Late 2 Early Day
+Night 3 Early Day Late
+
+CONTRACTS = 3
+FullTime (30,40) (3,5) (2,3) 4 1
+PartTime (20,30) (3,5) (2,5) 4 1
+HalfTime (15,20) (3,5) (3,5) 2 1
+
+NURSES = 60
+HN_0 PartTime 2 HeadNurse Nurse
+HN_1 FullTime 2 HeadNurse Nurse
+HN_2 HalfTime 2 HeadNurse Nurse
+HN_3 FullTime 2 HeadNurse Nurse
+HN_4 FullTime 2 HeadNurse Nurse
+HN_5 HalfTime 2 HeadNurse Nurse
+HN_6 PartTime 2 HeadNurse Nurse
+NU_7 FullTime 2 Nurse Caretaker
+NU_8 PartTime 2 Nurse Caretaker
+NU_9 FullTime 2 Nurse Caretaker
+NU_10 HalfTime 2 Nurse Caretaker
+NU_11 HalfTime 2 Nurse Caretaker
+NU_12 HalfTime 2 Nurse Caretaker
+NU_13 HalfTime 2 Nurse Caretaker
+NU_14 PartTime 2 Nurse Caretaker
+NU_15 FullTime 2 Nurse Caretaker
+NU_16 PartTime 2 Nurse Caretaker
+NU_17 PartTime 2 Nurse Caretaker
+NU_18 FullTime 2 Nurse Caretaker
+NU_19 HalfTime 2 Nurse Caretaker
+NU_20 FullTime 2 Nurse Caretaker
+NU_21 FullTime 2 Nurse Caretaker
+NU_22 HalfTime 2 Nurse Caretaker
+NU_23 FullTime 2 Nurse Caretaker
+NU_24 FullTime 2 Nurse Caretaker
+NU_25 FullTime 2 Nurse Caretaker
+NU_26 HalfTime 2 Nurse Caretaker
+NU_27 PartTime 2 Nurse Caretaker
+NU_28 PartTime 2 Nurse Caretaker
+NU_29 HalfTime 2 Nurse Caretaker
+CT_30 HalfTime 1 Caretaker
+CT_31 HalfTime 1 Caretaker
+CT_32 FullTime 1 Caretaker
+CT_33 FullTime 1 Caretaker
+CT_34 FullTime 1 Caretaker
+CT_35 FullTime 1 Caretaker
+CT_36 HalfTime 1 Caretaker
+CT_37 FullTime 1 Caretaker
+CT_38 FullTime 1 Caretaker
+CT_39 FullTime 1 Caretaker
+CT_40 HalfTime 1 Caretaker
+CT_41 PartTime 1 Caretaker
+CT_42 FullTime 1 Caretaker
+CT_43 PartTime 1 Caretaker
+CT_44 HalfTime 1 Caretaker
+CT_45 PartTime 1 Caretaker
+CT_46 PartTime 1 Caretaker
+CT_47 FullTime 1 Caretaker
+CT_48 HalfTime 1 Caretaker
+CT_49 HalfTime 1 Caretaker
+TR_50 HalfTime 1 Trainee
+TR_51 PartTime 1 Trainee
+TR_52 PartTime 1 Trainee
+TR_53 FullTime 1 Trainee
+TR_54 PartTime 1 Trainee
+TR_55 FullTime 1 Trainee
+TR_56 PartTime 1 Trainee
+TR_57 FullTime 1 Trainee
+TR_58 FullTime 1 Trainee
+TR_59 FullTime 1 Trainee

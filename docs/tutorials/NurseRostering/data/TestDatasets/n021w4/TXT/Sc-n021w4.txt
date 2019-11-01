@@ -1,0 +1,49 @@
+SCENARIO = n021w4_2
+
+WEEKS = 4
+
+SKILLS = 4
+HeadNurse
+Nurse
+Caretaker
+Trainee
+
+SHIFT_TYPES = 4
+Early (2,5)
+Day (2,28)
+Late (2,5)
+Night (4,5)
+
+FORBIDDEN_SHIFT_TYPES_SUCCESSIONS
+Early 0
+Day 0
+Late 2 Early Day
+Night 3 Early Day Late
+
+CONTRACTS = 3
+FullTime (15,22) (3,5) (2,3) 2 1
+PartTime (7,15) (3,5) (2,5) 2 1
+HalfTime (7,11) (3,5) (3,5) 1 1
+
+NURSES = 21
+HN_0 FullTime 3 HeadNurse Nurse Caretaker
+HN_1 PartTime 3 HeadNurse Nurse Caretaker
+HN_2 PartTime 3 HeadNurse Nurse Caretaker
+NU_3 HalfTime 2 Nurse Caretaker
+NU_4 PartTime 2 Nurse Caretaker
+NU_5 PartTime 2 Nurse Caretaker
+NU_6 HalfTime 2 Nurse Caretaker
+NU_7 HalfTime 2 Nurse Caretaker
+NU_8 FullTime 2 Nurse Caretaker
+NU_9 PartTime 2 Nurse Caretaker
+NU_10 HalfTime 2 Nurse Caretaker
+CT_11 PartTime 1 Caretaker
+CT_12 PartTime 1 Caretaker
+CT_13 PartTime 1 Caretaker
+CT_14 HalfTime 1 Caretaker
+CT_15 HalfTime 1 Caretaker
+TR_16 PartTime 1 Trainee
+TR_17 HalfTime 1 Trainee
+TR_18 FullTime 1 Trainee
+TR_19 PartTime 1 Trainee
+TR_20 PartTime 1 Trainee
