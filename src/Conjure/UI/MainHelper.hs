@@ -562,8 +562,7 @@ srMkArgs Solve{..} outBase modelPath =
         "coin-or"           -> [ "-minizinc"
                                , "-solver-options", "--solver COIN-BC"
                                ]
-                               
-        "cplex"           -> [ "-minizinc"
+        "cplex"             -> [ "-minizinc"
                                , "-solver-options", "--solver CPLEX"
                                ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
