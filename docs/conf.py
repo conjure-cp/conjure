@@ -228,8 +228,9 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'Conjure.tex', u'Conjure Documentation',
-     u'Özgür Akgün', 'manual'),
+     u'Özgür Akgün \\and András Salamon', 'manual'),
 ]
+
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.

@@ -22,7 +22,7 @@ import Conjure.Prelude
 import Text.Printf ( printf )
 
 -- text
-import qualified Data.Text as T ( Text, unpack )
+import qualified Data.Text as T ( Text, unpack, replace)
 
 -- pretty
 import Text.PrettyPrint
@@ -117,7 +117,7 @@ prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
 instance Pretty JSON.Value where
     pretty (Object x) = pretty x
     pretty (Array x) = pretty x
-    pretty (String x) = pretty (show x)
+    pretty (String x) = "\"" <> pretty (T.unpack (T.replace "\"" "\\\"" x)) <> "\""
     pretty (Number x) = pretty x
     pretty (Bool False) = "false"
     pretty (Bool True) = "true"

@@ -346,11 +346,19 @@ Record domains
 
 Record is a domain constructor, it takes a list of name-domain pairs as arguments.
 Records can be of arbitrary arity.
+(A name-domain pair is a name, followed by a colon, followed by a domain.)
 
 A record domain is denoted by the keyword ``record``, followed by a list of name-domain pairs separated by commas inside curly brackets.
 
 Records are very similar to tuples; except they use labels for their components instead of positions.
 When needed, domains inside a record are referred to using their labels.
+
+To explicitly specify a record, use a list of values inside round brackets, preceded by the keyword ``tuple``.
+
+.. code-block:: essence
+
+   letting s be record{}
+   letting t be record{A : int(0..1), B : int(0..2)}
 
 
 Variant domains
@@ -385,13 +393,17 @@ They are used when the decision variable or the problem parameter does not have 
 Using another kind of domain is more appropriate for most problem specifications in Essence.
 
 Matrix domains are not ordered, but matrices can be compared using the equality operators.
+Note that two matrices are only equal if their indices are the same.
 
 To explicitly specify a matrix, use a list of values inside square brackets.
+Optionally, the domain used to index the elements can be specified also.
 
 .. code-block:: essence
 
    letting M be [0,1,0,-1]
    letting N be [[0,1],[0,-1]]
+
+The matrix ``[0,1]`` is the same as ``[0,1; int(1..2)]``, but distinct from ``[0,1; int(0..1)]``.
 
 
 Set domains
@@ -718,6 +730,11 @@ The inline binary comparison operators
  | ``<lex`` ``<=lex`` ``>lex`` ``>=lex``
 
 test whether their arguments have the specified relative lexicographic order.
+
+.. code-block:: essence
+
+    find v : matrix indexed by [int(1..2)] of int(1..2)
+    such that v <lex [ v[3-i] | i : int(1..2) ] $ v = [1,2]
 
 
 Logical operators
@@ -1048,6 +1065,10 @@ Older versions of Savile Row do not support using the same name both for quantif
 An alternative quantifier-like syntax
 
  | ``sum i in I . f(i)``
+
+where ``I`` is a set, or for domains
+
+ | ``sum i : int(0..3) . f(i)``
 
 is supported for the ``sum`` and ``product`` operators.
 

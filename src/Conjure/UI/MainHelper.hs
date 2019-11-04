@@ -73,105 +73,138 @@ mainWithArgs :: forall m .
     UI -> m ()
 mainWithArgs TSDEF{} = liftIO tsDef
 mainWithArgs Modelling{..} = do
-    model <- readModelFromFile essence
-    liftIO $ hSetBuffering stdout LineBuffering
-    liftIO $ maybe (return ()) setRandomSeed seed
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
                                  (parseStrategy s)
 
-    config <- do
-        strategyQ'                  <- parseStrategy_ strategyQ
-        strategyA'                  <- parseStrategy_ strategyA
-        representations'            <- maybe (return strategyA')       parseStrategy_ representations
-        representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
-        representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
-        representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
-        representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
-        representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
+        getConfig = do
+            strategyQ'                  <- parseStrategy_ strategyQ
+            strategyA'                  <- parseStrategy_ strategyA
+            representations'            <- maybe (return strategyA')       parseStrategy_ representations
+            representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
+            representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
+            representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
+            representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
+            representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
 
-        case fst (viewAuto strategyQ') of
-            Compact -> userErr1 "The Compact heuristic isn't supported for questions."
-            _       -> return ()
+            case fst (viewAuto strategyQ') of
+                Compact -> userErr1 "The Compact heuristic isn't supported for questions."
+                _       -> return ()
 
-        let
-            parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
-            parseCommaSeparated flag str =
-                if null str
+            let
+                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
+                parseCommaSeparated flag str =
+                    if null str
+                        then return Nothing
+                        else do
+                            let parts = splitOn "," str
+                            let intParts = mapMaybe readMay parts
+                            if length parts == length intParts
+                                then return (Just intParts)
+                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                     , "Expected a comma separated list of integers."
+                                                     , "But got:" <+> pretty str
+                                                     ]
+
+            responsesList <- parseCommaSeparated "--responses" responses
+            generateStreamlinersList <- parseCommaSeparated "--generate-streamliners" generateStreamliners
+
+            responsesRepresentationList <- do
+                if null responsesRepresentation
                     then return Nothing
                     else do
-                        let parts = splitOn "," str
-                        let intParts = mapMaybe readMay parts
-                        if length parts == length intParts
-                            then return (Just intParts)
-                            else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
-                                                 , "Expected a comma separated list of integers."
-                                                 , "But got:" <+> pretty str
+                        let parts =
+                                [ case splitOn ":" pair of
+                                    [nm, val] ->
+                                        case readMay val of
+                                            Just i -> Just (Name (stringToText nm), i)
+                                            Nothing -> Nothing
+                                    _ -> Nothing
+                                | pair <- splitOn "," responsesRepresentation
+                                ]
+                        let partsJust = catMaybes parts
+                        if length parts == length partsJust
+                            then return (Just partsJust)
+                            else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
+                                                 , "Expected a comma separated list of variable name : integer pairs."
+                                                 , "But got:" <+> pretty responsesRepresentation
                                                  ]
 
-        responsesList <- parseCommaSeparated "--responses" responses
-        generateStreamlinersList <- parseCommaSeparated "--generate-streamliners" generateStreamliners
+            return Config.Config
+                { Config.outputDirectory            = outputDirectory
+                , Config.logLevel                   = logLevel
+                , Config.verboseTrail               = verboseTrail
+                , Config.rewritesTrail              = rewritesTrail
+                , Config.logRuleFails               = logRuleFails
+                , Config.logRuleSuccesses           = logRuleSuccesses
+                , Config.logRuleAttempts            = logRuleAttempts
+                , Config.logChoices                 = logChoices
+                , Config.strategyQ                  = strategyQ'
+                , Config.strategyA                  = strategyA'
+                , Config.representations            = representations'
+                , Config.representationsFinds       = representationsFinds'
+                , Config.representationsGivens      = representationsGivens'
+                , Config.representationsAuxiliaries = representationsAuxiliaries'
+                , Config.representationsQuantifieds = representationsQuantifieds'
+                , Config.representationsCuts        = representationsCuts'
+                , Config.channelling                = channelling
+                , Config.representationLevels       = representationLevels
+                , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
+                , Config.numberingStart             = numberingStart
+                , Config.smartFilenames             = smartFilenames
+                , Config.lineWidth                  = lineWidth
+                , Config.responses                  = responsesList
+                , Config.responsesRepresentation    = responsesRepresentationList
+                , Config.generateStreamliners       = generateStreamlinersList
+                , Config.estimateNumberOfModels     = estimateNumberOfModels
+                }
 
-        responsesRepresentationList <- do
-            if null responsesRepresentation
-                then return Nothing
-                else do
-                    let parts =
-                            [ case splitOn ":" pair of
-                                [nm, val] ->
-                                    case readMay val of
-                                        Just i -> Just (Name (stringToText nm), i)
-                                        Nothing -> Nothing
-                                _ -> Nothing
-                            | pair <- splitOn "," responsesRepresentation
-                            ]
-                    let partsJust = catMaybes parts
-                    if length parts == length partsJust
-                        then return (Just partsJust)
-                        else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
-                                             , "Expected a comma separated list of variable name : integer pairs."
-                                             , "But got:" <+> pretty responsesRepresentation
-                                             ]
+    essenceM <- readModelFromFile essence
+    liftIO $ hSetBuffering stdout LineBuffering
+    liftIO $ maybe (return ()) setRandomSeed seed
+    let
+        conjuring = do
+            config <- getConfig
+            runNameGen essenceM $ do
+                modelWithStreamliners <-
+                    case Config.generateStreamliners config of
+                        Nothing -> return essenceM
+                        Just ix -> do
+                            streamliners <- pure essenceM >>= resolveNames >>= typeCheckModel >>= streamlining
+                            let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
+                            return essenceM { mStatements = mStatements essenceM ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
+                outputModels config modelWithStreamliners
+    doIfNotCached          -- start the show!
+        ( sort (mStatements essenceM)
+        -- when the following flags change, invalidate hash
+        -- nested tuples, because :(
+        , ( numberingStart
+          , smartFilenames
+          , strategyQ
+          , strategyA
+          , responses
+          )
+        , ( representations
+          , representationsFinds
+          , representationsGivens
+          , representationsAuxiliaries
+          , representationsQuantifieds
+          , representationsCuts
+          )
+        , ( channelling
+          , representationLevels
+          , seed
+          , limitModels
+          , limitTime
+          , outputFormat
+          )
+        , generateStreamliners
+        )
+        (outputDirectory </> ".conjure-checksum")
+        (pp logLevel "Using cached models.")
+        conjuring
 
-        return Config.Config
-            { Config.outputDirectory            = outputDirectory
-            , Config.logLevel                   = logLevel
-            , Config.verboseTrail               = verboseTrail
-            , Config.rewritesTrail              = rewritesTrail
-            , Config.logRuleFails               = logRuleFails
-            , Config.logRuleSuccesses           = logRuleSuccesses
-            , Config.logRuleAttempts            = logRuleAttempts
-            , Config.logChoices                 = logChoices
-            , Config.strategyQ                  = strategyQ'
-            , Config.strategyA                  = strategyA'
-            , Config.representations            = representations'
-            , Config.representationsFinds       = representationsFinds'
-            , Config.representationsGivens      = representationsGivens'
-            , Config.representationsAuxiliaries = representationsAuxiliaries'
-            , Config.representationsQuantifieds = representationsQuantifieds'
-            , Config.representationsCuts        = representationsCuts'
-            , Config.channelling                = channelling
-            , Config.representationLevels       = representationLevels
-            , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
-            , Config.numberingStart             = numberingStart
-            , Config.smartFilenames             = smartFilenames
-            , Config.lineWidth                  = lineWidth
-            , Config.responses                  = responsesList
-            , Config.responsesRepresentation    = responsesRepresentationList
-            , Config.generateStreamliners       = generateStreamlinersList
-            , Config.estimateNumberOfModels     = estimateNumberOfModels
-            }
-    
-    runNameGen model $ do
-        modelWithStreamliners <-
-            case Config.generateStreamliners config of
-                Nothing -> return model
-                Just ix -> do
-                    streamliners <- pure model >>= resolveNames >>= typeCheckModel >>= streamlining
-                    let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
-                    return model { mStatements = mStatements model ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
-        outputModels config modelWithStreamliners
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
