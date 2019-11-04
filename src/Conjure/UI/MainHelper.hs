@@ -445,6 +445,12 @@ savilerowScriptName
     | otherwise = bug "Cannot detect operating system."
 
 
+quoteMultiWord :: String -> String
+quoteMultiWord s
+    | ' ' `elem` s = "\"" ++ s ++ "\""
+    | otherwise = s
+
+
 savileRowNoParam ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI ->
@@ -462,7 +468,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     let tr = translateSolution eprimeModel def
     when (logLevel >= LogDebug) $ do
         liftIO $ putStrLn "Using the following options for Savile Row:"
-        liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
+        liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     (outBase, modelPath, "<no param file>", ui)
@@ -502,7 +508,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let tr = translateSolution eprimeModel essenceParam
             when (logLevel >= LogDebug) $ do
                 liftIO $ putStrLn "Using the following options for Savile Row:"
-                liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
+                liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             (outBase, modelPath, paramPath, ui)
