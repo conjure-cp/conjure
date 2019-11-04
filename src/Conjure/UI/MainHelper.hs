@@ -90,18 +90,23 @@ mainWithArgs Modelling{..} = do
                 Compact -> userErr1 "The Compact heuristic isn't supported for questions."
                 _       -> return ()
 
-            responsesList <- do
-                if null responses
-                    then return Nothing
-                    else do
-                        let parts = splitOn "," responses
-                        let intParts = mapMaybe readMay parts
-                        if length parts == length intParts
-                            then return (Just intParts)
-                            else userErr1 $ vcat [ "Cannot parse the value for --responses."
-                                                 , "Expected a comma separated list of integers."
-                                                 , "But got:" <+> pretty responses
-                                                 ]
+            let
+                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
+                parseCommaSeparated flag str =
+                    if null str
+                        then return Nothing
+                        else do
+                            let parts = splitOn "," str
+                            let intParts = mapMaybe readMay parts
+                            if length parts == length intParts
+                                then return (Just intParts)
+                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                     , "Expected a comma separated list of integers."
+                                                     , "But got:" <+> pretty str
+                                                     ]
+
+            responsesList <- parseCommaSeparated "--responses" responses
+
             responsesRepresentationList <- do
                 if null responsesRepresentation
                     then return Nothing
