@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpFromSolution x) where parseJSON = genericPa
 instance (TypeOf x, Pretty x) => TypeOf (OpFromSolution x) where
     typeOf (OpFromSolution x) = typeOf x
 
-instance EvaluateOp OpFromSolution where
-    evaluateOp op = na $ "evaluateOp{OpFromSolution}:" <++> pretty (show op)
-
 instance SimplifyOp OpFromSolution x where
     simplifyOp _ = na "simplifyOp{OpFromSolution}"
 

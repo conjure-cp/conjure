@@ -123,6 +123,9 @@ instance EvaluateOp OpFreq where
     evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
+instance EvaluateOp OpFromSolution where
+    evaluateOp op = na $ "evaluateOp{OpFromSolution}:" <++> pretty (show op)
+
 instance EvaluateOp OpGeq where
     evaluateOp (OpGeq x y) = return $ ConstantBool $ x >= y
 
@@ -895,6 +898,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpFactorial x) = evaluateOp x
     evaluateOp (MkOpFlatten x) = evaluateOp x
     evaluateOp (MkOpFreq x) = evaluateOp x
+    evaluateOp (MkOpFromSolution x) = evaluateOp x
     evaluateOp (MkOpGeq x) = evaluateOp x
     evaluateOp (MkOpGt x) = evaluateOp x
     evaluateOp (MkOpHist x) = evaluateOp x
@@ -923,8 +927,8 @@ instance EvaluateOp Op where
     evaluateOp (MkOpParty x) = evaluateOp x
     evaluateOp (MkOpPow x) = evaluateOp x
     evaluateOp (MkOpPowerSet x) = evaluateOp x
-    evaluateOp (MkOpPreImage x) = evaluateOp x
     evaluateOp (MkOpPred x) = evaluateOp x
+    evaluateOp (MkOpPreImage x) = evaluateOp x
     evaluateOp (MkOpProduct x) = evaluateOp x
     evaluateOp (MkOpRange x) = evaluateOp x
     evaluateOp (MkOpRelationProj x) = evaluateOp x
@@ -940,11 +944,11 @@ instance EvaluateOp Op where
     evaluateOp (MkOpSupsetEq x) = evaluateOp x
     evaluateOp (MkOpTildeLeq x) = evaluateOp x
     evaluateOp (MkOpTildeLt x) = evaluateOp x
+    evaluateOp (MkOpTogether x) = evaluateOp x
     evaluateOp (MkOpToInt x) = evaluateOp x
     evaluateOp (MkOpToMSet x) = evaluateOp x
     evaluateOp (MkOpToRelation x) = evaluateOp x
     evaluateOp (MkOpToSet x) = evaluateOp x
-    evaluateOp (MkOpTogether x) = evaluateOp x
     evaluateOp (MkOpTransform x) = evaluateOp x
     evaluateOp (MkOpTrue x) = evaluateOp x
     evaluateOp (MkOpTwoBars x) = evaluateOp x
