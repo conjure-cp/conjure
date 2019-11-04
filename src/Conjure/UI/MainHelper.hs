@@ -250,6 +250,7 @@ mainWithArgs config@Solve{..} = do
                       , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
                       , ( "open-wbo"        , "open-wbo" )
                       , ( "coin-or"         , "minizinc" )
+                      , ( "cplex"           , "minizinc" )
                       ]
     -- some sanity checks
     case lookup solver executables of
@@ -560,6 +561,10 @@ srMkArgs Solve{..} outBase modelPath =
                                ]
         "coin-or"           -> [ "-minizinc"
                                , "-solver-options", "--solver COIN-BC"
+                               ]
+                               
+        "cplex"           -> [ "-minizinc"
+                               , "-solver-options", "--solver CPLEX"
                                ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
