@@ -16,6 +16,7 @@ import Data.Aeson.TypeScript.TH
 
 deriveTypeScript defaultOptions ''AbstractLiteral
 deriveTypeScript defaultOptions ''AbstractPattern
+deriveTypeScript defaultOptions ''AscDesc
 deriveTypeScript defaultOptions ''AttrName
 deriveTypeScript defaultOptions ''BinaryRelationAttr
 deriveTypeScript defaultOptions ''BinaryRelationAttrs
@@ -23,6 +24,7 @@ deriveTypeScript defaultOptions ''Constant
 deriveTypeScript defaultOptions ''Decision
 deriveTypeScript defaultOptions ''Declaration
 deriveTypeScript defaultOptions ''Domain
+deriveTypeScript defaultOptions ''Dominance
 deriveTypeScript defaultOptions ''Expression
 deriveTypeScript defaultOptions ''FindOrGiven
 deriveTypeScript defaultOptions ''FunctionAttr
@@ -56,6 +58,7 @@ deriveTypeScript defaultOptions ''OpEq
 deriveTypeScript defaultOptions ''OpFactorial
 deriveTypeScript defaultOptions ''OpFlatten
 deriveTypeScript defaultOptions ''OpFreq
+deriveTypeScript defaultOptions ''OpFromSolution
 deriveTypeScript defaultOptions ''OpGeq
 deriveTypeScript defaultOptions ''OpGt
 deriveTypeScript defaultOptions ''OpHist
@@ -132,6 +135,7 @@ tsDef :: IO ()
 tsDef = putStrLn $ formatTSDeclarations $ mconcat
     [ getTypeScriptDeclarations (Proxy :: Proxy AbstractLiteral)
     , getTypeScriptDeclarations (Proxy :: Proxy AbstractPattern)
+    , getTypeScriptDeclarations (Proxy :: Proxy AscDesc)
     , getTypeScriptDeclarations (Proxy :: Proxy AttrName)
     , getTypeScriptDeclarations (Proxy :: Proxy BinaryRelationAttr)
     , getTypeScriptDeclarations (Proxy :: Proxy BinaryRelationAttrs)
@@ -139,6 +143,7 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy Decision)
     , getTypeScriptDeclarations (Proxy :: Proxy Declaration)
     , getTypeScriptDeclarations (Proxy :: Proxy Domain)
+    , getTypeScriptDeclarations (Proxy :: Proxy Dominance)
     , getTypeScriptDeclarations (Proxy :: Proxy Expression)
     , getTypeScriptDeclarations (Proxy :: Proxy FindOrGiven)
     , getTypeScriptDeclarations (Proxy :: Proxy FunctionAttr)
@@ -172,6 +177,7 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpFactorial)
     , getTypeScriptDeclarations (Proxy :: Proxy OpFlatten)
     , getTypeScriptDeclarations (Proxy :: Proxy OpFreq)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpFromSolution)
     , getTypeScriptDeclarations (Proxy :: Proxy OpGeq)
     , getTypeScriptDeclarations (Proxy :: Proxy OpGt)
     , getTypeScriptDeclarations (Proxy :: Proxy OpHist)

@@ -176,9 +176,7 @@ parseTopLevels = do
                 L_heuristic -> Just $ do
                     nm <- parseName
                     return [ SearchHeuristic nm ]
-                    <?> "heuristic"
-                , do
-                    lexeme L_dominance_relation
+                L_dominance_relation -> Just $ do
                     x <- parseExpr
                     incomp <- optional $ do
                         lexeme L_incomparability_function
@@ -186,9 +184,8 @@ parseTopLevels = do
                         y <- parseExpr
                         return (ascDesc, y)
                     return [ DominanceStmt (Dominance x incomp False) ]
-                    <?> "dominance statement"
-                ] <?> "statement"
-    concat <$> some one
+                _ -> Nothing
+    concat <$> some (one <?> "statement")
 
 parseAscDesc :: Parser AscDesc
 parseAscDesc = do
