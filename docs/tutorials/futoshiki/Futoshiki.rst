@@ -1,13 +1,13 @@
 Futoshiki 
 ---------
 
-Author: Ruth Hoffmann and Gökberk Koçak
+Authors: Ruth Hoffmann and Gökberk Koçak
 
 Problem
 ~~~~~~~
 
 ``n x n`` board where each column and row is filled with the unique numbers from 1 to ``n``, similar to a sudoku.
-In contrast to sudoku, there are less than and greater than symbols between cells indicating that one cell has to be filled with a number grater than (or less than) than the cell on the other side of the operator.
+In contrast to sudoku, there are less than and greater than symbols between cells indicating that one cell has to be filled with a number greater than (or less than) than the cell on the other side of the operator.
 
 .. image:: tutorials/futoshiki/example.png
     :scale: 50%

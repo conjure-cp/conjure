@@ -843,6 +843,13 @@ Enumerated types are ordered, so they support comparisons and the operators `max
    find a : D such that a = succ(East) $ South
    find b : bool such that b = (max([North, South]) > East) $ true
 
+The number of elements in an enumerated type can be obtained by using the backtick operator to turn the domain into a list, and then using the cardinality operator:
+
+.. code-block:: essence
+
+   given directions new type enum
+   letting numberOfDirections be |`directions`|
+
 
 Multiset operators
 ~~~~~~~~~~~~~~~~~~
@@ -1101,4 +1108,27 @@ Examples of list comprehensions:
    find b : bool such that b =
        or([ (x=y) | i : I, letting x be i, letting y be M[i] ]) $ true
 
+
+Miscellaneous examples
+~~~~~~~~~~~~~~~~~~~~~~
+
+Some common design patterns are used frequently by experienced modellers.
+
+An often used pattern (also occurring in mixed-integer programming) is to count the number of times a Boolean expression holds across a list.
+This involves the ``toInt`` operator used in a quantification or sum.
+As an example, the following snippet counts the number of entries in a matrix that are each at least as large as the sum of its indices.
+
+.. code-block:: essence
+
+   letting D be domain int(1..3)
+   letting M be [[5,4,3],[3,4,5],[4,3,5]]
+   find k : int(1..100) such that
+     k = sum i,j : D . toInt(M[i,j] >= i+j) $ 6
+
+The ``letting`` command can be used to define macros to more succinctly express constraints.
+The final line of the preceding snippet could be replaced by:
+
+.. code-block:: essence
+
+     k = sum( [ toInt(x) : | i, j : D, letting x be (M[i,j] >= i+j) ] )
 

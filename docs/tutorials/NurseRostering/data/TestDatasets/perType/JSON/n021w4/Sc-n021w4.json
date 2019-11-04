@@ -1,0 +1,151 @@
+{
+  "id" : "n021w4_2",
+  "numberOfWeeks" : 4,
+  "skills" : [ "HeadNurse", "Nurse", "Caretaker", "Trainee" ],
+  "shiftTypes" : [ {
+    "id" : "Early",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  }, {
+    "id" : "Day",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 28
+  }, {
+    "id" : "Late",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  }, {
+    "id" : "Night",
+    "minimumNumberOfConsecutiveAssignments" : 4,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  } ],
+  "forbiddenShiftTypeSuccessions" : [ {
+    "precedingShiftType" : "Early",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Day",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Late",
+    "succeedingShiftTypes" : [ "Early", "Day" ]
+  }, {
+    "precedingShiftType" : "Night",
+    "succeedingShiftTypes" : [ "Early", "Day", "Late" ]
+  } ],
+  "contracts" : [ {
+    "id" : "FullTime",
+    "minimumNumberOfAssignments" : 15,
+    "maximumNumberOfAssignments" : 22,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 2,
+    "maximumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfWorkingWeekends" : 2,
+    "completeWeekends" : 1
+  }, {
+    "id" : "PartTime",
+    "minimumNumberOfAssignments" : 7,
+    "maximumNumberOfAssignments" : 15,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 2,
+    "maximumNumberOfConsecutiveDaysOff" : 5,
+    "maximumNumberOfWorkingWeekends" : 2,
+    "completeWeekends" : 1
+  }, {
+    "id" : "HalfTime",
+    "minimumNumberOfAssignments" : 7,
+    "maximumNumberOfAssignments" : 11,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfConsecutiveDaysOff" : 5,
+    "maximumNumberOfWorkingWeekends" : 1,
+    "completeWeekends" : 1
+  } ],
+  "nurses" : [ {
+    "id" : "HN_0",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_1",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_2",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_3",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_4",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_5",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_6",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_7",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_8",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_9",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_10",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "CT_11",
+    "contract" : "PartTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_12",
+    "contract" : "PartTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_13",
+    "contract" : "PartTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_14",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_15",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "TR_16",
+    "contract" : "PartTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_17",
+    "contract" : "HalfTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_18",
+    "contract" : "FullTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_19",
+    "contract" : "PartTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_20",
+    "contract" : "PartTime",
+    "skills" : [ "Trainee" ]
+  } ]
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2015 (x64) (http://www.altova.com) by Stefaan Haspeslagh (Vives University College) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" elementFormDefault="qualified" attributeFormDefault="unqualified" vc:minVersion="1.1">
+	<xs:element name="History">
+		<xs:annotation>
+			<xs:documentation>Comment describing your root element</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="Week" type="xs:int"/>
+				<xs:element name="Scenario" type="xs:string"/>
+				<xs:element name="NursesHistory">
+					<xs:complexType>
+						<xs:sequence maxOccurs="unbounded">
+							<xs:element name="NurseHistory">
+								<xs:complexType>
+									<xs:all>
+										<xs:element name="Nurse" type="xs:string"/>
+										<xs:element name="NumberOfAssignments" type="xs:int"/>
+										<xs:element name="NumberOfWorkingWeekends" type="xs:int"/>
+										<xs:element name="LastAssignedShiftType" type="xs:string"/>
+										<xs:element name="NumberOfConsecutiveAssignments" type="xs:int"/>
+										<xs:element name="NumberOfConsecutiveWorkingDays" type="xs:int"/>
+										<xs:element name="NumberOfConsecutiveDaysOff" type="xs:int"/>
+									</xs:all>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

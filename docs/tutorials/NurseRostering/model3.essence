@@ -1,0 +1,39 @@
+$ Nurse Rostering, simple version
+$ only hard constraints are considered
+$ no nurses' skills
+$ no history
+
+given nNurses, nDays : int(1..)
+given shifts new type enum
+
+letting days be domain int(1..nDays)
+letting nurses be domain int(1..nNurses)
+letting nShifts be |`shifts`|
+
+given forbiddenPatterns : set of tuple (shifts, shifts)
+given minimumDemand : function (total) (days, shifts) --> int(0..nNurses)
+
+$ instances should not be impossible even before constraints are enforced
+where
+    forAll d : days .
+        (sum s : shifts . minimumDemand((d,s))) <= nNurses
+ 	
+find roster: function (days, nurses) --> shifts
+
+$ constraint 1 (Single assignment per day): A nurse can be assigned to at most one shift per day
+$ NOTE: automatically satisfied because of how "roster" is defined
+
+$ constraint 2 (under staffing): The number of nurses for each shift must be at least equal to the minimum demand
+such that
+    forAll day : days . 
+        forAll shift : shifts . 
+            (sum ((d,_),s) in roster . toInt(d=day /\ s=shift)) >= minimumDemand((day,shift))
+
+$ constraint 3 (shift type successions): shift type assignments of one nurse on two consecutive days 
+$ must not violate any forbidden succession
+such that
+    forAll d : int(1..(nDays-1)) .
+        forAll n : nurses .
+            !((roster((d,n)), roster((d+1,n))) in forbiddenPatterns)
+
+

@@ -1,0 +1,227 @@
+{
+  "id" : "n040w8",
+  "numberOfWeeks" : 8,
+  "skills" : [ "HeadNurse", "Nurse", "Caretaker", "Trainee" ],
+  "shiftTypes" : [ {
+    "id" : "Early",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  }, {
+    "id" : "Day",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 56
+  }, {
+    "id" : "Late",
+    "minimumNumberOfConsecutiveAssignments" : 2,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  }, {
+    "id" : "Night",
+    "minimumNumberOfConsecutiveAssignments" : 4,
+    "maximumNumberOfConsecutiveAssignments" : 5
+  } ],
+  "forbiddenShiftTypeSuccessions" : [ {
+    "precedingShiftType" : "Early",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Day",
+    "succeedingShiftTypes" : [ ]
+  }, {
+    "precedingShiftType" : "Late",
+    "succeedingShiftTypes" : [ "Early", "Day" ]
+  }, {
+    "precedingShiftType" : "Night",
+    "succeedingShiftTypes" : [ "Early", "Day", "Late" ]
+  } ],
+  "contracts" : [ {
+    "id" : "FullTime",
+    "minimumNumberOfAssignments" : 25,
+    "maximumNumberOfAssignments" : 37,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 2,
+    "maximumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfWorkingWeekends" : 4,
+    "completeWeekends" : 1
+  }, {
+    "id" : "PartTime",
+    "minimumNumberOfAssignments" : 15,
+    "maximumNumberOfAssignments" : 25,
+    "minimumNumberOfConsecutiveWorkingDays" : 4,
+    "maximumNumberOfConsecutiveWorkingDays" : 7,
+    "minimumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfConsecutiveDaysOff" : 4,
+    "maximumNumberOfWorkingWeekends" : 3,
+    "completeWeekends" : 1
+  }, {
+    "id" : "HalfTime",
+    "minimumNumberOfAssignments" : 10,
+    "maximumNumberOfAssignments" : 22,
+    "minimumNumberOfConsecutiveWorkingDays" : 3,
+    "maximumNumberOfConsecutiveWorkingDays" : 5,
+    "minimumNumberOfConsecutiveDaysOff" : 3,
+    "maximumNumberOfConsecutiveDaysOff" : 5,
+    "maximumNumberOfWorkingWeekends" : 2,
+    "completeWeekends" : 1
+  } ],
+  "nurses" : [ {
+    "id" : "HN_0",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_1",
+    "contract" : "HalfTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_2",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_3",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_4",
+    "contract" : "FullTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "HN_5",
+    "contract" : "PartTime",
+    "skills" : [ "HeadNurse", "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_6",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_7",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_8",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_9",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_10",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_11",
+    "contract" : "HalfTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_12",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_13",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_14",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_15",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_16",
+    "contract" : "FullTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "NU_17",
+    "contract" : "PartTime",
+    "skills" : [ "Nurse", "Caretaker" ]
+  }, {
+    "id" : "CT_18",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_19",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_20",
+    "contract" : "PartTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_21",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_22",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_23",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_24",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_25",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_26",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_27",
+    "contract" : "HalfTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_28",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_29",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_30",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "CT_31",
+    "contract" : "FullTime",
+    "skills" : [ "Caretaker" ]
+  }, {
+    "id" : "TR_32",
+    "contract" : "PartTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_33",
+    "contract" : "PartTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_34",
+    "contract" : "HalfTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_35",
+    "contract" : "FullTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_36",
+    "contract" : "HalfTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_37",
+    "contract" : "HalfTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_38",
+    "contract" : "FullTime",
+    "skills" : [ "Trainee" ]
+  }, {
+    "id" : "TR_39",
+    "contract" : "PartTime",
+    "skills" : [ "Trainee" ]
+  } ]
+}

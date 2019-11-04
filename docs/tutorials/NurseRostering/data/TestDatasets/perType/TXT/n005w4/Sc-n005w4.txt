@@ -1,0 +1,28 @@
+SCENARIO = n005w4
+
+WEEKS = 4
+
+SKILLS = 2
+HeadNurse
+Nurse
+
+SHIFT_TYPES = 3
+Early (2,5)
+Late (2,3)
+Night (4,5)
+
+FORBIDDEN_SHIFT_TYPES_SUCCESSIONS
+Early 0
+Late 1 Early
+Night 2 Early Late
+
+CONTRACTS = 2
+FullTime (15,22) (3,5) (2,3) 2 1
+PartTime (7,11) (3,5) (3,5) 2 1
+
+NURSES = 5
+Patrick FullTime 2 HeadNurse Nurse 
+Andrea FullTime 2 HeadNurse Nurse
+Stefaan PartTime 2 HeadNurse Nurse
+Sara PartTime 1 Nurse
+Nguyen FullTime 1 Nurse
