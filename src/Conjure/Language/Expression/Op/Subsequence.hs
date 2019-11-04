@@ -29,17 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubsequence x) where
             (TypeSequence{}, TypeSequence{}) -> return TypeBool
             _ -> raiseTypeError p
 
-instance EvaluateOp OpSubsequence where
-    evaluateOp (OpSubsequence
-        (viewConstantSequence -> Just xs)
-        (viewConstantSequence -> Just ys)) =
-            return $ fromBool $
-                or [ and (zipWith (==) xs zs)
-                   | zs <- subsequences ys
-                   , length zs >= length xs
-                   ]
-    evaluateOp op = na $ "evaluateOp{OpSubsequence}:" <++> pretty (show op)
-
 instance SimplifyOp OpSubsequence x where
     simplifyOp _ = na "simplifyOp{OpSubsequence}"
 

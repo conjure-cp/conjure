@@ -271,6 +271,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
+        TypeFunction{} <- typeOf func
         DomainFunction _ attrs _domFr domTo <- domainOf func
         let upd val old = lambdaToFunction pat old val
         let
@@ -341,6 +342,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
+        TypeFunction{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             [ RuleResult
@@ -363,7 +365,7 @@ rule_Param_DefinedRange :: Rule
 rule_Param_DefinedRange = "param-DefinedRange-of-function" `namedRule` theRule where
     theRule p = do
         unless (categoryOf p == CatParameter) $ na "rule_Param_DefinedRange"
-        (_reducerType, mk, p2) <- match opReducer p
+        (_reducerType, _, mk, p2) <- match opReducer p
         (index, f) <- case p2 of
             [essence| defined(&f) |] -> return (1, f)
             [essence| range(&f)   |] -> return (2, f)

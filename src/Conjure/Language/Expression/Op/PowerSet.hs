@@ -4,7 +4,6 @@ module Conjure.Language.Expression.Op.PowerSet where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.Expression.Op.TildeLt ( ordTildeLt )
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -24,13 +23,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPowerSet x) where
         case tx of
             TypeSet i -> return (TypeSet (TypeSet i))
             _ -> raiseTypeError p
-
-instance EvaluateOp OpPowerSet where
-    evaluateOp (OpPowerSet (viewConstantSet -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitSet
-            [ ConstantAbstract $ AbsLitSet ys
-            | ys <- subsequences (sortBy ordTildeLt (sortNub xs)) ]
-    evaluateOp op = na $ "evaluateOp{OpPowerSet}:" <++> pretty (show op)
 
 instance SimplifyOp OpPowerSet x where
     simplifyOp _ = na "simplifyOp{OpPowerSet}"

@@ -78,19 +78,33 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
             )
 
 
-rule_Eq_Empty :: Rule
-rule_Eq_Empty = "sequence-eq-empty" `namedRule` theRule where
+rule_Eq_Literal :: Rule
+rule_Eq_Literal = "sequence-eq-literal" `namedRule` theRule where
     theRule p = do
-        (x,y)          <- match opEq p
-        TypeSequence{} <- typeOf x
-        TypeSequence{} <- typeOf y
-        other <- case (match sequenceLiteral x, match sequenceLiteral y) of
-            (Just (_, []), _) -> return y
-            (_, Just (_, [])) -> return x
+        (x,y) <- match opEq p
+        xTy <- typeOf x
+        yTy <- typeOf y
+        case (xTy, yTy) of
+            (TypeSequence{}, _) -> return ()
+            (_, TypeSequence{}) -> return ()
+            _ -> na "rule_Eq_Literal"
+        (other, vals) <- case ( match sequenceLiteral x, match matrixLiteral x
+                              , match sequenceLiteral y, match matrixLiteral y) of
+            (Just (_, vals), _                , _             , _                ) -> return (y, vals)
+            (_             , Just (_, _, vals), _             , _                ) -> return (y, vals)
+            (_             , _                , Just (_, vals), _                ) -> return (x, vals)
+            (_             , _                , _             , Just (_, _, vals)) -> return (x, vals)
             _                 -> na "sequence not empty"
         return
             ( "Horizontal rule for sequence equality, one side empty"
-            , return [essence| |&other| = 0 |]
+            , do
+                let len = fromInt (genericLength vals)
+                return $ make opAnd $ fromList
+                    $ [essence| |&other| = &len |]
+                    : [ [essence| &other(&i) = &val |]
+                      | (i_, val) <- zip allNats vals
+                      , let i = fromInt i_
+                      ]
             )
 
 

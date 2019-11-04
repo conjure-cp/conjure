@@ -50,7 +50,7 @@ rule_ToAnd = "bubble-to-and" `namedRule` theRule where
 rule_ToMultiply_HeadOfIntComprehension :: Rule
 rule_ToMultiply_HeadOfIntComprehension = "bubble-to-multiply-HeadOfIntComprehension" `namedRule` theRule where
     theRule p = do
-        (_, mk, Comprehension (WithLocals x (DefinednessConstraints cons)) gocs) <- match opReducer p
+        (_, _, mk, Comprehension (WithLocals x (DefinednessConstraints cons)) gocs) <- match opReducer p
         TypeInt _ <- typeOf x
         let conjunct = make opAnd (fromList cons)
         let x' = [essence| &x * toInt(&conjunct) |]

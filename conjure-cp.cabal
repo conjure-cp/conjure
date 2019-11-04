@@ -1,6 +1,6 @@
 
 Name:           conjure-cp
-Version:        2.2.0
+Version:        2.3.0
 Synopsis:       Conjure: The Automated Constraint Modelling Tool
 Description:    .
 Homepage:       http://github.com/conjure-cp/conjure
@@ -25,18 +25,20 @@ Library
 
                      -- definitions of language constructs
                      , Conjure.Language
-                     , Conjure.Language.AdHoc
-                     , Conjure.Language.Definition
-                     , Conjure.Language.Expression
-                     , Conjure.Language.Name
-                     , Conjure.Language.NameGen
-                     , Conjure.Language.Constant
                      , Conjure.Language.AbstractLiteral
+                     , Conjure.Language.AdHoc
+                     , Conjure.Language.Constant
+                     , Conjure.Language.Definition
                      , Conjure.Language.Domain
                      , Conjure.Language.Domain.AddAttributes
-                     , Conjure.Language.Type
+                     , Conjure.Language.EvaluateOp
+                     , Conjure.Language.Expression
                      , Conjure.Language.Lenses
+                     , Conjure.Language.Name
+                     , Conjure.Language.NameGen
                      , Conjure.Language.TH
+                     , Conjure.Language.Type
+
 
                      , Conjure.Language.Expression.Internal.Generated
                      , Conjure.Language.Expression.DomainSizeOf
@@ -130,21 +132,22 @@ Library
                      , Conjure.Language.ModelDiff
                      , Conjure.Language.ModelStats
                      , Conjure.Language.Lexer
+                     , Conjure.Language.NameResolution
                      , Conjure.Language.Parser
                      , Conjure.Language.ParserC
                      , Conjure.Language.Pretty
-                     , Conjure.Language.NameResolution
                      , Conjure.Language.ZeroVal
-                     , Conjure.Process.Sanity
-                     , Conjure.Process.Enums
-                     , Conjure.Process.Unnameds
-                     , Conjure.Process.Enumerate
-                     , Conjure.Process.FiniteGivens
-                     , Conjure.Process.LettingsForComplexInDoms
                      , Conjure.Process.AttributeAsConstraints
                      , Conjure.Process.DealWithCuts
-                     , Conjure.Process.ModelStrengthening
+                     , Conjure.Process.Enumerate
+                     , Conjure.Process.Enums
+                     , Conjure.Process.FiniteGivens
                      , Conjure.Process.InferAttributes
+                     , Conjure.Process.LettingsForComplexInDoms
+                     , Conjure.Process.ModelStrengthening
+                     , Conjure.Process.Sanity
+                     , Conjure.Process.Unnameds
+                     , Conjure.Process.ValidateConstantForDomain
 
                      -- definitions of representations: how to go down and up
                      , Conjure.Representations
@@ -233,11 +236,12 @@ Library
                      , Conjure.UI.VarSymBreaking
                      , Conjure.UI.ParameterGenerator
                      , Conjure.UI.NormaliseQuantified
-                     , Conjure.UI.LogFollow
+                     , Conjure.UI.TypeScript
 
     build-depends    : base
                      -- the export list have changed
                      , aeson >= 1.2.2.0
+                     , aeson-typescript
                      , bytestring
                      , cereal >= 0.5.1.0
                      -- changes in newline handling
@@ -282,6 +286,7 @@ Library
                      -- we do not directly depend on generic-deriving, but we need at least 1.10.6
                      -- see https://github.com/dreixel/generic-deriving/issues/41
                      , generic-deriving >= 1.10.6
+                     , ansi-terminal >= 0.8.2
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*

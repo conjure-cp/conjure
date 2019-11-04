@@ -11,11 +11,11 @@ branching on
      x_ExplicitR2_Occurrence]
 such that
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q6]; int(1)] | q6 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q6] | q6 : int(1..3)];
                  int(1..2)])
     <lex
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q7]; int(1)] | q7 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q7] | q7 : int(1..3)];
                  int(1..2)]),
     and([and([q3 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3] <

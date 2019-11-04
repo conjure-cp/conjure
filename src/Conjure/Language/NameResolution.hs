@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.Language.NameResolution
     ( resolveNames
@@ -13,53 +14,51 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
-import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.TH
 
 
-resolveNamesMulti
-    :: ( MonadLog m
-       , MonadFail m
-       , MonadUserError m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       ) => [Model] -> m [Model]
+resolveNamesMulti ::
+    MonadFail m =>
+    MonadLog m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    [Model] -> m [Model]
 resolveNamesMulti = flip evalStateT [] . go
     where
         go [] = return []
         go (m:ms) = (:) <$> resolveNames_ m <*> go ms
 
-resolveNames
-    :: ( MonadLog m
-       , MonadFail m
-       , MonadUserError m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       ) => Model -> m Model
+resolveNames ::
+    MonadFail m =>
+    MonadLog m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 resolveNames = flip evalStateT [] . resolveNames_
 
-resolveNames_
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => Model -> m Model
+resolveNames_ ::
+    MonadFail m =>
+    MonadLog m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 resolveNames_ model = do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
-    return model { mStatements = statements }
+    return model { mStatements = toTaggedInt statements }
 
 -- this is for when a name will shadow an already existing name that is outside of this expression
 -- we rename the new names to avoid name shadowing
-shadowing
-    :: ( MonadFail m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       )
-    => Expression
-    -> m Expression
+shadowing ::
+    MonadFail m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    NameGen m =>
+    Expression -> m Expression
 shadowing p@(Comprehension _ is) = do
     -- list of names originating from this comprehension
     let generators = concat
@@ -77,16 +76,24 @@ shadowing p@(Comprehension _ is) = do
 shadowing p = return p
 
 
-resolveNamesX
-    :: ( MonadFail m
-       , MonadUserError m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       ) => Expression -> m Expression
+resolveNamesX ::
+    MonadFail m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
 resolveNamesX x = do
     x' <- evalStateT (resolveX x) []
     mapM_ check (universe x')
     return x'
+
+
+toTaggedInt :: Data a => a -> a
+toTaggedInt = transformBi f
+    where
+        f :: Type -> Type
+        f (TypeEnum (Name nm)) = TypeInt (TagEnum nm)
+        f ty = ty
 
 
 check :: MonadFail m => Expression -> m ()
@@ -94,16 +101,13 @@ check (Reference nm Nothing) = fail ("Undefined:" <+> pretty nm)
 check _ = return ()
 
 
-resolveStatement
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => Statement
-    -> m Statement
-
+resolveStatement ::
+    MonadFail m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Statement -> m Statement
 resolveStatement st =
     case st of
         Declaration decl ->
@@ -147,15 +151,13 @@ resolveStatement st =
             return (DominanceStmt (Dominance x' (Just (dir, y')) pr))
 
 
-resolveSearchOrder
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => SearchOrder
-    -> m SearchOrder
+resolveSearchOrder ::
+    MonadFail m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    SearchOrder -> m SearchOrder
 resolveSearchOrder (BranchingOn nm) = do
     ctxt <- gets id
     mval <- gets (lookup nm)
@@ -169,16 +171,13 @@ resolveSearchOrder (Cut x) =
     in  Cut . transformBi f <$> resolveX x
 
 
-resolveX
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => Expression
-    -> m Expression
-
+resolveX ::
+    MonadFail m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
 resolveX (Reference nm Nothing) = do
     ctxt <- gets id
     mval <- gets (lookup nm)
@@ -238,10 +237,10 @@ resolveX p@Comprehension{} = scope $ do
                         modify ((nm, refto) :)
                     return (Generator gen')
                 Condition y -> Condition <$> resolveX y
-                ComprehensionLetting nm expr -> do
+                ComprehensionLetting pat expr -> do
                     expr' <- resolveX expr
-                    modify ((nm, Alias expr') :)
-                    return (ComprehensionLetting nm expr')
+                    resolveAbsPat p pat expr'
+                    return (ComprehensionLetting pat expr')
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"
@@ -259,18 +258,16 @@ resolveX (WithLocals body (DefinednessConstraints locals)) = scope $ do
 resolveX x = descendM resolveX x
 
 
-resolveD
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , Data r
-       , Pretty r
-       , Default r
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => Domain r Expression
-    -> m (Domain r Expression)
+resolveD ::
+    MonadFail m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    Data r =>
+    Default r =>
+    Pretty r =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain r Expression -> m (Domain r Expression)
 resolveD (DomainReference _ (Just d)) = resolveD d
 resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
@@ -280,12 +277,12 @@ resolveD (DomainReference nm Nothing) = do
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
-    t  <- typeOf d'
+    t  <- typeOfDomain d'
     modify ((n, RecordField n t) :)
     return (n, d')
 resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
-    t  <- typeOf d'
+    t  <- typeOfDomain d'
     modify ((n, VariantField n t) :)
     return (n, d')
 resolveD d = do
@@ -293,15 +290,39 @@ resolveD d = do
     mapM resolveX d'
 
 
-resolveAbsLit
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, ReferenceTo)] m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => AbstractLiteral Expression
-    -> m (AbstractLiteral Expression)
+resolveAbsPat ::
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    Expression -> AbstractPattern -> Expression -> m ()
+resolveAbsPat _ AbstractPatternMetaVar{} _ = bug "resolveAbsPat AbstractPatternMetaVar"
+resolveAbsPat _ (Single nm) x = modify ((nm, Alias x) :)
+resolveAbsPat context (AbsPatTuple ps) x =
+    sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
+              | (p, i_) <- zip ps allNats
+              , let i = fromInt i_
+              ]
+resolveAbsPat context (AbsPatMatrix ps) x =
+    sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
+              | (p, i_) <- zip ps allNats
+              , let i = fromInt i_
+              ]
+resolveAbsPat context (AbsPatSet ps) x = do
+    ys <- case x of
+        Constant (ConstantAbstract (AbsLitSet xs)) -> return (map Constant xs)
+        AbstractLiteral (AbsLitSet xs) -> return xs
+        _ -> userErr1 $ "Abstract set pattern cannot be used in this context:" <++> pretty context
+    sequence_ [ resolveAbsPat context p y
+              | (p,y) <- zip ps ys
+              ]
+
+
+resolveAbsLit ::
+    MonadFail m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    AbstractLiteral Expression -> m (AbstractLiteral Expression)
 resolveAbsLit (AbsLitVariant Nothing n x) = do
     x'   <- resolveX x
     mval <- gets id

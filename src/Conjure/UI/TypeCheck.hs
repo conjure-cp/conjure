@@ -60,7 +60,7 @@ typeCheckModel model1 = do
             Declaration decl -> do
                 case decl of
                     FindOrGiven _ _ domain -> do
-                        mty <- runExceptT $ typeOf domain
+                        mty <- runExceptT $ typeOfDomain domain
                         case mty of
                             Right _ -> return ()
                             Left err -> tell $ return $ vcat
@@ -68,7 +68,9 @@ typeCheckModel model1 = do
                                 , "Error:" <++> pretty err
                                 ]
                     Letting _ x -> do
-                        mty <- runExceptT $ typeOf x
+                        mty <- runExceptT $ case x of
+                                                Domain y -> typeOfDomain y
+                                                _ -> typeOf x
                         case mty of
                             Right _ -> return ()
                             Left err -> tell $ return $ vcat
@@ -143,7 +145,6 @@ typeCheckModel model1 = do
                             [ "In the objective:" <++> pretty st
                             , "Expected type `int`, but got:" <++> pretty t
                             , "Expression:" <+> pretty o
-                            , "Expression:" <+> pretty (show o)
                             ]
                         return o
                 case mty of

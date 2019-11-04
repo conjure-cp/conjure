@@ -160,17 +160,21 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
         TypeMSet (TypeInt _) <- typeOf s
         return
             ( "Horizontal rule for mset max"
-            , do
-                (iPat, i) <- quantifiedVar
-                return [essence| max([&i | &iPat <- &s]) |]
+            , case () of
+                _ | Just (_, xs) <- match setLiteral s, length xs > 0 -> return $ make opMax $ fromList xs
+                _ -> do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| max([&i | &iPat <- &s]) |]
             )
     theRule [essence| min(&s) |] = do
         TypeMSet (TypeInt _) <- typeOf s
         return
             ( "Horizontal rule for mset min"
-            , do
-                (iPat, i) <- quantifiedVar
-                return [essence| min([&i | &iPat <- &s]) |]
+            , case () of
+                _ | Just (_, xs) <- match setLiteral s, length xs > 0 -> return $ make opMin $ fromList xs
+                _ -> do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| min([&i | &iPat <- &s]) |]
             )
     theRule _ = na "rule_MaxMin"
 

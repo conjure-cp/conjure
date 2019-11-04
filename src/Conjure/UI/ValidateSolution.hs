@@ -6,16 +6,17 @@ import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 
 validateSolution ::
     MonadFail m =>
+    NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model ->      -- essence model
@@ -32,11 +33,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     valC                  <- gets id >>= flip instantiateExpression val
                     valC_typed            <- case valC of
                                                 TypedConstant c tyc -> do
-                                                    ty <- typeOf dom
+                                                    ty <- typeOfDomain dom
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    either userErr1 return (validateConstantForDomain nm valC domC)
+                    failToUserError $ validateConstantForDomain nm valC domC
                     modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
                                          , "Its domain:" <++> pretty dom
@@ -51,11 +52,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     valC                  <- gets id >>= flip instantiateExpression val
                     valC_typed            <- case valC of
                                                 TypedConstant c tyc -> do
-                                                    ty <- typeOf dom
+                                                    ty <- typeOfDomain dom
                                                     return $ TypedConstant c (mostDefined [ty, tyc])
                                                 _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    either userErr1 return (validateConstantForDomain nm valC domC)
+                    failToUserError $ validateConstantForDomain nm valC domC
                     modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
                                          , "Its domain:" <++> pretty dom
@@ -165,10 +166,10 @@ introduceRecordFields ::
     Domain r x -> m ()
 introduceRecordFields (DomainRecord inners) =
     forM_ inners $ \ (n, d) -> do
-        t <- typeOf d
+        t <- typeOfDomain d
         modify ((n, Constant (ConstantField n t)) :)
 introduceRecordFields (DomainVariant inners) =
     forM_ inners $ \ (n, d) -> do
-        t <- typeOf d
+        t <- typeOfDomain d
         modify ((n, Constant (ConstantField n t)) :)
 introduceRecordFields _ = return ()

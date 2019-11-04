@@ -30,36 +30,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
         ]
         (const False)
 
-instance EvaluateOp OpIntersect where
-    evaluateOp p | any isUndef (childrenBi p) = do
-        ty <- typeOf p
-        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpIntersect (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
-        ty <- typeOf p
-        let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ TypedConstant (ConstantAbstract $ AbsLitSet outs) ty
-    evaluateOp p@(OpIntersect (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) = do
-        ty <- typeOf p
-        let asHist = histogram as
-            bsHist = histogram bs
-            allElems = sortNub (as++bs)
-            outs =
-                [ replicate (fromInteger (min countA countB)) e
-                | e <- allElems
-                , let countA = fromMaybe 0 (e `lookup` asHist)
-                , let countB = fromMaybe 0 (e `lookup` bsHist)
-                ]
-        return $ TypedConstant (ConstantAbstract $ AbsLitMSet $ concat outs) ty
-    evaluateOp p@(OpIntersect (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
-        ty <- typeOf p
-        let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ TypedConstant (ConstantAbstract $ AbsLitFunction outs) ty
-    evaluateOp p@(OpIntersect (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) = do
-        ty <- typeOf p
-        let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ TypedConstant (ConstantAbstract $ AbsLitRelation outs) ty
-    evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
-
 instance SimplifyOp OpIntersect x where
     simplifyOp _ = na "simplifyOp{OpIntersect}"
 

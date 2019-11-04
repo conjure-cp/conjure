@@ -212,7 +212,7 @@ pgOnDomain x nm dom =
                             return (SequenceAttr sizeOut jectivity, lb, ub, cardDomain)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl =
                     [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
                     , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
@@ -287,7 +287,7 @@ pgOnDomain x nm dom =
                             return (SetAttr sizeOut, lb, ub, cardDomain)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl =
                     [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
                     , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
@@ -376,7 +376,7 @@ pgOnDomain x nm dom =
                             return (MSetAttr sizeAttrOut occurAttrOut, sizeLb, sizeUb, cardDomain, occurLb, occurUb)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl =
                     [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
                     , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
@@ -431,7 +431,7 @@ pgOnDomain x nm dom =
             -- drop total, post constraint instead
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
-                        FunctionAttr size _totality jectivity -> do
+                        FunctionAttr size PartialityAttr_Partial jectivity -> do
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
@@ -461,6 +461,8 @@ pgOnDomain x nm dom =
                                                , DomainInt TagInt [RangeBounded lb ub]
                                                )
                             return (FunctionAttr sizeOut PartialityAttr_Partial jectivity, lb, ub, cardDomain)
+                        FunctionAttr _size PartialityAttr_Total jectivity -> do
+                            return (FunctionAttr SizeAttr_None PartialityAttr_Partial jectivity, Nothing, Nothing, bug "cardDomain not needed")
 
             let isTotal = case attr of
                                 FunctionAttr _ PartialityAttr_Total _ -> True
@@ -468,7 +470,7 @@ pgOnDomain x nm dom =
                 isPartial = not isTotal
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl | isTotal = []
                         | otherwise =
                             [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
@@ -559,14 +561,16 @@ pgOnDomain x nm dom =
                 (d', decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show n)) d
                 return (d', decl, map liftCons cons)
 
+            let maxIntN = maxIntTimes (genericLength innerDomains)
+
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
                         RelationAttr size binRelAttr -> do
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
                                     SizeAttr_None ->
-                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
-                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                        return ( SizeAttr_MaxSize maxIntN, Nothing, Nothing
+                                               , DomainInt TagInt [RangeBounded minInt maxIntN]
                                                )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
@@ -576,8 +580,8 @@ pgOnDomain x nm dom =
                                                )
                                     SizeAttr_MinSize a -> do
                                         lb <- lowerBoundOfIntExpr a
-                                        return ( SizeAttr_MinMaxSize lb maxInt, Just a, Nothing
-                                               , DomainInt TagInt [RangeBounded lb maxInt]
+                                        return ( SizeAttr_MinMaxSize lb maxIntN, Just a, Nothing
+                                               , DomainInt TagInt [RangeBounded lb maxIntN]
                                                )
                                     SizeAttr_MaxSize a -> do
                                         ub <- upperBoundOfIntExpr a
@@ -593,7 +597,7 @@ pgOnDomain x nm dom =
                             return (RelationAttr sizeOut binRelAttr, lb, ub, cardDomain)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 3]
+                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxIntN / 2 |]]
                 newDecl =
                     [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
                     , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
@@ -638,6 +642,9 @@ minInt = Reference "MININT" Nothing
 
 maxInt :: Expression
 maxInt = Reference "MAXINT" Nothing
+
+maxIntTimes :: Integer -> Expression
+maxIntTimes n = let m = fromInt n in [essence| &maxInt ** &m |]
 
 
 minOfIntDomain :: MonadUserError m => Domain () Expression -> m Expression

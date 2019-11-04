@@ -8,9 +8,14 @@ find cut2: bool
 branching on [cut1, cut2, x_Occurrence, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     !cut1 <->
+<<<<<<< HEAD
     2 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q23]) | q23 : int(1..3)]) /\
     (or([x_ExplicitVarSizeWithFlags_Flags[q26] /\ x_ExplicitVarSizeWithFlags_Values[q26] = 1 | q26 : int(1..3)]) /\
      or([x_ExplicitVarSizeWithFlags_Flags[q28] /\ x_ExplicitVarSizeWithFlags_Values[q28] = 2 | q28 : int(1..3)])),
+=======
+    or([x_ExplicitVarSizeWithFlags_Flags[q14] /\ x_ExplicitVarSizeWithFlags_Values[q14] = 1 | q14 : int(1..3)]) /\
+    or([x_ExplicitVarSizeWithFlags_Flags[q16] /\ x_ExplicitVarSizeWithFlags_Values[q16] = 2 | q16 : int(1..3)]),
+>>>>>>> master
     !cut2 <-> x_Occurrence[1],
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]

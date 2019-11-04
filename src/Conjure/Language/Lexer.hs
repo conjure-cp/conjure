@@ -550,11 +550,19 @@ tryLexIntLiteral t =
         Left _ -> Nothing
         Right (x, rest) -> Just (rest, LIntLiteral x)
 
+
+emojis :: [Char]
+emojis = concat [['\x1f600'..'\x1F64F'],
+                 ['\x1f300'..'\x1f5ff'],
+                 ['\x1f680'..'\x1f999'],
+                 ['\x1f1e0'..'\x1f1ff']]
+
+
 isIdentifierFirstLetter :: Char -> Bool
-isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String)
+isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem` emojis
 
 isIdentifierLetter :: Char -> Bool
-isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String)
+isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
 tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
 tryLexMetaVar running = do

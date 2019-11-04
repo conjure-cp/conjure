@@ -27,6 +27,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Model generation:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--responses=ITEM</td><td style='padding-left:2ex;'>A comma separated list of integers.<br />If provided, these will be used as the answers during interactive model generation instead of prompting the user.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--responses-representation=ITEM</td><td style='padding-left:2ex;'>A comma separated list of variable name : integer pairs.<br />If provided, these will be used as the answers during interactive model generation instead of prompting the user for the variable representation questions.<br />See --dump-representations for a list of available representation options.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--estimate-number-of-models</td><td style='padding-left:2ex;'>Calculate (a lower bound on) the number of models, instead of running the usual modelling mode.</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-q</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-q=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting the next question to answer. Options: f (for first), i (for interactive), r (for random), x (for all). Prepend a (for auto) to automatically skip when there is only one option at any point.<br />Default value: f</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-a</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-a=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting an answer. Same options as strategy-q.<br /> c picks the most 'compact' option at every decision point.<br /> s picks the 'sparsest' option at every decision point: useful for --representations-givens<br /> l (for follow log) tries to pick given choices as far as possible<br />Default value: ai</td></tr>
@@ -112,6 +113,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Model generation:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--responses=ITEM</td><td style='padding-left:2ex;'>A comma separated list of integers.<br />If provided, these will be used as the answers during interactive model generation instead of prompting the user.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--responses-representation=ITEM</td><td style='padding-left:2ex;'>A comma separated list of variable name : integer pairs.<br />If provided, these will be used as the answers during interactive model generation instead of prompting the user for the variable representation questions.<br />See --dump-representations for a list of available representation options.</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-q</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-q=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting the next question to answer. Options: f (for first), i (for interactive), r (for random), x (for all). Prepend a (for auto) to automatically skip when there is only one option at any point.<br />Default value: f</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-a</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-a=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting an answer. Same options as strategy-q.<br /> c picks the most 'compact' option at every decision point.<br /> s picks the 'sparsest' option at every decision point: useful for --representations-givens<br /> l (for follow log) tries to pick given choices as far as possible<br />Default value: c</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation.<br />Default value: same as --strategy-a</td></tr>
@@ -128,7 +130,7 @@
 <tr><td colspan='3'>Options for other tools:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--savilerow-options=ITEM</td><td style='padding-left:2ex;'>Options passed to Savile Row.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver-options=ITEM</td><td style='padding-left:2ex;'>Options passed to the backend solver.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver=ITEM</td><td style='padding-left:2ex;'>Backend solver. Possible values:<br /> - minion (CP solver)<br /> - gecode (CP solver)<br /> - chuffed (CP solver)<br /> - glucose (SAT solver)<br /> - lingeling (SAT solver)<br /> - minisat (SAT solver)<br /> - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)<br /> - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)<br /> - open-wbo (MaxSAT solver, only works with optimisation problems)<br />Default: minion</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver=ITEM</td><td style='padding-left:2ex;'>Backend solver. Possible values:<br /> - minion (CP solver)<br /> - gecode (CP solver)<br /> - chuffed (CP solver)<br /> - glucose (SAT solver)<br /> - glucose-syrup (SAT solver)<br /> - lingeling (SAT solver)<br /> - minisat (SAT solver)<br /> - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)<br /> - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)<br /> - open-wbo (MaxSAT solver, only works with optimisation problems)<br />Default: minion</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure ide [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>IDE support features for Conjure.<br />Not intended for direct use.</td></tr>
@@ -139,7 +141,8 @@
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>IDE Features:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--dump-domains</td><td style='padding-left:2ex;'>Print the domains of decision variables and parameters.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--dump-declarations</td><td style='padding-left:2ex;'>Print information about top level declarations.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--dump-representations</td><td style='padding-left:2ex;'>List the available representations for decision variables and parameters.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure pretty [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Pretty print as Essence file to stdout.<br />This mode can be used to view a binary Essence file in textual form.</td></tr>
@@ -219,6 +222,14 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td colspan='3'>&nbsp;</tr>
+<tr><td colspan='3'>conjure tsdef [OPTIONS]</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>Generate data type definitions in TypeScript.<br />These can be used when interfacing with Conjure via JSON.</td></tr>
+<tr><td colspan='3'>&nbsp;</tr>
+<tr><td colspan='3'>Logging &amp; Output:</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
+<tr><td colspan='3'>General:</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 </table>
 </div>
 <br />

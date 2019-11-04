@@ -26,11 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
             TypeMatrix{} -> return TypeBool
             _ -> raiseTypeError p
 
-instance EvaluateOp OpAllDiff where
-    evaluateOp (OpAllDiff (viewConstantMatrix -> Just (_, vals))) =
-        return $ ConstantBool $ length vals == length (sortNub vals)
-    evaluateOp op = na $ "evaluateOp{OpAllDiff}:" <++> pretty (show op)
-
 instance SimplifyOp OpAllDiff x where
     simplifyOp _ = na "simplifyOp{OpAllDiff}"
 

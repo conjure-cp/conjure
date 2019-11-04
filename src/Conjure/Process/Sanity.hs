@@ -26,15 +26,34 @@ sanityChecks model = do
                 _                                   -> mapM_ (checkDomain False (Just st)) (universeBi (forgetRefs st))
             forM_ (mStatements m) $ \ st -> case st of
                 SuchThat{} ->
-                    forM_ (universeBi st) $ \case
-                        x@Comprehension{} ->
-                            forM_ (universeBi x) $ \case
-                                GenDomainNoRepr _ dom -> checkDomain True (Just st) dom
-                                _                     -> return ()
-                        _ -> return ()
+                    forM_ (universeBi st) $ \ x -> do
+                        case x of
+                            Comprehension{} ->
+                                forM_ (universeBi x) $ \case
+                                    GenDomainNoRepr _ dom -> checkDomain True (Just st) dom
+                                    _                     -> return ()
+                            _ -> return ()
+                        let mab = case x of
+                                    [essence| &a  = &b |] -> Just (a,b)
+                                    [essence| &a != &b |] -> Just (a,b)
+                                    _ -> Nothing
+                        case mab of
+                            Just (a,b) -> do
+                                let
+                                    disallowed (Comprehension _ gocs) =
+                                        or [ not $ null [ () | Generator (GenInExpr {}) <- gocs ]
+                                           , not $ null [ () | Condition c <- gocs, categoryOf c == CatDecision ]
+                                           ]
+                                    disallowed _ = False
+                                when (disallowed a || disallowed b) $
+                                    recordErr [ "Type error in" <+> vcat
+                                                    [ pretty x
+                                                    , "Cannot use a comprehension in an equality expression."
+                                                    ] ]
+                            _ -> return ()
                 _ -> return ()
             mapM_ checkFactorial (universeBi $ mStatements m)
-            statements2 <- transformBiM checkLit (mStatements m)
+            statements2 <- transformBiM updateSizeAttr =<< transformBiM checkLit (mStatements m)
             return m { mStatements = statements2 }
 
         -- check for mset attributes
@@ -88,6 +107,12 @@ sanityChecks model = do
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
             _ -> return ()
+
+
+        updateSizeAttr :: Monad m => SizeAttr Expression -> m (SizeAttr Expression)
+        updateSizeAttr (SizeAttr_MinMaxSize a b) | a == b = return (SizeAttr_Size a)
+        updateSizeAttr s = return s
+
 
         -- check for function literals
         --     they cannot contain anything > CatParameter

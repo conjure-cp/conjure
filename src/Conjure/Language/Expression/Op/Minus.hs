@@ -34,46 +34,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
                     _ -> False
         )
 
-instance EvaluateOp OpMinus where
-    evaluateOp p | any isUndef (childrenBi p) = do
-        ty <- typeOf p
-        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpMinus (ConstantInt t a) (ConstantInt _ b))
-      = return $ ConstantInt t (a - b)
-    evaluateOp (OpMinus (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
-        let outs =
-                [ a
-                | a <- as
-                , a `notElem` bs
-                ]
-        return $ ConstantAbstract $ AbsLitSet outs
-    evaluateOp (OpMinus (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) = do
-        let asHist = histogram as
-            bsHist = histogram bs
-            allElems = sortNub (as++bs)
-            outs =
-                [ replicate (fromInteger (countA - countB)) e
-                | e <- allElems
-                , let countA = fromMaybe 0 (e `lookup` asHist)
-                , let countB = fromMaybe 0 (e `lookup` bsHist)
-                ]
-        return $ ConstantAbstract $ AbsLitMSet $ concat outs
-    evaluateOp (OpMinus (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
-        let outs =
-                [ a
-                | a <- as
-                , a `notElem` bs
-                ]
-        return $ ConstantAbstract $ AbsLitFunction outs
-    evaluateOp (OpMinus (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) = do
-        let outs =
-                [ a
-                | a <- as
-                , a `notElem` bs
-                ]
-        return $ ConstantAbstract $ AbsLitRelation outs
-    evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
-
 instance SimplifyOp OpMinus x where
     simplifyOp _ = na "simplifyOp{OpMinus}"
 

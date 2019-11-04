@@ -63,18 +63,14 @@ such that
              | q90 : int(1..b)]),
     and([q12 + 1 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          flatten([[p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q12]; int(1)],
-                  flatten([[p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                [q12, q23];
-                                int(1)]
-                               | q23 : int(1..b)]);
+                  [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q12, q23]
+                       | q23 : int(1..b)];
                       int(1..2)])
          <lex
          flatten([[p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q12 + 1];
                        int(1)],
-                  flatten([[p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                [q12 + 1, q24];
-                                int(1)]
-                               | q24 : int(1..b)]);
+                  [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q12 + 1, q24]
+                       | q24 : int(1..b)];
                       int(1..2)])
              | q12 : int(1..b - 1)]),
     and([q13 > p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->

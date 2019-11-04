@@ -3,6 +3,7 @@
 module Conjure.Language.Pretty
     ( Pretty(..)
     , (<++>), (<+>), (<>)
+    , (<+->)
     , prettyList, prettyListDoc
     , parensIf
     , render, renderNormal, renderWide
@@ -21,7 +22,7 @@ import Conjure.Prelude
 import Text.Printf ( printf )
 
 -- text
-import qualified Data.Text as T ( Text, unpack )
+import qualified Data.Text as T ( Text, unpack, replace)
 
 -- pretty
 import Text.PrettyPrint
@@ -68,6 +69,10 @@ infixl 5 <++>
 (<++>) :: Doc -> Doc -> Doc
 a <++> b = hang a 4 b
 
+-- | For debugging output, truncates the second argument to 5 lines
+(<+->) :: Doc -> Doc -> Doc
+a <+-> b = a <+> (vcat $ map pretty $ take 5 $ lines $ renderWide $ b)
+
 prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
 prettyList wrap punc = prettyListDoc wrap punc . map pretty
 
@@ -112,7 +117,7 @@ prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
 instance Pretty JSON.Value where
     pretty (Object x) = pretty x
     pretty (Array x) = pretty x
-    pretty (String x) = pretty (show x)
+    pretty (String x) = "\"" <> pretty (T.unpack (T.replace "\"" "\\\"" x)) <> "\""
     pretty (Number x) = pretty x
     pretty (Bool False) = "false"
     pretty (Bool True) = "true"
@@ -134,7 +139,6 @@ instance Pretty JSON.Object where
                     , "nameGenState", "nbExtraGivens"
                     , "representations", "representationsTree"
                     , "originalDomains"
-                    , "questionAnswered"
                     , "before", "after"
                     ] [1..]
 

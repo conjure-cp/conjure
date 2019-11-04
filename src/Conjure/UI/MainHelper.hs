@@ -10,18 +10,19 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
-import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
+import Conjure.UI.TypeScript ( tsDef )
 
+import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
@@ -33,7 +34,7 @@ import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
-import Conjure.Language.ModelStats ( modelDomainsJSON )
+import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -68,73 +69,130 @@ mainWithArgs :: forall m .
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
+mainWithArgs TSDEF{} = liftIO tsDef
 mainWithArgs Modelling{..} = do
-    model <- readModelFromFile essence
-    liftIO $ hSetBuffering stdout LineBuffering
-    liftIO $ maybe (return ()) setRandomSeed seed
-    case savedChoices of
-        Just f  -> refAnswers f
-        Nothing -> return ()
-
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
                                  (parseStrategy s)
 
-    config <- do
-        strategyQ'                  <- parseStrategy_ strategyQ
-        strategyA'                  <- parseStrategy_ strategyA
-        representations'            <- maybe (return strategyA')       parseStrategy_ representations
-        representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
-        representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
-        representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
-        representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
-        representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
+        getConfig = do
+            strategyQ'                  <- parseStrategy_ strategyQ
+            strategyA'                  <- parseStrategy_ strategyA
+            representations'            <- maybe (return strategyA')       parseStrategy_ representations
+            representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
+            representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
+            representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
+            representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
+            representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
 
-        case fst (viewAuto strategyQ') of
-            Compact -> userErr1 "The Compact heuristic isn't supported for questions."
-            _       -> return ()
+            case fst (viewAuto strategyQ') of
+                Compact -> userErr1 "The Compact heuristic isn't supported for questions."
+                _       -> return ()
 
-        responsesList <- do
-            if null responses
-                then return Nothing
-                else do
-                    let parts = splitOn "," responses
-                    let intParts = mapMaybe readMay parts
-                    if length parts == length intParts
-                        then return (Just intParts)
-                        else userErr1 $ vcat [ "Cannot parse the value for --responses."
-                                             , "Expected a comma separated list of integers."
-                                             , "But got:" <+> pretty responses
-                                             ]
+            let
+                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
+                parseCommaSeparated flag str =
+                    if null str
+                        then return Nothing
+                        else do
+                            let parts = splitOn "," str
+                            let intParts = mapMaybe readMay parts
+                            if length parts == length intParts
+                                then return (Just intParts)
+                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                     , "Expected a comma separated list of integers."
+                                                     , "But got:" <+> pretty str
+                                                     ]
 
-        return Config.Config
-            { Config.outputDirectory            = outputDirectory
-            , Config.logLevel                   = logLevel
-            , Config.verboseTrail               = verboseTrail
-            , Config.rewritesTrail              = rewritesTrail
-            , Config.logRuleFails               = logRuleFails
-            , Config.logRuleSuccesses           = logRuleSuccesses
-            , Config.logRuleAttempts            = logRuleAttempts
-            , Config.logChoices                 = logChoices
-            , Config.strategyQ                  = strategyQ'
-            , Config.strategyA                  = strategyA'
-            , Config.representations            = representations'
-            , Config.representationsFinds       = representationsFinds'
-            , Config.representationsGivens      = representationsGivens'
-            , Config.representationsAuxiliaries = representationsAuxiliaries'
-            , Config.representationsQuantifieds = representationsQuantifieds'
-            , Config.representationsCuts        = representationsCuts'
-            , Config.channelling                = channelling
-            , Config.representationLevels       = representationLevels
-            , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
-            , Config.numberingStart             = numberingStart
-            , Config.smartFilenames             = smartFilenames
-            , Config.lineWidth                  = lineWidth
-            , Config.responses                  = responsesList
-            , Config.estimateNumberOfModels     = estimateNumberOfModels
-            }
-    runNameGen model $ outputModels config model
+            responsesList <- parseCommaSeparated "--responses" responses
+
+            responsesRepresentationList <- do
+                if null responsesRepresentation
+                    then return Nothing
+                    else do
+                        let parts =
+                                [ case splitOn ":" pair of
+                                    [nm, val] ->
+                                        case readMay val of
+                                            Just i -> Just (Name (stringToText nm), i)
+                                            Nothing -> Nothing
+                                    _ -> Nothing
+                                | pair <- splitOn "," responsesRepresentation
+                                ]
+                        let partsJust = catMaybes parts
+                        if length parts == length partsJust
+                            then return (Just partsJust)
+                            else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
+                                                 , "Expected a comma separated list of variable name : integer pairs."
+                                                 , "But got:" <+> pretty responsesRepresentation
+                                                 ]
+
+            return Config.Config
+                { Config.outputDirectory            = outputDirectory
+                , Config.logLevel                   = logLevel
+                , Config.verboseTrail               = verboseTrail
+                , Config.rewritesTrail              = rewritesTrail
+                , Config.logRuleFails               = logRuleFails
+                , Config.logRuleSuccesses           = logRuleSuccesses
+                , Config.logRuleAttempts            = logRuleAttempts
+                , Config.logChoices                 = logChoices
+                , Config.strategyQ                  = strategyQ'
+                , Config.strategyA                  = strategyA'
+                , Config.representations            = representations'
+                , Config.representationsFinds       = representationsFinds'
+                , Config.representationsGivens      = representationsGivens'
+                , Config.representationsAuxiliaries = representationsAuxiliaries'
+                , Config.representationsQuantifieds = representationsQuantifieds'
+                , Config.representationsCuts        = representationsCuts'
+                , Config.channelling                = channelling
+                , Config.representationLevels       = representationLevels
+                , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
+                , Config.numberingStart             = numberingStart
+                , Config.smartFilenames             = smartFilenames
+                , Config.lineWidth                  = lineWidth
+                , Config.responses                  = responsesList
+                , Config.responsesRepresentation    = responsesRepresentationList
+                , Config.estimateNumberOfModels     = estimateNumberOfModels
+                }
+
+    essenceM <- readModelFromFile essence
+    liftIO $ hSetBuffering stdout LineBuffering
+    liftIO $ maybe (return ()) setRandomSeed seed
+    let
+        conjuring = do
+            config <- getConfig
+            runNameGen essenceM $ outputModels config essenceM
+
+    doIfNotCached          -- start the show!
+        ( sort (mStatements essenceM)
+        -- when the following flags change, invalidate hash
+        -- nested tuples, because :(
+        , ( numberingStart
+          , smartFilenames
+          , strategyQ
+          , strategyA
+          , responses
+          )
+        , ( representations
+          , representationsFinds
+          , representationsGivens
+          , representationsAuxiliaries
+          , representationsQuantifieds
+          , representationsCuts
+          )
+        , ( channelling
+          , representationLevels
+          , seed
+          , limitModels
+          , limitTime
+          , outputFormat
+          )
+        )
+        (outputDirectory </> ".conjure-checksum")
+        (pp logLevel "Using cached models.")
+        conjuring
+
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
@@ -166,9 +224,12 @@ mainWithArgs IDE{..} = do
             then readModelFromStdin
             else readModelFromFile essence
     void $ runNameGen () $ typeCheckModel_StandAlone essence2
-    if dumpDomains
-        then liftIO $ putStrLn $ render lineWidth (modelDomainsJSON essence2)
-        else writeModel lineWidth JSON Nothing essence2
+    if
+        | dumpDeclarations    -> liftIO $ putStrLn $ render lineWidth (modelDeclarationsJSON essence2)
+        | dumpRepresentations -> do
+            json <- runNameGen () $ modelRepresentationsJSON essence2
+            liftIO $ putStrLn $ render lineWidth json
+        | otherwise           -> writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
@@ -220,7 +281,8 @@ mainWithArgs config@Solve{..} = do
     let executables = [ ( "minion"          , "minion" )
                       , ( "gecode"          , "fzn-gecode" )
                       , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "glucose"         , "glucose-syrup" )
+                      , ( "glucose"         , "glucose" )
+                      , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
                       , ( "minisat"         , "minisat" )
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
@@ -242,6 +304,9 @@ mainWithArgs config@Solve{..} = do
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
+    unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
+        when (nbSolutions == "all" || nbSolutions /= "1") $
+            userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readParamOrSolutionFromFile f
         return (f, p)
@@ -505,20 +570,31 @@ srMkArgs Solve{..} outBase modelPath =
         "chuffed"           -> [ "-chuffed"]
         "glucose"           -> [ "-sat"
                                , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose"
+                               ]
+        "glucose-syrup"     -> [ "-sat"
+                               , "-sat-family", "glucose"
+                               , "-satsolver-bin", "glucose-syrup"
                                ]
         "lingeling"         -> [ "-sat"
                                , "-sat-family", "lingeling"
+                               , "-satsolver-bin", "lingeling"
                                ]
         "minisat"           -> [ "-sat"
                                , "-sat-family", "minisat"
+                               , "-satsolver-bin", "minisat"
                                ]
         "bc_minisat_all"    -> [ "-sat"
                                , "-sat-family", "bc_minisat_all"
+                               , "-satsolver-bin", "bc_minisat_all_release"
                                ]
         "nbc_minisat_all"   -> [ "-sat"
                                , "-sat-family", "nbc_minisat_all"
+                               , "-satsolver-bin", "nbc_minisat_all_release"
                                ]
-        "open-wbo"          -> [ "-maxsat" ]
+        "open-wbo"          -> [ "-maxsat"
+                               , "-satsolver-bin", "open-wbo"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
@@ -545,7 +621,7 @@ srStdoutHandler
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
                         then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output file" line
+                        else if isPrefixOf "Created output" line
                             then pp logLevel $ hsep ["Running solver:", pretty solver]
                             else return ()
                     fmap (Left line :)
@@ -619,10 +695,7 @@ validateSolutionNoParam Solve{..} solutionPath = do
     essenceM <- readModelFromFile essence
     solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
-    case result of
-        Left err -> bug err
-        Right () -> return ()
+    failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
@@ -635,11 +708,7 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     param    <- readParamOrSolutionFromFile paramPath
     solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen ()
-                                $ validateSolution essenceM2 param2 solution2
-    case result of
-        Left err -> bug err
-        Right () -> return ()
+    failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 param2 solution2
 validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
 
 

@@ -981,15 +981,13 @@ such that
              | q27 : int(1..2)]),
     2 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
     flatten([[b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-             flatten([[b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[1, q21];
-                           int(1)]
-                          | q21 : int(1..2)]);
+             [b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[1, q21]
+                  | q21 : int(1..2)];
                  int(1..2)])
     <lex
     flatten([[b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             flatten([[b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[2, q22];
-                           int(1)]
-                          | q22 : int(1..2)]);
+             [b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[2, q22]
+                  | q22 : int(1..2)];
                  int(1..2)]),
     and([q15 > b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q15] = 0 /\

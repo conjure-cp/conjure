@@ -30,30 +30,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
         ]
         (const False)
 
-instance EvaluateOp OpUnion where
-    evaluateOp p | any isUndef (childrenBi p) = do
-        ty <- typeOf p
-        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpUnion (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) =
-        return $ ConstantAbstract $ AbsLitSet $ sortNub (as ++ bs)
-    evaluateOp (OpUnion (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) =
-        let asHist = histogram as
-            bsHist = histogram bs
-            allElems = sortNub (as++bs)
-        in
-            return $ ConstantAbstract $ AbsLitMSet $ concat
-                [ replicate (fromInteger (max countA countB)) e
-                | e <- allElems
-                , let countA = fromMaybe 0 (e `lookup` asHist)
-                , let countB = fromMaybe 0 (e `lookup` bsHist)
-                ]
-    -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
-    evaluateOp (OpUnion (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) =
-        return $ ConstantAbstract $ AbsLitFunction $ sortNub (as ++ bs)
-    evaluateOp (OpUnion (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) =
-        return $ ConstantAbstract $ AbsLitRelation $ sortNub (as ++ bs)
-    evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
-
 instance SimplifyOp OpUnion x where
     simplifyOp _ = na "simplifyOp{OpUnion}"
 

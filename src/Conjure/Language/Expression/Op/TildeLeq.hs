@@ -4,9 +4,6 @@ module Conjure.Language.Expression.Op.TildeLeq where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.Expression.Op.Eq
-import Conjure.Language.Expression.Op.Or
-import Conjure.Language.Expression.Op.TildeLt
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -26,12 +23,6 @@ instance BinaryOperator (OpTildeLeq x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpTildeLeq x) where
     typeOf p@(OpTildeLeq a b) = sameToSameToBool p a b [] (const True)
-
-instance EvaluateOp OpTildeLeq where
-    evaluateOp (OpTildeLeq x y) = do
-        flag1 <- evaluateOp (OpEq x y)
-        flag2 <- evaluateOp (OpTildeLt x y)
-        evaluateOp $ OpOr $ fromList [flag1, flag2]
 
 instance SimplifyOp OpTildeLeq x where
     simplifyOp _ = na "simplifyOp{OpTildeLeq}"

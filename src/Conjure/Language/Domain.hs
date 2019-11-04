@@ -22,7 +22,7 @@ module Conjure.Language.Domain
     , forgetRepr, changeRepr, defRepr
     , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainIntBTagged, mkDomainAny
     , typeOfDomain
-    , readBinRel
+    , readBinRel, binRelToAttrName
     , normaliseDomain, normaliseRange
     , innerDomainOf
     , singletonDomainInt
@@ -116,8 +116,6 @@ instance Arbitrary x => Arbitrary (Domain r x) where
     shrink (DomainInt t rs) = [DomainInt t (init rs)]
     shrink _ = []
 
-instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
-    typeOf = typeOfDomain
 
 typeOfDomain ::
     MonadFail m =>
@@ -151,26 +149,26 @@ typeOfDomain d@(DomainInt t rs)        = do
     return (TypeInt t)
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
-typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
-typeOfDomain (DomainRecord        xs ) = TypeRecord     <$> sequence [ do t <- typeOf d ; return (n, t)
+typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOfDomain xs
+typeOfDomain (DomainRecord        xs ) = TypeRecord     <$> sequence [ do t <- typeOfDomain d ; return (n, t)
                                                                      | (n,d) <- xs ]
-typeOfDomain (DomainVariant       xs ) = TypeVariant    <$> sequence [ do t <- typeOf d ; return (n, t)
+typeOfDomain (DomainVariant       xs ) = TypeVariant    <$> sequence [ do t <- typeOfDomain d ; return (n, t)
                                                                      | (n,d) <- xs ]
-typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
-typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
-typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
-typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf y
-typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOf x
-typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
-typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
+typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOfDomain ind <*> typeOfDomain inn
+typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOfDomain x
+typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOfDomain x
+typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOfDomain x <*> typeOfDomain y
+typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOfDomain x
+typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOfDomain xs
+typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOfDomain x
 typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
         then return (mostDefined ts)
         else fail ("Type error in" <+> pretty p)
-typeOfDomain (DomainReference _ (Just d)) = typeOf d
-typeOfDomain (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
-typeOfDomain (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
+typeOfDomain (DomainReference _ (Just d)) = typeOfDomain d
+typeOfDomain (DomainReference nm Nothing) = bug $ "typeOfDomain: DomainReference" <+> pretty nm
+typeOfDomain (DomainMetaVar nm) = bug $ "typeOfDomain: DomainMetaVar &" <> pretty nm
 
 forgetRepr :: Domain r x -> Domain () x
 forgetRepr = defRepr
@@ -635,6 +633,21 @@ readBinRel AttrName_equivalence   = return BinRelAttr_Equivalence
 readBinRel AttrName_partialOrder  = return BinRelAttr_PartialOrder
 readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
 
+binRelToAttrName :: BinaryRelationAttr -> AttrName
+binRelToAttrName BinRelAttr_Reflexive       = AttrName_reflexive    
+binRelToAttrName BinRelAttr_Irreflexive     = AttrName_irreflexive  
+binRelToAttrName BinRelAttr_Coreflexive     = AttrName_coreflexive  
+binRelToAttrName BinRelAttr_Symmetric       = AttrName_symmetric    
+binRelToAttrName BinRelAttr_AntiSymmetric   = AttrName_antiSymmetric
+binRelToAttrName BinRelAttr_ASymmetric      = AttrName_aSymmetric   
+binRelToAttrName BinRelAttr_Transitive      = AttrName_transitive   
+binRelToAttrName BinRelAttr_Total           = AttrName_total        
+binRelToAttrName BinRelAttr_Connex          = AttrName_connex       
+binRelToAttrName BinRelAttr_Euclidean       = AttrName_Euclidean    
+binRelToAttrName BinRelAttr_Serial          = AttrName_serial       
+binRelToAttrName BinRelAttr_Equivalence     = AttrName_equivalence  
+binRelToAttrName BinRelAttr_PartialOrder    = AttrName_partialOrder 
+
 -- reflexive        forAll x : T . rel(x,x)
 -- irreflexive      forAll x : T . !rel(x,x)
 -- coreflexive      forAll x,y : T . rel(x,y) -> x = y
@@ -747,6 +760,7 @@ rangesInts = fmap (sortNub . concat) . mapM rangeInts
         rangeInts _ = fail "Infinite range (or not an integer range)"
 
 expandRanges :: ExpressionLike c => [Range c] -> [Range c]
+expandRanges [RangeBounded a b] = [RangeBounded a b]
 expandRanges r =
     case rangesInts r of
         Nothing -> r
@@ -808,9 +822,12 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainIntE x) = "int" <> prParens (pretty x)
 
+    pretty (DomainInt (TagEnum nm) _) = pretty nm
+    pretty (DomainInt (TagUnnamed nm) _) = pretty nm
+
     pretty (DomainInt _ []) = "int"
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
-
+        
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _             _) = pretty name
 
@@ -908,7 +925,7 @@ textToRepresentation t []             | t == "RelationAsMatrix"           = retu
 textToRepresentation t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
 textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
 textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
-textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
+textToRepresentation _ _ = Nothing
 
 representationToShortText :: HasRepresentation -> Text
 representationToShortText Set_Occurrence                 = "Occurrence"

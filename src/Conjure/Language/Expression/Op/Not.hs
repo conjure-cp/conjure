@@ -29,9 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpNot x) where
                                               ]
 
 
-instance EvaluateOp OpNot where
-    evaluateOp (OpNot x) = ConstantBool . not <$> boolOut x
-
 instance SimplifyOp OpNot x where
     simplifyOp _ = na "simplifyOp{OpNot}"
 

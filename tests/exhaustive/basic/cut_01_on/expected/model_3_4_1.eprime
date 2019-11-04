@@ -12,11 +12,18 @@ branching on
      x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     !cut1 <->
+<<<<<<< HEAD
     2 <= x_ExplicitVarSizeWithMarker_Marker /\
     (or([q49 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q49] = 1 | q49 : int(1..3)]) /\
      or([q51 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q51] = 2 | q51 : int(1..3)])),
     !cut2 <->
     or([x_ExplicitVarSizeWithFlags_Flags[q53] /\ x_ExplicitVarSizeWithFlags_Values[q53] = 1 | q53 : int(1..3)]),
+=======
+    or([q30 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q30] = 1 | q30 : int(1..3)]) /\
+    or([q32 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q32] = 2 | q32 : int(1..3)]),
+    !cut2 <->
+    or([x_ExplicitVarSizeWithFlags_Flags[q34] /\ x_ExplicitVarSizeWithFlags_Values[q34] = 1 | q34 : int(1..3)]),
+>>>>>>> master
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..2)]),

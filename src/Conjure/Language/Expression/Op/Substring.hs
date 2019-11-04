@@ -29,17 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubstring x) where
             (TypeSequence{}, TypeSequence{}) -> return TypeBool
             _ -> raiseTypeError p
 
-instance EvaluateOp OpSubstring where
-    evaluateOp (OpSubstring
-        (viewConstantSequence -> Just xs)
-        (viewConstantSequence -> Just ys)) =
-            return $ fromBool $
-                or [ and (zipWith (==) xs zs)
-                   | zs <- tails ys
-                   , length zs >= length xs
-                   ]
-    evaluateOp op = na $ "evaluateOp{OpSubstring}:" <++> pretty (show op)
-
 instance SimplifyOp OpSubstring x where
     simplifyOp _ = na "simplifyOp{OpSubstring}"
 

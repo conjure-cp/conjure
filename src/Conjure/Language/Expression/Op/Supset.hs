@@ -4,7 +4,6 @@ module Conjure.Language.Expression.Op.Supset where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.Expression.Op.Subset
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -30,9 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
         , TypeRelation [TypeAny]
         ]
         (const False)
-
-instance EvaluateOp OpSupset where
-    evaluateOp (OpSupset a b) = evaluateOp (OpSubset b a)
 
 instance SimplifyOp OpSupset x where
     simplifyOp _ = na "simplifyOp{OpSupset}"

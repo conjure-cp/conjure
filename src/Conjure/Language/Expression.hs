@@ -447,7 +447,7 @@ instance VarSymBreakingDescription Expression where
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
-    typeOf (Domain x)   = typeOf x
+    typeOf (Domain x) = fail ("Expected an expression, but got a domain:" <++> pretty x)
     typeOf (Reference nm Nothing) = fail ("Type error, identifier not bound:" <+> pretty nm)
     typeOf (Reference nm (Just refTo)) =
         case refTo of
@@ -465,18 +465,25 @@ instance TypeOf Expression where
                     lu' _ _ = Nothing
                 in
                     case gen of
-                        GenDomainNoRepr  pat domain -> typeOf domain                 >>= lu pat
-                        GenDomainHasRepr pat domain -> typeOf domain                 >>= lu (Single pat)
-                        GenInExpr        pat expr   -> do
-                            tyExpr <- typeOf expr
-                            case innerTypeOf tyExpr of
-                                Just tyExprInner -> lu pat tyExprInner
-                                Nothing -> fail $ vcat
-                                    [ "Type error in the generator of a comprehension or a quantified expression"
+                        GenDomainNoRepr  pat domain -> typeOfDomain domain >>= lu pat
+                        GenDomainHasRepr pat domain -> typeOfDomain domain >>= lu (Single pat)
+                        GenInExpr        pat expr   ->
+                            case project expr of
+                                Just (d :: Domain () Expression) -> fail $ vcat
+                                    [ "Expected an expression, but got a domain:" <++> pretty d
+                                    , "In the generator of a comprehension or a quantified expression"
                                     , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
                                     ]
-            DeclNoRepr  _ _ dom _ -> typeOf dom
-            DeclHasRepr _ _ dom   -> typeOf dom
+                                Nothing -> do
+                                    tyExpr <- typeOf expr
+                                    case innerTypeOf tyExpr of
+                                        Just tyExprInner -> lu pat tyExprInner
+                                        Nothing -> fail $ vcat
+                                            [ "Type error in the generator of a comprehension or a quantified expression"
+                                            , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
+                                            ]
+            DeclNoRepr  _ _ dom _ -> typeOfDomain dom
+            DeclHasRepr _ _ dom   -> typeOfDomain dom
             RecordField _ ty      -> return ty
             VariantField _ ty     -> return ty
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
@@ -540,6 +547,7 @@ instance RepresentationOf Expression where
 instance Domain () Expression :< Expression where
     inject = Domain
     project (Domain x) = return x
+    project (Reference _ (Just (Alias x))) = project x
     project x = fail ("projecting Domain out of Expression:" <+> pretty x)
 
 instance Op Expression :< Expression where
@@ -666,6 +674,7 @@ auxiliaryVar = do
     return (nm, ref)
 
 
+-- | pattern, template, argument, result
 lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression
 lambdaToFunction (Single nm) body = \ p ->
     let
@@ -702,7 +711,7 @@ lambdaToFunction (AbsPatMatrix ts) body = \ p ->
         ps = case p of
             Constant (ConstantAbstract (AbsLitMatrix _ xs)) -> map Constant xs
             AbstractLiteral (AbsLitMatrix _ xs) -> xs
-            _ -> bug "lambdaToFunction, AbsPatMatrix"
+            _ -> bug $ "lambdaToFunction, AbsPatMatrix" <++> vcat [pretty p, pretty (show p)]
     in
         unroll ts ps body
 lambdaToFunction (AbsPatSet ts) body = \ p ->
@@ -716,7 +725,7 @@ lambdaToFunction (AbsPatSet ts) body = \ p ->
         ps = case p of
             Constant (ConstantAbstract (AbsLitSet xs)) -> map Constant xs
             AbstractLiteral (AbsLitSet xs) -> xs
-            _ -> bug "lambdaToFunction, AbsPatSet"
+            _ -> bug $ "lambdaToFunction, AbsPatSet" <++> vcat [pretty p, pretty (show p)]
     in
         unroll ts ps body
 lambdaToFunction p@AbstractPatternMetaVar{} _ = bug $ "Unsupported AbstractPattern, got" <+> pretty (show p)
@@ -830,7 +839,7 @@ patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"
 data GeneratorOrCondition
     = Generator Generator
     | Condition Expression
-    | ComprehensionLetting Name Expression
+    | ComprehensionLetting AbstractPattern Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Pretty GeneratorOrCondition where

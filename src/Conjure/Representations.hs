@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations
     ( downD, downC, up
@@ -128,6 +129,14 @@ onOp (MkOpFromSolution (OpFromSolution x)) = do
     ys <- downX1 x
     let wrap y = Op (MkOpFromSolution (OpFromSolution y))
     return (map wrap ys)
+onOp (MkOpImage (OpImage (match functionLiteral -> Just (_, xs)) a)) | length xs > 0 = do
+    vals <- forM xs $ \ (_, value) -> do
+        ys <- downX1 value
+        return ys
+    let keys = map fst xs
+    let outs = map (zip keys) (transpose vals)
+    return [ Op $ MkOpImage $ OpImage (AbstractLiteral (AbsLitFunction out)) a
+           | out <- outs ]
 onOp op = fail ("downX1.onOp:" <++> pretty op)
 
 
@@ -161,7 +170,7 @@ symmetryOrdering inp =
                 case mDom of
                     DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
                     _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
-            _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
+            _ -> bug ("symmetryOrdering, unhandled Op:" <++> pretty (show op))
         -- Comprehension body stmts -> do
         --     xs <- downX1 body
         --     return [Comprehension x stmts | x <- xs]

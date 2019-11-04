@@ -25,11 +25,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToRelation x) where
             TypeFunction i j -> return (TypeRelation [i,j])
             _ -> raiseTypeError p
 
-instance EvaluateOp OpToRelation where
-    evaluateOp (OpToRelation (viewConstantFunction -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitRelation $ sortNub [ [a,b] | (a,b) <- xs ]
-    evaluateOp op = na $ "evaluateOp{OpToRelation}:" <++> pretty (show op)
-
 instance SimplifyOp OpToRelation x where
     simplifyOp _ = na "simplifyOp{OpToRelation}"
 

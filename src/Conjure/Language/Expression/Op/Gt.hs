@@ -29,9 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
         TypeInt TagEnum{} -> True
         _ -> False
 
-instance EvaluateOp OpGt where
-    evaluateOp (OpGt x y) = return $ ConstantBool $ x > y
-
 instance SimplifyOp OpGt x where
     simplifyOp _ = na "simplifyOp{OpGt}"
 
