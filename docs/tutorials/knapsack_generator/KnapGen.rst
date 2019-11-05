@@ -46,7 +46,9 @@ The fundamental starting step is writing find statements for each variable we wi
     find capacity: int(1..5000)
 
 Solving the above model (by running 'conjure solve generator.essence items.param' on the console) will create a set of parameters for our knapsack model. However, these instances are not interesting enough yet.
+
 <output>
+
 We can make our instances more interesting by adding constraints into our generator's model.
 The first thing we notice is that all values assigned are identical, a bit TOO symmetrical for our taste.
 One simple solution to this issue is ensuring that all weights and gains assignments are associated with distinct values. This can be done by imposing `injectivity <https://en.wikipedia.org/wiki/Injective_function>`_ as a property of the function.
