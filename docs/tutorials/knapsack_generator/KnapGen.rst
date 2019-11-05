@@ -57,13 +57,16 @@ One simple solution to this issue is ensuring that all weights and gains assignm
     find gain: function (total, injective) items --> int(1..1000)
 
 <output>
+
 This gives us a slighly more interesting parameters set but it is not there yet
 The specific order that appears in the results is solver dependent. The default solver used by conjure is Minion and we can use an optional flag to have the variables assigned in a random order. This can be done with this command:
 
 conjure solve generator.essence items.param --solver-options=-randomiseorder
 
 Alternatively one can use another solver that uses randomness by default
+
 <output>
+
 Now it is starting to look more like a proper instance. At this point we can add some knowledge about the problem to formulate some constraints that will ensure that the instances are not trivial. ie when the sum of all the weights is smaller than the capacity than we can put all the objects in the knapsack or if all the objects are heavier of than the capacity no objects can be picked. Thefore we add constraints such as:
 
 .. code-block:: essence
