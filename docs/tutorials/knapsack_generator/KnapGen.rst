@@ -47,8 +47,17 @@ The fundamental starting step is writing find statements for each variable we wi
 
 Solving the above model (by running 'conjure solve generator.essence items.param' on the console) will create a set of parameters for our knapsack model. However, these instances are not interesting enough yet.
 
-<output>
+.. code-block:: essence
 
+    language Essence 1.3
+    letting capacity be 1
+    letting gain be
+            function(1 --> 1, 2 --> 1, 3 --> 1, 4 --> 1, 5 --> 1, 6 --> 1, 7 --> 1, 8 --> 1, 9 --> 1, 10 --> 1, 11 --> 1,
+                     12 --> 1, 13 --> 1, 14 --> 1, 15 --> 1, 16 --> 1, 17 --> 1, 18 --> 1, 19 --> 1, 20 --> 1)
+    letting weight be
+            function(1 --> 1, 2 --> 1, 3 --> 1, 4 --> 1, 5 --> 1, 6 --> 1, 7 --> 1, 8 --> 1, 9 --> 1, 10 --> 1, 11 --> 1,
+                     12 --> 1, 13 --> 1, 14 --> 1, 15 --> 1, 16 --> 1, 17 --> 1, 18 --> 1, 19 --> 1, 20 --> 1)
+                 
 We can make our instances more interesting by adding constraints into our generator's model.
 The first thing we notice is that all values assigned are identical, a bit TOO symmetrical for our taste.
 One simple solution to this issue is ensuring that all weights and gains assignments are associated with distinct values. This can be done by imposing `injectivity <https://en.wikipedia.org/wiki/Injective_function>`_ as a property of the function.
@@ -58,16 +67,38 @@ One simple solution to this issue is ensuring that all weights and gains assignm
     find weight: function (total, injective) items --> int(1..1000)
     find gain: function (total, injective) items --> int(1..1000)
 
-<output>
+And the results would be
+
+.. code-block:: essence
+
+    language Essence 1.3    
+    letting capacity be 1
+    letting gain be
+            function(1 --> 1, 2 --> 2, 3 --> 3, 4 --> 4, 5 --> 5, 6 --> 6, 7 --> 7, 8 --> 8, 9 --> 9, 10 --> 10, 11 --> 11,
+                     12 --> 12, 13 --> 13, 14 --> 14, 15 --> 15, 16 --> 16, 17 --> 17, 18 --> 18, 19 --> 19, 20 --> 20)
+    letting weight be
+            function(1 --> 1, 2 --> 2, 3 --> 3, 4 --> 4, 5 --> 5, 6 --> 6, 7 --> 7, 8 --> 8, 9 --> 9, 10 --> 10, 11 --> 11,
+                     12 --> 12, 13 --> 13, 14 --> 14, 15 --> 15, 16 --> 16, 17 --> 17, 18 --> 18, 19 --> 19, 20 --> 20)
 
 This gives us a slighly more interesting parameters set but it is not there yet
 The specific order that appears in the results is solver dependent. The default solver used by conjure is Minion and we can use an optional flag to have the variables assigned in a random order. This can be done with this command:
 
-conjure solve generator.essence items.param --solver-options=-randomiseorder
+``conjure solve generator.essence items.param --solver-options=-randomiseorder``
 
 Alternatively one can use another solver that uses randomness by default
 
-<output>
+.. code-block:: essence
+
+    language Essence 1.3
+    letting capacity be 2841
+    letting gain be
+            function(1 --> 858, 2 --> 653, 3 --> 673, 4 --> 365, 5 --> 389, 6 --> 783, 7 --> 566, 8 --> 664, 9 --> 387,
+                     10 --> 576, 11 --> 864, 12 --> 741, 13 --> 102, 14 --> 735, 15 --> 276, 16 --> 41, 17 --> 132,
+                     18 --> 974, 19 --> 293, 20 --> 381)
+    letting weight be
+            function(1 --> 946, 2 --> 435, 3 --> 796, 4 --> 653, 5 --> 291, 6 --> 101, 7 --> 924, 8 --> 988, 9 --> 854,
+                     10 --> 952, 11 --> 228, 12 --> 189, 13 --> 88, 14 --> 270, 15 --> 868, 16 --> 903, 17 --> 743,
+                     18 --> 396, 19 --> 174, 20 --> 446)
 
 Now it is starting to look more like a proper instance. At this point we can add some knowledge about the problem to formulate some constraints that will ensure that the instances are not trivial. ie when the sum of all the weights is smaller than the capacity than we can put all the objects in the knapsack or if all the objects are heavier of than the capacity no objects can be picked. Thefore we add constraints such as:
 
