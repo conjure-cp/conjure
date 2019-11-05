@@ -61,8 +61,8 @@ install-using-cabal:
 .PHONY: preinstall
 preinstall:
 	@bash etc/build/version.sh
-	@runhaskell etc/build/gen_Operator.hs
-	@runhaskell etc/build/gen_Expression.hs
+	@stack runhaskell etc/build/gen_Operator.hs
+	@stack runhaskell etc/build/gen_Expression.hs
 
 .PHONY: freeze
 freeze:
