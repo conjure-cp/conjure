@@ -23,7 +23,7 @@ This model has 4 different "given" statements :
 
 - weight: a functions that associates an integer(weight) to each item
 
-- gain: a function that associates an integer(value/profit) to each item
+- gain: a function that associates an integer(gain) to each item
 
 - capacity: an integer that defines the capacity of the knapsack
 
