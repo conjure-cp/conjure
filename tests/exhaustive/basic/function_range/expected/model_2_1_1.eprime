@@ -26,16 +26,16 @@ such that
     and([conjure_aux2_Occurrence[q21] ->
          or([x_Function1DPartial_Flags[q25] /\ x_Function1DPartial_Values[q25] = q21 | q25 : int(1..3)])
              | q21 : int(1..3)]),
-    and([x_Function1DPartial_Flags[q39] -> conjure_aux3_Occurrence[x_Function1DPartial_Values[q39]] | q39 : int(1..3)]),
-    and([conjure_aux3_Occurrence[q36] ->
-         or([x_Function1DPartial_Flags[q40] /\ x_Function1DPartial_Values[q40] = q36 | q40 : int(1..3)])
-             | q36 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q38] -> conjure_aux3_Occurrence[x_Function1DPartial_Values[q38]] | q38 : int(1..3)]),
+    and([conjure_aux3_Occurrence[q35] ->
+         or([x_Function1DPartial_Flags[q39] /\ x_Function1DPartial_Values[q39] = q35 | q39 : int(1..3)])
+             | q35 : int(1..3)]),
     2 = sum([toInt(conjure_aux1_ExplicitVarSizeWithDummy[q17] != 4) | q17 : int(1..3)]),
     2 <= sum([toInt(conjure_aux2_Occurrence[q20]) | q20 : int(1..3)]),
-    or([x_Function1DPartial_Flags[q29] /\ x_Function1DPartial_Values[q29] = 1 | q29 : int(1..3)]),
-    or([x_Function1DPartial_Flags[q32] /\ x_Function1DPartial_Values[q32] = 2 | q32 : int(1..3)]),
-    sum([toInt(conjure_aux3_Occurrence[q35]) | q35 : int(1..3)]) <= 2,
-    and([x_Function1DPartial_Flags[q42] -> 1 = x_Function1DPartial_Values[q42] \/ 2 = x_Function1DPartial_Values[q42]
-             | q42 : int(1..3)]),
+    or([x_Function1DPartial_Flags[q28] /\ x_Function1DPartial_Values[q28] = 1 | q28 : int(1..3)]),
+    or([x_Function1DPartial_Flags[q31] /\ x_Function1DPartial_Values[q31] = 2 | q31 : int(1..3)]),
+    sum([toInt(conjure_aux3_Occurrence[q34]) | q34 : int(1..3)]) <= 2,
+    and([x_Function1DPartial_Flags[q41] -> 1 = x_Function1DPartial_Values[q41] \/ 2 = x_Function1DPartial_Values[q41]
+             | q41 : int(1..3)]),
     and([x_Function1DPartial_Flags[q1] = false -> x_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)])
 

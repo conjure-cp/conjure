@@ -11,14 +11,9 @@ branching on
      x_Occurrence]
 such that
     !cut1 <->
-<<<<<<< HEAD
     2 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q61]) | q61 : int(1..3)]) /\
-    (or([x_ExplicitVarSizeWithFlags_Flags[q64] /\ x_ExplicitVarSizeWithFlags_Values[q64] = 1 | q64 : int(1..3)]) /\
-     or([x_ExplicitVarSizeWithFlags_Flags[q66] /\ x_ExplicitVarSizeWithFlags_Values[q66] = 2 | q66 : int(1..3)])),
-=======
-    or([x_ExplicitVarSizeWithFlags_Flags[q31] /\ x_ExplicitVarSizeWithFlags_Values[q31] = 1 | q31 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithFlags_Flags[q33] /\ x_ExplicitVarSizeWithFlags_Values[q33] = 2 | q33 : int(1..3)]),
->>>>>>> master
+    (or([x_ExplicitVarSizeWithFlags_Flags[q63] /\ x_ExplicitVarSizeWithFlags_Values[q63] = 1 | q63 : int(1..3)]) /\
+     or([x_ExplicitVarSizeWithFlags_Flags[q65] /\ x_ExplicitVarSizeWithFlags_Values[q65] = 2 | q65 : int(1..3)])),
     !cut2 <-> x_Occurrence[1],
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]

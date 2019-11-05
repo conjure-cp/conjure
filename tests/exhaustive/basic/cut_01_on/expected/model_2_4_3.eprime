@@ -12,18 +12,11 @@ branching on
      x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     !cut1 <->
-<<<<<<< HEAD
     2 <= sum([toInt(x_ExplicitVarSizeWithDummy[q63] != 4) | q63 : int(1..3)]) /\
-    (or([x_ExplicitVarSizeWithDummy[q66] != 4 /\ x_ExplicitVarSizeWithDummy[q66] = 1 | q66 : int(1..3)]) /\
-     or([x_ExplicitVarSizeWithDummy[q68] != 4 /\ x_ExplicitVarSizeWithDummy[q68] = 2 | q68 : int(1..3)])),
+    (or([x_ExplicitVarSizeWithDummy[q65] != 4 /\ x_ExplicitVarSizeWithDummy[q65] = 1 | q65 : int(1..3)]) /\
+     or([x_ExplicitVarSizeWithDummy[q67] != 4 /\ x_ExplicitVarSizeWithDummy[q67] = 2 | q67 : int(1..3)])),
     !cut2 <->
-    or([x_ExplicitVarSizeWithFlags_Flags[q70] /\ x_ExplicitVarSizeWithFlags_Values[q70] = 1 | q70 : int(1..3)]),
-=======
-    or([x_ExplicitVarSizeWithDummy[q39] != 4 /\ x_ExplicitVarSizeWithDummy[q39] = 1 | q39 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithDummy[q41] != 4 /\ x_ExplicitVarSizeWithDummy[q41] = 2 | q41 : int(1..3)]),
-    !cut2 <->
-    or([x_ExplicitVarSizeWithFlags_Flags[q43] /\ x_ExplicitVarSizeWithFlags_Values[q43] = 1 | q43 : int(1..3)]),
->>>>>>> master
+    or([x_ExplicitVarSizeWithFlags_Flags[q69] /\ x_ExplicitVarSizeWithFlags_Values[q69] = 1 | q69 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 4
              | q1 : int(1..2)]),
     and([x_ExplicitVarSizeWithDummy[q2] = 4 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 4 | q2 : int(1..2)]),

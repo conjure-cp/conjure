@@ -62,19 +62,11 @@ such that
                  | q35 : int(1..2)])
              | q33 : int(1..2)]),
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-<<<<<<< HEAD
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q55]; int(1)] | q55 : int(1..3)]);
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q55] | q55 : int(1..3)];
                  int(1..2)])
     <lex
     flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q56]; int(1)] | q56 : int(1..3)]);
-=======
-             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, q37] | q37 : int(1..3)];
-                 int(1..2)])
-    <lex
-    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q38] | q38 : int(1..3)];
->>>>>>> master
+             [x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q56] | q56 : int(1..3)];
                  int(1..2)]),
     and([and([q52 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q51] ->
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q51, q52] <

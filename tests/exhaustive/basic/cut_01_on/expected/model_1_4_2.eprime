@@ -12,11 +12,7 @@ branching on
 such that
     !cut1 <-> 2 <= sum([toInt(x_Occurrence[q60]) | q60 : int(1..3)]) /\ (x_Occurrence[1] /\ x_Occurrence[2]),
     !cut2 <->
-<<<<<<< HEAD
-    or([x_ExplicitVarSizeWithFlags_Flags[q63] /\ x_ExplicitVarSizeWithFlags_Values[q63] = 1 | q63 : int(1..3)]),
-=======
-    or([x_ExplicitVarSizeWithFlags_Flags[q31] /\ x_ExplicitVarSizeWithFlags_Values[q31] = 1 | q31 : int(1..3)]),
->>>>>>> master
+    or([x_ExplicitVarSizeWithFlags_Flags[q62] /\ x_ExplicitVarSizeWithFlags_Values[q62] = 1 | q62 : int(1..3)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
              | q2 : int(1..2)]),

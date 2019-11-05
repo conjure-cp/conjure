@@ -17,11 +17,11 @@ such that
               /\
               and([sum([1 | 1 = q44, 1 = q47]) + sum([1 | 1 = q44, 1 = q47]) + sum([1 | 1 = q44, 2 = q47]) +
                    (sum([1 | 2 = q44, 1 = q47]) + sum([1 | 2 = q44, 1 = q47]) + sum([1 | 2 = q44, 2 = q47]))
-                   = sum([toInt(y_1_2_Function1DR2_Occurrence[q44, q47, q59]) | q59 : int(1, 2)])
+                   = sum([toInt(y_1_2_Function1DR2_Occurrence[q44, q47, q53]) | q53 : int(1, 2)])
                    /\
                    (sum([1 | 1 = q44, 1 = q47]) + sum([1 | 1 = q44, 1 = q47]) + sum([1 | 1 = q44, 2 = q47]) +
                     (sum([1 | 2 = q44, 1 = q47]) + sum([1 | 2 = q44, 1 = q47]) + sum([1 | 2 = q44, 2 = q47]))
-                    <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, q47, q82]) | q82 : int(1, 2)])
+                    <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, q47, q64]) | q64 : int(1, 2)])
                     /\
                     (and([y_1_2_Function1DR2_Occurrence[q44, q47, 1] | 1 = q44, 1 = q47]) /\
                      and([y_1_2_Function1DR2_Occurrence[q44, q47, 2] | 1 = q44, 1 = q47])
@@ -31,87 +31,59 @@ such that
                       and([y_1_2_Function1DR2_Occurrence[q44, q47, 2] | 2 = q44, 1 = q47])
                       /\ and([y_1_2_Function1DR2_Occurrence[q44, q47, 1] | 2 = q44, 2 = q47]))))
                    /\
-<<<<<<< HEAD
-                   (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, q47, q95]) | q95 : int(1, 2)]) <=
+                   (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, q47, q71]) | q71 : int(1, 2)]) <=
                     sum([1 | 1 = q44, 1 = q47]) + sum([1 | 1 = q44, 1 = q47]) + sum([1 | 1 = q44, 2 = q47]) +
                     (sum([1 | 2 = q44, 1 = q47]) + sum([1 | 2 = q44, 1 = q47]) + sum([1 | 2 = q44, 2 = q47]))
                     /\
-                    and([y_1_2_Function1DR2_Occurrence[q44, q47, q83] ->
-                         or([1 = q83 | 1 = q44, 1 = q47]) \/ or([2 = q83 | 1 = q44, 1 = q47]) \/
-                         or([1 = q83 | 1 = q44, 2 = q47])
+                    and([y_1_2_Function1DR2_Occurrence[q44, q47, q65] ->
+                         or([1 = q65 | 1 = q44, 1 = q47]) \/ or([2 = q65 | 1 = q44, 1 = q47]) \/
+                         or([1 = q65 | 1 = q44, 2 = q47])
                          \/
-                         (or([1 = q83 | 2 = q44, 1 = q47]) \/ or([2 = q83 | 2 = q44, 1 = q47]) \/
-                          or([1 = q83 | 2 = q44, 2 = q47]))
-                             | q83 : int(1, 2)]))
+                         (or([1 = q65 | 2 = q44, 1 = q47]) \/ or([2 = q65 | 2 = q44, 1 = q47]) \/
+                          or([1 = q65 | 2 = q44, 2 = q47]))
+                             | q65 : int(1, 2)]))
                        | q47 : int(1..3)])
               /\
-              (and([and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q110]) | q110 : int(1, 2)]) = 2 /\
-                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q113]) | q113 : int(1, 2)]) <= 2 /\
-                          and([y_1_2_Function1DR2_Occurrence[q44, 1, q112] -> 1 = q112 \/ 2 = q112 | q112 : int(1, 2)]))
+              (and([and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q78]) | q78 : int(1, 2)]) = 2 /\
+                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q81]) | q81 : int(1, 2)]) <= 2 /\
+                          and([y_1_2_Function1DR2_Occurrence[q44, 1, q80] -> 1 = q80 \/ 2 = q80 | q80 : int(1, 2)]))
                          /\
-                         (2 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q117]) | q117 : int(1, 2)]) /\
+                         (2 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q85]) | q85 : int(1, 2)]) /\
                           (y_1_2_Function1DR2_Occurrence[q44, 1, 1] /\ y_1_2_Function1DR2_Occurrence[q44, 1, 2]))
                              | 1 = q44]),
-                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q110]) | q110 : int(1, 2)]) = 1 /\
-                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q113]) | q113 : int(1, 2)]) <= 1 /\
-                          and([y_1_2_Function1DR2_Occurrence[q44, 2, q112] -> 1 = q112 | q112 : int(1, 2)]))
+                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q78]) | q78 : int(1, 2)]) = 1 /\
+                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q81]) | q81 : int(1, 2)]) <= 1 /\
+                          and([y_1_2_Function1DR2_Occurrence[q44, 2, q80] -> 1 = q80 | q80 : int(1, 2)]))
                          /\
-                         (1 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q117]) | q117 : int(1, 2)]) /\
+                         (1 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q85]) | q85 : int(1, 2)]) /\
                           y_1_2_Function1DR2_Occurrence[q44, 2, 1])
                              | 1 = q44]),
-                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q110]) | q110 : int(1, 2)]) = 0 /\
-                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q113]) | q113 : int(1, 2)]) <= 0 /\
-                          and([y_1_2_Function1DR2_Occurrence[q44, 3, q112] -> false | q112 : int(1, 2)]))
-                         /\ 0 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q117]) | q117 : int(1, 2)])
+                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q78]) | q78 : int(1, 2)]) = 0 /\
+                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q81]) | q81 : int(1, 2)]) <= 0 /\
+                          and([y_1_2_Function1DR2_Occurrence[q44, 3, q80] -> false | q80 : int(1, 2)]))
+                         /\ 0 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q85]) | q85 : int(1, 2)])
                              | 1 = q44]);
                         int(1..3)])
                /\
-               and([and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q118]) | q118 : int(1, 2)]) = 2 /\
-                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q121]) | q121 : int(1, 2)]) <= 2 /\
-                          and([y_1_2_Function1DR2_Occurrence[q44, 1, q120] -> 1 = q120 \/ 2 = q120 | q120 : int(1, 2)]))
+               and([and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q86]) | q86 : int(1, 2)]) = 2 /\
+                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q89]) | q89 : int(1, 2)]) <= 2 /\
+                          and([y_1_2_Function1DR2_Occurrence[q44, 1, q88] -> 1 = q88 \/ 2 = q88 | q88 : int(1, 2)]))
                          /\
-                         (2 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q125]) | q125 : int(1, 2)]) /\
+                         (2 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 1, q93]) | q93 : int(1, 2)]) /\
                           (y_1_2_Function1DR2_Occurrence[q44, 1, 1] /\ y_1_2_Function1DR2_Occurrence[q44, 1, 2]))
                              | 2 = q44]),
-                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q118]) | q118 : int(1, 2)]) = 1 /\
-                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q121]) | q121 : int(1, 2)]) <= 1 /\
-                          and([y_1_2_Function1DR2_Occurrence[q44, 2, q120] -> 1 = q120 | q120 : int(1, 2)]))
+                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q86]) | q86 : int(1, 2)]) = 1 /\
+                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q89]) | q89 : int(1, 2)]) <= 1 /\
+                          and([y_1_2_Function1DR2_Occurrence[q44, 2, q88] -> 1 = q88 | q88 : int(1, 2)]))
                          /\
-                         (1 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q125]) | q125 : int(1, 2)]) /\
+                         (1 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 2, q93]) | q93 : int(1, 2)]) /\
                           y_1_2_Function1DR2_Occurrence[q44, 2, 1])
                              | 2 = q44]),
-                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q118]) | q118 : int(1, 2)]) = 0 /\
-                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q121]) | q121 : int(1, 2)]) <= 0 /\
-                          and([y_1_2_Function1DR2_Occurrence[q44, 3, q120] -> false | q120 : int(1, 2)]))
-                         /\ 0 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q125]) | q125 : int(1, 2)])
+                    and([sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q86]) | q86 : int(1, 2)]) = 0 /\
+                         (sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q89]) | q89 : int(1, 2)]) <= 0 /\
+                          and([y_1_2_Function1DR2_Occurrence[q44, 3, q88] -> false | q88 : int(1, 2)]))
+                         /\ 0 <= sum([toInt(y_1_2_Function1DR2_Occurrence[q44, 3, q93]) | q93 : int(1, 2)])
                              | 2 = q44]);
-=======
-                   and([y_1_2_Function1DR2_Occurrence[q26, q29, q35] ->
-                        or([1 = q35 | 1 = q26, 1 = q29]) \/ or([2 = q35 | 1 = q26, 1 = q29]) \/
-                        or([1 = q35 | 1 = q26, 2 = q29])
-                        \/
-                        (or([1 = q35 | 2 = q26, 1 = q29]) \/ or([2 = q35 | 2 = q26, 1 = q29]) \/
-                         or([1 = q35 | 2 = q26, 2 = q29]))
-                            | q35 : int(1, 2)])
-                       | q29 : int(1..3)])
-              /\
-              (and([and([and([y_1_2_Function1DR2_Occurrence[q26, 1, q41] -> 1 = q41 \/ 2 = q41 | q41 : int(1, 2)]) /\
-                         (y_1_2_Function1DR2_Occurrence[q26, 1, 1] /\ y_1_2_Function1DR2_Occurrence[q26, 1, 2])
-                             | 1 = q26]),
-                    and([and([y_1_2_Function1DR2_Occurrence[q26, 2, q41] -> 1 = q41 | q41 : int(1, 2)]) /\
-                         y_1_2_Function1DR2_Occurrence[q26, 2, 1]
-                             | 1 = q26]),
-                    and([and([y_1_2_Function1DR2_Occurrence[q26, 3, q41] -> false | q41 : int(1, 2)]) | 1 = q26]);
-                        int(1..3)])
-               /\
-               and([and([and([y_1_2_Function1DR2_Occurrence[q26, 1, q43] -> 1 = q43 \/ 2 = q43 | q43 : int(1, 2)]) /\
-                         (y_1_2_Function1DR2_Occurrence[q26, 1, 1] /\ y_1_2_Function1DR2_Occurrence[q26, 1, 2])
-                             | 2 = q26]),
-                    and([and([y_1_2_Function1DR2_Occurrence[q26, 2, q43] -> 1 = q43 | q43 : int(1, 2)]) /\
-                         y_1_2_Function1DR2_Occurrence[q26, 2, 1]
-                             | 2 = q26]),
-                    and([and([y_1_2_Function1DR2_Occurrence[q26, 3, q43] -> false | q43 : int(1, 2)]) | 2 = q26]);
->>>>>>> master
                         int(1..3)])),
               y_1_3[q44] = [33, 55; int(1..2)][q44];
                   int(1..3)])
