@@ -12,6 +12,7 @@ module Conjure.Language.Definition
 
     , e2c
     , nbUses
+    , isDomainExpr
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..), TrailRewrites(..)
