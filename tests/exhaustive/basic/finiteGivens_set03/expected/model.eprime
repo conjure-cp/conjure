@@ -11,8 +11,8 @@ find t: int(0..100)
 branching on [x, y, z, t]
 such that
     x = fin1,
-    y = fin2,
-    z = fin3,
+    y = a_Explicit[1],
+    z = a_Explicit[fin1],
     allDiff([x, y, z, t; int(1..4)]),
     or([a_Explicit[q2] = t | q2 : int(1..fin1)])
 

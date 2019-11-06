@@ -3,12 +3,13 @@ language ESSENCE' 1.0
 given fin1: int
 given fin2: int
 given fin3: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
 find x: int(0..100)
 find y: int(0..100)
 find z: int(0..100)
 branching on [x, y, z]
 such that
     x = fin1,
-    y = fin2,
-    z = fin3
+    y = a_Explicit[1],
+    z = a_Explicit[fin1]
 

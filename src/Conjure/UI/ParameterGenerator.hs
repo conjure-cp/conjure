@@ -33,8 +33,11 @@ parameterGenerator ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Integer ->      -- MININT
     Integer ->      -- MAXINT
-    Model -> m Model
-parameterGenerator minIntValue maxIntValue model = runNameGen () (resolveNames model) >>= core >>= evaluateBounds
+    Model -> m ( Model
+               , [(Name, String)] -- classification for each given
+               )
+parameterGenerator minIntValue maxIntValue model =
+    runWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds
     where
         core m = do
             outStatements <- forM (mStatements m) $ \ st -> case st of
@@ -106,6 +109,7 @@ fixQuantified x = return x
 pgOnDomain ::
     MonadUserError m =>
     NameGen m =>
+    MonadWriter [(Name, String)] m =>
     Expression ->                       -- how do we refer to this top level variable
     Name ->                             -- its name
     Domain () Expression ->             -- its domain
@@ -124,10 +128,15 @@ pgOnDomain x nm dom =
             ubX <- maxOfIntDomain dom
             lb  <- lowerBoundOfIntExpr lbX
             ub  <- upperBoundOfIntExpr ubX
+
             let nmMiddle = nm `mappend` "_middle"
-            let nmDelta  = nm `mappend` "_delta"
+            tell [(nmMiddle, "i")]
             let middle = Reference nmMiddle Nothing
+
+            let nmDelta  = nm `mappend` "_delta"
+            tell [(nmDelta, "i")]
             let delta = Reference nmDelta Nothing
+
             return3
                 (DomainInt t [RangeBounded lb ub])
                 [ Declaration (FindOrGiven Given nmMiddle
@@ -169,8 +178,11 @@ pgOnDomain x nm dom =
         DomainSequence r attr innerDomain -> do
 
             let nmCardMiddle = nm `mappend` "_cardMiddle"
-            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardMiddle, "i,log")]
             let cardMiddle = Reference nmCardMiddle Nothing
+
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardDelta, "i,log")]
             let cardDelta = Reference nmCardDelta Nothing
 
             (iPat, i) <- quantifiedVar
@@ -244,8 +256,11 @@ pgOnDomain x nm dom =
         DomainSet r attr innerDomain -> do
 
             let nmCardMiddle = nm `mappend` "_cardMiddle"
-            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardMiddle, "i,log")]
             let cardMiddle = Reference nmCardMiddle Nothing
+
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardDelta, "i,log")]
             let cardDelta = Reference nmCardDelta Nothing
 
             (iPat, i) <- quantifiedVar
@@ -319,8 +334,11 @@ pgOnDomain x nm dom =
         DomainMSet r attr innerDomain -> do
 
             let nmCardMiddle = nm `mappend` "_cardMiddle"
-            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardMiddle, "i,log")]
             let cardMiddle = Reference nmCardMiddle Nothing
+
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardDelta, "i,log")]
             let cardDelta = Reference nmCardDelta Nothing
 
             (iPat, i) <- quantifiedVar
@@ -418,8 +436,11 @@ pgOnDomain x nm dom =
         DomainFunction r attr innerDomainFr innerDomainTo -> do
 
             let nmCardMiddle = nm `mappend` "_cardMiddle"
-            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardMiddle, "i,log")]
             let cardMiddle = Reference nmCardMiddle Nothing
+
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardDelta, "i,log")]
             let cardDelta = Reference nmCardDelta Nothing
 
             (iPat, i) <- quantifiedVar
@@ -547,8 +568,11 @@ pgOnDomain x nm dom =
         DomainRelation r attr innerDomains -> do
 
             let nmCardMiddle = nm `mappend` "_cardMiddle"
-            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardMiddle, "i,log")]
             let cardMiddle = Reference nmCardMiddle Nothing
+
+            let nmCardDelta  = nm `mappend` "_cardDelta"
+            tell [(nmCardDelta, "i,log")]
             let cardDelta = Reference nmCardDelta Nothing
 
             (iPat, i) <- quantifiedVar

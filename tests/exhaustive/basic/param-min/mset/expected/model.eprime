@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+given a: int(1..200)
+given b: int(1..200)
+letting c be min([200, a + b; int(1..2)])
+where c >= b
+branching on []
+such that true
+

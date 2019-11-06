@@ -16,6 +16,7 @@ module Conjure.Language.Expression
     , patternToExpr
     , emptyCollectionX
     , nbUses
+    , isDomainExpr
     ) where
 
 -- conjure
@@ -866,3 +867,8 @@ emptyCollectionX (Constant x) = emptyCollection x
 emptyCollectionX (AbstractLiteral x) = emptyCollectionAbsLit x
 emptyCollectionX (Typed x _) = emptyCollectionX x
 emptyCollectionX _ = False
+
+
+isDomainExpr :: MonadFail m => Expression -> m ()
+isDomainExpr Domain{} = return ()
+isDomainExpr x = na ("Not a domain expression: " <+> pretty x)
