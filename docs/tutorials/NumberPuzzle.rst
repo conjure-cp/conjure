@@ -24,6 +24,7 @@ We can represent the different letters as an enumerated type, with each letter a
 
 .. code-block:: essence
 
+   language Essence 1.3
    letting letters be new type enum {S,E,N,D,M,O,R,Y}
    find f : function letters --> int(0..9)
    such that
@@ -33,7 +34,7 @@ We can represent the different letters as an enumerated type, with each letter a
 
 Each Essence specification can optionally contain a declaration of which dialect of Essence it is written in.
 The current version of Essence is 1.3.
-We leave out this declaration in the remaining examples to avoid repetition.
+We leave out this declaration in the remaining examples.
 
 This model is stored in ``sm1.essence``; let's use Conjure to find the solution:
 
