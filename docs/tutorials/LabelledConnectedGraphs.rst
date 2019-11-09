@@ -2,6 +2,8 @@
 Labelled connected graphs
 -------------------------
 
+Author: András Salamon (with thanks to Roy Dyckhoff for proofreading)
+
 We now illustrate the use of Conjure for a more realistic modelling task, to enumerate all labelled connected graphs.
 The number of labelled connected graphs over a fixed set of n distinct labels grows quickly; this is `OEIS sequence A001187 <http://oeis.org/A001187>`_.
 
