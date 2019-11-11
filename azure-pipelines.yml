@@ -34,4 +34,6 @@ jobs:
     displayName: "Install Glucose"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 0' ; fi
     displayName: "Test"
+  - bash: if $(coverage) ; then find . -name '*.tix' ; fi
+    displayName: "List tix files"
 
