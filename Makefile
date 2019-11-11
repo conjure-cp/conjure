@@ -7,6 +7,7 @@ export GHC_VERSION?=8.6
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
+export COVERAGE?=false
 
 .PHONY: install
 install:
@@ -33,23 +34,7 @@ install:
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
-	@if  [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests --no-terminal;\
-	elif [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests;\
-	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly --no-terminal;\
-	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly;\
-	elif   ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests --no-terminal;\
-	elif   ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests;\
-	elif ! ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --no-terminal;\
-	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR};\
-	fi
+	@bash etc/build/install.sh
 	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
 	@echo - savilerow
