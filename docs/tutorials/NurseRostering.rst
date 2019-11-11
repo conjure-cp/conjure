@@ -1,17 +1,17 @@
 Nurse rostering
 ---------------
 
-*Authors: Saad Attieh, Nguyen Dang, András Salamon*
+*Authors: András Salamon, Nguyen Dang, Saad Attieh*
 
 We now discuss a version of `Nurse Rostering <https://en.wikipedia.org/wiki/Nurse_scheduling_problem>`, a constrained scheduling problem.
 Unlike versions of this problem studied by operations research practitioners and researchers (such as competition instances :cite:`ceschia2019second`), we here focus on just some of the basic constraints.
 
 Some nurses are available to work in a hospital.
-Each day is divided into a sequence of shifts.
+Each day is divided into a sequence of shifts, e.g., an early-morning shift, a day shift and a night shift.
 Each nurse should be assigned to work some shifts during the course of a period of consecutive days.
-A nurse should not be assigned to work two different shifts on the same day.
-Moreover, for each nurse we need to avoid some patterns of consecutive shifts (where the shifts may refer to different consecutive days).
-We also must make sure to meet the minimum number of nurses needed for each shift.
+A nurse can be assigned to at most one shift per day.
+Moreover, for each nurse we need to avoid some forbidden shift patterns within two consecutive days. For example, a nurse cannot work a night shift today and an early-morning shift the next day. 
+We also must make sure to meet the minimum number of nurses demanded for each shift. These demand values vary between different days.
 
 
 Initial specification
@@ -133,13 +133,13 @@ We replace the last constraint by a version that corrects this syntax error:
 
 This is a specification that is acceptable to Conjure and which captures the key constraints we wanted to include.
 
-Assuming that the third specification is in file ``model3.essence`` and the test instance in file ``test.param``, we can run Conjure:
+Assuming that the third specification is in file ``model3.essence`` and the test instance in file ``test.param``, we can run Conjure to solve the instance.
 
 .. code-block:: bash
 
    conjure solve -ac model3.essence test.param
 
-After quite some time, this creates the following solution:
+Without any specification, the default solver is Minion :cite:`ceschia2019second`, a constraint programming solver. After quite some time, this creates the following solution:
 
 .. code-block:: essence
 
