@@ -33,7 +33,7 @@ jobs:
     displayName: "Install Minion"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
     displayName: "Install Glucose"
-  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 0' ; fi
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=0 make test ; fi
     displayName: "Test"
   - bash: if $(coverage) ; then find . -name '*.tix' ; fi
     displayName: "List tix files"

@@ -8,6 +8,7 @@ export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
 export COVERAGE?=false
+export LIMIT_TIME?=10
 
 .PHONY: install
 install:
@@ -39,9 +40,15 @@ install:
 	@cp -r etc/savilerow/* ${BIN_DIR}
 	@echo - savilerow
 
-.PHONY: install-using-cabal
-install-using-cabal:
-	@bash etc/build/install.sh
+.PHONY: test
+test:
+	@if [ ${COVERAGE} ]; then \
+		stack test --coverage --test-arguments '--limit-time ${LIMIT_TIME}';\
+		stack hpc report conjure-cp $(find . -name conjure.tix);\
+		ls .stack-work/install/x86_64-osx/*/*/hpc/combined/custom;\
+	else\
+		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
+	fi
 
 .PHONY: preinstall
 preinstall:
