@@ -33,8 +33,24 @@ jobs:
     displayName: "Install Minion"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
     displayName: "Install Glucose"
-  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=0 make test ; fi
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=5 make test ; fi
     displayName: "Test"
-  - bash: if $(coverage) ; then find . -name '*.tix' ; fi
-    displayName: "List tix files"
-
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: azure_id_rsa
+      displayName: 'Get the Github deploy key'
+    condition: and(succeeded(), eq('$(coverage)', 'true'))
+  - bash: |
+      mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
+      chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
+      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      git config --local user.name "Özgür Akgün"
+      git config --local user.name "ozgurakgun@gmail.com"
+      git clone git@github.com:conjure-cp/conjure-code-coverage.git
+      cp -r .stack-work/install/x86_64-osx/*/*/hpc/combined/custom/* conjure-code-coverage
+      cd conjure-code-coverage
+      git add .
+      git commit . -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/$(Build.SourceVersion)\n\nCommit message:\n\n$(Build.SourceVersionMessage)"
+      git push origin master
+    displayName: "Upload code coverage report to Github"
+    condition: and(succeeded(), eq('$(coverage)', 'true'))
