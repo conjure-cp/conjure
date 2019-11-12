@@ -39,7 +39,6 @@ jobs:
     inputs:
       secureFile: azure_id_rsa
       displayName: 'Get the Github deploy key'
-      condition: eq('$(coverage)', 'true')
   - bash: |
       # this is from https://cloudblogs.microsoft.com/opensource/2019/04/05/publishing-github-pages-from-azure-pipelines
       mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
@@ -58,4 +57,4 @@ jobs:
       git commit . -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/$(Build.SourceVersion)"
       git push origin master
     displayName: "Upload code coverage report to Github"
-    condition: eq('$(coverage)', 'true')
+    condition: eq('$(coverage)', true)
