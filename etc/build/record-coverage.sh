@@ -9,19 +9,29 @@ if ${COVERAGE}; then
     chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     git clone git@github.com:conjure-cp/conjure-code-coverage.git
+
     mkdir -p conjure-code-coverage/latest
     cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/latest
+
     TODAY=$(date "+%Y-%m-%d")
     mkdir -p conjure-code-coverage/${TODAY}
     cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/${TODAY}
+
     cd conjure-code-coverage
     git config --local user.name "Özgür Akgün"
     git config --local user.email "ozgurakgun@gmail.com"
+
     rm -f */custom.tix
+
+    cp ${TODAY}/hpc_index.html ${TODAY}/index.html
     git add ${TODAY}
     git commit ${TODAY} -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION} (daily)"
-    git add latest
-    git commit latest -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
+
+    cp latest/hpc_index.html index.html
+    cp latest/hpc_index.html latest/index.html
+    git add latest index.html
+    git commit latest index.html -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
+
     git push origin master
 else
     echo "Skipping, COVERAGE is set to ${COVERAGE}"
