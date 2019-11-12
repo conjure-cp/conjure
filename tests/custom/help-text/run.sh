@@ -1,4 +1,5 @@
-pushd ../../../docs > /dev/null
+(
+cd ../../../docs
 make conjure-help
 git diff conjure-help.txt
-popd > /dev/null
+)
