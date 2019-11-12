@@ -55,7 +55,7 @@ jobs:
       cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/${TODAY}
       cd conjure-code-coverage
       git add .
-      git commit . -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/$(Build.SourceVersion)\n\nCommit message:\n\n$(Build.SourceVersionMessage)"
+      git commit . -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/$(Build.SourceVersion)"
       git push origin master
     displayName: "Upload code coverage report to Github"
     condition: eq('$(coverage)', 'true')
