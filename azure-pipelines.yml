@@ -39,7 +39,6 @@ jobs:
     inputs:
       secureFile: azure_id_rsa
       displayName: 'Get the Github deploy key'
-    condition: and(succeeded(), eq('$(coverage)', 'true'))
   - bash: |
       # this is from https://cloudblogs.microsoft.com/opensource/2019/04/05/publishing-github-pages-from-azure-pipelines
       mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
@@ -48,10 +47,13 @@ jobs:
       git config --local user.name "Özgür Akgün"
       git config --local user.name "ozgurakgun@gmail.com"
       git clone git@github.com:conjure-cp/conjure-code-coverage.git
-      cp -r .stack-work/install/x86_64-osx/*/*/hpc/combined/custom/* conjure-code-coverage
+      mkdir -p conjure-code-coverage/latest
+      cp -r .stack-work/install/x86_64-osx/*/*/hpc/combined/custom/* conjure-code-coverage/latest
+      TODAY=$(date "+%Y-%m-%d")
+      mkdir -p conjure-code-coverage/${TODAY}
+      cp -r .stack-work/install/x86_64-osx/*/*/hpc/combined/custom/* conjure-code-coverage/${TODAY}
       cd conjure-code-coverage
       git add .
       git commit . -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/$(Build.SourceVersion)\n\nCommit message:\n\n$(Build.SourceVersionMessage)"
       git push origin master
     displayName: "Upload code coverage report to Github"
-    condition: and(succeeded(), eq('$(coverage)', 'true'))
