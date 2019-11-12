@@ -23,14 +23,12 @@ if ${COVERAGE}; then
 
     rm -f */custom.tix
 
-    cp ${TODAY}/hpc_index.html ${TODAY}/index.html
+    cp latest/index.html ${TODAY}/index.html
     git add ${TODAY}
     git commit ${TODAY} -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION} (daily)"
 
-    cp latest/hpc_index.html index.html
-    cp latest/hpc_index.html latest/index.html
-    git add latest index.html
-    git commit latest index.html -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
+    git add latest
+    git commit latest -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
 
     git push origin master
 else
