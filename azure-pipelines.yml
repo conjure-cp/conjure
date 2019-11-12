@@ -39,5 +39,5 @@ jobs:
     inputs:
       secureFile: azure_id_rsa
       displayName: 'Get the Github deploy key'
-  - bash: COVERAGE=$(coverage) SOURCE_VERSION=$(Build.SourceVersion) SOURCE_VERSION_MSG=$(Build.SourceVersionMessage) etc/build/record-coverage.sh
+  - bash: COVERAGE=$(coverage) SOURCE_VERSION="$(Build.SourceVersion)" SOURCE_VERSION_MSG="$(Build.SourceVersionMessage)" etc/build/record-coverage.sh
     displayName: "Upload code coverage report to Github"
