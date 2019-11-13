@@ -11,22 +11,22 @@ jobs:
         imageName: 'ubuntu-latest'
         runTests: true
         coverage: false
-        cache1: "${HOME}/.stack"
+        cache1: "$(Agent.HomeDirectory)/.stack"
       Mac:
         imageName: 'macos-latest'
         runTests: true
         coverage: false
-        cache1: "${HOME}/.stack"
+        cache1: "$(Agent.HomeDirectory)/.stack"
       Windows:
         imageName: 'vs2017-win2016'
         runTests: false
         coverage: false
-        cache1: "C:\\Users\\VssAdministrator\\AppData\\Local\\Programs\\stack"
+        cache1: "$(Agent.HomeDirectory)\\AppData\\Local\\Programs\\stack"
       CodeCoverage:
         imageName: 'ubuntu-latest'
         runTests: true
         coverage: true
-        cache1: "${HOME}/.stack"
+        cache1: "$(Agent.HomeDirectory)/.stack"
   pool:
     vmImage: $(imageName)
   steps:
