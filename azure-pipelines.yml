@@ -11,21 +11,30 @@ jobs:
         imageName: 'ubuntu-latest'
         runTests: true
         coverage: false
+        cache1: "${HOME}/.stack"
       Mac:
         imageName: 'macos-latest'
         runTests: true
         coverage: false
+        cache1: "${HOME}/.stack"
       Windows:
         imageName: 'vs2017-win2016'
         runTests: false
         coverage: false
+        cache1: "C:\\Users\\VssAdministrator\\AppData\\Local\\Programs\\stack"
       CodeCoverage:
         imageName: 'ubuntu-latest'
         runTests: true
         coverage: true
+        cache1: "${HOME}/.stack"
   pool:
     vmImage: $(imageName)
   steps:
+  - task: CacheBeta@1
+    inputs:
+      key: $(cache1) | $(Agent.OS) | $(Agent.JobName)
+      path: $(cache1)
+    displayName: Cache (~/.stack)
   - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh ; fi
