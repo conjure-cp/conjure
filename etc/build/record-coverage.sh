@@ -21,7 +21,7 @@ if ${COVERAGE}; then
     # rename the cryptic directory name for better diffs over time
     conjureDirName=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp)
     mv conjure-code-coverage/latest/${conjureDirName} conjure-code-coverage/latest/conjure-cp
-    find conjure-code-coverage/latest -type f -exec sed -i 's/${conjureDirName}/conjure-cp/g' {} \;
+    find conjure-code-coverage/latest -type f -exec sed -i "s/${conjureDirName}/conjure-cp/g" {} \;
 
     # move the index file back
     mv latest-index.html conjure-code-coverage/latest/index.html
