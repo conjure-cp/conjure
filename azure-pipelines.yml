@@ -32,7 +32,7 @@ jobs:
     displayName: "Install Minion"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
     displayName: "Install Glucose"
-  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=0 make test ; fi
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=5 make test ; fi
     displayName: "Test"
   - task: DownloadSecureFile@1
     inputs:

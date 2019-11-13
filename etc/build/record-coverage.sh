@@ -10,31 +10,46 @@ if ${COVERAGE}; then
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     git clone git@github.com:conjure-cp/conjure-code-coverage.git
 
+    # save this file for later
+    cp conjure-code-coverage/latest/index.html latest-index.html
+
+    # copy the report over to `latest`
+    rm -rf conjure-code-coverage/latest
     mkdir -p conjure-code-coverage/latest
     cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/latest
 
-    TODAY=$(date "+%Y-%m-%d")
-    mkdir -p conjure-code-coverage/${TODAY}
-    cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/${TODAY}
+    # rename the cryptic directory name for better diffs over time
+    conjureDirName=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp)
+    mv conjure-code-coverage/latest/${conjureDirName} conjure-code-coverage/latest/conjure-cp
+    find conjure-code-coverage/latest -type f -exec sed -i 's/${conjureDirName}/conjure-cp/g' {} \;
 
+    # move the index file back
+    mv latest-index.html conjure-code-coverage/latest/index.html
+
+    # copy latest
+    TODAY=$(date "+%Y-%m-%d")
+    rm -rf conjure-code-coverage/${TODAY}
+    cp -r conjure-code-coverage/latest conjure-code-coverage/${TODAY}
+
+    (
     cd conjure-code-coverage
     git config --local user.name "Özgür Akgün"
     git config --local user.email "ozgurakgun@gmail.com"
 
     rm -f */custom.tix
 
-    cp latest/index.html ${TODAY}/index.html
-    git add ${TODAY}
+    git add --all ${TODAY}
     if [[ -n $(git status -s ${TODAY}) ]]; then
         git commit ${TODAY} -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION} (daily snapshot)"
     fi
 
-    git add latest
+    git add --all latest
     if [[ -n $(git status -s latest) ]]; then
         git commit latest -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
     fi
 
     git push origin master
+    )
 else
     echo "Skipping, COVERAGE is set to ${COVERAGE}"
 fi
