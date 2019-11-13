@@ -25,10 +25,14 @@ if ${COVERAGE}; then
 
     cp latest/index.html ${TODAY}/index.html
     git add ${TODAY}
-    git commit ${TODAY} -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION} (daily snapshot)"
+    if [[ -n $(git status -s ${TODAY}) ]]; then
+        git commit ${TODAY} -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION} (daily snapshot)"
+    fi
 
     git add latest
-    git commit latest -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
+    if [[ -n $(git status -s latest) ]]; then
+        git commit latest -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
+    fi
 
     git push origin master
 else
