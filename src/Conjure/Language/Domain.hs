@@ -129,10 +129,10 @@ typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE x)          = do
     ty <- typeOf x
     case ty of
-        TypeInt{}              -> return ()       -- pre recoverDomainInt
-        TypeList     TypeInt{} -> return ()
-        TypeMatrix _ TypeInt{} -> return ()
-        TypeSet      TypeInt{} -> return ()
+        TypeInt TagInt                -> return ()       -- pre recoverDomainInt
+        TypeList     (TypeInt TagInt) -> return ()
+        TypeMatrix _ (TypeInt TagInt) -> return ()
+        TypeSet      (TypeInt TagInt) -> return ()
         _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
