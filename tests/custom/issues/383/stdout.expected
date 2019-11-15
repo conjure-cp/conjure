@@ -66,11 +66,11 @@ $  "enumLettings": [],
 
  ========== 3 ==========
 Error:
-    In a 'such that' statement: c = |toSet([image(f, u) | u : int(1..n)])|
+    In a 'such that' statement: c = |toSet([image(f, u) | u : vertices])|
     Error:
-        When type checking: c = |toSet([image(f, u) | u : int(1..n)])|
+        When type checking: c = |toSet([image(f, u) | u : vertices])|
         Cannot unify the types of the following.
         lhs        : c
         type of lhs: colours
-        rhs        : |toSet([image(f, u) | u : int(1..n)])|
+        rhs        : |toSet([image(f, u) | u : vertices])|
         type of rhs: int
