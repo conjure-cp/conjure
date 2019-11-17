@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.UI.ParameterGenerator where
 
@@ -117,7 +118,7 @@ pgOnDomain ::
       , [Statement]                     -- statements that define the necessary givens
       , [Expression]                    -- constraints
       )
-pgOnDomain x nm dom =
+pgOnDomain x nm (expandDomainReference -> dom) =
 
     case dom of
 
