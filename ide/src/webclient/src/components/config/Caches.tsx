@@ -1,3 +1,5 @@
+// import Select from "react-select"
+import Select, { Option, OptGroup } from 'rc-select';
 import * as React from "react"
 import { Cache } from "../../../../extension/src/utils";
 
@@ -7,59 +9,30 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 interface Props {
-  label: string
   caches: Cache[]
   index: number
   onChangeHandler: (cache: Cache, index: number) => void
 }
 
-interface Option {
-  value: Cache
-  label: string
-}
 
-interface State {
-  selectedOption: Option
-}
-
-import Select from "react-select"
-
-const untitled = {
-  value: { config: {}, name: "" },
-  label: "Untitled"
-}
-
-export class Caches extends React.Component<Props, State> {
-  state = {
-    selectedOption: { ...untitled }
-  }
-
-  handleChange = (selectedOption: any) => {
-    this.setState({ selectedOption: selectedOption })
-    this.props.onChangeHandler(selectedOption.value, this.props.index)
-  }
-
-  getOptions = () => {
-    const cachedOptions: Option[] = this.props.caches.map(c => {
-      return { value: c, label: c.name }
-    })
-    cachedOptions.unshift(untitled)
-    return cachedOptions
-  }
+export class Caches extends React.Component<Props, any> {
 
   render() {
-    const { selectedOption } = this.state
+
+    const options = this.props.caches.map((cache, index) => {
+      return <Option value={index}>{cache.name}</Option>
+    })
 
     return (
       <div className="row">
         <label className="col">Selected Cache</label>
-
         <div className="col">
           <Select
-            value={selectedOption}
-            onChange={this.handleChange}
-            options={this.getOptions()}
-          />
+            defaultValue={<Option value={-1}>{"untitled"}</Option>
+            }
+          >
+            {options}
+          </Select>
         </div>
       </div>
     )

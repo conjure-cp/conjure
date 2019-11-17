@@ -94,7 +94,7 @@ class ConfigForm extends React.Component<Props, State> {
 
   submissionHandler = (values: Values, props: Props) => {
     let cleaned = values.namedCaches.map((namedCache, index) =>
-      cleanCache(namedCache, props.reps, index)
+      cleanCache(namedCache, index)
     )
 
     fetch(`http://localhost:${this.props.vscodeServerPort}/config/solve`, {
@@ -116,7 +116,7 @@ class ConfigForm extends React.Component<Props, State> {
     // console.log(values)
 
     return values.namedCaches.map((cache, index) => {
-      const currentEssenceFile = values.namedCaches[index].config.essenceFile
+      const currentEssenceFile = values.namedCaches[index].essenceFile
 
       const varReps = currentEssenceFile ? props.reps[currentEssenceFile] : []
 
@@ -265,7 +265,7 @@ class ConfigForm extends React.Component<Props, State> {
               <Field
                 name={`namedCaches[${index}].config.translation`}
                 component={SelectWithLabel}
-                value={values.namedCaches[index].config.translation}
+                value={values.namedCaches[index].config.srConfig.translation}
                 title="Translation"
                 options={[
                   { value: "", label: "Default" },
@@ -371,7 +371,7 @@ class ConfigForm extends React.Component<Props, State> {
     })
   }
 
-  makeNamedConfig = (props: Props, index: number, reps: RepMap): Cache => {
+  makeNamedConfig = (props: Props, index: number, reps: RepMap): any => {
     const getName = (caches?: (Cache | undefined)[]) => {
       if (!caches) {
         return ""
@@ -430,17 +430,17 @@ class ConfigForm extends React.Component<Props, State> {
     selectedCache: Cache,
     initialConfig: Config
   ): Config => {
-    Object.keys(initialConfig).map(key => {
-      if (key in selectedCache.config) {
-        initialConfig[key] = selectedCache.config[key]
-      }
-    })
+    // Object.keys(initialConfig).map(key => {
+    //   if (key in selectedCache.config) {
+    //     initialConfig[key] = selectedCache.config[key]
+    //   }
+    // })
 
-    if (selectedCache.config.answers) {
-      initialConfig.answers = initialConfig.answers.map((str: any) => {
-        return str.split(":")[1]
-      })
-    }
+    // if (selectedCache.config.answers) {
+    //   initialConfig.answers = initialConfig.answers.map((str: any) => {
+    //     return str.split(":")[1]
+    //   })
+    // }
 
     // console.log("selected Cache ", selectedCache)
 
@@ -495,7 +495,7 @@ class ConfigForm extends React.Component<Props, State> {
               checked={this.props.diff}
               onChange={() => {
                 this.props.diffCheckHandler(
-                  cleanCache(values.namedCaches[0], this.props.reps, 0)
+                  cleanCache(values.namedCaches[0], 0)
                 )
               }}
             />

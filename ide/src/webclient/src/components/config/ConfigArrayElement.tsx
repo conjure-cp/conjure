@@ -2,23 +2,17 @@ import * as React from "react"
 import TextWithLabel from "./TextWithLabel"
 import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "../common/StageHeader"
-import { Check } from "../common/Check"
-import { validationSchema } from "./Validation"
+import {Caches} from "../config/Caches"
 import { Cache, RepMap } from "../../../../extension/src/utils"
 
 import {
-  Form,
   Field,
-  FieldArray,
   FieldProps,
-  Formik,
   FormikProps
 } from "formik"
 import { MinionConfig, MinionStage } from "./MinionStage"
 import { SRConfig, SRStage } from "./SRStage"
 import { ConjureConfig, ConjureStage } from "./ConjureStage"
-import { cloneDeep } from "lodash"
-import { Caches } from "./Caches"
 // import Select from "../common/Select"
 // import { SelectField } from "./SelectField"
 import { ChangeEvent } from "react";
@@ -54,7 +48,7 @@ export class ConfigArrayElement extends React.Component<
     showReps: false
   }
   render = () => {
-    const { values, index, setFieldValue } = this.props
+    const { values, index } = this.props
     const { name } = this.props.field
 
     // console.log(values)
@@ -67,8 +61,20 @@ export class ConfigArrayElement extends React.Component<
         <Field
           name={`${name}.name`}
           component={TextWithLabel}
-          label={"Save as:"}
+          title={"Save as:"}
         />
+        <Caches
+        index={0}
+        caches={this.props.caches}
+        onChangeHandler={() => {}}
+
+        
+        />
+        {/* <Field
+          name={`${name}.Caches`}
+          component={TextWithLabel}
+          title={"Caches"}
+        /> */}
         {/* <Field
           component={Select}
           title={"Caches"}

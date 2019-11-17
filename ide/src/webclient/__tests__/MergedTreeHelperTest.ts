@@ -23,7 +23,7 @@ import {
 } from "../src/modules/MergedTreeHelper"
 import { flipDiffLocations } from "../src/modules/Helper"
 
-import { diffPoints as differAt0 } from "./resources/differAt0"
+import { diffPoints as differAt0 } from "../__testResources__/differAt0"
 
 import {
   coreOf3 as coreOf3Normal,
@@ -40,7 +40,7 @@ import {
   // descendantsOf21 as descendantsOf21Normal,
   // descendantsOf28 as descendantsOf28Normal,
   core as coreNormal8
-} from "./resources/normal-8"
+} from "../__testResources__/normal-8"
 import {
   coreOf3 as coreOf3Sacbounds,
   coreOf4 as coreOf4Sacbounds,
@@ -48,12 +48,12 @@ import {
   coreOf7 as coreOf7Sacbounds,
   coreOf9 as coreOf9Sacbounds,
   core as coreSacbounds8
-} from "./resources/sacbounds-8"
+} from "../__testResources__/sacbounds-8"
 
-import { core as coreNoOpt } from "./resources/noOpt-8"
-import { core as coreNoOptSymmBreak } from "./resources/noOptSymmBreak-8"
+import { core as coreNoOpt } from "../__testResources__/noOpt-8"
+import { core as coreNoOptSymmBreak } from "../__testResources__/noOptSymmBreak-8"
 
-import { bigToSmall } from "./resources/normalVSSacbounds-8"
+import { bigToSmall } from "../__testResources__/normalVSSacbounds-8"
 import { makeState, insertNodesBoyo } from "../src/modules/TreeHelper"
 
 const smallToBig = flipDiffLocations(bigToSmall)

@@ -76,7 +76,7 @@ export class ConfigForm extends React.Component<Props, State> {
             } else {
               currentCache = values.caches[index]
             }
-            console.log("currentCahces is ", currentCache)
+            // console.log("currentCahces is ", currentCache)
 
             return (
               <div className="col" key={index}>

@@ -1,25 +1,17 @@
 import React from "react"
-import * as ReactDOM from "react-dom"
 
 import {
   Form,
   Field,
-  FieldArray,
-  FieldProps,
-  Formik,
-  FormikProps
-} from "formik"
+  Formik} from "formik"
 import {
   render,
   fireEvent,
-  waitForElement,
-  queryByLabelText,
-  getByTestId,
   cleanup,
   RenderResult
 } from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
-import { ConjureStage } from "../src/components/config/ConjureStage"
+import { ConjureStage } from "../../src/components/config/ConjureStage"
 
 describe("Test the stages components", () => {
   afterEach(cleanup)

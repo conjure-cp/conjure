@@ -1,22 +1,13 @@
 import React from "react"
-import * as ReactDOM from "react-dom"
 
 import {
   Form,
   Field,
-  FieldArray,
-  FieldProps,
-  Formik,
-  FormikProps
-} from "formik"
+  Formik} from "formik"
 import {
-  render,
-  fireEvent,
-  queryByLabelText,
-  getByTestId
-} from "@testing-library/react"
+  render} from "@testing-library/react"
 import "@testing-library/jest-dom/extend-expect"
-import { MinionStage } from "../src/components/config/MinionStage"
+import { MinionStage } from "../../src/components/config/MinionStage"
 
 describe("Test the stages components", () => {
   describe("Test the minion stage with values", () => {
@@ -52,7 +43,7 @@ describe("Test the stages components", () => {
     )
 
     const rendered = render(minionStage)
-    const { queryByText, getByLabelText, getByText, getByTestId } = rendered
+    const { queryByText, getByLabelText } = rendered
 
     expect(queryByText("Minion")).toBeTruthy()
 

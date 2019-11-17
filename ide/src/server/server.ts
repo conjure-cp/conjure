@@ -85,11 +85,16 @@ class ConfigService {
       `**/${ConfigHelper.cacheFileName}`
     )
 
+
+
     return sortBy(
       cachedFiles.map(uri => {
+        const file = JSON.parse(fs.readFileSync(uri.path).toString())
         return {
           name: path.basename(path.dirname(uri.path)),
-          config: JSON.parse(fs.readFileSync(uri.path).toString()).config
+          config: file.config,
+          essenceFile: file.essenceFile,
+          paramFile: file.paramFile
         }
       }),
       ["name"]

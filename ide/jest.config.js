@@ -9,7 +9,7 @@ module.exports = {
     }
   },
   preset: "ts-jest",
-  testMatch: ["**/__tests__/*.+(ts|tsx)"],
+  testMatch: ["**/__tests__/**/*.+(ts|tsx)"],
   automock: false,
   setupFiles: ["./src/webclient/src/setupJest.ts"],
   globals: {
