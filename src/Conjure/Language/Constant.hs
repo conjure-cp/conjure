@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Constant
     ( Constant(..)
@@ -292,7 +293,7 @@ viewConstantVariant   (TypedConstant c _) = viewConstantVariant c
 viewConstantVariant   constant = fail ("Expecting a variant, but got:" <++> pretty constant)
 
 viewConstantMatrix    :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
-viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (ind, xs)
+viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (expandDomainReference ind, xs)
 viewConstantMatrix    (TypedConstant c _) = viewConstantMatrix c
 viewConstantMatrix    constant = fail ("Expecting a matrix, but got:" <++> pretty constant)
 
@@ -312,7 +313,7 @@ viewConstantFunction  (TypedConstant c _) = viewConstantFunction c
 viewConstantFunction  constant = do
     let
         suggestion = case constant of
-            ConstantAbstract (AbsLitMatrix (DomainInt _ rs) vals) -> do
+            ConstantAbstract (AbsLitMatrix (expandDomainReference -> DomainInt _ rs) vals) -> do
                 froms <- valuesInIntDomain rs
                 return $ Just $ pretty $ AbsLitFunction (zip (map (ConstantInt TagInt) froms) vals)
             _ -> return Nothing

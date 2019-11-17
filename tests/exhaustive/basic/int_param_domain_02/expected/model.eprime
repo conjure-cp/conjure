@@ -1,7 +1,8 @@
 language ESSENCE' 1.0
 
-letting a be 1
-letting b be 5
+given s_Explicit: matrix indexed by [int(1..5)] of int(1..5)
+letting a be s_Explicit[1]
+letting b be s_Explicit[5]
 given c: int
 find x: int(a..b)
 branching on [x]

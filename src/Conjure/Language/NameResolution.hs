@@ -261,12 +261,12 @@ resolveD ::
     Pretty r =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Domain r Expression -> m (Domain r Expression)
-resolveD (DomainReference _ (Just d)) = resolveD d
+resolveD (DomainReference nm (Just d)) = DomainReference nm . Just <$> resolveD d
 resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
     case mval of
         Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
-        Just (Alias (Domain r)) -> resolveD (changeRepr def r)
+        Just (Alias (Domain r)) -> DomainReference nm . Just <$> resolveD (changeRepr def r)
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d

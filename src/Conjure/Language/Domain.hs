@@ -16,7 +16,7 @@ module Conjure.Language.Domain
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , textToRepresentation, representationToShortText, representationToFullText
-    , isPrimitiveDomain, domainCanIndexMatrix, getIndices
+    , isPrimitiveDomain, domainCanIndexMatrix, expandDomainReference, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , reprTreeEncoded
     , forgetRepr, changeRepr, defRepr
@@ -129,10 +129,10 @@ typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE x)          = do
     ty <- typeOf x
     case ty of
-        TypeInt{}              -> return ()       -- pre recoverDomainInt
-        TypeList     TypeInt{} -> return ()
-        TypeMatrix _ TypeInt{} -> return ()
-        TypeSet      TypeInt{} -> return ()
+        TypeInt TagInt                -> return ()       -- pre recoverDomainInt
+        TypeList     (TypeInt TagInt) -> return ()
+        TypeMatrix _ (TypeInt TagInt) -> return ()
+        TypeSet      (TypeInt TagInt) -> return ()
         _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
@@ -294,11 +294,16 @@ getIndices (DomainMatrix index inner) = first (index:) (getIndices inner)
 getIndices d = ([], d)
 
 domainCanIndexMatrix :: Domain r x -> Bool
+domainCanIndexMatrix (DomainReference _ (Just d)) = domainCanIndexMatrix d
 domainCanIndexMatrix DomainBool{} = True
 domainCanIndexMatrix DomainInt {} = True
 domainCanIndexMatrix DomainIntE{} = True
 domainCanIndexMatrix DomainEnum{} = True
 domainCanIndexMatrix _            = False
+
+expandDomainReference :: Data r => Data x => Domain r x -> Domain r x
+expandDomainReference (DomainReference _ (Just d)) = expandDomainReference d
+expandDomainReference d = descend expandDomainReference d
 
 
 --------------------------------------------------------------------------------
