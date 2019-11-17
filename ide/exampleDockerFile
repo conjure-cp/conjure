@@ -1,0 +1,56 @@
+FROM ubuntu
+
+RUN apt update
+RUN apt upgrade
+RUN apt install -y wget
+RUN apt install -y git
+
+WORKDIR /root
+RUN wget -qO- https://get.haskellstack.org/ | sh
+RUN git clone https://github.com/conjure-cp/conjure
+
+WORKDIR /root/conjure
+
+RUN git checkout loadcore
+
+RUN make
+
+RUN ls -al /usr/local/bin
+RUN ls -al /root/.local/bin
+RUN cp -r /root/.local/bin/* /usr/local/bin
+RUN conjure
+
+
+WORKDIR /root
+
+# Replace TOKEN with github access token
+RUN git clone https://TOKEN@github.com/minion/minion-private
+WORKDIR /root/minion-private
+RUN git checkout dumptreesql
+RUN mkdir build
+WORKDIR /root/minion-private/build
+
+RUN apt install -y python
+RUN ../configure.py
+RUN apt-get install -y libsqlite3-dev
+RUN apt install -y sqlite3
+RUN make -j 4
+
+RUN cp ./minion /usr/local/bin
+
+RUN apt install -y curl
+RUN curl https://nim-lang.org/choosenim/init.sh -sSf | bash -s -- -y
+
+
+RUN cp -r /root/.nimble/bin/* /usr/local/bin
+RUN ls /root/.nimble/bin
+RUN ls /usr/local/bin
+
+
+RUN apt install -y nodejs
+RUN apt install -y npm
+RUN npm install -g typescript
+
+WORKDIR /root/conjure/ide
+
+RUN npm install
