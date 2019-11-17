@@ -19,8 +19,8 @@ import { SRConfig, SRStage } from "./SRStage"
 import { ConjureConfig, ConjureStage } from "./ConjureStage"
 import { cloneDeep } from "lodash"
 import { Caches } from "./Caches"
-import Select from "../common/Select"
-import { SelectField } from "./SelectField"
+// import Select from "../common/Select"
+// import { SelectField } from "./SelectField"
 import { ChangeEvent } from "react";
 
 interface Props {
@@ -49,7 +49,7 @@ export interface Values {
 export class ConfigArrayElement extends React.Component<
   Props & FormikProps<Values> & FieldProps<any>,
   State
-> {
+  > {
   state = {
     showReps: false
   }
@@ -69,7 +69,7 @@ export class ConfigArrayElement extends React.Component<
           component={TextWithLabel}
           label={"Save as:"}
         />
-        <Field
+        {/* <Field
           component={Select}
           title={"Caches"}
           options={this.props.caches.map(x => {
@@ -88,7 +88,7 @@ export class ConfigArrayElement extends React.Component<
                   //   console.log(currentCache)
                   //   // this.setState({ currentCache })
                   // }}
-        />
+        /> */}
 
         <Field
           name={`${name}.essenceFile`}
