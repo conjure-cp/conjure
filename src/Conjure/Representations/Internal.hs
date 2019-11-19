@@ -40,7 +40,7 @@ data Representation (m :: * -> *) = Representation
     }
 
 type TypeOf_ReprCheck (m :: * -> *) =
-       forall x . (Pretty x, ExpressionLike x)
+       forall x . (Data x, Pretty x, ExpressionLike x)
     => (Domain () x -> m [DomainX x])               -- other checkers for inner domains
     -> Domain () x                                  -- this domain
     -> m [DomainX x]                                -- with all repr options
@@ -70,29 +70,32 @@ type TypeOf_DownC (m :: * -> *) =
     -> m (Maybe [(Name, DomainC, Constant)])        -- the outputs names, domains, and constants
 
 type TypeOf_Up (m :: * -> *) =
-       [(Name, Constant)]                           -- all known constants, representing a solution at the low level
-    -> (Name, DomainC)                              -- the name and domain we are working on
-    -> m (Name, Constant)                           -- the output constant, at the high level
+        [(Name, Constant)] ->                       -- all known constants, representing a solution at the low level
+        (Name, DomainC) ->                          -- the name and domain we are working on
+        m (Name, Constant)                          -- the output constant, at the high level
 
 
-type DispatchFunction m x
-        =  Pretty x
-        => Domain HasRepresentation x
-        -> Representation m
+type DispatchFunction m x =
+        Data x =>
+        Pretty x =>
+        Domain HasRepresentation x ->
+        Representation m
 
-type ReprOptionsFunction m r x
-        =  (Pretty x, ExpressionLike x)
-        => Domain () x
-        -> m [Domain HasRepresentation x]
+type ReprOptionsFunction m r x =
+        Data x =>
+        Pretty x =>
+        ExpressionLike x =>
+        Domain () x ->
+        m [Domain HasRepresentation x]
 
 
-rDownToX
-    :: Monad m
-    => Representation m                                 -- for a given representation
-    -> FindOrGiven                                      -- and a declaration: forg
-    -> Name                                             --                  : name
-    -> Domain HasRepresentation Expression              --                  : domain
-    -> m [Expression]                                   -- expressions referring to the representation
+rDownToX ::
+    Monad m =>
+    Representation m ->                             -- for a given representation
+    FindOrGiven ->                                  -- and a declaration: forg
+    Name ->                                         --                  : name
+    Domain HasRepresentation Expression ->          --                  : domain
+    m [Expression]                                  -- expressions referring to the representation
 rDownToX repr forg name domain = do
     pairs <- rDownD repr (name, domain)
     return [ Reference n (Just (DeclHasRepr forg n d))

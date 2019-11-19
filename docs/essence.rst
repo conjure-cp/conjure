@@ -133,7 +133,7 @@ This allows Conjure to produce a model independent of the values of the enumerat
 
 The letting-enum syntax can be used to declare an enumerated type directly in a problem specification as well.
 
-Values of an enumerated type cannot currently contain spaces.
+Values of an enumerated type cannot contain spaces.
 
 .. code-block:: essence
 

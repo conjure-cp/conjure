@@ -90,18 +90,23 @@ mainWithArgs Modelling{..} = do
                 Compact -> userErr1 "The Compact heuristic isn't supported for questions."
                 _       -> return ()
 
-            responsesList <- do
-                if null responses
-                    then return Nothing
-                    else do
-                        let parts = splitOn "," responses
-                        let intParts = mapMaybe readMay parts
-                        if length parts == length intParts
-                            then return (Just intParts)
-                            else userErr1 $ vcat [ "Cannot parse the value for --responses."
-                                                 , "Expected a comma separated list of integers."
-                                                 , "But got:" <+> pretty responses
-                                                 ]
+            let
+                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
+                parseCommaSeparated flag str =
+                    if null str
+                        then return Nothing
+                        else do
+                            let parts = splitOn "," str
+                            let intParts = mapMaybe readMay parts
+                            if length parts == length intParts
+                                then return (Just intParts)
+                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                     , "Expected a comma separated list of integers."
+                                                     , "But got:" <+> pretty str
+                                                     ]
+
+            responsesList <- parseCommaSeparated "--responses" responses
+
             responsesRepresentationList <- do
                 if null responsesRepresentation
                     then return Nothing
@@ -252,22 +257,25 @@ mainWithArgs SymmetryDetection{..} = do
     outputVarSymBreaking jsonFilePath model
 mainWithArgs ParameterGenerator{..} = do
     when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
-    model  <- readModelFromFile essence
-    output <- runNameGen () $ parameterGenerator minInt maxInt model
+    model <- readModelFromFile essence
+    (output, classes) <- runNameGen () $ parameterGenerator minInt maxInt model
     writeModel lineWidth outputFormat (Just essenceOut) output
     let
-        toIrace nm lb ub | lb == ub =
+        toIrace nm lb ub _ | lb == ub =
             pretty nm <+>
             "\"-" <> pretty nm <> " \" c" <+>
             prParens (pretty lb)
-        toIrace nm lb ub =
+        toIrace nm lb ub (Just klass) =
             pretty nm <+>
-            "\"-" <> pretty nm <> " \" i" <+>
+            "\"-" <> pretty nm <> " \" " <> pretty klass <+>
             prettyList prParens "," [lb, ub]
-    liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
-        [ toIrace nm lb ub
-        | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
-        ]
+        toIrace nm _ _ Nothing = bug ("Missing class for:" <+> pretty nm)
+
+        essenceOutFileContents = render lineWidth $ vcat
+            [ toIrace nm lb ub (lookup nm classes)
+            | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
+            ]
+    liftIO $ writeFile (essenceOut ++ ".irace") (essenceOutFileContents ++ "\n")
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=

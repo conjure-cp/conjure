@@ -347,6 +347,7 @@ rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
     theRule [essence| min(&s) |] = do
         TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
+        isDomainExpr s
         DomainSet _ _ inner <- domainOf s
         case inner of
             DomainInt _ rs | isInfinite rs -> na "rule_Param_MaxOfSet"
@@ -367,6 +368,7 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
         TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
+        isDomainExpr s
         DomainSet _ _ inner <- domainOf s
         case inner of
             DomainInt _ rs | isInfinite rs -> na "rule_Param_MaxOfSet"
