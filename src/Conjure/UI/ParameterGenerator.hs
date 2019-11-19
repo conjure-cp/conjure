@@ -99,7 +99,7 @@ fixQuantified (Comprehension body gocs) = do
                         _ -> return (d, [])
 
             let patX = Reference pat Nothing
-            (dom', cons) <- go patX domain
+            (dom', cons) <- go patX (expandDomainReference domain)
             return $ [Generator (GenDomainNoRepr (Single pat) dom')]
                    ++ map Condition cons
         _ -> return [goc]
