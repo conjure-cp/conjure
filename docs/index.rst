@@ -15,7 +15,7 @@ Conjure: The Automated Constraint Modelling Tool
     cli
     features
     essence
-    demonstrations
+    tutorials
     zreferences
     contact
 
