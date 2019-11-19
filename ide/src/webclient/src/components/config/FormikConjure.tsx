@@ -5,7 +5,7 @@ import * as ReactDOM from "react-dom"
 import { Form, Field, FieldArray, Formik, FormikProps } from "formik"
 import * as Yup from "yup"
 
-import { maxBy, times, isEqual, cloneDeep } from "lodash"
+import { maxBy, times, isEqual, cloneDeep, filter } from "lodash"
 import TextWithLabel from "./TextWithLabel"
 import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "../common/StageHeader"
@@ -115,19 +115,22 @@ class ConfigForm extends React.Component<Props, State> {
       cleaned["minionSwitches"] = config.minionSwitches
     }
 
-    // console.log(config.answers)
+    console.log(config.answers)
 
-    cleaned.answers = config.answers.map(
-      (answer: number | string, i: number) => {
-        let variable = this.props.reps[cleaned.essenceFile][i]
+    if (filter(config.answers, (x) => x !== undefined).length > 0) {
 
-        if (!answer) {
-          return `${variable.name}:${1}`
+      cleaned.answers = config.answers.map(
+        (answer: number | string, i: number) => {
+          let variable = this.props.reps[cleaned.essenceFile][i]
+
+          if (!answer) {
+            return `${variable.name}:${1}`
+          }
+
+          return `${variable.name}:${answer}`
         }
-
-        return `${variable.name}:${answer}`
-      }
-    )
+      )
+    }
 
     if (!state.showReps[index]) {
       delete cleaned["answers"]
@@ -137,10 +140,10 @@ class ConfigForm extends React.Component<Props, State> {
       cache.name !== ""
         ? cache.name
         : `${new Date()
-            // .toUTCString()
-            .toLocaleTimeString()
-            .replace(/ /g, "_")
-            .replace(/,/g, "_")}_Config`
+          // .toUTCString()
+          .toLocaleTimeString()
+          .replace(/ /g, "_")
+          .replace(/,/g, "_")}_Config`
 
     if (isEqual(values.namedCaches[0], values.namedCaches[1])) {
       name += "1+2"
@@ -207,9 +210,9 @@ class ConfigForm extends React.Component<Props, State> {
             value={
               cachedChoice
                 ? {
-                    label: cachedChoice.description,
-                    value: cachedChoice.answer
-                  }
+                  label: cachedChoice.description,
+                  value: cachedChoice.answer
+                }
                 : ""
             }
             onChange={setFieldValue}
@@ -541,9 +544,9 @@ class ConfigForm extends React.Component<Props, State> {
   render = () => {
     let list = this.props.diff
       ? [
-          this.makeNamedConfig(this.props, 0, this.props.reps),
-          this.makeNamedConfig(this.props, 1, this.props.reps)
-        ]
+        this.makeNamedConfig(this.props, 0, this.props.reps),
+        this.makeNamedConfig(this.props, 1, this.props.reps)
+      ]
       : [this.makeNamedConfig(this.props, 0, this.props.reps)]
 
     return (
