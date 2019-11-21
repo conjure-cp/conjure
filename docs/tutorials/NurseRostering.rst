@@ -4,14 +4,17 @@ Nurse rostering
 *Authors: András Salamon, Nguyen Dang, Saad Attieh*
 
 We now discuss a version of `Nurse Rostering <https://en.wikipedia.org/wiki/Nurse_scheduling_problem>`, a constrained scheduling problem.
-Unlike versions of this problem studied by operations research practitioners and researchers (such as competition instances :cite:`ceschia2019second`), we here focus on just some of the basic constraints.
+Variants of this problem are also known by other names, such as *workforce planning* and *staff scheduling*.
+Unlike versions of this problem studied by operations research practitioners and researchers (such as competition instances :cite:`ceschia2019second`), we here focus on just a few of the simplest constraints.
 
 Some nurses are available to work in a hospital.
-Each day is divided into a sequence of shifts, e.g., an early-morning shift, a day shift and a night shift.
+Each day is divided into a sequence of shifts, for instance an early-morning shift, a day shift, and a night shift.
 Each nurse should be assigned to work some shifts during the course of a period of consecutive days.
 A nurse can be assigned to at most one shift per day.
-Moreover, for each nurse we need to avoid some forbidden shift patterns within two consecutive days. For example, a nurse cannot work a night shift today and an early-morning shift the next day. 
-We also must make sure to meet the minimum number of nurses demanded for each shift. These demand values vary between different days.
+Moreover, for each nurse we need to avoid some forbidden shift patterns within two consecutive days.
+For example, a nurse cannot work a night shift on one day, and an early-morning shift the next day.
+We also must make sure to meet the minimum number of nurses required for each shift.
+These demand values may vary between different days.
 
 
 Initial specification
