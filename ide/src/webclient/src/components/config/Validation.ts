@@ -1,6 +1,5 @@
 import * as Yup from "yup"
 import { Cache, RepMap } from "../../../../extension/src/utils"
-import { State, Values } from "./FormikConjure"
 import { isEqual } from "lodash"
 
 const positiveInt = Yup.number()

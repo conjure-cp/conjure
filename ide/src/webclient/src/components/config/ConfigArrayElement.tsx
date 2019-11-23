@@ -2,7 +2,7 @@ import * as React from "react"
 import TextWithLabel from "./TextWithLabel"
 import SelectWithLabel from "./SelectWithLabel"
 import StageHeader from "../common/StageHeader"
-import {Caches} from "../config/Caches"
+// import {Caches} from "../config/Caches"
 import { Cache, RepMap } from "../../../../extension/src/utils"
 
 import {
@@ -63,13 +63,11 @@ export class ConfigArrayElement extends React.Component<
           component={TextWithLabel}
           title={"Save as:"}
         />
-        <Caches
+        {/* <Caches
         index={0}
         caches={this.props.caches}
         onChangeHandler={() => {}}
-
-        
-        />
+        /> */}
         {/* <Field
           name={`${name}.Caches`}
           component={TextWithLabel}

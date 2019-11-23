@@ -1,0 +1,24 @@
+{
+  "name": "cypress-example-typescript-webpack",
+  "version": "1.0.0",
+  "description": "Example showing TypeScript tests with Cypress",
+  "scripts": {
+    "start": "echo",
+    "cypress:run": "./node_modules/.bin/cypress run",
+    "o": "./node_modules/.bin/cypress open",
+    "build": "./node_modules/.bin/webpack --output-filename out.js --entry ./cypress/integration/spec.ts",
+    "lint": "./node_modules/.bin/tslint --project ./tsconfig.json",
+    "postlint": "npm run tsc",
+    "tsc": "./node_modules/.bin/tsc --pretty --noEmit",
+    "precypress:run": "npm run lint",
+    "test:ci": "./node_modules/.bin/cypress run"
+  },
+  "devDependencies": {
+    "@cypress/webpack-preprocessor": "4.1.1",
+    "cypress": "3.6.1",
+    "ts-loader": "4.5.0",
+    "typescript": "3.3.3",
+    "webpack": "4.29.6",
+    "webpack-cli": "3.3.3"
+  }
+}
