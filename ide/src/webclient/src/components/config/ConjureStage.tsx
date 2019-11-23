@@ -40,7 +40,12 @@ export const ConjureStage = (
 
   //   console.log(values.config.answers)
 
+  console.log(props)
+
+
+
   const repSelectBoxes = varRepresentations.map((x, i) => {
+
     const options = x.representations.map(y => {
       return {
         value: y.answer,
