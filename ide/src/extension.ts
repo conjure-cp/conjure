@@ -11,7 +11,7 @@ export const LANGID = "essence"
 
 var fp = require("find-free-port")
 
-function makeNimServer(context: vscode.ExtensionContext) {
+function makeNimServer(_context: vscode.ExtensionContext) {
   // console.log(
   //   execSync(path.join(context.extensionPath, "/buildServer.sh"), {
   //     cwd: context.extensionPath

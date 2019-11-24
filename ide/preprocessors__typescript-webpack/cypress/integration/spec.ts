@@ -13,7 +13,6 @@ describe('Homepage', () => {
 	describe('Conjure', () => {
 		beforeEach('expand', () => {
 			cy.visit('/')
-			// cy.pause()
 			cy.contains('Conjure').click()
 		})
 
@@ -21,6 +20,12 @@ describe('Homepage', () => {
 			cy.get('input[name="caches[0].config.conjureConfig.conjureTime"]').type('dasas')
 			cy.contains('Leave empty or specify an integer > 0')
 			cy.contains('Fix the errors first!')
+		})
+
+		it('Checks can select answers', () => {
+			cy.get('input[id="ChooseRepresentation-check"]').click()
+			cy.contains('x')
+			cy.contains('explicit')
 		})
 	})
 

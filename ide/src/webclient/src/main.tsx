@@ -104,7 +104,7 @@ class Root extends React.Component<any, State> {
 					reps: data.reps
 				})
 
-				console.log('fromServer', data)
+				// console.log('fromServer', data)
 				return
 			})
 			.then(() => {
@@ -124,8 +124,8 @@ class Root extends React.Component<any, State> {
 	}
 
 	render = () => {
-		console.log('prinitg the state')
-		console.log(this.state)
+		// console.log('prinitg the state')
+		// console.log(this.state)
 		return this.state.canRender ? (
 			<div>
 				<StageHeader

@@ -229,7 +229,7 @@ export class MergedTreeContainer extends React.Component<Props, State> {
     this.loadDiffsFromAbove()
   }
 
-  componentDidUpdate = async (prevProps: Props, prevState: State) => {
+  componentDidUpdate = async (prevProps: Props) => {
     if (!isEqual(prevProps, this.props)) {
       await this.loadDiffsFromAbove()
     }

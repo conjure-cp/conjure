@@ -5,6 +5,8 @@ import StageHeader from '../common/StageHeader'
 // import {Caches} from "../config/Caches"
 import { Cache, RepMap } from '../../../../extension/src/utils'
 
+import Select from 'react-select'
+
 import { Field, FieldProps, FormikProps } from 'formik'
 import { MinionConfig, MinionStage } from './MinionStage'
 import { SRConfig, SRStage } from './SRStage'
@@ -24,6 +26,7 @@ interface Props {
 
 interface State {
 	showReps: boolean
+	currentCache: Cache
 }
 
 export interface CombinedConfig {
@@ -38,10 +41,11 @@ export interface Values {
 
 export class ConfigArrayElement extends React.Component<Props & FormikProps<Values> & FieldProps<any>, State> {
 	state = {
-		showReps: false
+		showReps: false,
+		currentCache: this.props.values.cache
 	}
 	render = () => {
-		const { values, index } = this.props
+		const { index } = this.props
 		const { name } = this.props.field
 
 		// console.log(this.props)
@@ -59,26 +63,26 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
           component={TextWithLabel}
           title={"Caches"}
         /> */}
-				{/* <Field
-          component={Select}
-          title={"Caches"}
-          options={this.props.caches.map(x => {
-            return { value: x.name, label: x.name }
-          })}
-                  // changeHandler={(event: any) => {
-                  //   const cacheName = event.target.value
-                  //   const chosen = this.props.caches.find(
-                  //     x => x.name === cacheName
-                  //   )!
+				<Select
+					// component={Select}
+					id={'cacheSelect'}
+					// title={'Caches'}
+					options={this.props.caches.map((x) => {
+						return { value: x.name, label: x.name }
+					})}
+					onChange={(event: any) => {
+						console.log(event)
+						console.log('CHANGE!')
 
-                  //   // console.log(event.target.value)
-                  //   // console.log(cacheName)
-                  //   // console.log(chosen)
-                  //   currentCache = chosen
-                  //   console.log(currentCache)
-                  //   // this.setState({ currentCache })
-                  // }}
-        /> */}
+						// const cacheName = event.target.value
+						const chosen = this.props.caches.find((x) => x.name === event.value)!
+
+						// console.log(this.props.caches)
+						console.log(chosen)
+
+						this.setState({ currentCache: chosen })
+					}}
+				/>
 
 				<Field
 					name={`${name}.essenceFile`}
@@ -87,7 +91,7 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 					options={this.props.essenceFiles.map((file) => {
 						return { value: file, label: file }
 					})}
-					values={values.cache.essenceFile}
+					values={this.state.currentCache.essenceFile}
 				/>
 
 				<Field
@@ -97,15 +101,15 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 					options={this.props.paramFiles.map((file) => {
 						return { value: file, label: file }
 					})}
-					values={values.cache.paramFile}
+					values={this.state.currentCache.paramFile}
 				/>
 
 				<Field
 					name={`${name}.config.conjureConfig`}
 					component={ConjureStage}
-					values={{ config: values.cache.config.conjureConfig }}
+					values={{ config: this.state.currentCache.config.conjureConfig }}
 					index={index}
-					varRepresentations={this.props.modelToReps[values.cache.essenceFile]}
+					varRepresentations={this.props.modelToReps[this.state.currentCache.essenceFile]}
 					showReps={this.state.showReps}
 					showRepsHandler={() =>
 						this.setState((prevState: State) => {
@@ -116,14 +120,14 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 				<Field
 					name={`${name}.config.srConfig`}
 					component={SRStage}
-					values={{ config: values.cache.config.srConfig }}
+					values={{ config: this.state.currentCache.config.srConfig }}
 					index={index}
 				/>
 
 				<Field
 					name={`${name}.config.minionConfig`}
 					component={MinionStage}
-					values={{ config: values.cache.config.minionConfig }}
+					values={{ config: this.state.currentCache.config.minionConfig }}
 					index={index}
 				/>
 			</StageHeader>

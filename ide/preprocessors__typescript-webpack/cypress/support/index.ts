@@ -15,6 +15,7 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+require('cypress-skip-and-only-ui/support')
 
 Cypress.on('window:before:load', (win) => {
 	delete win.fetch

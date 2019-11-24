@@ -19,6 +19,11 @@
 <body>
   <div id="root"></div>
   <div id="port" vscodeserverport="4000"></div>
+  <script>
+    if (window.Cypress) {
+      window["__REACT_DEVTOOLS_GLOBAL_HOOK__"] = window.parent["__REACT_DEVTOOLS_GLOBAL_HOOK__"];
+    }
+  </script>
   <script src="./dist/configBundle.js"></script>
 </body>
 
