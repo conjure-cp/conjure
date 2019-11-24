@@ -40,7 +40,7 @@ export const ConjureStage = (
 
   //   console.log(values.config.answers)
 
-  console.log(props)
+  // console.log(props)
 
 
 

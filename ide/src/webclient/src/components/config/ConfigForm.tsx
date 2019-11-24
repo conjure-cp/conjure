@@ -40,7 +40,7 @@ export class ConfigForm extends React.Component<Props, State> {
 	}
 
 	render = () => {
-		console.log(this.props)
+//		console.log(this.props)
 
 		const initialCache = {
 			...newCache(),

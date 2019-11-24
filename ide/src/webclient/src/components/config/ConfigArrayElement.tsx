@@ -44,8 +44,8 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 		const { values, index } = this.props
 		const { name } = this.props.field
 
-		console.log(this.props)
-		console.log(values)
+		// console.log(this.props)
+		// console.log(values)
 		return (
 			<StageHeader isCollapsed={false} title={`Config ${index + 1}`} id={`config${index + 1}`}>
 				<Field name={`${name}.name`} component={TextWithLabel} title={'Save as:'} />
