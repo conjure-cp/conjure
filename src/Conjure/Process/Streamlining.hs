@@ -113,6 +113,23 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , setApproxHalf streamlinersForSingleVariable
 
     , binRelAttributes
+    , symmetric 2
+    , symmetric 4
+    , symmetric 8
+    , reflexive 2
+    , reflexive 4
+    , reflexive 8
+    , irreflexive 2
+    , irreflexive 4
+    , irreflexive 8
+    , asymmetric 2
+    , asymmetric 4
+    , asymmetric 8
+    , antisymmetry 2
+    , antisymmetry 4
+    , antisymmetry 8
+
+    , serialRel
 
     , monotonicallyIncreasing
     , monotonicallyDecreasing
@@ -401,6 +418,155 @@ setApproxHalf innerStreamliner x = do
                     (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
                 |]
         _ -> noStreamliner
+
+
+symmetric  ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer -> StreamlinerGen m
+symmetric n x = do
+    dom <- domainOf x
+    let
+        applicable = case dom of
+            DomainRelation _ _ _ -> True
+            _ -> False
+    if applicable
+    then do
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let size = [essence| |&x| |]
+        let nE = fromInt n
+
+        mkStreamliner "Symmetric" [essence|
+            (&size / &nE) <= sum([toInt(&x(&i[1], &i[2]) -> &x(&i[2], &i[1])) | &iPat <- &x])
+        |]
+    else noStreamliner
+
+
+
+reflexive  ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer -> StreamlinerGen m
+reflexive n x = do
+    dom <- domainOf x
+    let
+        applicable = case dom of
+            DomainRelation _ _ _ -> True
+            _ -> False
+    if applicable
+    then do
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let size = [essence| |&x| |]
+        let nE = fromInt n
+
+        mkStreamliner "reflexive" [essence|
+            (&size / &nE) <= sum([toInt(&x(&i[1], &i[1])) | &iPat <- &x])
+        |]
+    else noStreamliner
+
+irreflexive ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer -> StreamlinerGen m
+irreflexive n x = do
+    dom <- domainOf x
+    let
+        applicable = case dom of
+            DomainRelation _ _ _ -> True
+            _ -> False
+    let nE = fromInt n
+    if applicable
+    then do
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let size = [essence| |&x| |]
+
+        mkStreamliner "irreflexive" [essence|
+            (&size / &nE) <= sum([toInt(!&x(&i[1], &i[1])) | &iPat <- &x])
+        |]
+    else noStreamliner
+
+
+asymmetric ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer -> StreamlinerGen m
+asymmetric n x = do
+    dom <- domainOf x
+    let
+        applicable = case dom of
+            DomainRelation _ _ _ -> True
+            _ -> False
+    let nE = fromInt n
+    if applicable
+    then do
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let size = [essence| |&x| |]
+
+        mkStreamliner "asymmetric" [essence|
+            (&size / &nE) <= sum([toInt(&x(&i[1], &i[2]) -> !&x(&i[2], &i[1])) | &iPat <- &x])
+        |]
+    else noStreamliner
+
+
+antisymmetry ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Integer  ->StreamlinerGen m
+antisymmetry n x = do
+    dom <- domainOf x
+    let
+        applicable = case dom of
+            DomainRelation _ _ _ -> True
+            _ -> False
+    if applicable
+    then do
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let size = [essence| |&x| |]
+        let nE = fromInt n
+
+        mkStreamliner "antisymmetric" [essence|
+            (&size / &nE) <= sum([toInt(and([&x(&i[1], &i[2]), &x(&i[2], &i[1])]) -> &i[1] = &i[2]) | &iPat <- &x])
+        |]
+    else noStreamliner
+
+
+serialRel ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m
+serialRel x = do
+    dom <- domainOf x
+    let
+        applicable = case dom of
+            DomainRelation _ _ _ -> True
+            _ -> False
+    if applicable
+    then do
+
+        let DomainRelation _ _ [inner1, inner2] = dom
+        nm <- nextName "q"
+        let ref = Reference nm (Just (DeclNoRepr Find nm inner1 NoRegion))
+
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let dom = [essence| |&ref| |]
+
+        mkStreamliner "serialRel" [essence|
+            forAll &iPat  : &inner1. |toSet(&x(&i,_ ))| >= 1
+        |]
+    else noStreamliner
+
 
 
 binRelAttributes ::
