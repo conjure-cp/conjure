@@ -303,6 +303,16 @@ mainWithArgs config@Solve{..} = do
             case fp of
                 Nothing -> userErr1 ("Cannot find executable" <+> pretty ex <+> "(for solver" <+> pretty solver <> ")")
                 Just _  -> return ()
+    case solver of
+        "cplex" -> do
+            env <- liftIO getEnvironment
+            case lookup "CPLEX_PATH" env of
+                Nothing -> userErr1 $ vcat
+                    [ "Set environment variable CPLEX_PATH. Something like:"
+                    , "    CPLEX_PATH=/path/to/cplex/library conjure solve"
+                    ]
+                Just{} -> return ()
+        _ -> return ()
     unless (nbSolutions == "all" || all isDigit nbSolutions) $
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
