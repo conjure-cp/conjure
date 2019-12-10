@@ -42,11 +42,14 @@ install:
 
 .PHONY: test
 test:
-	@if [ ${COVERAGE} ]; then \
+	@echo ${COVERAGE}
+	@if ${COVERAGE}; then \
+		echo "in if";\
 		stack test --coverage --test-arguments '--limit-time ${LIMIT_TIME}';\
 		stack hpc report conjure-cp $(find . -name conjure.tix);\
 		ls .stack-work/install/*/*/*/hpc/combined/custom;\
 	else\
+		echo "in else";\
 		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
 	fi
 
