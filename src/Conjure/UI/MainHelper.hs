@@ -38,6 +38,7 @@ import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
+import System.Environment ( getEnvironment )
 import System.Info ( os )
 import GHC.Conc ( numCapabilities )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
@@ -506,7 +507,7 @@ savileRowNoParam ::
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
-    let srArgs = srMkArgs ui outBase modelPath
+    srArgs <- liftIO $ srMkArgs ui outBase modelPath
     let tr = translateSolution eprimeModel def
     when (logLevel >= LogDebug) $ do
         liftIO $ putStrLn "Using the following options for Savile Row:"
@@ -544,9 +545,10 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
         Left err -> return (Left err)
         Right eprimeParam -> do
             liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
+            srArgsBase <- liftIO $ srMkArgs ui outBase modelPath
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
-                       : srMkArgs ui outBase modelPath
+                       : srArgsBase
             let tr = translateSolution eprimeModel essenceParam
             when (logLevel >= LogDebug) $ do
                 liftIO $ putStrLn "Using the following options for Savile Row:"
@@ -559,63 +561,80 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
-srMkArgs :: UI -> FilePath -> FilePath -> [Text]
-srMkArgs Solve{..} outBase modelPath =
-    [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
-    , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
-    , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
-    , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
-    , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
-    , "-out-minizinc"   , stringToText $ outputDirectory </> outBase ++ ".eprime.mzn"
-    , "-run-solver"
-    , "-S0"
-    , "-solutions-to-stdout-one-line"
-    ] ++
-    [ "-cgroups" | cgroups ] ++
-    ( if nbSolutions == "all"
-        then ["-all-solutions"]
-        else ["-num-solutions", stringToText nbSolutions]
-    ) ++
-    ( case solver of
-        "minion"            -> [ "-minion" ]
-        "gecode"            -> [ "-gecode" ]
-        "chuffed"           -> [ "-chuffed"]
-        "glucose"           -> [ "-sat"
-                               , "-sat-family", "glucose"
-                               , "-satsolver-bin", "glucose"
-                               ]
-        "glucose-syrup"     -> [ "-sat"
-                               , "-sat-family", "glucose"
-                               , "-satsolver-bin", "glucose-syrup"
-                               ]
-        "lingeling"         -> [ "-sat"
-                               , "-sat-family", "lingeling"
-                               , "-satsolver-bin", "lingeling"
-                               ]
-        "minisat"           -> [ "-sat"
-                               , "-sat-family", "minisat"
-                               , "-satsolver-bin", "minisat"
-                               ]
-        "bc_minisat_all"    -> [ "-sat"
-                               , "-sat-family", "bc_minisat_all"
-                               , "-satsolver-bin", "bc_minisat_all_release"
-                               ]
-        "nbc_minisat_all"   -> [ "-sat"
-                               , "-sat-family", "nbc_minisat_all"
-                               , "-satsolver-bin", "nbc_minisat_all_release"
-                               ]
-        "open-wbo"          -> [ "-maxsat"
-                               , "-satsolver-bin", "open-wbo"
-                               ]
-        "coin-or"           -> [ "-minizinc"
-                               , "-solver-options", "--solver COIN-BC"
-                               ]
-        "cplex"             -> [ "-minizinc"
-                               , "-solver-options", "--solver CPLEX"
-                               ]
-        _ -> bug ("Unknown solver:" <+> pretty solver)
-    ) ++ map stringToText (concatMap words savilerowOptions)
-      ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
+srMkArgs :: UI -> FilePath -> FilePath -> IO [Text]
+srMkArgs Solve{..} outBase modelPath = do
+    let genericOpts =
+            [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
+            , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
+            , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
+            , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
+            , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
+            , "-out-minizinc"   , stringToText $ outputDirectory </> outBase ++ ".eprime.mzn"
+            , "-run-solver"
+            , "-S0"
+            , "-solutions-to-stdout-one-line"
+            ] ++
+            [ "-cgroups" | cgroups ] ++
+            ( if nbSolutions == "all"
+                then ["-all-solutions"]
+                else ["-num-solutions", stringToText nbSolutions]
+            )
+
+    solverSelection <- case solver of
+        "minion"            -> return [ "-minion" ]
+        "gecode"            -> return [ "-gecode" ]
+        "chuffed"           -> return [ "-chuffed"]
+        "glucose"           -> return [ "-sat"
+                                      , "-sat-family", "glucose"
+                                      , "-satsolver-bin", "glucose"
+                                      ]
+        "glucose-syrup"     -> return [ "-sat"
+                                      , "-sat-family", "glucose"
+                                      , "-satsolver-bin", "glucose-syrup"
+                                      ]
+        "lingeling"         -> return [ "-sat"
+                                      , "-sat-family", "lingeling"
+                                      , "-satsolver-bin", "lingeling"
+                                      ]
+        "minisat"           -> return [ "-sat"
+                                      , "-sat-family", "minisat"
+                                      , "-satsolver-bin", "minisat"
+                                      ]
+        "bc_minisat_all"    -> return [ "-sat"
+                                      , "-sat-family", "bc_minisat_all"
+                                      , "-satsolver-bin", "bc_minisat_all_release"
+                                      ]
+        "nbc_minisat_all"   -> return [ "-sat"
+                                      , "-sat-family", "nbc_minisat_all"
+                                      , "-satsolver-bin", "nbc_minisat_all_release"
+                                      ]
+        "open-wbo"          -> return [ "-maxsat"
+                                      , "-satsolver-bin", "open-wbo"
+                                      ]
+        "coin-or"           -> return [ "-minizinc"
+                                      , "-solver-options", "--solver COIN-BC"
+                                      ]
+        "cplex"             -> do
+            env <- getEnvironment
+            case lookup "CPLEX_PATH" env of
+                Nothing -> userErr1 $ vcat
+                    [ "Set environment variable CPLEX_PATH. Something like:"
+                    , "    CPLEX_PATH=/path/to/cplex/library conjure solve"
+                    ]
+                Just cplex_path ->
+                    return [ "-minizinc"
+                           , "-solver-options", stringToText ("--solver CPLEX --cplex-dll " ++ cplex_path)
+                           ]
+        _ -> userErr1 ("Unknown solver:" <+> pretty solver)
+
+    return $ genericOpts
+          ++ solverSelection
+          ++ map stringToText (concatMap words savilerowOptions)
+          ++ if null solverOptions
+                    then []
+                    else [ "-solver-options"
+                         , stringToText (unwords (concatMap words solverOptions))
+                         ]
 srMkArgs _ _ _ = bug "srMkArgs"
 
 
