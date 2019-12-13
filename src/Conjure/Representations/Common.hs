@@ -76,17 +76,17 @@ mkBinRelConsSoft maxNum divisor (BinaryRelationAttrs binRelAttrs) dom rel = do
     (zP, z) <- quantifiedVar
 
     let
-        one BinRelAttr_Reflexive     = return [essence| &maxNum / &divisor <= sum &xP           : &dom . &rel(&x,&x) |]
-        one BinRelAttr_Irreflexive   = return [essence| &maxNum / &divisor <= sum &xP           : &dom . !(&rel(&x,&x)) |]
-        one BinRelAttr_Coreflexive   = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . &rel(&x,&y) -> &x=&y |]
-        one BinRelAttr_Symmetric     = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . &rel(&x,&y) -> &rel(&y,&x) |]
-        one BinRelAttr_AntiSymmetric = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . &rel(&x,&y) /\ &rel(&y,&x) -> &x=&y |]
-        one BinRelAttr_ASymmetric    = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . &rel(&x,&y) -> !(&rel(&y,&x)) |]
-        one BinRelAttr_Transitive    = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z) |]
-        one BinRelAttr_Total         = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
-        one BinRelAttr_Connex        = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y) |]
-        one BinRelAttr_Euclidean     = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z) |]
-        one BinRelAttr_Serial        = return [essence| &maxNum / &divisor <= sum &xP : &dom . exists &yP : &dom . &rel(&x,&y) |]
+        one BinRelAttr_Reflexive     = return [essence| &maxNum / &divisor <= sum &xP           : &dom . toInt(&rel(&x,&x)) |]
+        one BinRelAttr_Irreflexive   = return [essence| &maxNum / &divisor <= sum &xP           : &dom . toInt(!(&rel(&x,&x))) |]
+        one BinRelAttr_Coreflexive   = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) -> &x=&y) |]
+        one BinRelAttr_Symmetric     = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) -> &rel(&y,&x)) |]
+        one BinRelAttr_AntiSymmetric = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) /\ &rel(&y,&x) -> &x=&y) |]
+        one BinRelAttr_ASymmetric    = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) -> !(&rel(&y,&x))) |]
+        one BinRelAttr_Transitive    = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . toInt(&rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z)) |]
+        one BinRelAttr_Total         = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) \/ &rel(&y,&x)) |]
+        one BinRelAttr_Connex        = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y)) |]
+        one BinRelAttr_Euclidean     = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . toInt(&rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z)) |]
+        one BinRelAttr_Serial        = return [essence| &maxNum / &divisor <= sum &xP : &dom . toInt(exists &yP : &dom . &rel(&x,&y)) |]
         one BinRelAttr_Equivalence   = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
         one BinRelAttr_PartialOrder  = one BinRelAttr_Reflexive ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
 
