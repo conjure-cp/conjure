@@ -6,6 +6,7 @@ module Conjure.Process.Streamlining
     ) where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Compute.DomainOf ( domainOf )
@@ -115,6 +116,8 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , setHalf streamlinersForSingleVariable
     , setMost streamlinersForSingleVariable
     , setApproxHalf streamlinersForSingleVariable
+
+    , relationCardinality
 
     , binRelAttributes
 
@@ -407,6 +410,28 @@ setApproxHalf innerStreamliner x = do
         _ -> noStreamliner
 
 
+relationCardinality ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m
+relationCardinality x = do
+    dom <- domainOf x
+    case dom of
+        DomainRelation _ _ inners -> do
+            let maxCard = make opProduct $ fromList [ [essence| |`&i`| |] | i <- inners ]
+            sequence
+                [ case lowerOrUpper of
+                    "lowerBound" -> return ([essence| |&x| >= &maxCard / &slice |], [grp])
+                    "upperBound" -> return ([essence| |&x| <= &maxCard / &slice |], [grp])
+                    _ -> bug "relationCardinality"
+                | slice <- [1,2,4,8,16,32]
+                , lowerOrUpper <- ["lowerBound","upperBound"]
+                , let grp = "cardinality-" ++ lowerOrUpper
+                ]
+        _ -> noStreamliner
+
+
 binRelAttributes ::
     MonadFail m =>
     NameGen m =>
@@ -419,8 +444,8 @@ binRelAttributes x = do
         DomainRelation _ _ [inner1, inner2] -> sequence
             [ do
                 out <- case softness of
-                        Nothing -> mkBinRelCons (BinaryRelationAttrs (S.singleton attr)) dom x
-                        Just s -> mkBinRelConsSoft maxNum s (BinaryRelationAttrs (S.singleton attr)) dom x
+                        Nothing -> mkBinRelCons (BinaryRelationAttrs (S.singleton attr)) inner x
+                        Just s -> mkBinRelConsSoft maxNum s (BinaryRelationAttrs (S.singleton attr)) inner x
                 return (make opAnd (fromList out), [grp])
             | inner <- [inner1, inner2]
             , (attr, maxNum) <- [ ( BinRelAttr_Reflexive     , [essence| |`&inner`| |] )
@@ -437,7 +462,7 @@ binRelAttributes x = do
                                 , ( BinRelAttr_Equivalence   , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
                                 , ( BinRelAttr_PartialOrder  , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
                                 ]
-            , softness <- [Nothing, Just 2, Just 4, Just 8]
+            , softness <- [Nothing, Just 2, Just 4, Just 8, Just 16, Just 32]
             , let grp = show attr
             ]
         _ -> noStreamliner
