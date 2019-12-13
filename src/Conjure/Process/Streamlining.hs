@@ -9,6 +9,10 @@ import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Compute.DomainOf ( domainOf )
+import Conjure.Representations.Common ( mkBinRelCons, mkBinRelConsSoft )
+
+-- containers
+import Data.Set as S ( singleton )
 
 
 streamliningToStdout ::
@@ -113,23 +117,6 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , setApproxHalf streamlinersForSingleVariable
 
     , binRelAttributes
-    , symmetric 2
-    , symmetric 4
-    , symmetric 8
-    , reflexive 2
-    , reflexive 4
-    , reflexive 8
-    , irreflexive 2
-    , irreflexive 4
-    , irreflexive 8
-    , asymmetric 2
-    , asymmetric 4
-    , asymmetric 8
-    , antisymmetry 2
-    , antisymmetry 4
-    , antisymmetry 8
-
-    , serialRel
 
     , monotonicallyIncreasing
     , monotonicallyDecreasing
@@ -420,155 +407,6 @@ setApproxHalf innerStreamliner x = do
         _ -> noStreamliner
 
 
-symmetric  ::
-    MonadFail m =>
-    NameGen m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Integer -> StreamlinerGen m
-symmetric n x = do
-    dom <- domainOf x
-    let
-        applicable = case dom of
-            DomainRelation _ _ _ -> True
-            _ -> False
-    if applicable
-    then do
-        (iPat, i) <- quantifiedVar
-        (jPat, j) <- quantifiedVar
-        let size = [essence| |&x| |]
-        let nE = fromInt n
-
-        mkStreamliner "Symmetric" [essence|
-            (&size / &nE) <= sum([toInt(&x(&i[1], &i[2]) -> &x(&i[2], &i[1])) | &iPat <- &x])
-        |]
-    else noStreamliner
-
-
-
-reflexive  ::
-    MonadFail m =>
-    NameGen m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Integer -> StreamlinerGen m
-reflexive n x = do
-    dom <- domainOf x
-    let
-        applicable = case dom of
-            DomainRelation _ _ _ -> True
-            _ -> False
-    if applicable
-    then do
-        (iPat, i) <- quantifiedVar
-        (jPat, j) <- quantifiedVar
-        let size = [essence| |&x| |]
-        let nE = fromInt n
-
-        mkStreamliner "reflexive" [essence|
-            (&size / &nE) <= sum([toInt(&x(&i[1], &i[1])) | &iPat <- &x])
-        |]
-    else noStreamliner
-
-irreflexive ::
-    MonadFail m =>
-    NameGen m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Integer -> StreamlinerGen m
-irreflexive n x = do
-    dom <- domainOf x
-    let
-        applicable = case dom of
-            DomainRelation _ _ _ -> True
-            _ -> False
-    let nE = fromInt n
-    if applicable
-    then do
-        (iPat, i) <- quantifiedVar
-        (jPat, j) <- quantifiedVar
-        let size = [essence| |&x| |]
-
-        mkStreamliner "irreflexive" [essence|
-            (&size / &nE) <= sum([toInt(!&x(&i[1], &i[1])) | &iPat <- &x])
-        |]
-    else noStreamliner
-
-
-asymmetric ::
-    MonadFail m =>
-    NameGen m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Integer -> StreamlinerGen m
-asymmetric n x = do
-    dom <- domainOf x
-    let
-        applicable = case dom of
-            DomainRelation _ _ _ -> True
-            _ -> False
-    let nE = fromInt n
-    if applicable
-    then do
-        (iPat, i) <- quantifiedVar
-        (jPat, j) <- quantifiedVar
-        let size = [essence| |&x| |]
-
-        mkStreamliner "asymmetric" [essence|
-            (&size / &nE) <= sum([toInt(&x(&i[1], &i[2]) -> !&x(&i[2], &i[1])) | &iPat <- &x])
-        |]
-    else noStreamliner
-
-
-antisymmetry ::
-    MonadFail m =>
-    NameGen m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Integer  ->StreamlinerGen m
-antisymmetry n x = do
-    dom <- domainOf x
-    let
-        applicable = case dom of
-            DomainRelation _ _ _ -> True
-            _ -> False
-    if applicable
-    then do
-        (iPat, i) <- quantifiedVar
-        (jPat, j) <- quantifiedVar
-        let size = [essence| |&x| |]
-        let nE = fromInt n
-
-        mkStreamliner "antisymmetric" [essence|
-            (&size / &nE) <= sum([toInt(and([&x(&i[1], &i[2]), &x(&i[2], &i[1])]) -> &i[1] = &i[2]) | &iPat <- &x])
-        |]
-    else noStreamliner
-
-
-serialRel ::
-    MonadFail m =>
-    NameGen m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    StreamlinerGen m
-serialRel x = do
-    dom <- domainOf x
-    let
-        applicable = case dom of
-            DomainRelation _ _ _ -> True
-            _ -> False
-    if applicable
-    then do
-
-        let DomainRelation _ _ [inner1, inner2] = dom
-        nm <- nextName "q"
-        let ref = Reference nm (Just (DeclNoRepr Find nm inner1 NoRegion))
-
-        (iPat, i) <- quantifiedVar
-        (jPat, j) <- quantifiedVar
-        let dom = [essence| |&ref| |]
-
-        mkStreamliner "serialRel" [essence|
-            forAll &iPat  : &inner1. |toSet(&x(&i,_ ))| >= 1
-        |]
-    else noStreamliner
-
-
-
 binRelAttributes ::
     MonadFail m =>
     NameGen m =>
@@ -577,23 +415,30 @@ binRelAttributes ::
 binRelAttributes x = do
     dom <- domainOf x
     case dom of
-        DomainRelation _ _ [inner1, inner2] | inner1 == inner2 -> return
-            [ (out, [grp])
-            | attr <- [ AttrName_reflexive
-                      , AttrName_irreflexive
-                      , AttrName_coreflexive
-                      , AttrName_symmetric
-                      , AttrName_antiSymmetric
-                      , AttrName_aSymmetric
-                      , AttrName_transitive
-                      , AttrName_connex
-                      , AttrName_Euclidean
-                      , AttrName_serial
-                      , AttrName_equivalence
-                      , AttrName_partialOrder
-                      ]
+        -- we don't insist on inner1 == inner2 any more
+        DomainRelation _ _ [inner1, inner2] -> sequence
+            [ do
+                out <- case softness of
+                        Nothing -> mkBinRelCons (BinaryRelationAttrs (S.singleton attr)) dom x
+                        Just s -> mkBinRelConsSoft maxNum s (BinaryRelationAttrs (S.singleton attr)) dom x
+                return (make opAnd (fromList out), [grp])
+            | inner <- [inner1, inner2]
+            , (attr, maxNum) <- [ ( BinRelAttr_Reflexive     , [essence| |`&inner`| |] )
+                                , ( BinRelAttr_Irreflexive   , [essence| |`&inner`| |] )
+                                , ( BinRelAttr_Coreflexive   , [essence| |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_Symmetric     , [essence| |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_AntiSymmetric , [essence| |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_ASymmetric    , [essence| |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_Transitive    , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_Total         , [essence| |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_Connex        , [essence| |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_Euclidean     , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_Serial        , [essence| |`&inner`| |] )
+                                , ( BinRelAttr_Equivalence   , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
+                                , ( BinRelAttr_PartialOrder  , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
+                                ]
+            , softness <- [Nothing, Just 2, Just 4, Just 8]
             , let grp = show attr
-            , let out = Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint x attr Nothing
             ]
         _ -> noStreamliner
 
