@@ -227,7 +227,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Conjure.tex', u'Conjure Documentation, Release 2.3.0',
+    (master_doc, 'Conjure.tex', u'Conjure Documentation, Release %s' % version,
      u'Özgür Akgün \\and András Salamon', 'manual'),
 ]
 
