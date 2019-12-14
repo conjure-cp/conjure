@@ -38,7 +38,7 @@ parameterGenerator ::
                , [(Name, String)] -- classification for each given
                )
 parameterGenerator minIntValue maxIntValue model =
-    runWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds
+    runWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds >>= return . inlineLettings
     where
         core m = do
             outStatements <- forM (mStatements m) $ \ st -> case st of
@@ -46,7 +46,7 @@ parameterGenerator minIntValue maxIntValue model =
                     (dom', decls, cons) <- pgOnDomain (Reference nm Nothing) nm dom
                     return $ decls ++ [Declaration (FindOrGiven Find nm dom'), SuchThat cons]
                 Declaration (FindOrGiven Find  _  _  ) -> return []
-                Declaration (Letting _ _)              -> return []
+                Declaration (Letting _ _)              -> return [st]
                 Declaration       {}                   -> return [st]
                 SearchOrder       {}                   -> return []
                 SearchHeuristic   {}                   -> return []
@@ -62,6 +62,25 @@ parameterGenerator minIntValue maxIntValue model =
             let eval = transformBiM (trySimplify symbols)
             stmtsEvaluated <- mapM eval (mStatements m)
             return m { mStatements = stmtsEvaluated }
+
+
+inlineLettings :: Model -> Model
+inlineLettings model =
+    let
+        inline p@(Reference nm _) = do
+            x <- gets (lookup nm)
+            return (fromMaybe p x)
+        inline p = return p
+
+        statements = catMaybes
+                        $ flip evalState []
+                        $ forM (mStatements model)
+                        $ \ st ->
+            case st of
+                Declaration (Letting nm x) -> modify ((nm,x) :) >> return Nothing
+                _ -> Just <$> transformBiM inline st
+    in
+        model { mStatements = statements }
 
 
 fixQuantified ::
