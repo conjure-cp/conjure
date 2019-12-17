@@ -285,6 +285,7 @@ mainWithArgs config@Solve{..} = do
     let executables = [ ( "minion"          , "minion" )
                       , ( "gecode"          , "fzn-gecode" )
                       , ( "chuffed"         , "fzn-chuffed" )
+                      , ( "cadical"         , "cadical" )
                       , ( "glucose"         , "glucose" )
                       , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
@@ -601,6 +602,10 @@ srMkArgs Solve{..} outBase modelPath = do
         "glucose-syrup"     -> return [ "-sat"
                                       , "-sat-family", "glucose"
                                       , "-satsolver-bin", "glucose-syrup"
+                                      ]
+        "cadical"           -> return [ "-sat"
+                                      , "-sat-family", "minisat"
+                                      , "-satsolver-bin", "cadical"
                                       ]
         "lingeling"         -> return [ "-sat"
                                       , "-sat-family", "lingeling"

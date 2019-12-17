@@ -118,6 +118,7 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-gecode.sh
 	@etc/build/silent-wrapper.sh etc/build/install-glucose.sh
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
+	@etc/build/silent-wrapper.sh etc/build/install-cadical.sh
 	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
 	@etc/build/silent-wrapper.sh etc/build/install-bc_minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
