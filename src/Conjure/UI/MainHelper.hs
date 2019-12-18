@@ -604,7 +604,7 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , "-satsolver-bin", "glucose-syrup"
                                       ]
         "cadical"           -> return [ "-sat"
-                                      , "-sat-family", "minisat"
+                                      , "-sat-family", "lingeling"
                                       , "-satsolver-bin", "cadical"
                                       ]
         "lingeling"         -> return [ "-sat"
