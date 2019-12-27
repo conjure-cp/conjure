@@ -1,56 +1,56 @@
 [
-	{
-		"name": "Config1",
-		"essenceFile": "model2.essence",
-		"paramFile": "param2.param",
-		"config": {
-			"conjureConfig": {
-				"conjureTime": "",
-				"strategy": "",
-				"answers": [ "undefined" ]
-			},
-			"srConfig": {
-				"optimisation": "",
-				"symmetry": "",
-				"translation": "",
-				"srTime": "",
-				"cnfLimit": ""
-			},
-			"minionConfig": {
-				"minionTime": "",
-				"nodeLimit": "",
-				"solLimit": "",
-				"preprocessing": "",
-				"consistency": "",
-				"minionSwitches": []
-			}
-		}
-	},
-	{
-		"name": "Config2",
-		"essenceFile": "model2.essence",
-		"paramFile": "param2.param",
-		"config": {
-			"conjureConfig": {
-				"conjureTime": "",
-				"strategy": "",
-				"answers": [ "undefined" ]
-			},
-			"srConfig": {
-				"optimisation": "",
-				"symmetry": "",
-				"translation": "",
-				"srTime": "",
-				"cnfLimit": ""
-			},
-			"minionConfig": {
-				"minionTime": "",
-				"nodeLimit": "",
-				"solLimit": "",
-				"preprocessing": "",
-				"consistency": "",
-				"minionSwitches": []
-			}
-		}
-	}
+    {
+        "name": "Config1",
+        "essenceFile": "cached1.essence",
+        "paramFile": "cached1.param",
+        "config": {
+            "conjureConfig": {
+                "conjureTime": "100",
+                "strategy": "c",
+                "answers": [ "x:1" ]
+            },
+            "srConfig": {
+                "optimisation": "-O1",
+                "symmetry": "-S1",
+                "translation": "-active-cse",
+                "srTime": "100",
+                "cnfLimit": "100"
+            },
+            "minionConfig": {
+                "minionTime": "100",
+                "nodeLimit": "100",
+                "solLimit": "100",
+                "preprocessing": "SSAC",
+                "consistency": "SSAC",
+                "minionSwitches": [ "-findallsols" ]
+            }
+        }
+    },
+    {
+        "name": "Config2",
+        "essenceFile": "cached2.essence",
+        "paramFile": "cached2.param",
+        "config": {
+            "conjureConfig": {
+                "conjureTime": "200",
+                "strategy": "",
+                "answers": [ "x:2" ]
+            },
+            "srConfig": {
+                "optimisation": "-O2",
+                "symmetry": "-S2",
+                "translation": "-active-cse",
+                "srTime": "200",
+                "cnfLimit": "200"
+            },
+            "minionConfig": {
+                "minionTime": "200",
+                "nodeLimit": "200",
+                "solLimit": "200",
+                "preprocessing": "SAC",
+                "consistency": "SAC",
+                "minionSwitches": [ "-findallsols" ]
+            }
+        }
+    }
 ]

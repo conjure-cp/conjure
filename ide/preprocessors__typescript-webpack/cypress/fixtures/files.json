@@ -1,33 +1,58 @@
 {
-	"essenceFiles": [ "model1.essence", "model2.essence" ],
-	"paramFiles": [ "p1.param", "p2.param" ],
-	"reps": {
-		"model1.essence": [
-			{
-				"name": "x",
-				"representations": [
-					{ "answer": "1", "description": "explicit" },
-					{
-						"answer": "2",
-						"description": "dummy"
-					}
-				]
-			}
-		],
-		"model2.essence": [
-			{
-				"name": "f",
-				"representations": [
-					{
-						"answer": "1",
-						"description": "complete"
-					},
-					{
-						"answer": "2",
-						"description": "partial"
-					}
-				]
-			}
-		]
-	}
+    "essenceFiles": [ "model1.essence", "model2.essence", "cached1.essence", "cached2.essence" ],
+    "paramFiles": [ "p1.param", "p2.param", "cached1.param", "cached2.param" ],
+    "reps": {
+        "model1.essence": [
+            {
+                "name": "x",
+                "representations": [
+                    { "answer": "1", "description": "explicit" },
+                    {
+                        "answer": "2",
+                        "description": "dummy"
+                    }
+                ]
+            }
+        ],
+        "model2.essence": [
+            {
+                "name": "f",
+                "representations": [
+                    {
+                        "answer": "1",
+                        "description": "complete"
+                    },
+                    {
+                        "answer": "2",
+                        "description": "partial"
+                    }
+                ]
+            }
+        ],
+
+        "cached1.essence": [
+            {
+                "name": "x",
+                "representations": [
+                    { "answer": "1", "description": "explicit" },
+                    {
+                        "answer": "2",
+                        "description": "dummy"
+                    }
+                ]
+            }
+        ],
+        "cached2.essence": [
+            {
+                "name": "x",
+                "representations": [
+                    { "answer": "1", "description": "explicit" },
+                    {
+                        "answer": "2",
+                        "description": "dummy"
+                    }
+                ]
+            }
+        ]
+    }
 }

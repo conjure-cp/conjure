@@ -17,7 +17,8 @@ describe('Homepage', () => {
         })
 
         it('Checks invalid field in conjure', () => {
-            cy.get('input[name="caches[0].config.conjureConfig.conjureTime"]').type('dasas')
+            cy.get('input[name="caches[0].config.conjureConfig.conjureTime"]').type('conjureText1')
+            cy.get('input[name="caches[0].config.conjureConfig.conjureTime"]').should('have.value', 'conjureText1')
             cy.contains('Leave empty or specify an integer > 0')
             cy.contains('Fix the errors first!')
         })
@@ -36,13 +37,15 @@ describe('Homepage', () => {
         })
 
         it('Checks time field in SR', () => {
-            cy.get('input[name="caches[0].config.srConfig.srTime"]').type('blah1')
+            cy.get('input[name="caches[0].config.srConfig.srTime"]').type('srText1')
+            cy.get('input[name="caches[0].config.srConfig.srTime"]').should('have.value', 'srText1')
             cy.contains('Leave empty or specify an integer > 0')
             cy.contains('Fix the errors first!')
         })
 
         it('Checks clause field in SR', () => {
-            cy.get('input[name="caches[0].config.srConfig.cnfLimit"]').type('dasas')
+            cy.get('input[name="caches[0].config.srConfig.cnfLimit"]').type('srText2')
+            cy.get('input[name="caches[0].config.srConfig.cnfLimit"]').should('have.value', 'srText2')
             cy.contains('Leave empty or specify an integer > 0')
             cy.contains('Fix the errors first!')
         })
@@ -56,28 +59,25 @@ describe('Homepage', () => {
         })
 
         it('Checks nodelimit field in Minion', () => {
-            cy.get('input[name="caches[0].config.minionConfig.nodeLimit"]').type('dasas')
+            cy.get('input[name="caches[0].config.minionConfig.nodeLimit"]').type('minionText1')
+            cy.get('input[name="caches[0].config.minionConfig.nodeLimit"]').should('have.value', 'minionText1')
             cy.contains('Leave empty or specify an integer > 0')
             cy.contains('Fix the errors first!')
         })
 
         it('Checks sollimit field in Minion', () => {
-            cy.get('input[name="caches[0].config.minionConfig.solLimit"]').type('dasas')
+            cy.get('input[name="caches[0].config.minionConfig.solLimit"]').type('minionText2')
+            cy.get('input[name="caches[0].config.minionConfig.solLimit"]').should('have.value', 'minionText2')
+
             cy.contains('Leave empty or specify an integer > 0')
             cy.contains('Fix the errors first!')
         })
 
         it('Checks minionTimelimit field in Minion', () => {
-            cy.get('input[name="caches[0].config.minionConfig.minionTime"]').type('dasas')
+            cy.get('input[name="caches[0].config.minionConfig.minionTime"]').type('minionText3')
+            cy.get('input[name="caches[0].config.minionConfig.minionTime"]').should('have.value', 'minionText3')
             cy.contains('Leave empty or specify an integer > 0')
             cy.contains('Fix the errors first!')
-        })
-    })
-
-    describe('nothing', () => {
-        it('Checks can select answers', () => {
-            cy.visit('/')
-            cy.contains('poop')
         })
     })
 })
