@@ -24,8 +24,46 @@ describe('Checks selecting the caches box', () => {
 
 		// This is only for config2, we still need to config 1
 
-		it('Pick a config', () => {
-			// cy.pause()
+		it('Pick config 1', () => {
+			const c1 = cachesJson[0]
+
+			cy.get('.css-1hwfws3').type('Config1')
+			cy.get('#react-select-2-option-0').click()
+
+			// cy.get('#conjure1 > .card-body > .row > .col > .input-group').type('123456')
+
+			cy.get('select[name="caches[0].essenceFile"]').should('have.value', c1.essenceFile)
+			cy.get('select[name="caches[0].paramFile"]').should('have.value', c1.paramFile)
+
+			cy
+				.get('#conjure1 > .card-body > .row > .col > .input-group')
+				.should('have.value', c1.config.conjureConfig.conjureTime)
+			cy.get('#ChooseRepresentation-check').should('not.be.checked')
+			cy.get('#Optimisation-select').should('have.value', c1.config.srConfig.optimisation)
+			cy.get('#Symmetry\\ Breaking-select').should('have.value', c1.config.srConfig.symmetry)
+			cy.get('#Translation-select').should('have.value', c1.config.srConfig.translation)
+			cy
+				.get('#sr1 > .card-body > :nth-child(4) > .col > .input-group')
+				.should('have.value', c1.config.srConfig.srTime)
+			cy
+				.get('#sr1 > .card-body > :nth-child(5) > .col > .input-group')
+				.should('have.value', c1.config.srConfig.cnfLimit)
+
+			cy.get('#Findallsolutions-Checkbox').should('not.be.checked')
+
+			cy.get('#RandomiseVarOrder-Checkbox').should('not.be.checked')
+			cy.get(':nth-child(3) > .col > .input-group').should('have.value', c1.config.minionConfig.minionTime)
+			cy
+				.get('#minion1 > .card-body > :nth-child(4) > .col > .input-group')
+				.should('have.value', c1.config.minionConfig.nodeLimit)
+			cy
+				.get('#minion1 > .card-body > :nth-child(5) > .col > .input-group')
+				.should('have.value', c1.config.minionConfig.solLimit)
+			cy.get('#Preprocessing-select').should('have.value', c1.config.minionConfig.preprocessing)
+			cy.get('#Consistency-select').should('have.value', c1.config.minionConfig.consistency)
+		})
+
+		it('Pick config 2', () => {
 			const c2 = cachesJson[1]
 
 			cy.get('.css-1hwfws3').click()
@@ -37,7 +75,7 @@ describe('Checks selecting the caches box', () => {
 				.get('#conjure1 > .card-body > .row > .col > .input-group')
 				.should('have.value', c2.config.conjureConfig.conjureTime)
 			cy.get('#ChooseRepresentation-check').should('be.checked')
-			cy.contains('x')
+			cy.get('#conjure1 > .card-body > :nth-child(3) > label').should('exist')
 			cy.get('#x-select').should('have.value', '1')
 			cy.get('#Optimisation-select').should('have.value', c2.config.srConfig.optimisation)
 			cy.get('#Symmetry\\ Breaking-select').should('have.value', c2.config.srConfig.symmetry)
@@ -48,7 +86,7 @@ describe('Checks selecting the caches box', () => {
 			cy
 				.get('#sr1 > .card-body > :nth-child(5) > .col > .input-group')
 				.should('have.value', c2.config.srConfig.cnfLimit)
-
+			cy.get('#Findallsolutions-Checkbox').should('be.checked')
 			cy.get('#RandomiseVarOrder-Checkbox').should('be.checked')
 			cy.get(':nth-child(3) > .col > .input-group').should('have.value', c2.config.minionConfig.minionTime)
 			cy
@@ -59,6 +97,43 @@ describe('Checks selecting the caches box', () => {
 				.should('have.value', c2.config.minionConfig.solLimit)
 			cy.get('#Preprocessing-select').should('have.value', c2.config.minionConfig.preprocessing)
 			cy.get('#Consistency-select').should('have.value', c2.config.minionConfig.consistency)
+		})
+
+		it('Pick config 1 and change a value', () => {
+			const c1 = cachesJson[0]
+
+			cy.get('.css-1hwfws3').type('Config1')
+			cy.get('#react-select-2-option-0').click()
+
+			cy.get('#conjure1 > .card-body > .row > .col > .input-group').clear().type('123456')
+
+			cy.get('select[name="caches[0].essenceFile"]').should('have.value', c1.essenceFile)
+			cy.get('select[name="caches[0].paramFile"]').should('have.value', c1.paramFile)
+
+			cy.get('#conjure1 > .card-body > .row > .col > .input-group').should('have.value', '123456')
+			cy.get('#ChooseRepresentation-check').should('not.be.checked')
+			cy.get('#Optimisation-select').should('have.value', c1.config.srConfig.optimisation)
+			cy.get('#Symmetry\\ Breaking-select').should('have.value', c1.config.srConfig.symmetry)
+			cy.get('#Translation-select').should('have.value', c1.config.srConfig.translation)
+			cy
+				.get('#sr1 > .card-body > :nth-child(4) > .col > .input-group')
+				.should('have.value', c1.config.srConfig.srTime)
+			cy
+				.get('#sr1 > .card-body > :nth-child(5) > .col > .input-group')
+				.should('have.value', c1.config.srConfig.cnfLimit)
+
+			cy.get('#Findallsolutions-Checkbox').should('not.be.checked')
+
+			cy.get('#RandomiseVarOrder-Checkbox').should('not.be.checked')
+			cy.get(':nth-child(3) > .col > .input-group').should('have.value', c1.config.minionConfig.minionTime)
+			cy
+				.get('#minion1 > .card-body > :nth-child(4) > .col > .input-group')
+				.should('have.value', c1.config.minionConfig.nodeLimit)
+			cy
+				.get('#minion1 > .card-body > :nth-child(5) > .col > .input-group')
+				.should('have.value', c1.config.minionConfig.solLimit)
+			cy.get('#Preprocessing-select').should('have.value', c1.config.minionConfig.preprocessing)
+			cy.get('#Consistency-select').should('have.value', c1.config.minionConfig.consistency)
 		})
 
 		// it('Pick a config', () => {

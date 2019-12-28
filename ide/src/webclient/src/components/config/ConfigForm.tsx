@@ -40,7 +40,7 @@ export class ConfigForm extends React.Component<Props, State> {
 	}
 
 	render = () => {
-//		console.log(this.props)
+		//		console.log(this.props)
 
 		const initialCache = {
 			...newCache(),
@@ -87,6 +87,7 @@ export class ConfigForm extends React.Component<Props, State> {
 									index={index}
 									caches={this.props.caches}
 									values={{ cache: currentCache }}
+									fieldSetter={renderProps.setFieldValue}
 									// changeHandler={(event: any) => {
 									//   const cacheName = event.target.value
 									//   const chosen = this.props.caches.find(
