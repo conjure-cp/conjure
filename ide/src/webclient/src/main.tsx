@@ -51,48 +51,48 @@ class Root extends React.Component<any, State> {
 		console.log('hello')
 	}
 
-	collapseHandler = () => {
-		this.setState((prevState: State) => {
-			return { isCollapsed: !prevState.isCollapsed }
-		})
-	}
+	// collapseHandler = () => {
+	// 	this.setState((prevState: State) => {
+	// 		return { isCollapsed: !prevState.isCollapsed }
+	// 	})
+	// }
 
-	initResponseHandler = (data: InitResponse) => {
-		this.setState({
-			isCollapsed: true,
-			trees: data.trees,
-			nimServerPort: data.nimServerPort
-		})
-		this.getFiles()
-		console.log('The data from the vscodeserver')
-		console.log(data)
-	}
+	// initResponseHandler = (data: InitResponse) => {
+	// 	this.setState({
+	// 		isCollapsed: true,
+	// 		trees: data.trees,
+	// 		nimServerPort: data.nimServerPort
+	// 	})
+	// 	this.getFiles()
+	// 	// console.log('The data from the vscodeserver')
+	// 	// console.log(data)
+	// }
 
-	cacheChangeHandler = (cache: Cache, index: number) => {
-		this.setState((prevState: State) => {
-			let copy = cloneDeep(prevState.selectedCaches)
-			console.log(copy)
-			if (!copy) {
-				copy = [ undefined, undefined ]
-			}
-			copy[index] = cache
-			console.log(copy)
-			return { selectedCaches: copy }
-		})
-	}
+	// cacheChangeHandler = (cache: Cache, index: number) => {
+	// 	this.setState((prevState: State) => {
+	// 		let copy = cloneDeep(prevState.selectedCaches)
+	// 		// console.log(copy)
+	// 		if (!copy) {
+	// 			copy = [ undefined, undefined ]
+	// 		}
+	// 		copy[index] = cache
+	// 		// console.log(copy)
+	// 		return { selectedCaches: copy }
+	// 	})
+	// }
 
-	diffCheckHandler = (namedCache1: Cache) => {
-		// console.log(namedCache1)
+	// diffCheckHandler = (namedCache1: Cache) => {
+	// 	// console.log(namedCache1)
 
-		this.setState((prevState: State) => {
-			namedCache1.name = ''
+	// 	this.setState((prevState: State) => {
+	// 		namedCache1.name = ''
 
-			return {
-				diff: !prevState.diff,
-				selectedCaches: [ namedCache1, cloneDeep(namedCache1) ]
-			}
-		})
-	}
+	// 		return {
+	// 			diff: !prevState.diff,
+	// 			selectedCaches: [ namedCache1, cloneDeep(namedCache1) ]
+	// 		}
+	// 	})
+	// }
 
 	getFiles = async () => {
 		await fetch(`http://localhost:${this.state.vscodeServerPort}/config/files`)
@@ -103,8 +103,6 @@ class Root extends React.Component<any, State> {
 					essenceFiles: data.essenceFiles,
 					reps: data.reps
 				})
-
-				// console.log('fromServer', data)
 				return
 			})
 			.then(() => {
@@ -125,7 +123,7 @@ class Root extends React.Component<any, State> {
 
 	render = () => {
 		// console.log('prinitg the state')
-		// console.log(this.state)
+		console.log(this.state.allCaches)
 		return this.state.canRender ? (
 			<div>
 				<StageHeader
@@ -133,7 +131,7 @@ class Root extends React.Component<any, State> {
 					id={'setup'}
 					isCollapsed={this.state.isCollapsed}
 					// isCollapsed={true}
-					collapseHandler={this.collapseHandler}
+					// collapseHandler={this.collapseHandler}
 				>
 					<button
 						className='btn btn-danger btn-lg btn-block mb-2'

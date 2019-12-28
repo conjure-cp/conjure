@@ -10,11 +10,6 @@ import { ConfigArrayElement } from './ConfigArrayElement'
 
 var Loader = require('react-loader')
 
-// import { MDBSpinner } from "mdbreact"
-
-// import Loader from "react-loader-spinner"
-// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-
 interface Props {
 	caches: Cache[]
 	waiting: boolean
@@ -39,9 +34,38 @@ export class ConfigForm extends React.Component<Props, State> {
 		currentCache: undefined
 	}
 
-	render = () => {
-		//		console.log(this.props)
+	validateProps = () => {
+		if (this.props.essenceFiles.length === 0) {
+			return 'No essence files detected!'
+		}
+		if (this.props.paramFiles.length === 0) {
+			return 'No param files detected!'
+		}
 
+		console.log(this.props.modelToReps)
+		console.log(this.props.caches)
+
+		for (const cache of this.props.caches) {
+			console.log(cache.essenceFile)
+
+			if (!this.props.essenceFiles.includes(cache.essenceFile)) {
+				return 'There exists a cache referencing an essence file that does not exist.'
+			}
+			if (!this.props.paramFiles.includes(cache.paramFile)) {
+				return 'There exists a cache referencing an param file that does not exist.'
+			}
+		}
+
+		for (const essenceFile of this.props.essenceFiles) {
+			if (!this.props.modelToReps[essenceFile]) {
+				return 'There exists an essenceFile without a corresponding "reps" field.'
+			}
+		}
+
+		return null
+	}
+
+	render = () => {
 		const initialCache = {
 			...newCache(),
 			essenceFile: this.props.essenceFiles[0],
@@ -50,7 +74,11 @@ export class ConfigForm extends React.Component<Props, State> {
 
 		const initialValues = { caches: [ initialCache, cloneDeep(initialCache) ] }
 
-		return (
+		const propsValidationError = this.validateProps()
+
+		console.log(propsValidationError)
+
+		const form = (
 			<Formik
 				initialValues={initialValues}
 				onSubmit={(values) => {
@@ -61,9 +89,7 @@ export class ConfigForm extends React.Component<Props, State> {
 				enableReinitialize={true}
 				render={(renderProps: FormikProps<Values>) => {
 					const values = renderProps.values
-
 					const submitButtonMessage = renderProps.isValid ? 'Solve' : 'Fix the errors first!'
-
 					const colourClass = renderProps.isValid ? 'primary' : 'warning'
 					const arrayIndexes = this.state.diff ? [ 0, 1 ] : [ 0 ]
 
@@ -74,8 +100,6 @@ export class ConfigForm extends React.Component<Props, State> {
 						} else {
 							currentCache = values.caches[index]
 						}
-						// console.log("currentCahces is ", currentCache)
-
 						return (
 							<div className='col' key={index}>
 								<Field
@@ -88,19 +112,6 @@ export class ConfigForm extends React.Component<Props, State> {
 									caches={this.props.caches}
 									values={{ cache: currentCache }}
 									fieldSetter={renderProps.setFieldValue}
-									// changeHandler={(event: any) => {
-									//   const cacheName = event.target.value
-									//   const chosen = this.props.caches.find(
-									//     x => x.name === cacheName
-									//   )!
-
-									//   // console.log(event.target.value)
-									//   // console.log(cacheName)
-									//   // console.log(chosen)
-									//   currentCache = chosen
-									//   console.log(currentCache)
-									//   // this.setState({ currentCache })
-									// }}
 								/>
 							</div>
 						)
@@ -130,5 +141,7 @@ export class ConfigForm extends React.Component<Props, State> {
 				}}
 			/>
 		)
+
+		return propsValidationError === null ? form : propsValidationError
 	}
 }

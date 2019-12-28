@@ -45,6 +45,7 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 		const { index, values } = this.props
 		const { name } = this.props.field
 
+		console.log(values)
 		return (
 			<StageHeader isCollapsed={false} title={`Config ${index + 1}`} id={`config${index + 1}`}>
 				<Field name={`${name}.name`} component={TextWithLabel} title={'Save as:'} />
@@ -68,7 +69,6 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 
 						values.cache = chosen
 						this.props.fieldSetter(this.props.field.name, chosen)
-
 						this.setState({
 							currentCache: chosen,
 							showReps: !values.cache.config.conjureConfig.answers.every((x) => !x)

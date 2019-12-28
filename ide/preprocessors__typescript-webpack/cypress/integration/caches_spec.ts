@@ -28,7 +28,7 @@ describe('Checks selecting the caches box', () => {
 			const c1 = cachesJson[0]
 
 			cy.get('.css-1hwfws3').type('Config1')
-			cy.get('#react-select-2-option-0').click()
+			cy.get('#react-select-2-option-1').click()
 
 			// cy.get('#conjure1 > .card-body > .row > .col > .input-group').type('123456')
 
@@ -65,9 +65,9 @@ describe('Checks selecting the caches box', () => {
 
 		it('Pick config 2', () => {
 			const c2 = cachesJson[1]
+			cy.get('.css-1hwfws3').type('Config2')
+			cy.get('#react-select-2-option-2').click()
 
-			cy.get('.css-1hwfws3').click()
-			cy.get('.css-26l3qy-menu').click()
 			cy.get('select[name="caches[0].essenceFile"]').should('have.value', c2.essenceFile)
 			cy.get('select[name="caches[0].paramFile"]').should('have.value', c2.paramFile)
 
@@ -103,7 +103,7 @@ describe('Checks selecting the caches box', () => {
 			const c1 = cachesJson[0]
 
 			cy.get('.css-1hwfws3').type('Config1')
-			cy.get('#react-select-2-option-0').click()
+			cy.get('#react-select-2-option-1').click()
 
 			cy.get('#conjure1 > .card-body > .row > .col > .input-group').clear().type('123456')
 
@@ -136,7 +136,7 @@ describe('Checks selecting the caches box', () => {
 			cy.get('#Consistency-select').should('have.value', c1.config.minionConfig.consistency)
 		})
 
-		it.only('When there are two trees the cache is applied approppriately ', () => {
+		it('When there are two trees the cache is applied approppriately ', () => {
 			cy.get('#Comparetrees-check').click()
 			cy.get('#config2 > :nth-child(1) > #cacheSelect > .css-yk16xz-control > .css-1hwfws3').type('Config1')
 			cy.get('#react-select-3-option-1').click()
@@ -145,3 +145,8 @@ describe('Checks selecting the caches box', () => {
 		})
 	})
 })
+
+// TODO what if there are no essence files?
+// TODO what if there are no param files?
+// TODO what id the files referenced in the caches dont exist?
+// TODO how can we delete a single cache?
