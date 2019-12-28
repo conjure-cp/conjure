@@ -139,7 +139,7 @@ describe('Checks selecting the caches box', () => {
 		it.only('When there are two trees the cache is applied approppriately ', () => {
 			cy.get('#Comparetrees-check').click()
 			cy.get('#config2 > :nth-child(1) > #cacheSelect > .css-yk16xz-control > .css-1hwfws3').type('Config1')
-			cy.get('#react-select-3-option-0').click()
+			cy.get('#react-select-3-option-1').click()
 			cy.get('#config1 > :nth-child(1) > :nth-child(3) > #Model-select').should('have.value', 'model1.essence')
 			cy.get('#config2 > :nth-child(1) > :nth-child(3) > #Model-select').should('have.value', 'cached1.essence')
 		})
