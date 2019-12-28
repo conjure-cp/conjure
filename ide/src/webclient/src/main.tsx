@@ -57,16 +57,14 @@ class Root extends React.Component<any, State> {
 	// 	})
 	// }
 
-	// initResponseHandler = (data: InitResponse) => {
-	// 	this.setState({
-	// 		isCollapsed: true,
-	// 		trees: data.trees,
-	// 		nimServerPort: data.nimServerPort
-	// 	})
-	// 	this.getFiles()
-	// 	// console.log('The data from the vscodeserver')
-	// 	// console.log(data)
-	// }
+	initResponseHandler = (data: InitResponse) => {
+		this.setState({
+			isCollapsed: true,
+			trees: data.trees,
+			nimServerPort: data.nimServerPort
+		})
+		this.getFiles()
+	}
 
 	// cacheChangeHandler = (cache: Cache, index: number) => {
 	// 	this.setState((prevState: State) => {
@@ -150,7 +148,20 @@ class Root extends React.Component<any, State> {
 						modelToReps={this.state.reps}
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
-						submitHandler={(values) => console.log('SUBMIT ', values)}
+						submitHandler={(values) =>
+							fetch(`http://localhost:${this.state.vscodeServerPort}/config/solve`, {
+								method: 'post',
+								headers: {
+									Accept: 'application/json, text/plain, */*',
+									'Content-Type': 'application/json'
+								},
+								body: JSON.stringify(values)
+							})
+								.then((response) => response.json())
+								.then((data) => {
+									console.log('From solve', data)
+									this.initResponseHandler(data)
+								})}
 					/>
 				</StageHeader>
 				<Forest trees={this.state.trees} nimServerPort={this.state.nimServerPort} />

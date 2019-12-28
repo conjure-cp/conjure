@@ -42,12 +42,7 @@ export class ConfigForm extends React.Component<Props, State> {
 			return 'No param files detected!'
 		}
 
-		console.log(this.props.modelToReps)
-		console.log(this.props.caches)
-
 		for (const cache of this.props.caches) {
-			console.log(cache.essenceFile)
-
 			if (!this.props.essenceFiles.includes(cache.essenceFile)) {
 				return 'There exists a cache referencing an essence file that does not exist.'
 			}

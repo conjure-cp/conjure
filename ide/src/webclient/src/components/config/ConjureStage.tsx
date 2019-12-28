@@ -5,11 +5,8 @@ import StageHeader from "../common/StageHeader"
 import { Check } from "../common/Check"
 
 import {
-  Form,
   Field,
-  FieldArray,
   FieldProps,
-  Formik,
   FormikProps
 } from "formik"
 
@@ -48,7 +45,6 @@ export const ConjureStage = (
       }
     })
 
-    // console.log(values.config.answers[i])
     return (
       <Field
         key={i}
