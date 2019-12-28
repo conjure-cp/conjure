@@ -52,6 +52,8 @@ export class ConfigForm extends React.Component<Props, State> {
 		}
 
 		for (const essenceFile of this.props.essenceFiles) {
+			console.log(this.props)
+
 			if (!this.props.modelToReps[essenceFile]) {
 				return 'There exists an essenceFile without a corresponding "reps" field.'
 			}
@@ -68,10 +70,7 @@ export class ConfigForm extends React.Component<Props, State> {
 		}
 
 		const initialValues = { caches: [ initialCache, cloneDeep(initialCache) ] }
-
 		const propsValidationError = this.validateProps()
-
-		console.log(propsValidationError)
 
 		const form = (
 			<Formik

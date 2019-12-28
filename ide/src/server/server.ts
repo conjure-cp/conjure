@@ -18,9 +18,9 @@ import { Core } from '../webclient/src/components/vis/TreeContainer'
 const collator = new Intl.Collator(undefined, { numeric: true })
 
 interface FilesResponse {
-	models: string[]
-	params: string[]
-	representations: RepMap
+	essenceFiles: string[]
+	paramFiles: string[]
+	modelToReps: RepMap
 }
 
 export interface InitResponse {
@@ -39,7 +39,7 @@ class HTMlService {
 	@GET
 	getPage(): string {
 		let html =
-			fs.readFileSync(path.join(context.extensionPath, 'src/webclient/src/index.html')).toString() +
+			fs.readFileSync(path.join(context.extensionPath, './index.html')).toString() +
 			`
       <div id="port" vscodeServerPort="${thisServerPort}"></div>
     <script>${fs.readFileSync(path.join(context.extensionPath, 'dist/configBundle.js')).toString()}</script>
@@ -102,11 +102,13 @@ class ConfigService {
 			map[r.name] = r.representations
 		})
 
-		return {
-			models: models.map((uri) => this.toRel(uri)).sort(collator.compare),
-			params: params.map((uri) => this.toRel(uri)).sort(collator.compare),
-			representations: map
+		const res = {
+			essenceFiles: models.map((uri) => this.toRel(uri)).sort(collator.compare),
+			paramFiles: params.map((uri) => this.toRel(uri)).sort(collator.compare),
+			modelToReps: map
 		}
+		console.log(JSON.stringify(res))
+		return res
 	}
 
 	@Path('/solve')

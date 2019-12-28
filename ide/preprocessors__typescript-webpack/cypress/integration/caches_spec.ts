@@ -146,7 +146,5 @@ describe('Checks selecting the caches box', () => {
 	})
 })
 
-// TODO what if there are no essence files?
-// TODO what if there are no param files?
-// TODO what id the files referenced in the caches dont exist?
 // TODO how can we delete a single cache?
+// TODO show time stamp alongside name of untitled cache

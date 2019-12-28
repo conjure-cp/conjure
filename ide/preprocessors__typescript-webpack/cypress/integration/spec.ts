@@ -1,7 +1,5 @@
 import { vscodeServerBase } from '../support'
 
-//test with no caches
-
 describe('Homepage', () => {
 	beforeEach('works', () => {
 		cy.server() // enable response stubbing

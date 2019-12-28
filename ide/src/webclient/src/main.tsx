@@ -25,10 +25,11 @@ interface State {
 	selectedCaches?: (Cache | undefined)[]
 	essenceFiles: string[]
 	paramFiles: string[]
-	reps: RepMap
+	modelToReps: RepMap
 	nimServerPort: number
 	vscodeServerPort: number
 	canRender: boolean
+	waiting: boolean
 }
 
 class Root extends React.Component<any, State> {
@@ -37,6 +38,7 @@ class Root extends React.Component<any, State> {
 	constructor(props: any) {
 		super(props)
 		this.state = {
+			waiting: false,
 			canRender: false,
 			trees: undefined,
 			isCollapsed: false,
@@ -57,28 +59,6 @@ class Root extends React.Component<any, State> {
 	// 	})
 	// }
 
-	initResponseHandler = (data: InitResponse) => {
-		this.setState({
-			isCollapsed: true,
-			trees: data.trees,
-			nimServerPort: data.nimServerPort
-		})
-		this.getFiles()
-	}
-
-	// cacheChangeHandler = (cache: Cache, index: number) => {
-	// 	this.setState((prevState: State) => {
-	// 		let copy = cloneDeep(prevState.selectedCaches)
-	// 		// console.log(copy)
-	// 		if (!copy) {
-	// 			copy = [ undefined, undefined ]
-	// 		}
-	// 		copy[index] = cache
-	// 		// console.log(copy)
-	// 		return { selectedCaches: copy }
-	// 	})
-	// }
-
 	// diffCheckHandler = (namedCache1: Cache) => {
 	// 	// console.log(namedCache1)
 
@@ -92,6 +72,16 @@ class Root extends React.Component<any, State> {
 	// 	})
 	// }
 
+	initResponseHandler = (data: InitResponse) => {
+		this.setState({
+			isCollapsed: true,
+			trees: data.trees,
+			nimServerPort: data.nimServerPort,
+			waiting: false
+		})
+		this.getFiles()
+	}
+
 	getFiles = async () => {
 		await fetch(`http://localhost:${this.state.vscodeServerPort}/config/files`)
 			.then((response) => response.json())
@@ -99,7 +89,7 @@ class Root extends React.Component<any, State> {
 				this.setState({
 					paramFiles: data.paramFiles,
 					essenceFiles: data.essenceFiles,
-					reps: data.reps
+					modelToReps: data.modelToReps
 				})
 				return
 			})
@@ -121,7 +111,8 @@ class Root extends React.Component<any, State> {
 
 	render = () => {
 		// console.log('prinitg the state')
-		console.log(this.state.allCaches)
+		// console.log(this.state.allCaches)
+
 		return this.state.canRender ? (
 			<div>
 				<StageHeader
@@ -144,12 +135,13 @@ class Root extends React.Component<any, State> {
 					</button>
 					<ConfigForm
 						caches={this.state.allCaches}
-						waiting={false}
-						modelToReps={this.state.reps}
+						waiting={this.state.waiting}
+						modelToReps={this.state.modelToReps}
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
-						submitHandler={(values) =>
-							fetch(`http://localhost:${this.state.vscodeServerPort}/config/solve`, {
+						submitHandler={async (values) => {
+							this.setState({ waiting: true })
+							const res = await fetch(`http://localhost:${this.state.vscodeServerPort}/config/solve`, {
 								method: 'post',
 								headers: {
 									Accept: 'application/json, text/plain, */*',
@@ -157,11 +149,35 @@ class Root extends React.Component<any, State> {
 								},
 								body: JSON.stringify(values)
 							})
-								.then((response) => response.json())
-								.then((data) => {
-									console.log('From solve', data)
-									this.initResponseHandler(data)
-								})}
+							const json = await res.json()
+							this.initResponseHandler(json)
+						}}
+						// new Promise(() => {
+						// 	console.log('Making request')
+						// 	// this.setState({ waiting: true })
+						// })
+						// 	.then(() =>
+						// 		fetch(`http://localhost:${this.state.vscodeServerPort}/config/solve`, {
+						// 			method: 'post',
+						// 			headers: {
+						// 				Accept: 'application/json, text/plain, */*',
+						// 				'Content-Type': 'application/json'
+						// 			},
+						// 			body: JSON.stringify(values)
+						// 		})
+						// 	)
+						// 	.then((response) => {
+						// 		console.log('HERERERER')
+						// 		this.setState({ waiting: false })
+						// 		return response
+						// 	})
+						// 	.then((response) => response.json())
+						// 	.then((data) => {
+						// 		console.log('From solve', data)
+						// 		this.initResponseHandler(data)
+						// 		this.setState({ waiting: false })
+						// 	})
+						// 	.finally(() => console.log('over'))}
 					/>
 				</StageHeader>
 				<Forest trees={this.state.trees} nimServerPort={this.state.nimServerPort} />
