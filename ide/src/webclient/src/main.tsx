@@ -55,7 +55,9 @@ class Root extends React.Component<any, State> {
 			essenceFiles: [],
 			modelToReps: {},
 			nimServerPort: 5000,
-			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport'))
+			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport')),
+			showError: false,
+			errorObject: { message: 'No error', stackTrace: 'No stack trace' }
 		}
 		console.log('hello')
 	}

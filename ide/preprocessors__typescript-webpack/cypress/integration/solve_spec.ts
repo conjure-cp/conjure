@@ -42,5 +42,3 @@ describe('solving', () => {
 })
 
 // TODO no response from the server, It will just keep waiting -> okay I guess
-// TODO response from the server is an error message, still JSON tho
-// TODO response where not even json, it just dies
