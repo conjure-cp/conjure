@@ -46,7 +46,7 @@ class Root extends React.Component<any, State> {
 			allCaches: [],
 			paramFiles: [],
 			essenceFiles: [],
-			reps: {},
+			modelToReps: {},
 			nimServerPort: 5000,
 			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport'))
 		}
@@ -152,32 +152,6 @@ class Root extends React.Component<any, State> {
 							const json = await res.json()
 							this.initResponseHandler(json)
 						}}
-						// new Promise(() => {
-						// 	console.log('Making request')
-						// 	// this.setState({ waiting: true })
-						// })
-						// 	.then(() =>
-						// 		fetch(`http://localhost:${this.state.vscodeServerPort}/config/solve`, {
-						// 			method: 'post',
-						// 			headers: {
-						// 				Accept: 'application/json, text/plain, */*',
-						// 				'Content-Type': 'application/json'
-						// 			},
-						// 			body: JSON.stringify(values)
-						// 		})
-						// 	)
-						// 	.then((response) => {
-						// 		console.log('HERERERER')
-						// 		this.setState({ waiting: false })
-						// 		return response
-						// 	})
-						// 	.then((response) => response.json())
-						// 	.then((data) => {
-						// 		console.log('From solve', data)
-						// 		this.initResponseHandler(data)
-						// 		this.setState({ waiting: false })
-						// 	})
-						// 	.finally(() => console.log('over'))}
 					/>
 				</StageHeader>
 				<Forest trees={this.state.trees} nimServerPort={this.state.nimServerPort} />
