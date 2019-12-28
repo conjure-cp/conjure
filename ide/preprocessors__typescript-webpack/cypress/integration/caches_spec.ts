@@ -136,14 +136,12 @@ describe('Checks selecting the caches box', () => {
 			cy.get('#Consistency-select').should('have.value', c1.config.minionConfig.consistency)
 		})
 
-		// it('Pick a config', () => {
-		//     // cy.pause()
-		//     cy.get('.css-1hwfws3').click()
-		//     cy.get('.css-26l3qy-menu').click()
-		//     cy.get('select[name="caches[0].essenceFile"]').should('have.value', 'cached2.essence')
-		//     cy.get('select[name="caches[0].paramFile"]').should('have.value', 'cached2.param')
-		//     cy.get('#conjure1 > .card-body > .row > .col > #Timelimit-textBox').should('have.value', '200')
-		//     cy.get('#Strategy-select').should('have.value', 's')
-		// })
+		it.only('When there are two trees the cache is applied approppriately ', () => {
+			cy.get('#Comparetrees-check').click()
+			cy.get('#config2 > :nth-child(1) > #cacheSelect > .css-yk16xz-control > .css-1hwfws3').type('Config1')
+			cy.get('#react-select-3-option-0').click()
+			cy.get('#config1 > :nth-child(1) > :nth-child(3) > #Model-select').should('have.value', 'model1.essence')
+			cy.get('#config2 > :nth-child(1) > :nth-child(3) > #Model-select').should('have.value', 'cached1.essence')
+		})
 	})
 })

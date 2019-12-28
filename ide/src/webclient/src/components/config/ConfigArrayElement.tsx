@@ -69,9 +69,7 @@ export class ConfigArrayElement extends React.Component<Props & FormikProps<Valu
 						const chosen = this.props.caches.find((x) => x.name === event.value)!
 
 						values.cache = chosen
-						this.props.fieldSetter('caches[0]', chosen)
-
-						console.log(values.cache.config.conjureConfig.answers)
+						this.props.fieldSetter(this.props.field.name, chosen)
 
 						this.setState({
 							currentCache: chosen,
