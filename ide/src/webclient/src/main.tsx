@@ -17,6 +17,11 @@ if (process.env.NODE_ENV !== 'production') {
 	whyDidYouRender(React)
 }
 
+interface Error {
+	stackTrace: string
+	message: string
+}
+
 interface State {
 	trees: any
 	isCollapsed: boolean
@@ -30,6 +35,8 @@ interface State {
 	vscodeServerPort: number
 	canRender: boolean
 	waiting: boolean
+	showError: boolean
+	errorObject: Error
 }
 
 class Root extends React.Component<any, State> {
@@ -113,7 +120,7 @@ class Root extends React.Component<any, State> {
 		// console.log('prinitg the state')
 		// console.log(this.state.allCaches)
 
-		return this.state.canRender ? (
+		return this.state.canRender ? !this.state.showError ? (
 			<div>
 				<StageHeader
 					title={'Setup'}
@@ -149,12 +156,33 @@ class Root extends React.Component<any, State> {
 								},
 								body: JSON.stringify(values)
 							})
-							const json = await res.json()
-							this.initResponseHandler(json)
+
+							try {
+								const json = await res.json()
+								if (json.stackTrace) {
+									this.setState({ showError: true, errorObject: json })
+								} else {
+									this.initResponseHandler(json)
+								}
+							} catch (e) {
+								this.setState({
+									showError: true,
+									errorObject: {
+										stackTrace: e.message,
+										message: 'A server error happended and we could not parse the response'
+									}
+								})
+							}
 						}}
 					/>
 				</StageHeader>
 				<Forest trees={this.state.trees} nimServerPort={this.state.nimServerPort} />
+			</div>
+		) : (
+			<div>
+				<p>SERVER ERROR</p>
+				<p>{this.state.errorObject.message}</p>
+				<p>{this.state.errorObject.stackTrace}</p>
 			</div>
 		) : (
 			<p>Waiting for response...</p>
