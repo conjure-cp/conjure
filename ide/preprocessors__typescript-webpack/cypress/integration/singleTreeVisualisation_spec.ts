@@ -23,4 +23,11 @@ describe('tree vis', () => {
 	it('Can go to the next node', () => {
 		cy.get(':nth-child(3) > :nth-child(3)')
 	})
+
+	it('can collapse and expand without losing the decision labels', () => {
+		cy.wait(1000)
+		cy.get('#treeSVG').type('c', { delay: 500 })
+		cy.get('#treeSVG').type('e', { delay: 500 })
+		cy.get('[transform="translate(0, 90)"] > .decision').should('have.attr', 'style', 'fill-opacity: 1;')
+	})
 })

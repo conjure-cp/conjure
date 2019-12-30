@@ -184,8 +184,6 @@ export class TreeContainer extends React.Component<Props, State> {
 	}
 
 	render = () => {
-		// TODO move this it shouldnt be here
-
 		return (
 			<HotKeys keyMap={this.map} handlers={this.handlers}>
 				<StatsBar
