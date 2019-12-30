@@ -8,11 +8,11 @@ describe('solving', () => {
 			cy.server({ delay: 1500 }) // enable response stubbing
 			cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:files.json')
 			cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
-			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:solve.json')
+			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:normal-8/initialResponse.json')
 			cy.visit('/')
 		})
 
-		it('Checks can select answers', () => {
+		it.only('Checks can select answers', () => {
 			cy.get('.loadedContent > .btn').click()
 		})
 	})

@@ -43,21 +43,21 @@ class Root extends React.Component<any, State> {
 			essenceFiles: [],
 			modelToReps: {},
 			nimServerPort: 5000,
-			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport'))
+			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport')),
 		}
 		console.log('hello')
 	}
 
 	componentDidMount = async () => {
 		const res = await fetch(`http://localhost:${this.state.vscodeServerPort}/test/tree`, {
-			method: 'get'
+			method: 'get',
 		})
 		const json = await res.json()
 		this.setState({
 			isCollapsed: true,
 			trees: json.trees,
 			nimServerPort: json.nimServerPort,
-			waiting: false
+			waiting: false,
 		})
 		console.log(json)
 		console.log(this.state.waiting)
@@ -66,7 +66,7 @@ class Root extends React.Component<any, State> {
 	render = () => {
 		return !this.state.waiting ? (
 			<div>
-				<Forest trees={this.state.trees} nimServerPort={this.state.nimServerPort} />
+				<Forest trees={this.state.trees} nimServerPort={5000} />
 			</div>
 		) : (
 			<p>TEST WAITING FOR CORE</p>
@@ -78,5 +78,5 @@ ReactDOM.render(
 	<div>
 		<Root />
 	</div>,
-	document.getElementById('root')
+	document.getElementById('root'),
 )
