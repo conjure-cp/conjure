@@ -37,23 +37,23 @@
                 "runOn": "folderOpen"
             }
         },
-                {
-                    "label": "start nim server",
-                    "type": "shell",
-                    "command": "./runServer.sh",
-                    "isBackground": true,
-                    "runOptions": {
-                        "runOn": "folderOpen"
-                    }
-                },
-                                {
-                                    "label": "start cypress",
-                                    "type": "shell",
-                                    "command": "(cd preprocessors__typescript-webpack && npm run o)",
-                                    "isBackground": true,
-                                    "runOptions": {
-                                        "runOn": "folderOpen"
-                                    }
-                                }
+        {
+            "label": "start nim server",
+            "type": "shell",
+            "command": "./runServer.sh",
+            "isBackground": true,
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "start cypress",
+            "type": "shell",
+            "command": "(cd preprocessors__typescript-webpack && npm run o)",
+            "isBackground": true,
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
     ]
 }

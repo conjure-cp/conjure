@@ -77,7 +77,7 @@ export default class TreeVis extends React.Component<Props, State> {
 		return true
 	}
 
-	getDecCountMessage(d: HierarchyPointNode<Node>): string {
+	getDescCountMessage(d: HierarchyPointNode<Node>): string {
 		if (this.hasHiddenChildren(d)) {
 			return d.data.descCount + ' nodes below'
 		}
@@ -192,10 +192,10 @@ export default class TreeVis extends React.Component<Props, State> {
 			.attr('y', (d) => {
 				return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize, this.props.diffParentId)
 			})
-			.attr('class', 'decCount')
+			.attr('class', 'descCount')
 			.attr('dy', '.35em')
 			.attr('text-anchor', 'middle')
-			.text((d) => (this.props.showLabels ? this.getDecCountMessage(d) : ''))
+			.text((d) => (this.props.showLabels ? this.getDescCountMessage(d) : ''))
 			.transition()
 			.duration(this.props.duration)
 			.style('fill-opacity', 1)
@@ -211,14 +211,14 @@ export default class TreeVis extends React.Component<Props, State> {
 		})
 
 		nodeUpdate
-			.select('text.decCount')
+			.select('text.descCount')
 			.attr('y', (d) => {
 				return 2 * Node.getRadius(d, this.props.linScale, this.props.minsize, this.props.diffParentId)
 			})
 			.transition()
 			.duration(this.props.duration)
-			.text((d) => (this.props.showLabels ? this.getDecCountMessage(d) : ''))
-			.style('fill-opacity', (d) => (this.getDecCountMessage(d) === '' ? 0 : 1))
+			.text((d) => (this.props.showLabels ? this.getDescCountMessage(d) : ''))
+			.style('fill-opacity', (d) => (this.getDescCountMessage(d) === '' ? 0 : 1))
 
 		nodeUpdate
 			.select('text.decision')

@@ -14,25 +14,25 @@ describe('tree vis', () => {
 		)
 
 		cy.visit('/singleTreeVisualisation.html')
+		cy.wait(1000)
 	})
 
 	it('Checks the root node is focussed', () => {
-		cy.get('.selected')
+		cy.get('.selected').siblings('text.decision').should('have.text', '')
 	})
 
-	it('Can go to the next node', () => {
-		cy.get(':nth-child(3) > :nth-child(3)')
+	it.only('Checks the nodes below is correct for the root', () => {
+		cy.get('#treeSVG').type('c', { delay: 500 })
+		cy.get('.selected').siblings('text.descCount').should('contain.text', '32')
 	})
 
 	it('can collapse and expand without losing the decision labels', () => {
-		cy.wait(1000)
 		cy.get('#treeSVG').type('c', { delay: 500 })
 		cy.get('#treeSVG').type('e', { delay: 500 })
 		cy.get('[transform="translate(0, 90)"] > .decision').should('have.attr', 'style', 'fill-opacity: 1;')
 	})
 
 	it('can load all the nodes in the tree', () => {
-		cy.wait(1000)
 		cy.get('#treeSVG').type('c')
 
 		cy.get(':nth-child(1) > .card-header > .collapsed').click()
