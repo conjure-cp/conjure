@@ -34,7 +34,7 @@ class VisualiserSettings extends React.Component<Props, State> {
 							onChange={this.props.labelChangeHandler}
 						/>
 						<Check
-							title={'Sync duration and interval'}
+							title={'Sync animation to delay'}
 							checked={this.props.locked}
 							onChange={this.props.lockChangeHandler}
 						/>

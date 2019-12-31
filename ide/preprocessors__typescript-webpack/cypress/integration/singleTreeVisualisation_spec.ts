@@ -17,11 +17,22 @@ describe('tree vis', () => {
 		cy.wait(1000)
 	})
 
+	it('Checks the labels can be toggled', () => {
+		cy.get(':nth-child(1) > .card-header > .collapsed').click()
+		cy.get('#ShowLabels-check').click()
+		cy.get('#treeSVG').type('s', { delay: 500 })
+		cy.get('#treeSVG').type('s', { delay: 500 })
+
+		cy.get('.selected').siblings('text').should('have.text', '')
+		cy.get('#ShowLabels-check').click()
+		cy.get('.selected').siblings('text').should('not.have.text', '')
+	})
+
 	it('Checks the root node is focussed', () => {
 		cy.get('.selected').siblings('text.decision').should('have.text', '')
 	})
 
-	it.only('Checks the nodes below is correct for the root', () => {
+	it('Checks the nodes below is correct for the root', () => {
 		cy.get('#treeSVG').type('c', { delay: 500 })
 		cy.get('.selected').siblings('text.descCount').should('contain.text', '32')
 	})
