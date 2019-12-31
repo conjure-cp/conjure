@@ -3,20 +3,6 @@ import { vscodeServerBase } from '../support'
 //test with no caches
 
 describe('solving', () => {
-	describe('Solve ok', () => {
-		beforeEach('expand', () => {
-			cy.server({ delay: 1500 }) // enable response stubbing
-			cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:files.json')
-			cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
-			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:normal-8/initialResponse.json')
-			cy.visit('/')
-		})
-
-		it.only('Checks can select answers', () => {
-			cy.get('.loadedContent > .btn').click()
-		})
-	})
-
 	describe('server error json', () => {
 		it('Checks can show error message', () => {
 			cy.server() // enable response stubbing
@@ -37,6 +23,18 @@ describe('solving', () => {
 			cy.visit('/')
 			cy.get('.loadedContent > .btn').click()
 			cy.contains('SERVER ERROR')
+		})
+	})
+
+	describe('its ok', () => {
+		it('Checks can solve', () => {
+			cy.server({ delay: 1500 }) // enable response stubbing
+			cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:files.json')
+			cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
+			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:normal-8/initialResponse.json')
+			cy.visit('/')
+
+			cy.get('.loadedContent > .btn').click()
 		})
 	})
 })

@@ -8,6 +8,7 @@ import './css/styles.css'
 import './css/vis.css'
 import { InitResponse } from '../../server/server'
 import { ConfigForm } from './components/config/ConfigForm'
+import { requestServer } from './modules/TreeHelper'
 
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
@@ -57,7 +58,7 @@ class Root extends React.Component<any, State> {
 			nimServerPort: 5000,
 			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport')),
 			showError: false,
-			errorObject: { message: 'No error', stackTrace: 'No stack trace' }
+			errorObject: { message: 'No error', stackTrace: 'No stack trace' },
 		}
 		console.log('hello')
 	}
@@ -86,7 +87,7 @@ class Root extends React.Component<any, State> {
 			isCollapsed: true,
 			trees: data.trees,
 			nimServerPort: data.nimServerPort,
-			waiting: false
+			waiting: false,
 		})
 		this.getFiles()
 	}
@@ -98,7 +99,7 @@ class Root extends React.Component<any, State> {
 				this.setState({
 					paramFiles: data.paramFiles,
 					essenceFiles: data.essenceFiles,
-					modelToReps: data.modelToReps
+					modelToReps: data.modelToReps,
 				})
 				return
 			})
@@ -107,7 +108,7 @@ class Root extends React.Component<any, State> {
 					.then((response) => response.json())
 					.then((data) => {
 						this.setState({
-							allCaches: data
+							allCaches: data,
 						})
 					})
 			})
@@ -116,6 +117,18 @@ class Root extends React.Component<any, State> {
 
 	componentDidMount = () => {
 		this.getFiles()
+	}
+
+	makeRequest = async (url: string, method: string, payload: any, isNimServer: boolean) => {
+		this.setState({ waiting: true })
+		const json = await requestServer(url, method, JSON.stringify(payload), isNimServer)
+		this.setState({ waiting: false })
+
+		if (json.stackTrace) {
+			this.setState({ showError: true, errorObject: json })
+			return null
+		}
+		return json
 	}
 
 	render = () => {
@@ -149,32 +162,16 @@ class Root extends React.Component<any, State> {
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
 						submitHandler={async (values) => {
-							this.setState({ waiting: true })
-							const res = await fetch(`http://localhost:${this.state.vscodeServerPort}/config/solve`, {
-								method: 'post',
-								headers: {
-									Accept: 'application/json, text/plain, */*',
-									'Content-Type': 'application/json'
-								},
-								body: JSON.stringify(values)
-							})
-
-							try {
-								const json = await res.json()
-								if (json.stackTrace) {
-									this.setState({ showError: true, errorObject: json })
-								} else {
-									this.initResponseHandler(json)
-								}
-							} catch (e) {
-								this.setState({
-									showError: true,
-									errorObject: {
-										stackTrace: e.message,
-										message: 'A server error happended and we could not parse the response'
-									}
-								})
+							const res = await this.makeRequest(
+								`http://localhost:${this.state.vscodeServerPort}/config/solve`,
+								'post',
+								values,
+								false,
+							)
+							if (!res) {
+								return
 							}
+							this.initResponseHandler(res)
 						}}
 					/>
 				</StageHeader>
@@ -198,5 +195,5 @@ ReactDOM.render(
 		<Root />
 		{/* <FormikConjure diff={true}/> */}
 	</div>,
-	document.getElementById('root')
+	document.getElementById('root'),
 )
