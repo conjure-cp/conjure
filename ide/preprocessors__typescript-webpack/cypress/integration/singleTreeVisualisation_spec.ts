@@ -1,6 +1,14 @@
 import { vscodeServerBase } from '../support'
 
-//test with no caches
+// it.only('shows error message if cannot make request to nim server', () => {
+// 	cy.server()
+// 	cy.route('GET', `${vscodeServerBase}/test/tree`, 'fixture:normal-8/initialResponseWrongNimPort.json')
+
+// 	cy.visit('/singleTreeVisualisation.html')
+// 	for (let i = 0; i < 10; i++) {
+// 		cy.get('#treeSVG').type('s', { delay: 1000 })
+// 	}
+// })
 
 describe('tree vis', () => {
 	beforeEach('setup', () => {
@@ -15,6 +23,76 @@ describe('tree vis', () => {
 
 		cy.visit('/singleTreeVisualisation.html')
 		cy.wait(1000)
+	})
+
+	it('Checks that the next failed branch works', () => {
+		cy.get('.row > :nth-child(1) > :nth-child(3)').click()
+		cy.contains('Domains at 3')
+
+		for (let i = 0; i < 40; i++) {
+			cy.get('.row > :nth-child(1) > :nth-child(3)').click()
+		}
+
+		cy.contains('Domains at 29')
+	})
+
+	it('Checks that the previous failed branch works', () => {
+		cy.get('[tabindex="-1"] > .row > :nth-child(4) > :nth-child(2)').click()
+		cy.get('[tabindex="-1"] > .row > :nth-child(1) > :nth-child(2)').click()
+		cy.contains('Domains at 29')
+		for (let i = 0; i < 40; i++) {
+			cy.get('[tabindex="-1"] > .row > :nth-child(1) > :nth-child(2)').click()
+		}
+		cy.contains('Domains at 3')
+	})
+
+	it('Checks that next solution node works', () => {
+		cy.get(':nth-child(4) > :nth-child(3)').click()
+		cy.contains('Domains at 32')
+	})
+
+	it('Checks that previous solution node works', () => {
+		cy.get('[tabindex="-1"] > .row > :nth-child(4) > :nth-child(2)').click()
+		cy.contains('Domains at 32')
+	})
+
+	it('Checks that the next solution branch works', () => {
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 1')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 2')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 16')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 26')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 27')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 30')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 31')
+		cy.get('.row > :nth-child(2) > :nth-child(3)').click()
+		cy.contains('Domains at 32')
+	})
+
+	it('Checks that the previous solution branch works', () => {
+		cy.get('[tabindex="-1"] > .row > :nth-child(4) > :nth-child(2)').click()
+		cy.contains('Domains at 32')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 31')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 30')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 27')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 26')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 16')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 2')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
+		cy.contains('Domains at 1')
+		cy.get('[tabindex="-1"] > .row > :nth-child(2) > :nth-child(2)').click()
 	})
 
 	it('Checks the labels can be toggled', () => {

@@ -385,3 +385,5 @@ export const goToPreviousHandler = (instance: TreeContainer) => {
 		instance.collapse()
 	}
 }
+
+// TODO need to write comprehensive tests for the visualisation before any modifications to this file.

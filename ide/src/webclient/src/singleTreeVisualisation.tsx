@@ -80,7 +80,11 @@ class Root extends React.Component<any, State> {
 	render = () => {
 		return !this.state.waitingForSolution ? (
 			<div>
-				<Forest requestHandler={this.makeRequest} trees={this.state.trees} nimServerPort={5000} />
+				<Forest
+					requestHandler={this.makeRequest}
+					trees={this.state.trees}
+					nimServerPort={this.state.nimServerPort}
+				/>
 			</div>
 		) : (
 			<p>TEST WAITING FOR CORE</p>
