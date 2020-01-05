@@ -31,6 +31,7 @@ export interface Tree {
 interface Props {
 	trees: Tree[]
 	nimServerPort: number
+	requestHandler: (url: string, payload: any, isNimServer: boolean) => any
 }
 
 interface State {
@@ -272,6 +273,7 @@ class Forest extends React.Component<Props, State> {
 												finishedPlayingHandler={() => this.setState({ playing: false })}
 												collapseAsExploring={this.state.collapseAsExploring}
 												showLabels={this.state.showLabels}
+												requestHandler={this.props.requestHandler}
 											/>
 										</div>
 									))}

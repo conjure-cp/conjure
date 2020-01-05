@@ -49,6 +49,7 @@ interface Props {
 	finishedPlayingHandler: () => void
 	collapseAsExploring: boolean
 	diffParentId: number
+	requestHandler: (url: string, payload: any, isNimServer: boolean) => any
 }
 
 export interface State {

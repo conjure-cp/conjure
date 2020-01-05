@@ -8,6 +8,7 @@ import './css/styles.css'
 import './css/vis.css'
 import { InitResponse } from '../../server/server'
 import { ConfigForm } from './components/config/ConfigForm'
+import { requestServer } from './modules/TreeHelper'
 
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
@@ -24,7 +25,9 @@ interface State {
 	nimServerPort: number
 	vscodeServerPort: number
 	canRender: boolean
-	waiting: boolean
+	waitingForSolution: boolean
+	showError: boolean
+	errorObject: any
 }
 
 class Root extends React.Component<any, State> {
@@ -33,7 +36,8 @@ class Root extends React.Component<any, State> {
 	constructor(props: any) {
 		super(props)
 		this.state = {
-			waiting: false,
+			waitingForSolution: false,
+			showError: false,
 			canRender: false,
 			trees: undefined,
 			isCollapsed: false,
@@ -44,6 +48,7 @@ class Root extends React.Component<any, State> {
 			modelToReps: {},
 			nimServerPort: 5000,
 			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport')),
+			errorObject: undefined,
 		}
 		console.log('hello')
 	}
@@ -57,16 +62,25 @@ class Root extends React.Component<any, State> {
 			isCollapsed: true,
 			trees: json.trees,
 			nimServerPort: json.nimServerPort,
-			waiting: false,
+			waitingForSolution: false,
 		})
-		console.log(json)
-		console.log(this.state.waiting)
+	}
+	makeRequest = async (url: string, payload: string | null, isNimServer: boolean) => {
+		this.setState({ waitingForSolution: true })
+		const json = await requestServer(url, payload, isNimServer)
+		this.setState({ waitingForSolution: false })
+
+		if (json.stackTrace) {
+			this.setState({ showError: true, errorObject: json })
+			return null
+		}
+		return json
 	}
 
 	render = () => {
-		return !this.state.waiting ? (
+		return !this.state.waitingForSolution ? (
 			<div>
-				<Forest trees={this.state.trees} nimServerPort={5000} />
+				<Forest requestHandler={this.makeRequest} trees={this.state.trees} nimServerPort={5000} />
 			</div>
 		) : (
 			<p>TEST WAITING FOR CORE</p>

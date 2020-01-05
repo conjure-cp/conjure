@@ -182,7 +182,11 @@ class Root extends React.Component<any, State> {
 						}}
 					/>
 				</StageHeader>
-				<Forest trees={this.state.trees} nimServerPort={this.state.nimServerPort} />
+				<Forest
+					requestHandler={this.makeRequest}
+					trees={this.state.trees}
+					nimServerPort={this.state.nimServerPort}
+				/>
 			</div>
 		) : (
 			<div>
