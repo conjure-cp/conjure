@@ -10,6 +10,8 @@ import { InitResponse } from '../../server/server'
 import { ConfigForm } from './components/config/ConfigForm'
 import { requestServer } from './modules/TreeHelper'
 
+var Loader = require('react-loader')
+
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
 
@@ -37,7 +39,8 @@ interface State {
 	nimServerPort: number
 	vscodeServerPort: number
 	filesReceived: boolean
-	waiting: boolean
+	waitingForSolution: boolean
+	invalidateWaiting: boolean
 	showError: boolean
 	errorObject: Error
 }
@@ -48,7 +51,8 @@ class Root extends React.Component<any, State> {
 	constructor(props: any) {
 		super(props)
 		this.state = {
-			waiting: false,
+			waitingForSolution: false,
+			invalidateWaiting: false,
 			filesReceived: false,
 			trees: undefined,
 			isCollapsed: false,
@@ -89,7 +93,7 @@ class Root extends React.Component<any, State> {
 			isCollapsed: true,
 			trees: data.trees,
 			nimServerPort: data.nimServerPort,
-			waiting: false,
+			waitingForSolution: false,
 		})
 		this.getFiles()
 	}
@@ -120,9 +124,9 @@ class Root extends React.Component<any, State> {
 	}
 
 	makeRequest = async (url: string, payload: string | null, isNimServer: boolean) => {
-		this.setState({ waiting: true })
+		this.setState({ waitingForSolution: true })
 		const json = await requestServer(url, payload, isNimServer)
-		this.setState({ waiting: false })
+		this.setState({ waitingForSolution: false })
 
 		if (json.stackTrace) {
 			this.setState({ showError: true, errorObject: json })
@@ -144,20 +148,27 @@ class Root extends React.Component<any, State> {
 					// isCollapsed={true}
 					// collapseHandler={this.collapseHandler}
 				>
-					<button
-						className='btn btn-danger btn-lg btn-block mb-2'
-						onClick={async () => {
-							console.log('Should invalidate caches!')
-							await fetch(`http://localhost:${this.state.vscodeServerPort}/config/invalidateCaches`)
-							await this.getFiles()
-							console.log('Done!!')
-						}}
-					>
-						Invalidate Caches
-					</button>
+					<Loader loaded={!this.state.invalidateWaiting}>
+						<button
+							className='btn btn-danger btn-lg btn-block mb-2'
+							onClick={async () => {
+								this.setState({ invalidateWaiting: true })
+
+								await this.makeRequest(
+									`http://localhost:${this.state.vscodeServerPort}/config/invalidateCaches`,
+									null,
+									false,
+								)
+								this.setState({ invalidateWaiting: false })
+							}}
+						>
+							Invalidate Caches
+						</button>
+					</Loader>
+
 					<ConfigForm
 						caches={this.state.allCaches}
-						waiting={this.state.waiting}
+						waiting={this.state.waitingForSolution}
 						modelToReps={this.state.modelToReps}
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
@@ -167,9 +178,6 @@ class Root extends React.Component<any, State> {
 								JSON.stringify(values),
 								false,
 							)
-							if (!res) {
-								return
-							}
 							this.initResponseHandler(res)
 						}}
 					/>
