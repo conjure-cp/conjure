@@ -40,4 +40,18 @@ describe('propsValidationTests', () => {
 		cy.visit('/')
 		cy.contains('There exists an essenceFile without a corresponding "reps" field.')
 	})
+
+	it('no files endpoint', () => {
+		cy.server()
+		cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:noCaches.json')
+		cy.visit('/')
+		cy.contains('config/files')
+	})
+
+	it('no caches endpoint', () => {
+		cy.server()
+		cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:weirdFileNames.json')
+		cy.visit('/')
+		cy.contains('config/caches')
+	})
 })

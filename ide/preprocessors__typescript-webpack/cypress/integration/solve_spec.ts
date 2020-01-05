@@ -11,7 +11,7 @@ describe('solving', () => {
 			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:serverError.json')
 			cy.visit('/')
 			cy.get('.loadedContent > .btn').click()
-			cy.contains('SERVER ERROR')
+			cy.contains('ERROR')
 		})
 	})
 	describe('server error text', () => {
@@ -22,7 +22,7 @@ describe('solving', () => {
 			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:notEvenJson.txt')
 			cy.visit('/')
 			cy.get('.loadedContent > .btn').click()
-			cy.contains('SERVER ERROR')
+			cy.contains('ERROR')
 		})
 	})
 

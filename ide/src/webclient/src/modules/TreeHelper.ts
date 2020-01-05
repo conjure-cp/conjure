@@ -228,22 +228,26 @@ export const insertNodes = (nodes: Node[], nextId: number, instance: TreeContain
 	})
 }
 
-export const requestServer = async (url: string, method: string, payload: string, nim: boolean) => {
+export const requestServer = async (url: string, payload: string | null, nim: boolean) => {
+	const reqInfo = {
+		method: payload ? 'POST' : 'GET',
+		headers: {
+			Accept: 'application/json, text/plain, */*',
+			'Content-Type': 'application/json',
+		},
+		body: payload ? JSON.stringify(payload) : null,
+	}
+
 	try {
-		const res = await fetch(url, {
-			method: method,
-			headers: {
-				Accept: 'application/json, text/plain, */*',
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(payload),
-		})
+		const res = await fetch(url, reqInfo)
 		const json = await res.json()
 		return json
 	} catch (error) {
 		return {
 			stackTrace: error.message,
 			message: `Failed to make request to ${nim ? 'nim' : 'vscode'} server.`,
+			url: url,
+			reqInfo: reqInfo,
 		}
 	}
 }

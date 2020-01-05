@@ -21,6 +21,8 @@ if (process.env.NODE_ENV !== 'production') {
 interface Error {
 	stackTrace: string
 	message: string
+	url: string
+	reqInfo: any
 }
 
 interface State {
@@ -34,7 +36,7 @@ interface State {
 	modelToReps: RepMap
 	nimServerPort: number
 	vscodeServerPort: number
-	canRender: boolean
+	filesReceived: boolean
 	waiting: boolean
 	showError: boolean
 	errorObject: Error
@@ -47,7 +49,7 @@ class Root extends React.Component<any, State> {
 		super(props)
 		this.state = {
 			waiting: false,
-			canRender: false,
+			filesReceived: false,
 			trees: undefined,
 			isCollapsed: false,
 			diff: false,
@@ -58,7 +60,7 @@ class Root extends React.Component<any, State> {
 			nimServerPort: 5000,
 			vscodeServerPort: Number(document.getElementById('port')!.getAttribute('vscodeserverport')),
 			showError: false,
-			errorObject: { message: 'No error', stackTrace: 'No stack trace' },
+			errorObject: { message: 'No error', stackTrace: 'No stack trace', url: 'nourl', reqInfo: 'noInfo' },
 		}
 		console.log('hello')
 	}
@@ -93,35 +95,33 @@ class Root extends React.Component<any, State> {
 	}
 
 	getFiles = async () => {
-		await fetch(`http://localhost:${this.state.vscodeServerPort}/config/files`)
-			.then((response) => response.json())
-			.then((data) => {
-				this.setState({
-					paramFiles: data.paramFiles,
-					essenceFiles: data.essenceFiles,
-					modelToReps: data.modelToReps,
-				})
-				return
-			})
-			.then(() => {
-				fetch(`http://localhost:${this.state.vscodeServerPort}/config/caches`)
-					.then((response) => response.json())
-					.then((data) => {
-						this.setState({
-							allCaches: data,
-						})
-					})
-			})
-			.then(() => this.setState({ canRender: true }))
+		const filesRes = await this.makeRequest(
+			`http://localhost:${this.state.vscodeServerPort}/config/files`,
+			null,
+			false,
+		)
+
+		this.setState({
+			paramFiles: filesRes.paramFiles,
+			essenceFiles: filesRes.essenceFiles,
+			modelToReps: filesRes.modelToReps,
+		})
+
+		const cachesRes = await this.makeRequest(
+			`http://localhost:${this.state.vscodeServerPort}/config/caches`,
+			null,
+			false,
+		)
+		this.setState({ allCaches: cachesRes, filesReceived: true })
 	}
 
 	componentDidMount = () => {
 		this.getFiles()
 	}
 
-	makeRequest = async (url: string, method: string, payload: any, isNimServer: boolean) => {
+	makeRequest = async (url: string, payload: string | null, isNimServer: boolean) => {
 		this.setState({ waiting: true })
-		const json = await requestServer(url, method, JSON.stringify(payload), isNimServer)
+		const json = await requestServer(url, payload, isNimServer)
 		this.setState({ waiting: false })
 
 		if (json.stackTrace) {
@@ -135,7 +135,7 @@ class Root extends React.Component<any, State> {
 		// console.log('prinitg the state')
 		// console.log(this.state.allCaches)
 
-		return this.state.canRender ? !this.state.showError ? (
+		return !this.state.showError ? (
 			<div>
 				<StageHeader
 					title={'Setup'}
@@ -164,8 +164,7 @@ class Root extends React.Component<any, State> {
 						submitHandler={async (values) => {
 							const res = await this.makeRequest(
 								`http://localhost:${this.state.vscodeServerPort}/config/solve`,
-								'post',
-								values,
+								JSON.stringify(values),
 								false,
 							)
 							if (!res) {
@@ -179,12 +178,12 @@ class Root extends React.Component<any, State> {
 			</div>
 		) : (
 			<div>
-				<p>SERVER ERROR</p>
+				<p>ERROR</p>
 				<p>{this.state.errorObject.message}</p>
 				<p>{this.state.errorObject.stackTrace}</p>
+				<p>{this.state.errorObject.url}</p>
+				<p>{JSON.stringify(this.state.errorObject.reqInfo)}</p>
 			</div>
-		) : (
-			<p>Waiting for response...</p>
 		)
 	}
 }
