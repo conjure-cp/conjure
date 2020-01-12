@@ -130,4 +130,16 @@ describe('tree vis', () => {
 
 		cy.get('#tree0thegroup g circle').should('have.length', 33)
 	})
+
+	it.only('can go to previous node by loading ancestors', () => {
+		cy.get(':nth-child(4) > :nth-child(3)').click()
+
+		cy.wait(500)
+
+		for (let i = 0; i < 3; i++) {
+			cy.get('#treeSVG').type('{shift}', { delay: 0 })
+		}
+
+		cy.contains('Domains at 29')
+	})
 })

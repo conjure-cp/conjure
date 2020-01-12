@@ -246,23 +246,13 @@ export const goLeft = async (instance: TreeContainer) => {
 		depth: instance.props.loadDepth,
 	}
 
-	// await fetch(`http://localhost:${instance.props.nimServerPort}/loadNodes`, {
-	// 	method: 'post',
-	// 	headers: headers,
-	// 	body: JSON.stringify(payload),
-	// })
-	// 	.then((data) => data.json())
-	// 	.then((nodes) => TreeHelper.insertNodes(nodes, instance.state.selected, instance))
-
 	const res = await instance.props.requestHandler(
 		`http://localhost:${instance.props.nimServerPort}/loadNodes`,
 		JSON.stringify(payload),
 		true,
 	)
 	console.log(instance.props.nimServerPort)
-	// console.log('here')
 	TreeHelper.insertNodes(res, instance.state.selected, instance)
-	// console.log('here')
 }
 
 export const goPrev = (instance: TreeContainer, start?: number) => {
