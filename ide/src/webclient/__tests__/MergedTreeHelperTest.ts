@@ -5,7 +5,6 @@ import {
   getDescList,
   assignTreeIds
 } from "../src/modules/ForestHelper"
-import { fetchAncestors, goLeftBoyo } from "../src/modules/MovementHelper"
 // import { FetchMock} from "jest-fetch-mock"
 import { cloneDeep } from "lodash"
 import * as d3 from "d3"

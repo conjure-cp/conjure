@@ -55,3 +55,25 @@ describe('propsValidationTests', () => {
 		cy.contains('config/caches')
 	})
 })
+
+describe('nimServerProblems', () => {
+	beforeEach('setup', () => {
+		cy.server()
+		cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
+		cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:files.json')
+		cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:normal-8/initialResponseWrongNimPort.json')
+		cy.visit('/')
+		cy.get('form > .loadedContent > .btn').click()
+	})
+
+	it.only('shows error message if cannot make request to nim server', () => {
+		cy.wait(1000)
+
+		for (let i = 0; i < 4; i++) {
+			cy.get('#treeSVG').type('s', { delay: 500 })
+		}
+
+		cy.contains('ERROR')
+		cy.contains('nim')
+	})
+})

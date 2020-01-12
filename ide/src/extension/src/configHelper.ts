@@ -43,7 +43,7 @@ export default class ConfigureHelper {
 	public static makePromise(
 		needToGenerate: ToProcess[],
 		progress: vscode.Progress<{}>,
-		token: vscode.CancellationToken
+		token: vscode.CancellationToken,
 	) {
 		return new Promise((resolve, reject) => {
 			const pIncrement = 5
@@ -55,14 +55,13 @@ export default class ConfigureHelper {
 			for (let i = 0; i < needToGenerate.length; i++) {
 				const obj = needToGenerate[i]
 
-				console.log('FUCC')
 				const proc = spawn('conjure', obj.args, {
 					shell: true,
 					env: {
-						PATH: process.env.PATH
+						PATH: process.env.PATH,
 					},
 					cwd: this.cacheFolderPath,
-					detached: true
+					detached: true,
 				})
 
 				procs.push(proc)
@@ -72,7 +71,7 @@ export default class ConfigureHelper {
 				progress.report({
 					message: `${this.getProgressMessage(doneCount, needToGenerate.length, proc, pid2JobId)}
                              Generating models..`,
-					increment: pIncrement
+					increment: pIncrement,
 				})
 
 				let errorMessage = ''
@@ -85,21 +84,21 @@ export default class ConfigureHelper {
 						progress.report({
 							message: `${this.getProgressMessage(doneCount, needToGenerate.length, proc, pid2JobId)}
                                 Running savilerow..`,
-							increment: pIncrement
+							increment: pIncrement,
 						})
 					}
 					if (data.includes('domain')) {
 						progress.report({
 							message: `${this.getProgressMessage(doneCount, needToGenerate.length, proc, pid2JobId)}
                                 Domain filtering..`,
-							increment: pIncrement
+							increment: pIncrement,
 						})
 					}
 					if (data.includes('solver')) {
 						progress.report({
 							message: `${this.getProgressMessage(doneCount, needToGenerate.length, proc, pid2JobId)}
                                 Running Minion..`,
-							increment: pIncrement
+							increment: pIncrement,
 						})
 					}
 				})
@@ -115,14 +114,14 @@ export default class ConfigureHelper {
 					progress.report({
 						message: `${this.getProgressMessage(doneCount, needToGenerate.length, proc, pid2JobId)}
                                 Running Minion..`,
-						increment: pIncrement
+						increment: pIncrement,
 					})
 
 					fs.writeFileSync(
 						path.join(this.cacheFolderPath, obj.name, this.cacheFileName),
 						JSON.stringify({
-							config: obj.config
-						})
+							config: obj.config,
+						}),
 					)
 
 					fs.writeFileSync(path.join(this.cacheFolderPath, obj.name, `${obj.hash}.hash`), '')
@@ -184,7 +183,7 @@ export default class ConfigureHelper {
 				args: args,
 				hash: hash,
 				config: cache.config,
-				name: cache.name
+				name: cache.name,
 			}
 
 			const hashes = await vscode.workspace.findFiles('**/*.hash')
@@ -236,7 +235,7 @@ export default class ConfigureHelper {
 			'configure', // Identifies the type of the webview. Used internally
 			'Configuration Chooser', // Title of the panel displayed to the user
 			vscode.ViewColumn.One, // Editor column to show the new webview panel in.
-			{ enableScripts: true } // Allow scripts for the webview
+			{ enableScripts: true }, // Allow scripts for the webview
 		)
 
 		panel.webview.html = this.getWebContent()
@@ -284,7 +283,7 @@ export default class ConfigureHelper {
 			dir: 'rtl',
 			head: '<meta name="description" content="example">',
 			body: htmlContent,
-			favicon: 'favicon.png'
+			favicon: 'favicon.png',
 		})
 		return htmlFile
 	}

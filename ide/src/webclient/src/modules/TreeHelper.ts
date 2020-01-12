@@ -230,14 +230,13 @@ export const insertNodes = (nodes: Node[], nextId: number, instance: TreeContain
 
 export const requestServer = async (url: string, payload: string | null, nim: boolean) => {
 	const reqInfo = {
-		method: payload ? 'POST' : 'GET',
+		method: payload ? 'post' : 'get',
 		headers: {
 			Accept: 'application/json, text/plain, */*',
 			'Content-Type': 'application/json',
 		},
-		body: payload ? JSON.stringify(payload) : null,
+		body: payload,
 	}
-
 	try {
 		const res = await fetch(url, reqInfo)
 		const json = await res.json()

@@ -89,6 +89,7 @@ class Root extends React.Component<any, State> {
 	// }
 
 	initResponseHandler = (data: InitResponse) => {
+		console.log(data)
 		this.setState({
 			isCollapsed: true,
 			trees: data.trees,

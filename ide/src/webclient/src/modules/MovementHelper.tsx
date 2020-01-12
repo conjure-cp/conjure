@@ -246,13 +246,23 @@ export const goLeft = async (instance: TreeContainer) => {
 		depth: instance.props.loadDepth,
 	}
 
-	await fetch(`http://localhost:${instance.props.nimServerPort}/loadNodes`, {
-		method: 'post',
-		headers: headers,
-		body: JSON.stringify(payload),
-	})
-		.then((data) => data.json())
-		.then((nodes) => TreeHelper.insertNodes(nodes, instance.state.selected, instance))
+	// await fetch(`http://localhost:${instance.props.nimServerPort}/loadNodes`, {
+	// 	method: 'post',
+	// 	headers: headers,
+	// 	body: JSON.stringify(payload),
+	// })
+	// 	.then((data) => data.json())
+	// 	.then((nodes) => TreeHelper.insertNodes(nodes, instance.state.selected, instance))
+
+	const res = await instance.props.requestHandler(
+		`http://localhost:${instance.props.nimServerPort}/loadNodes`,
+		JSON.stringify(payload),
+		true,
+	)
+	console.log(instance.props.nimServerPort)
+	// console.log('here')
+	TreeHelper.insertNodes(res, instance.state.selected, instance)
+	// console.log('here')
 }
 
 export const goPrev = (instance: TreeContainer, start?: number) => {
@@ -274,7 +284,7 @@ export const goPrev = (instance: TreeContainer, start?: number) => {
 
 	loadAncestors(instance.props.path, nextId, instance)
 }
-export const fetchAncestors = async (path: string, nodeId: number, nimServerPort: number): Promise<Node[]> => {
+export const fetchAncestorsSingle = async (path: string, nodeId: number, nimServerPort: number): Promise<Node[]> => {
 	const payload = {
 		path: path,
 		nodeId: nodeId,
@@ -293,7 +303,7 @@ export const fetchAncestors = async (path: string, nodeId: number, nimServerPort
 }
 
 export const loadAncestors = async (path: string, nodeId: number, instance: TreeContainer) => {
-	const nodes = await fetchAncestors(path, nodeId, instance.props.nimServerPort)
+	const nodes = await fetchAncestorsSingle(path, nodeId, instance.props.nimServerPort)
 	TreeHelper.insertNodes(nodes, nodeId, instance)
 }
 

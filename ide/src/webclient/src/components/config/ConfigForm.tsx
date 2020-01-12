@@ -31,7 +31,7 @@ interface Values {
 export class ConfigForm extends React.Component<Props, State> {
 	state = {
 		diff: false,
-		currentCache: undefined
+		currentCache: undefined,
 	}
 
 	validateProps = () => {
@@ -52,8 +52,6 @@ export class ConfigForm extends React.Component<Props, State> {
 		}
 
 		for (const essenceFile of this.props.essenceFiles) {
-			console.log(this.props)
-
 			if (!this.props.modelToReps[essenceFile]) {
 				return 'There exists an essenceFile without a corresponding "reps" field.'
 			}
@@ -66,7 +64,7 @@ export class ConfigForm extends React.Component<Props, State> {
 		const initialCache = {
 			...newCache(),
 			essenceFile: this.props.essenceFiles[0],
-			paramFile: this.props.paramFiles[0]
+			paramFile: this.props.paramFiles[0],
 		}
 
 		const initialValues = { caches: [ initialCache, cloneDeep(initialCache) ] }

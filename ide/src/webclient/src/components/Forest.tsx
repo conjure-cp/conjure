@@ -111,8 +111,8 @@ class Forest extends React.Component<Props, State> {
 		if (this.props.trees) {
 			// console.log(JSON.stringify(this.props.trees[0].core))
 			// console.log(JSON.stringify(this.props.trees[1].core))
-			console.log(JSON.stringify(this.state.diffPoints))
-			console.log(this.state.diffPoints)
+			// console.log(JSON.stringify(this.state.diffPoints))
+			// console.log(this.state.diffPoints)
 			// console.log(JSON.stringify(this.state.augmentedIds))
 		}
 

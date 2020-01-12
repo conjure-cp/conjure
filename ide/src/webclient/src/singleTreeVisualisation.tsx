@@ -69,16 +69,16 @@ class Root extends React.Component<any, State> {
 		this.setState({ waitingForSolution: true })
 		const json = await requestServer(url, payload, isNimServer)
 		this.setState({ waitingForSolution: false })
-
 		if (json.stackTrace) {
 			this.setState({ showError: true, errorObject: json })
 			return null
 		}
+		console.log(json)
 		return json
 	}
 
 	render = () => {
-		return !this.state.waitingForSolution ? (
+		return (
 			<div>
 				<Forest
 					requestHandler={this.makeRequest}
@@ -86,8 +86,6 @@ class Root extends React.Component<any, State> {
 					nimServerPort={this.state.nimServerPort}
 				/>
 			</div>
-		) : (
-			<p>TEST WAITING FOR CORE</p>
 		)
 	}
 }

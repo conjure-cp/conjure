@@ -1,15 +1,5 @@
 import { vscodeServerBase } from '../support'
 
-// it.only('shows error message if cannot make request to nim server', () => {
-// 	cy.server()
-// 	cy.route('GET', `${vscodeServerBase}/test/tree`, 'fixture:normal-8/initialResponseWrongNimPort.json')
-
-// 	cy.visit('/singleTreeVisualisation.html')
-// 	for (let i = 0; i < 10; i++) {
-// 		cy.get('#treeSVG').type('s', { delay: 1000 })
-// 	}
-// })
-
 describe('tree vis', () => {
 	beforeEach('setup', () => {
 		cy.server() // enable response stubbing

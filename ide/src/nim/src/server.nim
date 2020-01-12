@@ -7,8 +7,15 @@ import util/response
 
 
 router mainRouter:
+    options re"(.*)":
+        resp(Http200, [
+            ("Access-Control-Allow-Origin", "*"),
+            ("Access-Control-Allow-Headers", "content-type"),
+            ("Access-Control-Allow-Method", "POST")
+        ], "ok")
+
     get "/":
-       resp readFile("/home/tom/conjure/ide/src/webview/ts/test.html")
+        resp readFile("/home/tom/conjure/ide/src/webview/ts/test.html")
 
     get re"/init/(.*)":
         let path = request.matches[0]
@@ -20,7 +27,7 @@ router mainRouter:
         # except:
         #     let e = getCurrentException()
         #     let msg = getCurrentExceptionMsg()
-            
+
         #     echo msg
 
         #     resp(Http200, [("Access-Control-Allow-Origin", "*")], ${"error":msg})
@@ -30,21 +37,34 @@ router mainRouter:
 
     post "/simpleDomains":
         let json = parseJson($request.body)
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadSimpleDomains(json["path"].getStr(), $json["nodeId"].getInt(), true)))
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(
+                %loadSimpleDomains(json["path"].getStr(), $json[
+                "nodeId"].getInt(), true)))
 
     post "/loadNodes":
         let json = parseJson($request.body)
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadNodes(json["path"].getStr(), $json["nodeId"].getInt(), $json["depth"].getInt())))
+        resp(
+            Http200,
+            [("Access-Control-Allow-Origin", "*")],
+            $(
+                %loadNodes(
+                    json["path"].getStr(),
+                    $json["nodeId"].getInt(),
+                    $json["depth"].getInt()))
+            )
 
     post "/loadAncestors":
         let json = parseJson($request.body)
         echo json
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(json["path"].getStr(), $json["nodeId"].getInt())))
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(%loadAncestors(
+                json["path"].getStr(), $json["nodeId"].getInt())))
 
     post "/diff":
         let json = parseJson($request.body)
-        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(diffHandler(json["path1"].getStr(), $json["path2"].getStr(),json["hash1"].getStr(), $json["hash2"].getStr())))
-    
+        resp(Http200, [("Access-Control-Allow-Origin", "*")], $(diffHandler(
+                json["path1"].getStr(), $json["path2"].getStr(), json[
+                "hash1"].getStr(), $json["hash2"].getStr())))
+
 
     # get "/longestBranchingVariable":
     #     resp(Http200, [("Access-Control-Allow-Origin", "*")], getLongestBranchingVarName())
@@ -54,17 +74,17 @@ router mainRouter:
 
 
 proc main() =
-    
-    var port : int
-    if paramCount() == 0 :
+
+    var port: int
+    if paramCount() == 0:
         port = 5000
     else:
         port = paramStr(1).parseInt()
 
     echo "NIM SERVER STARTING ON " & $port
 
-    let settings = newSettings(port=Port(port))
-    var jester = initJester(mainRouter, settings=settings)
+    let settings = newSettings(port = Port(port))
+    var jester = initJester(mainRouter, settings = settings)
     jester.serve()
 
 when isMainModule:
