@@ -66,11 +66,24 @@ describe('nimServerProblems', () => {
 		cy.get('form > .loadedContent > .btn').click()
 	})
 
-	it.only('shows error message if cannot make request to nim server', () => {
+	it('shows error message if cannot make request to nim server when going to next', () => {
 		cy.wait(1000)
 
 		for (let i = 0; i < 4; i++) {
 			cy.get('#treeSVG').type('s', { delay: 500 })
+		}
+
+		cy.contains('ERROR')
+		cy.contains('nim')
+	})
+
+	it('shows error message if cannot make request to nim server when going to previous', () => {
+		cy.get(':nth-child(4) > :nth-child(3)').click()
+
+		cy.wait(1000)
+
+		for (let i = 0; i < 3; i++) {
+			cy.get('#treeSVG').type('{shift}', { delay: 500 })
 		}
 
 		cy.contains('ERROR')

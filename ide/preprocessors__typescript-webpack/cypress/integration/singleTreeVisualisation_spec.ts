@@ -131,7 +131,7 @@ describe('tree vis', () => {
 		cy.get('#tree0thegroup g circle').should('have.length', 33)
 	})
 
-	it.only('can go to previous node by loading ancestors', () => {
+	it('can go to previous node by loading ancestors', () => {
 		cy.get(':nth-child(4) > :nth-child(3)').click()
 
 		cy.wait(500)

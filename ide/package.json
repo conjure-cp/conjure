@@ -8,8 +8,13 @@
 		"vscode": "^1.36.0"
 	},
 	"main": "./out/extension",
-	"categories": [ "Programming Languages", "Formatters" ],
-	"activationEvents": [ "*" ],
+	"categories": [
+		"Programming Languages",
+		"Formatters"
+	],
+	"activationEvents": [
+		"*"
+	],
 	"contributes": {
 		"commands": [
 			{
@@ -46,7 +51,10 @@
 		"languages": [
 			{
 				"id": "essence",
-				"aliases": [ "Essence", "essence" ],
+				"aliases": [
+					"Essence",
+					"essence"
+				],
 				"extensions": [
 					".essence",
 					".eprime",
@@ -88,6 +96,8 @@
 		"@types/node": "^8.10.59",
 		"awesome-typescript-loader": "^5.2.1",
 		"css-loader": "^3.0.0",
+		"cypress": "^3.8.2",
+		"cypress-react-unit-test": "^2.4.3",
 		"cypress-skip-and-only-ui": "^1.2.6",
 		"eslint": "^5.16.0",
 		"eslint-config-prettier": "^4.3.0",

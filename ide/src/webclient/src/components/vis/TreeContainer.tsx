@@ -180,7 +180,7 @@ export class TreeContainer extends React.Component<Props, State> {
 		}
 
 		if (this.props.selected !== prevProps.selected) {
-			MovementHelper.loadAncestors(this.props.path, this.props.selected, this)
+			MovementHelper.loadAncestors(this.props.selected, this)
 		}
 	}
 
