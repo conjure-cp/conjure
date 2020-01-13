@@ -1,18 +1,31 @@
 import { vscodeServerBase } from '../support'
 
+// import React from 'react's
+
+// import Forest from '../../../src/webclient/src/components/Forest'
+
+// const trees = require('../fixtures/normal-8/initialRespose.json')
 describe('tree vis', () => {
 	beforeEach('setup', () => {
-		cy.server() // enable response stubbing
-		cy.route('GET', `${vscodeServerBase}/test/tree`, 'fixture:normal-8/initialResponse.json')
-		// cy.route('POST', `${vscodeServerBase}/loadNode`, 'fixture:normal-8/childrenOf4.json')
-		//     .route('POST', `${vscodeServerBase}/loadNode`, 'fixture:normal-8/childrenOf4.json')
-
 		cy.request(
 			'http://localhost:5000/init//Users/tom/Documents/SearchTreeVisualisationTests/testData/diff/default-findAllSols-8/normal',
 		)
-
+		cy.server() // enable response stubbing
+		cy.route('GET', `${vscodeServerBase}/test/tree`, 'fixture:normal-8/initialResponse.json')
 		cy.visit('/singleTreeVisualisation.html')
 		cy.wait(1000)
+
+		// cy.mount(<div></div>)
+
+		// cy.mount(((
+		// 	<Forest
+		// 		trees={trees}
+		// 		nimServerPort={5000}
+		// 		requestHandler={() => {
+		// 			console.log('req')
+		// 		}}
+		// 	/>
+		// ) as unknown) as Symbol)
 	})
 
 	it('Checks that the next failed branch works', () => {

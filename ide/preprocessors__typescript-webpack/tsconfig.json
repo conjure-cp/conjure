@@ -4,6 +4,8 @@
     "module": "commonjs",
     "skipLibCheck": true,
     "strict": true,
+    "jsx": "react",
+    "esModuleInterop": true,
     "types": [
       // load Cypress global type
       "cypress",
@@ -12,6 +14,7 @@
   },
   "include": [
     // process only spec files
-    "cypress/**/*.ts"
+    "cypress/**/*.ts",
+    "cypress/integration/singleTreeVisualisation_spec.tsx"
   ]
 }

@@ -15,6 +15,7 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+// import 'cypress-react-unit-test'
 require('cypress-skip-and-only-ui/support')
 
 Cypress.on('window:before:load', (win) => {
