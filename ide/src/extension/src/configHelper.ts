@@ -174,7 +174,8 @@ export default class ConfigureHelper {
 		for (let i = 0; i < list.length; i++) {
 			const cache = list[i]
 
-			const hash = hasher(cache.config)
+			// need to read in the source files in case theyve been modified
+			const hash = hasher(cache)
 			const args = cacheToArgs(cache, this.cacheFolderPath, hash)
 
 			const obj = {
