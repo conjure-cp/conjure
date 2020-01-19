@@ -35,6 +35,7 @@ describe('Homepage', () => {
 		})
 
 		it('Checks time field in SR', () => {
+			cy.contains('Savile Row').click()
 			cy.get('input[name="caches[0].config.srConfig.srTime"]').type('srText1')
 			cy.get('input[name="caches[0].config.srConfig.srTime"]').should('have.value', 'srText1')
 			cy.contains('Leave empty or specify an integer > 0')

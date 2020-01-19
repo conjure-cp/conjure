@@ -1,4 +1,4 @@
-import { vscodeServerBase } from '../support'
+import { vscodeServerBase, delay } from '../support'
 
 describe('propsValidationTests', () => {
 	it('shows an error messsage if there are no essence files', () => {
@@ -67,10 +67,10 @@ describe('nimServerProblems', () => {
 	})
 
 	it('shows error message if cannot make request to nim server when going to next', () => {
-		cy.wait(1000)
+		cy.wait(delay)
 
 		for (let i = 0; i < 4; i++) {
-			cy.get('#treeSVG').type('s', { delay: 500 })
+			cy.get('#treeSVG').type('s', { delay: delay })
 		}
 
 		cy.contains('ERROR')
@@ -80,10 +80,10 @@ describe('nimServerProblems', () => {
 	it('shows error message if cannot make request to nim server when going to previous', () => {
 		cy.get(':nth-child(4) > :nth-child(3)').click()
 
-		cy.wait(1000)
+		cy.wait(delay)
 
 		for (let i = 0; i < 3; i++) {
-			cy.get('#treeSVG').type('{shift}', { delay: 500 })
+			cy.get('#treeSVG').type('{shift}', { delay: delay })
 		}
 
 		cy.contains('ERROR')

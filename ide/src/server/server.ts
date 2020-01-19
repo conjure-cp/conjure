@@ -40,9 +40,9 @@ class HTMlService {
 	getPage(): string {
 		let html =
 			fs.readFileSync(path.join(context.extensionPath, './index.html')).toString() +
-			`
+			` 
       <div id="port" vscodeServerPort="${thisServerPort}"></div>
-    <script>${fs.readFileSync(path.join(context.extensionPath, 'dist/configBundle.js')).toString()}</script>
+    <script>${fs.readFileSync(path.join(context.extensionPath, 'dist/main.js')).toString()}</script>
   </body>
 </html>
       `
@@ -76,10 +76,10 @@ class ConfigService {
 					name: path.basename(path.dirname(uri.path)),
 					config: file.config,
 					essenceFile: file.essenceFile,
-					paramFile: file.paramFile
+					paramFile: file.paramFile,
 				}
 			}),
-			[ 'name' ]
+			[ 'name' ],
 		).reverse()
 	}
 
@@ -92,7 +92,7 @@ class ConfigService {
 		let reps = models.map((model) => {
 			return {
 				name: this.toRel(model),
-				representations: JSON.parse(execSync(`conjure ide ${model.path} --dump-representations`).toString())
+				representations: JSON.parse(execSync(`conjure ide ${model.path} --dump-representations`).toString()),
 			}
 		})
 
@@ -105,7 +105,7 @@ class ConfigService {
 		const res = {
 			essenceFiles: models.map((uri) => this.toRel(uri)).sort(collator.compare),
 			paramFiles: params.map((uri) => this.toRel(uri)).sort(collator.compare),
-			modelToReps: map
+			modelToReps: map,
 		}
 		console.log(JSON.stringify(res))
 		return res
@@ -120,27 +120,31 @@ class ConfigService {
 		// vscode.window.showErrorMessage("Configs are the same! aborting..")
 		// return
 
-		let jobs = configsAreTheSame ? [ list[0] ] : list
+		if (configsAreTheSame) {
+			list.pop()
+		}
 
-		const { needToGenerate, loadFromCache } = await ConfigHelper.separateJobs(jobs)
+		// let jobs = configsAreTheSame ? [ list[0] ] : list
+
+		const { needToGenerate, loadFromCache } = await ConfigHelper.separateJobs(list)
 
 		return vscode.window
 			.withProgress(
 				{
 					cancellable: true,
 					location: vscode.ProgressLocation.Notification,
-					title: 'Solving '
+					title: 'Solving ',
 				},
 				(progress, token) => {
 					return ConfigHelper.makePromise(needToGenerate, progress, token)
-				}
+				},
 			)
 			.then(() => {
 				return vscode.window.withProgress(
 					{
 						cancellable: false,
 						location: vscode.ProgressLocation.Notification,
-						title: 'Processing Tree'
+						title: 'Processing Tree',
 					},
 					async () => {
 						const inits = await Promise.all(
@@ -157,20 +161,20 @@ class ConfigService {
 								return {
 									hash: hasher(tree.config),
 									path: fullPath,
-									...json
+									...json,
 								}
-							})
+							}),
 						)
 
 						const response = {
 							trees: inits,
 							nimServerPort: nimServerPort,
-							vscodeServerPort: thisServerPort
+							vscodeServerPort: thisServerPort,
 						}
 
 						// console.log(inits)
 						return response
-					}
+					},
 				)
 			})
 	}

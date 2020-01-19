@@ -173,10 +173,14 @@ class Root extends React.Component<any, State> {
 						modelToReps={this.state.modelToReps}
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
-						submitHandler={async (values) => {
+						submitHandler={async (values, diffTrees) => {
+							if (!diffTrees) {
+								values.caches.pop()
+							}
+
 							const res = await this.makeRequest(
 								`http://localhost:${this.state.vscodeServerPort}/config/solve`,
-								JSON.stringify(values),
+								JSON.stringify(values.caches),
 								false,
 							)
 							this.initResponseHandler(res)

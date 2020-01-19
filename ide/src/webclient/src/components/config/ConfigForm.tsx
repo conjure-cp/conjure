@@ -16,7 +16,7 @@ interface Props {
 	modelToReps: RepMap
 	essenceFiles: string[]
 	paramFiles: string[]
-	submitHandler: (values: Values) => void
+	submitHandler: (values: Values, diff: boolean) => void
 }
 
 interface State {
@@ -74,7 +74,7 @@ export class ConfigForm extends React.Component<Props, State> {
 			<Formik
 				initialValues={initialValues}
 				onSubmit={(values) => {
-					this.props.submitHandler(values)
+					this.props.submitHandler(values, this.state.diff)
 				}}
 				validationSchema={validationSchema}
 				isInitialValid={() => validateYupSchema(initialValues, validationSchema, true) !== undefined}

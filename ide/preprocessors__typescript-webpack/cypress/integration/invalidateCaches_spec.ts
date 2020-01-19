@@ -11,6 +11,7 @@ describe('Homepage', () => {
 	it('shows error message when request failes', () => {
 		cy.wait(1000)
 		cy.contains('nval').click()
+		cy.wait(1000)
 		cy.contains('ERROR')
 		cy.contains('config/invalidateCaches')
 	})

@@ -57,12 +57,12 @@ export default class ConfigureHelper {
 
 				const proc = spawn('conjure', obj.args, {
 					shell: true,
-					env: {
-						PATH: process.env.PATH,
-					},
-					cwd: this.cacheFolderPath,
+					cwd: vscode.workspace.rootPath,
 					detached: true,
 				})
+
+				console.error('conjure ' + obj.args.join(' '))
+				console.error(this.cacheFolderPath)
 
 				procs.push(proc)
 
@@ -117,11 +117,9 @@ export default class ConfigureHelper {
 						increment: pIncrement,
 					})
 
-					fs.writeFileSync(
+					const folderName = fs.writeFileSync(
 						path.join(this.cacheFolderPath, obj.name, this.cacheFileName),
-						JSON.stringify({
-							config: obj.config,
-						}),
+						JSON.stringify(obj),
 					)
 
 					fs.writeFileSync(path.join(this.cacheFolderPath, obj.name, `${obj.hash}.hash`), '')
@@ -134,7 +132,7 @@ export default class ConfigureHelper {
 					} else {
 						kill(proc.pid)
 						vscode.window.showErrorMessage(`Config ${pid2JobId[proc.pid]} | ${errorMessage}`)
-						rimraf.sync(path.join(vscode.workspace.rootPath!, obj.hash))
+						// rimraf.sync(path.join(vscode.workspace.rootPath!, obj.hash))
 						reject()
 					}
 
@@ -158,7 +156,7 @@ export default class ConfigureHelper {
 
 					console.log('canceled')
 
-					needToGenerate.map((j) => rimraf.sync(path.join(this.cacheFolderPath, j.name)))
+					// needToGenerate.map((j) => rimraf.sync(path.join(this.cacheFolderPath, j.name)))
 				})
 			}
 			if (needToGenerate.length === 0) {
@@ -182,8 +180,9 @@ export default class ConfigureHelper {
 			const obj = {
 				args: args,
 				hash: hash,
-				config: cache.config,
-				name: cache.name,
+				...cache,
+				// config: cache.config,
+				// name: cache.name,
 			}
 
 			const hashes = await vscode.workspace.findFiles('**/*.hash')
@@ -204,7 +203,7 @@ export default class ConfigureHelper {
 				vscode.window.showInformationMessage(`Loading config${i + 1} from cache...`)
 			} else {
 				if (fs.existsSync(path.join(this.cacheFolderPath, obj.name))) {
-					rimraf.sync(path.join(this.cacheFolderPath, obj.name))
+					// rimraf.sync(path.join(this.cacheFolderPath, obj.name))
 				}
 				needToGenerate.push(obj)
 			}
@@ -219,10 +218,10 @@ export default class ConfigureHelper {
 
 	public static async invalidateCaches() {
 		let diffs = await vscode.workspace.findFiles(`**/diffCaches/*.json`)
-		diffs.map((file) => rimraf.sync(file.path))
+		// diffs.map((file) => rimraf.sync(file.path))
 
 		let caches = await vscode.workspace.findFiles(`**/${this.cacheFileName}`)
-		caches.map((file) => rimraf.sync(path.dirname(file.path)))
+		// caches.map((file) => rimraf.sync(path.dirname(file.path)))
 		vscode.window.showInformationMessage('Caches invalidated')
 	}
 

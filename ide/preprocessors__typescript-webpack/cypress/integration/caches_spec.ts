@@ -18,16 +18,13 @@ describe('Checks selecting the caches box', () => {
 			cy.contains('Conjure').click()
 			cy.contains('Savile Row').click()
 			cy.contains('a', 'Minion').click()
+			cy.wait(1000)
 		})
-
-		// What about configs without answers?
-
-		// This is only for config2, we still need to config 1
 
 		it('Pick config 1', () => {
 			const c1 = cachesJson[0]
 
-			cy.get('.css-1hwfws3').type('Config1')
+			cy.get('#cacheSelect').type('Config1')
 			cy.get('#react-select-2-option-1').click()
 
 			// cy.get('#conjure1 > .card-body > .row > .col > .input-group').type('123456')

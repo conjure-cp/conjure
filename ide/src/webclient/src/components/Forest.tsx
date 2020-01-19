@@ -54,8 +54,8 @@ class Forest extends React.Component<Props, State> {
 		super(props)
 		this.state = {
 			loadDepth: 1,
-			duration: 1000,
-			interval: 1000,
+			duration: 0,
+			interval: 0,
 			reverse: false,
 			playing: false,
 			collapseAsExploring: false,
