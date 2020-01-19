@@ -118,11 +118,11 @@ export default class ConfigureHelper {
 					})
 
 					const folderName = fs.writeFileSync(
-						path.join(this.cacheFolderPath, obj.name, this.cacheFileName),
+						path.join(this.cacheFolderPath, obj.hash, this.cacheFileName),
 						JSON.stringify(obj),
 					)
 
-					fs.writeFileSync(path.join(this.cacheFolderPath, obj.name, `${obj.hash}.hash`), '')
+					fs.writeFileSync(path.join(this.cacheFolderPath, obj.hash, `${obj.hash}.hash`), '')
 
 					console.log(`child process exited with code ${code}`)
 					console.error(errorMessage)
@@ -175,7 +175,7 @@ export default class ConfigureHelper {
 			const cache = list[i]
 
 			const hash = hasher(cache.config)
-			const args = cacheToArgs(cache, this.cacheFolderPath)
+			const args = cacheToArgs(cache, this.cacheFolderPath, hash)
 
 			const obj = {
 				args: args,

@@ -60,8 +60,9 @@ class ConfigService {
 
 	@Path('/invalidateCaches')
 	@GET
-	async invalidateCaches() {
+	async invalidateCaches(): Promise<any> {
 		await ConfigHelper.invalidateCaches()
+		return {}
 	}
 
 	@Path('/caches')
@@ -148,8 +149,8 @@ class ConfigService {
 					},
 					async () => {
 						const inits = await Promise.all(
-							list.map(async (tree) => {
-								const fullPath = path.join(ConfigHelper.cacheFolderPath, tree.name)
+							needToGenerate.concat(loadFromCache).map(async (tree) => {
+								const fullPath = path.join(ConfigHelper.cacheFolderPath, tree.hash)
 
 								const response = await fetch(`http://localhost:${nimServerPort}/init/${fullPath}`)
 
