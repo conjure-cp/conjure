@@ -29,8 +29,10 @@ cd lingeling-bbc-9230380-160707
 make -j
 mkdir -p ${BIN_DIR}
 cp lingeling ${BIN_DIR}/lingeling
+cp plingeling ${BIN_DIR}/plingeling
 echo "lingeling executable is at ${BIN_DIR}/lingeling"
-ls -l ${BIN_DIR}/lingeling
+echo "plingeling executable is at ${BIN_DIR}/plingeling"
+ls -l ${BIN_DIR}/lingeling ${BIN_DIR}/plingeling
 popd
 rm -rf ${BIN_DIR}/tmp-install-lingeling
 

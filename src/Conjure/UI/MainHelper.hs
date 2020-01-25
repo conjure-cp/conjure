@@ -289,6 +289,7 @@ mainWithArgs config@Solve{..} = do
                       , ( "glucose"         , "glucose" )
                       , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
+                      , ( "plingeling"      , "plingeling" )
                       , ( "minisat"         , "minisat" )
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
                       , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
@@ -610,6 +611,10 @@ srMkArgs Solve{..} outBase modelPath = do
         "lingeling"         -> return [ "-sat"
                                       , "-sat-family", "lingeling"
                                       , "-satsolver-bin", "lingeling"
+                                      ]
+        "plingeling"        -> return [ "-sat"
+                                      , "-sat-family", "lingeling"
+                                      , "-satsolver-bin", "plingeling"
                                       ]
         "minisat"           -> return [ "-sat"
                                       , "-sat-family", "minisat"
