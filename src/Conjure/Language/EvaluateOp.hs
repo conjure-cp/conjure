@@ -294,6 +294,9 @@ instance EvaluateOp OpLexLt where
 instance EvaluateOp OpLt where
     evaluateOp (OpLt x y) = return $ ConstantBool $ x < y
 
+instance EvaluateOp OpMakeTable where
+    evaluateOp op = na $ "evaluateOp{OpMakeTable}:" <++> pretty (show op)
+
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (childrenBi p) =
             return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
@@ -910,6 +913,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpLexLeq x) = evaluateOp x
     evaluateOp (MkOpLexLt x) = evaluateOp x
     evaluateOp (MkOpLt x) = evaluateOp x
+    evaluateOp (MkOpMakeTable x) = evaluateOp x
     evaluateOp (MkOpMax x) = evaluateOp x
     evaluateOp (MkOpMin x) = evaluateOp x
     evaluateOp (MkOpMinus x) = evaluateOp x
@@ -923,8 +927,8 @@ instance EvaluateOp Op where
     evaluateOp (MkOpParty x) = evaluateOp x
     evaluateOp (MkOpPow x) = evaluateOp x
     evaluateOp (MkOpPowerSet x) = evaluateOp x
-    evaluateOp (MkOpPreImage x) = evaluateOp x
     evaluateOp (MkOpPred x) = evaluateOp x
+    evaluateOp (MkOpPreImage x) = evaluateOp x
     evaluateOp (MkOpProduct x) = evaluateOp x
     evaluateOp (MkOpRange x) = evaluateOp x
     evaluateOp (MkOpRelationProj x) = evaluateOp x
@@ -940,11 +944,11 @@ instance EvaluateOp Op where
     evaluateOp (MkOpSupsetEq x) = evaluateOp x
     evaluateOp (MkOpTildeLeq x) = evaluateOp x
     evaluateOp (MkOpTildeLt x) = evaluateOp x
+    evaluateOp (MkOpTogether x) = evaluateOp x
     evaluateOp (MkOpToInt x) = evaluateOp x
     evaluateOp (MkOpToMSet x) = evaluateOp x
     evaluateOp (MkOpToRelation x) = evaluateOp x
     evaluateOp (MkOpToSet x) = evaluateOp x
-    evaluateOp (MkOpTogether x) = evaluateOp x
     evaluateOp (MkOpTransform x) = evaluateOp x
     evaluateOp (MkOpTrue x) = evaluateOp x
     evaluateOp (MkOpTwoBars x) = evaluateOp x
