@@ -69,27 +69,8 @@ class Root extends React.Component<any, State> {
 		console.log('hello')
 	}
 
-	// collapseHandler = () => {
-	// 	this.setState((prevState: State) => {
-	// 		return { isCollapsed: !prevState.isCollapsed }
-	// 	})
-	// }
-
-	// diffCheckHandler = (namedCache1: Cache) => {
-	// 	// console.log(namedCache1)
-
-	// 	this.setState((prevState: State) => {
-	// 		namedCache1.name = ''
-
-	// 		return {
-	// 			diff: !prevState.diff,
-	// 			selectedCaches: [ namedCache1, cloneDeep(namedCache1) ]
-	// 		}
-	// 	})
-	// }
-
 	initResponseHandler = (data: InitResponse) => {
-		console.log(data)
+		// console.log(data)
 		this.setState({
 			isCollapsed: true,
 			trees: data.trees,
@@ -105,13 +86,11 @@ class Root extends React.Component<any, State> {
 			null,
 			false,
 		)
-
 		this.setState({
 			paramFiles: filesRes.paramFiles,
 			essenceFiles: filesRes.essenceFiles,
 			modelToReps: filesRes.modelToReps,
 		})
-
 		const cachesRes = await this.makeRequest(
 			`http://localhost:${this.state.vscodeServerPort}/config/caches`,
 			null,
@@ -137,9 +116,6 @@ class Root extends React.Component<any, State> {
 	}
 
 	render = () => {
-		// console.log('prinitg the state')
-		// console.log(this.state.allCaches)
-
 		return !this.state.showError ? (
 			<div>
 				<StageHeader
@@ -174,10 +150,10 @@ class Root extends React.Component<any, State> {
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
 						submitHandler={async (values, diffTrees) => {
+							console.log(values)
 							if (!diffTrees) {
 								values.caches.pop()
 							}
-
 							const res = await this.makeRequest(
 								`http://localhost:${this.state.vscodeServerPort}/config/solve`,
 								JSON.stringify(values.caches),

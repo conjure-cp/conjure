@@ -39,7 +39,7 @@ class HTMlService {
 	@GET
 	getPage(): string {
 		let html =
-			fs.readFileSync(path.join(context.extensionPath, './index.html')).toString() +
+			fs.readFileSync(path.join(context.extensionPath, './indexServedFromExtension.html')).toString() +
 			` 
       <div id="port" vscodeServerPort="${thisServerPort}"></div>
     <script>${fs.readFileSync(path.join(context.extensionPath, 'dist/main.js')).toString()}</script>

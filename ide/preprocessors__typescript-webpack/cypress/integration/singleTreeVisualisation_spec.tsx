@@ -117,7 +117,8 @@ describe('tree vis', () => {
 	})
 
 	it('Checks the labels can be toggled', () => {
-		cy.get(':nth-child(1) > .card-header > .collapsed').click()
+		cy.get(':nth-child(1) > :nth-child(1) > .card-header > a').click()
+		cy.wait(delay)
 		cy.get('#ShowLabels-check').click()
 		cy.get('#treeSVG').type('s', { delay: delay })
 		cy.get('#treeSVG').type('s', { delay: delay })

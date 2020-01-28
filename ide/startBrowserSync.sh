@@ -1,1 +1,1 @@
-browser-sync start --server --files "."  --port 8080
+browser-sync start --server --files "." --port 8080
