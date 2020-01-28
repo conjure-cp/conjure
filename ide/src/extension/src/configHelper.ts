@@ -175,7 +175,7 @@ export default class ConfigureHelper {
 			const cache = list[i]
 
 			// need to read in the source files in case theyve been modified
-			const hash = hasher(cache)
+			const hash = hasher(cache.config + cache.essenceFile + cache.paramFile)
 			const args = cacheToArgs(cache, this.cacheFolderPath, hash)
 
 			const obj = {

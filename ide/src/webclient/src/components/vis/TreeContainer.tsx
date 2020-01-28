@@ -204,46 +204,46 @@ export class TreeContainer extends React.Component<Props, State> {
 					linScale={this.state.linScale}
 				/>
 
-				{/* <Wrapper> */}
-				{/* <SplitPane split='horizontal' defaultSize={700} maxSize={900}> */}
-				<TreeVis
-					hash={this.props.hash}
-					identifier={this.props.identifier}
-					rootNode={this.state.id2Node[0]}
-					selected={this.state.selected}
-					solAncestorIds={this.props.core.solAncestorIds}
-					solveable={this.state.solveable}
-					linScale={this.state.linScale}
-					minsize={this.state.minsize}
-					nodeClickHandler={this.nodeClickHandler}
-					storeNodePrevPos={(list) => {
-						this.setState((prevState: State) => {
-							let newMap = cloneDeep(prevState.id2Node)
-							list.forEach((d) => {
-								newMap[d.data.id].x0 = d.x
-								newMap[d.data.id].y0 = d.y
-							})
-							console.log('CALLED')
-							// console.log(newMap[28])
-							return { id2Node: newMap }
-						})
-					}}
-					duration={this.props.duration}
-					width={1200}
-					height={500}
-					showLabels={this.props.showLabels}
-					diffParentId={this.props.diffParentId}
-				/>
+				<Wrapper>
+					<SplitPane split='horizontal' defaultSize={700} maxSize={900}>
+						<TreeVis
+							hash={this.props.hash}
+							identifier={this.props.identifier}
+							rootNode={this.state.id2Node[0]}
+							selected={this.state.selected}
+							solAncestorIds={this.props.core.solAncestorIds}
+							solveable={this.state.solveable}
+							linScale={this.state.linScale}
+							minsize={this.state.minsize}
+							nodeClickHandler={this.nodeClickHandler}
+							storeNodePrevPos={(list) => {
+								this.setState((prevState: State) => {
+									let newMap = cloneDeep(prevState.id2Node)
+									list.forEach((d) => {
+										newMap[d.data.id].x0 = d.x
+										newMap[d.data.id].y0 = d.y
+									})
+									console.log('CALLED')
+									// console.log(newMap[28])
+									return { id2Node: newMap }
+								})
+							}}
+							duration={this.props.duration}
+							width={1200}
+							height={500}
+							showLabels={this.props.showLabels}
+							diffParentId={this.props.diffParentId}
+						/>
 
-				<Domains
-					hash={this.props.hash}
-					selected={this.state.selected}
-					path={this.props.path}
-					nimServerPort={this.props.nimServerPort}
-				/>
-				<h1>DASDASDASDAS</h1>
-				{/* </SplitPane> */}
-				{/* </Wrapper> */}
+						<Domains
+							hash={this.props.hash}
+							selected={this.state.selected}
+							path={this.props.path}
+							nimServerPort={this.props.nimServerPort}
+						/>
+						<h1>DASDASDASDAS</h1>
+					</SplitPane>
+				</Wrapper>
 			</HotKeys>
 		)
 	}
