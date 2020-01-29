@@ -1,5 +1,3 @@
-import { vscodeServerBase } from '../../support'
-
 const prdVscodeServerURL = 'http://localhost:8000'
 const url = `${prdVscodeServerURL}/config/solve`
 
@@ -65,7 +63,7 @@ describe('testing the solve endpoint', () => {
 	})
 
 	it('Checks an error is returned if there is something wring with the essence', () => {
-		sampleSetup.essenceFile = 'broken.essence'
+		sampleSetup.essenceFile = 'zzz_broken.essence'
 		cy.request('POST', url, [ sampleSetup ]).then((response) => {
 			expect(response.body.stackTrace).to.contain('Error: Undefined reference to a domain: dNum')
 		})
