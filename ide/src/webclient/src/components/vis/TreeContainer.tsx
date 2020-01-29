@@ -210,7 +210,7 @@ export class TreeContainer extends React.Component<Props, State> {
 				/>
 
 				<Wrapper>
-					<SplitPane split='horizontal' defaultSize={700} maxSize={900}>
+					<SplitPane split='horizontal' defaultSize={500} maxSize={550}>
 						<TreeVis
 							hash={this.props.hash}
 							identifier={this.props.identifier}
