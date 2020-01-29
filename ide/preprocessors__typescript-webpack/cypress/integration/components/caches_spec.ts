@@ -1,6 +1,6 @@
 // import function "add" from another TypeScript file
 
-const cachesJson = require('../fixtures/caches.json')
+const cachesJson = require('../../fixtures/caches.json')
 
 describe('Checks selecting the caches box', () => {
 	beforeEach('setup server', () => {
