@@ -1,4 +1,4 @@
-import { vscodeServerBase } from '../support'
+import { vscodeServerBase } from '../../support'
 
 //test with no caches
 

@@ -184,8 +184,6 @@ export default class ConfigureHelper {
 				args: args,
 				hash: hash,
 				...cache,
-				// config: cache.config,
-				// name: cache.name,
 			}
 
 			const hashes = await vscode.workspace.findFiles('**/*.hash')

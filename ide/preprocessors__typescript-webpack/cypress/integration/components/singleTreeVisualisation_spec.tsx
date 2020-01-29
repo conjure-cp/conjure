@@ -1,4 +1,4 @@
-import { vscodeServerBase, delay } from '../support'
+import { vscodeServerBase, delay } from '../../support'
 
 // import React from 'react's
 
