@@ -64,10 +64,10 @@ describe('testing the solve endpoint', () => {
 		})
 	})
 
-	it.only('Checks an error is returned if there is something wring with the essence', () => {
+	it('Checks an error is returned if there is something wring with the essence', () => {
 		sampleSetup.essenceFile = 'broken.essence'
 		cy.request('POST', url, [ sampleSetup ]).then((response) => {
-			expect(response.body).to.have.property('trees')
+			expect(response.body.stackTrace).to.contain('Error: Undefined reference to a domain: dNum')
 		})
 	})
 })

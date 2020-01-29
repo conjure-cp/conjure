@@ -117,12 +117,12 @@ export default class ConfigureHelper {
 						increment: pIncrement,
 					})
 
-					const folderName = fs.writeFileSync(
-						path.join(this.cacheFolderPath, obj.hash, this.cacheFileName),
-						JSON.stringify(obj),
-					)
+					fs.writeFileSync(path.join(this.cacheFolderPath, obj.hash, this.cacheFileName), JSON.stringify(obj))
 
-					fs.writeFileSync(path.join(this.cacheFolderPath, obj.hash, `${obj.hash}.hash`), '')
+					fs.writeFileSync(
+						path.join(this.cacheFolderPath, obj.hash, `${obj.hash}.hash`),
+						'This file is only here to make it easier to discover cached runs.',
+					)
 
 					console.log(`child process exited with code ${code}`)
 					console.error(errorMessage)
@@ -132,8 +132,9 @@ export default class ConfigureHelper {
 					} else {
 						kill(proc.pid)
 						vscode.window.showErrorMessage(`Config ${pid2JobId[proc.pid]} | ${errorMessage}`)
-						rimraf.sync(path.join(vscode.workspace.rootPath!, obj.hash))
-						reject()
+						rimraf.sync(path.join(this.cacheFolderPath, obj.hash))
+						rimraf.sync(path.join(this.cacheFolderPath, obj.hash))
+						reject(errorMessage)
 					}
 
 					if (doneCount === needToGenerate.length) {
@@ -145,7 +146,7 @@ export default class ConfigureHelper {
 					console.log('Failed to start subprocess.')
 					console.error(err)
 					vscode.window.showErrorMessage('Failed to start conjure ;_;')
-					reject()
+					reject(err)
 				})
 
 				token.onCancellationRequested(() => {

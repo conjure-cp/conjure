@@ -14,6 +14,7 @@ import ConfigHelper, { hasher } from '../extension/src/configHelper'
 import { Cache, RepMap } from '../extension/src/utils'
 import { execSync } from 'child_process'
 import { Core } from '../webclient/src/components/vis/TreeContainer'
+import { string } from 'yup'
 
 const collator = new Intl.Collator(undefined, { numeric: true })
 
@@ -132,14 +133,10 @@ class ConfigService {
 		console.log('SOLLLLLLLLLLLLLLLLLLLLVE REQUEST', list)
 
 		let configsAreTheSame = isEqual(list[0], list[1])
-		// vscode.window.showErrorMessage("Configs are the same! aborting..")
-		// return
 
 		if (configsAreTheSame) {
 			list.pop()
 		}
-
-		// let jobs = configsAreTheSame ? [ list[0] ] : list
 
 		const { needToGenerate, loadFromCache } = await ConfigHelper.separateJobs(list)
 
@@ -154,47 +151,47 @@ class ConfigService {
 					return ConfigHelper.makePromise(needToGenerate, progress, token)
 				},
 			)
-			.then(() => {
-				return vscode.window.withProgress(
-					{
-						cancellable: false,
-						location: vscode.ProgressLocation.Notification,
-						title: 'Processing Tree',
-					},
-					async () =>
-						Promise.all(
-							needToGenerate.concat(loadFromCache).map(async (tree) => {
-								const fullPath = path.join(ConfigHelper.cacheFolderPath, tree.hash)
+			.then(
+				(success: any) => {
+					return vscode.window.withProgress(
+						{
+							cancellable: false,
+							location: vscode.ProgressLocation.Notification,
+							title: 'Processing Tree',
+						},
+						async () =>
+							Promise.all(
+								needToGenerate.concat(loadFromCache).map(async (tree) => {
+									const fullPath = path.join(ConfigHelper.cacheFolderPath, tree.hash)
 
-								const url = `http://localhost:${nimServerPort}/init/${fullPath}`
+									const url = `http://localhost:${nimServerPort}/init/${fullPath}`
 
-								const response = await fetch(url)
+									const response = await fetch(url)
 
-								return response.json().then((json: { core: Core; info: string }) => ({
-									hash: tree.hash,
-									path: fullPath,
-									...json,
-								}))
-							}),
-						)
-							.then((inits) => {
+									return response.json().then((json: { core: Core; info: string }) => ({
+										hash: tree.hash,
+										path: fullPath,
+										...json,
+									}))
+								}),
+							).then((inits) => {
 								return {
 									trees: inits,
 									nimServerPort: nimServerPort,
 									vscodeServerPort: thisServerPort,
 								}
-							})
-							.catch((error) => {
-								console.error(error)
-								return {
-									stackTrace: error.stack,
-									message: error.message,
-									url: '/init',
-									reqInfo: error.type,
-								}
 							}),
-				)
-			})
+					)
+				},
+				(error) => {
+					return {
+						message: 'Failed to initialsise tree(s)',
+						stackTrace: String(error),
+						url: '/config/solve',
+						reqInfo: JSON.stringify(needToGenerate.concat(loadFromCache)),
+					}
+				},
+			)
 	}
 }
 
