@@ -1,8 +1,10 @@
-import util, strutils, intsets, sequtils, algorithm, system, types, parseutils
+import strutils, system, types, parseutils
 
-proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft, val: string): string 
+proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft,
+        val: string): string
 
-proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPretty: bool = false): string =
+proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string,
+        wantPretty: bool = false): string =
     ## Returns the label for a node
 
     if branchName == "":
@@ -14,7 +16,7 @@ proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPrett
         # if ("_" in branchName):
         #     pretty = getPrettyBranchingCondition(vars, branchName, isLeft, value)
 
-        if  pretty != "":
+        if pretty != "":
             return pretty
 
     result &= branchName
@@ -26,7 +28,7 @@ proc getLabel*(vars: seq[Variable], branchName, isLeft, value: string, wantPrett
 
     result &= value
 
-proc innerSet*(s: Set, isLeft, val, name, branchName : string): string =
+proc innerSet*(s: Set, isLeft, val, name, branchName: string): string =
 
     let splitted = branchName.split("_")
     # echo "here"
@@ -39,9 +41,9 @@ proc innerSet*(s: Set, isLeft, val, name, branchName : string): string =
             if isLeft == "1":
                 return "Cardinality of " & name & " was set to " & val
             return "Cardinality of " & name & " was not set to " & val
-        
+
         if s of OccurrenceSet:
-            var num : int
+            var num: int
             discard splitted[^1].parseInt(num)
 
             if isLeft == "1":
@@ -61,7 +63,7 @@ proc innerSet*(s: Set, isLeft, val, name, branchName : string): string =
         if s of DummySet:
 
             let d = DummySet(s)
-            var num : int
+            var num: int
             discard splitted[^1].parseInt(num)
 
             if (val == $d.dummyVal):
@@ -72,7 +74,7 @@ proc innerSet*(s: Set, isLeft, val, name, branchName : string): string =
             if isLeft == "1":
                 return val & " was included in " & name
             return val & " was not included in " & name
-        
+
     if splitted.len() > 3:
 
         if s of MarkerSet:
@@ -86,7 +88,7 @@ proc innerSet*(s: Set, isLeft, val, name, branchName : string): string =
                 return val & " was not included in " & name
 
         if s of FlagSet:
-            var num : int
+            var num: int
             discard splitted[^1].parseInt(num)
             # echo name
             # echo name.contains("Values")
@@ -119,7 +121,7 @@ proc handleMarkerValues(name, isLeft, val: string): string =
     else:
         return val & " was not included in " & name
 
-proc handleMarkerMarker(name, isLeft, val:  string): string =
+proc handleMarkerMarker(name, isLeft, val: string): string =
     if isLeft == "1":
         return "Cardinality of " & name & " was set to " & val
     return "Cardinality of " & name & " was not set to " & val
@@ -146,7 +148,7 @@ proc handleOccurrence(name, isLeft, val, num: string): string =
             return num & " was excluded from " & name
         return num & " was included in " & name
 
-proc handleDummy(name, isLeft, val, num: string, s: Set): string = 
+proc handleDummy(name, isLeft, val, num: string, s: Set): string =
     let d = DummySet(s)
 
     if (val == $d.dummyVal):
@@ -166,7 +168,7 @@ proc getSetName(parentName: string, indexes: seq[int]): string =
 
 proc getSetLabel(s: Set, isLeft, val, branchName: string): string =
 
-    var indexes : seq[int]
+    var indexes: seq[int]
     let splitted = branchName.split("_")
     var depth = 0
 
@@ -190,7 +192,7 @@ proc getSetLabel(s: Set, isLeft, val, branchName: string): string =
     while copy > 1:
         current = current.inner
         copy.dec()
-    
+
     # var b = branchName
 
     # var childName = s.name
@@ -223,20 +225,21 @@ proc getSetLabel(s: Set, isLeft, val, branchName: string): string =
         let childName = getSetName(s.name, indexes[0..^2])
         return handleDummy(childName, isLeft, val, $parseInt(splitted[^1]), current)
 
-        
 
 
-        
 
 
-proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft, val: string): string =
+
+
+proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft,
+        val: string): string =
     ## Returns a prettified label
 
     let splitted = branchName.split("_")
 
     let name = splitted[0]
 
-    var s : Set
+    var s: Set
     s = nil
 
     for v in vars:
@@ -254,6 +257,6 @@ proc getPrettyBranchingCondition*(vars: seq[Variable], branchName, isLeft, val: 
     # else:
     #     return getInnerSetName(s, isLeft, val, branchName)
 
-        
+
     # return ""
 

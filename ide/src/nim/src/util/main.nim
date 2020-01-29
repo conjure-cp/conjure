@@ -52,15 +52,15 @@ proc diffHandler*(leftPath, rightPath, leftHash, rightHash: string): JsonNode =
   let diffCacheFile = fmt"{diffCachesDir}/{leftHash}~{rightHash}.json"
   let flipped = fmt"{diffCachesDir}/{rightHash}~{leftHash}.json"
 
-  # if fileExists(diffCacheFile):
-  #   return parseJson(readAll(open(diffCacheFile)))
+  if fileExists(diffCacheFile):
+    return parseJson(readAll(open(diffCacheFile)))
 
-  # if fileExists(flipped):
-  #   return %(parseJson(readAll(open(flipped))).getElems()
-  #     .map(x => newDiffPoint($x["rightTreeId"], $x["leftTreeId"],
-  #                             x["highlightRight"].getElems().map(y => $y),
-  #                             x["highlightLeft"].getElems().map(y => $y),
-  #                             x["descCount"].getInt())))
+  if fileExists(flipped):
+    return %(parseJson(readAll(open(flipped))).getElems()
+      .map(x => newDiffPoint($x["rightTreeId"], $x["leftTreeId"],
+                              x["highlightRight"].getElems().map(y => $y),
+                              x["highlightLeft"].getElems().map(y => $y),
+        )))
 
   let res = diff(leftPath, rightPath)
   writeFile(diffCacheFile, $(%res))

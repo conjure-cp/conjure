@@ -10,65 +10,68 @@ template benchmark(benchmarkName: string, code: untyped) =
     let elapsedStr = elapsed.formatFloat(format = ffDecimal, precision = 3)
     echo "CPU Time [", benchmarkName, "] ", elapsedStr, "s"
 
-# suite "diffHandler":
-#   test "handleNotCached":
-#     let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
-#     let rightPath = testDataPath & "diff/default-sacbounds-8/sacbounds"
-#     discard init(leftPath)
-#     discard init(rightPath)
-#     let leftHash = "leftHash"
-#     let rightHash = "rightHash"
-#     discard diffHandler(leftPath, rightPath, leftHash, rightHash)
-#     let fileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{leftHash}~{rightHash}.json"
-#     check(fileExists(fileName))
+suite "diffHandler":
+  test "handleNotCached":
+    let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
+    let rightPath = testDataPath & "diff/default-sacbounds-8/sacbounds"
+    discard init(leftPath)
+    discard init(rightPath)
+    let leftHash = "leftHash"
+    let rightHash = "rightHash"
+    discard diffHandler(leftPath, rightPath, leftHash, rightHash)
+    let fileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{leftHash}~{rightHash}.json"
+    check(fileExists(fileName))
 
-#     let json = parseJson(readAll(open(fileName)))
+    let json = parseJson(readAll(open(fileName)))
 
-#     echo json
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3,
+          "highlightLeft": [4], "highlightRight": []}, {
+        "leftTreeId": 7, "rightTreeId": 4,
+        "highlightLeft": [8, 11], "highlightRight": []}, {
+        "leftTreeId": 17, "rightTreeId": 6, "highlightLeft": [
+        18], "highlightRight": []}, {"leftTreeId": 21,
+        "rightTreeId": 7, "highlightLeft": [22, 24],
+        "highlightRight": []}, {"leftTreeId": 27,
+        "rightTreeId": 9, "highlightLeft": [28, 30],
+        "highlightRight": [10]}]
 
-#     let answer = %*[{"path": "0/1/2/3", "leftTreeId": 3, "rightTreeId": 3,
-#         "descCount": 0, "highlightLeft": [4], "highlightRight": []}, {
-#         "path": "0/1/2/3/7", "leftTreeId": 7, "rightTreeId": 4, "descCount": 0,
-#         "highlightLeft": [8, 11], "highlightRight": []}, {"path": "0/1/2/16/17",
-#         "leftTreeId": 17, "rightTreeId": 6, "descCount": 0, "highlightLeft": [
-#         18], "highlightRight": []}, {"path": "0/1/2/16/17/21", "leftTreeId": 21,
-#         "rightTreeId": 7, "descCount": 0, "highlightLeft": [22, 24],
-#         "highlightRight": []}, {"path": "0/1/2/16/26/27", "leftTreeId": 27,
-#         "rightTreeId": 9, "descCount": 1, "highlightLeft": [28, 30],
-#         "highlightRight": [10]}]
-#     check (json == answer)
+    # echo json.pretty()
+    # echo "~~~~~~"
+    # echo answer.pretty()
 
-#     removeFile(fileName)
+    check (json == answer)
 
-#   test "handleCachedFlipped":
-#     let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
-#     let rightPath = testDataPath & "diff/default-sacbounds-8/sacbounds"
-#     discard init(leftPath)
-#     discard init(rightPath)
-#     let leftHash = "leftHash"
-#     let rightHash = "rightHash"
-#     discard diffHandler(leftPath, rightPath, leftHash, rightHash)
-#     let fileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{leftHash}~{rightHash}.json"
+    removeFile(fileName)
 
-#     check(fileExists(fileName))
+  test "handleCachedFlipped":
+    let leftPath = testDataPath & "diff/default-sacbounds-8/normal"
+    let rightPath = testDataPath & "diff/default-sacbounds-8/sacbounds"
+    discard init(leftPath)
+    discard init(rightPath)
+    let leftHash = "leftHash"
+    let rightHash = "rightHash"
+    discard diffHandler(leftPath, rightPath, leftHash, rightHash)
+    let fileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{leftHash}~{rightHash}.json"
 
-#     let answer = %*[{"path": "", "leftTreeId": 3, "rightTreeId": 3,
-#         "descCount": 0, "highlightLeft": [], "highlightRight": [4]}, {
-#         "path": "", "leftTreeId": 4, "rightTreeId": 7, "descCount": 0,
-#         "highlightLeft": [], "highlightRight": [8, 11]}, {"path": "",
-#         "leftTreeId": 6, "rightTreeId": 17, "descCount": 0, "highlightLeft": [],
-#         "highlightRight": [18]}, {"path": "", "leftTreeId": 7,
-#         "rightTreeId": 21, "descCount": 0, "highlightLeft": [],
-#         "highlightRight": [22, 24]}, {"path": "", "leftTreeId": 9,
-#         "rightTreeId": 27, "descCount": 1, "highlightLeft": [10],
-#         "highlightRight": [28, 30]}]
+    check(fileExists(fileName))
 
-#     check(answer == diffHandler(leftPath, rightPath, rightHash, leftHash))
+    let answer = %*[{"leftTreeId": 3, "rightTreeId": 3,
+          "highlightLeft": [], "highlightRight": [4]}, {
+       "leftTreeId": 4, "rightTreeId": 7,
+        "highlightLeft": [], "highlightRight": [8, 11]}, {
+        "leftTreeId": 6, "rightTreeId": 17, "highlightLeft": [],
+        "highlightRight": [18]}, {"leftTreeId": 7,
+        "rightTreeId": 21, "highlightLeft": [],
+        "highlightRight": [22, 24]}, {"leftTreeId": 9,
+        "rightTreeId": 27, "highlightLeft": [10],
+        "highlightRight": [28, 30]}]
 
-#     let flippedFileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{rightHash}~{leftHash}.json"
-#     check(not fileExists(flippedFileName))
+    check(answer == diffHandler(rightPath, leftPath, rightHash, leftHash))
 
-#     removeFile(fileName)
+    let flippedFileName = fmt"{testDataPath}/diff/default-sacbounds-8/diffCaches/{rightHash}~{leftHash}.json"
+    check(not fileExists(flippedFileName))
+
+    removeFile(fileName)
 
 
 suite "domainsAreEqual":
@@ -97,57 +100,6 @@ suite "domainsAreEqual":
     discard init(rightPath)
     let rightDB = getDB(rightPath)
     check checkDomainsAreEqual([leftDB, rightDB], [$4, $4]) == false
-
-suite "descCountIncreases":
-  test "10dc":
-
-    let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
-    let rightPath = testDataPath & "/diff/default-sacbounds-10/sacbounds"
-    discard init(leftPath)
-    let leftDB = getDB(leftPath)
-    discard init(rightPath)
-    let rightDB = getDB(rightPath)
-
-
-# @[4, 4], @[9, 5], @[13, 6]
-    var list = newSeq[DiffPoint]()
-# @[5], @[10], @[14, 16]
-
-    list.add(newDiffPoint("4", "4", @["5"], @[]))
-    list.add(newDiffPoint("9", "5", @["10"], @[]))
-    list.add(newDiffPoint("13", "6", @["14", "16"], @[]))
-    # let point1 = newDiffPoint("4", "4", @[],@[])
-
-    assignDescCountIncreases(leftDB, rightDB, list, true)
-
-    check list[0].descCount == 0
-    check list[1].descCount == 0
-    check list[2].descCount == 0
-
-  test "r10dc":
-
-    let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
-    let rightPath = testDataPath & "/diff/default-sacbounds-10/sacbounds"
-    discard init(leftPath)
-    let leftDB = getDB(leftPath)
-    discard init(rightPath)
-    let rightDB = getDB(rightPath)
-
-
-# @[4, 4], @[9, 5], @[13, 6]
-    var list = newSeq[DiffPoint]()
-# @[5], @[10], @[14, 16]
-
-    list.add(newDiffPoint("4", "4",@[], @["5"]))
-    list.add(newDiffPoint("5", "9",  @[], @["10"]))
-    list.add(newDiffPoint("6", "13",  @[], @["14", "16"]))
-    # let point1 = newDiffPoint("4", "4", @[],@[])
-
-    assignDescCountIncreases(rightDB, leftDB, list, true)
-
-    check list[0].descCount == 4
-    check list[1].descCount == 3
-    check list[2].descCount == 6
 
 suite "removeDuplicates":
 
@@ -183,7 +135,6 @@ suite "diff":
     discard init(rightPath)
 
     let d = diff(leftPath, rightPath, false)
-    echo d
 
     let diffNodeIds = d.map(x => @[x.leftTreeId, x.rightTreeId])
     let answers = @[@[3, 3], @[7, 4], @[17, 6], @[21, 7], @[27, 9]]
@@ -199,31 +150,6 @@ suite "diff":
 
     check highlightRight == @[@[], @[], @[], @[], @[10]]
 
-    check d[0].descCount == 0
-    check d[1].descCount == 0
-    check d[2].descCount == 0
-    check d[3].descCount == 0
-    check d[4].descCount == 1
-
-    # check d[0].path == "0/1/2/3"
-    # check d[1].path == "0/1/2/3/7"
-    # check d[2].path == "0/1/2/16/17"
-    # check d[3].path == "0/1/2/16/17/21"
-    # check d[4].path == "0/1/2/16/26/27"
-
-    let flipped = diff(rightPath, leftPath, false)
-
-    check flipped[0].descCount == 3
-    check flipped[1].descCount == 8
-    check flipped[2].descCount == 3
-    check flipped[3].descCount == 4
-    check flipped[4].descCount == 5
-
-    # check flipped[0].path == "0/1/2/3"
-    # check flipped[1].path == "0/1/2/3/4"
-    # check flipped[2].path == "0/1/2/5/6"
-    # check flipped[3].path == "0/1/2/5/6/7"
-    # check flipped[4].path == "0/1/2/5/8/9"
 
   test "10":
     let leftPath = testDataPath & "/diff/default-sacbounds-10/normal"
@@ -528,13 +454,11 @@ suite "diff":
     discard init(rightPath)
 
     let d = diff(leftPath, rightPath)
-    let flipped = d.map(x => newDiffPoint($x.rightTreeId, $x.leftTreeId,
-        x.highlightRight.map(y => $y), x.highlightLeft.map(y => $y),
-            x.descCount, x.leftPath))
+    let flipped = d.map(x =>
+    newDiffPoint($x.rightTreeId, $x.leftTreeId, x.highlightRight.map(y => $y),
+        x.highlightLeft.map(y => $y)))
 
     let rTL = diff(rightPath, leftPath)
-
-    echo rTL
 
     for i in countUp(0, rTL.len() - 1):
       check rTL[i].leftTreeId == flipped[i].leftTreeId
@@ -551,7 +475,6 @@ suite "diff":
     check(d[0].leftTreeId == -1)
     check(d[0].rightTreeId == -1)
 
-    echo d[0].descCount == 0
     # check(d.augmentedIds == newSeq[seq[int]](2))
 
   test "findAllSols":
@@ -572,12 +495,6 @@ suite "diff":
     check(d[1].highlightLeft.len() == 0)
     check(d[1].highlightRight == @[36])
 
-
-    check d[0].descCount == 3
-    check d[1].descCount == 35
-
-    echo d
-
   test "symmBreak":
     let leftPath = testDataPath & "/diff/default-symmBreak-8/normal"
     let rightPath = testDataPath & "/diff/default-symmBreak-8/symmBreakNoOptimisation"
@@ -589,5 +506,3 @@ suite "diff":
     check(d[0].rightTreeId == 0)
     check(d[0].highlightLeft == @[1])
     check(d[0].highlightRight == @[1])
-
-    check d[0].descCount == 10

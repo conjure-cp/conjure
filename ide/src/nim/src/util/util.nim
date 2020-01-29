@@ -1,10 +1,10 @@
-import intsets, algorithm, sequtils, json, strformat
+import json, strformat
 
 
 proc getPrettyRange*(lowerBound: string, upperBound: string): string =
     ## Returns a range in the same format as essence
     if lowerBound == upperBound:
-       return "int(" & $lowerBound & ")" 
+        return "int(" & $lowerBound & ")"
     return "int(" & $lowerBound & ".." & $upperBound & ")"
 
 # [ [2,2],[4,5],[7,15] ]
@@ -47,7 +47,7 @@ proc prettifyMinionStoreDump*(dump: string): string =
 #             index.inc()
 #             if (index == list.len() - 1):
 #                 break
-        
+
 #         if ($list[index] != prevNum):
 #             result &= ".." & $list[index]
 #             prevNum = $list[index]
@@ -58,5 +58,5 @@ proc prettifyMinionStoreDump*(dump: string): string =
 #             result &= ","
 #             result &= list[index]
 #             prevNum = $list[index]
-    
+
 #     result &= ")"
