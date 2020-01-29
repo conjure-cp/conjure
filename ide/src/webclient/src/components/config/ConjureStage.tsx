@@ -35,6 +35,9 @@ export const ConjureStage = (
   const { index, showReps, showRepsHandler, varRepresentations, values } = props
   const { name } = props.field
 
+  if (values.config.answers.length === 0){
+    values.config.answers = Array(varRepresentations.length).fill(undefined)
+  }
 
   const repSelectBoxes = varRepresentations.map((x, i) => {
 

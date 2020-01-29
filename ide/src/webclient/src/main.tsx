@@ -145,6 +145,12 @@ class Root extends React.Component<any, State> {
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
 						submitHandler={async (values, isDiffing) => {
+							values.caches.forEach((cache) => {
+								if (cache.config.conjureConfig.answers.every((x) => !x)) {
+									cache.config.conjureConfig.answers = []
+								}
+							})
+
 							const toSubmit = isDiffing ? values.caches : values.caches.slice(0, 1)
 
 							const res = await this.makeRequest(

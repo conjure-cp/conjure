@@ -82,7 +82,17 @@ export const cacheToArgs = (cache: Cache, cacheFolderPath: string, hash: string)
 		conjureOptions.push('--channelling=no')
 		conjureOptions.push('--smart-filenames')
 		conjureOptions.push('--responses')
-		conjureOptions.push(`${conjureConfig.answers.join(',').slice(1)}`)
+		conjureOptions.push(
+			`${conjureConfig.answers
+				.map((x) => {
+					if (!x) {
+						return 1
+					}
+					return x
+				})
+				.join(',')
+				.replace(/(^,)|(,$)/g, '')}`,
+		)
 	}
 
 	let savileRowOptions = [ '--savilerow-options', '"' ]

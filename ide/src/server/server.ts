@@ -99,16 +99,18 @@ class ConfigService {
 		let params = await vscode.workspace.findFiles('**/*.param')
 
 		let reps = models.map((model) => {
-			let representations = []
+			let modelReps = []
 			try {
 				const conjureOutput = execSync(`conjure ide ${model.path} --dump-representations`).toString()
-				representations = JSON.parse(conjureOutput)
+				modelReps = JSON.parse(conjureOutput)
 			} catch (e) {
 				vscode.window.showErrorMessage('One or more essence files contains an error')
 			}
+			modelReps = modelReps.filter((x: any) => x.representations.length > 1)
+
 			return {
 				name: this.toRel(model),
-				representations: representations,
+				representations: modelReps,
 			}
 		})
 
