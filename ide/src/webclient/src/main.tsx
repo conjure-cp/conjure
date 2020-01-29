@@ -86,6 +86,7 @@ class Root extends React.Component<any, State> {
 			null,
 			false,
 		)
+		console.log(filesRes)
 		this.setState({
 			paramFiles: filesRes.paramFiles,
 			essenceFiles: filesRes.essenceFiles,
@@ -116,6 +117,7 @@ class Root extends React.Component<any, State> {
 	}
 
 	render = () => {
+		// console.log('files', this.state.essenceFiles)
 		return !this.state.showError ? (
 			<div>
 				<StageHeader
@@ -149,14 +151,12 @@ class Root extends React.Component<any, State> {
 						modelToReps={this.state.modelToReps}
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
-						submitHandler={async (values, diffTrees) => {
-							console.log(values)
-							if (!diffTrees) {
-								values.caches.pop()
-							}
+						submitHandler={async (values, isDiffing) => {
+							const toSubmit = isDiffing ? values.caches : values.caches[0]
+
 							const res = await this.makeRequest(
 								`http://localhost:${this.state.vscodeServerPort}/config/solve`,
-								JSON.stringify(values.caches),
+								JSON.stringify(toSubmit),
 								false,
 							)
 							this.initResponseHandler(res)

@@ -33,8 +33,26 @@ describe('solving', () => {
 			cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
 			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:normal-8/initialResponse.json')
 			cy.visit('/')
+			cy.wait(3000)
+			cy.get('form > .loadedContent > .btn').click()
+		})
+	})
 
-			cy.get('.loadedContent > .btn').click()
+	describe('its ok', () => {
+		it.only('Solves two', () => {
+			cy.server({ delay: 1500 }) // enable response stubbing
+			cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:files.json')
+			cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
+			cy.route('POST', `${vscodeServerBase}/config/solve`, 'fixture:normal-8/initialResponse.json')
+			cy.visit('/')
+			cy.wait(3000)
+			cy.get('form > .loadedContent > .btn').click()
+			cy.wait(5000)
+			cy.contains('Setup').click()
+			cy.get('form > .loadedContent > .btn').click()
+			cy.contains('Setup').should('exist')
+
+			// cy.get('.loadedContent > .btn').click()
 		})
 	})
 })

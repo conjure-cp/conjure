@@ -87,11 +87,14 @@ export class ConfigForm extends React.Component<Props, State> {
 
 					const array = arrayIndexes.map((index) => {
 						let currentCache: Cache
+						// console.log('stateCache', this.state.currentCache)
 						if (this.state.currentCache) {
 							currentCache = this.state.currentCache!
 						} else {
 							currentCache = values.caches[index]
 						}
+						// console.log('currentCache', currentCache)
+
 						return (
 							<div className='col' key={index}>
 								<Field
