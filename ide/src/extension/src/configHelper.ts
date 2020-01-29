@@ -4,9 +4,7 @@ import fs = require('fs')
 import { spawn, ChildProcess } from 'child_process'
 import apiConstructor = require('node-object-hash')
 import rimraf = require('rimraf')
-import { noop } from 'react-select/lib/utils'
-import { VarRepresentation, ToProcess, Cache, Separation, cacheToArgs } from './utils'
-import { RepMap } from './utils'
+import { ToProcess, Cache, Separation, cacheToArgs } from './utils'
 
 const createHTML = require('create-html')
 const kill = require('tree-kill')
@@ -191,19 +189,11 @@ export default class ConfigureHelper {
 			const uri = hashes.find((h) => path.basename(h.path).includes(hash))
 
 			if (uri) {
-				// const dirname = path.dirname(uri.path)
-				// if (dirname !== cache.name) {
-				// 	try {
-				// 		fs.renameSync(dirname, dirname.replace(path.basename(dirname), cache.name))
-				// 	} catch (error) {
-				// 		vscode.window.showErrorMessage('Failed to rename cache')
-				// 	}
-				// }
 				loadFromCache.push(obj)
 				vscode.window.showInformationMessage(`Loading config${i + 1} from cache...`)
 			} else {
-				if (fs.existsSync(path.join(this.cacheFolderPath, obj.name))) {
-					rimraf.sync(path.join(this.cacheFolderPath, obj.name))
+				if (fs.existsSync(path.join(this.cacheFolderPath, obj.hash))) {
+					rimraf.sync(path.join(this.cacheFolderPath, obj.hash))
 				}
 				needToGenerate.push(obj)
 			}
@@ -260,15 +250,8 @@ export default class ConfigureHelper {
 		const jspanelCSS = 'https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.css'
 		const fontawesome = 'https://use.fontawesome.com/releases/v5.6.3/css/all.css'
 		const bootstrap = 'https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css'
-		const jspanelJS = 'https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js'
-		const d3 = 'https://d3js.org/d3.v3.min.js'
 		const jquery = 'https://code.jquery.com/jquery-3.3.1.min.js'
 		const validator = 'https://cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.js'
-		const mouseTrap = 'https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js'
-		const canvas =
-			'https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js'
-		const fileSaver =
-			'https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js'
 
 		var htmlFile = createHTML({
 			title: 'example',

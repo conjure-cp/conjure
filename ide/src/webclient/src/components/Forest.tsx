@@ -109,7 +109,7 @@ class Forest extends React.Component<Props, State> {
 
 	render = () => {
 		if (this.props.trees) {
-			console.log(JSON.stringify(this.props.trees[0].core))
+			// console.log(JSON.stringify(this.props.trees[0].core))
 			// console.log(JSON.stringify(this.props.trees[1].core))
 			// console.log(JSON.stringify(this.state.diffPoints))
 			// console.log(this.state.diffPoints)
@@ -234,49 +234,50 @@ class Forest extends React.Component<Props, State> {
 						<div className='forestContainer' style={{ height: '85%', display: 'flex' }}>
 							{this.state.splitScreen ? (
 								<Fragment>
-									{this.props.trees.map((_tree: any, i: number) => (
-										<div
-											key={`${this.props.trees[i].hash}${i}`}
-											className='treeContainer'
-											style={this.props.trees.length == 2 ? { width: '50%' } : { width: '100%' }}
-										>
-											<TreeContainer
-												diffParentId={
-													this.state.currentDiffIndex !== -1 ? i === 0 ? (
-														this.state.diffPoints[this.state.currentDiffIndex].leftTreeId
-													) : (
-														this.state.diffPoints[this.state.currentDiffIndex].rightTreeId
-													) : (
-														-1
-													)
+									{this.props.trees.map((_tree: any, i: number) => {
+										let diffParentId = -1
+										let selected = 0
+
+										if (this.state.currentDiffIndex !== -1) {
+											const diffPoint = this.state.diffPoints[this.state.currentDiffIndex]
+											if (i === 0) {
+												diffParentId = diffPoint.leftTreeId
+											} else {
+												diffParentId = diffPoint.rightTreeId
+											}
+											selected = diffParentId
+										}
+
+										return (
+											<div
+												key={`${this.props.trees[i].hash}${i}`}
+												className='treeContainer'
+												style={
+													this.props.trees.length == 2 ? { width: '50%' } : { width: '100%' }
 												}
-												selected={
-													this.state.currentDiffIndex !== -1 ? i === 0 ? (
-														this.state.diffPoints[this.state.currentDiffIndex].leftTreeId
-													) : (
-														this.state.diffPoints[this.state.currentDiffIndex].rightTreeId
-													) : (
-														0
-													)
-												}
-												hash={this.props.trees[i].hash}
-												path={this.props.trees[i].path}
-												nimServerPort={this.props.nimServerPort}
-												info={this.props.trees[i].info}
-												core={this.props.trees[i].core}
-												identifier={`tree${i}`}
-												playing={this.state.playing}
-												loadDepth={this.state.loadDepth}
-												reverse={this.state.reverse}
-												duration={this.state.duration}
-												interval={this.state.interval}
-												finishedPlayingHandler={() => this.setState({ playing: false })}
-												collapseAsExploring={this.state.collapseAsExploring}
-												showLabels={this.state.showLabels}
-												requestHandler={this.props.requestHandler}
-											/>
-										</div>
-									))}
+											>
+												<TreeContainer
+													diffParentId={diffParentId}
+													selected={selected}
+													hash={this.props.trees[i].hash}
+													path={this.props.trees[i].path}
+													nimServerPort={this.props.nimServerPort}
+													info={this.props.trees[i].info}
+													core={this.props.trees[i].core}
+													identifier={`tree${i}`}
+													playing={this.state.playing}
+													loadDepth={this.state.loadDepth}
+													reverse={this.state.reverse}
+													duration={this.state.duration}
+													interval={this.state.interval}
+													finishedPlayingHandler={() => this.setState({ playing: false })}
+													collapseAsExploring={this.state.collapseAsExploring}
+													showLabels={this.state.showLabels}
+													requestHandler={this.props.requestHandler}
+												/>
+											</div>
+										)
+									})}
 								</Fragment>
 							) : (
 								this.state.diffReady && (

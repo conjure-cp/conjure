@@ -116,15 +116,6 @@ export const goRightBoyo = (map: MyMap, currentSelected: number) => {
 export const goRight = (instance: TreeContainer) => {
 	instance.setState((prev: State) => {
 		return goRightBoyo(prev.id2Node, prev.selected)
-
-		// const current = prev.id2Node[prev.selected]
-		// if (!current.children) {
-		//   return null
-		// }
-		// if (current.children.length < 2) {
-		//   return null
-		// }
-		// return { selected: current.children[1].id }
 	})
 }
 

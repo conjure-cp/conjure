@@ -193,13 +193,7 @@ export const mergeMaps = (l: MyMap, r: MyMap, diffPoints: DiffPoint[]) => {
 }
 
 export const assignNewDescCounts = (merged: MyMap, diffPoints: DiffPoint[]) => {
-	// let paths = [
-	//   "0/1/2/3",
-	//   "0/1/2/3/7",
-	//   "0/1/2/16/17",
-	//   "0/1/2/16/17/21",
-	//   "0/1/2/16/26/27"
-	// ]
+	return
 
 	let copy = cloneDeep(diffPoints)
 
