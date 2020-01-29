@@ -1,4 +1,4 @@
-import { vscodeServerBase, delay } from '../support'
+import { vscodeServerBase, delay } from '../../support'
 
 describe('propsValidationTests', () => {
 	it('shows an error messsage if there are no essence files', () => {

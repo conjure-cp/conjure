@@ -132,7 +132,7 @@ export default class ConfigureHelper {
 					} else {
 						kill(proc.pid)
 						vscode.window.showErrorMessage(`Config ${pid2JobId[proc.pid]} | ${errorMessage}`)
-						// rimraf.sync(path.join(vscode.workspace.rootPath!, obj.hash))
+						rimraf.sync(path.join(vscode.workspace.rootPath!, obj.hash))
 						reject()
 					}
 
@@ -156,7 +156,7 @@ export default class ConfigureHelper {
 
 					console.log('canceled')
 
-					// needToGenerate.map((j) => rimraf.sync(path.join(this.cacheFolderPath, j.name)))
+					needToGenerate.map((j) => rimraf.sync(path.join(this.cacheFolderPath, j.hash)))
 				})
 			}
 			if (needToGenerate.length === 0) {
@@ -202,7 +202,7 @@ export default class ConfigureHelper {
 				vscode.window.showInformationMessage(`Loading config${i + 1} from cache...`)
 			} else {
 				if (fs.existsSync(path.join(this.cacheFolderPath, obj.name))) {
-					// rimraf.sync(path.join(this.cacheFolderPath, obj.name))
+					rimraf.sync(path.join(this.cacheFolderPath, obj.name))
 				}
 				needToGenerate.push(obj)
 			}

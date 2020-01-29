@@ -1,4 +1,4 @@
-import { vscodeServerBase } from '../support'
+import { vscodeServerBase } from '../../support'
 
 describe('Homepage', () => {
 	beforeEach('works', () => {

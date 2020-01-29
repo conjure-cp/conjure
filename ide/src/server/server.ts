@@ -23,6 +23,13 @@ interface FilesResponse {
 	modelToReps: RepMap
 }
 
+export interface Error {
+	stackTrace: string
+	message: string
+	url: string
+	reqInfo: any
+}
+
 export interface InitResponse {
 	trees: { core: Core; info: string; path: string; hash: string }[]
 	nimServerPort: number
@@ -91,9 +98,16 @@ class ConfigService {
 		let params = await vscode.workspace.findFiles('**/*.param')
 
 		let reps = models.map((model) => {
+			let representations = []
+			try {
+				const conjureOutput = execSync(`conjure ide ${model.path} --dump-representations`).toString()
+				representations = JSON.parse(conjureOutput)
+			} catch (e) {
+				vscode.window.showErrorMessage('One or more essence files contains an error')
+			}
 			return {
 				name: this.toRel(model),
-				representations: JSON.parse(execSync(`conjure ide ${model.path} --dump-representations`).toString()),
+				representations: representations,
 			}
 		})
 
@@ -114,7 +128,7 @@ class ConfigService {
 
 	@Path('/solve')
 	@POST
-	async startSearch(list: Cache[]): Promise<InitResponse> {
+	async startSearch(list: Cache[]): Promise<InitResponse | Error> {
 		console.log('SOLLLLLLLLLLLLLLLLLLLLVE REQUEST', list)
 
 		let configsAreTheSame = isEqual(list[0], list[1])
@@ -147,35 +161,38 @@ class ConfigService {
 						location: vscode.ProgressLocation.Notification,
 						title: 'Processing Tree',
 					},
-					async () => {
-						const inits = await Promise.all(
+					async () =>
+						Promise.all(
 							needToGenerate.concat(loadFromCache).map(async (tree) => {
 								const fullPath = path.join(ConfigHelper.cacheFolderPath, tree.hash)
 
-								const response = await fetch(`http://localhost:${nimServerPort}/init/${fullPath}`)
+								const url = `http://localhost:${nimServerPort}/init/${fullPath}`
 
-								const json = (await response.json()) as {
-									core: Core
-									info: string
-								}
+								const response = await fetch(url)
 
-								return {
+								return response.json().then((json: { core: Core; info: string }) => ({
 									hash: tree.hash,
 									path: fullPath,
 									...json,
-								}
+								}))
 							}),
 						)
-
-						const response = {
-							trees: inits,
-							nimServerPort: nimServerPort,
-							vscodeServerPort: thisServerPort,
-						}
-
-						// console.log(inits)
-						return response
-					},
+							.then((inits) => {
+								return {
+									trees: inits,
+									nimServerPort: nimServerPort,
+									vscodeServerPort: thisServerPort,
+								}
+							})
+							.catch((error) => {
+								console.error(error)
+								return {
+									stackTrace: error.stack,
+									message: error.message,
+									url: '/init',
+									reqInfo: error.type,
+								}
+							}),
 				)
 			})
 	}

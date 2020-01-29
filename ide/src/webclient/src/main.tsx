@@ -6,7 +6,7 @@ import { cloneDeep } from 'lodash'
 import Forest from './components/Forest'
 import './css/styles.css'
 import './css/vis.css'
-import { InitResponse } from '../../server/server'
+import { InitResponse, Error } from '../../server/server'
 import { ConfigForm } from './components/config/ConfigForm'
 import { requestServer } from './modules/TreeHelper'
 
@@ -18,13 +18,6 @@ require('isomorphic-fetch')
 if (process.env.NODE_ENV !== 'production') {
 	const whyDidYouRender = require('@welldone-software/why-did-you-render/dist/no-classes-transpile/umd/whyDidYouRender.min.js')
 	whyDidYouRender(React)
-}
-
-interface Error {
-	stackTrace: string
-	message: string
-	url: string
-	reqInfo: any
 }
 
 interface State {
