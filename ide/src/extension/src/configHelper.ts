@@ -175,7 +175,9 @@ export default class ConfigureHelper {
 			const cache = list[i]
 
 			// need to read in the source files in case theyve been modified
-			const hash = hasher(cache.config + cache.essenceFile + cache.paramFile)
+			const hash = hasher(
+				JSON.stringify(cache.config) + JSON.stringify(cache.essenceFile) + JSON.stringify(cache.paramFile),
+			)
 			const args = cacheToArgs(cache, this.cacheFolderPath, hash)
 
 			const obj = {
@@ -190,16 +192,14 @@ export default class ConfigureHelper {
 			const uri = hashes.find((h) => path.basename(h.path).includes(hash))
 
 			if (uri) {
-				const dirname = path.dirname(uri.path)
-
-				if (dirname !== cache.name) {
-					try {
-						fs.renameSync(dirname, dirname.replace(path.basename(dirname), cache.name))
-					} catch (error) {
-						vscode.window.showErrorMessage('Failed to rename cache')
-					}
-				}
-
+				// const dirname = path.dirname(uri.path)
+				// if (dirname !== cache.name) {
+				// 	try {
+				// 		fs.renameSync(dirname, dirname.replace(path.basename(dirname), cache.name))
+				// 	} catch (error) {
+				// 		vscode.window.showErrorMessage('Failed to rename cache')
+				// 	}
+				// }
 				loadFromCache.push(obj)
 				vscode.window.showInformationMessage(`Loading config${i + 1} from cache...`)
 			} else {

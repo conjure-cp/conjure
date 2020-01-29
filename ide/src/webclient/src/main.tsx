@@ -69,15 +69,15 @@ class Root extends React.Component<any, State> {
 		console.log('hello')
 	}
 
-	initResponseHandler = (data: InitResponse) => {
-		// console.log(data)
+	initResponseHandler = async (data: InitResponse) => {
+		console.log('fromvscode', data)
 		this.setState({
 			isCollapsed: true,
 			trees: data.trees,
 			nimServerPort: data.nimServerPort,
 			waitingForSolution: false,
 		})
-		this.getFiles()
+		await this.getFiles()
 	}
 
 	getFiles = async () => {
@@ -132,12 +132,12 @@ class Root extends React.Component<any, State> {
 							className='btn btn-danger btn-lg btn-block mb-2'
 							onClick={async () => {
 								this.setState({ invalidateWaiting: true })
-
 								await this.makeRequest(
 									`http://localhost:${this.state.vscodeServerPort}/config/invalidateCaches`,
 									null,
 									false,
 								)
+								await this.getFiles()
 								this.setState({ invalidateWaiting: false })
 							}}
 						>
@@ -152,7 +152,7 @@ class Root extends React.Component<any, State> {
 						essenceFiles={this.state.essenceFiles}
 						paramFiles={this.state.paramFiles}
 						submitHandler={async (values, isDiffing) => {
-							const toSubmit = isDiffing ? values.caches : values.caches[0]
+							const toSubmit = isDiffing ? values.caches : values.caches.slice(0, 1)
 
 							const res = await this.makeRequest(
 								`http://localhost:${this.state.vscodeServerPort}/config/solve`,

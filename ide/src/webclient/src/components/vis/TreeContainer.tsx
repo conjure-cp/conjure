@@ -171,6 +171,11 @@ export class TreeContainer extends React.Component<Props, State> {
 
 	componentDidUpdate = (prevProps: Props) => {
 		// Typical usage (don't forget to compare props):
+
+		console.log(prevProps.hash)
+		console.log(this.props.hash)
+		console.log('~~~~~~~~~')
+
 		if (this.props.hash !== prevProps.hash) {
 			this.setState(TreeHelper.makeState(this.props.core, this.props.selected))
 		}

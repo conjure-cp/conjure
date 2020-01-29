@@ -39,7 +39,7 @@ describe('solving', () => {
 	})
 
 	describe('its ok', () => {
-		it.only('Solves two', () => {
+		it('Solves two', () => {
 			cy.server({ delay: 1500 }) // enable response stubbing
 			cy.route('GET', `${vscodeServerBase}/config/files`, 'fixture:files.json')
 			cy.route('GET', `${vscodeServerBase}/config/caches`, 'fixture:caches.json')
@@ -51,8 +51,6 @@ describe('solving', () => {
 			cy.contains('Setup').click()
 			cy.get('form > .loadedContent > .btn').click()
 			cy.contains('Setup').should('exist')
-
-			// cy.get('.loadedContent > .btn').click()
 		})
 	})
 })

@@ -160,7 +160,7 @@ class ConfigService {
 								}
 
 								return {
-									hash: hasher(tree.config),
+									hash: tree.hash,
 									path: fullPath,
 									...json,
 								}
