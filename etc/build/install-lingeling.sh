@@ -31,7 +31,6 @@ mkdir -p ${BIN_DIR}
 cp lingeling ${BIN_DIR}/lingeling
 cp plingeling ${BIN_DIR}/plingeling
 cp treengeling ${BIN_DIR}/treengeling
-ls -l
 echo "lingeling executable is at ${BIN_DIR}/lingeling"
 echo "plingeling executable is at ${BIN_DIR}/plingeling"
 echo "treengeling executable is at ${BIN_DIR}/treengeling"
