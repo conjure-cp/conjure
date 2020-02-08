@@ -865,8 +865,7 @@ ui = modes
                     \ - chuffed (CP solver)\n\
                     \ - glucose (SAT solver)\n\
                     \ - glucose-syrup (SAT solver)\n\
-                    \ - lingeling (SAT solver)\n\
-                    \ - plingeling (parallel SAT solver)\n\
+                    \ - lingeling/plingeling/treengeling (SAT solver)\n\
                     \ - cadical (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\

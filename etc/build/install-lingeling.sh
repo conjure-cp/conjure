@@ -30,9 +30,12 @@ make -j
 mkdir -p ${BIN_DIR}
 cp lingeling ${BIN_DIR}/lingeling
 cp plingeling ${BIN_DIR}/plingeling
+cp treengeling ${BIN_DIR}/treengeling
+ls -l
 echo "lingeling executable is at ${BIN_DIR}/lingeling"
 echo "plingeling executable is at ${BIN_DIR}/plingeling"
-ls -l ${BIN_DIR}/lingeling ${BIN_DIR}/plingeling
+echo "treengeling executable is at ${BIN_DIR}/treengeling"
+ls -l ${BIN_DIR}/lingeling ${BIN_DIR}/plingeling ${BIN_DIR}/treengeling
 popd
 rm -rf ${BIN_DIR}/tmp-install-lingeling
 
