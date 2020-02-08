@@ -22,9 +22,9 @@ function download {
 }
 export -f download
 
-download http://fmv.jku.at/lingeling/lingeling-bbc-9230380-160707.tar.gz
-tar xzf lingeling-bbc-9230380-160707.tar.gz
-cd lingeling-bbc-9230380-160707
+download http://fmv.jku.at/lingeling/lingeling-bcj-78ebb86-180517.tar.gz
+tar xzf lingeling-bcj*.tar.gz
+cd lingeling-bcj*
 ./configure.sh
 make -j
 mkdir -p ${BIN_DIR}
