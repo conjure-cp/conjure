@@ -640,6 +640,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                 outputModels portfolioSize modelHashesBefore modelNamePrefix config modelWithStreamliners
     doIfNotCached          -- start the show!
         ( sort (mStatements essenceM)
+        , modelNamePrefix 
         -- when the following flags change, invalidate hash
         -- nested tuples, because :(
         , ( numberingStart
