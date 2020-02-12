@@ -535,7 +535,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
 mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
     mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
 mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
-
+    pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
@@ -637,7 +637,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                             streamliners <- pure essenceM >>= resolveNames >>= typeCheckModel >>= streamlining
                             let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
                             return essenceM { mStatements = mStatements essenceM ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
-                outputModels config modelWithStreamliners
+                outputModels portfolioSize modelHashesBefore modelNamePrefix config modelWithStreamliners
     doIfNotCached          -- start the show!
         ( sort (mStatements essenceM)
         -- when the following flags change, invalidate hash
@@ -665,7 +665,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
         , generateStreamliners
         )
         (outputDirectory </> ".conjure-checksum")
-        (pp logLevel "Using cached models.")
+        (pp logLevel "Using cached models." >> return S.empty) -- TODO
         conjuring
 mainWithArgs_Modelling _ _ _ _ = bug "mainWithArgs_Modelling"
 
