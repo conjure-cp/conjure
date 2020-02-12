@@ -74,7 +74,37 @@ mainWithArgs :: forall m .
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
 mainWithArgs TSDEF{} = liftIO tsDef
-mainWithArgs mode@Modelling{..} = void $ mainWithArgs_Modelling "" mode Nothing S.empty
+mainWithArgs mode@Modelling{..} = do
+    essenceM <- readModelFromFile essence
+    doIfNotCached          -- start the show!
+        ( sort (mStatements essenceM)
+        , portfolio
+        -- when the following flags change, invalidate hash
+        -- nested tuples, because :(
+        , ( numberingStart
+          , smartFilenames
+          , strategyQ
+          , strategyA
+          , responses
+          )
+        , ( representations
+          , representationsFinds
+          , representationsGivens
+          , representationsAuxiliaries
+          , representationsQuantifieds
+          , representationsCuts
+          )
+        , ( channelling
+          , representationLevels
+          , seed
+          , limitModels
+          , limitTime
+          , outputFormat
+          )
+        )
+        (outputDirectory </> ".conjure-checksum")
+        (pp logLevel "Using cached models.")
+        (void $ mainWithArgs_Modelling "" mode Nothing S.empty)
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
@@ -236,6 +266,7 @@ mainWithArgs config@Solve{..} = do
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else doIfNotCached          -- start the show!
                     ( sort (mStatements essenceM)
+                    , portfolio
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
                     , ( numberingStart
@@ -337,7 +368,7 @@ mainWithArgs config@Solve{..} = do
             n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            pp logLevel $ "Generated" <+> pretty (S.size n) <+> " models:" <+> prettyList id "," eprimes
+            pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
@@ -382,7 +413,7 @@ mainWithArgs_Modelling :: forall m .
     S.Set Int ->                -- modelHashesBefore
     m (S.Set Int)
 mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolioSize <- portfolio = do
-    pp logLevel $ "Running in portfolio mode, aiming to generate up to" <+> pretty portfolioSize <+> "models."
+    pp logLevel $ "Running in portfolio mode, aiming to generate" <+> pretty portfolioSize <+> "models."
     let
         go modelsSoFar [] = do
             pp logLevel $ "Done, no more levels, generated" <+> pretty (S.size modelsSoFar) <+> "models."
@@ -623,36 +654,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
         conjuring = do
             config <- getConfig
             runNameGen essenceM $ outputModels portfolioSize modelHashesBefore modelNamePrefix config essenceM
-
-    doIfNotCached          -- start the show!
-        ( sort (mStatements essenceM)
-        , modelNamePrefix
-        -- when the following flags change, invalidate hash
-        -- nested tuples, because :(
-        , ( numberingStart
-          , smartFilenames
-          , strategyQ
-          , strategyA
-          , responses
-          )
-        , ( representations
-          , representationsFinds
-          , representationsGivens
-          , representationsAuxiliaries
-          , representationsQuantifieds
-          , representationsCuts
-          )
-        , ( channelling
-          , representationLevels
-          , seed
-          , limitModels
-          , limitTime
-          , outputFormat
-          )
-        )
-        (outputDirectory </> ".conjure-checksum")
-        (pp logLevel "Using cached models." >> return S.empty) -- TODO
-        conjuring
+    conjuring
 mainWithArgs_Modelling _ _ _ _ = bug "mainWithArgs_Modelling"
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
