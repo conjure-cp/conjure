@@ -36,6 +36,7 @@ data UI
         , logRuleAttempts            :: Bool
         , logChoices                 :: Bool
         -- flags related to modelling decisions
+        , portfolio                  :: Maybe Int
         , strategyQ                  :: String
         , strategyA                  :: String
         , representations            :: Maybe String        -- (def: strategyA)
@@ -106,6 +107,7 @@ data UI
         , logRuleAttempts            :: Bool
         , logChoices                 :: Bool
         -- flags related to modelling decisions
+        , portfolio                  :: Maybe Int
         , strategyQ                  :: String
         , strategyA                  :: String
         , representations            :: Maybe String
@@ -327,6 +329,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Store the choices in a way that can be reused by -al"
+        , portfolio
+            = Nothing
+            &= typ "PORTFOLIO"
+            &= name "portfolio"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Portfolio size. When it is set to N, Conjure will try to generate up to N models."
         , strategyQ
             = "f"
             &= typ "STRATEGY"
@@ -743,6 +752,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Store the choices in a way that can be reused by -al"
+        , portfolio
+            = Nothing
+            &= typ "PORTFOLIO"
+            &= name "portfolio"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Portfolio size. When it is set to N, Conjure will try to generate up to N models."
         , strategyQ
             = "f"
             &= typ "STRATEGY"
@@ -884,11 +900,14 @@ ui = modes
                     \ - chuffed (CP solver)\n\
                     \ - glucose (SAT solver)\n\
                     \ - glucose-syrup (SAT solver)\n\
-                    \ - lingeling (SAT solver)\n\
+                    \ - lingeling/plingeling/treengeling (SAT solver)\n\
+                    \ - cadical (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
+                    \ - coin-or (MIP solver, implemented via MiniZinc)\n\
+                    \ - cplex (MIP solver, implemented via MiniZinc)\n\
                     \Default: minion"
         , cgroups
             = False

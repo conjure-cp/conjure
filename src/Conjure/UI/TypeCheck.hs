@@ -59,14 +59,20 @@ typeCheckModel model1 = do
         case st of
             Declaration decl -> do
                 case decl of
-                    FindOrGiven _ _ domain -> do
-                        mty <- runExceptT $ typeOfDomain domain
-                        case mty of
-                            Right _ -> return ()
-                            Left err -> tell $ return $ vcat
-                                [ "In a declaration statement:" <++> pretty st
-                                , "Error:" <++> pretty err
-                                ]
+                    FindOrGiven _ _ domain ->
+                        case domain of
+                            DomainReference{} ->
+                                -- no need to raise an error here if this is a reference to another domain
+                                -- because must have already we raised the error in the "letting" of that domain
+                                return ()
+                            _ -> do
+                                mty <- runExceptT $ typeOfDomain domain
+                                case mty of
+                                    Right _ -> return ()
+                                    Left err -> tell $ return $ vcat
+                                        [ "In a declaration statement:" <++> pretty st
+                                        , "Error:" <++> pretty err
+                                        ]
                     Letting _ x -> do
                         mty <- runExceptT $ case x of
                                                 Domain y -> typeOfDomain y
@@ -187,7 +193,7 @@ typeCheckModel model1 = do
             ty <- typeOf x
             return $ case ty of
                 TypeInt t -> DomainInt t [RangeSingle x]
-                _       -> d
+                _ -> d
         domainIntERecover d = return d
     statements4 <- transformBiM domainIntERecover statements3
 

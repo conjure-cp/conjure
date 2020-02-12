@@ -10,21 +10,33 @@ jobs:
       Linux:
         imageName: 'ubuntu-latest'
         runTests: true
+        coverage: false
       Mac:
         imageName: 'macos-latest'
         runTests: true
+        coverage: false
       Windows:
         imageName: 'vs2017-win2016'
         runTests: false
+        coverage: false
+      CodeCoverage:
+        imageName: 'ubuntu-latest'
+        runTests: true
+        coverage: true
   pool:
     vmImage: $(imageName)
   steps:
-  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
+  - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh ; fi
     displayName: "Install Minion"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
     displayName: "Install Glucose"
-  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} stack test --test-arguments '--limit-time 0' ; fi
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=0 make test ; fi
     displayName: "Test"
-
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: azure_id_rsa
+      displayName: 'Get the Github deploy key'
+  - bash: COVERAGE=$(coverage) SOURCE_VERSION="$(Build.SourceVersion)" etc/build/record-coverage.sh
+    displayName: "Upload code coverage report to Github"

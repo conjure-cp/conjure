@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Conjure.Representations.Combined
     ( downD, downC, up
     , downD1, downC1, up1
@@ -306,10 +308,11 @@ reprsSparseOrder = map return
 reprOptions ::
     Monad m =>
     Functor m =>
+    Data x =>
     Pretty x =>
     ExpressionLike x =>
     AllRepresentations m -> Domain () x -> m [Domain HasRepresentation x]
-reprOptions reprs domain = go reprs
+reprOptions reprs (expandDomainReference -> domain) = go reprs
     where
         go [] = return []
         go (reprsThisLevel:reprsNextLevels) = do

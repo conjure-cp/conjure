@@ -145,6 +145,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , logRuleSuccesses              = False
             , logRuleAttempts               = False
             , logChoices                    = False
+            , portfolio                     = Nothing
             , strategyQ                     = "f"
             , strategyA                     = "c"
             , representations               = Nothing

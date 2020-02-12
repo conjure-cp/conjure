@@ -97,7 +97,7 @@ import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 -- base
 import System.IO ( hFlush, stdout )
-import Data.IORef ( IORef, newIORef, readIORef, writeIORef )
+import Data.IORef ( IORef, newIORef, readIORef, writeIORef, modifyIORef )
 import System.IO.Unsafe ( unsafePerformIO )
 
 -- uniplate
@@ -112,6 +112,9 @@ import qualified Data.Aeson.Types as JSON   -- aeson
 import qualified Data.HashMap.Strict as M   -- containers
 import qualified Data.Vector as V           -- vector
 
+-- containers
+import qualified Data.Set as S
+
 
 outputModels ::
     forall m .
@@ -122,10 +125,13 @@ outputModels ::
     EnumerateDomain m =>
     MonadUserError m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
+    Maybe Int ->                -- portfolioSize
+    S.Set Int ->                -- modelHashesBefore
+    String ->                   -- modelNamePrefix
     Config ->
     Model ->
-    m ()
-outputModels config model = do
+    m (S.Set Int)               -- hash values, identifying the models
+outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
 
     liftIO $ writeIORef recordedResponses (responses config)
     liftIO $ writeIORef recordedResponsesRepresentation (responsesRepresentation config)
@@ -170,45 +176,73 @@ outputModels config model = do
                 Left {} -> limitModelsNeeded n              -- yielded a log, still n models to produce
                 Right{} -> limitModelsNeeded (n-1)          -- yielded a model, produce n-1 more models
 
-        each i logOrModel =
+        limitModelsPortfolioSize :: Pipe LogOrModel LogOrModel m ()
+        limitModelsPortfolioSize =
+            case portfolioSize of
+                Nothing -> Pipes.cat
+                Just s -> do
+                    nb <- liftIO (readIORef nbGeneratedModels)
+                    if nb < s
+                        then do
+                            x <- Pipes.await
+                            Pipes.yield x
+                            limitModelsPortfolioSize
+                        else do
+                            log LogInfo $ "Stopping, generated" <+> pretty nb <+> "models."
+                            return ()
+
+        each (modelHashes, i) logOrModel =
             case logOrModel of
                 Left (l,msg) -> do
                     log l msg
-                    return i
+                    return (modelHashes, i)
                 Right eprime -> do
-                    let gen =
-                            if smartFilenames config
-                                then [ choice
-                                     | (_question, choice, numOptions) <-
-                                             eprime |> mInfo |> miTrailCompact
-                                     , numOptions > 1
-                                     ] |> map (('_':) . show)
-                                       |> concat
-                                else padLeft 6 '0' (show i)
-                    let filename = dir </> "model" ++ gen ++ ".eprime"
-                    if estimateNumberOfModels config
+                    let newHash = hash eprime { mInfo = def, mStatements = sort (mStatements eprime) }
+                    if S.member newHash modelHashes
                         then do
-                            let
-                                estimate :: Integer
-                                estimate = product $ 1 : [ toInteger numOptions
-                                                         | (_question, _choice, numOptions) <-
-                                                             eprime |> mInfo |> miTrailCompact
-                                                         ]
-                            liftIO $ print
-                                        $ "These options would generate at least"
-                                        <+> pretty estimate
-                                        <+> (if estimate == 1 then "model" else "models") <> "."
-                        else writeModel (lineWidth config) Plain (Just filename) eprime
-                    return (i+1)
+                            log LogInfo "Skipping duplicate model."
+                            return (modelHashes, i)
+                        else do
+                            let gen =
+                                    if modelNamePrefix `elem` ["01_compact", "02_sparse"]
+                                        then modelNamePrefix
+                                        else modelNamePrefix ++
+                                                if smartFilenames config
+                                                    then [ choice
+                                                         | (_question, choice, numOptions) <-
+                                                                 eprime |> mInfo |> miTrailCompact
+                                                         , numOptions > 1
+                                                         ] |> map (('_':) . show)
+                                                           |> concat
+                                                    else padLeft 6 '0' (show i)
+                            let filename = dir </> gen ++ ".eprime"
+                            if estimateNumberOfModels config
+                                then do
+                                    let
+                                        estimate :: Integer
+                                        estimate = product $ 1 : [ toInteger numOptions
+                                                                 | (_question, _choice, numOptions) <-
+                                                                     eprime |> mInfo |> miTrailCompact
+                                                                 ]
+                                    log LogInfo $ "These options would generate at least"
+                                                <+> pretty estimate
+                                                <+> (if estimate == 1 then "model" else "models") <> "."
+                                else do
+                                    log LogInfo $ "Saved model in:" <+> pretty filename
+                                    writeModel (lineWidth config) Plain (Just filename) eprime
+                                    liftIO $ modifyIORef nbGeneratedModels (+1)
+                            let modelHashes' = S.insert newHash modelHashes
+                            return (modelHashes', i+1)
 
     let ?typeCheckerMode = RelaxedIntegerTags
 
     Pipes.foldM each
-                (return (numberingStart config))
-                (const $ return ())
+                (return (modelHashesBefore, numberingStart config))
+                (\ (modelHashes, _nbModels) -> return modelHashes )
                 (toCompletion config model
                     >-> limitModelsIfNeeded
-                    >-> limitModelsIfEstimating)
+                    >-> limitModelsIfEstimating
+                    >-> limitModelsPortfolioSize)
 
 
 toCompletion :: forall m .
@@ -514,6 +548,10 @@ recordedResponsesRepresentation :: IORef (Maybe [(Name, Int)])
 {-# NOINLINE recordedResponsesRepresentation #-}
 recordedResponsesRepresentation = unsafePerformIO (newIORef Nothing)
 
+nbGeneratedModels :: IORef Int
+{-# NOINLINE nbGeneratedModels #-}
+nbGeneratedModels = unsafePerformIO (newIORef 0)
+
 
 executeStrategy :: (MonadIO m, MonadLog m) => Question -> [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
 executeStrategy _ [] _ = bug "executeStrategy: nothing to choose from"
@@ -747,6 +785,10 @@ emptyMatrixLiterals model =
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
+
+
+expandDomainReferences :: Model -> Model
+expandDomainReferences = transformBi (expandDomainReference :: Domain () Expression -> Domain () Expression)
 
 
 -- | Add a default search order (branching on [...])
@@ -1173,6 +1215,8 @@ epilogue model = return model
     >>= sliceThemMatrices             >>= logDebugIdModel "[sliceThemMatrices]"
     >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= return . emptyMatrixLiterals  >>= logDebugIdModel "[emptyMatrixLiterals]"
+    >>= return . expandDomainReferences
+                                      >>= logDebugIdModel "[expandDomainReferences]"
     >>= return . reverseTrails        >>= logDebugIdModel "[reverseTrails]"
     >>= return . oneSuchThat          >>= logDebugIdModel "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugIdModel "[languageEprime]"
@@ -1589,6 +1633,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
         let reprsWhichOrder
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
+                | (forg, representationsFinds  config) == (Find , Sparse) = reprsSparseOrder
                 | representationLevels config == False                    = reprsStandardOrderNoLevels
                 | otherwise                                               = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder inpDom
@@ -2149,7 +2194,7 @@ rule_DomainCardinality :: Rule
 rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
     theRule p = do
         maybeDomain <- match opTwoBars p
-        d <- case maybeDomain of
+        d <- expandDomainReference <$> case maybeDomain of
             Domain d -> return d
             Reference _ (Just (Alias (Domain d))) -> return d
             _ -> na "rule_DomainCardinality"

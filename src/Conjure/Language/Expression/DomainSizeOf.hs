@@ -22,6 +22,7 @@ import Conjure.Language.Pretty
 
 
 instance DomainSizeOf Expression Expression where
+    domainSizeOf (DomainReference _ (Just d)) = domainSizeOf d
     domainSizeOf DomainBool = return 2
     domainSizeOf (DomainInt _ [] ) = fail "domainSizeOf infinite integer domain"
     domainSizeOf (DomainInt _ [r]) = domainSizeOfRange r

@@ -7,6 +7,8 @@ export GHC_VERSION?=8.6
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
+export COVERAGE?=false
+export LIMIT_TIME?=10
 
 .PHONY: install
 install:
@@ -33,30 +35,20 @@ install:
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
-	@if  [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests --no-terminal;\
-	elif [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests;\
-	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly --no-terminal;\
-	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --resolver nightly;\
-	elif   ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests --no-terminal;\
-	elif   ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests;\
-	elif ! ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR} --no-terminal;\
-	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --local-bin-path ${BIN_DIR};\
-	fi
+	@bash etc/build/install.sh
 	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
 	@echo - savilerow
 
-.PHONY: install-using-cabal
-install-using-cabal:
-	@bash etc/build/install.sh
+.PHONY: test
+test:
+	@if ${COVERAGE}; then \
+		stack test --coverage --test-arguments '--limit-time ${LIMIT_TIME}';\
+		stack hpc report conjure-cp $(find . -name conjure.tix);\
+		ls .stack-work/install/*/*/*/hpc/combined/custom;\
+	else\
+		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
+	fi
 
 .PHONY: preinstall
 preinstall:
@@ -126,6 +118,7 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-gecode.sh
 	@etc/build/silent-wrapper.sh etc/build/install-glucose.sh
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
+	@etc/build/silent-wrapper.sh etc/build/install-cadical.sh
 	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
 	@etc/build/silent-wrapper.sh etc/build/install-bc_minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
