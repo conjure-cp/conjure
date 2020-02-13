@@ -371,7 +371,6 @@ mainWithArgs config@Solve{..} = do
             if (S.size n == 1)
                 then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
                 else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
-            pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
