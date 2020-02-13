@@ -561,7 +561,8 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
 mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
     mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
 mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
-    pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
+    unless (modelNamePrefix == "model") $
+        pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
