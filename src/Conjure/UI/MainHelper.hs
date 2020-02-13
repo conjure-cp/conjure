@@ -373,7 +373,9 @@ mainWithArgs config@Solve{..} = do
             n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
+            if (S.size n == 1)
+                then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
+                else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
@@ -566,7 +568,8 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
 mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
     mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
 mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
-    pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
+    unless (modelNamePrefix == "model") $
+        pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
     let
         parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return

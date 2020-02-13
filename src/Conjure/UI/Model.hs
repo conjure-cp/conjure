@@ -198,24 +198,24 @@ outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
                     return (modelHashes, i)
                 Right eprime -> do
                     let newHash = hash eprime { mInfo = def, mStatements = sort (mStatements eprime) }
+                    let gen =
+                            if modelNamePrefix `elem` ["01_compact", "02_sparse"]
+                                then modelNamePrefix
+                                else modelNamePrefix ++
+                                        if smartFilenames config
+                                            then [ choice
+                                                 | (_question, choice, numOptions) <-
+                                                         eprime |> mInfo |> miTrailCompact
+                                                 , numOptions > 1
+                                                 ] |> map (('_':) . show)
+                                                   |> concat
+                                            else padLeft 6 '0' (show i)
+                    let filename = dir </> gen ++ ".eprime"
                     if S.member newHash modelHashes
                         then do
-                            log LogInfo "Skipping duplicate model."
+                            log LogInfo $ "Skipping duplicate model (" <> pretty filename <> ")"
                             return (modelHashes, i)
                         else do
-                            let gen =
-                                    if modelNamePrefix `elem` ["01_compact", "02_sparse"]
-                                        then modelNamePrefix
-                                        else modelNamePrefix ++
-                                                if smartFilenames config
-                                                    then [ choice
-                                                         | (_question, choice, numOptions) <-
-                                                                 eprime |> mInfo |> miTrailCompact
-                                                         , numOptions > 1
-                                                         ] |> map (('_':) . show)
-                                                           |> concat
-                                                    else padLeft 6 '0' (show i)
-                            let filename = dir </> gen ++ ".eprime"
                             if estimateNumberOfModels config
                                 then do
                                     let
@@ -228,7 +228,9 @@ outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
                                                 <+> pretty estimate
                                                 <+> (if estimate == 1 then "model" else "models") <> "."
                                 else do
-                                    log LogInfo $ "Saved model in:" <+> pretty filename
+                                    case portfolioSize of
+                                        Nothing -> return ()
+                                        Just _ -> log LogInfo $ "Saved model in:" <+> pretty filename
                                     writeModel (lineWidth config) Plain (Just filename) eprime
                                     liftIO $ modifyIORef nbGeneratedModels (+1)
                             let modelHashes' = S.insert newHash modelHashes
