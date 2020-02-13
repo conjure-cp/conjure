@@ -228,7 +228,9 @@ outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
                                                 <+> pretty estimate
                                                 <+> (if estimate == 1 then "model" else "models") <> "."
                                 else do
-                                    log LogInfo $ "Saved model in:" <+> pretty filename
+                                    case portfolioSize of
+                                        Nothing -> return ()
+                                        Just _ -> log LogInfo $ "Saved model in:" <+> pretty filename
                                     writeModel (lineWidth config) Plain (Just filename) eprime
                                     liftIO $ modifyIORef nbGeneratedModels (+1)
                             let modelHashes' = S.insert newHash modelHashes

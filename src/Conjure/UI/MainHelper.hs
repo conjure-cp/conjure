@@ -368,6 +368,9 @@ mainWithArgs config@Solve{..} = do
             n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
+            if (S.size n == 1)
+                then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
+                else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
