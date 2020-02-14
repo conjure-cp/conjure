@@ -103,6 +103,7 @@ mainWithArgs mode@Modelling{..} = do
           , limitTime
           , outputFormat
           )
+        , generateStreamliners
         )
         (outputDirectory </> ".conjure-checksum")
         (pp logLevel "Using cached models.")
