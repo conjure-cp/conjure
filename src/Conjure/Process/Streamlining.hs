@@ -176,7 +176,7 @@ intLowerHalf ::
     StreamlinerGen m
 intLowerHalf x = do
     ty <- typeOf x
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainInt _ [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
@@ -193,7 +193,7 @@ intUpperHalf ::
     StreamlinerGen m
 intUpperHalf x = do
     ty <- typeOf x
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainInt _ [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
@@ -214,7 +214,7 @@ matrixAll ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 matrixAll innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainMatrix indexDom innerDom -> do
             nm <- nextName "q"
@@ -238,7 +238,7 @@ matrixMost ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 matrixMost innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainMatrix indexDom innerDom -> do
             nm <- nextName "q"
@@ -259,7 +259,7 @@ matrixHalf :: MonadFail m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 matrixHalf innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainMatrix indexDom innerDom -> do
             let size = [essence| |`&indexDom`| |]
@@ -282,7 +282,7 @@ matrixApproxHalf ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 matrixApproxHalf innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainMatrix indexDom innerDom -> do
             let size = [essence| |`&indexDom`| |]
@@ -313,7 +313,7 @@ setAll ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 setAll innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
@@ -339,7 +339,7 @@ setMost ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 setMost innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
@@ -363,7 +363,7 @@ setHalf ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 setHalf innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
@@ -388,7 +388,7 @@ setApproxHalf ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 setApproxHalf innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
                 DomainSet _ _ innerDom -> Just innerDom
@@ -416,7 +416,7 @@ relationCardinality ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 relationCardinality x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainRelation _ _ inners -> do
             let maxCard = make opProduct $ fromList [ [essence| |`&i`| |] | i <- inners ]
@@ -438,7 +438,7 @@ binRelAttributes ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 binRelAttributes x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         -- we don't insist on inner1 == inner2 any more
         DomainRelation _ _ [inner1, inner2] -> sequence
@@ -479,8 +479,9 @@ monotonicallyIncreasing ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 monotonicallyIncreasing x = do
-    dom <- domainOf x
-    -- traceM $ show $ "Monotonically Increasing"
+    -- traceM $ show $ "Monotonically Increasing [1]" <+> pretty x
+    dom <- expandDomainReference <$> domainOf x
+    -- traceM $ show $ "Monotonically Increasing [2]" <+> pretty dom
     let
         applicable = case dom of
                         DomainFunction _ _ DomainInt{} DomainInt{} -> True
@@ -504,7 +505,7 @@ monotonicallyDecreasing ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 monotonicallyDecreasing x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let
         applicable = case dom of
                         DomainFunction _ _ DomainInt{} DomainInt{} -> True
@@ -529,7 +530,7 @@ smallestFirst ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 smallestFirst x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let
         applicable = case dom of
                         DomainFunction _ _ DomainInt{} DomainInt{} -> True
@@ -552,7 +553,7 @@ largestFirst ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 largestFirst x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     let
         applicable = case dom of
                         DomainFunction _ _ DomainInt{} DomainInt{} -> True
@@ -575,7 +576,7 @@ commutative ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 commutative x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainFunction () _ (DomainTuple [a, b]) c -> do
             if (a==b) && (b==c)
@@ -596,7 +597,7 @@ nonCommutative ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 nonCommutative x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainFunction () _ (DomainTuple [a, b]) c -> do
             if (a==b) && (b==c)
@@ -617,7 +618,7 @@ associative ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 associative x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainFunction () _ (DomainTuple [a, b]) c -> do
             if (a==b) && (b==c)
@@ -639,7 +640,7 @@ onTuple ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Integer -> StreamlinerGen m -> StreamlinerGen m
 onTuple n innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainTuple ds | n >= 1 && n <= genericLength ds -> do
             nm <- nextName "q"
@@ -665,7 +666,7 @@ onRange ::
     StreamlinerGen m -> StreamlinerGen m
 onRange innerStreamliner x = do
     -- traceM $ show $ "onRange" <+> pretty x
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     -- traceM $ show $ "onRange dom" <+> pretty dom
     let
         minnerDomTo = case dom of
@@ -702,7 +703,7 @@ onDefined ::
     StreamlinerGen m -> StreamlinerGen m
 onDefined innerStreamliner x = do
     -- traceM $ show $ "Defined" <+> pretty x
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     -- traceM $ show $ "Defined dom" <+> pretty dom
     -- So we get the range and then we apply and then apply the rule to the range of the function
     let
@@ -736,7 +737,7 @@ onDefined innerStreamliner x = do
 -- diagonal :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 -- diagonal innerStreamliner x = do
 --     traceM $ show $ "diagnoal" <+> pretty x
---     dom <- domainOf x
+--     dom <- expandDomainReference <$> domainOf x
 --     case dom of
 --         DomainFunction () _ (DomainTuple [a, b]) domto-> do
 --             case (a == b)  of
@@ -759,7 +760,7 @@ onDefined innerStreamliner x = do
 -- prefix :: (MonadFail m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
 -- prefix innerStreamliner x = do
 --     traceM $ show $ "prefix"
---     dom <- domainOf x
+--     dom <- expandDomainReference <$> domainOf x
 --     case dom of
 --         DomainFunction () _ (DomainInt [RangeBounded lb up]) innerDomTo -> do
 --             case x of
@@ -783,7 +784,7 @@ onDefined innerStreamliner x = do
 -- postfix :: (MonadFail m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
 -- postfix innerStreamliner x = do
 --     traceM $ show $ "postfix"
---     dom <- domainOf x
+--     dom <- expandDomainReference <$> domainOf x
 --     case dom of
 --         DomainFunction () _ (DomainInt [RangeBounded lb up]) innerDomTo -> do
 --             case x of
@@ -815,7 +816,7 @@ parts ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
 parts innerStreamliner x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainPartition _ _ partitionDomain -> do
             -- traceM $ show $ "partition"
@@ -842,7 +843,7 @@ quasiRegular ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 quasiRegular x = do
-    dom <- domainOf x
+    dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainPartition{} -> do
             mkStreamliner "PartitionRegular" [essence|
