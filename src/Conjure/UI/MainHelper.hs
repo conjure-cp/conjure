@@ -440,7 +440,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , strategyA = "c"
                  , representations = Just "c"
                  , representationsFinds = Just "c"
-                 , representationsGivens = Just "c"
+                 , representationsGivens = Just "s"
                  , representationsAuxiliaries = Just "c"
                  , representationsQuantifieds = Just "c"
                  , representationsCuts = Just "c"
