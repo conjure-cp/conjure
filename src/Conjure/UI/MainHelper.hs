@@ -448,7 +448,20 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = True
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "02_sparse"
+        , mainWithArgs_Modelling "02_compact"
+            mode { portfolio = Nothing
+                 , strategyA = "c"
+                 , representations = Just "c"
+                 , representationsFinds = Just "c"
+                 , representationsGivens = Just "c"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "03_sparse"
             mode { portfolio = Nothing
                  , strategyA = "s"
                  , representations = Just "s"
@@ -461,7 +474,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = True
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "03_nochPrunedLevels"
+        , mainWithArgs_Modelling "04_nochPrunedLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -474,7 +487,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = True
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "04_nochAllLevels"
+        , mainWithArgs_Modelling "05_nochAllLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -487,7 +500,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = False
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "05_chPrunedLevels"
+        , mainWithArgs_Modelling "06_chPrunedLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -500,7 +513,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = True
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "06_chAllLevels"
+        , mainWithArgs_Modelling "07_chAllLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -513,7 +526,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = False
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "07_fullPrunedLevels"
+        , mainWithArgs_Modelling "08_fullPrunedLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -526,7 +539,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = True
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "08_fullAllLevels"
+        , mainWithArgs_Modelling "09_fullAllLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -539,7 +552,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = False
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "09_fullParamsPrunedLevels"
+        , mainWithArgs_Modelling "10_fullParamsPrunedLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
@@ -552,7 +565,7 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
                  , representationLevels = True
                  , smartFilenames = True
                  }
-        , mainWithArgs_Modelling "10_fullParamsAllLevels"
+        , mainWithArgs_Modelling "11_fullParamsAllLevels"
             mode { portfolio = Nothing
                  , strategyA = "x"
                  , representations = Just "x"
