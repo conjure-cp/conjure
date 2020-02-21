@@ -1,0 +1,18 @@
+Generating models for sequence-injective.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+language ESSENCE' 1.0
+
+find s_ExplicitBounded_Length: int(0..5)
+find s_ExplicitBounded_Values: matrix indexed by [int(1..5)] of int(1..5)
+branching on [s_ExplicitBounded_Length, s_ExplicitBounded_Values]
+such that
+    and([q1 > s_ExplicitBounded_Length -> s_ExplicitBounded_Values[q1] = 1 | q1 : int(1..5)]),
+    s_ExplicitBounded_Length <= 5,
+    alldifferent_except([toInt(q2 <= s_ExplicitBounded_Length) * catchUndef(s_ExplicitBounded_Values[q2], 0)
+                             | q2 : int(1..5)],
+                        0)
+
