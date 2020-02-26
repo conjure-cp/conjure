@@ -1,0 +1,61 @@
+$ counting Hamiltonian cycles in an n by n grid
+$ bijective path, induced bit pattern of inside/outside blocks for symmetry
+$ about 6s per solution for 8x8
+
+given n : int(1..)
+letting U be n-1
+letting W be n-2
+letting N be n*n
+letting M be U*U
+letting V be M-1
+letting vertices be domain int(0..N-1) $ i,j -> i*n+j 0,0 .. U,U
+letting index be domain int(1..N)
+letting blocks be domain int(0..V) $ i,j -> i*U+j 0,0 .. 0,U-1 1,0 .. U-1,U-1
+
+find p : sequence (size N,bijective) of vertices
+such that $ p represents a cycle
+and([ |p(k)/n - p((k%N)+1)/n| + |p(k)%n - p((k%N)+1)%n| = 1 | k : index ])
+
+$ break symmetries introduced by using p
+such that p(1) = 0, p(2) = 1, p(N) = n,
+
+$ determine 0-1 pattern of blocks outside-inside curve
+$ denote block by top left corner
+find P : matrix indexed by [blocks] of bool
+
+$ use the path, right hand side is inside, LHS is outside
+such that
+P[0],
+
+and([ (((u1=v1  ) /\ (u2=v2-1) /\ (u1 < W)) ->  P[ u1   *U+u2  ]) $ E
+   /\ (((u1=v1-1) /\ (u2=v2  ) /\ (u2 > 0)) ->  P[ u1   *U+u2-1]) $ S
+   /\ (((u1=v1  ) /\ (u2=v2+1) /\ (u1 > 0)) ->  P[(u1-1)*U+u2-1]) $ W
+   /\ (((u1=v1+1) /\ (u2=v2  ) /\ (u2 < W)) ->  P[(u1-1)*U+u2  ]) $ N
+   | k : index, letting u1 be p(k)/n, letting u2 be p(k)%n,
+   letting v1 be p((k%N)+1)/n, letting v2 be p((k%N)+1)%n ]),
+
+$ the rest must all be 0 (or sum of true values is 17/18 for 8x8?)
+$ without this, the solution might not be canonical
+and([ (((u1=v1  ) /\ (u2=v2-1) /\ (u1 > 0)) -> !P[(u1-1)*U+u2  ]) $ E
+   /\ (((u1=v1-1) /\ (u2=v2  ) /\ (u2 < W)) -> !P[ u1   *U+u2  ]) $ S
+   /\ (((u1=v1  ) /\ (u2=v2+1) /\ (u1 < W)) -> !P[ u1   *U+u2-1]) $ W
+   /\ (((u1=v1+1) /\ (u2=v2  ) /\ (u2 > 0)) -> !P[(u1-1)*U+u2-1]) $ N
+   | k : index, letting u1 be p(k)/n, letting u2 be p(k)%n,
+   letting v1 be p((k%N)+1)/n, letting v2 be p((k%N)+1)%n ]),
+
+$ ensure holes are assigned also
+and([ ((k >= U) /\ (k < W*U) /\ (k%U > 0) /\ (k%U < W))
+   -> (
+   (( P[k-U]/\ P[k+U]/\ P[k-1]/\ P[k+1]) ->  P[k]) /\
+   ((!P[k-U]/\!P[k+U]/\!P[k-1]/\!P[k+1]) -> !P[k]))
+   | k : blocks ]),
+
+$ check that a cycle is lex-first
+such that $ k=   (k/U)*U + k%U
+   P <=lex [ P[(W-(k/U))*U + k%U]     | k : blocks ],
+   P <=lex [ P[(W-(k%U))*U + k/U]     | k : blocks ],
+   P <=lex [ P[   (k%U) *U + k/U]     | k : blocks ],
+   P <=lex [ P[(W-(k/U))*U + W-(k%U)] | k : blocks ],
+   P <=lex [ P[   (k/U) *U + W-(k%U)] | k : blocks ],
+   P <=lex [ P[   (k%U) *U + W-k/U]   | k : blocks ],
+   P <=lex [ P[(W-(k%U))*U + W-k/U]   | k : blocks ],
