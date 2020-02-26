@@ -1938,14 +1938,7 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
 rule_Flatten_Lex :: Rule
 rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
     theRule [essence| &a <lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
+      reject_flat a b
       fa <- flatten a
       fb <- flatten b
       tfa <- typeOf fa
@@ -1958,14 +1951,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
              , return [essence| &fa <lex &fb |]
              )
     theRule [essence| &a <=lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
+      reject_flat a b
       fa <- flatten a
       fb <- flatten b
       tfa <- typeOf fa
@@ -1978,6 +1964,24 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
              , return [essence| &fa <=lex &fb |]
              )
     theRule _ = na "rule_Flatten_Lex"  
+    reject_flat a b = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeMatrix TypeBool TypeInt{}, _) ->
+          na "rule_Flatten_Lex"
+        (TypeMatrix TypeBool TypeBool, _) ->
+          na "rule_Flatten_Lex"
+        (TypeList TypeInt{}, _) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeInt{}, _) ->
+          na "rule_Flatten_Lex"
+        (TypeList TypeBool, _) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeBool, _) ->
+          na "rule_Flatten_Lex"
+        _ -> return () 
+
     flatten a = do
       ta <- typeOf a
       case ta of

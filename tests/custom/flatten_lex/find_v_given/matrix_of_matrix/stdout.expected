@@ -1,0 +1,155 @@
+Generating models for matrix.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime matrix.param
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: matrix-matrix.solution
+language ESSENCE' 1.0
+
+given A_1: matrix indexed by [int(0..1), int(0..2)] of bool
+given A_2: matrix indexed by [int(0..1), int(0..2)] of int(5..7)
+find B_1: matrix indexed by [int(0..1), int(0..2)] of bool
+find B_2: matrix indexed by [int(0..1), int(0..2)] of int(5..7)
+branching on [B_1, B_2]
+such that
+    flatten([flatten([flatten([[-toInt(A_1[q3, q4]); int(1)], [A_2[q3, q4]; int(1)]; int(1..2)]) | q4 : int(0..2)])
+                 | q3 : int(0..1)])
+    <lex
+    flatten([flatten([flatten([[-toInt(B_1[q5, q6]); int(1)], [B_2[q5, q6]; int(1)]; int(1..2)]) | q6 : int(0..2)])
+                 | q5 : int(0..1)])
+
+$ Conjure's
+$ {"finds": [{"Name": "B"}],
+$  "givens": [{"Name": "A"}],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Compact": []},
+$  "trailCompact":
+$      [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
+$  "trailVerbose": [],
+$  "trailRewrites": [],
+$  "nameGenState": [["q", 7]],
+$  "nbExtraGivens": 0,
+$  "representations":
+$      [[{"Name": "A"},
+$        {"DomainMatrix":
+$             [{"DomainInt":
+$                   [{"TagInt": []},
+$                    [{"RangeBounded":
+$                          [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                           {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+$              {"DomainMatrix":
+$                   [{"DomainInt":
+$                         [{"TagInt": []},
+$                          [{"RangeBounded":
+$                                [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                                 {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+$                    {"DomainTuple":
+$                         [{"DomainBool": []},
+$                          {"DomainInt":
+$                               [{"TagInt": []},
+$                                [{"RangeBounded":
+$                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+$                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 7]}}]}]]}]}]}]}],
+$       [{"Name": "B"},
+$        {"DomainMatrix":
+$             [{"DomainInt":
+$                   [{"TagInt": []},
+$                    [{"RangeBounded":
+$                          [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                           {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+$              {"DomainMatrix":
+$                   [{"DomainInt":
+$                         [{"TagInt": []},
+$                          [{"RangeBounded":
+$                                [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                                 {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+$                    {"DomainTuple":
+$                         [{"DomainBool": []},
+$                          {"DomainInt":
+$                               [{"TagInt": []},
+$                                [{"RangeBounded":
+$                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+$                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 7]}}]}]]}]}]}]}]],
+$  "representationsTree":
+$      [[{"Name": "A"},
+$        [{"rootLabel": null,
+$          "subForest":
+$              [{"rootLabel": null,
+$                "subForest":
+$                    [{"rootLabel": null,
+$                      "subForest":
+$                          [{"rootLabel": null,
+$                            "subForest": []},
+$                           {"rootLabel": null,
+$                            "subForest": []}]}]}]}]],
+$       [{"Name": "B"},
+$        [{"rootLabel": null,
+$          "subForest":
+$              [{"rootLabel": null,
+$                "subForest":
+$                    [{"rootLabel": null,
+$                      "subForest":
+$                          [{"rootLabel": null,
+$                            "subForest": []},
+$                           {"rootLabel": null,
+$                            "subForest": []}]}]}]}]]],
+$  "originalDomains":
+$      [[{"Name": "A"},
+$        {"DomainMatrix":
+$             [{"DomainInt":
+$                   [{"TagInt": []},
+$                    [{"RangeBounded":
+$                          [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                           {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+$              {"DomainMatrix":
+$                   [{"DomainInt":
+$                         [{"TagInt": []},
+$                          [{"RangeBounded":
+$                                [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                                 {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+$                    {"DomainTuple":
+$                         [{"DomainBool": []},
+$                          {"DomainInt":
+$                               [{"TagInt": []},
+$                                [{"RangeBounded":
+$                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+$                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 7]}}]}]]}]}]}]}],
+$       [{"Name": "B"},
+$        {"DomainMatrix":
+$             [{"DomainInt":
+$                   [{"TagInt": []},
+$                    [{"RangeBounded":
+$                          [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                           {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+$              {"DomainMatrix":
+$                   [{"DomainInt":
+$                         [{"TagInt": []},
+$                          [{"RangeBounded":
+$                                [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+$                                 {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+$                    {"DomainTuple":
+$                         [{"DomainBool": []},
+$                          {"DomainInt":
+$                               [{"TagInt": []},
+$                                [{"RangeBounded":
+$                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+$                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 7]}}]}]]}]}]}]}]]}
+language Essence 1.3
+
+letting B be
+        [[(false, 5), (false, 5), (false, 5); int(0..2)], [(false, 5), (false, 5), (false, 6); int(0..2)]; int(0..1)]
+$ Visualisation for B
+$ _ 5
+$ _ 5
+$ _ 5
+$ 
+$ _ 5
+$ _ 5
+$ _ 6
+$ 
+
