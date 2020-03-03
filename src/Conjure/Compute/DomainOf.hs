@@ -132,6 +132,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpLexLeq x) = domainOf x
     domainOf (MkOpLexLt x) = domainOf x
     domainOf (MkOpLt x) = domainOf x
+    domainOf (MkOpMakeTable x) = domainOf x
     domainOf (MkOpMax x) = domainOf x
     domainOf (MkOpMin x) = domainOf x
     domainOf (MkOpMinus x) = domainOf x
@@ -204,6 +205,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpLexLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpLexLt x) = indexDomainsOf x
     indexDomainsOf (MkOpLt x) = indexDomainsOf x
+    indexDomainsOf (MkOpMakeTable x) = indexDomainsOf x
     indexDomainsOf (MkOpMax x) = indexDomainsOf x
     indexDomainsOf (MkOpMin x) = indexDomainsOf x
     indexDomainsOf (MkOpMinus x) = indexDomainsOf x
@@ -461,6 +463,9 @@ instance DomainOf (OpLexLt x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpLt x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpMakeTable x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMax x) where

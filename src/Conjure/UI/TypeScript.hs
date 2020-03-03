@@ -71,6 +71,7 @@ deriveTypeScript defaultOptions ''OpLeq
 deriveTypeScript defaultOptions ''OpLexLeq
 deriveTypeScript defaultOptions ''OpLexLt
 deriveTypeScript defaultOptions ''OpLt
+deriveTypeScript defaultOptions ''OpMakeTable
 deriveTypeScript defaultOptions ''OpMax
 deriveTypeScript defaultOptions ''OpMin
 deriveTypeScript defaultOptions ''OpMinus

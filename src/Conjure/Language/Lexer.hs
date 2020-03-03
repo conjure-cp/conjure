@@ -145,6 +145,7 @@ data Lexeme
     | L_hist
 
     | L_toInt
+    | L_makeTable
 
     -- global constraints
     | L_allDiff
@@ -391,6 +392,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_freq, "freq" )
     , ( L_hist, "hist" )
     , ( L_toInt, "toInt" )
+    , ( L_makeTable, "makeTable" )
 
     , ( L_allDiff, "allDiff" )
     , ( L_alldifferent_except, "alldifferent_except" )

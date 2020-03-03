@@ -48,6 +48,8 @@
                                               See --dump-representations for a list of available representation options.
       --estimate-number-of-models             Calculate (a lower bound on) the number of models, instead of running
                                               the usual modelling mode.
+      --portfolio=PORTFOLIO                   Portfolio size. When it is set to N, Conjure will try to generate up to
+                                              N models.
    -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
                                               first), i (for interactive), r (for random), x (for all). Prepend a (for
                                               auto) to automatically skip when there is only one option at any point.
@@ -189,6 +191,8 @@
                                               generation instead of prompting the user for the variable representation
                                               questions.
                                               See --dump-representations for a list of available representation options.
+      --portfolio=PORTFOLIO                   Portfolio size. When it is set to N, Conjure will try to generate up to
+                                              N models.
    -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
                                               first), i (for interactive), r (for random), x (for all). Prepend a (for
                                               auto) to automatically skip when there is only one option at any point.
@@ -230,8 +234,7 @@
                                                - chuffed (CP solver)
                                                - glucose (SAT solver)
                                                - glucose-syrup (SAT solver)
-                                               - lingeling (SAT solver)
-                                               - plingeling (parallel SAT solver)
+                                               - lingeling/plingeling/treengeling (SAT solver)
                                                - cadical (SAT solver)
                                                - minisat (SAT solver)
                                                - bc_minisat_all (AllSAT solver, only works with

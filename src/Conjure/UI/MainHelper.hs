@@ -44,6 +44,9 @@ import GHC.Conc ( numCapabilities )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 import Data.Char ( isDigit )
 
+-- containers
+import qualified Data.Set as S
+
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
 
@@ -71,102 +74,11 @@ mainWithArgs :: forall m .
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
 mainWithArgs TSDEF{} = liftIO tsDef
-mainWithArgs Modelling{..} = do
-    let
-        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
-                                 return
-                                 (parseStrategy s)
-
-        getConfig = do
-            strategyQ'                  <- parseStrategy_ strategyQ
-            strategyA'                  <- parseStrategy_ strategyA
-            representations'            <- maybe (return strategyA')       parseStrategy_ representations
-            representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
-            representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
-            representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
-            representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
-            representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
-
-            case fst (viewAuto strategyQ') of
-                Compact -> userErr1 "The Compact heuristic isn't supported for questions."
-                _       -> return ()
-
-            let
-                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
-                parseCommaSeparated flag str =
-                    if null str
-                        then return Nothing
-                        else do
-                            let parts = splitOn "," str
-                            let intParts = mapMaybe readMay parts
-                            if length parts == length intParts
-                                then return (Just intParts)
-                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
-                                                     , "Expected a comma separated list of integers."
-                                                     , "But got:" <+> pretty str
-                                                     ]
-
-            responsesList <- parseCommaSeparated "--responses" responses
-
-            responsesRepresentationList <- do
-                if null responsesRepresentation
-                    then return Nothing
-                    else do
-                        let parts =
-                                [ case splitOn ":" pair of
-                                    [nm, val] ->
-                                        case readMay val of
-                                            Just i -> Just (Name (stringToText nm), i)
-                                            Nothing -> Nothing
-                                    _ -> Nothing
-                                | pair <- splitOn "," responsesRepresentation
-                                ]
-                        let partsJust = catMaybes parts
-                        if length parts == length partsJust
-                            then return (Just partsJust)
-                            else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
-                                                 , "Expected a comma separated list of variable name : integer pairs."
-                                                 , "But got:" <+> pretty responsesRepresentation
-                                                 ]
-
-            return Config.Config
-                { Config.outputDirectory            = outputDirectory
-                , Config.logLevel                   = logLevel
-                , Config.verboseTrail               = verboseTrail
-                , Config.rewritesTrail              = rewritesTrail
-                , Config.logRuleFails               = logRuleFails
-                , Config.logRuleSuccesses           = logRuleSuccesses
-                , Config.logRuleAttempts            = logRuleAttempts
-                , Config.logChoices                 = logChoices
-                , Config.strategyQ                  = strategyQ'
-                , Config.strategyA                  = strategyA'
-                , Config.representations            = representations'
-                , Config.representationsFinds       = representationsFinds'
-                , Config.representationsGivens      = representationsGivens'
-                , Config.representationsAuxiliaries = representationsAuxiliaries'
-                , Config.representationsQuantifieds = representationsQuantifieds'
-                , Config.representationsCuts        = representationsCuts'
-                , Config.channelling                = channelling
-                , Config.representationLevels       = representationLevels
-                , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
-                , Config.numberingStart             = numberingStart
-                , Config.smartFilenames             = smartFilenames
-                , Config.lineWidth                  = lineWidth
-                , Config.responses                  = responsesList
-                , Config.responsesRepresentation    = responsesRepresentationList
-                , Config.estimateNumberOfModels     = estimateNumberOfModels
-                }
-
+mainWithArgs mode@Modelling{..} = do
     essenceM <- readModelFromFile essence
-    liftIO $ hSetBuffering stdout LineBuffering
-    liftIO $ maybe (return ()) setRandomSeed seed
-    let
-        conjuring = do
-            config <- getConfig
-            runNameGen essenceM $ outputModels config essenceM
-
     doIfNotCached          -- start the show!
         ( sort (mStatements essenceM)
+        , portfolio
         -- when the following flags change, invalidate hash
         -- nested tuples, because :(
         , ( numberingStart
@@ -192,8 +104,7 @@ mainWithArgs Modelling{..} = do
         )
         (outputDirectory </> ".conjure-checksum")
         (pp logLevel "Using cached models.")
-        conjuring
-
+        (void $ mainWithArgs_Modelling "" mode Nothing S.empty)
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
@@ -290,6 +201,7 @@ mainWithArgs config@Solve{..} = do
                       , ( "glucose-syrup"   , "glucose-syrup" )
                       , ( "lingeling"       , "lingeling" )
                       , ( "plingeling"      , "plingeling" )
+                      , ( "treengeling"     , "treengeling" )
                       , ( "minisat"         , "minisat" )
                       , ( "bc_minisat_all"  , "bc_minisat_all_release" )
                       , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
@@ -354,6 +266,7 @@ mainWithArgs config@Solve{..} = do
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else doIfNotCached          -- start the show!
                     ( sort (mStatements essenceM)
+                    , portfolio
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
                     , ( numberingStart
@@ -452,10 +365,12 @@ mainWithArgs config@Solve{..} = do
                                 estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
-            mainWithArgs modelling
+            n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
+            if (S.size n == 1)
+                then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
+                else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
@@ -487,6 +402,276 @@ mainWithArgs config@Solve{..} = do
                 else autoParallel_ [ validateSolutionWithParams config sol p
                                    | (_, p, Just sol) <- solutions ]
 
+
+mainWithArgs_Modelling :: forall m .
+    MonadIO m =>
+    MonadLog m =>
+    MonadFail m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    String ->                   -- modelNamePrefix
+    UI ->
+    Maybe Int ->                -- portfolioSize for the recursive call
+    S.Set Int ->                -- modelHashesBefore
+    m (S.Set Int)
+mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolioSize <- portfolio = do
+    pp logLevel $ "Running in portfolio mode, aiming to generate" <+> pretty portfolioSize <+> "models."
+    let
+        go modelsSoFar [] = do
+            pp logLevel $ "Done, no more levels, generated" <+> pretty (S.size modelsSoFar) <+> "models."
+            return modelsSoFar
+        go modelsSoFar (l:ls) = do
+            let nbModelsNeeded = portfolioSize - S.size modelsSoFar
+            if nbModelsNeeded <= 0
+                then return modelsSoFar
+                else do
+                    modelsSoFar' <- l (Just portfolioSize) modelsSoFar
+                    go modelsSoFar' ls
+
+    go modelHashesBefore
+        [ mainWithArgs_Modelling "01_compact"
+            mode { portfolio = Nothing
+                 , strategyA = "c"
+                 , representations = Just "c"
+                 , representationsFinds = Just "c"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "02_compact"
+            mode { portfolio = Nothing
+                 , strategyA = "c"
+                 , representations = Just "c"
+                 , representationsFinds = Just "c"
+                 , representationsGivens = Just "c"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "03_sparse"
+            mode { portfolio = Nothing
+                 , strategyA = "s"
+                 , representations = Just "s"
+                 , representationsFinds = Just "s"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "s"
+                 , representationsQuantifieds = Just "s"
+                 , representationsCuts = Just "s"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "04_nochPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "05_nochAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "06_chPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = True
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "07_chAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = True
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "08_fullPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "09_fullAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "10_fullParamsPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "x"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "11_fullParamsAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "x"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        ]
+mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
+    mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
+mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
+    unless (modelNamePrefix == "model") $
+        pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
+    let
+        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
+                                 return
+                                 (parseStrategy s)
+
+        getConfig = do
+            strategyQ'                  <- parseStrategy_ strategyQ
+            strategyA'                  <- parseStrategy_ strategyA
+            representations'            <- maybe (return strategyA')       parseStrategy_ representations
+            representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
+            representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
+            representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
+            representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
+            representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
+
+            case fst (viewAuto strategyQ') of
+                Compact -> userErr1 "The Compact heuristic isn't supported for questions."
+                _       -> return ()
+
+            let
+                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
+                parseCommaSeparated flag str =
+                    if null str
+                        then return Nothing
+                        else do
+                            let parts = splitOn "," str
+                            let intParts = mapMaybe readMay parts
+                            if length parts == length intParts
+                                then return (Just intParts)
+                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                     , "Expected a comma separated list of integers."
+                                                     , "But got:" <+> pretty str
+                                                     ]
+
+            responsesList <- parseCommaSeparated "--responses" responses
+
+            responsesRepresentationList <- do
+                if null responsesRepresentation
+                    then return Nothing
+                    else do
+                        let parts =
+                                [ case splitOn ":" pair of
+                                    [nm, val] ->
+                                        case readMay val of
+                                            Just i -> Just (Name (stringToText nm), i)
+                                            Nothing -> Nothing
+                                    _ -> Nothing
+                                | pair <- splitOn "," responsesRepresentation
+                                ]
+                        let partsJust = catMaybes parts
+                        if length parts == length partsJust
+                            then return (Just partsJust)
+                            else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
+                                                 , "Expected a comma separated list of variable name : integer pairs."
+                                                 , "But got:" <+> pretty responsesRepresentation
+                                                 ]
+
+            return Config.Config
+                { Config.outputDirectory            = outputDirectory
+                , Config.logLevel                   = logLevel
+                , Config.verboseTrail               = verboseTrail
+                , Config.rewritesTrail              = rewritesTrail
+                , Config.logRuleFails               = logRuleFails
+                , Config.logRuleSuccesses           = logRuleSuccesses
+                , Config.logRuleAttempts            = logRuleAttempts
+                , Config.logChoices                 = logChoices
+                , Config.strategyQ                  = strategyQ'
+                , Config.strategyA                  = strategyA'
+                , Config.representations            = representations'
+                , Config.representationsFinds       = representationsFinds'
+                , Config.representationsGivens      = representationsGivens'
+                , Config.representationsAuxiliaries = representationsAuxiliaries'
+                , Config.representationsQuantifieds = representationsQuantifieds'
+                , Config.representationsCuts        = representationsCuts'
+                , Config.channelling                = channelling
+                , Config.representationLevels       = representationLevels
+                , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
+                , Config.numberingStart             = numberingStart
+                , Config.smartFilenames             = smartFilenames
+                , Config.lineWidth                  = lineWidth
+                , Config.responses                  = responsesList
+                , Config.responsesRepresentation    = responsesRepresentationList
+                , Config.estimateNumberOfModels     = estimateNumberOfModels
+                }
+
+    essenceM <- readModelFromFile essence
+    liftIO $ hSetBuffering stdout LineBuffering
+    liftIO $ maybe (return ()) setRandomSeed seed
+    let
+        conjuring = do
+            config <- getConfig
+            runNameGen essenceM $ outputModels portfolioSize modelHashesBefore modelNamePrefix config essenceM
+    conjuring
+mainWithArgs_Modelling _ _ _ _ = bug "mainWithArgs_Modelling"
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
 pp LogNone = const $ return ()
@@ -615,6 +800,10 @@ srMkArgs Solve{..} outBase modelPath = do
         "plingeling"        -> return [ "-sat"
                                       , "-sat-family", "lingeling"
                                       , "-satsolver-bin", "plingeling"
+                                      ]
+        "treengeling"       -> return [ "-sat"
+                                      , "-sat-family", "lingeling"
+                                      , "-satsolver-bin", "treengeling"
                                       ]
         "minisat"           -> return [ "-sat"
                                       , "-sat-family", "minisat"
