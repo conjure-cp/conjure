@@ -1,12 +1,4 @@
-Generating models for tuple.essence
-Generated models: model000001.eprime
-Saved under: conjure-output
-Savile Row: model000001.eprime tuple.param
-Running minion for domain filtering.
-Running solver: minion
-Copying solution to: tuple-tuple.solution
 language ESSENCE' 1.0
-
 given A_1: bool
 given A_2: bool
 given A_3: bool
@@ -17,46 +9,3 @@ branching on [B_1, B_2, B_3]
 such that
     flatten([[-toInt(A_1); int(1)], [-toInt(A_2); int(1)], [-toInt(A_3); int(1)]; int(1..3)]) <lex
     flatten([[-toInt(B_1); int(1)], [-toInt(B_2); int(1)], [-toInt(B_3); int(1)]; int(1..3)])
-
-$ Conjure's
-$ {"finds": [{"Name": "B"}],
-$  "givens": [{"Name": "A"}],
-$  "enumGivens": [],
-$  "enumLettings": [],
-$  "lettings": [],
-$  "unnameds": [],
-$  "strategyQ": {"PickFirst": []},
-$  "strategyA": {"Compact": []},
-$  "trailCompact": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
-$  "trailVerbose": [],
-$  "trailRewrites": [],
-$  "nameGenState": [],
-$  "nbExtraGivens": 0,
-$  "representations":
-$      [[{"Name": "A"}, {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]}],
-$       [{"Name": "B"}, {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]}]],
-$  "representationsTree":
-$      [[{"Name": "A"},
-$        [{"rootLabel": null,
-$          "subForest":
-$              [{"rootLabel": null,
-$                "subForest": []},
-$               {"rootLabel": null,
-$                "subForest": []},
-$               {"rootLabel": null,
-$                "subForest": []}]}]],
-$       [{"Name": "B"},
-$        [{"rootLabel": null,
-$          "subForest":
-$              [{"rootLabel": null,
-$                "subForest": []},
-$               {"rootLabel": null,
-$                "subForest": []},
-$               {"rootLabel": null,
-$                "subForest": []}]}]]],
-$  "originalDomains":
-$      [[{"Name": "A"}, {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]}],
-$       [{"Name": "B"}, {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]}]]}
-language Essence 1.3
-
-letting B be (false, false, false)

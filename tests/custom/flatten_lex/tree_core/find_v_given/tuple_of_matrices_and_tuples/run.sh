@@ -1,5 +1,3 @@
-conjure solve *.essence *.param
-cat conjure-output/*.eprime
-cat *.solution
-rm *.solution
+conjure modelling *.essence
+cat conjure-output/*.eprime | grep "^[^$]"
 rm -r conjure-output
