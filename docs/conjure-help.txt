@@ -31,10 +31,11 @@
       --log-rule-successes                    Generate logs for rule applications.
       --log-rule-attempts                     Generate logs for rule attempts. (Caution: can be a lot!)
       --log-choices                           Store the choices in a way that can be reused by -al
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Model generation:
@@ -95,10 +96,11 @@
                                               'foo.param'.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -118,10 +120,11 @@
                                               replaced by '.solution'.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -136,10 +139,11 @@
       --solution=FILE                         Essence solution.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -176,10 +180,11 @@
       --log-rule-successes                    Generate logs for rule applications.
       --log-rule-attempts                     Generate logs for rule attempts. (Caution: can be a lot!)
       --log-choices                           Store the choices in a way that can be reused by -al
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Model generation:
@@ -270,10 +275,11 @@
       --remove-unused                         Remove unused declarations.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -284,10 +290,11 @@
  
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -308,10 +315,11 @@
    -o --output-directory=DIR                  Where to save generated models.
                                               Default value: 'conjure-output'
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -325,10 +333,11 @@
                                               Default is 'foo.essence-json'
                                               if the Essence file is named 'foo.essence'
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -341,10 +350,11 @@
  Logging & Output:
       --essence-out=FILE                      Output file path.
       --log-level=LOGLEVEL                    Log level.
-      --output-format=FORMAT                  Format to use for output.
-                                                  plain : default
-                                                  binary: can be read by Conjure
-                                                  json  : use to avoid parsing
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Integer bounds:
@@ -363,13 +373,11 @@
       --essence-out=FILE                      Output file path.
       --log-level=LOGLEVEL                    Log level.
       --log-rule-successes                    Generate logs for rule applications.
-      --output-format=FORMAT                  Conjure's output can be in multiple formats.
-                                                  plain : The default
-                                                  binary: A binary encoding of the Essence output.
-                                                          It can be read back in by Conjure.
-                                                  json  : A json encoding of the Essence output.
-                                                          It can be used by other tools integrating with Conjure
-                                                          in order to avoid having to parse textual Essence.
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width to use during pretty printing.
                                               Default: 120
  General:

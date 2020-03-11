@@ -79,6 +79,12 @@ instance Hashable  Model
 instance ToJSON    Model where toJSON = genericToJSON jsonOptions
 instance FromJSON  Model where parseJSON = genericParseJSON jsonOptions
 
+instance SimpleJSON Model where
+    toSimpleJSON m = do
+        inners <- mapM toSimpleJSON (mStatements m)
+        return (JSON.Array $ V.fromList $ inners)
+    fromSimpleJSON _ = noFromSimpleJSON
+
 instance Default Model where
     def = Model def [] def
 

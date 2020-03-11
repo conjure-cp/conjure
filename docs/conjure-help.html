@@ -23,7 +23,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused by -al</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Model generation:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--responses=ITEM</td><td style='padding-left:2ex;'>A comma separated list of integers.<br />If provided, these will be used as the answers during interactive model generation instead of prompting the user.</td></tr>
@@ -55,7 +55,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--eprime-param=FILE</td><td style='padding-left:2ex;'>An Essence' parameter matching the Essence' model.<br />Default is 'foo.eprime-param' if the Essence parameter file is named 'foo.param'.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -70,7 +70,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-solution=FILE</td><td style='padding-left:2ex;'>An Essence solution for the original problem specification.<br />By default, its value is the value of --eprime-solution with extensions replaced by '.solution'.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -84,7 +84,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solution=FILE</td><td style='padding-left:2ex;'>Essence solution.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -110,7 +110,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused by -al</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Model generation:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--responses=ITEM</td><td style='padding-left:2ex;'>A comma separated list of integers.<br />If provided, these will be used as the answers during interactive model generation instead of prompting the user.</td></tr>
@@ -154,7 +154,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--remove-unused</td><td style='padding-left:2ex;'>Remove unused declarations.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -164,7 +164,7 @@
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -183,7 +183,7 @@
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Where to save generated models.<br />Default value: 'conjure-output'</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -194,7 +194,7 @@
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--json=JSON_FILE</td><td style='padding-left:2ex;'>Output JSON file.<br />Default is 'foo.essence-json'<br />if the Essence file is named 'foo.essence'</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
@@ -205,7 +205,7 @@
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-out=FILE</td><td style='padding-left:2ex;'>Output file path.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Integer bounds:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--MININT=INT</td><td style='padding-left:2ex;'>The minimum integer value for the parameter values.<br />Default: 0</td></tr>
@@ -220,7 +220,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-out=FILE</td><td style='padding-left:2ex;'>Output file path.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output.<br />            It can be used by other tools integrating with Conjure<br />            in order to avoid having to parse textual Essence.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, best for parameters and solutions<br /></td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
