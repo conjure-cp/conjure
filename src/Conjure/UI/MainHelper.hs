@@ -141,7 +141,7 @@ mainWithArgs IDE{..} = do
         | dumpRepresentations -> do
             json <- runNameGen () $ modelRepresentationsJSON essence2
             liftIO $ putStrLn $ render lineWidth json
-        | otherwise           -> writeModel lineWidth JSON Nothing essence2
+        | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]

@@ -1,6 +1,5 @@
  ========== 1 ==========
 language ESSENCE' 1.0
-
 given n: int
 given fin1: int
 given G_ExplicitR3_Explicit: matrix indexed by [int(1..fin1), int(1..2)] of int(1..n)
@@ -24,16 +23,9 @@ such that
     c = sum([toInt(conjure_aux1_Occurrence[q7]) | q7 : int(1..n)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..n)])
 
-$ Conjure's
-$ {"finds": [{"Name": "f"}, {"Name": "c"}],
-$  "givens": [{"Name": "n"}, {"Name": "G"}],
-$  "enumGivens": [],
-$  "enumLettings": [],
-
 
  ========== 2 ==========
 language ESSENCE' 1.0
-
 given n: int
 given fin1: int
 given G_ExplicitR3_Explicit: matrix indexed by [int(1..fin1), int(1..2)] of int(1..n)
@@ -56,12 +48,6 @@ such that
              | q6 : int(1..n)]),
     and([S_Occurrence[q8] = conjure_aux1_Occurrence[q8] | q8 : int(1..n)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..n)])
-
-$ Conjure's
-$ {"finds": [{"Name": "f"}, {"Name": "S"}],
-$  "givens": [{"Name": "n"}, {"Name": "G"}],
-$  "enumGivens": [],
-$  "enumLettings": [],
 
 
  ========== 3 ==========
