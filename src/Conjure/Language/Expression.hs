@@ -343,6 +343,12 @@ instance SimpleJSON Expression where
             Constant c -> toSimpleJSON c
             AbstractLiteral lit -> toSimpleJSON lit
             Typed y _ -> toSimpleJSON y
+            Op (MkOpMinus (OpMinus a b)) -> do
+                a' <- toSimpleJSON a
+                b' <- toSimpleJSON b
+                case (a', b') of
+                    (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
+                    _ -> noToSimpleJSON x
             _ -> noToSimpleJSON x
     fromSimpleJSON _ = noFromSimpleJSON
 
