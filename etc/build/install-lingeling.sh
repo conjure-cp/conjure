@@ -24,6 +24,7 @@ export -f download
 
 download http://fmv.jku.at/lingeling/lingeling-bcj-78ebb86-180517.tar.gz
 tar xzf lingeling-bcj*.tar.gz
+rm -f lingeling-bcj*.tar.gz
 cd lingeling-bcj*
 ./configure.sh
 make -j
