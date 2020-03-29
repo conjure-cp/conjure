@@ -350,7 +350,6 @@ ui = modes
                     \ s picks the 'sparsest' option \
                     \at every decision point: \
                     \useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: ai"
         , representations
             = Nothing
@@ -769,7 +768,6 @@ ui = modes
                     \ s picks the 'sparsest' option \
                     \at every decision point: \
                     \useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: c"
         , representations
             = Nothing
