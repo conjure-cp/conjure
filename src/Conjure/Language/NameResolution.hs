@@ -19,7 +19,6 @@ import Conjure.Language.TH
 
 
 resolveNamesMulti ::
-    MonadFail m =>
     MonadLog m =>
     MonadUserError m =>
     NameGen m =>
@@ -31,7 +30,6 @@ resolveNamesMulti = flip evalStateT [] . go
         go (m:ms) = (:) <$> resolveNames_ m <*> go ms
 
 resolveNames ::
-    MonadFail m =>
     MonadLog m =>
     MonadUserError m =>
     NameGen m =>
@@ -40,14 +38,13 @@ resolveNames ::
 resolveNames = flip evalStateT [] . resolveNames_
 
 resolveNames_ ::
-    MonadFail m =>
     MonadLog m =>
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m Model
-resolveNames_ model = do
+resolveNames_ model = failToUserError $ do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
     return model { mStatements = toTaggedInt statements }

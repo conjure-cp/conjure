@@ -3,6 +3,7 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Prelude
     ( module X
@@ -82,6 +83,7 @@ import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, modify
                                          , evalStateT, runStateT, evalState, runState )
+import Control.Monad.State.Strict ( put ) -- only for defining instances
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
@@ -423,6 +425,11 @@ instance MonadTrans ExceptT where
     lift comp = ExceptT $ do
         res <- comp
         return (Right res)
+
+instance MonadState s m => MonadState s (ExceptT m) where
+    get = lift get
+    put = lift . put
+
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
