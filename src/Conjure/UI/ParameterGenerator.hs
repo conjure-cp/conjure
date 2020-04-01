@@ -175,6 +175,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                   | ub /= ubX
                   ]
 
+        DomainRecord ds -> do
+            inners <- forM ds $ \ (nmRec, domRec) -> do
+                let iE = Reference nmRec Nothing
+                let ref = [essence| &x[&iE] |]
+                pgOnDomain ref (nm `mappend` (Name $ pack $ "_" ++ show (pretty nmRec))) domRec
+            return3
+                (DomainTuple (map fst3 inners))
+                (concatMap snd3 inners)
+                (concatMap thd3 inners)
+
         DomainTuple ds -> do
             inners <- forM (zip [1..] ds) $ \ (i, d) -> do
                 let iE = fromInt i
