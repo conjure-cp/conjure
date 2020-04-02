@@ -728,6 +728,12 @@ lowerBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
 lowerBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
     bounds <- mapM lowerBoundOfIntExpr xs
     return $ make opProduct $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpMin (OpMin x))) | Just xs <- listOut x = do
+    bounds <- mapM lowerBoundOfIntExpr xs
+    return $ make opMin $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpMax (OpMax x))) | Just xs <- listOut x = do
+    bounds <- mapM lowerBoundOfIntExpr xs
+    return $ make opMin $ fromList bounds
 lowerBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
     bound <- upperBoundOfIntExpr x
     return (make opNegate bound)
@@ -762,6 +768,12 @@ upperBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
 upperBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
     bounds <- mapM upperBoundOfIntExpr xs
     return $ make opProduct $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpMin (OpMin x))) | Just xs <- listOut x = do
+    bounds <- mapM upperBoundOfIntExpr xs
+    return $ make opMax $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpMax (OpMax x))) | Just xs <- listOut x = do
+    bounds <- mapM upperBoundOfIntExpr xs
+    return $ make opMax $ fromList bounds
 upperBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
     bound <- lowerBoundOfIntExpr x
     return (make opNegate bound)
