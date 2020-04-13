@@ -38,6 +38,8 @@ find maxid_city: int(0..100)
 such that
     maxid_city >= maxid_city_middle - maxid_city_delta,
     maxid_city <= maxid_city_middle + maxid_city_delta
+given init_at__percentage: int(0..100)
+given init_in__percentage: int(0..100)
 given init_fuel_range_middle: int(-65536..65536)
 given init_fuel_range_delta: int(0..65536)
 given init_distance_range_middle: int(-65536..65536)
@@ -49,17 +51,21 @@ given init_onboard_range_delta: int(0..65536)
 given init_total_fuel_used_range_middle: int(-65536..65536)
 given init_total_fuel_used_range_delta: int(0..65536)
 find init:
-        (function (int(0..100), int(0..100)) --> bool, function (int(0..100), int(0..100)) --> bool,
-         function int(0..100) --> int(-65536..65536), function (int(0..100), int(0..100)) --> int(-65536..65536),
-         function int(0..100) --> int(-65536..65536), function int(0..100) --> int(-65536..65536),
-         function int(0) --> int(-65536..65536))
+        record {at_ : function (int(0..100), int(0..100)) --> bool, in_ : function (int(0..100), int(0..100)) --> bool,
+                fuel : function int(0..100) --> int(-65536..65536),
+                distance : function (int(0..100), int(0..100)) --> int(-65536..65536),
+                capacity : function int(0..100) --> int(-65536..65536),
+                onboard : function int(0..100) --> int(-65536..65536),
+                total_fuel_used : function int(0) --> int(-65536..65536)}
 such that
     and([q1[1] >= minid_aircraft /\ q1[1] <= maxid_person /\ (q1[2] >= minid_city /\ q1[2] <= maxid_city) <->
          q1 in defined(init[at_])
              | q1 : (int(0..100), int(0..100))]),
+    sum([toInt(q1[2]) | q1 <- init[at_]]) = init_at__percentage * |defined(init[at_])| / 100,
     and([q2[1] >= minid_person /\ q2[1] <= maxid_person /\ (q2[2] >= minid_aircraft /\ q2[2] <= maxid_aircraft) <->
          q2 in defined(init[in_])
              | q2 : (int(0..100), int(0..100))]),
+    sum([toInt(q2[2]) | q2 <- init[in_]]) = init_in__percentage * |defined(init[in_])| / 100,
     and([q3 >= minid_aircraft /\ q3 <= maxid_aircraft <-> q3 in defined(init[fuel]) | q3 : int(0..100)]),
     and([q3[2] >= init_fuel_range_middle - init_fuel_range_delta | q3 <- init[fuel]]),
     and([q3[2] <= init_fuel_range_middle + init_fuel_range_delta | q3 <- init[fuel]]),
@@ -100,12 +106,14 @@ given goal_at__defined_tuple1_middle: int(0..100)
 given goal_at__defined_tuple1_delta: int(0..50)
 given goal_at__defined_tuple2_middle: int(0..100)
 given goal_at__defined_tuple2_delta: int(0..50)
+given goal_at__percentage: int(0..100)
 given goal_in__cardMiddle: int(0..100)
 given goal_in__cardDelta: int(0..50)
 given goal_in__defined_tuple1_middle: int(0..100)
 given goal_in__defined_tuple1_delta: int(0..50)
 given goal_in__defined_tuple2_middle: int(0..100)
 given goal_in__defined_tuple2_delta: int(0..50)
+given goal_in__percentage: int(0..100)
 given goal_onboard_cardMiddle: int(0..100)
 given goal_onboard_cardDelta: int(0..50)
 given goal_onboard_defined_middle: int(0..100)
@@ -113,9 +121,9 @@ given goal_onboard_defined_delta: int(0..50)
 given goal_onboard_range_middle: int(-65536..65536)
 given goal_onboard_range_delta: int(0..65536)
 find goal:
-        (function (maxSize 100) (int(0..100), int(0..100)) --> bool,
-         function (maxSize 100) (int(0..100), int(0..100)) --> bool,
-         function (maxSize 100) int(0..100) --> int(-65536..65536))
+        record {at_ : function (maxSize 100) (int(0..100), int(0..100)) --> bool,
+                in_ : function (maxSize 100) (int(0..100), int(0..100)) --> bool,
+                onboard : function (maxSize 100) int(0..100) --> int(-65536..65536)}
 such that
     |goal[at_]| >= goal_at__cardMiddle - goal_at__cardDelta /\ |goal[at_]| <= goal_at__cardMiddle + goal_at__cardDelta,
     and([q8[1, 1] >= goal_at__defined_tuple1_middle - goal_at__defined_tuple1_delta | q8 <- goal[at_]]),
@@ -126,6 +134,7 @@ such that
     and([q8[1, 2] <= goal_at__defined_tuple2_middle + goal_at__defined_tuple2_delta | q8 <- goal[at_]]),
     and([q8[1, 2] >= minid_city | q8 <- goal[at_]]),
     and([q8[1, 2] <= maxid_city | q8 <- goal[at_]]),
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) = goal_at__percentage * |defined(goal[at_])| / 100,
     |goal[in_]| >= goal_in__cardMiddle - goal_in__cardDelta /\ |goal[in_]| <= goal_in__cardMiddle + goal_in__cardDelta,
     and([q9[1, 1] >= goal_in__defined_tuple1_middle - goal_in__defined_tuple1_delta | q9 <- goal[in_]]),
     and([q9[1, 1] <= goal_in__defined_tuple1_middle + goal_in__defined_tuple1_delta | q9 <- goal[in_]]),
@@ -135,6 +144,7 @@ such that
     and([q9[1, 2] <= goal_in__defined_tuple2_middle + goal_in__defined_tuple2_delta | q9 <- goal[in_]]),
     and([q9[1, 2] >= minid_aircraft | q9 <- goal[in_]]),
     and([q9[1, 2] <= maxid_aircraft | q9 <- goal[in_]]),
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) = goal_in__percentage * |defined(goal[in_])| / 100,
     |goal[onboard]| >= goal_onboard_cardMiddle - goal_onboard_cardDelta /\
     |goal[onboard]| <= goal_onboard_cardMiddle + goal_onboard_cardDelta,
     and([q10[1] >= goal_onboard_defined_middle - goal_onboard_defined_delta | q10 <- goal[onboard]]),
@@ -161,6 +171,8 @@ minid_city_middle "-minid_city_middle " i (0, 100)
 minid_city_delta "-minid_city_delta " i (0, 50)
 maxid_city_middle "-maxid_city_middle " i (0, 100)
 maxid_city_delta "-maxid_city_delta " i (0, 50)
+init_at__percentage "-init_at__percentage " i (0, 100)
+init_in__percentage "-init_in__percentage " i (0, 100)
 init_fuel_range_middle "-init_fuel_range_middle " i (-65536, 65536)
 init_fuel_range_delta "-init_fuel_range_delta " i (0, 65536)
 init_distance_range_middle "-init_distance_range_middle " i (-65536, 65536)
@@ -177,12 +189,14 @@ goal_at__defined_tuple1_middle "-goal_at__defined_tuple1_middle " i (0, 100)
 goal_at__defined_tuple1_delta "-goal_at__defined_tuple1_delta " i (0, 50)
 goal_at__defined_tuple2_middle "-goal_at__defined_tuple2_middle " i (0, 100)
 goal_at__defined_tuple2_delta "-goal_at__defined_tuple2_delta " i (0, 50)
+goal_at__percentage "-goal_at__percentage " i (0, 100)
 goal_in__cardMiddle "-goal_in__cardMiddle " i,log (0, 100)
 goal_in__cardDelta "-goal_in__cardDelta " i,log (0, 50)
 goal_in__defined_tuple1_middle "-goal_in__defined_tuple1_middle " i (0, 100)
 goal_in__defined_tuple1_delta "-goal_in__defined_tuple1_delta " i (0, 50)
 goal_in__defined_tuple2_middle "-goal_in__defined_tuple2_middle " i (0, 100)
 goal_in__defined_tuple2_delta "-goal_in__defined_tuple2_delta " i (0, 50)
+goal_in__percentage "-goal_in__percentage " i (0, 100)
 goal_onboard_cardMiddle "-goal_onboard_cardMiddle " i,log (0, 100)
 goal_onboard_cardDelta "-goal_onboard_cardDelta " i,log (0, 50)
 goal_onboard_defined_middle "-goal_onboard_defined_middle " i (0, 100)
@@ -233,6 +247,8 @@ find maxid_city: int(-10..50)
 such that
     maxid_city >= maxid_city_middle - maxid_city_delta,
     maxid_city <= maxid_city_middle + maxid_city_delta
+given init_at__percentage: int(0..100)
+given init_in__percentage: int(0..100)
 given init_fuel_range_middle: int(-65536..65536)
 given init_fuel_range_delta: int(0..65536)
 given init_distance_range_middle: int(-65536..65536)
@@ -244,17 +260,22 @@ given init_onboard_range_delta: int(0..65536)
 given init_total_fuel_used_range_middle: int(-65536..65536)
 given init_total_fuel_used_range_delta: int(0..65536)
 find init:
-        (function (int(-10..50), int(-10..50)) --> bool, function (int(-10..50), int(-10..50)) --> bool,
-         function int(-10..50) --> int(-65536..65536), function (int(-10..50), int(-10..50)) --> int(-65536..65536),
-         function int(-10..50) --> int(-65536..65536), function int(-10..50) --> int(-65536..65536),
-         function int(0) --> int(-65536..65536))
+        record {at_ : function (int(-10..50), int(-10..50)) --> bool,
+                in_ : function (int(-10..50), int(-10..50)) --> bool,
+                fuel : function int(-10..50) --> int(-65536..65536),
+                distance : function (int(-10..50), int(-10..50)) --> int(-65536..65536),
+                capacity : function int(-10..50) --> int(-65536..65536),
+                onboard : function int(-10..50) --> int(-65536..65536),
+                total_fuel_used : function int(0) --> int(-65536..65536)}
 such that
     and([q1[1] >= minid_aircraft /\ q1[1] <= maxid_person /\ (q1[2] >= minid_city /\ q1[2] <= maxid_city) <->
          q1 in defined(init[at_])
              | q1 : (int(-10..50), int(-10..50))]),
+    sum([toInt(q1[2]) | q1 <- init[at_]]) = init_at__percentage * |defined(init[at_])| / 100,
     and([q2[1] >= minid_person /\ q2[1] <= maxid_person /\ (q2[2] >= minid_aircraft /\ q2[2] <= maxid_aircraft) <->
          q2 in defined(init[in_])
              | q2 : (int(-10..50), int(-10..50))]),
+    sum([toInt(q2[2]) | q2 <- init[in_]]) = init_in__percentage * |defined(init[in_])| / 100,
     and([q3 >= minid_aircraft /\ q3 <= maxid_aircraft <-> q3 in defined(init[fuel]) | q3 : int(-10..50)]),
     and([q3[2] >= init_fuel_range_middle - init_fuel_range_delta | q3 <- init[fuel]]),
     and([q3[2] <= init_fuel_range_middle + init_fuel_range_delta | q3 <- init[fuel]]),
@@ -295,12 +316,14 @@ given goal_at__defined_tuple1_middle: int(-10..50)
 given goal_at__defined_tuple1_delta: int(0..30)
 given goal_at__defined_tuple2_middle: int(-10..50)
 given goal_at__defined_tuple2_delta: int(0..30)
+given goal_at__percentage: int(0..100)
 given goal_in__cardMiddle: int(-10..50)
 given goal_in__cardDelta: int(0..25)
 given goal_in__defined_tuple1_middle: int(-10..50)
 given goal_in__defined_tuple1_delta: int(0..30)
 given goal_in__defined_tuple2_middle: int(-10..50)
 given goal_in__defined_tuple2_delta: int(0..30)
+given goal_in__percentage: int(0..100)
 given goal_onboard_cardMiddle: int(-10..50)
 given goal_onboard_cardDelta: int(0..25)
 given goal_onboard_defined_middle: int(-10..50)
@@ -308,9 +331,9 @@ given goal_onboard_defined_delta: int(0..30)
 given goal_onboard_range_middle: int(-65536..65536)
 given goal_onboard_range_delta: int(0..65536)
 find goal:
-        (function (maxSize 50) (int(-10..50), int(-10..50)) --> bool,
-         function (maxSize 50) (int(-10..50), int(-10..50)) --> bool,
-         function (maxSize 50) int(-10..50) --> int(-65536..65536))
+        record {at_ : function (maxSize 50) (int(-10..50), int(-10..50)) --> bool,
+                in_ : function (maxSize 50) (int(-10..50), int(-10..50)) --> bool,
+                onboard : function (maxSize 50) int(-10..50) --> int(-65536..65536)}
 such that
     |goal[at_]| >= goal_at__cardMiddle - goal_at__cardDelta /\ |goal[at_]| <= goal_at__cardMiddle + goal_at__cardDelta,
     and([q8[1, 1] >= goal_at__defined_tuple1_middle - goal_at__defined_tuple1_delta | q8 <- goal[at_]]),
@@ -321,6 +344,7 @@ such that
     and([q8[1, 2] <= goal_at__defined_tuple2_middle + goal_at__defined_tuple2_delta | q8 <- goal[at_]]),
     and([q8[1, 2] >= minid_city | q8 <- goal[at_]]),
     and([q8[1, 2] <= maxid_city | q8 <- goal[at_]]),
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) = goal_at__percentage * |defined(goal[at_])| / 100,
     |goal[in_]| >= goal_in__cardMiddle - goal_in__cardDelta /\ |goal[in_]| <= goal_in__cardMiddle + goal_in__cardDelta,
     and([q9[1, 1] >= goal_in__defined_tuple1_middle - goal_in__defined_tuple1_delta | q9 <- goal[in_]]),
     and([q9[1, 1] <= goal_in__defined_tuple1_middle + goal_in__defined_tuple1_delta | q9 <- goal[in_]]),
@@ -330,6 +354,7 @@ such that
     and([q9[1, 2] <= goal_in__defined_tuple2_middle + goal_in__defined_tuple2_delta | q9 <- goal[in_]]),
     and([q9[1, 2] >= minid_aircraft | q9 <- goal[in_]]),
     and([q9[1, 2] <= maxid_aircraft | q9 <- goal[in_]]),
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) = goal_in__percentage * |defined(goal[in_])| / 100,
     |goal[onboard]| >= goal_onboard_cardMiddle - goal_onboard_cardDelta /\
     |goal[onboard]| <= goal_onboard_cardMiddle + goal_onboard_cardDelta,
     and([q10[1] >= goal_onboard_defined_middle - goal_onboard_defined_delta | q10 <- goal[onboard]]),
@@ -356,6 +381,8 @@ minid_city_middle "-minid_city_middle " i (-10, 50)
 minid_city_delta "-minid_city_delta " i (0, 30)
 maxid_city_middle "-maxid_city_middle " i (-10, 50)
 maxid_city_delta "-maxid_city_delta " i (0, 30)
+init_at__percentage "-init_at__percentage " i (0, 100)
+init_in__percentage "-init_in__percentage " i (0, 100)
 init_fuel_range_middle "-init_fuel_range_middle " i (-65536, 65536)
 init_fuel_range_delta "-init_fuel_range_delta " i (0, 65536)
 init_distance_range_middle "-init_distance_range_middle " i (-65536, 65536)
@@ -372,12 +399,14 @@ goal_at__defined_tuple1_middle "-goal_at__defined_tuple1_middle " i (-10, 50)
 goal_at__defined_tuple1_delta "-goal_at__defined_tuple1_delta " i (0, 30)
 goal_at__defined_tuple2_middle "-goal_at__defined_tuple2_middle " i (-10, 50)
 goal_at__defined_tuple2_delta "-goal_at__defined_tuple2_delta " i (0, 30)
+goal_at__percentage "-goal_at__percentage " i (0, 100)
 goal_in__cardMiddle "-goal_in__cardMiddle " i,log (-10, 50)
 goal_in__cardDelta "-goal_in__cardDelta " i,log (0, 25)
 goal_in__defined_tuple1_middle "-goal_in__defined_tuple1_middle " i (-10, 50)
 goal_in__defined_tuple1_delta "-goal_in__defined_tuple1_delta " i (0, 30)
 goal_in__defined_tuple2_middle "-goal_in__defined_tuple2_middle " i (-10, 50)
 goal_in__defined_tuple2_delta "-goal_in__defined_tuple2_delta " i (0, 30)
+goal_in__percentage "-goal_in__percentage " i (0, 100)
 goal_onboard_cardMiddle "-goal_onboard_cardMiddle " i,log (-10, 50)
 goal_onboard_cardDelta "-goal_onboard_cardDelta " i,log (0, 25)
 goal_onboard_defined_middle "-goal_onboard_defined_middle " i (-10, 50)
