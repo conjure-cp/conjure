@@ -181,7 +181,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 let ref = [essence| &x[&iE] |]
                 pgOnDomain ref (nm `mappend` (Name $ pack $ "_" ++ show (pretty nmRec))) domRec
             return3
-                (DomainTuple (map fst3 inners))
+                (DomainRecord (zip (map fst ds) (map fst3 inners)))
                 (concatMap snd3 inners)
                 (concatMap thd3 inners)
 
