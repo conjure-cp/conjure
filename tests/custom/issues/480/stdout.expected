@@ -1,0 +1,62 @@
+Generating models for generator.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime p.param
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: generator-p.solution
+language Essence 1.3
+
+letting a be
+        function(1 --> false, 2 --> false, 3 --> false, 4 --> false, 5 --> false, 6 --> false, 7 --> false, 8 --> false,
+                 9 --> false, 10 --> false, 11 --> false, 12 --> false, 13 --> false, 14 --> false, 15 --> false,
+                 16 --> false, 17 --> false, 18 --> false, 19 --> false, 20 --> false, 21 --> false, 22 --> true,
+                 23 --> true, 24 --> true, 25 --> true, 26 --> true, 27 --> true, 28 --> true, 29 --> true, 30 --> true)
+letting b be
+        function(21 --> false, 22 --> false, 23 --> false, 24 --> false, 25 --> false, 26 --> false, 27 --> false,
+                 28 --> true, 29 --> true, 30 --> true)
+letting m be 30
+m_middle "-m_middle " i (1, 100)
+m_delta "-m_delta " i (0, 49)
+a_percentage "-a_percentage " i (0, 100)
+b_cardMiddle "-b_cardMiddle " i,log (0, 100)
+b_cardDelta "-b_cardDelta " i,log (0, 50)
+b_defined_middle "-b_defined_middle " i (1, 100)
+b_defined_delta "-b_defined_delta " i (0, 49)
+b_percentage "-b_percentage " i (0, 100)
+language ESSENCE' 1.0
+
+given m_middle: int(1..100)
+given m_delta: int(0..49)
+find m: int(1..100)
+given a_percentage: int(0..100)
+find a_Function1DPartial_Flags: matrix indexed by [int(1..100)] of bool
+find a_Function1DPartial_Values: matrix indexed by [int(1..100)] of bool
+given b_cardMiddle: int(0..100)
+given b_cardDelta: int(0..50)
+given b_defined_middle: int(1..100)
+given b_defined_delta: int(0..49)
+given b_percentage: int(0..100)
+find b_Function1DPartial_Flags: matrix indexed by [int(1..100)] of bool
+find b_Function1DPartial_Values: matrix indexed by [int(1..100)] of bool
+branching on
+    [m, a_Function1DPartial_Flags, a_Function1DPartial_Values, b_Function1DPartial_Flags, b_Function1DPartial_Values]
+such that
+    m >= m_middle - m_delta,
+    m <= m_middle + m_delta,
+    and([q1 >= 1 /\ q1 <= m <-> a_Function1DPartial_Flags[q1] | q1 : int(1..100)]),
+    sum([toInt(a_Function1DPartial_Flags[q21]) * catchUndef(toInt(a_Function1DPartial_Values[q21]), 0)
+             | q21 : int(1..100)])
+    = a_percentage * sum([toInt(a_Function1DPartial_Flags[q24]) | q24 : int(1..100)]) / 100,
+    sum([toInt(b_Function1DPartial_Flags[q57]) | q57 : int(1..100)]) >= b_cardMiddle - b_cardDelta,
+    sum([toInt(b_Function1DPartial_Flags[q59]) | q59 : int(1..100)]) <= b_cardMiddle + b_cardDelta,
+    and([b_Function1DPartial_Flags[q31] -> q31 >= b_defined_middle - b_defined_delta | q31 : int(1..100)]),
+    and([b_Function1DPartial_Flags[q35] -> q35 <= b_defined_middle + b_defined_delta | q35 : int(1..100)]),
+    and([b_Function1DPartial_Flags[q39] -> q39 <= m | q39 : int(1..100)]),
+    sum([toInt(b_Function1DPartial_Flags[q43]) * catchUndef(toInt(b_Function1DPartial_Values[q43]), 0)
+             | q43 : int(1..100)])
+    = b_percentage * sum([toInt(b_Function1DPartial_Flags[q46]) | q46 : int(1..100)]) / 100,
+    and([a_Function1DPartial_Flags[q3] = false -> a_Function1DPartial_Values[q3] = false | q3 : int(1..100)]),
+    and([b_Function1DPartial_Flags[q6] = false -> b_Function1DPartial_Values[q6] = false | q6 : int(1..100)]),
+    sum([toInt(b_Function1DPartial_Flags[q7]) | q7 : int(1..100)]) <= 100
+

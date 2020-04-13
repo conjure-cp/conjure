@@ -584,6 +584,18 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                         Nothing -> return []
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
+            -- only for bool domains (innerDomainTo)
+            let nmPercentage  = nm `mappend` "_percentage"
+            tell [(nmPercentage, "i")]
+            let refPercentage = Reference nmPercentage Nothing
+
+            let isToBool = case innerDomainTo of
+                                DomainBool -> True
+                                _ -> False
+
+            let declToBool = Declaration (FindOrGiven Given nmPercentage (DomainInt TagInt [RangeBounded 0 100])) 
+            let consToBool = [essence| sum([ toInt(&i[2]) | &iPat <- &x ]) = &refPercentage * |defined(&x)| / 100 |]
+
             newCons <- concat <$> sequence [cardinalityCons, totalityCons, sizeLbCons, sizeUbCons]
             let innerCons = concat $ concat
                     [ [consFr | isPartial ] -- only if the function is not total
@@ -592,8 +604,8 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             return3
                 (DomainFunction r attrOut domFr domTo)
-                (newDecl ++ concat [ declFr | isPartial ] ++ declTo)
-                (newCons ++ map liftCons innerCons)
+                (newDecl ++ concat [ declFr | isPartial ] ++ declTo ++ concat [ [declToBool] | isToBool ])
+                (newCons ++ map liftCons innerCons ++ concat [[consToBool] | isToBool ])
 
         DomainRelation r attr innerDomains -> do
 
