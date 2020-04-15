@@ -252,7 +252,7 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
     fileShouldExist (tBaseDir   </> paramPath)
     eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
     param       <- readModelFromFile (tBaseDir   </> paramPath)
-    eprimeParam <- ignoreLogs $ runNameGen () $ translateParameter eprimeModel param
+    eprimeParam <- ignoreLogs $ runNameGen () $ translateParameter False eprimeModel param
     let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
     writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
     (stdoutSR, stderrSR, exitCodeSR) <-

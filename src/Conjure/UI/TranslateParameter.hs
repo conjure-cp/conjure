@@ -22,12 +22,14 @@ translateParameter ::
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
+    MonadIO m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
+    Bool ->      -- Prepare input files for the Glasgow graph solver
     Model ->     -- eprime model
     Model ->     -- essence param
     m Model      -- eprime param
 
-translateParameter eprimeModel0 essenceParam0 = do
+translateParameter graphSolver eprimeModel0 essenceParam0 = do
     logDebug $ "[eprimeModel  0]" <+-> pretty essenceParam0
     logDebug $ "[essenceParam 0]" <+-> pretty essenceParam0
     (eprimeModel, essenceParam1) <- removeEnumsFromParam eprimeModel0 essenceParam0
@@ -156,6 +158,24 @@ translateParameter eprimeModel0 essenceParam0 = do
             ty <- typeOfDomain domain
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
+
+    when graphSolver $
+        forM_ essenceGivensAndLettings' $ \ (n,d,c) ->
+            case d of
+                DomainFunction _ _
+                    (DomainTuple [DomainInt{}, DomainInt{}])
+                    DomainInt{} -> do
+                        let csvLines = 
+                                case c of
+                                    ConstantAbstract (AbsLitFunction rows) -> catMaybes
+                                        [ case row of
+                                            (ConstantAbstract (AbsLitTuple [a, b]), _) -> Just (pretty a <> "," <> pretty b)
+                                            _ -> Nothing
+                                        | row <- rows ]
+                                    _ -> []
+                        unless (null csvLines) $
+                            liftIO $ writeFile (show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                _ -> return ()
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]

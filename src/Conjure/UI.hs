@@ -120,10 +120,11 @@ data UI
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
-        -- flags for SR and Minion/Lingeling
+        -- flags for SR and the selected solver
         , savilerowOptions           :: [String]
         , solverOptions              :: [String]
         , solver                     :: String
+        , graphSolver                :: Bool
         , cgroups                    :: Bool
         , nbSolutions                :: String              -- a number, or "all". by default 1
         , copySolutions              :: Bool
@@ -892,6 +893,12 @@ ui = modes
                     \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \ - cplex (MIP solver, implemented via MiniZinc)\n\
                     \Default: minion"
+        , graphSolver
+            = False
+            &= name "graph-solver"
+            &= groupname "General"
+            &= explicit
+            &= help "Create input files for the Glasgow graph solver."
         , cgroups
             = False
             &= name "cgroups"

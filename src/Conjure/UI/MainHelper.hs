@@ -111,7 +111,7 @@ mainWithArgs TranslateParameter{..} = do
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
     essenceParamF <- readParamOrSolutionFromFile essenceParam
-    output <- runNameGen () $ translateParameter eprimeF essenceParamF
+    output <- runNameGen () $ translateParameter False eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
@@ -736,7 +736,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
         runTranslateParameter :: IO (Either [Doc] Model)
         runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen () $
-                                    translateParameter eprimeModel essenceParam
+                                    translateParameter graphSolver eprimeModel essenceParam
     eprimeParam' <- liftIO runTranslateParameter
     case eprimeParam' of
         Left err -> return (Left err)
