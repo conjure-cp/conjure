@@ -109,13 +109,15 @@ streamlinersForSingleVariable x = concatMapM ($ x)
 
     , matrixAll streamlinersForSingleVariable
     , matrixHalf streamlinersForSingleVariable
-    , matrixMost streamlinersForSingleVariable
+    , matrixAtMostOne streamlinersForSingleVariable
     , matrixApproxHalf streamlinersForSingleVariable
+    -- TODO: add moreThanHalf and lessThanHalf
 
     , setAll streamlinersForSingleVariable
     , setHalf streamlinersForSingleVariable
-    , setMost streamlinersForSingleVariable
+    , setAtMostOne streamlinersForSingleVariable
     , setApproxHalf streamlinersForSingleVariable
+    -- TODO: add moreThanHalf and lessThanHalf
 
     , relationCardinality
 
@@ -232,12 +234,12 @@ matrixAll innerStreamliner x = do
         _ -> noStreamliner
 
 
-matrixMost ::
+matrixAtMostOne ::
     MonadFail m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
-matrixMost innerStreamliner x = do
+matrixAtMostOne innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     case dom of
         DomainMatrix indexDom innerDom -> do
@@ -333,12 +335,12 @@ setAll innerStreamliner x = do
         _ -> noStreamliner
 
 
-setMost ::
+setAtMostOne ::
     MonadFail m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
-setMost innerStreamliner x = do
+setAtMostOne innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
