@@ -680,14 +680,16 @@ addToTrail Config{..}
            ruleDescr oldExpr newExpr
            oldInfo = newInfo
     where
-        newInfo = oldInfo { miTrailCompact  = (questionNumber, answerNumber, answerNumbers)
-                                            : miTrailCompact oldInfo
-                          , miTrailVerbose  = if verboseTrail
-                                                    then theA : theQ : miTrailVerbose oldInfo
-                                                    else []
-                          , miTrailRewrites = if rewritesTrail
-                                                    then theRewrite : miTrailRewrites oldInfo
-                                                    else []
+        newInfo = oldInfo { miTrailCompact      = (questionNumber, answerNumber, answerNumbers)
+                                                : miTrailCompact oldInfo
+                          -- , miTrailGeneralised  = (?, ?)
+                          --                       : miTrailGeneralised oldInfo
+                          , miTrailVerbose      = if verboseTrail
+                                                      then theA : theQ : miTrailVerbose oldInfo
+                                                      else []
+                          , miTrailRewrites     = if rewritesTrail
+                                                      then theRewrite : miTrailRewrites oldInfo
+                                                      else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)

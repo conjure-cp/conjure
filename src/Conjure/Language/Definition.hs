@@ -171,6 +171,9 @@ data ModelInfo = ModelInfo
                           , Int     -- picked answer #
                           , Int     -- number of answers
                           ) ]
+    , miTrailGeneralised :: [ ( Int     -- "question"
+                              , Int     -- "answer"
+                              ) ]       -- both are hashes...
     , miTrailVerbose :: [Decision]
     , miTrailRewrites :: [TrailRewrites]
     , miNameGenState :: [(Text, Int)]
@@ -189,7 +192,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
