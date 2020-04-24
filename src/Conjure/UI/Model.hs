@@ -1198,6 +1198,7 @@ prologue model = do
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
+    >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
 
 
@@ -2438,6 +2439,56 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
             , bugFailT "rule_AttributeToConstraint" conv
             )
     theRule _ = na "rule_AttributeToConstraint"
+
+
+evaluateModel ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
+evaluateModel m = do
+    let
+        full (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
+            return val
+        full p@Constant{} = return p
+        full p@Domain{} = return p
+        full p = do
+            mconstant <- runExceptT (instantiateExpression [] p)
+            case mconstant of
+                Left msg -> return p
+                Right constant -> do
+                    if null [() | ConstantUndefined{} <- universe constant]
+                        then return p
+                        else return (Constant constant)
+    let
+        partial (Op op)
+            | Just (x, y) <- case op of
+                                MkOpLeq (OpLeq x y) -> Just (x,y)
+                                MkOpGeq (OpGeq x y) -> Just (x,y)
+                                MkOpEq  (OpEq  x y) -> Just (x,y)
+                                _                   -> Nothing
+            , Reference nmX _ <- x
+            , Reference nmY _ <- y
+            , nmX == nmY
+            , categoryOf x <= CatQuantified
+            , categoryOf y <= CatQuantified
+            = return (fromBool True)
+        partial p@(Op x) = do
+            mx' <- runExceptT (simplifyOp x)
+            case mx' of
+                Left{} -> return p
+                Right x' -> do
+                    when (Op x == x') $ bug $ vcat
+                        [ "rule_PartialEvaluate, simplifier returns the input unchanged."
+                        , "input:" <+> vcat [ pretty (Op x)
+                                            , pretty (show (Op x))
+                                            ]
+                        ]
+                    return x'
+        partial p = return p
+
+    (descendBiM full >=> transformBiM partial) m
 
 
 rule_FullEvaluate :: Rule

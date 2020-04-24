@@ -1,0 +1,107 @@
+$ ----- Objects --------
+given n_actiontag : int(0..)
+given n_goods : int(0..)
+given n_stage : int(0..)
+given n_round : int(0..)
+given n_worker : int(0..)
+given n_improvement : int(0..)
+given n_roundclass : int(0..)
+given n_phaseclass : int(0..)
+given n_roundparts : int(0..)
+given n_resource : int(0..)
+given n_room : int(0..)
+given n_num : int(0..)
+given n_buildtag : int(0..)
+given n_animaltag : int(0..)
+given n_vegtag : int(0..)
+given n_gentag : int(0..)
+given n_animal : int(0..)
+given n_vegetable : int(0..)
+$ ----- Domains --------
+letting buildtag be domain int(0 + 1 .. 0 + n_buildtag)
+letting animaltag be domain int(0 + n_buildtag + 1 .. 0 + n_buildtag + n_animaltag)
+letting vegtag be domain int(0 + n_buildtag + n_animaltag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag)
+letting gentag be domain int(0 + n_buildtag + n_animaltag + n_vegtag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag)
+letting animal be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal)
+letting vegetable be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable)
+letting stage be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage)
+letting round be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round)
+letting worker be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker)
+letting improvement be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement)
+letting roundclass be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass)
+letting phaseclass be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass)
+letting roundparts be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts)
+letting resource be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource)
+letting room be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + n_room)
+letting num be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + n_room + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + n_room + n_num)
+letting actiontag be domain int(0 + 1 .. 0 + n_buildtag,0 + n_buildtag + 1 .. 0 + n_buildtag + n_animaltag,0 + n_buildtag + n_animaltag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag,0 + n_buildtag + n_animaltag + n_vegtag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag)
+letting goods be domain int(0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable)
+letting object be domain int(0 + 1 .. 0 + n_buildtag,0 + n_buildtag + 1 .. 0 + n_buildtag + n_animaltag,0 + n_buildtag + n_animaltag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag,0 + n_buildtag + n_animaltag + n_vegtag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + n_room,0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + n_room + 1 .. 0 + n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker + n_improvement + n_roundclass + n_phaseclass + n_roundparts + n_resource + n_room + n_num)
+letting Undefined be domain int(0)
+
+$ ----- init --------
+given init: record {
+ NEXT_STAGE : function (total) (stage,stage) --> bool,
+ current_stage : function (total) (stage) --> bool,
+ harvest_phase : function (total) (stage,phaseclass) --> bool,
+ NEXT_ROUND : function (total) (round,round) --> bool,
+ hold_round : function (total) (round,roundparts) --> bool,
+ current_round : function (total) (round) --> bool,
+ CATEGORY_ROUND : function (total) (round,roundclass) --> bool,
+ NEXT_WORKER : function (total) (worker,worker) --> bool,
+ current_worker : function (total) (worker) --> bool,
+ max_worker : function (total) (worker) --> bool,
+ newborn : function (total) (Undefined) --> bool,
+ plowed_fields : function (total) (Undefined) --> bool,
+ stored_veg : function (total) (vegetable) --> bool,
+ sown_veg : function (total) (vegetable) --> bool,
+ can_harvest : function (total) (vegetable) --> bool,
+ fences_for : function (total) (animal) --> bool,
+ owned_animals : function (total) (animal) --> bool,
+ can_breed : function (total) (animal) --> bool,
+ NEXT_NUM : function (total) (num,num) --> bool,
+ NEXT2_NUM : function (total) (num,num) --> bool,
+ NUM_SUBSTRACT : function (total) (num,num,num) --> bool,
+ FOOD_REQUIRED : function (total) (worker,num) --> bool,
+ open_action : function (total) (actiontag) --> bool,
+ available_action : function (total) (actiontag) --> bool,
+ DRAWCARD_ROUND : function (total) (actiontag,round) --> bool,
+ num_food : function (total) (num) --> bool,
+ stored_resource : function (total) (resource) --> bool,
+ SUPPLY_RESOURCE : function (total) (buildtag,resource) --> bool,
+ space_rooms : function (total) (room) --> bool,
+ built_rooms : function (total) (room,worker) --> bool,
+ ok : function (total) (Undefined) --> bool,
+ home_improvement : function (total) (improvement) --> bool,
+ total_cost : function (total) (Undefined) --> int,
+ group_worker_cost : function (total) (worker) --> int}
+
+
+$ ----- goal --------
+given goal: record {
+ current_stage : function (stage) --> bool,
+ harvest_phase : function (stage,phaseclass) --> bool,
+ hold_round : function (round,roundparts) --> bool,
+ current_round : function (round) --> bool,
+ current_worker : function (worker) --> bool,
+ max_worker : function (worker) --> bool,
+ newborn : function (Undefined) --> bool,
+ plowed_fields : function (Undefined) --> bool,
+ stored_veg : function (vegetable) --> bool,
+ sown_veg : function (vegetable) --> bool,
+ can_harvest : function (vegetable) --> bool,
+ fences_for : function (animal) --> bool,
+ owned_animals : function (animal) --> bool,
+ can_breed : function (animal) --> bool,
+ open_action : function (actiontag) --> bool,
+ available_action : function (actiontag) --> bool,
+ num_food : function (num) --> bool,
+ stored_resource : function (resource) --> bool,
+ space_rooms : function (room) --> bool,
+ built_rooms : function (room,worker) --> bool,
+ ok : function (Undefined) --> bool,
+ home_improvement : function (improvement) --> bool,
+ total_cost : function (Undefined) --> int}
+
+where
+|defined(goal[current_stage])| + |defined(goal[harvest_phase])| + |defined(goal[hold_round])| + |defined(goal[current_round])| + |defined(goal[current_worker])| + |defined(goal[max_worker])| + |defined(goal[newborn])| + |defined(goal[plowed_fields])| + |defined(goal[stored_veg])| + |defined(goal[sown_veg])| + |defined(goal[can_harvest])| + |defined(goal[fences_for])| + |defined(goal[owned_animals])| + |defined(goal[can_breed])| + |defined(goal[open_action])| + |defined(goal[available_action])| + |defined(goal[num_food])| + |defined(goal[stored_resource])| + |defined(goal[space_rooms])| + |defined(goal[built_rooms])| + |defined(goal[ok])| + |defined(goal[home_improvement])| + |defined(goal[total_cost])| > 0
