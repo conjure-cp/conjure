@@ -149,24 +149,24 @@ pgOnDomain x nm (expandDomainReference -> dom) =
             lb  <- lowerBoundOfIntExpr lbX
             ub  <- upperBoundOfIntExpr ubX
 
-            let nmMiddle = nm `mappend` "_middle"
-            tell [(nmMiddle, "i")]
-            let middle = Reference nmMiddle Nothing
+            let nmMin = nm `mappend` "_min"
+            tell [(nmMin, "i")]
+            let rmin = Reference nmMin Nothing
 
-            let nmDelta  = nm `mappend` "_delta"
-            tell [(nmDelta, "i")]
-            let delta = Reference nmDelta Nothing
+            let nmMax  = nm `mappend` "_max"
+            tell [(nmMax, "i")]
+            let rmax = Reference nmMax Nothing
 
             return3
                 (DomainInt t [RangeBounded lb ub])
-                [ Declaration (FindOrGiven Given nmMiddle
+                [ Declaration (FindOrGiven Given nmMin
                         (DomainInt t [RangeBounded lb ub]))
-                , Declaration (FindOrGiven Given nmDelta
+                , Declaration (FindOrGiven Given nmMax
                         -- (DomainInt t [RangeBounded 0 [essence| min([5, (&ub - &lb) / 2]) |]]))
-                        (DomainInt t [RangeBounded 0 [essence| (&ub - &lb) / 2 |]]))
+                        (DomainInt t [RangeBounded lb ub]))
                 ]
-                $ [ [essence| &x >= &middle - &delta |]
-                  , [essence| &x <= &middle + &delta |]
+                $ [ [essence| &x >= &rmin |]
+                  , [essence| &x <= &rmax |]
                   ] ++
                   [ [essence| &x >= &lbX |]
                   | lb /= lbX
@@ -207,13 +207,13 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
         DomainSequence r attr innerDomain -> do
 
-            let nmCardMiddle = nm `mappend` "_cardMiddle"
-            tell [(nmCardMiddle, "i,log")]
-            let cardMiddle = Reference nmCardMiddle Nothing
+            let nmCardMin = nm `mappend` "_cardMin"
+            tell [(nmCardMin, "i")]
+            let cardMin = Reference nmCardMin Nothing
 
-            let nmCardDelta  = nm `mappend` "_cardDelta"
-            tell [(nmCardDelta, "i,log")]
-            let cardDelta = Reference nmCardDelta Nothing
+            let nmCardMax  = nm `mappend` "_cardMax"
+            tell [(nmCardMax, "i")]
+            let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
@@ -253,17 +253,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                             return (SequenceAttr sizeOut jectivity, lb, ub, cardDomain)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl =
-                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
-                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    [ Declaration (FindOrGiven Given nmCardMin cardDomain)
+                    , Declaration (FindOrGiven Given nmCardMax cardDomain)
                     ]
 
             let
                 cardinalityCons = return $ return
                     [essence|
-                        |&x| >= &cardMiddle - &cardDelta /\
-                        |&x| <= &cardMiddle + &cardDelta
+                        |&x| >= &cardMin /\
+                        |&x| <= &cardMax
                     |]
 
                 sizeLbCons =
@@ -285,13 +284,13 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
         DomainSet r attr innerDomain -> do
 
-            let nmCardMiddle = nm `mappend` "_cardMiddle"
-            tell [(nmCardMiddle, "i,log")]
-            let cardMiddle = Reference nmCardMiddle Nothing
+            let nmCardMin = nm `mappend` "_cardMin"
+            tell [(nmCardMin, "i")]
+            let cardMin = Reference nmCardMin Nothing
 
-            let nmCardDelta  = nm `mappend` "_cardDelta"
-            tell [(nmCardDelta, "i,log")]
-            let cardDelta = Reference nmCardDelta Nothing
+            let nmCardMax  = nm `mappend` "_cardMax"
+            tell [(nmCardMax, "i")]
+            let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
@@ -331,17 +330,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                             return (SetAttr sizeOut, lb, ub, cardDomain)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl =
-                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
-                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    [ Declaration (FindOrGiven Given nmCardMin cardDomain)
+                    , Declaration (FindOrGiven Given nmCardMax cardDomain)
                     ]
 
             let
                 cardinalityCons = return $ return
                     [essence|
-                        |&x| >= &cardMiddle - &cardDelta /\
-                        |&x| <= &cardMiddle + &cardDelta
+                        |&x| >= &cardMin /\
+                        |&x| <= &cardMax
                     |]
 
                 sizeLbCons =
@@ -363,13 +361,13 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
         DomainMSet r attr innerDomain -> do
 
-            let nmCardMiddle = nm `mappend` "_cardMiddle"
-            tell [(nmCardMiddle, "i,log")]
-            let cardMiddle = Reference nmCardMiddle Nothing
+            let nmCardMin = nm `mappend` "_cardMin"
+            tell [(nmCardMin, "i")]
+            let cardMin = Reference nmCardMin Nothing
 
-            let nmCardDelta  = nm `mappend` "_cardDelta"
-            tell [(nmCardDelta, "i,log")]
-            let cardDelta = Reference nmCardDelta Nothing
+            let nmCardMax  = nm `mappend` "_cardMax"
+            tell [(nmCardMax, "i")]
+            let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
@@ -423,17 +421,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                             return (MSetAttr sizeAttrOut occurAttrOut, sizeLb, sizeUb, cardDomain, occurLb, occurUb)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl =
-                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
-                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    [ Declaration (FindOrGiven Given nmCardMin cardDomain)
+                    , Declaration (FindOrGiven Given nmCardMax cardDomain)
                     ]
 
             let
                 cardinalityCons = return $ return
                     [essence|
-                        |&x| >= &cardMiddle - &cardDelta /\
-                        |&x| <= &cardMiddle + &cardDelta
+                        |&x| >= &cardMin /\
+                        |&x| <= &cardMax
                     |]
 
                 sizeLbCons =
@@ -465,13 +462,13 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
         DomainFunction r attr innerDomainFr innerDomainTo -> do
 
-            let nmCardMiddle = nm `mappend` "_cardMiddle"
-            tell [(nmCardMiddle, "i,log")]
-            let cardMiddle = Reference nmCardMiddle Nothing
+            let nmCardMin = nm `mappend` "_cardMin"
+            tell [(nmCardMin, "i")]
+            let cardMin = Reference nmCardMin Nothing
 
-            let nmCardDelta  = nm `mappend` "_cardDelta"
-            tell [(nmCardDelta, "i,log")]
-            let cardDelta = Reference nmCardDelta Nothing
+            let nmCardMax  = nm `mappend` "_cardMax"
+            tell [(nmCardMax, "i")]
+            let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
@@ -520,19 +517,18 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 isPartial = not isTotal
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxInt / 2 |]]
                 newDecl | isTotal = []
                         | otherwise =
-                            [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
-                            , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                            [ Declaration (FindOrGiven Given nmCardMin cardDomain)
+                            , Declaration (FindOrGiven Given nmCardMax cardDomain)
                             ]
 
             let
                 cardinalityCons | isTotal = return []
                                 | otherwise = return $ return
                     [essence|
-                        |&x| >= &cardMiddle - &cardDelta /\
-                        |&x| <= &cardMiddle + &cardDelta
+                        |&x| >= &cardMin /\
+                        |&x| <= &cardMax
                     |]
 
                 totalityCons | isPartial = return []
@@ -609,13 +605,13 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
         DomainRelation r attr innerDomains -> do
 
-            let nmCardMiddle = nm `mappend` "_cardMiddle"
-            tell [(nmCardMiddle, "i,log")]
-            let cardMiddle = Reference nmCardMiddle Nothing
+            let nmCardMin = nm `mappend` "_cardMin"
+            tell [(nmCardMin, "i")]
+            let cardMin = Reference nmCardMin Nothing
 
-            let nmCardDelta  = nm `mappend` "_cardDelta"
-            tell [(nmCardDelta, "i,log")]
-            let cardDelta = Reference nmCardDelta Nothing
+            let nmCardMax  = nm `mappend` "_cardMax"
+            tell [(nmCardMax, "i")]
+            let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
@@ -662,17 +658,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                             return (RelationAttr sizeOut binRelAttr, lb, ub, cardDomain)
 
             let
-                deltaDomain = DomainInt TagInt [RangeBounded 0 [essence| &maxIntN / 2 |]]
                 newDecl =
-                    [ Declaration (FindOrGiven Given nmCardMiddle cardDomain)
-                    , Declaration (FindOrGiven Given nmCardDelta deltaDomain)
+                    [ Declaration (FindOrGiven Given nmCardMin cardDomain)
+                    , Declaration (FindOrGiven Given nmCardMax cardDomain)
                     ]
 
             let
                 cardinalityCons = return $ return
                     [essence|
-                        |&x| >= &cardMiddle - &cardDelta /\
-                        |&x| <= &cardMiddle + &cardDelta
+                        |&x| >= &cardMin /\
+                        |&x| <= &cardMax
                     |]
 
                 sizeLbCons =
