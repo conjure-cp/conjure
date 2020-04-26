@@ -534,11 +534,8 @@ strategyToDriver config questions = do
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
             , let upd = addToTrail
                             config
-                            (strategyQ  config) pickedQNumber                   pickedQDescr
-                            (strategyA' config) pickedANumber (length optionsA) pickedADescr
-                            (aText pickedA)
-                            (aBefore pickedA)
-                            (aAnswer pickedA)
+                            (strategyQ  config) pickedQNumber                   pickedQDescr pickedQ
+                            (strategyA' config) pickedANumber (length optionsA) pickedADescr pickedA
             , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
@@ -671,20 +668,23 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int ->        Doc
-    -> Strategy -> Int -> Int -> Doc
-    -> Doc -> Expression -> Expression
+    -> Strategy -> Int ->        Doc -> Question
+    -> Strategy -> Int -> Int -> Doc -> Answer
     -> ModelInfo -> ModelInfo
 addToTrail Config{..}
-           questionStrategy questionNumber                 questionDescr
-           answerStrategy   answerNumber   answerNumbers   answerDescr
-           ruleDescr oldExpr newExpr
+           questionStrategy questionNumber                  questionDescr    theQuestion
+           answerStrategy   answerNumber    answerNumbers   answerDescr      theAnswer
            oldInfo = newInfo
     where
+        ruleDescr = aText theAnswer
+        oldExpr = aBefore theAnswer
+        newExpr = aAnswer theAnswer
         newInfo = oldInfo { miTrailCompact      = (questionNumber, answerNumber, answerNumbers)
                                                 : miTrailCompact oldInfo
-                          -- , miTrailGeneralised  = (?, ?)
-                          --                       : miTrailGeneralised oldInfo
+                          , miTrailGeneralised  = ( hash (qType theQuestion, qHole theQuestion, qAscendants theQuestion)
+                                                  , hash (aBefore theAnswer, renderWide (aRuleName theAnswer))
+                                                  )
+                                                : miTrailGeneralised oldInfo
                           , miTrailVerbose      = if verboseTrail
                                                       then theA : theQ : miTrailVerbose oldInfo
                                                       else []

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Conjure.Rules.Definition
@@ -46,7 +46,9 @@ data QuestionType
     | ChooseRepr_Quantified
     | ChooseRepr_Cut Name
     | ExpressionRefinement
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
+
+instance Hashable QuestionType
 
 data Answer = Answer
     { aText      :: Doc
