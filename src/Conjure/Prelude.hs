@@ -211,6 +211,9 @@ import System.CPUTime ( getCPUTime )
 -- time
 import Data.Time.Clock ( getCurrentTime )
 
+-- timeit
+import System.TimeIt as X ( timeIt, timeItNamed )
+
 import Debug.Trace as X ( trace, traceM )
 
 tracing :: Show a => String -> a -> a

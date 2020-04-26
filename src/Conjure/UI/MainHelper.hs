@@ -576,6 +576,8 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
         ]
 mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
     mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
+mainWithArgs_Modelling modelNamePrefix mode@Modelling{..} portfolioSize modelHashesBefore | strategyA == "c" && channelling == True =
+    mainWithArgs_Modelling modelNamePrefix mode{channelling=False} portfolioSize modelHashesBefore
 mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
     unless (modelNamePrefix == "model") $
         pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix

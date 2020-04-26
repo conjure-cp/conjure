@@ -9,6 +9,7 @@ module Conjure.UI.Model
     , Strategy(..), Config(..), parseStrategy
     , nbUses
     , modelRepresentationsJSON
+    , timedF
     ) where
 
 import Conjure.Prelude
@@ -2441,6 +2442,10 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
     theRule _ = na "rule_AttributeToConstraint"
 
 
+timedF :: MonadIO m => String -> (a -> m b) -> a -> m b
+timedF name comp = \ a -> timeItNamed name (comp a)
+
+
 evaluateModel ::
     MonadFail m =>
     NameGen m =>
@@ -2456,7 +2461,7 @@ evaluateModel m = do
         full p = do
             mconstant <- runExceptT (instantiateExpression [] p)
             case mconstant of
-                Left msg -> return p
+                Left{} -> return p
                 Right constant -> do
                     if null [() | ConstantUndefined{} <- universe constant]
                         then return p
