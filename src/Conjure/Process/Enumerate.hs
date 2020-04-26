@@ -157,6 +157,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , representationsCuts           = Nothing
             , channelling                   = False
             , representationLevels          = True
+            , followModel                   = ""
             , useExistingModels             = []
             , seed                          = Nothing
             , limitModels                   = Nothing

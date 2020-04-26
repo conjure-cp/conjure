@@ -47,6 +47,7 @@ data UI
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
+        , followModel                :: FilePath            -- this is a model to be followed
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -116,6 +117,7 @@ data UI
         , representationsCuts        :: Maybe String
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
+        , followModel                :: FilePath            -- this is a model to be followed
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -415,6 +417,13 @@ ui = modes
             &= help "Whether to use built-in precedence levels when choosing representations. \
                     \Used to cut down the number of generated models.\n\
                     \Default: true"
+        , followModel
+            = ""
+            &= name "follow-model"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Provide a Conjure-generated Essence Prime model to be used as a guide during model generation. \
+                    \Conjure will try to imitate the modelling decisions from this file."
         , seed
             = Nothing
             &= name "seed"
@@ -833,6 +842,13 @@ ui = modes
             &= help "Whether to use built-in precedence levels when choosing representations. \
                     \Used to cut down the number of generated models.\n\
                     \Default: true"
+        , followModel
+            = ""
+            &= name "follow-model"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Provide a Conjure-generated Essence Prime model to be used as a guide during model generation. \
+                    \Conjure will try to imitate the modelling decisions from this file."
         , seed
             = Nothing
             &= name "seed"
