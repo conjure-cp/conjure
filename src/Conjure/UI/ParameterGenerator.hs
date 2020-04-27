@@ -10,7 +10,7 @@ import Conjure.Language.CategoryOf ( categoryOf, Category(..) )
 import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Language.Instantiate ( trySimplify )
 import Conjure.Process.Enumerate ( EnumerateDomain )
--- import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 
 -- text
 import Data.Text ( pack )
@@ -481,13 +481,12 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                         FunctionAttr size PartialityAttr_Partial jectivity -> do
                             (sizeOut, lb, ub, cardDomain) <-
                                 case size of
-                                    SizeAttr_None ->
+                                    SizeAttr_None -> do
+                                        mdomSize <- runExceptT $ domainSizeOf innerDomainFr
                                         return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
-                                               , case innerDomainFr of
-                                                   DomainInt _ [RangeBounded _ ubGiven] ->
-                                                       DomainInt TagInt [RangeBounded minInt ubGiven]
-                                                   _ ->
-                                                       DomainInt TagInt [RangeBounded minInt maxInt]
+                                               , case mdomSize of
+                                                   Left{} -> DomainInt TagInt [RangeBounded minInt maxInt]
+                                                   Right domSize -> DomainInt TagInt [RangeBounded 0 domSize]
                                                )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
