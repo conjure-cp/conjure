@@ -2517,14 +2517,14 @@ rule_FullEvaluate :: Rule
 rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Constant{} = na "rule_FullEvaluate"
     theRule Domain{} = na "rule_FullEvaluate"
+    theRule (Reference _ (Just (Alias x)))                 -- selectively inline, unless x is huge
+        | Just Comprehension{} <- match opToSet x
+        = return ("Inline alias", return x)
     theRule p = do
         constant <- instantiateExpression [] p
         unless (null [() | ConstantUndefined{} <- universe constant]) $
             na "rule_PartialEvaluate, undefined"
-        return
-            ( "Full evaluator"
-            , return $ Constant constant
-            )
+        return ("Full evaluator", return $ Constant constant)
 
 
 rule_PartialEvaluate :: Rule

@@ -15,10 +15,10 @@ import Conjure.Language.Pretty
 --   specifically, name-resolution needs to be rerun after representation selection.
 --   however, this transformation (as part of `Conjure.UI.Model.prologue`) cleans this up by introducing
 --   extra letting statements.
-lettingsForComplexInDoms
-    :: (MonadFail m, NameGen m)
-    => Model
-    -> m Model
+lettingsForComplexInDoms ::
+    MonadFail m =>
+    NameGen m =>
+    Model -> m Model
 lettingsForComplexInDoms m = do
     let
         expressionExtract expr@Constant{}        = return expr
@@ -73,6 +73,7 @@ inlineLettingDomainsForDecls m = do
                     return (Declaration (FindOrGiven forg name domain'))
                 _ -> return st
         return m { mStatements = statements }
+
 
 -- | remove domain lettings, only after name resolution
 removeDomainLettings :: Monad m => Model -> m Model

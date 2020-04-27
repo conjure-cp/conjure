@@ -82,6 +82,9 @@ instance DomainOf Expression where
     domainOf (AbstractLiteral x) = domainOf x
     domainOf (Op x) = domainOf x
     domainOf (WithLocals h _) = domainOf h
+    domainOf (Comprehension h _) = do
+        domH <- domainOf h
+        return $ DomainMatrix (DomainInt TagInt [RangeLowerBounded 1]) domH
     domainOf x = fail ("domainOf{Expression}:" <+> pretty (show x))
 
     -- if an empty matrix literal has a type annotation
@@ -639,8 +642,11 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpToRelation x) where
     domainOf op = mkDomainAny ("OpToRelation:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
-    domainOf op = mkDomainAny ("OpToSet:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpToSet x) where
+    domainOf (OpToSet _ x) = do
+        domX <- domainOf x
+        innerDomX <- innerDomainOf domX
+        return $ DomainSet () def innerDomX
 
 instance DomainOf (OpTogether x) where
     domainOf _ = return DomainBool
