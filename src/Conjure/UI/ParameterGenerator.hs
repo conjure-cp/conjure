@@ -736,6 +736,10 @@ lowerBoundOfIntExpr x | x == minInt = return minInt
 lowerBoundOfIntExpr x | x == maxInt = return maxInt
 lowerBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = minOfIntDomain dom
 lowerBoundOfIntExpr (Reference _ (Just (Alias x))) = lowerBoundOfIntExpr x
+lowerBoundOfIntExpr (Op (MkOpMinus (OpMinus a b))) = do
+    aLower <- lowerBoundOfIntExpr a
+    bUpper <- upperBoundOfIntExpr b
+    return $ make opMinus aLower bUpper
 lowerBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
     bounds <- mapM lowerBoundOfIntExpr xs
     return $ make opSum $ fromList bounds
@@ -776,6 +780,10 @@ upperBoundOfIntExpr x | x == minInt = return minInt
 upperBoundOfIntExpr x | x == maxInt = return maxInt
 upperBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = maxOfIntDomain dom
 upperBoundOfIntExpr (Reference _ (Just (Alias x))) = upperBoundOfIntExpr x
+upperBoundOfIntExpr (Op (MkOpMinus (OpMinus a b))) = do
+    aUpper <- upperBoundOfIntExpr a
+    bLower <- lowerBoundOfIntExpr b
+    return $ make opMinus aUpper bLower
 upperBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
     bounds <- mapM upperBoundOfIntExpr xs
     return $ make opSum $ fromList bounds
