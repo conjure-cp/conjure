@@ -1,96 +1,89 @@
 $ conjure parameter-generator problem.essence --essence-out problem-gen.essence
-Generating models for problem-gen.essence
-Generated models: model000001.eprime
-Saved under: conjure-output
-Savile Row: model000001.eprime test.param
-Running minion for domain filtering.
-Running solver: minion
-Copying solution to: problem-gen-test.solution
 File: problem-gen.essence
 language Essence 1.3
 
-given a_middle: int(1..10)
-given a_delta: int(0..4)
+given a_min: int(1..10)
+given a_max: int(1..10)
 find a: int(1..10)
 such that
-    a >= a_middle - a_delta,
-    a <= a_middle + a_delta
-given b_middle: int(1..10)
-given b_delta: int(0..4)
+    a >= a_min,
+    a <= a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
 find b: int(1..10)
 such that
-    b >= b_middle - b_delta,
-    b <= b_middle + b_delta
-given c_middle: int(1..10)
-given c_delta: int(0..4)
+    b >= b_min,
+    b <= b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
 find c: int(1..10)
 such that
-    c >= c_middle - c_delta,
-    c <= c_middle + c_delta
-given s_middle: int(1..10)
-given s_delta: int(0..4)
+    c >= c_min,
+    c <= c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
 find s: int(1..10)
 such that
-    s >= s_middle - s_delta,
-    s <= s_middle + s_delta
-given f_range_middle: int(1..100)
-given f_range_delta: int(0..49)
+    s >= s_min,
+    s <= s_max
+given f_range_min: int(1..100)
+given f_range_max: int(1..100)
 find f: function (injective) int(1..10) --> int(1..100)
 such that
     and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
-    and([q1[2] >= f_range_middle - f_range_delta | q1 <- f]),
-    and([q1[2] <= f_range_middle + f_range_delta | q1 <- f]),
+    and([q1[2] >= f_range_min | q1 <- f]),
+    and([q1[2] <= f_range_max | q1 <- f]),
     and([q1[2] >= c | q1 <- f])
-given g_cardMiddle: int(1..10)
-given g_cardDelta: int(0..50)
-given g_defined_middle: int(1..10)
-given g_defined_delta: int(0..4)
-given g_range_middle: int(1..100)
-given g_range_delta: int(0..49)
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_defined_min: int(1..10)
+given g_defined_max: int(1..10)
+given g_range_min: int(1..100)
+given g_range_max: int(1..100)
 find g: function (minSize 1, maxSize 10, injective) int(1..10) --> int(1..100)
 such that
-    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
+    |g| >= g_cardMin /\ |g| <= g_cardMax,
     |g| >= s,
     |g| <= s,
-    and([q2[1] >= g_defined_middle - g_defined_delta | q2 <- g]),
-    and([q2[1] <= g_defined_middle + g_defined_delta | q2 <- g]),
+    and([q2[1] >= g_defined_min | q2 <- g]),
+    and([q2[1] <= g_defined_max | q2 <- g]),
     and([q2[1] >= a | q2 <- g]),
     and([q2[1] <= b | q2 <- g]),
-    and([q2[2] >= g_range_middle - g_range_delta | q2 <- g]),
-    and([q2[2] <= g_range_middle + g_range_delta | q2 <- g]),
+    and([q2[2] >= g_range_min | q2 <- g]),
+    and([q2[2] <= g_range_max | q2 <- g]),
     and([q2[2] >= c | q2 <- g])
-given h_cardMiddle: int(1..100)
-given h_cardDelta: int(0..50)
-given h_defined_middle: int(1..10)
-given h_defined_delta: int(0..4)
-given h_range_middle: int(1..100)
-given h_range_delta: int(0..49)
+given h_cardMin: int(1..100)
+given h_cardMax: int(1..100)
+given h_defined_min: int(1..10)
+given h_defined_max: int(1..10)
+given h_range_min: int(1..100)
+given h_range_max: int(1..100)
 find h: function (minSize 1, maxSize 100, injective) int(1..10) --> int(1..100)
 such that
-    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
+    |h| >= h_cardMin /\ |h| <= h_cardMax,
     |h| >= s,
-    and([q3[1] >= h_defined_middle - h_defined_delta | q3 <- h]),
-    and([q3[1] <= h_defined_middle + h_defined_delta | q3 <- h]),
+    and([q3[1] >= h_defined_min | q3 <- h]),
+    and([q3[1] <= h_defined_max | q3 <- h]),
     and([q3[1] >= a | q3 <- h]),
     and([q3[1] <= b | q3 <- h]),
-    and([q3[2] >= h_range_middle - h_range_delta | q3 <- h]),
-    and([q3[2] <= h_range_middle + h_range_delta | q3 <- h]),
+    and([q3[2] >= h_range_min | q3 <- h]),
+    and([q3[2] <= h_range_max | q3 <- h]),
     and([q3[2] >= c | q3 <- h])
-given k_cardMiddle: int(0..100)
-given k_cardDelta: int(0..50)
-given k_defined_middle: int(1..10)
-given k_defined_delta: int(0..4)
-given k_range_middle: int(1..100)
-given k_range_delta: int(0..49)
+given k_cardMin: int(0..100)
+given k_cardMax: int(0..100)
+given k_defined_min: int(1..10)
+given k_defined_max: int(1..10)
+given k_range_min: int(1..100)
+given k_range_max: int(1..100)
 find k: function (maxSize 100) int(1..10) --> int(1..100)
 such that
-    |k| >= k_cardMiddle - k_cardDelta /\ |k| <= k_cardMiddle + k_cardDelta,
-    and([q4[1] >= k_defined_middle - k_defined_delta | q4 <- k]),
-    and([q4[1] <= k_defined_middle + k_defined_delta | q4 <- k]),
+    |k| >= k_cardMin /\ |k| <= k_cardMax,
+    and([q4[1] >= k_defined_min | q4 <- k]),
+    and([q4[1] <= k_defined_max | q4 <- k]),
     and([q4[1] >= a | q4 <- k]),
     and([q4[1] <= b | q4 <- k]),
-    and([q4[2] >= k_range_middle - k_range_delta | q4 <- k]),
-    and([q4[2] <= k_range_middle + k_range_delta | q4 <- k]),
+    and([q4[2] >= k_range_min | q4 <- k]),
+    and([q4[2] <= k_range_max | q4 <- k]),
     and([q4[2] >= c | q4 <- k])
 such that g != h
 
@@ -98,146 +91,124 @@ such that g != h
 
 
 File: problem-gen.essence.irace
-a_middle "-a_middle " i (1, 10)
-a_delta "-a_delta " i (0, 4)
-b_middle "-b_middle " i (1, 10)
-b_delta "-b_delta " i (0, 4)
-c_middle "-c_middle " i (1, 10)
-c_delta "-c_delta " i (0, 4)
-s_middle "-s_middle " i (1, 10)
-s_delta "-s_delta " i (0, 4)
-f_range_middle "-f_range_middle " i (1, 100)
-f_range_delta "-f_range_delta " i (0, 49)
-g_cardMiddle "-g_cardMiddle " i,log (1, 10)
-g_cardDelta "-g_cardDelta " i,log (0, 50)
-g_defined_middle "-g_defined_middle " i (1, 10)
-g_defined_delta "-g_defined_delta " i (0, 4)
-g_range_middle "-g_range_middle " i (1, 100)
-g_range_delta "-g_range_delta " i (0, 49)
-h_cardMiddle "-h_cardMiddle " i,log (1, 100)
-h_cardDelta "-h_cardDelta " i,log (0, 50)
-h_defined_middle "-h_defined_middle " i (1, 10)
-h_defined_delta "-h_defined_delta " i (0, 4)
-h_range_middle "-h_range_middle " i (1, 100)
-h_range_delta "-h_range_delta " i (0, 49)
-k_cardMiddle "-k_cardMiddle " i,log (0, 100)
-k_cardDelta "-k_cardDelta " i,log (0, 50)
-k_defined_middle "-k_defined_middle " i (1, 10)
-k_defined_delta "-k_defined_delta " i (0, 4)
-k_range_middle "-k_range_middle " i (1, 100)
-k_range_delta "-k_range_delta " i (0, 49)
-
---------------------
-
-
-File: problem-gen-test.solution
-language Essence 1.3
-
-letting a be 4
-letting b be 7
-letting c be 9
-letting f be function(4 --> 9, 5 --> 10, 6 --> 11, 7 --> 12)
-letting g be function(5 --> 9, 6 --> 10, 7 --> 11)
-letting h be function(5 --> 9, 6 --> 10, 7 --> 12)
-letting k be function(6 --> 13, 7 --> 13)
-letting s be 3
+a_min "-a_min " i (1, 10)
+a_max "-a_max " i (1, 10)
+b_min "-b_min " i (1, 10)
+b_max "-b_max " i (1, 10)
+c_min "-c_min " i (1, 10)
+c_max "-c_max " i (1, 10)
+s_min "-s_min " i (1, 10)
+s_max "-s_max " i (1, 10)
+f_range_min "-f_range_min " i (1, 100)
+f_range_max "-f_range_max " i (1, 100)
+g_cardMin "-g_cardMin " i (1, 10)
+g_cardMax "-g_cardMax " i (1, 10)
+g_defined_min "-g_defined_min " i (1, 10)
+g_defined_max "-g_defined_max " i (1, 10)
+g_range_min "-g_range_min " i (1, 100)
+g_range_max "-g_range_max " i (1, 100)
+h_cardMin "-h_cardMin " i (1, 100)
+h_cardMax "-h_cardMax " i (1, 100)
+h_defined_min "-h_defined_min " i (1, 10)
+h_defined_max "-h_defined_max " i (1, 10)
+h_range_min "-h_range_min " i (1, 100)
+h_range_max "-h_range_max " i (1, 100)
+k_cardMin "-k_cardMin " i (0, 100)
+k_cardMax "-k_cardMax " i (0, 100)
+k_defined_min "-k_defined_min " i (1, 10)
+k_defined_max "-k_defined_max " i (1, 10)
+k_range_min "-k_range_min " i (1, 100)
+k_range_max "-k_range_max " i (1, 100)
 
 --------------------
 
 
 $ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
-Generating models for problem-gen.essence
-Generated models: model000001.eprime
-Saved under: conjure-output
-Savile Row: model000001.eprime test.param
-Running minion for domain filtering.
-Running solver: minion
-Copying solution to: problem-gen-test.solution
 File: problem-gen.essence
 language Essence 1.3
 
-given a_middle: int(1..10)
-given a_delta: int(0..4)
+given a_min: int(1..10)
+given a_max: int(1..10)
 find a: int(1..10)
 such that
-    a >= a_middle - a_delta,
-    a <= a_middle + a_delta
-given b_middle: int(1..10)
-given b_delta: int(0..4)
+    a >= a_min,
+    a <= a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
 find b: int(1..10)
 such that
-    b >= b_middle - b_delta,
-    b <= b_middle + b_delta
-given c_middle: int(1..10)
-given c_delta: int(0..4)
+    b >= b_min,
+    b <= b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
 find c: int(1..10)
 such that
-    c >= c_middle - c_delta,
-    c <= c_middle + c_delta
-given s_middle: int(1..10)
-given s_delta: int(0..4)
+    c >= c_min,
+    c <= c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
 find s: int(1..10)
 such that
-    s >= s_middle - s_delta,
-    s <= s_middle + s_delta
-given f_range_middle: int(1..50)
-given f_range_delta: int(0..24)
+    s >= s_min,
+    s <= s_max
+given f_range_min: int(1..50)
+given f_range_max: int(1..50)
 find f: function (injective) int(1..10) --> int(1..50)
 such that
     and([q1 >= a /\ q1 <= b <-> q1 in defined(f) | q1 : int(1..10)]),
-    and([q1[2] >= f_range_middle - f_range_delta | q1 <- f]),
-    and([q1[2] <= f_range_middle + f_range_delta | q1 <- f]),
+    and([q1[2] >= f_range_min | q1 <- f]),
+    and([q1[2] <= f_range_max | q1 <- f]),
     and([q1[2] >= c | q1 <- f])
-given g_cardMiddle: int(1..10)
-given g_cardDelta: int(0..25)
-given g_defined_middle: int(1..10)
-given g_defined_delta: int(0..4)
-given g_range_middle: int(1..50)
-given g_range_delta: int(0..24)
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_defined_min: int(1..10)
+given g_defined_max: int(1..10)
+given g_range_min: int(1..50)
+given g_range_max: int(1..50)
 find g: function (minSize 1, maxSize 10, injective) int(1..10) --> int(1..50)
 such that
-    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
+    |g| >= g_cardMin /\ |g| <= g_cardMax,
     |g| >= s,
     |g| <= s,
-    and([q2[1] >= g_defined_middle - g_defined_delta | q2 <- g]),
-    and([q2[1] <= g_defined_middle + g_defined_delta | q2 <- g]),
+    and([q2[1] >= g_defined_min | q2 <- g]),
+    and([q2[1] <= g_defined_max | q2 <- g]),
     and([q2[1] >= a | q2 <- g]),
     and([q2[1] <= b | q2 <- g]),
-    and([q2[2] >= g_range_middle - g_range_delta | q2 <- g]),
-    and([q2[2] <= g_range_middle + g_range_delta | q2 <- g]),
+    and([q2[2] >= g_range_min | q2 <- g]),
+    and([q2[2] <= g_range_max | q2 <- g]),
     and([q2[2] >= c | q2 <- g])
-given h_cardMiddle: int(1..50)
-given h_cardDelta: int(0..25)
-given h_defined_middle: int(1..10)
-given h_defined_delta: int(0..4)
-given h_range_middle: int(1..50)
-given h_range_delta: int(0..24)
+given h_cardMin: int(1..50)
+given h_cardMax: int(1..50)
+given h_defined_min: int(1..10)
+given h_defined_max: int(1..10)
+given h_range_min: int(1..50)
+given h_range_max: int(1..50)
 find h: function (minSize 1, maxSize 50, injective) int(1..10) --> int(1..50)
 such that
-    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
+    |h| >= h_cardMin /\ |h| <= h_cardMax,
     |h| >= s,
-    and([q3[1] >= h_defined_middle - h_defined_delta | q3 <- h]),
-    and([q3[1] <= h_defined_middle + h_defined_delta | q3 <- h]),
+    and([q3[1] >= h_defined_min | q3 <- h]),
+    and([q3[1] <= h_defined_max | q3 <- h]),
     and([q3[1] >= a | q3 <- h]),
     and([q3[1] <= b | q3 <- h]),
-    and([q3[2] >= h_range_middle - h_range_delta | q3 <- h]),
-    and([q3[2] <= h_range_middle + h_range_delta | q3 <- h]),
+    and([q3[2] >= h_range_min | q3 <- h]),
+    and([q3[2] <= h_range_max | q3 <- h]),
     and([q3[2] >= c | q3 <- h])
-given k_cardMiddle: int(-10..50)
-given k_cardDelta: int(0..25)
-given k_defined_middle: int(1..10)
-given k_defined_delta: int(0..4)
-given k_range_middle: int(1..50)
-given k_range_delta: int(0..24)
+given k_cardMin: int(-10..50)
+given k_cardMax: int(-10..50)
+given k_defined_min: int(1..10)
+given k_defined_max: int(1..10)
+given k_range_min: int(1..50)
+given k_range_max: int(1..50)
 find k: function (maxSize 50) int(1..10) --> int(1..50)
 such that
-    |k| >= k_cardMiddle - k_cardDelta /\ |k| <= k_cardMiddle + k_cardDelta,
-    and([q4[1] >= k_defined_middle - k_defined_delta | q4 <- k]),
-    and([q4[1] <= k_defined_middle + k_defined_delta | q4 <- k]),
+    |k| >= k_cardMin /\ |k| <= k_cardMax,
+    and([q4[1] >= k_defined_min | q4 <- k]),
+    and([q4[1] <= k_defined_max | q4 <- k]),
     and([q4[1] >= a | q4 <- k]),
     and([q4[1] <= b | q4 <- k]),
-    and([q4[2] >= k_range_middle - k_range_delta | q4 <- k]),
-    and([q4[2] <= k_range_middle + k_range_delta | q4 <- k]),
+    and([q4[2] >= k_range_min | q4 <- k]),
+    and([q4[2] <= k_range_max | q4 <- k]),
     and([q4[2] >= c | q4 <- k])
 such that g != h
 
@@ -245,49 +216,34 @@ such that g != h
 
 
 File: problem-gen.essence.irace
-a_middle "-a_middle " i (1, 10)
-a_delta "-a_delta " i (0, 4)
-b_middle "-b_middle " i (1, 10)
-b_delta "-b_delta " i (0, 4)
-c_middle "-c_middle " i (1, 10)
-c_delta "-c_delta " i (0, 4)
-s_middle "-s_middle " i (1, 10)
-s_delta "-s_delta " i (0, 4)
-f_range_middle "-f_range_middle " i (1, 50)
-f_range_delta "-f_range_delta " i (0, 24)
-g_cardMiddle "-g_cardMiddle " i,log (1, 10)
-g_cardDelta "-g_cardDelta " i,log (0, 25)
-g_defined_middle "-g_defined_middle " i (1, 10)
-g_defined_delta "-g_defined_delta " i (0, 4)
-g_range_middle "-g_range_middle " i (1, 50)
-g_range_delta "-g_range_delta " i (0, 24)
-h_cardMiddle "-h_cardMiddle " i,log (1, 50)
-h_cardDelta "-h_cardDelta " i,log (0, 25)
-h_defined_middle "-h_defined_middle " i (1, 10)
-h_defined_delta "-h_defined_delta " i (0, 4)
-h_range_middle "-h_range_middle " i (1, 50)
-h_range_delta "-h_range_delta " i (0, 24)
-k_cardMiddle "-k_cardMiddle " i,log (-10, 50)
-k_cardDelta "-k_cardDelta " i,log (0, 25)
-k_defined_middle "-k_defined_middle " i (1, 10)
-k_defined_delta "-k_defined_delta " i (0, 4)
-k_range_middle "-k_range_middle " i (1, 50)
-k_range_delta "-k_range_delta " i (0, 24)
-
---------------------
-
-
-File: problem-gen-test.solution
-language Essence 1.3
-
-letting a be 4
-letting b be 7
-letting c be 9
-letting f be function(4 --> 9, 5 --> 10, 6 --> 11, 7 --> 12)
-letting g be function(5 --> 9, 6 --> 10, 7 --> 11)
-letting h be function(5 --> 9, 6 --> 10, 7 --> 12)
-letting k be function(6 --> 13, 7 --> 13)
-letting s be 3
+a_min "-a_min " i (1, 10)
+a_max "-a_max " i (1, 10)
+b_min "-b_min " i (1, 10)
+b_max "-b_max " i (1, 10)
+c_min "-c_min " i (1, 10)
+c_max "-c_max " i (1, 10)
+s_min "-s_min " i (1, 10)
+s_max "-s_max " i (1, 10)
+f_range_min "-f_range_min " i (1, 50)
+f_range_max "-f_range_max " i (1, 50)
+g_cardMin "-g_cardMin " i (1, 10)
+g_cardMax "-g_cardMax " i (1, 10)
+g_defined_min "-g_defined_min " i (1, 10)
+g_defined_max "-g_defined_max " i (1, 10)
+g_range_min "-g_range_min " i (1, 50)
+g_range_max "-g_range_max " i (1, 50)
+h_cardMin "-h_cardMin " i (1, 50)
+h_cardMax "-h_cardMax " i (1, 50)
+h_defined_min "-h_defined_min " i (1, 10)
+h_defined_max "-h_defined_max " i (1, 10)
+h_range_min "-h_range_min " i (1, 50)
+h_range_max "-h_range_max " i (1, 50)
+k_cardMin "-k_cardMin " i (-10, 50)
+k_cardMax "-k_cardMax " i (-10, 50)
+k_defined_min "-k_defined_min " i (1, 10)
+k_defined_max "-k_defined_max " i (1, 10)
+k_range_min "-k_range_min " i (1, 50)
+k_range_max "-k_range_max " i (1, 50)
 
 --------------------
 
