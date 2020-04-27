@@ -483,7 +483,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                                 case size of
                                     SizeAttr_None ->
                                         return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
-                                               , DomainInt TagInt [RangeBounded minInt maxInt]
+                                               , case innerDomainFr of
+                                                   DomainInt _ [RangeBounded _ ubGiven] ->
+                                                       DomainInt TagInt [RangeBounded minInt ubGiven]
+                                                   _ ->
+                                                       DomainInt TagInt [RangeBounded minInt maxInt]
                                                )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
