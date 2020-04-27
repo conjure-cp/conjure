@@ -1,15 +1,15 @@
 language Essence 1.3
 
-given n_middle: int(1..100)
-given n_delta: int(0..49)
+given n_min: int(1..100)
+given n_max: int(1..100)
 find n: int(1..100)
 such that
-    n >= n_middle - n_delta,
-    n <= n_middle + n_delta
-given k_middle: int(1..100)
-given k_delta: int(0..49)
+    n >= n_min,
+    n <= n_max
+given k_min: int(1..100)
+given k_max: int(1..100)
 find k: int(1..100)
 such that
-    k >= k_middle - k_delta,
-    k <= k_middle + k_delta
+    k >= k_min,
+    k <= k_max
 such that k < sum([i | i : int(1..100), i <= n])
