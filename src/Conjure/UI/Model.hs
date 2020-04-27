@@ -9,6 +9,7 @@ module Conjure.UI.Model
     , Strategy(..), Config(..), parseStrategy
     , nbUses
     , modelRepresentationsJSON
+    , timedF
     ) where
 
 import Conjure.Prelude
@@ -533,11 +534,8 @@ strategyToDriver config questions = do
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
             , let upd = addToTrail
                             config
-                            (strategyQ  config) pickedQNumber                   pickedQDescr
-                            (strategyA' config) pickedANumber (length optionsA) pickedADescr
-                            (aText pickedA)
-                            (aBefore pickedA)
-                            (aAnswer pickedA)
+                            (strategyQ  config) pickedQNumber                   pickedQDescr pickedQ
+                            (strategyA' config) pickedANumber (length optionsA) pickedADescr pickedA
             , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
@@ -653,12 +651,23 @@ executeAnswerStrategy _ _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy _ _ [(doc, option)] (viewAuto -> (_, True)) = do
     logDebug ("Picking the only option:" <+> doc)
     return [(1, doc, option)]
-executeAnswerStrategy _ question options st@(viewAuto -> (strategy, _)) =
-    case strategy of
-        Compact -> do
-            let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
-            return [(n, doc, c)]
-        _  -> executeStrategy question options st
+executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) = do
+    let
+        -- if the trail log does not tell us what to do
+        cacheMiss =
+            case strategy of
+                Compact -> do
+                    let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
+                    return [(n, doc, c)]
+                _  -> executeStrategy question options st
+
+    case M.lookup (hashQuestion question) (followTrail config) of
+        Just aHash -> do
+            case [ (n, doc, option) | (n, (doc, option)) <- zip [1..] options, hashAnswer option == aHash ] of
+                [a] -> do
+                    return [a]
+                _ -> cacheMiss
+        Nothing -> cacheMiss
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -670,24 +679,27 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int ->        Doc
-    -> Strategy -> Int -> Int -> Doc
-    -> Doc -> Expression -> Expression
+    -> Strategy -> Int ->        Doc -> Question
+    -> Strategy -> Int -> Int -> Doc -> Answer
     -> ModelInfo -> ModelInfo
 addToTrail Config{..}
-           questionStrategy questionNumber                 questionDescr
-           answerStrategy   answerNumber   answerNumbers   answerDescr
-           ruleDescr oldExpr newExpr
+           questionStrategy questionNumber                  questionDescr    theQuestion
+           answerStrategy   answerNumber    answerNumbers   answerDescr      theAnswer
            oldInfo = newInfo
     where
-        newInfo = oldInfo { miTrailCompact  = (questionNumber, answerNumber, answerNumbers)
-                                            : miTrailCompact oldInfo
-                          , miTrailVerbose  = if verboseTrail
-                                                    then theA : theQ : miTrailVerbose oldInfo
-                                                    else []
-                          , miTrailRewrites = if rewritesTrail
-                                                    then theRewrite : miTrailRewrites oldInfo
-                                                    else []
+        ruleDescr = aText theAnswer
+        oldExpr = aBefore theAnswer
+        newExpr = aAnswer theAnswer
+        newInfo = oldInfo { miTrailCompact      = (questionNumber, answerNumber, answerNumbers)
+                                                : miTrailCompact oldInfo
+                          , miTrailGeneralised  = (hashQuestion theQuestion, hashAnswer theAnswer)
+                                                : miTrailGeneralised oldInfo
+                          , miTrailVerbose      = if verboseTrail
+                                                      then theA : theQ : miTrailVerbose oldInfo
+                                                      else []
+                          , miTrailRewrites     = if rewritesTrail
+                                                      then theRewrite : miTrailRewrites oldInfo
+                                                      else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
@@ -710,6 +722,14 @@ addToTrail Config{..}
             , trBefore = map stringToText $ lines $ renderWide $ pretty oldExpr
             , trAfter  = map stringToText $ lines $ renderWide $ pretty newExpr
             }
+
+
+hashQuestion :: Question -> Int
+hashQuestion q = hash (qType q, qHole q, qAscendants q)
+
+
+hashAnswer :: Answer -> Int
+hashAnswer a = hash (aBefore a, renderWide (aRuleName a), aAnswer a)
 
 
 -- | Add a true-constraint, for every decision variable (whether it is used or not in the model) and
@@ -1196,6 +1216,7 @@ prologue model = do
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
+    >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
 
 
@@ -1979,14 +2000,7 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
 rule_Flatten_Lex :: Rule
 rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
     theRule [essence| &a <lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
+      reject_flat a b
       fa <- flatten a
       fb <- flatten b
       tfa <- typeOf fa
@@ -1999,14 +2013,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
              , return [essence| &fa <lex &fb |]
              )
     theRule [essence| &a <=lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
+      reject_flat a b
       fa <- flatten a
       fb <- flatten b
       tfa <- typeOf fa
@@ -2019,6 +2026,24 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
              , return [essence| &fa <=lex &fb |]
              )
     theRule _ = na "rule_Flatten_Lex"  
+    reject_flat a b = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeMatrix TypeBool TypeInt{}, _) ->
+          na "rule_Flatten_Lex"
+        (TypeMatrix TypeBool TypeBool, _) ->
+          na "rule_Flatten_Lex"
+        (TypeList TypeInt{}, _) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeInt{}, _) ->
+          na "rule_Flatten_Lex"
+        (TypeList TypeBool, _) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeBool, _) ->
+          na "rule_Flatten_Lex"
+        _ -> return () 
+
     flatten a = do
       ta <- typeOf a
       case ta of
@@ -2432,6 +2457,60 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
             , bugFailT "rule_AttributeToConstraint" conv
             )
     theRule _ = na "rule_AttributeToConstraint"
+
+
+timedF :: MonadIO m => String -> (a -> m b) -> a -> m b
+timedF name comp = \ a -> timeItNamed name (comp a)
+
+
+evaluateModel ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
+evaluateModel m = do
+    let
+        full (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
+            return val
+        full p@Constant{} = return p
+        full p@Domain{} = return p
+        full p = do
+            mconstant <- runExceptT (instantiateExpression [] p)
+            case mconstant of
+                Left{} -> return p
+                Right constant -> do
+                    if null [() | ConstantUndefined{} <- universe constant]
+                        then return p
+                        else return (Constant constant)
+    let
+        partial (Op op)
+            | Just (x, y) <- case op of
+                                MkOpLeq (OpLeq x y) -> Just (x,y)
+                                MkOpGeq (OpGeq x y) -> Just (x,y)
+                                MkOpEq  (OpEq  x y) -> Just (x,y)
+                                _                   -> Nothing
+            , Reference nmX _ <- x
+            , Reference nmY _ <- y
+            , nmX == nmY
+            , categoryOf x <= CatQuantified
+            , categoryOf y <= CatQuantified
+            = return (fromBool True)
+        partial p@(Op x) = do
+            mx' <- runExceptT (simplifyOp x)
+            case mx' of
+                Left{} -> return p
+                Right x' -> do
+                    when (Op x == x') $ bug $ vcat
+                        [ "rule_PartialEvaluate, simplifier returns the input unchanged."
+                        , "input:" <+> vcat [ pretty (Op x)
+                                            , pretty (show (Op x))
+                                            ]
+                        ]
+                    return x'
+        partial p = return p
+
+    (descendBiM full >=> transformBiM partial) m
 
 
 rule_FullEvaluate :: Rule

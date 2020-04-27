@@ -37,6 +37,27 @@ instance Hashable  x => Hashable  (AbstractLiteral x)
 instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = genericParseJSON jsonOptions
 
+instance (SimpleJSON x, Pretty x) => SimpleJSON (AbstractLiteral x) where
+    toSimpleJSON lit =
+        case lit of
+            AbsLitTuple xs -> toSimpleJSON xs
+            AbsLitRecord xs -> do
+                xs' <- forM xs $ \ (nm, x) -> do
+                    x' <- toSimpleJSON x
+                    return (stringToText (renderNormal nm), x')
+                return $ JSON.Object $ M.fromList xs'
+            -- AbsLitVariant (Maybe [(Name, Domain () x)]) Name x
+            AbsLitMatrix _ xs -> toSimpleJSON xs
+            AbsLitSet xs -> toSimpleJSON xs
+            AbsLitMSet xs -> toSimpleJSON xs
+            AbsLitFunction xs -> toSimpleJSON xs
+            AbsLitSequence xs -> toSimpleJSON xs
+            AbsLitRelation xs -> toSimpleJSON xs
+            AbsLitPartition xs -> toSimpleJSON xs
+            _ -> noToSimpleJSON lit
+    fromSimpleJSON _ = noFromSimpleJSON
+
+
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
     pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <+> pretty x

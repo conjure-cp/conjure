@@ -1,0 +1,80 @@
+language ESSENCE' 1.0
+
+given n_actiontag: int(0..)
+given n_goods: int(0..)
+given n_stage: int(0..)
+given n_round: int(0..)
+given n_worker: int(0..)
+given n_improvement: int(0..)
+given n_roundclass: int(0..)
+given n_phaseclass: int(0..)
+given n_roundparts: int(0..)
+given n_resource: int(0..)
+given n_room: int(0..)
+given n_num: int(0..)
+given n_buildtag: int(0..)
+given n_animaltag: int(0..)
+given n_vegtag: int(0..)
+given n_gentag: int(0..)
+given n_animal: int(0..)
+given n_vegetable: int(0..)
+letting let1 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + 1
+letting let2 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage
+letting let3 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + 1
+letting let4 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage
+letting let5 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + 1
+letting let6 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage
+letting let7 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + 1
+letting let8 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage
+letting let9 be
+        n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker +
+        n_improvement
+        + n_roundclass
+        + 1
+letting let10 be
+        n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker +
+        n_improvement
+        + n_roundclass
+        + n_phaseclass
+letting let11 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1
+letting let12 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round
+letting let13 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1
+letting let14 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round
+letting let15 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1
+letting let16 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round
+letting let17 be
+        n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker +
+        n_improvement
+        + n_roundclass
+        + n_phaseclass
+        + 1
+letting let18 be
+        n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker +
+        n_improvement
+        + n_roundclass
+        + n_phaseclass
+        + n_roundparts
+letting let19 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1
+letting let20 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round
+letting let21 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + 1
+letting let22 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round
+letting let23 be
+        n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker +
+        n_improvement
+        + 1
+letting let24 be
+        n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker +
+        n_improvement
+        + n_roundclass
+letting let25 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + 1
+letting let26 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker
+letting let27 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + 1
+letting let28 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker
+letting let29 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + 1
+letting let30 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker
+letting let31 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + 1
+letting let32 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable + n_stage + n_round + n_worker
+letting let33 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1
+letting let34 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable
+letting let35 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1
+letting let36 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable

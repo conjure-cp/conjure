@@ -175,6 +175,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                   | ub /= ubX
                   ]
 
+        DomainRecord ds -> do
+            inners <- forM ds $ \ (nmRec, domRec) -> do
+                let iE = Reference nmRec Nothing
+                let ref = [essence| &x[&iE] |]
+                pgOnDomain ref (nm `mappend` (Name $ pack $ "_" ++ show (pretty nmRec))) domRec
+            return3
+                (DomainRecord (zip (map fst ds) (map fst3 inners)))
+                (concatMap snd3 inners)
+                (concatMap thd3 inners)
+
         DomainTuple ds -> do
             inners <- forM (zip [1..] ds) $ \ (i, d) -> do
                 let iE = fromInt i
@@ -574,6 +584,18 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                         Nothing -> return []
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
+            -- only for bool domains (innerDomainTo)
+            let nmPercentage  = nm `mappend` "_percentage"
+            tell [(nmPercentage, "i")]
+            let refPercentage = Reference nmPercentage Nothing
+
+            let isToBool = case innerDomainTo of
+                                DomainBool -> True
+                                _ -> False
+
+            let declToBool = Declaration (FindOrGiven Given nmPercentage (DomainInt TagInt [RangeBounded 0 100])) 
+            let consToBool = [essence| sum([ toInt(&i[2]) | &iPat <- &x ]) = &refPercentage * |defined(&x)| / 100 |]
+
             newCons <- concat <$> sequence [cardinalityCons, totalityCons, sizeLbCons, sizeUbCons]
             let innerCons = concat $ concat
                     [ [consFr | isPartial ] -- only if the function is not total
@@ -582,8 +604,8 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             return3
                 (DomainFunction r attrOut domFr domTo)
-                (newDecl ++ concat [ declFr | isPartial ] ++ declTo)
-                (newCons ++ map liftCons innerCons)
+                (newDecl ++ concat [ declFr | isPartial ] ++ declTo ++ concat [ [declToBool] | isToBool ])
+                (newCons ++ map liftCons innerCons ++ concat [[consToBool] | isToBool ])
 
         DomainRelation r attr innerDomains -> do
 
@@ -718,6 +740,12 @@ lowerBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
 lowerBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
     bounds <- mapM lowerBoundOfIntExpr xs
     return $ make opProduct $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpMin (OpMin x))) | Just xs <- listOut x = do
+    bounds <- mapM lowerBoundOfIntExpr xs
+    return $ make opMin $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpMax (OpMax x))) | Just xs <- listOut x = do
+    bounds <- mapM lowerBoundOfIntExpr xs
+    return $ make opMin $ fromList bounds
 lowerBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
     bound <- upperBoundOfIntExpr x
     return (make opNegate bound)
@@ -752,6 +780,12 @@ upperBoundOfIntExpr (Op (MkOpSum (OpSum x))) | Just xs <- listOut x = do
 upperBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
     bounds <- mapM upperBoundOfIntExpr xs
     return $ make opProduct $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpMin (OpMin x))) | Just xs <- listOut x = do
+    bounds <- mapM upperBoundOfIntExpr xs
+    return $ make opMax $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpMax (OpMax x))) | Just xs <- listOut x = do
+    bounds <- mapM upperBoundOfIntExpr xs
+    return $ make opMax $ fromList bounds
 upperBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
     bound <- lowerBoundOfIntExpr x
     return (make opNegate bound)

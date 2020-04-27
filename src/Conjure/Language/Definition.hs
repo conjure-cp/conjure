@@ -79,6 +79,12 @@ instance Hashable  Model
 instance ToJSON    Model where toJSON = genericToJSON jsonOptions
 instance FromJSON  Model where parseJSON = genericParseJSON jsonOptions
 
+instance SimpleJSON Model where
+    toSimpleJSON m = do
+        inners <- mapM toSimpleJSON (mStatements m)
+        return (JSON.Array $ V.fromList $ inners)
+    fromSimpleJSON _ = noFromSimpleJSON
+
 instance Default Model where
     def = Model def [] def
 
@@ -165,6 +171,9 @@ data ModelInfo = ModelInfo
                           , Int     -- picked answer #
                           , Int     -- number of answers
                           ) ]
+    , miTrailGeneralised :: [ ( Int     -- "question"
+                              , Int     -- "answer"
+                              ) ]       -- both are hashes...
     , miTrailVerbose :: [Decision]
     , miTrailRewrites :: [TrailRewrites]
     , miNameGenState :: [(Text, Int)]
@@ -183,7 +192,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON

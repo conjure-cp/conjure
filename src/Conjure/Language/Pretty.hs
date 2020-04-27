@@ -124,7 +124,7 @@ instance Pretty JSON.Value where
     pretty Null = "null"
 
 instance Pretty JSON.Object where
-    pretty = prBraces . vcat . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
+    pretty = prBraces . fsep . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
         where
             f (key, Array value)
                 | all (\ v -> case v of String{} -> True ; _ -> False ) value

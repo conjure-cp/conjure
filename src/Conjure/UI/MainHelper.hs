@@ -23,7 +23,7 @@ import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 import Conjure.UI.TypeScript ( tsDef )
 
 import Conjure.Language.Name ( Name(..) )
-import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
+import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGenM, runNameGen )
@@ -46,8 +46,8 @@ import GHC.Conc ( numCapabilities )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 import Data.Char ( isDigit )
 
--- containers
-import qualified Data.Set as S
+import qualified Data.Set as S                  -- containers
+import qualified Data.HashMap.Strict as M       -- unordered-containers
 
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
@@ -114,7 +114,7 @@ mainWithArgs TranslateParameter{..} = do
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
     essenceParamF <- readParamOrSolutionFromFile essenceParam
-    output <- runNameGen () $ translateParameter eprimeF essenceParamF
+    output <- runNameGen () $ translateParameter False eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
@@ -144,7 +144,7 @@ mainWithArgs IDE{..} = do
         | dumpRepresentations -> do
             json <- runNameGen () $ modelRepresentationsJSON essence2
             liftIO $ putStrLn $ render lineWidth json
-        | otherwise           -> writeModel lineWidth JSON Nothing essence2
+        | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
@@ -272,6 +272,7 @@ mainWithArgs config@Solve{..} = do
             else doIfNotCached          -- start the show!
                     ( sort (mStatements essenceM)
                     , portfolio
+                    , graphSolver
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
                     , ( numberingStart
@@ -581,6 +582,8 @@ mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolio
         ]
 mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
     mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
+mainWithArgs_Modelling modelNamePrefix mode@Modelling{..} portfolioSize modelHashesBefore | strategyA == "c" && channelling == True =
+    mainWithArgs_Modelling modelNamePrefix mode{channelling=False} portfolioSize modelHashesBefore
 mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
     unless (modelNamePrefix == "model") $
         pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
@@ -642,6 +645,10 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                                                  , "But got:" <+> pretty responsesRepresentation
                                                  ]
 
+            trail <- if (followModel /= "")
+                        then miTrailGeneralised . mInfo <$> readModelInfoFromFile followModel
+                        else return []
+
             return Config.Config
                 { Config.outputDirectory            = outputDirectory
                 , Config.logLevel                   = logLevel
@@ -651,6 +658,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                 , Config.logRuleSuccesses           = logRuleSuccesses
                 , Config.logRuleAttempts            = logRuleAttempts
                 , Config.logChoices                 = logChoices
+                , Config.followTrail                = M.fromList trail
                 , Config.strategyQ                  = strategyQ'
                 , Config.strategyA                  = strategyA'
                 , Config.representations            = representations'
@@ -749,7 +757,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
         runTranslateParameter :: IO (Either [Doc] Model)
         runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen () $
-                                    translateParameter eprimeModel essenceParam
+                                    translateParameter graphSolver eprimeModel essenceParam
     eprimeParam' <- liftIO runTranslateParameter
     case eprimeParam' of
         Left err -> return (Left err)

@@ -1,27 +1,16 @@
-[{"name": "n",
-  "representations":
-      [{"answer": 1,
-        "description": "int(1..10)"}]},
+[{"name": "n", "representations": [{"answer": 1, "description": "int(1..10)"}]},
  {"name": "x",
   "representations":
-      [{"answer": 1,
-        "description": "set {Occurrence} (maxSize n) of int(1..n)"},
-       {"answer": 2,
-        "description": "set {ExplicitVarSizeWithDummy} (maxSize n) of int(1..n)"},
-       {"answer": 3,
-        "description": "set {ExplicitVarSizeWithMarker} (maxSize n) of int(1..n)"},
-       {"answer": 4,
-        "description": "set {ExplicitVarSizeWithFlags} (maxSize n) of int(1..n)"}]},
+      [{"answer": 1, "description": "set {Occurrence} (maxSize n) of int(1..n)"},
+       {"answer": 2, "description": "set {ExplicitVarSizeWithDummy} (maxSize n) of int(1..n)"},
+       {"answer": 3, "description": "set {ExplicitVarSizeWithMarker} (maxSize n) of int(1..n)"},
+       {"answer": 4, "description": "set {ExplicitVarSizeWithFlags} (maxSize n) of int(1..n)"}]},
  {"name": "y",
   "representations":
-      [{"answer": 1,
-        "description": "set {Occurrence} (minSize n) of int(1..n)"},
-       {"answer": 2,
-        "description": "set {ExplicitVarSizeWithDummy} (minSize n) of int(1..n)"},
-       {"answer": 3,
-        "description": "set {ExplicitVarSizeWithMarker} (minSize n) of int(1..n)"},
-       {"answer": 4,
-        "description": "set {ExplicitVarSizeWithFlags} (minSize n) of int(1..n)"}]},
+      [{"answer": 1, "description": "set {Occurrence} (minSize n) of int(1..n)"},
+       {"answer": 2, "description": "set {ExplicitVarSizeWithDummy} (minSize n) of int(1..n)"},
+       {"answer": 3, "description": "set {ExplicitVarSizeWithMarker} (minSize n) of int(1..n)"},
+       {"answer": 4, "description": "set {ExplicitVarSizeWithFlags} (minSize n) of int(1..n)"}]},
  {"name": "nested",
   "representations":
       [{"answer": 1,
@@ -120,7 +109,4 @@
        {"answer": 32,
         "description":
             "set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of set {ExplicitVarSizeWithFlags} (maxSize 1) of int(1..n)"}]},
- {"name": "c_EnumSize",
-  "representations":
-      [{"answer": 1,
-        "description": "c"}]}]
+ {"name": "c_EnumSize", "representations": [{"answer": 1, "description": "c"}]}]

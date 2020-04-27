@@ -47,6 +47,7 @@ data UI
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
+        , followModel                :: FilePath            -- this is a model to be followed
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -118,14 +119,16 @@ data UI
         , representationsCuts        :: Maybe String
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
+        , followModel                :: FilePath            -- this is a model to be followed
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
-        -- flags for SR and Minion/Lingeling
+        -- flags for SR and the selected solver
         , savilerowOptions           :: [String]
         , solverOptions              :: [String]
         , solver                     :: String
+        , graphSolver                :: Bool
         , cgroups                    :: Bool
         , nbSolutions                :: String              -- a number, or "all". by default 1
         , copySolutions              :: Bool
@@ -219,7 +222,7 @@ instance ToJSON    UI where toJSON = genericToJSON jsonOptions
 instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
-data OutputFormat = Plain | Binary | JSON
+data OutputFormat = Plain | Binary | ASTJSON | JSON
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize OutputFormat
@@ -361,7 +364,6 @@ ui = modes
                     \ s picks the 'sparsest' option \
                     \at every decision point: \
                     \useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: ai"
         , representations
             = Nothing
@@ -426,6 +428,13 @@ ui = modes
             &= help "Whether to use built-in precedence levels when choosing representations. \
                     \Used to cut down the number of generated models.\n\
                     \Default: true"
+        , followModel
+            = ""
+            &= name "follow-model"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Provide a Conjure-generated Essence Prime model to be used as a guide during model generation. \
+                    \Conjure will try to imitate the modelling decisions from this file."
         , seed
             = Nothing
             &= name "seed"
@@ -458,10 +467,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -520,10 +530,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -582,10 +593,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -632,10 +644,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -784,7 +797,6 @@ ui = modes
                     \ s picks the 'sparsest' option \
                     \at every decision point: \
                     \useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: c"
         , representations
             = Nothing
@@ -849,6 +861,13 @@ ui = modes
             &= help "Whether to use built-in precedence levels when choosing representations. \
                     \Used to cut down the number of generated models.\n\
                     \Default: true"
+        , followModel
+            = ""
+            &= name "follow-model"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Provide a Conjure-generated Essence Prime model to be used as a guide during model generation. \
+                    \Conjure will try to imitate the modelling decisions from this file."
         , seed
             = Nothing
             &= name "seed"
@@ -909,6 +928,12 @@ ui = modes
                     \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \ - cplex (MIP solver, implemented via MiniZinc)\n\
                     \Default: minion"
+        , graphSolver
+            = False
+            &= name "graph-solver"
+            &= groupname "General"
+            &= explicit
+            &= help "Create input files for the Glasgow graph solver."
         , cgroups
             = False
             &= name "cgroups"
@@ -936,10 +961,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1033,10 +1059,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1074,10 +1101,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1139,10 +1167,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1184,10 +1213,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1242,10 +1272,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1294,13 +1325,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, best for parameters and solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
