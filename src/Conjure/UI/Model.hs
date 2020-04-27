@@ -1216,7 +1216,7 @@ prologue model = do
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
-    >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
+    -- >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
 
 
