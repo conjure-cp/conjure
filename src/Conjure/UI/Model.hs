@@ -651,12 +651,23 @@ executeAnswerStrategy _ _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy _ _ [(doc, option)] (viewAuto -> (_, True)) = do
     logDebug ("Picking the only option:" <+> doc)
     return [(1, doc, option)]
-executeAnswerStrategy _ question options st@(viewAuto -> (strategy, _)) =
-    case strategy of
-        Compact -> do
-            let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
-            return [(n, doc, c)]
-        _  -> executeStrategy question options st
+executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) = do
+    let
+        -- if the trail log does not tell us what to do
+        cacheMiss =
+            case strategy of
+                Compact -> do
+                    let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
+                    return [(n, doc, c)]
+                _  -> executeStrategy question options st
+
+    case M.lookup (hashQuestion question) (followTrail config) of
+        Just aHash -> do
+            case [ (n, doc, option) | (n, (doc, option)) <- zip [1..] options, hashAnswer option == aHash ] of
+                [a] -> do
+                    return [a]
+                _ -> cacheMiss
+        Nothing -> cacheMiss
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -681,9 +692,7 @@ addToTrail Config{..}
         newExpr = aAnswer theAnswer
         newInfo = oldInfo { miTrailCompact      = (questionNumber, answerNumber, answerNumbers)
                                                 : miTrailCompact oldInfo
-                          , miTrailGeneralised  = ( hash (qType theQuestion, qHole theQuestion, qAscendants theQuestion)
-                                                  , hash (aBefore theAnswer, renderWide (aRuleName theAnswer))
-                                                  )
+                          , miTrailGeneralised  = (hashQuestion theQuestion, hashAnswer theAnswer)
                                                 : miTrailGeneralised oldInfo
                           , miTrailVerbose      = if verboseTrail
                                                       then theA : theQ : miTrailVerbose oldInfo
@@ -713,6 +722,14 @@ addToTrail Config{..}
             , trBefore = map stringToText $ lines $ renderWide $ pretty oldExpr
             , trAfter  = map stringToText $ lines $ renderWide $ pretty newExpr
             }
+
+
+hashQuestion :: Question -> Int
+hashQuestion q = hash (qType q, qHole q, qAscendants q)
+
+
+hashAnswer :: Answer -> Int
+hashAnswer a = hash (aBefore a, renderWide (aRuleName a), aAnswer a)
 
 
 -- | Add a true-constraint, for every decision variable (whether it is used or not in the model) and

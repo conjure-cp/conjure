@@ -23,7 +23,7 @@ import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 import Conjure.UI.TypeScript ( tsDef )
 
 import Conjure.Language.Name ( Name(..) )
-import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
+import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGenM, runNameGen )
@@ -44,8 +44,8 @@ import GHC.Conc ( numCapabilities )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 import Data.Char ( isDigit )
 
--- containers
-import qualified Data.Set as S
+import qualified Data.Set as S                  -- containers
+import qualified Data.HashMap.Strict as M       -- unordered-containers
 
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
@@ -638,6 +638,10 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                                                  , "But got:" <+> pretty responsesRepresentation
                                                  ]
 
+            trail <- if (followModel /= "")
+                        then miTrailGeneralised . mInfo <$> readModelInfoFromFile followModel
+                        else return []
+
             return Config.Config
                 { Config.outputDirectory            = outputDirectory
                 , Config.logLevel                   = logLevel
@@ -647,6 +651,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                 , Config.logRuleSuccesses           = logRuleSuccesses
                 , Config.logRuleAttempts            = logRuleAttempts
                 , Config.logChoices                 = logChoices
+                , Config.followTrail                = M.fromList trail
                 , Config.strategyQ                  = strategyQ'
                 , Config.strategyA                  = strategyA'
                 , Config.representations            = representations'

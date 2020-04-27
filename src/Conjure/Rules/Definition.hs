@@ -27,6 +27,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, fromZipper, zipperBi )
 
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 
 type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
@@ -91,6 +93,8 @@ data Config = Config
     , logRuleSuccesses           :: Bool
     , logRuleAttempts            :: Bool
     , logChoices                 :: Bool
+    , followTrail                :: M.HashMap Int -- Question hash
+                                              Int -- Answer hash
     , strategyQ                  :: Strategy
     , strategyA                  :: Strategy
     , representations            :: Strategy
@@ -121,6 +125,7 @@ instance Default Config where
         , logRuleSuccesses           = False
         , logRuleAttempts            = False
         , logChoices                 = False
+        , followTrail                = M.empty
         , strategyQ                  = Interactive
         , strategyA                  = Interactive
         , representations            = Interactive
