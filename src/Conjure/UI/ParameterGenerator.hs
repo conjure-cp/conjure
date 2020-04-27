@@ -483,11 +483,16 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                                 case size of
                                     SizeAttr_None -> do
                                         mdomSize <- runExceptT $ domainSizeOf innerDomainFr
-                                        return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
-                                               , case mdomSize of
-                                                   Left{} -> DomainInt TagInt [RangeBounded minInt maxInt]
-                                                   Right domSize -> DomainInt TagInt [RangeBounded 0 domSize]
-                                               )
+                                        case mdomSize of
+                                            Left{} ->
+                                                return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
+                                                       , DomainInt TagInt [RangeBounded minInt maxInt]
+                                                       )
+                                            Right domSize -> do
+                                                domSizeUpp <- upperBoundOfIntExpr domSize
+                                                return ( SizeAttr_MaxSize maxInt, Nothing, Nothing
+                                                       , DomainInt TagInt [RangeBounded 0 domSizeUpp]
+                                                       )
                                     SizeAttr_Size a -> do
                                         lb <- lowerBoundOfIntExpr a
                                         ub <- upperBoundOfIntExpr a
