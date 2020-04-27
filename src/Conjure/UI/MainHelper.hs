@@ -272,7 +272,6 @@ mainWithArgs config@Solve{..} = do
             else doIfNotCached          -- start the show!
                     ( sort (mStatements essenceM)
                     , portfolio
-                    , graphSolver
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
                     , ( numberingStart

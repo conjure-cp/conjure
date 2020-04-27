@@ -41,17 +41,17 @@ such that
     m >= m_middle - m_delta,
     m <= m_middle + m_delta,
     and([q1 >= 1 /\ q1 <= m <-> f_a_Function1DPartial_Flags[q1] | q1 : int(1..100)]),
-    sum([toInt(f_a_Function1DPartial_Flags[q21]) * catchUndef(toInt(f_a_Function1DPartial_Values[q21]), 0)
-             | q21 : int(1..100)])
-    = f_a_percentage * sum([toInt(f_a_Function1DPartial_Flags[q24]) | q24 : int(1..100)]) / 100,
-    sum([toInt(f_b_Function1DPartial_Flags[q32]) | q32 : int(1..100)]) >= f_b_cardMiddle - f_b_cardDelta,
-    sum([toInt(f_b_Function1DPartial_Flags[q34]) | q34 : int(1..100)]) <= f_b_cardMiddle + f_b_cardDelta,
-    and([f_b_Function1DPartial_Flags[q38] -> q38 >= f_b_defined_middle - f_b_defined_delta | q38 : int(1..100)]),
-    and([f_b_Function1DPartial_Flags[q42] -> q42 <= f_b_defined_middle + f_b_defined_delta | q42 : int(1..100)]),
-    and([f_b_Function1DPartial_Flags[q46] -> q46 <= m | q46 : int(1..100)]),
-    sum([toInt(f_b_Function1DPartial_Flags[q50]) * catchUndef(toInt(f_b_Function1DPartial_Values[q50]), 0)
-             | q50 : int(1..100)])
-    = f_b_percentage * sum([toInt(f_b_Function1DPartial_Flags[q53]) | q53 : int(1..100)]) / 100,
+    sum([toInt(f_a_Function1DPartial_Flags[q9]) * catchUndef(toInt(f_a_Function1DPartial_Values[q9]), 0)
+             | q9 : int(1..100)])
+    = f_a_percentage * sum([toInt(f_a_Function1DPartial_Flags[q12]) | q12 : int(1..100)]) / 100,
+    sum([toInt(f_b_Function1DPartial_Flags[q42]) | q42 : int(1..100)]) >= f_b_cardMiddle - f_b_cardDelta,
+    sum([toInt(f_b_Function1DPartial_Flags[q44]) | q44 : int(1..100)]) <= f_b_cardMiddle + f_b_cardDelta,
+    and([f_b_Function1DPartial_Flags[q23] -> q23 >= f_b_defined_middle - f_b_defined_delta | q23 : int(1..100)]),
+    and([f_b_Function1DPartial_Flags[q27] -> q27 <= f_b_defined_middle + f_b_defined_delta | q27 : int(1..100)]),
+    and([f_b_Function1DPartial_Flags[q31] -> q31 <= m | q31 : int(1..100)]),
+    sum([toInt(f_b_Function1DPartial_Flags[q13]) * catchUndef(toInt(f_b_Function1DPartial_Values[q13]), 0)
+             | q13 : int(1..100)])
+    = f_b_percentage * sum([toInt(f_b_Function1DPartial_Flags[q16]) | q16 : int(1..100)]) / 100,
     and([f_a_Function1DPartial_Flags[q3] = false -> f_a_Function1DPartial_Values[q3] = false | q3 : int(1..100)]),
     and([f_b_Function1DPartial_Flags[q6] = false -> f_b_Function1DPartial_Values[q6] = false | q6 : int(1..100)]),
     sum([toInt(f_b_Function1DPartial_Flags[q7]) | q7 : int(1..100)]) <= 100
