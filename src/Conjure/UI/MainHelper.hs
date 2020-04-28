@@ -35,6 +35,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
+import Conjure.Language.AdHoc ( toSimpleJSON )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -900,14 +901,21 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solutions"
                             let filenameEssenceSol = mkFilename ".solutions"
+                            let filenameEssenceSolJSON = mkFilename ".solutions.json"
                             -- remove the solutions files before writing the first solution
                             when (solutionNumber == 1) $ do
                                 removeFileIfExists filenameEprimeSol
                                 removeFileIfExists filenameEssenceSol
-                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
-                            appendFile filenameEprimeSol  ("\n" ++ render lineWidth eprimeSol  ++ "\n\n")
-                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
-                            appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
+                                removeFileIfExists filenameEssenceSolJSON
+                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                            appendFile filenameEprimeSol  (render lineWidth eprimeSol  ++ "\n\n")
+                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                            appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
+                            when (outputFormat == JSON) $ do
+                                appendFile filenameEssenceSolJSON  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                                essenceSol' <- toSimpleJSON essenceSol
+                                appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
+                                appendFile filenameEssenceSolJSON  ("\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
