@@ -68,6 +68,13 @@ instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (ins
 newtype HasUndef = HasUndef Any
     deriving (Semigroup, Monoid)
 
+instance Default HasUndef where
+    def = HasUndef def
+
+instance RunWriter HasUndef where
+    runWriterT m = runStateT m def
+
+
 instantiateE ::
     MonadFail m =>
     MonadState [(Name, Expression)] m =>
@@ -82,10 +89,10 @@ instantiateE (Comprehension body gensOrConds) = do
             MonadState [(Name, Expression)] m =>
             EnumerateDomain m =>
             NameGen m =>
-            [GeneratorOrCondition] -> WriterT HasUndef m [Constant]
-        loop [] = return <$> instantiateE body
+            [GeneratorOrCondition] -> StateT HasUndef m [Constant]
+        loop [] = return <$> lift (instantiateE body)
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
-            DomainInConstant domainConstant <- instantiateE (Domain domain)
+            DomainInConstant domainConstant <- lift $ instantiateE (Domain domain)
             let undefinedsInsideTheDomain =
                     [ und
                     | und@ConstantUndefined{} <- universeBi domainConstant
@@ -95,7 +102,7 @@ instantiateE (Comprehension body gensOrConds) = do
                     enumeration <- enumerateDomain domainConstant
                     concatMapM
                         (\ val -> scope $ do
-                            valid <- bind pat val
+                            valid <- lift $ bind pat val
                             if valid
                                 then loop rest
                                 else return [] )
@@ -106,23 +113,23 @@ instantiateE (Comprehension body gensOrConds) = do
         loop (Generator (GenDomainHasRepr pat domain) : rest) =
             loop (Generator (GenDomainNoRepr (Single pat) (forgetRepr domain)) : rest)
         loop (Generator (GenInExpr pat expr) : rest) = do
-            exprConstant <- instantiateE expr
+            exprConstant <- lift $ instantiateE expr
             enumeration <- enumerateInConstant exprConstant
             concatMapM
                 (\ val -> scope $ do
-                    valid <- bind pat val
+                    valid <- lift $ bind pat val
                     if valid
                         then loop rest
                         else return [] )
                 enumeration
         loop (Condition expr : rest) = do
-            constant <- instantiateE expr
+            constant <- lift $ instantiateE expr
             if constant == ConstantBool True
                 then loop rest
                 else return []
         loop (ComprehensionLetting pat expr : rest) = do
-            constant <- instantiateE expr
-            valid <- bind pat constant
+            constant <- lift $ instantiateE expr
+            valid <- lift $ bind pat constant
             unless valid (bug "ComprehensionLetting.bind expected to be valid")
             loop rest
 

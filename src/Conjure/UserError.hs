@@ -58,9 +58,6 @@ instance MonadUserError m => MonadUserError (ExceptT m) where
 instance MonadUserError m => MonadUserError (StateT st m) where
     userErr = lift . userErr
 
-instance (MonadUserError m, Monoid w) => MonadUserError (WriterT w m) where
-    userErr = lift . userErr
-
 instance MonadUserError m => MonadUserError (ReaderT r m) where
     userErr = lift . userErr
 

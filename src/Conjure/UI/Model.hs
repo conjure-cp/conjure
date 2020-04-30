@@ -10,6 +10,7 @@ module Conjure.UI.Model
     , nbUses
     , modelRepresentationsJSON
     , timedF
+    , evaluateModel -- unused, exporting to suppress warning
     ) where
 
 import Conjure.Prelude
@@ -402,6 +403,8 @@ remaining config modelZipper minfo = do
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
                                 , "Error :" <+> pretty msg
+                                , "Before:" <+> pretty (show $ hole focus)
+                                , "After :" <+> pretty (show $ ruleResultExpr)
                                 ]
 
             fullModelAfterHook <- case ruleResultHook of
@@ -1049,23 +1052,21 @@ topLevelBubbles m = do
             case locals of
                 AuxiliaryVars          locs -> (           locs  ++ [Objective obj h] ) |> onStmts
                 DefinednessConstraints locs -> ( [SuchThat locs] ++ [Objective obj h] ) |> onStmts
-        onStmt (Declaration decl) =
+        onStmt (Declaration decl) = do
             let
                 f (WithLocals h locs) = tell [locs] >> return h
                 f x = return x
-
-                (decl', locals) = runWriter (transformBiM f decl)
-
+            (decl', locals) <- runWriterT (transformBiM f decl)
+            let
                 conv :: InBubble -> [Statement]
                 conv (AuxiliaryVars locs) = locs
                 conv (DefinednessConstraints locs) = [SuchThat locs]
 
                 newStmts :: [Statement]
-                newStmts = concatMap conv locals
-            in
-                if null newStmts
-                    then return [Declaration decl]
-                    else onStmts (newStmts ++ [Declaration decl'])
+                newStmts = concatMap conv (locals :: [InBubble])
+            if null newStmts
+                then return [Declaration decl]
+                else onStmts (newStmts ++ [Declaration decl'])
         onStmt s = return [s]
 
         -- a where that has a bubble at the top-most level will be replaced
@@ -1903,7 +1904,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
 
     mkStructurals name domain = do
         let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
-        gen  <- getStructurals downX1 domain
+        gen <- getStructurals downX1 domain
         gen ref
 
 

@@ -49,11 +49,6 @@ instance NameGen m => NameGen (StateT st m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
-instance (NameGen m, Monoid w) => NameGen (WriterT w m) where
-    nextName = lift . nextName
-    exportNameGenState = lift exportNameGenState
-    importNameGenState = lift . importNameGenState
-
 instance NameGen m => NameGen (ReaderT r m) where
     nextName = lift . nextName
     exportNameGenState = lift exportNameGenState

@@ -45,6 +45,7 @@ module Conjure.Prelude
     , JSONValue
     , isTopMostZ
     , getDirectoryContents
+    , RunWriter, runWriterT, tell
     ) where
 
 import GHC.Err as X ( error )
@@ -86,7 +87,6 @@ import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, mo
 import Control.Monad.State.Strict ( put ) -- only for defining instances
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
-import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
 import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
 import Control.Arrow                as X ( first, second, (***), (&&&) )
 import Control.Category             as X ( (<<<), (>>>) )
@@ -382,9 +382,6 @@ instance (Functor m, Monad m) => MonadFail (ExceptT m) where
 instance (Functor m, Monad m, MonadFail m) => MonadFail (StateT st m) where
     fail = lift . fail
 
-instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
-    fail = lift . fail
-
 instance MonadFail m => MonadFail (ReaderT r m) where
     fail = lift . fail
 
@@ -501,9 +498,6 @@ logDebugVerbose = log LogDebugVerbose
 instance MonadLog m => MonadLog (ReaderT r m) where
     log l m = lift (log l m)
 
-instance (MonadLog m, Monoid w) => MonadLog (WriterT w m) where
-    log l m = lift (log l m)
-
 instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
 
@@ -537,7 +531,7 @@ histogram = map (head &&& genericLength) . group . sort
 sh :: Sh a -> IO a
 sh = shelly . print_stdout False . print_stderr False
 
-scope :: MonadState st m => m a -> m a
+scope :: MonadState  st m => m a -> m a
 scope ma = do
     st <- gets id
     a <- ma
@@ -600,3 +594,20 @@ type JSONValue = JSON.Value
 --   i.e. we cannot go any more up.
 isTopMostZ :: Zipper a b -> Bool
 isTopMostZ = isNothing . up
+
+class RunWriter s where
+    -- | We don't have Writer monads around here, they leak space.
+    runWriterT :: (Monad m, Default s) => StateT s m a -> m (a, s)
+
+instance RunWriter [s] where
+    runWriterT m = do
+        (a, out) <- runStateT m def
+        return (a, reverse out)
+
+instance RunWriter ([a],[b]) where
+    runWriterT m = do
+        (x, (a,b)) <- runStateT m def
+        return (x, (reverse a, reverse b))
+
+tell :: (MonadState s m, Monoid s) => s -> m ()
+tell xs = modify (xs `mappend`)
