@@ -38,7 +38,7 @@ parameterGenerator ::
                , [(Name, String)] -- classification for each given
                )
 parameterGenerator minIntValue maxIntValue model =
-    runWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds >>= return . inlineLettings
+    runStateAsWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds >>= return . inlineLettings
     where
         core m = do
             outStatements <- forM (mStatements m) $ \ st -> case st of
@@ -129,7 +129,7 @@ fixQuantified x = return x
 pgOnDomain ::
     MonadUserError m =>
     NameGen m =>
-    MonadWriter [(Name, String)] m =>
+    MonadState [(Name, String)] m =>
     Expression ->                       -- how do we refer to this top level variable
     Name ->                             -- its name
     Domain () Expression ->             -- its domain
@@ -150,11 +150,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
             ub  <- upperBoundOfIntExpr ubX
 
             let nmMin = nm `mappend` "_min"
-            tell [(nmMin, "i")]
+            sawTell [(nmMin, "i")]
             let rmin = Reference nmMin Nothing
 
             let nmMax  = nm `mappend` "_max"
-            tell [(nmMax, "i")]
+            sawTell [(nmMax, "i")]
             let rmax = Reference nmMax Nothing
 
             return3
@@ -208,11 +208,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
         DomainSequence r attr innerDomain -> do
 
             let nmCardMin = nm `mappend` "_cardMin"
-            tell [(nmCardMin, "i")]
+            sawTell [(nmCardMin, "i")]
             let cardMin = Reference nmCardMin Nothing
 
             let nmCardMax  = nm `mappend` "_cardMax"
-            tell [(nmCardMax, "i")]
+            sawTell [(nmCardMax, "i")]
             let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
@@ -285,11 +285,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
         DomainSet r attr innerDomain -> do
 
             let nmCardMin = nm `mappend` "_cardMin"
-            tell [(nmCardMin, "i")]
+            sawTell [(nmCardMin, "i")]
             let cardMin = Reference nmCardMin Nothing
 
             let nmCardMax  = nm `mappend` "_cardMax"
-            tell [(nmCardMax, "i")]
+            sawTell [(nmCardMax, "i")]
             let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
@@ -362,11 +362,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
         DomainMSet r attr innerDomain -> do
 
             let nmCardMin = nm `mappend` "_cardMin"
-            tell [(nmCardMin, "i")]
+            sawTell [(nmCardMin, "i")]
             let cardMin = Reference nmCardMin Nothing
 
             let nmCardMax  = nm `mappend` "_cardMax"
-            tell [(nmCardMax, "i")]
+            sawTell [(nmCardMax, "i")]
             let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
@@ -463,11 +463,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
         DomainFunction r attr innerDomainFr innerDomainTo -> do
 
             let nmCardMin = nm `mappend` "_cardMin"
-            tell [(nmCardMin, "i")]
+            sawTell [(nmCardMin, "i")]
             let cardMin = Reference nmCardMin Nothing
 
             let nmCardMax  = nm `mappend` "_cardMax"
-            tell [(nmCardMax, "i")]
+            sawTell [(nmCardMax, "i")]
             let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
@@ -590,7 +590,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             -- only for bool domains (innerDomainTo)
             let nmPercentage  = nm `mappend` "_percentage"
-            tell [(nmPercentage, "i")]
+            sawTell [(nmPercentage, "i")]
             let refPercentage = Reference nmPercentage Nothing
 
             let isToBool = case innerDomainTo of
@@ -614,11 +614,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
         DomainRelation r attr innerDomains -> do
 
             let nmCardMin = nm `mappend` "_cardMin"
-            tell [(nmCardMin, "i")]
+            sawTell [(nmCardMin, "i")]
             let cardMin = Reference nmCardMin Nothing
 
             let nmCardMax  = nm `mappend` "_cardMax"
-            tell [(nmCardMax, "i")]
+            sawTell [(nmCardMax, "i")]
             let cardMax = Reference nmCardMax Nothing
 
             (iPat, i) <- quantifiedVar
