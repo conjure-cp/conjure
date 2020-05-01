@@ -36,6 +36,7 @@ instance EnumerateDomain m => EnumerateDomain (IdentityT m) where liftIO' = lift
 instance EnumerateDomain m => EnumerateDomain (MaybeT m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (ExceptT m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (ReaderT r m) where liftIO' = lift . liftIO'
+instance (EnumerateDomain m, Monoid w) => EnumerateDomain (WriterT w m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (StateT st m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'

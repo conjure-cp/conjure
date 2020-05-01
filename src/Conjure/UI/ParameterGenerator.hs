@@ -129,7 +129,7 @@ fixQuantified x = return x
 pgOnDomain ::
     MonadUserError m =>
     NameGen m =>
-    MonadState [(Name, String)] m =>
+    MonadWriter [(Name, String)] m =>
     Expression ->                       -- how do we refer to this top level variable
     Name ->                             -- its name
     Domain () Expression ->             -- its domain

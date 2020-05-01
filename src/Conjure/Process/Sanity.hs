@@ -11,10 +11,10 @@ import Conjure.Language.CategoryOf
 sanityChecks :: (MonadFail m, MonadUserError m) => Model -> m Model
 sanityChecks model = do
     let
-        recordErr :: MonadState [Doc] m => [Doc] -> m ()
-        recordErr msgs = tell [vcat msgs]
+        recordErr :: MonadWriter [Doc] m => [Doc] -> m ()
+        recordErr = tell . return . vcat
 
-        check :: (MonadFail m, MonadState [Doc] m) => Model -> m Model
+        check :: (MonadFail m, MonadWriter [Doc] m) => Model -> m Model
         check m = do
             upToOneObjective m
             upToOneHeuristic m
@@ -57,7 +57,7 @@ sanityChecks model = do
 
         -- check for mset attributes
         -- check for binary relation attrobutes
-        checkDomain :: MonadState [Doc] m => Bool -> Maybe Statement -> Domain () Expression -> m ()
+        checkDomain :: MonadWriter [Doc] m => Bool -> Maybe Statement -> Domain () Expression -> m ()
         checkDomain checkForInfinity mstmt domain = case domain of
             DomainInt _ rs | checkForInfinity && isInfinite rs -> recordErr
                         [ "Infinite integer domain."
@@ -141,7 +141,7 @@ sanityChecks model = do
                         else WithLocals lit (DefinednessConstraints disjoint)
             _ -> return lit
 
-        checkFactorial :: MonadState [Doc] m => Expression -> m ()
+        checkFactorial :: MonadWriter [Doc] m => Expression -> m ()
         checkFactorial p@[essence| factorial(&x) |]
             | categoryOf x >= CatDecision
             = recordErr
@@ -150,7 +150,7 @@ sanityChecks model = do
                 ]
         checkFactorial _ = return ()
 
-        upToOne :: MonadState [Doc] m => (Statement -> Bool) -> Doc -> Model -> m ()
+        upToOne :: MonadWriter [Doc] m => (Statement -> Bool) -> Doc -> Model -> m ()
         upToOne f message m = do
             let found = [ st | st <- mStatements m, f st ]
             unless (length found <= 1) $ recordErr
@@ -158,13 +158,13 @@ sanityChecks model = do
                 , vcat $ map (nest 4 . ("-" <+>) . pretty) found
                 ]
 
-        upToOneObjective :: MonadState [Doc] m => Model -> m ()
+        upToOneObjective :: MonadWriter [Doc] m => Model -> m ()
         upToOneObjective = upToOne (\ st -> case st of Objective{} -> True; _ -> False) "objective"
 
-        upToOneHeuristic :: MonadState [Doc] m => Model -> m ()
+        upToOneHeuristic :: MonadWriter [Doc] m => Model -> m ()
         upToOneHeuristic = upToOne (\ st -> case st of SearchHeuristic{} -> True; _ -> False) "heuristic"
 
-        upToOneBranchingOn :: MonadState [Doc] m => Model -> m ()
+        upToOneBranchingOn :: MonadWriter [Doc] m => Model -> m ()
         upToOneBranchingOn = upToOne (\ st -> case st of SearchOrder{} -> True; _ -> False) "branching on"
 
 

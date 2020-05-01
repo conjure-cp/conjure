@@ -145,7 +145,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                                       | (n,d,c) <- essenceGivensAndLettings'
                                                       ]
 
-    (_, errs) <- runWriterT $ forM_ essenceGivensAndLettings' $ \ (nm, dom, val) -> do
+    errs <- execWriterT $ forM_ essenceGivensAndLettings' $ \ (nm, dom, val) -> do
         mres <- runExceptT $ validateConstantForDomain nm val dom
         case mres of
             Left err -> tell [err]
