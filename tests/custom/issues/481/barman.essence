@@ -1,0 +1,109 @@
+$ ----- Objects --------
+given n_hand : int(0..)
+given n_level : int(0..)
+given n_beverage : int(0..)
+given n_dispenser : int(0..)
+given n_container : int(0..)
+given n_ingredient : int(0..)
+given n_cocktail : int(0..)
+given n_shot : int(0..)
+given n_shaker : int(0..)
+$ ----- Domains --------
+letting hand be domain int(0 + 1 .. 0 + n_hand)
+letting level be domain int(0 + n_hand + 1 .. 0 + n_hand + n_level)
+letting ingredient be domain int(0 + n_hand + n_level + 1 .. 0 + n_hand + n_level + n_ingredient)
+letting cocktail be domain int(0 + n_hand + n_level + n_ingredient + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail)
+letting dispenser be domain int(0 + n_hand + n_level + n_ingredient + n_cocktail + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser)
+letting shot be domain int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot)
+letting shaker be domain int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker)
+letting beverage be domain int(0 + n_hand + n_level + 1 .. 0 + n_hand + n_level + n_ingredient,0 + n_hand + n_level + n_ingredient + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail)
+letting container be domain int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker)
+letting object be domain int(0 + 1 .. 0 + n_hand,0 + n_hand + 1 .. 0 + n_hand + n_level,0 + n_hand + n_level + 1 .. 0 + n_hand + n_level + n_ingredient,0 + n_hand + n_level + n_ingredient + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail,0 + n_hand + n_level + n_ingredient + n_cocktail + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser,0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 .. 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker)
+letting Undefined be domain int(0)
+
+$ ----- init --------
+given init: record {
+ ontable : function (total) (container) --> bool,
+ holding : function (total) (hand,container) --> bool,
+ handempty : function (total) (hand) --> bool,
+ empty : function (total) (container) --> bool,
+ contains : function (total) (container,beverage) --> bool,
+ clean : function (total) (container) --> bool,
+ used : function (total) (container,beverage) --> bool,
+ dispenses : function (total) (dispenser,ingredient) --> bool,
+ shaker_empty_level : function (total) (shaker,level) --> bool,
+ shaker_level : function (total) (shaker,level) --> bool,
+ next : function (total) (level,level) --> bool,
+ unshaked : function (total) (shaker) --> bool,
+ shaked : function (total) (shaker) --> bool,
+ cocktail_part1 : function (total) (cocktail,ingredient) --> bool,
+ cocktail_part2 : function (total) (cocktail,ingredient) --> bool}
+where
+(forAll var_c : container . 
+	 (forAll var_b : beverage . 
+	 (!init[contains]((var_c, var_b))))),
+(forAll var_s : shaker . 
+	 ((init[unshaked]((var_s)) /\ 
+	 !init[shaked]((var_s))))),
+(forAll var_c : container . 
+	 (((init[ontable]((var_c)) \/ 1 = sum([toInt(value = true) | ((_,p1),value) <- init[holding],var_c = p1 ])) /\ !(init[ontable]((var_c)) /\ 1 = sum([toInt(value = true) | ((_,p1),value) <- init[holding],var_c = p1 ]))))),
+(forAll var_h : hand . 
+	 ((1 >= sum([toInt(value = true) | ((p0,_),value) <- init[holding],var_h = p0 ]) /\ 
+	 ((init[handempty]((var_h)) \/ 1 = sum([toInt(value = true) | ((p0,_),value) <- init[holding],var_h = p0 ])) /\ !(init[handempty]((var_h)) /\ 1 = sum([toInt(value = true) | ((p0,_),value) <- init[holding],var_h = p0 ])))))),
+(forAll var_c : container . 
+	 ((init[empty]((var_c)) /\ 
+	 init[clean]((var_c))))),
+(forAll var_s : shaker . 
+	 (1 = sum([toInt(value = true) | ((p0,_),value) <- init[shaker_empty_level],var_s = p0 ]))),
+(exists var_l : level . 
+	 ((forAll var_s : shaker . 
+	 ((init[shaker_empty_level]((var_s, var_l)) /\ 
+	 init[shaker_level]((var_s, var_l))))))),
+(exists var_f : level . 
+	 ((exists var_i : level . 
+	 ((!(var_i = var_f) /\ 
+	 0 = sum([toInt(value = true) | ((p0,_),value) <- init[next],var_f = p0 ]) /\ 
+	 (forAll var_l : level . 
+	 (((var_l = var_f) \/ 
+	 1 = sum([toInt(value = true) | ((p0,_),value) <- init[next],var_l = p0 ])))) /\ 
+	 0 = sum([toInt(value = true) | ((_,p1),value) <- init[next],var_i = p1 ]) /\ 
+	 (forAll var_l : level . 
+	 (((var_l = var_i) \/ 
+	 1 = sum([toInt(value = true) | ((_,p1),value) <- init[next],var_l = p1 ]))))))))),
+(forAll var_l : level . 
+	 (!init[next]((var_l, var_l)))),
+
+$ ----- goal --------
+given goal: record {
+ ontable : function (container) --> bool,
+ holding : function (hand,container) --> bool,
+ handempty : function (hand) --> bool,
+ empty : function (container) --> bool,
+ contains : function (container,beverage) --> bool,
+ clean : function (container) --> bool,
+ used : function (container,beverage) --> bool,
+ shaker_level : function (shaker,level) --> bool,
+ unshaked : function (shaker) --> bool,
+ shaked : function (shaker) --> bool}
+where
+(forAll var_c : container . 
+	 (((goal[ontable]((var_c)) \/ 1 = sum([toInt(value = true) | ((_,p1),value) <- goal[holding],var_c = p1 ])) /\ !(goal[ontable]((var_c)) /\ 1 = sum([toInt(value = true) | ((_,p1),value) <- goal[holding],var_c = p1 ]))))),
+(forAll var_h : hand . 
+	 ((1 >= sum([toInt(value = true) | ((p0,_),value) <- goal[holding],var_h = p0 ]) /\ 
+	 ((goal[handempty]((var_h)) \/ 1 = sum([toInt(value = true) | ((p0,_),value) <- goal[holding],var_h = p0 ])) /\ !(goal[handempty]((var_h)) /\ 1 = sum([toInt(value = true) | ((p0,_),value) <- goal[holding],var_h = p0 ])))))),
+(forAll var_s : shaker . 
+	 (1 = sum([toInt(value = true) | ((p0,_),value) <- goal[shaker_level],var_s = p0 ]))),
+(forAll var_s : shot . 
+	 (((goal[clean]((var_s)) \/ 0 = sum([toInt(value = true) | ((p0,_),value) <- goal[used],var_s = p0 ])) /\ !(goal[clean]((var_s)) /\ 0 = sum([toInt(value = true) | ((p0,_),value) <- goal[used],var_s = p0 ]))))),
+(forAll var_c : container . 
+	 (((goal[empty]((var_c)) \/ 1 <= sum([toInt(value = true) | ((p0,_),value) <- goal[contains],var_c = p0 ])) /\ !(goal[empty]((var_c)) /\ 1 <= sum([toInt(value = true) | ((p0,_),value) <- goal[contains],var_c = p0 ]))))),
+(forAll var_s : shot . 
+	 (((goal[clean]((var_s)) \/ goal[empty]((var_s))) /\ !(goal[clean]((var_s)) /\ goal[empty]((var_s)))))),
+(forAll var_s : shaker . 
+	 ((goal[unshaked]((var_s)) /\ 
+	 !goal[shaked]((var_s))))),
+(forAll var_s : shaker . 
+	 ((goal[empty]((var_s)) /\ 
+	 !goal[shaked]((var_s))))),
+
+

@@ -78,3 +78,636 @@ letting let33 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1
 letting let34 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable
 letting let35 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + 1
 letting let36 be n_buildtag + n_animaltag + n_vegtag + n_gentag + n_animal + n_vegetable
+
+
+language Essence 1.3
+
+given n_hand_min: int(0..30)
+given n_hand_max: int(0..30)
+find n_hand: int(0..30)
+such that
+    n_hand >= n_hand_min,
+    n_hand <= n_hand_max
+given n_level_min: int(0..30)
+given n_level_max: int(0..30)
+find n_level: int(0..30)
+such that
+    n_level >= n_level_min,
+    n_level <= n_level_max
+given n_beverage_min: int(0..30)
+given n_beverage_max: int(0..30)
+find n_beverage: int(0..30)
+such that
+    n_beverage >= n_beverage_min,
+    n_beverage <= n_beverage_max
+given n_dispenser_min: int(0..30)
+given n_dispenser_max: int(0..30)
+find n_dispenser: int(0..30)
+such that
+    n_dispenser >= n_dispenser_min,
+    n_dispenser <= n_dispenser_max
+given n_container_min: int(0..30)
+given n_container_max: int(0..30)
+find n_container: int(0..30)
+such that
+    n_container >= n_container_min,
+    n_container <= n_container_max
+given n_ingredient_min: int(0..30)
+given n_ingredient_max: int(0..30)
+find n_ingredient: int(0..30)
+such that
+    n_ingredient >= n_ingredient_min,
+    n_ingredient <= n_ingredient_max
+given n_cocktail_min: int(0..30)
+given n_cocktail_max: int(0..30)
+find n_cocktail: int(0..30)
+such that
+    n_cocktail >= n_cocktail_min,
+    n_cocktail <= n_cocktail_max
+given n_shot_min: int(0..30)
+given n_shot_max: int(0..30)
+find n_shot: int(0..30)
+such that
+    n_shot >= n_shot_min,
+    n_shot <= n_shot_max
+given n_shaker_min: int(0..30)
+given n_shaker_max: int(0..30)
+find n_shaker: int(0..30)
+such that
+    n_shaker >= n_shaker_min,
+    n_shaker <= n_shaker_max
+given init_ontable_percentage: int(0..100)
+given init_holding_percentage: int(0..100)
+given init_handempty_percentage: int(0..100)
+given init_empty_percentage: int(0..100)
+given init_contains_percentage: int(0..100)
+given init_clean_percentage: int(0..100)
+given init_used_percentage: int(0..100)
+given init_dispenses_percentage: int(0..100)
+given init_shaker_empty_level_percentage: int(0..100)
+given init_shaker_level_percentage: int(0..100)
+given init_next_percentage: int(0..100)
+given init_unshaked_percentage: int(0..100)
+given init_shaked_percentage: int(0..100)
+given init_cocktail_part1_percentage: int(0..100)
+given init_cocktail_part2_percentage: int(0..100)
+find init:
+        record {ontable : function int(1..210) --> bool, holding : function (int(1..30), int(1..210)) --> bool,
+                handempty : function int(1..30) --> bool, empty : function int(1..210) --> bool,
+                contains : function (int(1..210), int(1..120)) --> bool, clean : function int(1..210) --> bool,
+                used : function (int(1..210), int(1..120)) --> bool,
+                dispenses : function (int(1..150), int(1..90)) --> bool,
+                shaker_empty_level : function (int(1..210), int(1..60)) --> bool,
+                shaker_level : function (int(1..210), int(1..60)) --> bool,
+                next : function (int(1..60), int(1..60)) --> bool, unshaked : function int(1..210) --> bool,
+                shaked : function int(1..210) --> bool, cocktail_part1 : function (int(1..120), int(1..90)) --> bool,
+                cocktail_part2 : function (int(1..120), int(1..90)) --> bool}
+such that
+    and([q1 >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+         /\
+         q1 <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+         <-> q1 in defined(init[ontable])
+             | q1 : int(1..210)]),
+    sum([toInt(q1[2]) | q1 <- init[ontable]]) = init_ontable_percentage * |defined(init[ontable])| / 100,
+    and([q2[1] >= 1 /\ q2[1] <= 0 + n_hand /\
+         (q2[2] >=
+          max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+               0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                   int(1..2)])
+          /\
+          q2[2] <=
+          min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+               0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                   int(1..2)]))
+         <-> q2 in defined(init[holding])
+             | q2 : (int(1..30), int(1..210))]),
+    sum([toInt(q2[2]) | q2 <- init[holding]]) = init_holding_percentage * |defined(init[holding])| / 100,
+    and([q3 >= 1 /\ q3 <= 0 + n_hand <-> q3 in defined(init[handempty]) | q3 : int(1..30)]),
+    sum([toInt(q3[2]) | q3 <- init[handempty]]) = init_handempty_percentage * |defined(init[handempty])| / 100,
+    and([q4 >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+         /\
+         q4 <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+         <-> q4 in defined(init[empty])
+             | q4 : int(1..210)]),
+    sum([toInt(q4[2]) | q4 <- init[empty]]) = init_empty_percentage * |defined(init[empty])| / 100,
+    and([q5[1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+         /\
+         q5[1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+         /\
+         (q5[2] >= max([0 + n_hand + n_level + 1, 0 + n_hand + n_level + n_ingredient + 1; int(1..2)]) /\
+          q5[2] <=
+          min([0 + n_hand + n_level + n_ingredient, 0 + n_hand + n_level + n_ingredient + n_cocktail; int(1..2)]))
+         <-> q5 in defined(init[contains])
+             | q5 : (int(1..210), int(1..120))]),
+    sum([toInt(q5[2]) | q5 <- init[contains]]) = init_contains_percentage * |defined(init[contains])| / 100,
+    and([q6 >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+         /\
+         q6 <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+         <-> q6 in defined(init[clean])
+             | q6 : int(1..210)]),
+    sum([toInt(q6[2]) | q6 <- init[clean]]) = init_clean_percentage * |defined(init[clean])| / 100,
+    and([q7[1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+         /\
+         q7[1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+         /\
+         (q7[2] >= max([0 + n_hand + n_level + 1, 0 + n_hand + n_level + n_ingredient + 1; int(1..2)]) /\
+          q7[2] <=
+          min([0 + n_hand + n_level + n_ingredient, 0 + n_hand + n_level + n_ingredient + n_cocktail; int(1..2)]))
+         <-> q7 in defined(init[used])
+             | q7 : (int(1..210), int(1..120))]),
+    sum([toInt(q7[2]) | q7 <- init[used]]) = init_used_percentage * |defined(init[used])| / 100,
+    and([q8[1] >= 0 + n_hand + n_level + n_ingredient + n_cocktail + 1 /\
+         q8[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser
+         /\ (q8[2] >= 0 + n_hand + n_level + 1 /\ q8[2] <= 0 + n_hand + n_level + n_ingredient)
+         <-> q8 in defined(init[dispenses])
+             | q8 : (int(1..150), int(1..90))]),
+    sum([toInt(q8[2]) | q8 <- init[dispenses]]) = init_dispenses_percentage * |defined(init[dispenses])| / 100,
+    and([q9[1] >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 /\
+         q9[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+         /\ (q9[2] >= 0 + n_hand + 1 /\ q9[2] <= 0 + n_hand + n_level)
+         <-> q9 in defined(init[shaker_empty_level])
+             | q9 : (int(1..210), int(1..60))]),
+    sum([toInt(q9[2]) | q9 <- init[shaker_empty_level]]) =
+    init_shaker_empty_level_percentage * |defined(init[shaker_empty_level])| / 100,
+    and([q10[1] >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 /\
+         q10[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+         /\ (q10[2] >= 0 + n_hand + 1 /\ q10[2] <= 0 + n_hand + n_level)
+         <-> q10 in defined(init[shaker_level])
+             | q10 : (int(1..210), int(1..60))]),
+    sum([toInt(q10[2]) | q10 <- init[shaker_level]]) =
+    init_shaker_level_percentage * |defined(init[shaker_level])| / 100,
+    and([q11[1] >= 0 + n_hand + 1 /\ q11[1] <= 0 + n_hand + n_level /\
+         (q11[2] >= 0 + n_hand + 1 /\ q11[2] <= 0 + n_hand + n_level)
+         <-> q11 in defined(init[next])
+             | q11 : (int(1..60), int(1..60))]),
+    sum([toInt(q11[2]) | q11 <- init[next]]) = init_next_percentage * |defined(init[next])| / 100,
+    and([q12 >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 /\
+         q12 <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+         <-> q12 in defined(init[unshaked])
+             | q12 : int(1..210)]),
+    sum([toInt(q12[2]) | q12 <- init[unshaked]]) = init_unshaked_percentage * |defined(init[unshaked])| / 100,
+    and([q13 >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 /\
+         q13 <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+         <-> q13 in defined(init[shaked])
+             | q13 : int(1..210)]),
+    sum([toInt(q13[2]) | q13 <- init[shaked]]) = init_shaked_percentage * |defined(init[shaked])| / 100,
+    and([q14[1] >= 0 + n_hand + n_level + n_ingredient + 1 /\ q14[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail
+         /\ (q14[2] >= 0 + n_hand + n_level + 1 /\ q14[2] <= 0 + n_hand + n_level + n_ingredient)
+         <-> q14 in defined(init[cocktail_part1])
+             | q14 : (int(1..120), int(1..90))]),
+    sum([toInt(q14[2]) | q14 <- init[cocktail_part1]]) =
+    init_cocktail_part1_percentage * |defined(init[cocktail_part1])| / 100,
+    and([q15[1] >= 0 + n_hand + n_level + n_ingredient + 1 /\ q15[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail
+         /\ (q15[2] >= 0 + n_hand + n_level + 1 /\ q15[2] <= 0 + n_hand + n_level + n_ingredient)
+         <-> q15 in defined(init[cocktail_part2])
+             | q15 : (int(1..120), int(1..90))]),
+    sum([toInt(q15[2]) | q15 <- init[cocktail_part2]]) =
+    init_cocktail_part2_percentage * |defined(init[cocktail_part2])| / 100
+such that
+    and([and([!init[contains]((var_c, var_b))
+                  | var_b : int(0 + n_hand + n_level + 1..0 + n_hand + n_level + n_ingredient,
+                                0 + n_hand + n_level + n_ingredient + 1..0 + n_hand + n_level + n_ingredient +
+                                                                         n_cocktail)])
+             | var_c : int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1..0 + n_hand + n_level +
+                                                                                               n_ingredient
+                                                                                               + n_cocktail
+                                                                                               + n_dispenser
+                                                                                               + n_shot,
+                           0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1..0 + n_hand +
+                                                                                                        n_level
+                                                                                                        + n_ingredient
+                                                                                                        + n_cocktail
+                                                                                                        + n_dispenser
+                                                                                                        + n_shot
+                                                                                                        + n_shaker)]),
+    and([init[unshaked](var_s) /\ !init[shaked](var_s)
+             | var_s : int(1..210),
+               var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker]),
+    and([(init[ontable](var_c) \/ 1 = sum([toInt(value = true) | ((_, p1), value) <- init[holding], var_c = p1])) /\
+         !(init[ontable](var_c) /\ 1 = sum([toInt(value = true) | ((_, p1), value) <- init[holding], var_c = p1]))
+             | var_c : int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1..0 + n_hand + n_level +
+                                                                                               n_ingredient
+                                                                                               + n_cocktail
+                                                                                               + n_dispenser
+                                                                                               + n_shot,
+                           0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1..0 + n_hand +
+                                                                                                        n_level
+                                                                                                        + n_ingredient
+                                                                                                        + n_cocktail
+                                                                                                        + n_dispenser
+                                                                                                        + n_shot
+                                                                                                        + n_shaker)]),
+    and([1 >= sum([toInt(value = true) | ((p0, _), value) <- init[holding], var_h = p0]) /\
+         ((init[handempty](var_h) \/ 1 = sum([toInt(value = true) | ((p0, _), value) <- init[holding], var_h = p0])) /\
+          !(init[handempty](var_h) /\ 1 = sum([toInt(value = true) | ((p0, _), value) <- init[holding], var_h = p0])))
+             | var_h : int(1..30), var_h <= 0 + n_hand]),
+    and([init[empty](var_c) /\ init[clean](var_c)
+             | var_c : int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1..0 + n_hand + n_level +
+                                                                                               n_ingredient
+                                                                                               + n_cocktail
+                                                                                               + n_dispenser
+                                                                                               + n_shot,
+                           0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1..0 + n_hand +
+                                                                                                        n_level
+                                                                                                        + n_ingredient
+                                                                                                        + n_cocktail
+                                                                                                        + n_dispenser
+                                                                                                        + n_shot
+                                                                                                        + n_shaker)]),
+    and([1 = sum([toInt(value = true) | ((p0, _), value) <- init[shaker_empty_level], var_s = p0])
+             | var_s : int(1..210),
+               var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker]),
+    or([and([init[shaker_empty_level]((var_s, var_l)) /\ init[shaker_level]((var_s, var_l))
+                 | var_s : int(1..210),
+                   var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1,
+                   var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker])
+            | var_l : int(1..60), var_l >= 0 + n_hand + 1, var_l <= 0 + n_hand + n_level]),
+    or([or([!(var_i = var_f) /\ 0 = sum([toInt(value = true) | ((p0, _), value) <- init[next], var_f = p0]) /\
+            and([var_l = var_f \/ 1 = sum([toInt(value = true) | ((p0, _), value) <- init[next], var_l = p0])
+                     | var_l : int(1..60), var_l >= 0 + n_hand + 1, var_l <= 0 + n_hand + n_level])
+            /\ 0 = sum([toInt(value = true) | ((_, p1), value) <- init[next], var_i = p1])
+            /\
+            and([var_l = var_i \/ 1 = sum([toInt(value = true) | ((_, p1), value) <- init[next], var_l = p1])
+                     | var_l : int(1..60), var_l >= 0 + n_hand + 1, var_l <= 0 + n_hand + n_level])
+                | var_i : int(1..60), var_i >= 0 + n_hand + 1, var_i <= 0 + n_hand + n_level])
+            | var_f : int(1..60), var_f >= 0 + n_hand + 1, var_f <= 0 + n_hand + n_level]),
+    and([!init[next]((var_l, var_l)) | var_l : int(1..60), var_l >= 0 + n_hand + 1, var_l <= 0 + n_hand + n_level])
+given goal_ontable_cardMin: int(0..390)
+given goal_ontable_cardMax: int(0..390)
+given goal_ontable_defined_min: int(1..210)
+given goal_ontable_defined_max: int(1..210)
+given goal_ontable_percentage: int(0..100)
+given goal_holding_cardMin: int(0..11700)
+given goal_holding_cardMax: int(0..11700)
+given goal_holding_defined_tuple1_min: int(1..30)
+given goal_holding_defined_tuple1_max: int(1..30)
+given goal_holding_defined_tuple2_min: int(1..210)
+given goal_holding_defined_tuple2_max: int(1..210)
+given goal_holding_percentage: int(0..100)
+given goal_handempty_cardMin: int(0..30)
+given goal_handempty_cardMax: int(0..30)
+given goal_handempty_defined_min: int(1..30)
+given goal_handempty_defined_max: int(1..30)
+given goal_handempty_percentage: int(0..100)
+given goal_empty_cardMin: int(0..390)
+given goal_empty_cardMax: int(0..390)
+given goal_empty_defined_min: int(1..210)
+given goal_empty_defined_max: int(1..210)
+given goal_empty_percentage: int(0..100)
+given goal_contains_cardMin: int(0..81900)
+given goal_contains_cardMax: int(0..81900)
+given goal_contains_defined_tuple1_min: int(1..210)
+given goal_contains_defined_tuple1_max: int(1..210)
+given goal_contains_defined_tuple2_min: int(1..120)
+given goal_contains_defined_tuple2_max: int(1..120)
+given goal_contains_percentage: int(0..100)
+given goal_clean_cardMin: int(0..390)
+given goal_clean_cardMax: int(0..390)
+given goal_clean_defined_min: int(1..210)
+given goal_clean_defined_max: int(1..210)
+given goal_clean_percentage: int(0..100)
+given goal_used_cardMin: int(0..81900)
+given goal_used_cardMax: int(0..81900)
+given goal_used_defined_tuple1_min: int(1..210)
+given goal_used_defined_tuple1_max: int(1..210)
+given goal_used_defined_tuple2_min: int(1..120)
+given goal_used_defined_tuple2_max: int(1..120)
+given goal_used_percentage: int(0..100)
+given goal_shaker_level_cardMin: int(0..12600)
+given goal_shaker_level_cardMax: int(0..12600)
+given goal_shaker_level_defined_tuple1_min: int(1..210)
+given goal_shaker_level_defined_tuple1_max: int(1..210)
+given goal_shaker_level_defined_tuple2_min: int(1..60)
+given goal_shaker_level_defined_tuple2_max: int(1..60)
+given goal_shaker_level_percentage: int(0..100)
+given goal_unshaked_cardMin: int(0..210)
+given goal_unshaked_cardMax: int(0..210)
+given goal_unshaked_defined_min: int(1..210)
+given goal_unshaked_defined_max: int(1..210)
+given goal_unshaked_percentage: int(0..100)
+given goal_shaked_cardMin: int(0..210)
+given goal_shaked_cardMax: int(0..210)
+given goal_shaked_defined_min: int(1..210)
+given goal_shaked_defined_max: int(1..210)
+given goal_shaked_percentage: int(0..100)
+find goal:
+        record {ontable : function (maxSize 30) int(1..210) --> bool,
+                holding : function (maxSize 30) (int(1..30), int(1..210)) --> bool,
+                handempty : function (maxSize 30) int(1..30) --> bool,
+                empty : function (maxSize 30) int(1..210) --> bool,
+                contains : function (maxSize 30) (int(1..210), int(1..120)) --> bool,
+                clean : function (maxSize 30) int(1..210) --> bool,
+                used : function (maxSize 30) (int(1..210), int(1..120)) --> bool,
+                shaker_level : function (maxSize 30) (int(1..210), int(1..60)) --> bool,
+                unshaked : function (maxSize 30) int(1..210) --> bool,
+                shaked : function (maxSize 30) int(1..210) --> bool}
+such that
+    |goal[ontable]| >= goal_ontable_cardMin /\ |goal[ontable]| <= goal_ontable_cardMax,
+    and([q16[1] >= goal_ontable_defined_min | q16 <- goal[ontable]]),
+    and([q16[1] <= goal_ontable_defined_max | q16 <- goal[ontable]]),
+    and([q16[1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+             | q16 <- goal[ontable]]),
+    and([q16[1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+             | q16 <- goal[ontable]]),
+    sum([toInt(q16[2]) | q16 <- goal[ontable]]) = goal_ontable_percentage * |defined(goal[ontable])| / 100,
+    |goal[holding]| >= goal_holding_cardMin /\ |goal[holding]| <= goal_holding_cardMax,
+    and([q17[1, 1] >= goal_holding_defined_tuple1_min | q17 <- goal[holding]]),
+    and([q17[1, 1] <= goal_holding_defined_tuple1_max | q17 <- goal[holding]]),
+    and([q17[1, 1] <= 0 + n_hand | q17 <- goal[holding]]),
+    and([q17[1, 2] >= goal_holding_defined_tuple2_min | q17 <- goal[holding]]),
+    and([q17[1, 2] <= goal_holding_defined_tuple2_max | q17 <- goal[holding]]),
+    and([q17[1, 2] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+             | q17 <- goal[holding]]),
+    and([q17[1, 2] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+             | q17 <- goal[holding]]),
+    sum([toInt(q17[2]) | q17 <- goal[holding]]) = goal_holding_percentage * |defined(goal[holding])| / 100,
+    |goal[handempty]| >= goal_handempty_cardMin /\ |goal[handempty]| <= goal_handempty_cardMax,
+    and([q18[1] >= goal_handempty_defined_min | q18 <- goal[handempty]]),
+    and([q18[1] <= goal_handempty_defined_max | q18 <- goal[handempty]]),
+    and([q18[1] <= 0 + n_hand | q18 <- goal[handempty]]),
+    sum([toInt(q18[2]) | q18 <- goal[handempty]]) = goal_handempty_percentage * |defined(goal[handempty])| / 100,
+    |goal[empty]| >= goal_empty_cardMin /\ |goal[empty]| <= goal_empty_cardMax,
+    and([q19[1] >= goal_empty_defined_min | q19 <- goal[empty]]),
+    and([q19[1] <= goal_empty_defined_max | q19 <- goal[empty]]),
+    and([q19[1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+             | q19 <- goal[empty]]),
+    and([q19[1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+             | q19 <- goal[empty]]),
+    sum([toInt(q19[2]) | q19 <- goal[empty]]) = goal_empty_percentage * |defined(goal[empty])| / 100,
+    |goal[contains]| >= goal_contains_cardMin /\ |goal[contains]| <= goal_contains_cardMax,
+    and([q20[1, 1] >= goal_contains_defined_tuple1_min | q20 <- goal[contains]]),
+    and([q20[1, 1] <= goal_contains_defined_tuple1_max | q20 <- goal[contains]]),
+    and([q20[1, 1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+             | q20 <- goal[contains]]),
+    and([q20[1, 1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+             | q20 <- goal[contains]]),
+    and([q20[1, 2] >= goal_contains_defined_tuple2_min | q20 <- goal[contains]]),
+    and([q20[1, 2] <= goal_contains_defined_tuple2_max | q20 <- goal[contains]]),
+    and([q20[1, 2] >= max([0 + n_hand + n_level + 1, 0 + n_hand + n_level + n_ingredient + 1; int(1..2)])
+             | q20 <- goal[contains]]),
+    and([q20[1, 2] <=
+         min([0 + n_hand + n_level + n_ingredient, 0 + n_hand + n_level + n_ingredient + n_cocktail; int(1..2)])
+             | q20 <- goal[contains]]),
+    sum([toInt(q20[2]) | q20 <- goal[contains]]) = goal_contains_percentage * |defined(goal[contains])| / 100,
+    |goal[clean]| >= goal_clean_cardMin /\ |goal[clean]| <= goal_clean_cardMax,
+    and([q21[1] >= goal_clean_defined_min | q21 <- goal[clean]]),
+    and([q21[1] <= goal_clean_defined_max | q21 <- goal[clean]]),
+    and([q21[1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+             | q21 <- goal[clean]]),
+    and([q21[1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+             | q21 <- goal[clean]]),
+    sum([toInt(q21[2]) | q21 <- goal[clean]]) = goal_clean_percentage * |defined(goal[clean])| / 100,
+    |goal[used]| >= goal_used_cardMin /\ |goal[used]| <= goal_used_cardMax,
+    and([q22[1, 1] >= goal_used_defined_tuple1_min | q22 <- goal[used]]),
+    and([q22[1, 1] <= goal_used_defined_tuple1_max | q22 <- goal[used]]),
+    and([q22[1, 1] >=
+         max([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1;
+                  int(1..2)])
+             | q22 <- goal[used]]),
+    and([q22[1, 1] <=
+         min([0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot,
+              0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker;
+                  int(1..2)])
+             | q22 <- goal[used]]),
+    and([q22[1, 2] >= goal_used_defined_tuple2_min | q22 <- goal[used]]),
+    and([q22[1, 2] <= goal_used_defined_tuple2_max | q22 <- goal[used]]),
+    and([q22[1, 2] >= max([0 + n_hand + n_level + 1, 0 + n_hand + n_level + n_ingredient + 1; int(1..2)])
+             | q22 <- goal[used]]),
+    and([q22[1, 2] <=
+         min([0 + n_hand + n_level + n_ingredient, 0 + n_hand + n_level + n_ingredient + n_cocktail; int(1..2)])
+             | q22 <- goal[used]]),
+    sum([toInt(q22[2]) | q22 <- goal[used]]) = goal_used_percentage * |defined(goal[used])| / 100,
+    |goal[shaker_level]| >= goal_shaker_level_cardMin /\ |goal[shaker_level]| <= goal_shaker_level_cardMax,
+    and([q23[1, 1] >= goal_shaker_level_defined_tuple1_min | q23 <- goal[shaker_level]]),
+    and([q23[1, 1] <= goal_shaker_level_defined_tuple1_max | q23 <- goal[shaker_level]]),
+    and([q23[1, 1] >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1
+             | q23 <- goal[shaker_level]]),
+    and([q23[1, 1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+             | q23 <- goal[shaker_level]]),
+    and([q23[1, 2] >= goal_shaker_level_defined_tuple2_min | q23 <- goal[shaker_level]]),
+    and([q23[1, 2] <= goal_shaker_level_defined_tuple2_max | q23 <- goal[shaker_level]]),
+    and([q23[1, 2] >= 0 + n_hand + 1 | q23 <- goal[shaker_level]]),
+    and([q23[1, 2] <= 0 + n_hand + n_level | q23 <- goal[shaker_level]]),
+    sum([toInt(q23[2]) | q23 <- goal[shaker_level]]) =
+    goal_shaker_level_percentage * |defined(goal[shaker_level])| / 100,
+    |goal[unshaked]| >= goal_unshaked_cardMin /\ |goal[unshaked]| <= goal_unshaked_cardMax,
+    and([q24[1] >= goal_unshaked_defined_min | q24 <- goal[unshaked]]),
+    and([q24[1] <= goal_unshaked_defined_max | q24 <- goal[unshaked]]),
+    and([q24[1] >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1
+             | q24 <- goal[unshaked]]),
+    and([q24[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+             | q24 <- goal[unshaked]]),
+    sum([toInt(q24[2]) | q24 <- goal[unshaked]]) = goal_unshaked_percentage * |defined(goal[unshaked])| / 100,
+    |goal[shaked]| >= goal_shaked_cardMin /\ |goal[shaked]| <= goal_shaked_cardMax,
+    and([q25[1] >= goal_shaked_defined_min | q25 <- goal[shaked]]),
+    and([q25[1] <= goal_shaked_defined_max | q25 <- goal[shaked]]),
+    and([q25[1] >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1 | q25 <- goal[shaked]]),
+    and([q25[1] <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker
+             | q25 <- goal[shaked]]),
+    sum([toInt(q25[2]) | q25 <- goal[shaked]]) = goal_shaked_percentage * |defined(goal[shaked])| / 100
+such that
+    and([(goal[ontable](var_c) \/ 1 = sum([toInt(value = true) | ((_, p1), value) <- goal[holding], var_c = p1])) /\
+         !(goal[ontable](var_c) /\ 1 = sum([toInt(value = true) | ((_, p1), value) <- goal[holding], var_c = p1]))
+             | var_c : int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1..0 + n_hand + n_level +
+                                                                                               n_ingredient
+                                                                                               + n_cocktail
+                                                                                               + n_dispenser
+                                                                                               + n_shot,
+                           0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1..0 + n_hand +
+                                                                                                        n_level
+                                                                                                        + n_ingredient
+                                                                                                        + n_cocktail
+                                                                                                        + n_dispenser
+                                                                                                        + n_shot
+                                                                                                        + n_shaker)]),
+    and([1 >= sum([toInt(value = true) | ((p0, _), value) <- goal[holding], var_h = p0]) /\
+         ((goal[handempty](var_h) \/ 1 = sum([toInt(value = true) | ((p0, _), value) <- goal[holding], var_h = p0])) /\
+          !(goal[handempty](var_h) /\ 1 = sum([toInt(value = true) | ((p0, _), value) <- goal[holding], var_h = p0])))
+             | var_h : int(1..30), var_h <= 0 + n_hand]),
+    and([1 = sum([toInt(value = true) | ((p0, _), value) <- goal[shaker_level], var_s = p0])
+             | var_s : int(1..210),
+               var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker]),
+    and([(goal[clean](var_s) \/ 0 = sum([toInt(value = true) | ((p0, _), value) <- goal[used], var_s = p0])) /\
+         !(goal[clean](var_s) /\ 0 = sum([toInt(value = true) | ((p0, _), value) <- goal[used], var_s = p0]))
+             | var_s : int(1..180), var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot]),
+    and([(goal[empty](var_c) \/ 1 <= sum([toInt(value = true) | ((p0, _), value) <- goal[contains], var_c = p0])) /\
+         !(goal[empty](var_c) /\ 1 <= sum([toInt(value = true) | ((p0, _), value) <- goal[contains], var_c = p0]))
+             | var_c : int(0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1..0 + n_hand + n_level +
+                                                                                               n_ingredient
+                                                                                               + n_cocktail
+                                                                                               + n_dispenser
+                                                                                               + n_shot,
+                           0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1..0 + n_hand +
+                                                                                                        n_level
+                                                                                                        + n_ingredient
+                                                                                                        + n_cocktail
+                                                                                                        + n_dispenser
+                                                                                                        + n_shot
+                                                                                                        + n_shaker)]),
+    and([(goal[clean](var_s) \/ goal[empty](var_s)) /\ !(goal[clean](var_s) /\ goal[empty](var_s))
+             | var_s : int(1..180), var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot]),
+    and([goal[unshaked](var_s) /\ !goal[shaked](var_s)
+             | var_s : int(1..210),
+               var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker]),
+    and([goal[empty](var_s) /\ !goal[shaked](var_s)
+             | var_s : int(1..210),
+               var_s >= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + 1,
+               var_s <= 0 + n_hand + n_level + n_ingredient + n_cocktail + n_dispenser + n_shot + n_shaker])
+n_hand_min "-n_hand_min " i (0, 30)
+n_hand_max "-n_hand_max " i (0, 30)
+n_level_min "-n_level_min " i (0, 30)
+n_level_max "-n_level_max " i (0, 30)
+n_beverage_min "-n_beverage_min " i (0, 30)
+n_beverage_max "-n_beverage_max " i (0, 30)
+n_dispenser_min "-n_dispenser_min " i (0, 30)
+n_dispenser_max "-n_dispenser_max " i (0, 30)
+n_container_min "-n_container_min " i (0, 30)
+n_container_max "-n_container_max " i (0, 30)
+n_ingredient_min "-n_ingredient_min " i (0, 30)
+n_ingredient_max "-n_ingredient_max " i (0, 30)
+n_cocktail_min "-n_cocktail_min " i (0, 30)
+n_cocktail_max "-n_cocktail_max " i (0, 30)
+n_shot_min "-n_shot_min " i (0, 30)
+n_shot_max "-n_shot_max " i (0, 30)
+n_shaker_min "-n_shaker_min " i (0, 30)
+n_shaker_max "-n_shaker_max " i (0, 30)
+init_ontable_percentage "-init_ontable_percentage " i (0, 100)
+init_holding_percentage "-init_holding_percentage " i (0, 100)
+init_handempty_percentage "-init_handempty_percentage " i (0, 100)
+init_empty_percentage "-init_empty_percentage " i (0, 100)
+init_contains_percentage "-init_contains_percentage " i (0, 100)
+init_clean_percentage "-init_clean_percentage " i (0, 100)
+init_used_percentage "-init_used_percentage " i (0, 100)
+init_dispenses_percentage "-init_dispenses_percentage " i (0, 100)
+init_shaker_empty_level_percentage "-init_shaker_empty_level_percentage " i (0, 100)
+init_shaker_level_percentage "-init_shaker_level_percentage " i (0, 100)
+init_next_percentage "-init_next_percentage " i (0, 100)
+init_unshaked_percentage "-init_unshaked_percentage " i (0, 100)
+init_shaked_percentage "-init_shaked_percentage " i (0, 100)
+init_cocktail_part1_percentage "-init_cocktail_part1_percentage " i (0, 100)
+init_cocktail_part2_percentage "-init_cocktail_part2_percentage " i (0, 100)
+goal_ontable_cardMin "-goal_ontable_cardMin " i (0, 390)
+goal_ontable_cardMax "-goal_ontable_cardMax " i (0, 390)
+goal_ontable_defined_min "-goal_ontable_defined_min " i (1, 210)
+goal_ontable_defined_max "-goal_ontable_defined_max " i (1, 210)
+goal_ontable_percentage "-goal_ontable_percentage " i (0, 100)
+goal_holding_cardMin "-goal_holding_cardMin " i (0, 11700)
+goal_holding_cardMax "-goal_holding_cardMax " i (0, 11700)
+goal_holding_defined_tuple1_min "-goal_holding_defined_tuple1_min " i (1, 30)
+goal_holding_defined_tuple1_max "-goal_holding_defined_tuple1_max " i (1, 30)
+goal_holding_defined_tuple2_min "-goal_holding_defined_tuple2_min " i (1, 210)
+goal_holding_defined_tuple2_max "-goal_holding_defined_tuple2_max " i (1, 210)
+goal_holding_percentage "-goal_holding_percentage " i (0, 100)
+goal_handempty_cardMin "-goal_handempty_cardMin " i (0, 30)
+goal_handempty_cardMax "-goal_handempty_cardMax " i (0, 30)
+goal_handempty_defined_min "-goal_handempty_defined_min " i (1, 30)
+goal_handempty_defined_max "-goal_handempty_defined_max " i (1, 30)
+goal_handempty_percentage "-goal_handempty_percentage " i (0, 100)
+goal_empty_cardMin "-goal_empty_cardMin " i (0, 390)
+goal_empty_cardMax "-goal_empty_cardMax " i (0, 390)
+goal_empty_defined_min "-goal_empty_defined_min " i (1, 210)
+goal_empty_defined_max "-goal_empty_defined_max " i (1, 210)
+goal_empty_percentage "-goal_empty_percentage " i (0, 100)
+goal_contains_cardMin "-goal_contains_cardMin " i (0, 81900)
+goal_contains_cardMax "-goal_contains_cardMax " i (0, 81900)
+goal_contains_defined_tuple1_min "-goal_contains_defined_tuple1_min " i (1, 210)
+goal_contains_defined_tuple1_max "-goal_contains_defined_tuple1_max " i (1, 210)
+goal_contains_defined_tuple2_min "-goal_contains_defined_tuple2_min " i (1, 120)
+goal_contains_defined_tuple2_max "-goal_contains_defined_tuple2_max " i (1, 120)
+goal_contains_percentage "-goal_contains_percentage " i (0, 100)
+goal_clean_cardMin "-goal_clean_cardMin " i (0, 390)
+goal_clean_cardMax "-goal_clean_cardMax " i (0, 390)
+goal_clean_defined_min "-goal_clean_defined_min " i (1, 210)
+goal_clean_defined_max "-goal_clean_defined_max " i (1, 210)
+goal_clean_percentage "-goal_clean_percentage " i (0, 100)
+goal_used_cardMin "-goal_used_cardMin " i (0, 81900)
+goal_used_cardMax "-goal_used_cardMax " i (0, 81900)
+goal_used_defined_tuple1_min "-goal_used_defined_tuple1_min " i (1, 210)
+goal_used_defined_tuple1_max "-goal_used_defined_tuple1_max " i (1, 210)
+goal_used_defined_tuple2_min "-goal_used_defined_tuple2_min " i (1, 120)
+goal_used_defined_tuple2_max "-goal_used_defined_tuple2_max " i (1, 120)
+goal_used_percentage "-goal_used_percentage " i (0, 100)
+goal_shaker_level_cardMin "-goal_shaker_level_cardMin " i (0, 12600)
+goal_shaker_level_cardMax "-goal_shaker_level_cardMax " i (0, 12600)
+goal_shaker_level_defined_tuple1_min "-goal_shaker_level_defined_tuple1_min " i (1, 210)
+goal_shaker_level_defined_tuple1_max "-goal_shaker_level_defined_tuple1_max " i (1, 210)
+goal_shaker_level_defined_tuple2_min "-goal_shaker_level_defined_tuple2_min " i (1, 60)
+goal_shaker_level_defined_tuple2_max "-goal_shaker_level_defined_tuple2_max " i (1, 60)
+goal_shaker_level_percentage "-goal_shaker_level_percentage " i (0, 100)
+goal_unshaked_cardMin "-goal_unshaked_cardMin " i (0, 210)
+goal_unshaked_cardMax "-goal_unshaked_cardMax " i (0, 210)
+goal_unshaked_defined_min "-goal_unshaked_defined_min " i (1, 210)
+goal_unshaked_defined_max "-goal_unshaked_defined_max " i (1, 210)
+goal_unshaked_percentage "-goal_unshaked_percentage " i (0, 100)
+goal_shaked_cardMin "-goal_shaked_cardMin " i (0, 210)
+goal_shaked_cardMax "-goal_shaked_cardMax " i (0, 210)
+goal_shaked_defined_min "-goal_shaked_defined_min " i (1, 210)
+goal_shaked_defined_max "-goal_shaked_defined_max " i (1, 210)
+goal_shaked_percentage "-goal_shaked_percentage " i (0, 100)
