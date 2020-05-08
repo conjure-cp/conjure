@@ -1,0 +1,39 @@
+language Essence 1.3
+
+given f_cardMin: int(1..20)
+given f_cardMax: int(1..20)
+given f_defined_min: int(1..10)
+given f_defined_max: int(1..10)
+given f_range_min: int(1..20)
+given f_range_max: int(1..20)
+find f: function (minSize 1, maxSize 20) int(1..10) --> int(1..20)
+such that
+    |f| >= f_cardMin /\ |f| <= f_cardMax,
+    |f| >= 1,
+    and([q1[1] >= f_defined_min | q1 <- f]),
+    and([q1[1] <= f_defined_max | q1 <- f]),
+    and([q1[2] >= f_range_min | q1 <- f]),
+    and([q1[2] <= f_range_max | q1 <- f])
+language Essence 1.3
+
+given f_cardMin: int(1..20)
+given f_cardMax: int(1..20)
+given f_defined_min: int(1..10)
+given f_defined_max: int(1..10)
+given f_range_min: int(1..20)
+given f_range_max: int(1..20)
+find repair_f_cardMin: int(1..20)
+find repair_f_cardMax: int(1..20)
+find repair_f_defined_min: int(1..10)
+find repair_f_defined_max: int(1..10)
+find repair_f_range_min: int(1..20)
+find repair_f_range_max: int(1..20)
+such that
+    repair_f_cardMin <= repair_f_cardMax,
+    repair_f_defined_max - repair_f_defined_min + 1 >= repair_f_cardMax,
+    repair_f_defined_min <= repair_f_defined_max,
+    repair_f_range_min <= repair_f_range_max
+minimising
+    sum([|repair_f_cardMin - f_cardMin|, |repair_f_cardMax - f_cardMax|, |repair_f_defined_min - f_defined_min|,
+         |repair_f_defined_max - f_defined_max|, |repair_f_range_min - f_range_min|, |repair_f_range_max - f_range_max|;
+             int(1..6)])

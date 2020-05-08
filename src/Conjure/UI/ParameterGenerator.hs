@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Conjure.UI.ParameterGenerator where
+module Conjure.UI.ParameterGenerator ( parameterGenerator ) where
 
 import Conjure.Prelude
 import Conjure.Bug
@@ -34,28 +34,64 @@ parameterGenerator ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Integer ->      -- MININT
     Integer ->      -- MAXINT
-    Model -> m ( Model
-               , [(Name, String)] -- classification for each given
+    Model -> m ( ( Model            -- generator model
+                 , Model )          -- repair model
+               , [(Name, String)]   -- classification for each given
                )
 parameterGenerator minIntValue maxIntValue model =
-    runStateAsWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds >>= return . inlineLettings
+    runStateAsWriterT $ runNameGen () (resolveNames model) >>= core >>= evaluateBounds2
     where
         core m = do
-            outStatements <- forM (mStatements m) $ \ st -> case st of
+            out <- forM (mStatements m) $ \ st -> case st of
                 Declaration (FindOrGiven Given nm dom) -> do
-                    (dom', decls, cons) <- pgOnDomain (Reference nm Nothing) nm dom
-                    return $ decls ++ [Declaration (FindOrGiven Find nm dom'), SuchThat cons]
-                Declaration (FindOrGiven Find  _  _  ) -> return []
-                Declaration (Letting _ _)              -> return [st]
-                Declaration       {}                   -> return [st]
-                SearchOrder       {}                   -> return []
-                SearchHeuristic   {}                   -> return []
+                    (dom', genDecls, genCons, repairCons) <- pgOnDomain (Reference nm Nothing) nm dom
+                    let repairDecls = [ Declaration (FindOrGiven Find ("repair_" `mappend` genDeclNm) genDeclDom)
+                                      | Declaration (FindOrGiven Given genDeclNm genDeclDom) <- genDecls
+                                      ]
+                    let repairObjectiveParts =
+                                [ [essence| |&b-&a| |]
+                                | Declaration (FindOrGiven Given genDeclNm _) <- genDecls
+                                , let a = Reference genDeclNm Nothing
+                                , let b = Reference ("repair_" `mappend` genDeclNm) Nothing
+                                ]
+                    let featureNames =
+                                [ genDeclNm
+                                | Declaration (FindOrGiven Given genDeclNm _) <- genDecls
+                                ]
+                    let prependRepair (Reference n _)
+                            | n `elem` featureNames = Reference ("repair_" `mappend` n) Nothing
+                        prependRepair x = x
+                    return  ( genDecls
+                                ++ [ Declaration (FindOrGiven Find nm dom')
+                                   , SuchThat genCons
+                                   ]
+                            , genDecls
+                                ++ repairDecls
+                                ++ [SuchThat (map (transform prependRepair) repairCons)]
+                            , repairObjectiveParts
+                            )
+                Declaration (FindOrGiven Find  _  _  ) -> return ([], [], [])
+                Declaration (Letting _ _)              -> return ([st], [], [])
+                Declaration       {}                   -> return ([st], [], [])
+                SearchOrder       {}                   -> return ([], [], [])
+                SearchHeuristic   {}                   -> return ([], [], [])
                 Where             xs                   -> do
                     xs' <- mapM (transformM fixQuantified) xs
-                    return [SuchThat xs']
-                Objective         {}                   -> return []
-                SuchThat          {}                   -> return []
-            return m { mStatements = concat outStatements }
+                    return ([SuchThat xs'], [], [])
+                Objective         {}                   -> return ([], [], [])
+                SuchThat          {}                   -> return ([], [], [])
+
+            let (generatorStmts, repairStmts, repairObjectiveParts) = mconcat out
+
+            return ( m { mStatements = generatorStmts }
+                   , m { mStatements = repairStmts
+                                    ++ [Objective Minimising (make opSum (fromList repairObjectiveParts))] }
+                   )
+
+        evaluateBounds2 (m1, m2) = do
+            m1' <- evaluateBounds m1
+            m2' <- evaluateBounds m2
+            return (inlineLettings m1', inlineLettings m2')
 
         evaluateBounds m = do
             let symbols = [("MININT", fromInt minIntValue), ("MAXINT", fromInt maxIntValue)]
@@ -135,7 +171,8 @@ pgOnDomain ::
     Domain () Expression ->             -- its domain
     m ( Domain () Expression            -- its modified domain for the find version
       , [Statement]                     -- statements that define the necessary givens
-      , [Expression]                    -- constraints
+      , [Expression]                    -- constraints for the generator model
+      , [Expression]                    -- constraints for the repair model
       )
 pgOnDomain x nm (expandDomainReference -> dom) =
 
@@ -157,7 +194,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
             sawTell [(nmMax, "i")]
             let rmax = Reference nmMax Nothing
 
-            return3
+            return4
                 (DomainInt t [RangeBounded lb ub])
                 [ Declaration (FindOrGiven Given nmMin
                         (DomainInt t [RangeBounded lb ub]))
@@ -165,7 +202,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                         -- (DomainInt t [RangeBounded 0 [essence| min([5, (&ub - &lb) / 2]) |]]))
                         (DomainInt t [RangeBounded lb ub]))
                 ]
-                $ [ [essence| &x >= &rmin |]
+                ( [ [essence| &x >= &rmin |]
                   , [essence| &x <= &rmax |]
                   ] ++
                   [ [essence| &x >= &lbX |]
@@ -173,7 +210,9 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                   ] ++
                   [ [essence| &x <= &ubX |]
                   | ub /= ubX
-                  ]
+                  ] )
+                ( [ [essence| &rmin <= &rmax |]
+                  ] )
 
         DomainRecord ds -> do
             inners <- forM ds $ \ (nmRec, domRec) -> do
@@ -181,9 +220,9 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 let ref = [essence| &x[&iE] |]
                 pgOnDomain ref (nm `mappend` (Name $ pack $ "_" ++ show (pretty nmRec))) domRec
             return3
-                (DomainRecord (zip (map fst ds) (map fst3 inners)))
-                (concatMap snd3 inners)
-                (concatMap thd3 inners)
+                (DomainRecord (zip (map fst ds) (map fst4 inners)))
+                (concatMap snd4 inners)
+                (concatMap thd4 inners)
 
         DomainTuple ds -> do
             inners <- forM (zip [1..] ds) $ \ (i, d) -> do
@@ -191,19 +230,20 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 let ref = [essence| &x[&iE] |]
                 pgOnDomain ref (nm `mappend` (Name $ pack $ "_tuple" ++ show i)) d
             return3
-                (DomainTuple (map fst3 inners))
-                (concatMap snd3 inners)
-                (concatMap thd3 inners)
+                (DomainTuple (map fst4 inners))
+                (concatMap snd4 inners)
+                (concatMap thd4 inners)
 
         DomainMatrix indexDomain innerDomain | categoryOf indexDomain <= CatConstant -> do
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat : &indexDomain . &c |]
             let ref = [essence| &x[&i] |]
-            (innerDomain', declInner, consInner) <- pgOnDomain ref (nm `mappend` "_inner") innerDomain
-            return3
+            (innerDomain', declInner, consInner, repairStmts) <- pgOnDomain ref (nm `mappend` "_inner") innerDomain
+            return4
                 (DomainMatrix indexDomain innerDomain')
                 declInner
                 (map liftCons consInner)
+                repairStmts
 
         DomainSequence r attr innerDomain -> do
 
@@ -217,7 +257,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
-            (domInner, declInner, consInner) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_inner") innerDomain
+            (domInner, declInner, consInner, repairStmts) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_inner") innerDomain
 
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
@@ -277,10 +317,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons]
 
-            return3
+            return4
                 (DomainSequence r attrOut domInner)
                 (newDecl ++ declInner)
                 (newCons ++ map liftCons consInner)
+                repairStmts
 
         DomainSet r attr innerDomain -> do
 
@@ -294,7 +335,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
-            (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
+            (domInner, declInner, consInner, repairStmts) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
 
             (attrOut, sizeLb, sizeUb, cardDomain) <-
                     case attr of
@@ -354,10 +395,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons]
 
-            return3
+            return4
                 (DomainSet r attrOut domInner)
                 (newDecl ++ declInner)
                 (newCons ++ map liftCons consInner)
+                repairStmts
 
         DomainMSet r attr innerDomain -> do
 
@@ -371,7 +413,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
-            (domInner, declInner, consInner) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
+            (domInner, declInner, consInner, repairStmts) <- pgOnDomain i (nm `mappend` "_inner") innerDomain
 
             (attrOut, sizeLb, sizeUb, cardDomain, occurLb, occurUb) <-
                     case attr of
@@ -455,10 +497,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons, occurLbCons, occurUbCons]
 
-            return3
+            return4
                 (DomainMSet r attrOut domInner)
                 (newDecl ++ declInner)
                 (newCons ++ map liftCons consInner)
+                repairStmts
 
         DomainFunction r attr innerDomainFr innerDomainTo -> do
 
@@ -472,8 +515,8 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             (iPat, i) <- quantifiedVar
             let liftCons c = [essence| forAll &iPat in &x . &c |]
-            (domFr, declFr, consFr) <- pgOnDomain [essence| &i[1] |] (nm `mappend` "_defined") innerDomainFr
-            (domTo, declTo, consTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_range") innerDomainTo
+            (domFr, declFr, consFr, repairStmtsFr) <- pgOnDomain [essence| &i[1] |] (nm `mappend` "_defined") innerDomainFr
+            (domTo, declTo, consTo, repairStmtsTo) <- pgOnDomain [essence| &i[2] |] (nm `mappend` "_range") innerDomainTo
 
             -- drop total, post constraint instead
             (attrOut, sizeLb, sizeUb, cardDomain) <-
@@ -606,10 +649,19 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                     , [consTo]
                     ]
 
-            return3
+            let
+                defined_max = Reference (nm `mappend` "_defined_max") Nothing
+                defined_min = Reference (nm `mappend` "_defined_min") Nothing
+                repairCons = [ [essence| &cardMin <= &cardMax |] ]
+                          ++ [ [essence| &defined_max - &defined_min + 1 >= &cardMax |]
+                             | isPartial
+                             ]
+
+            return4
                 (DomainFunction r attrOut domFr domTo)
                 (newDecl ++ concat [ declFr | isPartial ] ++ declTo ++ concat [ [declToBool] | isToBool ])
                 (newCons ++ map liftCons innerCons ++ concat [[consToBool] | isToBool ])
+                (repairCons ++ repairStmtsFr ++ repairStmtsTo)
 
         DomainRelation r attr innerDomains -> do
 
@@ -627,8 +679,8 @@ pgOnDomain x nm (expandDomainReference -> dom) =
             inners <- forM (zip [1..] innerDomains) $ \ (n, d) -> do
                 let nE = fromInt n
                 let ref = [essence| &i[&nE] |]
-                (d', decl, cons) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show n)) d
-                return (d', decl, map liftCons cons)
+                (d', decl, cons, repairStmts) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show n)) d
+                return (d', decl, map liftCons cons, map liftCons repairStmts)
 
             let maxIntN = maxIntTimes (genericLength innerDomains)
 
@@ -690,10 +742,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             newCons <- concat <$> sequence [cardinalityCons, sizeLbCons, sizeUbCons]
 
-            return3
-                (DomainRelation r attrOut (map fst3 inners))
-                (newDecl ++ concatMap snd3 inners)
-                (newCons ++ concatMap thd3 inners)
+            return4
+                (DomainRelation r attrOut (map fst4 inners))
+                (newDecl ++ concatMap snd4 inners)
+                (newCons ++ concatMap thd4 inners)
+                (concatMap fourth4 inners)
 
         _ -> userErr1 $ "Unhandled domain:" <++> vcat [ pretty dom
                                                       , pretty (show dom)
@@ -702,8 +755,11 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
 -- helper functions
 
-return3 :: Monad m => a -> b -> c -> m (a,b,c)
-return3 x y z = return (x,y,z)
+return3 :: Monad m => a -> b -> c -> m (a,b,c,[d])
+return3 x y z = return (x,y,z,[])
+
+return4 :: Monad m => a -> b -> c -> d -> m (a,b,c,d)
+return4 x y z w = return (x,y,z,w)
 
 minInt :: Expression
 minInt = Reference "MININT" Nothing

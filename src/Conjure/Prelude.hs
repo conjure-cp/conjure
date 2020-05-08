@@ -25,6 +25,7 @@ module Conjure.Prelude
     , decodeFromFile
     , RandomM(..)
     , fst3, snd3, thd3
+    , fst4, snd4, thd4, fourth4
     , (|>)
     , allNats
     , jsonOptions
@@ -340,6 +341,18 @@ snd3 (_,b,_) = b
 
 thd3 :: (a,b,c) -> c
 thd3 (_,_,c) = c
+
+fst4 :: (a,b,c,d) -> a
+fst4 (a,_,_,_) = a
+
+snd4 :: (a,b,c,d) -> b
+snd4 (_,b,_,_) = b
+
+thd4 :: (a,b,c,d) -> c
+thd4 (_,_,c,_) = c
+
+fourth4 :: (a,b,c,d) -> d
+fourth4 (_,_,_,d) = d
 
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)

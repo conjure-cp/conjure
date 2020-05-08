@@ -169,10 +169,15 @@ mainWithArgs SymmetryDetection{..} = do
     model <- readModelFromFile essence
     outputVarSymBreaking jsonFilePath model
 mainWithArgs ParameterGenerator{..} = do
-    when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
     model <- readModelFromFile essence
-    (output, classes) <- runNameGen () $ parameterGenerator minInt maxInt model
-    writeModel lineWidth outputFormat (Just essenceOut) output
+    ((genModel, repairModel), classes) <- runNameGen () $ parameterGenerator minInt maxInt model
+
+    let genModelOut = dropExtension essence ++ "-instanceGenerator.essence"
+    writeModel lineWidth outputFormat (Just genModelOut) genModel
+
+    let repairModelOut = dropExtension essence ++ "-instanceRepair.essence"
+    writeModel lineWidth outputFormat (Just repairModelOut) repairModel
+
     let
         toIrace nm lb ub _ | lb == ub =
             pretty nm <+>
@@ -186,9 +191,9 @@ mainWithArgs ParameterGenerator{..} = do
 
         essenceOutFileContents = render lineWidth $ vcat
             [ toIrace nm lb ub (lookup nm classes)
-            | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
+            | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
-    liftIO $ writeFile (essenceOut ++ ".irace") (essenceOutFileContents ++ "\n")
+    liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=

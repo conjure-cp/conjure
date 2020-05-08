@@ -182,7 +182,6 @@ data UI
         }
     | ParameterGenerator
         { essence                    :: FilePath
-        , essenceOut                 :: FilePath
         , minInt                     :: Integer
         , maxInt                     :: Integer
         , logLevel                   :: LogLevel
@@ -1205,14 +1204,6 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , essenceOut
-            = def
-            &= typ "ESSENCE_FILE"
-            &= typFile
-            &= name "essence-out"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Output file path."
         , minInt
             = 0
             &= typ "INT"
