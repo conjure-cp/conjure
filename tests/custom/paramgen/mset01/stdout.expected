@@ -1,5 +1,5 @@
-$ conjure parameter-generator problem.essence --essence-out problem-gen.essence
-File: problem-gen.essence
+$ conjure parameter-generator problem.essence
+File: problem-instanceGenerator.essence
 language Essence 1.3
 
 given a_min: int(1..10)
@@ -75,7 +75,7 @@ such that f = g intersect h
 --------------------
 
 
-File: problem-gen.essence.irace
+File: problem-instanceGenerator.essence.irace
 a_min "-a_min " i (1, 10)
 a_max "-a_max " i (1, 10)
 b_min "-b_min " i (1, 10)
@@ -102,8 +102,76 @@ h_inner_max "-h_inner_max " i (1, 10)
 --------------------
 
 
-$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
-File: problem-gen.essence
+File: problem-instanceRepair.essence
+language Essence 1.3
+
+given a_min: int(1..10)
+given a_max: int(1..10)
+find repaired_a_min: int(1..10)
+find repaired_a_max: int(1..10)
+such that repaired_a_min <= repaired_a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
+find repaired_b_min: int(1..10)
+find repaired_b_max: int(1..10)
+such that repaired_b_min <= repaired_b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
+find repaired_c_min: int(1..10)
+find repaired_c_max: int(1..10)
+such that repaired_c_min <= repaired_c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
+find repaired_s_min: int(1..10)
+find repaired_s_max: int(1..10)
+such that repaired_s_min <= repaired_s_max
+given t_min: int(1..10)
+given t_max: int(1..10)
+find repaired_t_min: int(1..10)
+find repaired_t_max: int(1..10)
+such that repaired_t_min <= repaired_t_max
+given f_cardMin: int(0..100)
+given f_cardMax: int(0..100)
+given f_inner_min: int(1..10)
+given f_inner_max: int(1..10)
+find repaired_f_cardMin: int(0..100)
+find repaired_f_cardMax: int(0..100)
+find repaired_f_inner_min: int(1..10)
+find repaired_f_inner_max: int(1..10)
+such that repaired_f_inner_min <= repaired_f_inner_max
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_inner_min: int(1..10)
+given g_inner_max: int(1..10)
+find repaired_g_cardMin: int(1..10)
+find repaired_g_cardMax: int(1..10)
+find repaired_g_inner_min: int(1..10)
+find repaired_g_inner_max: int(1..10)
+such that repaired_g_inner_min <= repaired_g_inner_max
+given h_cardMin: int(1..100)
+given h_cardMax: int(1..100)
+given h_inner_min: int(1..10)
+given h_inner_max: int(1..10)
+find repaired_h_cardMin: int(1..100)
+find repaired_h_cardMax: int(1..100)
+find repaired_h_inner_min: int(1..10)
+find repaired_h_inner_max: int(1..10)
+such that repaired_h_inner_min <= repaired_h_inner_max
+minimising
+    sum([|repaired_a_min - a_min|, |repaired_a_max - a_max|, |repaired_b_min - b_min|, |repaired_b_max - b_max|,
+         |repaired_c_min - c_min|, |repaired_c_max - c_max|, |repaired_s_min - s_min|, |repaired_s_max - s_max|,
+         |repaired_t_min - t_min|, |repaired_t_max - t_max|, |repaired_f_cardMin - f_cardMin|,
+         |repaired_f_cardMax - f_cardMax|, |repaired_f_inner_min - f_inner_min|, |repaired_f_inner_max - f_inner_max|,
+         |repaired_g_cardMin - g_cardMin|, |repaired_g_cardMax - g_cardMax|, |repaired_g_inner_min - g_inner_min|,
+         |repaired_g_inner_max - g_inner_max|, |repaired_h_cardMin - h_cardMin|, |repaired_h_cardMax - h_cardMax|,
+         |repaired_h_inner_min - h_inner_min|, |repaired_h_inner_max - h_inner_max|;
+             int(1..22)])
+
+--------------------
+
+
+$ conjure parameter-generator problem.essence --MININT -10 --MAXINT 50
+File: problem-instanceGenerator.essence
 language Essence 1.3
 
 given a_min: int(1..10)
@@ -179,7 +247,7 @@ such that f = g intersect h
 --------------------
 
 
-File: problem-gen.essence.irace
+File: problem-instanceGenerator.essence.irace
 a_min "-a_min " i (1, 10)
 a_max "-a_max " i (1, 10)
 b_min "-b_min " i (1, 10)
@@ -202,6 +270,74 @@ h_cardMin "-h_cardMin " i (1, 50)
 h_cardMax "-h_cardMax " i (1, 50)
 h_inner_min "-h_inner_min " i (1, 10)
 h_inner_max "-h_inner_max " i (1, 10)
+
+--------------------
+
+
+File: problem-instanceRepair.essence
+language Essence 1.3
+
+given a_min: int(1..10)
+given a_max: int(1..10)
+find repaired_a_min: int(1..10)
+find repaired_a_max: int(1..10)
+such that repaired_a_min <= repaired_a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
+find repaired_b_min: int(1..10)
+find repaired_b_max: int(1..10)
+such that repaired_b_min <= repaired_b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
+find repaired_c_min: int(1..10)
+find repaired_c_max: int(1..10)
+such that repaired_c_min <= repaired_c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
+find repaired_s_min: int(1..10)
+find repaired_s_max: int(1..10)
+such that repaired_s_min <= repaired_s_max
+given t_min: int(1..10)
+given t_max: int(1..10)
+find repaired_t_min: int(1..10)
+find repaired_t_max: int(1..10)
+such that repaired_t_min <= repaired_t_max
+given f_cardMin: int(-10..50)
+given f_cardMax: int(-10..50)
+given f_inner_min: int(1..10)
+given f_inner_max: int(1..10)
+find repaired_f_cardMin: int(-10..50)
+find repaired_f_cardMax: int(-10..50)
+find repaired_f_inner_min: int(1..10)
+find repaired_f_inner_max: int(1..10)
+such that repaired_f_inner_min <= repaired_f_inner_max
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_inner_min: int(1..10)
+given g_inner_max: int(1..10)
+find repaired_g_cardMin: int(1..10)
+find repaired_g_cardMax: int(1..10)
+find repaired_g_inner_min: int(1..10)
+find repaired_g_inner_max: int(1..10)
+such that repaired_g_inner_min <= repaired_g_inner_max
+given h_cardMin: int(1..50)
+given h_cardMax: int(1..50)
+given h_inner_min: int(1..10)
+given h_inner_max: int(1..10)
+find repaired_h_cardMin: int(1..50)
+find repaired_h_cardMax: int(1..50)
+find repaired_h_inner_min: int(1..10)
+find repaired_h_inner_max: int(1..10)
+such that repaired_h_inner_min <= repaired_h_inner_max
+minimising
+    sum([|repaired_a_min - a_min|, |repaired_a_max - a_max|, |repaired_b_min - b_min|, |repaired_b_max - b_max|,
+         |repaired_c_min - c_min|, |repaired_c_max - c_max|, |repaired_s_min - s_min|, |repaired_s_max - s_max|,
+         |repaired_t_min - t_min|, |repaired_t_max - t_max|, |repaired_f_cardMin - f_cardMin|,
+         |repaired_f_cardMax - f_cardMax|, |repaired_f_inner_min - f_inner_min|, |repaired_f_inner_max - f_inner_max|,
+         |repaired_g_cardMin - g_cardMin|, |repaired_g_cardMax - g_cardMax|, |repaired_g_inner_min - g_inner_min|,
+         |repaired_g_inner_max - g_inner_max|, |repaired_h_cardMin - h_cardMin|, |repaired_h_cardMax - h_cardMax|,
+         |repaired_h_inner_min - h_inner_min|, |repaired_h_inner_max - h_inner_max|;
+             int(1..22)])
 
 --------------------
 

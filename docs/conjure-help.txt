@@ -352,8 +352,12 @@
    Generate an Essence model describing the instances of the problem class defined in the input Essence model.
    An error will be printed if the model has infinitely many instances.
  
+ Integer bounds:
+      --MININT=INT                            The minimum integer value for the parameter values.
+                                              Default: 0
+      --MAXINT=INT                            The maximum integer value for the parameter values.
+                                              Default: 100
  Logging & Output:
-      --essence-out=FILE                      Output file path.
       --log-level=LOGLEVEL                    Log level.
       --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
                                                   plain: default
@@ -362,11 +366,6 @@
                                                   json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
- Integer bounds:
-      --MININT=INT                            The minimum integer value for the parameter values.
-                                              Default: 0
-      --MAXINT=INT                            The maximum integer value for the parameter values.
-                                              Default: 100
  General:
       --limit-time=INT                        Limit in seconds of real time.
  

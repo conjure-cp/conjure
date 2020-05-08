@@ -1,13 +1,12 @@
 
-rm -rf problem-gen.* problem-gen-test.solution conjure-output
+rm -rf problem-*.* conjure-output
 
-echo "$ conjure parameter-generator problem.essence --essence-out problem-gen.essence"
-conjure parameter-generator problem.essence --essence-out problem-gen.essence
-conjure modelling -ac problem-gen.essence
+echo "$ conjure parameter-generator problem.essence"
+conjure parameter-generator problem.essence
+conjure modelling -ac problem-instanceGenerator.essence
 # write a test.param file and uncomment the following to test more of the functionality...
-# conjure solve problem-gen.essence test.param
-# for file in problem-gen.* problem-gen-test.solution; do
-for file in problem-gen.*; do
+# conjure solve problem-instanceGenerator.essence test.param
+for file in problem-*.*; do
     echo "File: $file"
     cat $file
     echo ""
@@ -16,15 +15,14 @@ for file in problem-gen.*; do
     echo ""
 done
 
-rm -rf problem-gen.* problem-gen-test.solution conjure-output
+rm -rf problem-*.* conjure-output
 
-echo "$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50"
-conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
-conjure modelling -ac problem-gen.essence
+echo "$ conjure parameter-generator problem.essence --MININT -10 --MAXINT 50"
+conjure parameter-generator problem.essence --MININT -10 --MAXINT 50
+conjure modelling -ac problem-instanceGenerator.essence
 # write a test.param file and uncomment the following to test more of the functionality...
-# conjure solve problem-gen.essence test.param
-# for file in problem-gen.* problem-gen-test.solution; do
-for file in problem-gen.*; do
+# conjure solve problem-instanceGenerator.essence test.param
+for file in problem-*.*; do
     echo "File: $file"
     cat $file
     echo ""
@@ -33,4 +31,4 @@ for file in problem-gen.*; do
     echo ""
 done
 
-rm -rf problem-gen.* problem-gen-test.solution conjure-output
+rm -rf problem-*.* conjure-output

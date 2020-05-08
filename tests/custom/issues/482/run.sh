@@ -1,3 +1,3 @@
-conjure parameter-generator model.essence --essence-out gen.essence
-cat gen.essence gen.essence.irace
-rm -f gen.essence gen.essence.irace
+conjure parameter-generator model.essence
+cat model-instanceGenerator.essence model-instanceGenerator.essence.irace
+rm -f model-*.*

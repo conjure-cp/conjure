@@ -7,7 +7,7 @@ rm -rf conjure-output
 echo ""
 echo ""
 
-conjure parameter-generator barman.essence --essence-out generator.essence --MAXINT=30
-cat generator.essence*
-rm -f generator.essence*
+conjure parameter-generator barman.essence --MAXINT=30
+cat barman-instanceGenerator.essence*
+rm -f barman-instanceGenerator.essence*
 
