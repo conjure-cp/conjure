@@ -22,18 +22,19 @@ given f_defined_min: int(1..10)
 given f_defined_max: int(1..10)
 given f_range_min: int(1..20)
 given f_range_max: int(1..20)
-find repair_f_cardMin: int(1..20)
-find repair_f_cardMax: int(1..20)
-find repair_f_defined_min: int(1..10)
-find repair_f_defined_max: int(1..10)
-find repair_f_range_min: int(1..20)
-find repair_f_range_max: int(1..20)
+find repaired_f_cardMin: int(1..20)
+find repaired_f_cardMax: int(1..20)
+find repaired_f_defined_min: int(1..10)
+find repaired_f_defined_max: int(1..10)
+find repaired_f_range_min: int(1..20)
+find repaired_f_range_max: int(1..20)
 such that
-    repair_f_cardMin <= repair_f_cardMax,
-    repair_f_defined_max - repair_f_defined_min + 1 >= repair_f_cardMax,
-    repair_f_defined_min <= repair_f_defined_max,
-    repair_f_range_min <= repair_f_range_max
+    repaired_f_cardMin <= repaired_f_cardMax,
+    repaired_f_defined_max - repaired_f_defined_min + 1 >= repaired_f_cardMax,
+    repaired_f_defined_min <= repaired_f_defined_max,
+    repaired_f_range_min <= repaired_f_range_max
 minimising
-    sum([|repair_f_cardMin - f_cardMin|, |repair_f_cardMax - f_cardMax|, |repair_f_defined_min - f_defined_min|,
-         |repair_f_defined_max - f_defined_max|, |repair_f_range_min - f_range_min|, |repair_f_range_max - f_range_max|;
+    sum([|repaired_f_cardMin - f_cardMin|, |repaired_f_cardMax - f_cardMax|, |repaired_f_defined_min - f_defined_min|,
+         |repaired_f_defined_max - f_defined_max|, |repaired_f_range_min - f_range_min|,
+         |repaired_f_range_max - f_range_max|;
              int(1..6)])

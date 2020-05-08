@@ -45,21 +45,21 @@ parameterGenerator minIntValue maxIntValue model =
             out <- forM (mStatements m) $ \ st -> case st of
                 Declaration (FindOrGiven Given nm dom) -> do
                     (dom', genDecls, genCons, repairCons) <- pgOnDomain (Reference nm Nothing) nm dom
-                    let repairDecls = [ Declaration (FindOrGiven Find ("repair_" `mappend` genDeclNm) genDeclDom)
+                    let repairDecls = [ Declaration (FindOrGiven Find ("repaired_" `mappend` genDeclNm) genDeclDom)
                                       | Declaration (FindOrGiven Given genDeclNm genDeclDom) <- genDecls
                                       ]
                     let repairObjectiveParts =
                                 [ [essence| |&b-&a| |]
                                 | Declaration (FindOrGiven Given genDeclNm _) <- genDecls
                                 , let a = Reference genDeclNm Nothing
-                                , let b = Reference ("repair_" `mappend` genDeclNm) Nothing
+                                , let b = Reference ("repaired_" `mappend` genDeclNm) Nothing
                                 ]
                     let featureNames =
                                 [ genDeclNm
                                 | Declaration (FindOrGiven Given genDeclNm _) <- genDecls
                                 ]
                     let prependRepair (Reference n _)
-                            | n `elem` featureNames = Reference ("repair_" `mappend` n) Nothing
+                            | n `elem` featureNames = Reference ("repaired_" `mappend` n) Nothing
                         prependRepair x = x
                     return  ( genDecls
                                 ++ [ Declaration (FindOrGiven Find nm dom')
