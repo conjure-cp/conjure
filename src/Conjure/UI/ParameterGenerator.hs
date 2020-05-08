@@ -649,13 +649,25 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                     , [consTo]
                     ]
 
+            defined_minMaxBounds <-
+                case innerDomainFr of
+                    DomainInt{} -> do
+                        defined_minBound <- minOfIntDomain innerDomainFr
+                        defined_maxBound <- maxOfIntDomain innerDomainFr
+                        return [(defined_minBound, defined_maxBound)]
+                    _ -> return []
+
             let
                 defined_max = Reference (nm `mappend` "_defined_max") Nothing
                 defined_min = Reference (nm `mappend` "_defined_min") Nothing
                 repairCons = [ [essence| &cardMin <= &cardMax |] ]
                           ++ [ [essence| &defined_max - &defined_min + 1 >= &cardMax |]
-                             | isPartial
-                             ]
+                             | isPartial ]
+                          ++ concat [ [ [essence| &defined_min >= &defined_minBound |]
+                                      , [essence| &defined_max <= &defined_maxBound |]
+                                      ]
+                                    | (defined_minBound, defined_maxBound) <- defined_minMaxBounds
+                                    ]
 
             return4
                 (DomainFunction r attrOut domFr domTo)
