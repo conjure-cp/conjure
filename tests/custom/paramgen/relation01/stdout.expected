@@ -102,8 +102,8 @@ find repaired_r2_relation1_max: int(-2..10)
 find repaired_r2_relation2_min: int(-2..10)
 find repaired_r2_relation2_max: int(-2..10)
 such that
-    and([repaired_r2_relation1_min <= repaired_r2_relation1_max | q1 <- r2]),
-    and([repaired_r2_relation2_min <= repaired_r2_relation2_max | q1 <- r2])
+    and([repaired_r2_relation1_min <= repaired_r2_relation1_max | q1 <- repaired_r2]),
+    and([repaired_r2_relation2_min <= repaired_r2_relation2_max | q1 <- repaired_r2])
 given r3_cardMin: int(-2..1000)
 given r3_cardMax: int(-2..1000)
 given r3_relation1_min: int(-2..10)
@@ -121,9 +121,9 @@ find repaired_r3_relation2_max: int(-2..10)
 find repaired_r3_relation3_min: int(-2..10)
 find repaired_r3_relation3_max: int(-2..10)
 such that
-    and([repaired_r3_relation1_min <= repaired_r3_relation1_max | q2 <- r3]),
-    and([repaired_r3_relation2_min <= repaired_r3_relation2_max | q2 <- r3]),
-    and([repaired_r3_relation3_min <= repaired_r3_relation3_max | q2 <- r3])
+    and([repaired_r3_relation1_min <= repaired_r3_relation1_max | q2 <- repaired_r3]),
+    and([repaired_r3_relation2_min <= repaired_r3_relation2_max | q2 <- repaired_r3]),
+    and([repaired_r3_relation3_min <= repaired_r3_relation3_max | q2 <- repaired_r3])
 given r4_cardMin: int(-2..10000)
 given r4_cardMax: int(-2..10000)
 given r4_relation1_min: int(-2..10)
@@ -145,10 +145,10 @@ find repaired_r4_relation3_max: int(-2..10)
 find repaired_r4_relation4_min: int(-2..10)
 find repaired_r4_relation4_max: int(-2..10)
 such that
-    and([repaired_r4_relation1_min <= repaired_r4_relation1_max | q3 <- r4]),
-    and([repaired_r4_relation2_min <= repaired_r4_relation2_max | q3 <- r4]),
-    and([repaired_r4_relation3_min <= repaired_r4_relation3_max | q3 <- r4]),
-    and([repaired_r4_relation4_min <= repaired_r4_relation4_max | q3 <- r4])
+    and([repaired_r4_relation1_min <= repaired_r4_relation1_max | q3 <- repaired_r4]),
+    and([repaired_r4_relation2_min <= repaired_r4_relation2_max | q3 <- repaired_r4]),
+    and([repaired_r4_relation3_min <= repaired_r4_relation3_max | q3 <- repaired_r4]),
+    and([repaired_r4_relation4_min <= repaired_r4_relation4_max | q3 <- repaired_r4])
 minimising
     sum([|repaired_r2_cardMin - r2_cardMin|, |repaired_r2_cardMax - r2_cardMax|,
          |repaired_r2_relation1_min - r2_relation1_min|, |repaired_r2_relation1_max - r2_relation1_max|,

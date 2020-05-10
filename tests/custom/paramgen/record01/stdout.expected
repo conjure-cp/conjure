@@ -264,6 +264,11 @@ find repaired_init_onboard_range_max: int(-65536..65536)
 find repaired_init_total_fuel_used_range_min: int(-65536..65536)
 find repaired_init_total_fuel_used_range_max: int(-65536..65536)
 such that
+    repaired_init_fuel_range_min <= repaired_init_fuel_range_max,
+    repaired_init_distance_range_min <= repaired_init_distance_range_max,
+    repaired_init_capacity_range_min <= repaired_init_capacity_range_max,
+    repaired_init_onboard_range_min <= repaired_init_onboard_range_max,
+    repaired_init_total_fuel_used_range_min <= repaired_init_total_fuel_used_range_max
 given goal_at__cardMin: int(0..10201)
 given goal_at__cardMax: int(0..10201)
 given goal_at__defined_tuple1_min: int(0..100)
@@ -305,6 +310,20 @@ find repaired_goal_onboard_defined_max: int(0..100)
 find repaired_goal_onboard_range_min: int(-65536..65536)
 find repaired_goal_onboard_range_max: int(-65536..65536)
 such that
+    repaired_goal_at__cardMin <= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_max - repaired_goal_at__defined_min + 1 >= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
+    repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
+    repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_max - repaired_goal_in__defined_min + 1 >= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
+    repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
+    repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_max - repaired_goal_onboard_defined_min + 1 >= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_min >= repaired_minid_aircraft_min,
+    repaired_goal_onboard_defined_max <= repaired_maxid_aircraft_max,
+    repaired_goal_onboard_defined_min <= repaired_goal_onboard_defined_max,
+    repaired_goal_onboard_range_min <= repaired_goal_onboard_range_max
 minimising
     sum([|repaired_minid_aircraft_min - minid_aircraft_min|, |repaired_minid_aircraft_max - minid_aircraft_max|,
          |repaired_maxid_aircraft_min - maxid_aircraft_min|, |repaired_maxid_aircraft_max - maxid_aircraft_max|,
@@ -611,6 +630,11 @@ find repaired_init_onboard_range_max: int(-65536..65536)
 find repaired_init_total_fuel_used_range_min: int(-65536..65536)
 find repaired_init_total_fuel_used_range_max: int(-65536..65536)
 such that
+    repaired_init_fuel_range_min <= repaired_init_fuel_range_max,
+    repaired_init_distance_range_min <= repaired_init_distance_range_max,
+    repaired_init_capacity_range_min <= repaired_init_capacity_range_max,
+    repaired_init_onboard_range_min <= repaired_init_onboard_range_max,
+    repaired_init_total_fuel_used_range_min <= repaired_init_total_fuel_used_range_max
 given goal_at__cardMin: int(0..3721)
 given goal_at__cardMax: int(0..3721)
 given goal_at__defined_tuple1_min: int(-10..50)
@@ -652,6 +676,20 @@ find repaired_goal_onboard_defined_max: int(-10..50)
 find repaired_goal_onboard_range_min: int(-65536..65536)
 find repaired_goal_onboard_range_max: int(-65536..65536)
 such that
+    repaired_goal_at__cardMin <= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_max - repaired_goal_at__defined_min + 1 >= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
+    repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
+    repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_max - repaired_goal_in__defined_min + 1 >= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
+    repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
+    repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_max - repaired_goal_onboard_defined_min + 1 >= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_min >= repaired_minid_aircraft_min,
+    repaired_goal_onboard_defined_max <= repaired_maxid_aircraft_max,
+    repaired_goal_onboard_defined_min <= repaired_goal_onboard_defined_max,
+    repaired_goal_onboard_range_min <= repaired_goal_onboard_range_max
 minimising
     sum([|repaired_minid_aircraft_min - minid_aircraft_min|, |repaired_minid_aircraft_max - minid_aircraft_max|,
          |repaired_maxid_aircraft_min - maxid_aircraft_min|, |repaired_maxid_aircraft_max - maxid_aircraft_max|,

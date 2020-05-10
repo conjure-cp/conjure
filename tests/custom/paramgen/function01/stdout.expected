@@ -150,12 +150,7 @@ given f_range_min: int(1..100)
 given f_range_max: int(1..100)
 find repaired_f_range_min: int(1..100)
 find repaired_f_range_max: int(1..100)
-such that
-    f_cardMin <= f_cardMax,
-    f_defined_min >= a,
-    f_defined_max <= b,
-    f_defined_min <= f_defined_max,
-    repaired_f_range_min <= repaired_f_range_max
+such that repaired_f_range_min <= repaired_f_range_max
 given g_cardMin: int(1..10)
 given g_cardMax: int(1..10)
 given g_defined_min: int(1..10)
@@ -171,8 +166,8 @@ find repaired_g_range_max: int(1..100)
 such that
     repaired_g_cardMin <= repaired_g_cardMax,
     repaired_g_defined_max - repaired_g_defined_min + 1 >= repaired_g_cardMax,
-    repaired_g_defined_min >= a,
-    repaired_g_defined_max <= b,
+    repaired_g_defined_min >= repaired_a_min,
+    repaired_g_defined_max <= repaired_b_max,
     repaired_g_defined_min <= repaired_g_defined_max,
     repaired_g_range_min <= repaired_g_range_max
 given h_cardMin: int(1..100)
@@ -190,8 +185,8 @@ find repaired_h_range_max: int(1..100)
 such that
     repaired_h_cardMin <= repaired_h_cardMax,
     repaired_h_defined_max - repaired_h_defined_min + 1 >= repaired_h_cardMax,
-    repaired_h_defined_min >= a,
-    repaired_h_defined_max <= b,
+    repaired_h_defined_min >= repaired_a_min,
+    repaired_h_defined_max <= repaired_b_max,
     repaired_h_defined_min <= repaired_h_defined_max,
     repaired_h_range_min <= repaired_h_range_max
 given k_cardMin: int(0..10)
@@ -209,8 +204,8 @@ find repaired_k_range_max: int(1..100)
 such that
     repaired_k_cardMin <= repaired_k_cardMax,
     repaired_k_defined_max - repaired_k_defined_min + 1 >= repaired_k_cardMax,
-    repaired_k_defined_min >= a,
-    repaired_k_defined_max <= b,
+    repaired_k_defined_min >= repaired_a_min,
+    repaired_k_defined_max <= repaired_b_max,
     repaired_k_defined_min <= repaired_k_defined_max,
     repaired_k_range_min <= repaired_k_range_max
 minimising
@@ -382,12 +377,7 @@ given f_range_min: int(1..50)
 given f_range_max: int(1..50)
 find repaired_f_range_min: int(1..50)
 find repaired_f_range_max: int(1..50)
-such that
-    f_cardMin <= f_cardMax,
-    f_defined_min >= a,
-    f_defined_max <= b,
-    f_defined_min <= f_defined_max,
-    repaired_f_range_min <= repaired_f_range_max
+such that repaired_f_range_min <= repaired_f_range_max
 given g_cardMin: int(1..10)
 given g_cardMax: int(1..10)
 given g_defined_min: int(1..10)
@@ -403,8 +393,8 @@ find repaired_g_range_max: int(1..50)
 such that
     repaired_g_cardMin <= repaired_g_cardMax,
     repaired_g_defined_max - repaired_g_defined_min + 1 >= repaired_g_cardMax,
-    repaired_g_defined_min >= a,
-    repaired_g_defined_max <= b,
+    repaired_g_defined_min >= repaired_a_min,
+    repaired_g_defined_max <= repaired_b_max,
     repaired_g_defined_min <= repaired_g_defined_max,
     repaired_g_range_min <= repaired_g_range_max
 given h_cardMin: int(1..50)
@@ -422,8 +412,8 @@ find repaired_h_range_max: int(1..50)
 such that
     repaired_h_cardMin <= repaired_h_cardMax,
     repaired_h_defined_max - repaired_h_defined_min + 1 >= repaired_h_cardMax,
-    repaired_h_defined_min >= a,
-    repaired_h_defined_max <= b,
+    repaired_h_defined_min >= repaired_a_min,
+    repaired_h_defined_max <= repaired_b_max,
     repaired_h_defined_min <= repaired_h_defined_max,
     repaired_h_range_min <= repaired_h_range_max
 given k_cardMin: int(0..10)
@@ -441,8 +431,8 @@ find repaired_k_range_max: int(1..50)
 such that
     repaired_k_cardMin <= repaired_k_cardMax,
     repaired_k_defined_max - repaired_k_defined_min + 1 >= repaired_k_cardMax,
-    repaired_k_defined_min >= a,
-    repaired_k_defined_max <= b,
+    repaired_k_defined_min >= repaired_a_min,
+    repaired_k_defined_max <= repaired_b_max,
     repaired_k_defined_min <= repaired_k_defined_max,
     repaired_k_range_min <= repaired_k_range_max
 minimising
