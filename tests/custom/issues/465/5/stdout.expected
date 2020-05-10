@@ -1,0 +1,36 @@
+language Essence 1.3
+
+given r_f_cardMin: int(0..10)
+given r_f_cardMax: int(0..10)
+given r_f_defined_min: int(1..10)
+given r_f_defined_max: int(1..10)
+given r_f_percentage: int(0..100)
+find r: record {f : function (maxSize 20) int(1..10) --> bool}
+such that
+    |r[f]| >= r_f_cardMin /\ |r[f]| <= r_f_cardMax,
+    and([q1[1] >= r_f_defined_min | q1 <- r[f]]),
+    and([q1[1] <= r_f_defined_max | q1 <- r[f]]),
+    sum([toInt(q1[2]) | q1 <- r[f]]) = r_f_percentage * |defined(r[f])| / 100
+language Essence 1.3
+
+given r_f_cardMin: int(0..10)
+given r_f_cardMax: int(0..10)
+given r_f_defined_min: int(1..10)
+given r_f_defined_max: int(1..10)
+given r_f_percentage: int(0..100)
+find repaired_r_f_cardMin: int(0..10)
+find repaired_r_f_cardMax: int(0..10)
+find repaired_r_f_defined_min: int(1..10)
+find repaired_r_f_defined_max: int(1..10)
+find repaired_r_f_percentage: int(0..100)
+such that
+    repaired_r_f_cardMin <= repaired_r_f_cardMax,
+    repaired_r_f_defined_max - repaired_r_f_defined_min + 1 >= repaired_r_f_cardMax,
+    repaired_r_f_defined_min >= 1,
+    repaired_r_f_defined_max <= 10,
+    repaired_r_f_defined_min <= repaired_r_f_defined_max
+minimising
+    sum([|repaired_r_f_cardMin - r_f_cardMin|, |repaired_r_f_cardMax - r_f_cardMax|,
+         |repaired_r_f_defined_min - r_f_defined_min|, |repaired_r_f_defined_max - r_f_defined_max|,
+         |repaired_r_f_percentage - r_f_percentage|;
+             int(1..5)])
