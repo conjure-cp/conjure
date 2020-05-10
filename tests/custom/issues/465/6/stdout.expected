@@ -9,5 +9,4 @@ language Essence 1.3
 
 given f1_percentage: int(0..100)
 find repaired_f1_percentage: int(0..100)
-such that f1_defined_min <= f1_defined_max
 minimising sum([|repaired_f1_percentage - f1_percentage|; int(1)])

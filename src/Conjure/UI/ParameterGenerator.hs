@@ -62,12 +62,11 @@ parameterGenerator minIntValue maxIntValue model =
                             | n `elem` featureNames = Reference ("repaired_" `mappend` n) Nothing
                         prependRepair x = x
                     return  ( genDecls
-                                ++ [ Declaration (FindOrGiven Find nm dom')
-                                   , SuchThat genCons
-                                   ]
+                                ++ [ Declaration (FindOrGiven Find nm dom') ]
+                                ++ [ SuchThat genCons | not (null genCons) ]
                             , genDecls
                                 ++ repairDecls
-                                ++ [SuchThat (map (transform prependRepair) repairCons)]
+                                ++ [SuchThat (map (transform prependRepair) repairCons) | not (null repairCons)]
                             , repairObjectiveParts
                             )
                 Declaration (FindOrGiven Find  _  _  ) -> return ([], [], [])
@@ -683,7 +682,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 (DomainFunction r attrOut domFr domTo)
                 (newDecl ++ concat [ declFr | isPartial ] ++ declTo ++ concat [ [declToBool] | isToBool ])
                 (newCons ++ map liftCons innerCons ++ concat [[consToBool] | isToBool ])
-                (repairCons ++ repairStmtsFr ++ repairStmtsTo)
+                (repairCons ++ concat [ repairStmtsFr | isPartial ] ++ repairStmtsTo)
 
         DomainRelation r attr innerDomains -> do
 
