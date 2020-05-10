@@ -178,7 +178,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
     case dom of
 
-        DomainBool -> return3 dom [] []
+        DomainBool -> return4 dom [] [] []
 
         DomainInt t _ -> do
             lbX <- minOfIntDomain dom
@@ -219,20 +219,22 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 let iE = Reference nmRec Nothing
                 let ref = [essence| &x[&iE] |]
                 pgOnDomain ref (nm `mappend` (Name $ pack $ "_" ++ show (pretty nmRec))) domRec
-            return3
+            return4
                 (DomainRecord (zip (map fst ds) (map fst4 inners)))
                 (concatMap snd4 inners)
                 (concatMap thd4 inners)
+                (concatMap fourth4 inners)
 
         DomainTuple ds -> do
             inners <- forM (zip [1..] ds) $ \ (i, d) -> do
                 let iE = fromInt i
                 let ref = [essence| &x[&iE] |]
                 pgOnDomain ref (nm `mappend` (Name $ pack $ "_tuple" ++ show i)) d
-            return3
+            return4
                 (DomainTuple (map fst4 inners))
                 (concatMap snd4 inners)
                 (concatMap thd4 inners)
+                (concatMap fourth4 inners)
 
         DomainMatrix indexDomain innerDomain | categoryOf indexDomain <= CatConstant -> do
             (iPat, i) <- quantifiedVar
@@ -654,19 +656,27 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                     DomainInt{} -> do
                         defined_minBound <- minOfIntDomain innerDomainFr
                         defined_maxBound <- maxOfIntDomain innerDomainFr
-                        return [(defined_minBound, defined_maxBound)]
+                        return [ ( case defined_minBound of
+                                    Reference n _ -> Reference (n `mappend` "_min") Nothing
+                                    _ -> defined_minBound
+                                 , case defined_maxBound of
+                                    Reference n _ -> Reference (n `mappend` "_max") Nothing
+                                    _ -> defined_maxBound
+                                 ) ]
                     _ -> return []
 
             let
                 defined_max = Reference (nm `mappend` "_defined_max") Nothing
                 defined_min = Reference (nm `mappend` "_defined_min") Nothing
-                repairCons = [ [essence| &cardMin <= &cardMax |] ]
+                repairCons = [ [essence| &cardMin <= &cardMax |]
+                             | isPartial ]
                           ++ [ [essence| &defined_max - &defined_min + 1 >= &cardMax |]
                              | isPartial ]
                           ++ concat [ [ [essence| &defined_min >= &defined_minBound |]
                                       , [essence| &defined_max <= &defined_maxBound |]
                                       ]
                                     | (defined_minBound, defined_maxBound) <- defined_minMaxBounds
+                                    , isPartial
                                     ]
 
             return4
@@ -766,9 +776,6 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
 
 -- helper functions
-
-return3 :: Monad m => a -> b -> c -> m (a,b,c,[d])
-return3 x y z = return (x,y,z,[])
 
 return4 :: Monad m => a -> b -> c -> d -> m (a,b,c,d)
 return4 x y z w = return (x,y,z,w)

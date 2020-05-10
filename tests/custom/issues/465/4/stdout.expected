@@ -51,8 +51,8 @@ find repaired_f_percentage: int(0..100)
 such that
     repaired_f_cardMin <= repaired_f_cardMax,
     repaired_f_defined_max - repaired_f_defined_min + 1 >= repaired_f_cardMax,
-    repaired_f_defined_min >= m1,
-    repaired_f_defined_max <= m2,
+    repaired_f_defined_min >= m1_min,
+    repaired_f_defined_max <= m2_max,
     repaired_f_defined_min <= repaired_f_defined_max
 minimising
     sum([|repaired_m1_min - m1_min|, |repaired_m1_max - m1_max|, |repaired_m2_min - m2_min|, |repaired_m2_max - m2_max|,

@@ -55,8 +55,8 @@ find repaired_f_range_max: int(1..20)
 such that
     repaired_f_cardMin <= repaired_f_cardMax,
     repaired_f_defined_max - repaired_f_defined_min + 1 >= repaired_f_cardMax,
-    repaired_f_defined_min >= m1,
-    repaired_f_defined_max <= m2,
+    repaired_f_defined_min >= m1_min,
+    repaired_f_defined_max <= m2_max,
     repaired_f_defined_min <= repaired_f_defined_max,
     repaired_f_range_min <= repaired_f_range_max
 minimising
