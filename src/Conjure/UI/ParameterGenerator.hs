@@ -54,12 +54,7 @@ parameterGenerator minIntValue maxIntValue model =
                                 , let a = Reference genDeclNm Nothing
                                 , let b = Reference ("repaired_" `mappend` genDeclNm) Nothing
                                 ]
-                    let featureNames =
-                                [ genDeclNm
-                                | Declaration (FindOrGiven Given genDeclNm _) <- genDecls
-                                ]
-                    let prependRepair (Reference n _)
-                            | n `elem` featureNames = Reference ("repaired_" `mappend` n) Nothing
+                    let prependRepair (Reference n _) = Reference ("repaired_" `mappend` n) Nothing
                         prependRepair x = x
                     return  ( genDecls
                                 ++ [ Declaration (FindOrGiven Find nm dom') ]
@@ -650,17 +645,17 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                     , [consTo]
                     ]
 
+            let
+                appendToReferences suffix (Reference n _) = Reference (n `mappend` suffix) Nothing
+                appendToReferences _ n = n
+
             defined_minMaxBounds <-
                 case innerDomainFr of
                     DomainInt{} -> do
                         defined_minBound <- minOfIntDomain innerDomainFr
                         defined_maxBound <- maxOfIntDomain innerDomainFr
-                        return [ ( case defined_minBound of
-                                    Reference n _ -> Reference (n `mappend` "_min") Nothing
-                                    _ -> defined_minBound
-                                 , case defined_maxBound of
-                                    Reference n _ -> Reference (n `mappend` "_max") Nothing
-                                    _ -> defined_maxBound
+                        return [ ( transform (appendToReferences "_min") defined_minBound
+                                 , transform (appendToReferences "_max") defined_maxBound
                                  ) ]
                     _ -> return []
 
