@@ -311,11 +311,23 @@ find repaired_goal_onboard_range_min: int(-65536..65536)
 find repaired_goal_onboard_range_max: int(-65536..65536)
 such that
     repaired_goal_at__cardMin <= repaired_goal_at__cardMax,
-    repaired_goal_at__defined_max - repaired_goal_at__defined_min + 1 >= repaired_goal_at__cardMax,
+    (repaired_goal_at__defined_tuple1_max - repaired_goal_at__defined_tuple1_min + 1) *
+    (repaired_goal_at__defined_tuple2_max - repaired_goal_at__defined_tuple2_min + 1)
+    >= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_tuple1_min >= repaired_minid_aircraft_min,
+    repaired_goal_at__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_at__defined_tuple2_min >= repaired_minid_city_min,
+    repaired_goal_at__defined_tuple2_max <= repaired_maxid_city_max,
     repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
     repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
     repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
-    repaired_goal_in__defined_max - repaired_goal_in__defined_min + 1 >= repaired_goal_in__cardMax,
+    (repaired_goal_in__defined_tuple1_max - repaired_goal_in__defined_tuple1_min + 1) *
+    (repaired_goal_in__defined_tuple2_max - repaired_goal_in__defined_tuple2_min + 1)
+    >= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_tuple1_min >= repaired_minid_person_min,
+    repaired_goal_in__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_in__defined_tuple2_min >= repaired_minid_aircraft_min,
+    repaired_goal_in__defined_tuple2_max <= repaired_maxid_aircraft_max,
     repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
     repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
     repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
@@ -677,11 +689,23 @@ find repaired_goal_onboard_range_min: int(-65536..65536)
 find repaired_goal_onboard_range_max: int(-65536..65536)
 such that
     repaired_goal_at__cardMin <= repaired_goal_at__cardMax,
-    repaired_goal_at__defined_max - repaired_goal_at__defined_min + 1 >= repaired_goal_at__cardMax,
+    (repaired_goal_at__defined_tuple1_max - repaired_goal_at__defined_tuple1_min + 1) *
+    (repaired_goal_at__defined_tuple2_max - repaired_goal_at__defined_tuple2_min + 1)
+    >= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_tuple1_min >= repaired_minid_aircraft_min,
+    repaired_goal_at__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_at__defined_tuple2_min >= repaired_minid_city_min,
+    repaired_goal_at__defined_tuple2_max <= repaired_maxid_city_max,
     repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
     repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
     repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
-    repaired_goal_in__defined_max - repaired_goal_in__defined_min + 1 >= repaired_goal_in__cardMax,
+    (repaired_goal_in__defined_tuple1_max - repaired_goal_in__defined_tuple1_min + 1) *
+    (repaired_goal_in__defined_tuple2_max - repaired_goal_in__defined_tuple2_min + 1)
+    >= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_tuple1_min >= repaired_minid_person_min,
+    repaired_goal_in__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_in__defined_tuple2_min >= repaired_minid_aircraft_min,
+    repaired_goal_in__defined_tuple2_max <= repaired_maxid_aircraft_max,
     repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
     repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
     repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
