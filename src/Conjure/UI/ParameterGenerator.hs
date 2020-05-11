@@ -649,29 +649,62 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 appendToReferences suffix (Reference n _) = Reference (n `mappend` suffix) Nothing
                 appendToReferences _ n = n
 
-            defined_minMaxBounds <-
-                case innerDomainFr of
-                    DomainInt{} -> do
-                        defined_minBound <- minOfIntDomain innerDomainFr
-                        defined_maxBound <- maxOfIntDomain innerDomainFr
-                        return [ ( transform (appendToReferences "_min") defined_minBound
-                                 , transform (appendToReferences "_max") defined_maxBound
-                                 ) ]
-                    _ -> return []
-
             let
-                defined_max = Reference (nm `mappend` "_defined_max") Nothing
-                defined_min = Reference (nm `mappend` "_defined_min") Nothing
-                repairCons = [ [essence| &cardMin <= &cardMax |]
-                             | isPartial ]
-                          ++ [ [essence| &defined_max - &defined_min + 1 >= &cardMax |]
-                             | isPartial ]
-                          ++ concat [ [ [essence| &defined_min >= &defined_minBound |]
-                                      , [essence| &defined_max <= &defined_maxBound |]
-                                      ]
-                                    | (defined_minBound, defined_maxBound) <- defined_minMaxBounds
-                                    , isPartial
-                                    ]
+
+                definedBoundCons n d = 
+                    case d of
+                        DomainInt{} -> do
+                            let
+                                defined_max = Reference (n `mappend` "_max") Nothing
+                                defined_min = Reference (n `mappend` "_min") Nothing
+                            defined_maxBound <- transform (appendToReferences "_max") <$> maxOfIntDomain d
+                            defined_minBound <- transform (appendToReferences "_min") <$> minOfIntDomain d
+                            return [ [essence| &defined_min >= &defined_minBound |]
+                                   , [essence| &defined_max <= &defined_maxBound |]
+                                   ]
+                        DomainTuple ds ->
+                            concatForM (zip allNats ds) $ \ (n', d') ->
+                                definedBoundCons
+                                    (mconcat [n, "_tuple", Name (stringToText $ show n')])
+                                    d'
+                        _ -> return []
+
+                definedGtCard =
+                    case innerDomainFr of
+                        DomainTuple ds -> 
+                            let
+                                defined_min n =
+                                    Reference
+                                        (mconcat [nm, "_defined_tuple", Name (stringToText $ show n), "_min"])
+                                        Nothing
+                                defined_max n =
+                                    Reference
+                                        (mconcat [nm, "_defined_tuple", Name (stringToText $ show n), "_max"])
+                                        Nothing
+                                one n = let minn = defined_min n
+                                            maxn = defined_max n
+                                        in  [essence| &maxn - &minn + 1 |]
+                                multiplied = make opProduct $ fromList $ map one [1..length ds]
+                            in
+                                [essence| &multiplied >= &cardMax |]
+                        _ ->
+                            let
+                                defined_max = Reference (nm `mappend` "_defined_max") Nothing
+                                defined_min = Reference (nm `mappend` "_defined_min") Nothing
+                            in
+                                [essence| &defined_max - &defined_min + 1 >= &cardMax |]
+
+            definedBoundCons' <- definedBoundCons (nm `mappend` "_defined") innerDomainFr
+
+            let repairCons = [ [essence| &cardMin <= &cardMax |] | isPartial ]
+                          ++ [ definedGtCard | isPartial ]
+                          ++ concat [ definedBoundCons' | isPartial ]
+                          -- ++ concat [ [ [essence| &defined_min >= &defined_minBound |]
+                          --             , [essence| &defined_max <= &defined_maxBound |]
+                          --             ]
+                          --           | (defined_minBound, defined_maxBound) <- defined_minMaxBounds
+                          --           , isPartial
+                          --           ]
 
             return4
                 (DomainFunction r attrOut domFr domTo)
