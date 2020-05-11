@@ -790,7 +790,7 @@ minOfIntDomain (DomainInt _ rs) = do
     case xs of
         []  -> return minInt
         [x] -> return x
-        _   -> return $ make opMax $ fromList xs
+        _   -> return $ make opMin $ fromList xs
 minOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> vcat [pretty d, pretty (show d)]
 
 minOfIntRange :: Monad m => Range Expression -> m Expression
@@ -834,7 +834,7 @@ maxOfIntDomain (DomainInt _ rs) = do
     case xs of
         []  -> return maxInt
         [x] -> return x
-        _   -> return $ make opMin $ fromList xs
+        _   -> return $ make opMax $ fromList xs
 maxOfIntDomain d = userErr1 $ "Expected integer domain, but got:" <++> pretty d
 
 maxOfIntRange :: Monad m => Range Expression -> m Expression
