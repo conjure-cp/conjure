@@ -1,12 +1,17 @@
 language Essence 1.3
 
-given f1_percentage: int(0..100)
+given f1_percentage_min: int(0..100)
+given f1_percentage_max: int(0..100)
 find f1: function int(1..10) --> bool
 such that
     and([q1 >= 1 /\ q1 <= 10 <-> q1 in defined(f1) | q1 : int(1..10)]),
-    sum([toInt(q1[2]) | q1 <- f1]) = f1_percentage * |defined(f1)| / 100
+    sum([toInt(q1[2]) | q1 <- f1]) <= f1_percentage_max * |defined(f1)| / 100 /\
+    sum([toInt(q1[2]) | q1 <- f1]) >= f1_percentage_min * |defined(f1)| / 100
 language Essence 1.3
 
-given f1_percentage: int(0..100)
-find repaired_f1_percentage: int(0..100)
-minimising sum([|repaired_f1_percentage - f1_percentage|; int(1)])
+given f1_percentage_min: int(0..100)
+given f1_percentage_max: int(0..100)
+find repaired_f1_percentage_min: int(0..100)
+find repaired_f1_percentage_max: int(0..100)
+such that repaired_f1_percentage_max >= repaired_f1_percentage_min
+minimising |repaired_f1_percentage_min - f1_percentage_min| + |repaired_f1_percentage_max - f1_percentage_max|

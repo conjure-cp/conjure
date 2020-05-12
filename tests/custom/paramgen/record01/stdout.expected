@@ -38,8 +38,10 @@ find maxid_city: int(0..100)
 such that
     maxid_city >= maxid_city_min,
     maxid_city <= maxid_city_max
-given init_at__percentage: int(0..100)
-given init_in__percentage: int(0..100)
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
 given init_fuel_range_min: int(-65536..65536)
 given init_fuel_range_max: int(-65536..65536)
 given init_distance_range_min: int(-65536..65536)
@@ -61,11 +63,13 @@ such that
     and([q1[1] >= minid_aircraft /\ q1[1] <= maxid_person /\ (q1[2] >= minid_city /\ q1[2] <= maxid_city) <->
          q1 in defined(init[at_])
              | q1 : (int(0..100), int(0..100))]),
-    sum([toInt(q1[2]) | q1 <- init[at_]]) = init_at__percentage * |defined(init[at_])| / 100,
+    sum([toInt(q1[2]) | q1 <- init[at_]]) <= init_at__percentage_max * |defined(init[at_])| / 100 /\
+    sum([toInt(q1[2]) | q1 <- init[at_]]) >= init_at__percentage_min * |defined(init[at_])| / 100,
     and([q2[1] >= minid_person /\ q2[1] <= maxid_person /\ (q2[2] >= minid_aircraft /\ q2[2] <= maxid_aircraft) <->
          q2 in defined(init[in_])
              | q2 : (int(0..100), int(0..100))]),
-    sum([toInt(q2[2]) | q2 <- init[in_]]) = init_in__percentage * |defined(init[in_])| / 100,
+    sum([toInt(q2[2]) | q2 <- init[in_]]) <= init_in__percentage_max * |defined(init[in_])| / 100 /\
+    sum([toInt(q2[2]) | q2 <- init[in_]]) >= init_in__percentage_min * |defined(init[in_])| / 100,
     and([q3 >= minid_aircraft /\ q3 <= maxid_aircraft <-> q3 in defined(init[fuel]) | q3 : int(0..100)]),
     and([q3[2] >= init_fuel_range_min | q3 <- init[fuel]]),
     and([q3[2] <= init_fuel_range_max | q3 <- init[fuel]]),
@@ -106,14 +110,16 @@ given goal_at__defined_tuple1_min: int(0..100)
 given goal_at__defined_tuple1_max: int(0..100)
 given goal_at__defined_tuple2_min: int(0..100)
 given goal_at__defined_tuple2_max: int(0..100)
-given goal_at__percentage: int(0..100)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
 given goal_in__cardMin: int(0..10201)
 given goal_in__cardMax: int(0..10201)
 given goal_in__defined_tuple1_min: int(0..100)
 given goal_in__defined_tuple1_max: int(0..100)
 given goal_in__defined_tuple2_min: int(0..100)
 given goal_in__defined_tuple2_max: int(0..100)
-given goal_in__percentage: int(0..100)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
 given goal_onboard_cardMin: int(0..101)
 given goal_onboard_cardMax: int(0..101)
 given goal_onboard_defined_min: int(0..100)
@@ -134,7 +140,8 @@ such that
     and([q8[1, 2] <= goal_at__defined_tuple2_max | q8 <- goal[at_]]),
     and([q8[1, 2] >= minid_city | q8 <- goal[at_]]),
     and([q8[1, 2] <= maxid_city | q8 <- goal[at_]]),
-    sum([toInt(q8[2]) | q8 <- goal[at_]]) = goal_at__percentage * |defined(goal[at_])| / 100,
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) <= goal_at__percentage_max * |defined(goal[at_])| / 100 /\
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) >= goal_at__percentage_min * |defined(goal[at_])| / 100,
     |goal[in_]| >= goal_in__cardMin /\ |goal[in_]| <= goal_in__cardMax,
     and([q9[1, 1] >= goal_in__defined_tuple1_min | q9 <- goal[in_]]),
     and([q9[1, 1] <= goal_in__defined_tuple1_max | q9 <- goal[in_]]),
@@ -144,7 +151,8 @@ such that
     and([q9[1, 2] <= goal_in__defined_tuple2_max | q9 <- goal[in_]]),
     and([q9[1, 2] >= minid_aircraft | q9 <- goal[in_]]),
     and([q9[1, 2] <= maxid_aircraft | q9 <- goal[in_]]),
-    sum([toInt(q9[2]) | q9 <- goal[in_]]) = goal_in__percentage * |defined(goal[in_])| / 100,
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) <= goal_in__percentage_max * |defined(goal[in_])| / 100 /\
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) >= goal_in__percentage_min * |defined(goal[in_])| / 100,
     |goal[onboard]| >= goal_onboard_cardMin /\ |goal[onboard]| <= goal_onboard_cardMax,
     and([q10[1] >= goal_onboard_defined_min | q10 <- goal[onboard]]),
     and([q10[1] <= goal_onboard_defined_max | q10 <- goal[onboard]]),
@@ -170,8 +178,10 @@ minid_city_min "-minid_city_min " i (0, 100)
 minid_city_max "-minid_city_max " i (0, 100)
 maxid_city_min "-maxid_city_min " i (0, 100)
 maxid_city_max "-maxid_city_max " i (0, 100)
-init_at__percentage "-init_at__percentage " i (0, 100)
-init_in__percentage "-init_in__percentage " i (0, 100)
+init_at__percentage_min "-init_at__percentage_min " i (0, 100)
+init_at__percentage_max "-init_at__percentage_max " i (0, 100)
+init_in__percentage_min "-init_in__percentage_min " i (0, 100)
+init_in__percentage_max "-init_in__percentage_max " i (0, 100)
 init_fuel_range_min "-init_fuel_range_min " i (-65536, 65536)
 init_fuel_range_max "-init_fuel_range_max " i (-65536, 65536)
 init_distance_range_min "-init_distance_range_min " i (-65536, 65536)
@@ -188,14 +198,16 @@ goal_at__defined_tuple1_min "-goal_at__defined_tuple1_min " i (0, 100)
 goal_at__defined_tuple1_max "-goal_at__defined_tuple1_max " i (0, 100)
 goal_at__defined_tuple2_min "-goal_at__defined_tuple2_min " i (0, 100)
 goal_at__defined_tuple2_max "-goal_at__defined_tuple2_max " i (0, 100)
-goal_at__percentage "-goal_at__percentage " i (0, 100)
+goal_at__percentage_min "-goal_at__percentage_min " i (0, 100)
+goal_at__percentage_max "-goal_at__percentage_max " i (0, 100)
 goal_in__cardMin "-goal_in__cardMin " i (0, 10201)
 goal_in__cardMax "-goal_in__cardMax " i (0, 10201)
 goal_in__defined_tuple1_min "-goal_in__defined_tuple1_min " i (0, 100)
 goal_in__defined_tuple1_max "-goal_in__defined_tuple1_max " i (0, 100)
 goal_in__defined_tuple2_min "-goal_in__defined_tuple2_min " i (0, 100)
 goal_in__defined_tuple2_max "-goal_in__defined_tuple2_max " i (0, 100)
-goal_in__percentage "-goal_in__percentage " i (0, 100)
+goal_in__percentage_min "-goal_in__percentage_min " i (0, 100)
+goal_in__percentage_max "-goal_in__percentage_max " i (0, 100)
 goal_onboard_cardMin "-goal_onboard_cardMin " i (0, 101)
 goal_onboard_cardMax "-goal_onboard_cardMax " i (0, 101)
 goal_onboard_defined_min "-goal_onboard_defined_min " i (0, 100)
@@ -239,8 +251,10 @@ given maxid_city_max: int(0..100)
 find repaired_maxid_city_min: int(0..100)
 find repaired_maxid_city_max: int(0..100)
 such that repaired_maxid_city_min <= repaired_maxid_city_max
-given init_at__percentage: int(0..100)
-given init_in__percentage: int(0..100)
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
 given init_fuel_range_min: int(-65536..65536)
 given init_fuel_range_max: int(-65536..65536)
 given init_distance_range_min: int(-65536..65536)
@@ -251,8 +265,10 @@ given init_onboard_range_min: int(-65536..65536)
 given init_onboard_range_max: int(-65536..65536)
 given init_total_fuel_used_range_min: int(-65536..65536)
 given init_total_fuel_used_range_max: int(-65536..65536)
-find repaired_init_at__percentage: int(0..100)
-find repaired_init_in__percentage: int(0..100)
+find repaired_init_at__percentage_min: int(0..100)
+find repaired_init_at__percentage_max: int(0..100)
+find repaired_init_in__percentage_min: int(0..100)
+find repaired_init_in__percentage_max: int(0..100)
 find repaired_init_fuel_range_min: int(-65536..65536)
 find repaired_init_fuel_range_max: int(-65536..65536)
 find repaired_init_distance_range_min: int(-65536..65536)
@@ -264,6 +280,8 @@ find repaired_init_onboard_range_max: int(-65536..65536)
 find repaired_init_total_fuel_used_range_min: int(-65536..65536)
 find repaired_init_total_fuel_used_range_max: int(-65536..65536)
 such that
+    repaired_init_at__percentage_max >= repaired_init_at__percentage_min,
+    repaired_init_in__percentage_max >= repaired_init_in__percentage_min,
     repaired_init_fuel_range_min <= repaired_init_fuel_range_max,
     repaired_init_distance_range_min <= repaired_init_distance_range_max,
     repaired_init_capacity_range_min <= repaired_init_capacity_range_max,
@@ -275,14 +293,16 @@ given goal_at__defined_tuple1_min: int(0..100)
 given goal_at__defined_tuple1_max: int(0..100)
 given goal_at__defined_tuple2_min: int(0..100)
 given goal_at__defined_tuple2_max: int(0..100)
-given goal_at__percentage: int(0..100)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
 given goal_in__cardMin: int(0..10201)
 given goal_in__cardMax: int(0..10201)
 given goal_in__defined_tuple1_min: int(0..100)
 given goal_in__defined_tuple1_max: int(0..100)
 given goal_in__defined_tuple2_min: int(0..100)
 given goal_in__defined_tuple2_max: int(0..100)
-given goal_in__percentage: int(0..100)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
 given goal_onboard_cardMin: int(0..101)
 given goal_onboard_cardMax: int(0..101)
 given goal_onboard_defined_min: int(0..100)
@@ -295,14 +315,16 @@ find repaired_goal_at__defined_tuple1_min: int(0..100)
 find repaired_goal_at__defined_tuple1_max: int(0..100)
 find repaired_goal_at__defined_tuple2_min: int(0..100)
 find repaired_goal_at__defined_tuple2_max: int(0..100)
-find repaired_goal_at__percentage: int(0..100)
+find repaired_goal_at__percentage_min: int(0..100)
+find repaired_goal_at__percentage_max: int(0..100)
 find repaired_goal_in__cardMin: int(0..10201)
 find repaired_goal_in__cardMax: int(0..10201)
 find repaired_goal_in__defined_tuple1_min: int(0..100)
 find repaired_goal_in__defined_tuple1_max: int(0..100)
 find repaired_goal_in__defined_tuple2_min: int(0..100)
 find repaired_goal_in__defined_tuple2_max: int(0..100)
-find repaired_goal_in__percentage: int(0..100)
+find repaired_goal_in__percentage_min: int(0..100)
+find repaired_goal_in__percentage_max: int(0..100)
 find repaired_goal_onboard_cardMin: int(0..101)
 find repaired_goal_onboard_cardMax: int(0..101)
 find repaired_goal_onboard_defined_min: int(0..100)
@@ -318,6 +340,7 @@ such that
     repaired_goal_at__defined_tuple1_max <= repaired_maxid_person_max,
     repaired_goal_at__defined_tuple2_min >= repaired_minid_city_min,
     repaired_goal_at__defined_tuple2_max <= repaired_maxid_city_max,
+    repaired_goal_at__percentage_max >= repaired_goal_at__percentage_min,
     repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
     repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
     repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
@@ -328,6 +351,7 @@ such that
     repaired_goal_in__defined_tuple1_max <= repaired_maxid_person_max,
     repaired_goal_in__defined_tuple2_min >= repaired_minid_aircraft_min,
     repaired_goal_in__defined_tuple2_max <= repaired_maxid_aircraft_max,
+    repaired_goal_in__percentage_max >= repaired_goal_in__percentage_min,
     repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
     repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
     repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
@@ -343,7 +367,10 @@ minimising
          |repaired_maxid_person_min - maxid_person_min|, |repaired_maxid_person_max - maxid_person_max|,
          |repaired_minid_city_min - minid_city_min|, |repaired_minid_city_max - minid_city_max|,
          |repaired_maxid_city_min - maxid_city_min|, |repaired_maxid_city_max - maxid_city_max|,
-         |repaired_init_at__percentage - init_at__percentage|, |repaired_init_in__percentage - init_in__percentage|,
+         |repaired_init_at__percentage_min - init_at__percentage_min|,
+         |repaired_init_at__percentage_max - init_at__percentage_max|,
+         |repaired_init_in__percentage_min - init_in__percentage_min|,
+         |repaired_init_in__percentage_max - init_in__percentage_max|,
          |repaired_init_fuel_range_min - init_fuel_range_min|, |repaired_init_fuel_range_max - init_fuel_range_max|,
          |repaired_init_distance_range_min - init_distance_range_min|,
          |repaired_init_distance_range_max - init_distance_range_max|,
@@ -358,19 +385,21 @@ minimising
          |repaired_goal_at__defined_tuple1_max - goal_at__defined_tuple1_max|,
          |repaired_goal_at__defined_tuple2_min - goal_at__defined_tuple2_min|,
          |repaired_goal_at__defined_tuple2_max - goal_at__defined_tuple2_max|,
-         |repaired_goal_at__percentage - goal_at__percentage|, |repaired_goal_in__cardMin - goal_in__cardMin|,
+         |repaired_goal_at__percentage_min - goal_at__percentage_min|,
+         |repaired_goal_at__percentage_max - goal_at__percentage_max|, |repaired_goal_in__cardMin - goal_in__cardMin|,
          |repaired_goal_in__cardMax - goal_in__cardMax|,
          |repaired_goal_in__defined_tuple1_min - goal_in__defined_tuple1_min|,
          |repaired_goal_in__defined_tuple1_max - goal_in__defined_tuple1_max|,
          |repaired_goal_in__defined_tuple2_min - goal_in__defined_tuple2_min|,
          |repaired_goal_in__defined_tuple2_max - goal_in__defined_tuple2_max|,
-         |repaired_goal_in__percentage - goal_in__percentage|, |repaired_goal_onboard_cardMin - goal_onboard_cardMin|,
-         |repaired_goal_onboard_cardMax - goal_onboard_cardMax|,
+         |repaired_goal_in__percentage_min - goal_in__percentage_min|,
+         |repaired_goal_in__percentage_max - goal_in__percentage_max|,
+         |repaired_goal_onboard_cardMin - goal_onboard_cardMin|, |repaired_goal_onboard_cardMax - goal_onboard_cardMax|,
          |repaired_goal_onboard_defined_min - goal_onboard_defined_min|,
          |repaired_goal_onboard_defined_max - goal_onboard_defined_max|,
          |repaired_goal_onboard_range_min - goal_onboard_range_min|,
          |repaired_goal_onboard_range_max - goal_onboard_range_max|;
-             int(1..44)])
+             int(1..48)])
 
 --------------------
 
@@ -415,8 +444,10 @@ find maxid_city: int(-10..50)
 such that
     maxid_city >= maxid_city_min,
     maxid_city <= maxid_city_max
-given init_at__percentage: int(0..100)
-given init_in__percentage: int(0..100)
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
 given init_fuel_range_min: int(-65536..65536)
 given init_fuel_range_max: int(-65536..65536)
 given init_distance_range_min: int(-65536..65536)
@@ -439,11 +470,13 @@ such that
     and([q1[1] >= minid_aircraft /\ q1[1] <= maxid_person /\ (q1[2] >= minid_city /\ q1[2] <= maxid_city) <->
          q1 in defined(init[at_])
              | q1 : (int(-10..50), int(-10..50))]),
-    sum([toInt(q1[2]) | q1 <- init[at_]]) = init_at__percentage * |defined(init[at_])| / 100,
+    sum([toInt(q1[2]) | q1 <- init[at_]]) <= init_at__percentage_max * |defined(init[at_])| / 100 /\
+    sum([toInt(q1[2]) | q1 <- init[at_]]) >= init_at__percentage_min * |defined(init[at_])| / 100,
     and([q2[1] >= minid_person /\ q2[1] <= maxid_person /\ (q2[2] >= minid_aircraft /\ q2[2] <= maxid_aircraft) <->
          q2 in defined(init[in_])
              | q2 : (int(-10..50), int(-10..50))]),
-    sum([toInt(q2[2]) | q2 <- init[in_]]) = init_in__percentage * |defined(init[in_])| / 100,
+    sum([toInt(q2[2]) | q2 <- init[in_]]) <= init_in__percentage_max * |defined(init[in_])| / 100 /\
+    sum([toInt(q2[2]) | q2 <- init[in_]]) >= init_in__percentage_min * |defined(init[in_])| / 100,
     and([q3 >= minid_aircraft /\ q3 <= maxid_aircraft <-> q3 in defined(init[fuel]) | q3 : int(-10..50)]),
     and([q3[2] >= init_fuel_range_min | q3 <- init[fuel]]),
     and([q3[2] <= init_fuel_range_max | q3 <- init[fuel]]),
@@ -484,14 +517,16 @@ given goal_at__defined_tuple1_min: int(-10..50)
 given goal_at__defined_tuple1_max: int(-10..50)
 given goal_at__defined_tuple2_min: int(-10..50)
 given goal_at__defined_tuple2_max: int(-10..50)
-given goal_at__percentage: int(0..100)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
 given goal_in__cardMin: int(0..3721)
 given goal_in__cardMax: int(0..3721)
 given goal_in__defined_tuple1_min: int(-10..50)
 given goal_in__defined_tuple1_max: int(-10..50)
 given goal_in__defined_tuple2_min: int(-10..50)
 given goal_in__defined_tuple2_max: int(-10..50)
-given goal_in__percentage: int(0..100)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
 given goal_onboard_cardMin: int(0..61)
 given goal_onboard_cardMax: int(0..61)
 given goal_onboard_defined_min: int(-10..50)
@@ -512,7 +547,8 @@ such that
     and([q8[1, 2] <= goal_at__defined_tuple2_max | q8 <- goal[at_]]),
     and([q8[1, 2] >= minid_city | q8 <- goal[at_]]),
     and([q8[1, 2] <= maxid_city | q8 <- goal[at_]]),
-    sum([toInt(q8[2]) | q8 <- goal[at_]]) = goal_at__percentage * |defined(goal[at_])| / 100,
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) <= goal_at__percentage_max * |defined(goal[at_])| / 100 /\
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) >= goal_at__percentage_min * |defined(goal[at_])| / 100,
     |goal[in_]| >= goal_in__cardMin /\ |goal[in_]| <= goal_in__cardMax,
     and([q9[1, 1] >= goal_in__defined_tuple1_min | q9 <- goal[in_]]),
     and([q9[1, 1] <= goal_in__defined_tuple1_max | q9 <- goal[in_]]),
@@ -522,7 +558,8 @@ such that
     and([q9[1, 2] <= goal_in__defined_tuple2_max | q9 <- goal[in_]]),
     and([q9[1, 2] >= minid_aircraft | q9 <- goal[in_]]),
     and([q9[1, 2] <= maxid_aircraft | q9 <- goal[in_]]),
-    sum([toInt(q9[2]) | q9 <- goal[in_]]) = goal_in__percentage * |defined(goal[in_])| / 100,
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) <= goal_in__percentage_max * |defined(goal[in_])| / 100 /\
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) >= goal_in__percentage_min * |defined(goal[in_])| / 100,
     |goal[onboard]| >= goal_onboard_cardMin /\ |goal[onboard]| <= goal_onboard_cardMax,
     and([q10[1] >= goal_onboard_defined_min | q10 <- goal[onboard]]),
     and([q10[1] <= goal_onboard_defined_max | q10 <- goal[onboard]]),
@@ -548,8 +585,10 @@ minid_city_min "-minid_city_min " i (-10, 50)
 minid_city_max "-minid_city_max " i (-10, 50)
 maxid_city_min "-maxid_city_min " i (-10, 50)
 maxid_city_max "-maxid_city_max " i (-10, 50)
-init_at__percentage "-init_at__percentage " i (0, 100)
-init_in__percentage "-init_in__percentage " i (0, 100)
+init_at__percentage_min "-init_at__percentage_min " i (0, 100)
+init_at__percentage_max "-init_at__percentage_max " i (0, 100)
+init_in__percentage_min "-init_in__percentage_min " i (0, 100)
+init_in__percentage_max "-init_in__percentage_max " i (0, 100)
 init_fuel_range_min "-init_fuel_range_min " i (-65536, 65536)
 init_fuel_range_max "-init_fuel_range_max " i (-65536, 65536)
 init_distance_range_min "-init_distance_range_min " i (-65536, 65536)
@@ -566,14 +605,16 @@ goal_at__defined_tuple1_min "-goal_at__defined_tuple1_min " i (-10, 50)
 goal_at__defined_tuple1_max "-goal_at__defined_tuple1_max " i (-10, 50)
 goal_at__defined_tuple2_min "-goal_at__defined_tuple2_min " i (-10, 50)
 goal_at__defined_tuple2_max "-goal_at__defined_tuple2_max " i (-10, 50)
-goal_at__percentage "-goal_at__percentage " i (0, 100)
+goal_at__percentage_min "-goal_at__percentage_min " i (0, 100)
+goal_at__percentage_max "-goal_at__percentage_max " i (0, 100)
 goal_in__cardMin "-goal_in__cardMin " i (0, 3721)
 goal_in__cardMax "-goal_in__cardMax " i (0, 3721)
 goal_in__defined_tuple1_min "-goal_in__defined_tuple1_min " i (-10, 50)
 goal_in__defined_tuple1_max "-goal_in__defined_tuple1_max " i (-10, 50)
 goal_in__defined_tuple2_min "-goal_in__defined_tuple2_min " i (-10, 50)
 goal_in__defined_tuple2_max "-goal_in__defined_tuple2_max " i (-10, 50)
-goal_in__percentage "-goal_in__percentage " i (0, 100)
+goal_in__percentage_min "-goal_in__percentage_min " i (0, 100)
+goal_in__percentage_max "-goal_in__percentage_max " i (0, 100)
 goal_onboard_cardMin "-goal_onboard_cardMin " i (0, 61)
 goal_onboard_cardMax "-goal_onboard_cardMax " i (0, 61)
 goal_onboard_defined_min "-goal_onboard_defined_min " i (-10, 50)
@@ -617,8 +658,10 @@ given maxid_city_max: int(-10..50)
 find repaired_maxid_city_min: int(-10..50)
 find repaired_maxid_city_max: int(-10..50)
 such that repaired_maxid_city_min <= repaired_maxid_city_max
-given init_at__percentage: int(0..100)
-given init_in__percentage: int(0..100)
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
 given init_fuel_range_min: int(-65536..65536)
 given init_fuel_range_max: int(-65536..65536)
 given init_distance_range_min: int(-65536..65536)
@@ -629,8 +672,10 @@ given init_onboard_range_min: int(-65536..65536)
 given init_onboard_range_max: int(-65536..65536)
 given init_total_fuel_used_range_min: int(-65536..65536)
 given init_total_fuel_used_range_max: int(-65536..65536)
-find repaired_init_at__percentage: int(0..100)
-find repaired_init_in__percentage: int(0..100)
+find repaired_init_at__percentage_min: int(0..100)
+find repaired_init_at__percentage_max: int(0..100)
+find repaired_init_in__percentage_min: int(0..100)
+find repaired_init_in__percentage_max: int(0..100)
 find repaired_init_fuel_range_min: int(-65536..65536)
 find repaired_init_fuel_range_max: int(-65536..65536)
 find repaired_init_distance_range_min: int(-65536..65536)
@@ -642,6 +687,8 @@ find repaired_init_onboard_range_max: int(-65536..65536)
 find repaired_init_total_fuel_used_range_min: int(-65536..65536)
 find repaired_init_total_fuel_used_range_max: int(-65536..65536)
 such that
+    repaired_init_at__percentage_max >= repaired_init_at__percentage_min,
+    repaired_init_in__percentage_max >= repaired_init_in__percentage_min,
     repaired_init_fuel_range_min <= repaired_init_fuel_range_max,
     repaired_init_distance_range_min <= repaired_init_distance_range_max,
     repaired_init_capacity_range_min <= repaired_init_capacity_range_max,
@@ -653,14 +700,16 @@ given goal_at__defined_tuple1_min: int(-10..50)
 given goal_at__defined_tuple1_max: int(-10..50)
 given goal_at__defined_tuple2_min: int(-10..50)
 given goal_at__defined_tuple2_max: int(-10..50)
-given goal_at__percentage: int(0..100)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
 given goal_in__cardMin: int(0..3721)
 given goal_in__cardMax: int(0..3721)
 given goal_in__defined_tuple1_min: int(-10..50)
 given goal_in__defined_tuple1_max: int(-10..50)
 given goal_in__defined_tuple2_min: int(-10..50)
 given goal_in__defined_tuple2_max: int(-10..50)
-given goal_in__percentage: int(0..100)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
 given goal_onboard_cardMin: int(0..61)
 given goal_onboard_cardMax: int(0..61)
 given goal_onboard_defined_min: int(-10..50)
@@ -673,14 +722,16 @@ find repaired_goal_at__defined_tuple1_min: int(-10..50)
 find repaired_goal_at__defined_tuple1_max: int(-10..50)
 find repaired_goal_at__defined_tuple2_min: int(-10..50)
 find repaired_goal_at__defined_tuple2_max: int(-10..50)
-find repaired_goal_at__percentage: int(0..100)
+find repaired_goal_at__percentage_min: int(0..100)
+find repaired_goal_at__percentage_max: int(0..100)
 find repaired_goal_in__cardMin: int(0..3721)
 find repaired_goal_in__cardMax: int(0..3721)
 find repaired_goal_in__defined_tuple1_min: int(-10..50)
 find repaired_goal_in__defined_tuple1_max: int(-10..50)
 find repaired_goal_in__defined_tuple2_min: int(-10..50)
 find repaired_goal_in__defined_tuple2_max: int(-10..50)
-find repaired_goal_in__percentage: int(0..100)
+find repaired_goal_in__percentage_min: int(0..100)
+find repaired_goal_in__percentage_max: int(0..100)
 find repaired_goal_onboard_cardMin: int(0..61)
 find repaired_goal_onboard_cardMax: int(0..61)
 find repaired_goal_onboard_defined_min: int(-10..50)
@@ -696,6 +747,7 @@ such that
     repaired_goal_at__defined_tuple1_max <= repaired_maxid_person_max,
     repaired_goal_at__defined_tuple2_min >= repaired_minid_city_min,
     repaired_goal_at__defined_tuple2_max <= repaired_maxid_city_max,
+    repaired_goal_at__percentage_max >= repaired_goal_at__percentage_min,
     repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
     repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
     repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
@@ -706,6 +758,7 @@ such that
     repaired_goal_in__defined_tuple1_max <= repaired_maxid_person_max,
     repaired_goal_in__defined_tuple2_min >= repaired_minid_aircraft_min,
     repaired_goal_in__defined_tuple2_max <= repaired_maxid_aircraft_max,
+    repaired_goal_in__percentage_max >= repaired_goal_in__percentage_min,
     repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
     repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
     repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
@@ -721,7 +774,10 @@ minimising
          |repaired_maxid_person_min - maxid_person_min|, |repaired_maxid_person_max - maxid_person_max|,
          |repaired_minid_city_min - minid_city_min|, |repaired_minid_city_max - minid_city_max|,
          |repaired_maxid_city_min - maxid_city_min|, |repaired_maxid_city_max - maxid_city_max|,
-         |repaired_init_at__percentage - init_at__percentage|, |repaired_init_in__percentage - init_in__percentage|,
+         |repaired_init_at__percentage_min - init_at__percentage_min|,
+         |repaired_init_at__percentage_max - init_at__percentage_max|,
+         |repaired_init_in__percentage_min - init_in__percentage_min|,
+         |repaired_init_in__percentage_max - init_in__percentage_max|,
          |repaired_init_fuel_range_min - init_fuel_range_min|, |repaired_init_fuel_range_max - init_fuel_range_max|,
          |repaired_init_distance_range_min - init_distance_range_min|,
          |repaired_init_distance_range_max - init_distance_range_max|,
@@ -736,19 +792,21 @@ minimising
          |repaired_goal_at__defined_tuple1_max - goal_at__defined_tuple1_max|,
          |repaired_goal_at__defined_tuple2_min - goal_at__defined_tuple2_min|,
          |repaired_goal_at__defined_tuple2_max - goal_at__defined_tuple2_max|,
-         |repaired_goal_at__percentage - goal_at__percentage|, |repaired_goal_in__cardMin - goal_in__cardMin|,
+         |repaired_goal_at__percentage_min - goal_at__percentage_min|,
+         |repaired_goal_at__percentage_max - goal_at__percentage_max|, |repaired_goal_in__cardMin - goal_in__cardMin|,
          |repaired_goal_in__cardMax - goal_in__cardMax|,
          |repaired_goal_in__defined_tuple1_min - goal_in__defined_tuple1_min|,
          |repaired_goal_in__defined_tuple1_max - goal_in__defined_tuple1_max|,
          |repaired_goal_in__defined_tuple2_min - goal_in__defined_tuple2_min|,
          |repaired_goal_in__defined_tuple2_max - goal_in__defined_tuple2_max|,
-         |repaired_goal_in__percentage - goal_in__percentage|, |repaired_goal_onboard_cardMin - goal_onboard_cardMin|,
-         |repaired_goal_onboard_cardMax - goal_onboard_cardMax|,
+         |repaired_goal_in__percentage_min - goal_in__percentage_min|,
+         |repaired_goal_in__percentage_max - goal_in__percentage_max|,
+         |repaired_goal_onboard_cardMin - goal_onboard_cardMin|, |repaired_goal_onboard_cardMax - goal_onboard_cardMax|,
          |repaired_goal_onboard_defined_min - goal_onboard_defined_min|,
          |repaired_goal_onboard_defined_max - goal_onboard_defined_max|,
          |repaired_goal_onboard_range_min - goal_onboard_range_min|,
          |repaired_goal_onboard_range_max - goal_onboard_range_max|;
-             int(1..44)])
+             int(1..48)])
 
 --------------------
 

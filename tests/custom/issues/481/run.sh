@@ -8,6 +8,6 @@ echo ""
 echo ""
 
 conjure parameter-generator barman.essence --MAXINT=30
-cat barman-instanceGenerator.essence*
-rm -f barman-instanceGenerator.essence*
+cat barman-instance*.essence*
+rm -f barman-instance*.essence*
 

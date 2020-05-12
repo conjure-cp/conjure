@@ -22,7 +22,8 @@ given f_cardMin: int(0..98)
 given f_cardMax: int(0..98)
 given f_defined_min: int(1..60)
 given f_defined_max: int(1..60)
-given f_percentage: int(0..100)
+given f_percentage_min: int(0..100)
+given f_percentage_max: int(0..100)
 find f: function (maxSize 20) int(1..60) --> bool
 such that
     |f| >= f_cardMin /\ |f| <= f_cardMax,
@@ -30,7 +31,8 @@ such that
     and([q1[1] <= f_defined_max | q1 <- f]),
     and([q1[1] >= min([m1, m1 + m2 + 1; int(1..2)]) | q1 <- f]),
     and([q1[1] <= max([m1 + m2, m1 + m2 + m3; int(1..2)]) | q1 <- f]),
-    sum([toInt(q1[2]) | q1 <- f]) = f_percentage * |defined(f)| / 100
+    sum([toInt(q1[2]) | q1 <- f]) <= f_percentage_max * |defined(f)| / 100 /\
+    sum([toInt(q1[2]) | q1 <- f]) >= f_percentage_min * |defined(f)| / 100
 language Essence 1.3
 
 given m1_min: int(1..20)
@@ -52,22 +54,26 @@ given f_cardMin: int(0..98)
 given f_cardMax: int(0..98)
 given f_defined_min: int(1..60)
 given f_defined_max: int(1..60)
-given f_percentage: int(0..100)
+given f_percentage_min: int(0..100)
+given f_percentage_max: int(0..100)
 find repaired_f_cardMin: int(0..98)
 find repaired_f_cardMax: int(0..98)
 find repaired_f_defined_min: int(1..60)
 find repaired_f_defined_max: int(1..60)
-find repaired_f_percentage: int(0..100)
+find repaired_f_percentage_min: int(0..100)
+find repaired_f_percentage_max: int(0..100)
 such that
     repaired_f_cardMin <= repaired_f_cardMax,
     repaired_f_defined_max - repaired_f_defined_min + 1 >= repaired_f_cardMax,
     repaired_f_defined_min >= min([repaired_m1_min, repaired_m1_min + repaired_m2_min + 1; int(1..2)]),
     repaired_f_defined_max <=
     max([repaired_m1_max + repaired_m2_max, repaired_m1_max + repaired_m2_max + repaired_m3_max; int(1..2)]),
+    repaired_f_percentage_max >= repaired_f_percentage_min,
     repaired_f_defined_min <= repaired_f_defined_max
 minimising
     sum([|repaired_m1_min - m1_min|, |repaired_m1_max - m1_max|, |repaired_m2_min - m2_min|, |repaired_m2_max - m2_max|,
          |repaired_m3_min - m3_min|, |repaired_m3_max - m3_max|, |repaired_f_cardMin - f_cardMin|,
          |repaired_f_cardMax - f_cardMax|, |repaired_f_defined_min - f_defined_min|,
-         |repaired_f_defined_max - f_defined_max|, |repaired_f_percentage - f_percentage|;
-             int(1..11)])
+         |repaired_f_defined_max - f_defined_max|, |repaired_f_percentage_min - f_percentage_min|,
+         |repaired_f_percentage_max - f_percentage_max|;
+             int(1..12)])

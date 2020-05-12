@@ -18,25 +18,29 @@ letting b be
 letting m be 30
 m_min "-m_min " i (1, 100)
 m_max "-m_max " i (1, 100)
-a_percentage "-a_percentage " i (0, 100)
+a_percentage_min "-a_percentage_min " i (0, 100)
+a_percentage_max "-a_percentage_max " i (0, 100)
 b_cardMin "-b_cardMin " i (0, 100)
 b_cardMax "-b_cardMax " i (0, 100)
 b_defined_min "-b_defined_min " i (1, 100)
 b_defined_max "-b_defined_max " i (1, 100)
-b_percentage "-b_percentage " i (0, 100)
+b_percentage_min "-b_percentage_min " i (0, 100)
+b_percentage_max "-b_percentage_max " i (0, 100)
 language ESSENCE' 1.0
 
 given m_min: int(1..100)
 given m_max: int(1..100)
 find m: int(1..100)
-given a_percentage: int(0..100)
+given a_percentage_min: int(0..100)
+given a_percentage_max: int(0..100)
 find a_Function1DPartial_Flags: matrix indexed by [int(1..100)] of bool
 find a_Function1DPartial_Values: matrix indexed by [int(1..100)] of bool
 given b_cardMin: int(0..100)
 given b_cardMax: int(0..100)
 given b_defined_min: int(1..100)
 given b_defined_max: int(1..100)
-given b_percentage: int(0..100)
+given b_percentage_min: int(0..100)
+given b_percentage_max: int(0..100)
 find b_Function1DPartial_Flags: matrix indexed by [int(1..100)] of bool
 find b_Function1DPartial_Values: matrix indexed by [int(1..100)] of bool
 branching on
@@ -45,17 +49,23 @@ such that
     m >= m_min,
     m <= m_max,
     and([q1 >= 1 /\ q1 <= m <-> a_Function1DPartial_Flags[q1] | q1 : int(1..100)]),
-    sum([toInt(a_Function1DPartial_Flags[q21]) * catchUndef(toInt(a_Function1DPartial_Values[q21]), 0)
-             | q21 : int(1..100)])
-    = a_percentage * sum([toInt(a_Function1DPartial_Flags[q24]) | q24 : int(1..100)]) / 100,
-    sum([toInt(b_Function1DPartial_Flags[q57]) | q57 : int(1..100)]) >= b_cardMin,
-    sum([toInt(b_Function1DPartial_Flags[q59]) | q59 : int(1..100)]) <= b_cardMax,
-    and([b_Function1DPartial_Flags[q31] -> q31 >= b_defined_min | q31 : int(1..100)]),
-    and([b_Function1DPartial_Flags[q35] -> q35 <= b_defined_max | q35 : int(1..100)]),
-    and([b_Function1DPartial_Flags[q39] -> q39 <= m | q39 : int(1..100)]),
-    sum([toInt(b_Function1DPartial_Flags[q43]) * catchUndef(toInt(b_Function1DPartial_Values[q43]), 0)
-             | q43 : int(1..100)])
-    = b_percentage * sum([toInt(b_Function1DPartial_Flags[q46]) | q46 : int(1..100)]) / 100,
+    sum([toInt(a_Function1DPartial_Flags[q9]) * catchUndef(toInt(a_Function1DPartial_Values[q9]), 0)
+             | q9 : int(1..100)])
+    <= a_percentage_max * sum([toInt(a_Function1DPartial_Flags[q12]) | q12 : int(1..100)]) / 100,
+    sum([toInt(a_Function1DPartial_Flags[q13]) * catchUndef(toInt(a_Function1DPartial_Values[q13]), 0)
+             | q13 : int(1..100)])
+    >= a_percentage_min * sum([toInt(a_Function1DPartial_Flags[q16]) | q16 : int(1..100)]) / 100,
+    sum([toInt(b_Function1DPartial_Flags[q29]) | q29 : int(1..100)]) >= b_cardMin,
+    sum([toInt(b_Function1DPartial_Flags[q31]) | q31 : int(1..100)]) <= b_cardMax,
+    and([b_Function1DPartial_Flags[q17] -> q17 >= b_defined_min | q17 : int(1..100)]),
+    and([b_Function1DPartial_Flags[q18] -> q18 <= b_defined_max | q18 : int(1..100)]),
+    and([b_Function1DPartial_Flags[q19] -> q19 <= m | q19 : int(1..100)]),
+    sum([toInt(b_Function1DPartial_Flags[q20]) * catchUndef(toInt(b_Function1DPartial_Values[q20]), 0)
+             | q20 : int(1..100)])
+    <= b_percentage_max * sum([toInt(b_Function1DPartial_Flags[q23]) | q23 : int(1..100)]) / 100,
+    sum([toInt(b_Function1DPartial_Flags[q24]) * catchUndef(toInt(b_Function1DPartial_Values[q24]), 0)
+             | q24 : int(1..100)])
+    >= b_percentage_min * sum([toInt(b_Function1DPartial_Flags[q27]) | q27 : int(1..100)]) / 100,
     and([a_Function1DPartial_Flags[q3] = false -> a_Function1DPartial_Values[q3] = false | q3 : int(1..100)]),
     and([b_Function1DPartial_Flags[q6] = false -> b_Function1DPartial_Values[q6] = false | q6 : int(1..100)]),
     sum([toInt(b_Function1DPartial_Flags[q7]) | q7 : int(1..100)]) <= 100
