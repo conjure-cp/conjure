@@ -628,16 +628,25 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
             -- only for bool domains (innerDomainTo)
-            let nmPercentage  = nm `mappend` "_percentage"
-            sawTell [(nmPercentage, "i")]
-            let refPercentage = Reference nmPercentage Nothing
+            let nmPercentageMin  = nm `mappend` "_percentage_min"
+            sawTell [(nmPercentageMin, "i")]
+            let refPercentageMin = Reference nmPercentageMin Nothing
+            let nmPercentageMax  = nm `mappend` "_percentage_max"
+            sawTell [(nmPercentageMax, "i")]
+            let refPercentageMax = Reference nmPercentageMax Nothing
 
             let isToBool = case innerDomainTo of
                                 DomainBool -> True
                                 _ -> False
 
-            let declToBool = Declaration (FindOrGiven Given nmPercentage (DomainInt TagInt [RangeBounded 0 100])) 
-            let consToBool = [essence| sum([ toInt(&i[2]) | &iPat <- &x ]) = &refPercentage * |defined(&x)| / 100 |]
+            let declToBool =
+                    [ Declaration (FindOrGiven Given nmPercentageMin (DomainInt TagInt [RangeBounded 0 100]))
+                    , Declaration (FindOrGiven Given nmPercentageMax (DomainInt TagInt [RangeBounded 0 100]))
+                    ]
+            let consToBool = make opAnd $ fromList
+                    [ [essence| sum([ toInt(&i[2]) | &iPat <- &x ]) <= &refPercentageMax * |defined(&x)| / 100 |]
+                    , [essence| sum([ toInt(&i[2]) | &iPat <- &x ]) >= &refPercentageMin * |defined(&x)| / 100 |]
+                    ]
 
             newCons <- concat <$> sequence [cardinalityCons, totalityCons, sizeLbCons, sizeUbCons]
             let innerCons = concat $ concat
@@ -708,7 +717,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
 
             return4
                 (DomainFunction r attrOut domFr domTo)
-                (newDecl ++ concat [ declFr | isPartial ] ++ declTo ++ concat [ [declToBool] | isToBool ])
+                (newDecl ++ concat [ declFr | isPartial ] ++ declTo ++ concat [ declToBool | isToBool ])
                 (newCons ++ map liftCons innerCons ++ concat [[consToBool] | isToBool ])
                 (repairCons ++ concat [ repairStmtsFr | isPartial ] ++ repairStmtsTo)
 
