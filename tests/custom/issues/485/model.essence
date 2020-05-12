@@ -1,0 +1,4 @@
+given m, n: int(0..)
+letting d be domain int(0..m, m+1..m+n)
+given f: function (total) d --> int
+where forAll o: d . o <= 5

@@ -123,20 +123,44 @@ fixQuantified (Comprehension body gocs) = do
         Generator (GenDomainNoRepr (Single pat) domain) -> do
             let go x d =
                     case d of
-                        DomainInt t [RangeBounded fr to] -> do
-                            (fr', frCons) <-
-                                if categoryOf fr < CatParameter
-                                    then return (fr, [])
-                                    else do
-                                        bound <- lowerBoundOfIntExpr fr
-                                        return (bound, return [essence| &x >= &fr |])
-                            (to', toCons) <-
-                                if categoryOf to < CatParameter
-                                    then return (to, [])
-                                    else do
-                                        bound <- upperBoundOfIntExpr to
-                                        return (bound, return [essence| &x <= &to |])
-                            return (DomainInt t [RangeBounded fr' to'], frCons ++ toCons)
+                        DomainInt t ranges -> do
+                            boundsAndCons <- forM ranges $ \ range ->
+                                case range of
+                                    RangeSingle s -> do
+                                        (fr', frCons) <-
+                                            if categoryOf s < CatParameter
+                                                then return (s, [])
+                                                else do
+                                                    bound <- lowerBoundOfIntExpr s
+                                                    return (bound, return [essence| &x = &s |])
+                                        (to', _) <-
+                                            if categoryOf s < CatParameter
+                                                then return (s, [])
+                                                else do
+                                                    bound <- upperBoundOfIntExpr s
+                                                    return (bound, [])
+                                        return ([fr'], [to'], frCons)
+                                    RangeBounded fr to -> do
+                                        (fr', frCons) <-
+                                            if categoryOf fr < CatParameter
+                                                then return (fr, [])
+                                                else do
+                                                    bound <- lowerBoundOfIntExpr fr
+                                                    return (bound, return [essence| &x >= &fr |])
+                                        (to', toCons) <-
+                                            if categoryOf to < CatParameter
+                                                then return (to, [])
+                                                else do
+                                                    bound <- upperBoundOfIntExpr to
+                                                    return (bound, return [essence| &x <= &to |])
+                                        return ([fr'], [to'], frCons ++ toCons)
+                                    _ -> userErr1 $ vcat [ "Open ranges are not supported:" <+> pretty range
+                                                         , "In domain:" <+> pretty d
+                                                         ]
+                            let (froms, tos, cons) = mconcat boundsAndCons
+                            let fr' = make opMin $ fromList froms
+                            let to' = make opMax $ fromList tos
+                            return (DomainInt t [RangeBounded fr' to'], cons)
                         DomainFunction r attr innerFr innerTo -> do
                             (jPat, j) <- quantifiedVar
                             (innerFr', consFr) <- go [essence| &j[1] |] innerFr
