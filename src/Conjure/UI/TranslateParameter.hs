@@ -159,12 +159,12 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
 
-    when graphSolver $
+    when graphSolver $ do
         forM_ essenceGivensAndLettings' $ \ (n,d,c) ->
             case d of
                 DomainFunction _ _
                     (DomainTuple [DomainInt{}, DomainInt{}])
-                    DomainInt{} -> do
+                    _ -> do
                         let csvLines = 
                                 case c of
                                     ConstantAbstract (AbsLitFunction rows) -> catMaybes
@@ -174,8 +174,28 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                         | row <- rows ]
                                     _ -> []
                         unless (null csvLines) $
-                            liftIO $ writeFile (show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                            liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
                 _ -> return ()
+
+        let essenceFindNames = eprimeModel |> mInfo |> miFinds
+        let essenceFinds = eprimeModel |> mInfo |> miRepresentations |> filter (\ (n,_) -> n `elem` essenceFindNames )
+        forM_ essenceFinds $ \ (n, d) -> do
+            case d of
+                DomainFunction _ _ (DomainInt _ [RangeBounded a b]) _ -> do
+                        a' <- instantiateExpression allLettings a
+                        b' <- instantiateExpression allLettings b
+                        case (a', b') of
+                            (ConstantInt _ a'', ConstantInt _ b'') -> do
+                                let csvLines =
+                                        [ pretty i <> "," <> name
+                                        | i <- [a''..b'']
+                                        , let name = pretty n <> "_Function1D_" <> pretty (padLeft 5 '0' (show i))
+                                        ]
+                                unless (null csvLines) $
+                                    liftIO $ writeFile ("find-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                            _ -> userErr1 $ "Unsupported domain for --graph-solver:" <+> pretty d
+                _ -> return ()
+
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
