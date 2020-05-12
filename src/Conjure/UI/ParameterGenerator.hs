@@ -628,12 +628,12 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                         Just bound -> return $ return [essence| |&x| <= &bound |]
 
             -- only for bool domains (innerDomainTo)
-            let nmPercentageMin  = nm `mappend` "_percentage_min"
-            sawTell [(nmPercentageMin, "i")]
-            let refPercentageMin = Reference nmPercentageMin Nothing
             let nmPercentageMax  = nm `mappend` "_percentage_max"
-            sawTell [(nmPercentageMax, "i")]
+            let nmPercentageMin  = nm `mappend` "_percentage_min"
             let refPercentageMax = Reference nmPercentageMax Nothing
+            let refPercentageMin = Reference nmPercentageMin Nothing
+            sawTell [(nmPercentageMax, "i")]
+            sawTell [(nmPercentageMin, "i")]
 
             let isToBool = case innerDomainTo of
                                 DomainBool -> True
@@ -708,12 +708,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
             let repairCons = [ [essence| &cardMin <= &cardMax |] | isPartial ]
                           ++ [ definedGtCard | isPartial ]
                           ++ concat [ definedBoundCons' | isPartial ]
-                          -- ++ concat [ [ [essence| &defined_min >= &defined_minBound |]
-                          --             , [essence| &defined_max <= &defined_maxBound |]
-                          --             ]
-                          --           | (defined_minBound, defined_maxBound) <- defined_minMaxBounds
-                          --           , isPartial
-                          --           ]
+                          ++ [ [essence| &refPercentageMax >= &refPercentageMin |] | isToBool ]
 
             return4
                 (DomainFunction r attrOut domFr domTo)
