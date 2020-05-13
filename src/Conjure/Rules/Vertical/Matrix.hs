@@ -70,6 +70,7 @@ rule_Comprehension = "matrix-comprehension" `namedRule` theRule where
         indexDom:_ <- indexDomainsOf expr
         case indexDom of
             DomainAny{} -> na "rule_Comprehension"
+            DomainInt _ [RangeLowerBounded _] -> na "rule_Comprehension"
             _ -> return ()
         return
             ( "Comprehension on a matrix"

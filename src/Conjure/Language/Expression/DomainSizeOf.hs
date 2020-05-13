@@ -22,10 +22,17 @@ import Conjure.Language.Pretty
 
 
 instance DomainSizeOf Expression Expression where
+    domainSizeOf (DomainReference _ (Just d)) = domainSizeOf d
     domainSizeOf DomainBool = return 2
     domainSizeOf (DomainInt _ [] ) = fail "domainSizeOf infinite integer domain"
     domainSizeOf (DomainInt _ [r]) = domainSizeOfRange r
     domainSizeOf (DomainInt _ rs ) = make opSum . fromList <$> mapM domainSizeOfRange rs
+    domainSizeOf (DomainIntE x) = do
+        let
+            go (Reference _ (Just (Alias y))) = go y
+            go (Comprehension _body gocs) = return $ make opSum $ Comprehension 1 gocs
+            go y = bug ("not implemented: domainSizeOf.go:" <+> vcat [pretty y, pretty (show y)])
+        go x
     domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt TagInt [])))

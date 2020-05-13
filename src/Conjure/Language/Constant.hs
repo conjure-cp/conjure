@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Constant
     ( Constant(..)
@@ -82,6 +83,17 @@ instance Serialize Constant
 instance Hashable  Constant
 instance ToJSON    Constant where toJSON = genericToJSON jsonOptions
 instance FromJSON  Constant where parseJSON = genericParseJSON jsonOptions
+
+instance SimpleJSON Constant where
+    toSimpleJSON c =
+        case c of
+            ConstantBool b -> return (toJSON b)
+            ConstantInt _ i -> return (toJSON i)
+            ConstantEnum _ _ nm -> return (toJSON (renderNormal nm))
+            ConstantAbstract lit -> toSimpleJSON lit
+            TypedConstant c' _ -> toSimpleJSON c'
+            _ -> noToSimpleJSON c
+    fromSimpleJSON _ = noFromSimpleJSON
 
 instance Arbitrary Constant where
     arbitrary = oneof
@@ -292,7 +304,7 @@ viewConstantVariant   (TypedConstant c _) = viewConstantVariant c
 viewConstantVariant   constant = fail ("Expecting a variant, but got:" <++> pretty constant)
 
 viewConstantMatrix    :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
-viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (ind, xs)
+viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (expandDomainReference ind, xs)
 viewConstantMatrix    (TypedConstant c _) = viewConstantMatrix c
 viewConstantMatrix    constant = fail ("Expecting a matrix, but got:" <++> pretty constant)
 
@@ -312,7 +324,7 @@ viewConstantFunction  (TypedConstant c _) = viewConstantFunction c
 viewConstantFunction  constant = do
     let
         suggestion = case constant of
-            ConstantAbstract (AbsLitMatrix (DomainInt _ rs) vals) -> do
+            ConstantAbstract (AbsLitMatrix (expandDomainReference -> DomainInt _ rs) vals) -> do
                 froms <- valuesInIntDomain rs
                 return $ Just $ pretty $ AbsLitFunction (zip (map (ConstantInt TagInt) froms) vals)
             _ -> return Nothing

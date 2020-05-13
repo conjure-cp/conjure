@@ -5,22 +5,22 @@ given fin1: int
 given g_RelationAsSet_Explicit_1: matrix indexed by [int(1..fin1)] of int(1..n)
 given g_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of int(1..n)
 where
-    and([!(or([g_RelationAsSet_Explicit_1[q12] = g_RelationAsSet_Explicit_2[q14] /\
-               g_RelationAsSet_Explicit_2[q12] = g_RelationAsSet_Explicit_1[q14]
-                   | q12 : int(1..fin1)])
+    and([!(or([g_RelationAsSet_Explicit_1[q11] = g_RelationAsSet_Explicit_2[q13] /\
+               g_RelationAsSet_Explicit_2[q11] = g_RelationAsSet_Explicit_1[q13]
+                   | q11 : int(1..fin1)])
            \/
-           or([or([g_RelationAsSet_Explicit_1[q8] = g_RelationAsSet_Explicit_2[q14] /\
-                   g_RelationAsSet_Explicit_2[q8] = path_ExplicitBounded_Values[1]
-                       | q8 : int(1..fin1)])
+           or([or([g_RelationAsSet_Explicit_1[q7] = g_RelationAsSet_Explicit_2[q13] /\
+                   g_RelationAsSet_Explicit_2[q7] = path_ExplicitBounded_Values[1]
+                       | q7 : int(1..fin1)])
                /\ 1 <= path_ExplicitBounded_Length
                /\
-               or([g_RelationAsSet_Explicit_1[q6] = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\
-                   g_RelationAsSet_Explicit_2[q6] = g_RelationAsSet_Explicit_1[q14]
-                       | q6 : int(1..fin1)])
+               or([g_RelationAsSet_Explicit_1[q5] = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\
+                   g_RelationAsSet_Explicit_2[q5] = g_RelationAsSet_Explicit_1[q13]
+                       | q5 : int(1..fin1)])
                /\
-               and([and([or([g_RelationAsSet_Explicit_1[q10] = path_ExplicitBounded_Values[x] /\
-                             g_RelationAsSet_Explicit_2[q10] = path_ExplicitBounded_Values[x + 1]
-                                 | q10 : int(1..fin1)]),
+               and([and([or([g_RelationAsSet_Explicit_1[q9] = path_ExplicitBounded_Values[x] /\
+                             g_RelationAsSet_Explicit_2[q9] = path_ExplicitBounded_Values[x + 1]
+                                 | q9 : int(1..fin1)]),
                          x <= path_ExplicitBounded_Length, x + 1 <= path_ExplicitBounded_Length;
                              int(1..3)])
                         | x : int(1..path_ExplicitBounded_Length - 1)])
@@ -29,10 +29,9 @@ where
                      and([q1 > path_ExplicitBounded_Length -> path_ExplicitBounded_Values[q1] = 1
                               | q1 : int(1..n - 2)]),
                      1 <= path_ExplicitBounded_Length, path_ExplicitBounded_Length <= n - 2,
-                     and([path_ExplicitBounded_Values[q2] != path_ExplicitBounded_Values[q3]
-                              | q2 : int(1..n - 2), q3 : int(1..n - 2), q2 < q3, q2 <= path_ExplicitBounded_Length,
-                                q3 <= path_ExplicitBounded_Length])]))
-             | q14 : int(1..fin1)])
+                     allDiff([path_ExplicitBounded_Values[q2]
+                                  | q2 : int(1..n - 2), q2 <= path_ExplicitBounded_Length])]))
+             | q13 : int(1..fin1)])
 find b: int(0)
 branching on [b]
 such that true

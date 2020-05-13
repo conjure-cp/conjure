@@ -97,7 +97,7 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
                     TypeBool -> do
                         [flags,values] <- downX1 f
                         tell $ return [essence| &flags[&x] |]
-                        return [essence| &values[&x] |]
+                        return [essence| { &values[&x] @ such that &flags[&x] } |]
                     _ -> return ch
             imageChild ch = return ch
         topMost <- asks isTopMostZ
@@ -110,10 +110,10 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
         case flags of
             [] -> na "rule_Image_Bool"
             _  -> do
-                let flagsCombined = make opAnd $ fromList flags
+                -- let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Function image, Function1DPartial representation, bool"
-                    , return [essence| { &p' @ such that &flagsCombined } |]
+                    , return p'
                     )
 
 

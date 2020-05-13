@@ -1,72 +1,65 @@
-$ conjure parameter-generator problem.essence --essence-out problem-gen.essence
-Generating models for problem-gen.essence
-Generated models: model000001.eprime
-Saved under: conjure-output
-Savile Row: model000001.eprime test.param
-Running minion for domain filtering.
-Running solver: minion
-Copying solution to: problem-gen-test.solution
-File: problem-gen.essence
+$ conjure parameter-generator problem.essence
+File: problem-instanceGenerator.essence
 language Essence 1.3
 
-given a_middle: int(1..10)
-given a_delta: int(0..4)
+given a_min: int(1..10)
+given a_max: int(1..10)
 find a: int(1..10)
 such that
-    a >= a_middle - a_delta,
-    a <= a_middle + a_delta
-given b_middle: int(1..10)
-given b_delta: int(0..4)
+    a >= a_min,
+    a <= a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
 find b: int(1..10)
 such that
-    b >= b_middle - b_delta,
-    b <= b_middle + b_delta
-given c_middle: int(1..10)
-given c_delta: int(0..4)
+    b >= b_min,
+    b <= b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
 find c: int(1..10)
 such that
-    c >= c_middle - c_delta,
-    c <= c_middle + c_delta
-given s_middle: int(1..10)
-given s_delta: int(0..4)
+    c >= c_min,
+    c <= c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
 find s: int(1..10)
 such that
-    s >= s_middle - s_delta,
-    s <= s_middle + s_delta
-given f_cardMiddle: int(0..100)
-given f_cardDelta: int(0..50)
-given f_inner_middle: int(1..10)
-given f_inner_delta: int(0..4)
+    s >= s_min,
+    s <= s_max
+given f_cardMin: int(0..100)
+given f_cardMax: int(0..100)
+given f_inner_min: int(1..10)
+given f_inner_max: int(1..10)
 find f: set (maxSize 100) of int(1..10)
 such that
-    |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
-    and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
-    and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
+    |f| >= f_cardMin /\ |f| <= f_cardMax,
+    and([q1 >= f_inner_min | q1 <- f]),
+    and([q1 <= f_inner_max | q1 <- f]),
     and([q1 >= a | q1 <- f]),
     and([q1 <= b | q1 <- f])
-given g_cardMiddle: int(1..10)
-given g_cardDelta: int(0..50)
-given g_inner_middle: int(1..10)
-given g_inner_delta: int(0..4)
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_inner_min: int(1..10)
+given g_inner_max: int(1..10)
 find g: set (minSize 1, maxSize 10) of int(1..10)
 such that
-    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
+    |g| >= g_cardMin /\ |g| <= g_cardMax,
     |g| >= s,
     |g| <= s,
-    and([q2 >= g_inner_middle - g_inner_delta | q2 <- g]),
-    and([q2 <= g_inner_middle + g_inner_delta | q2 <- g]),
+    and([q2 >= g_inner_min | q2 <- g]),
+    and([q2 <= g_inner_max | q2 <- g]),
     and([q2 >= a | q2 <- g]),
     and([q2 <= b | q2 <- g])
-given h_cardMiddle: int(1..100)
-given h_cardDelta: int(0..50)
-given h_inner_middle: int(1..10)
-given h_inner_delta: int(0..4)
+given h_cardMin: int(1..100)
+given h_cardMax: int(1..100)
+given h_inner_min: int(1..10)
+given h_inner_max: int(1..10)
 find h: set (minSize 1, maxSize 100) of int(1..10)
 such that
-    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
+    |h| >= h_cardMin /\ |h| <= h_cardMax,
     |h| >= s,
-    and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
-    and([q3 <= h_inner_middle + h_inner_delta | q3 <- h]),
+    and([q3 >= h_inner_min | q3 <- h]),
+    and([q3 <= h_inner_max | q3 <- h]),
     and([q3 >= a | q3 <- h]),
     and([q3 <= c | q3 <- h])
 such that g != h
@@ -75,113 +68,155 @@ such that f = g intersect h
 --------------------
 
 
-File: problem-gen.essence.irace
-a_middle "-a_middle " i (1, 10)
-a_delta "-a_delta " i (0, 4)
-b_middle "-b_middle " i (1, 10)
-b_delta "-b_delta " i (0, 4)
-c_middle "-c_middle " i (1, 10)
-c_delta "-c_delta " i (0, 4)
-s_middle "-s_middle " i (1, 10)
-s_delta "-s_delta " i (0, 4)
-f_cardMiddle "-f_cardMiddle " i (0, 100)
-f_cardDelta "-f_cardDelta " i (0, 50)
-f_inner_middle "-f_inner_middle " i (1, 10)
-f_inner_delta "-f_inner_delta " i (0, 4)
-g_cardMiddle "-g_cardMiddle " i (1, 10)
-g_cardDelta "-g_cardDelta " i (0, 50)
-g_inner_middle "-g_inner_middle " i (1, 10)
-g_inner_delta "-g_inner_delta " i (0, 4)
-h_cardMiddle "-h_cardMiddle " i (1, 100)
-h_cardDelta "-h_cardDelta " i (0, 50)
-h_inner_middle "-h_inner_middle " i (1, 10)
-h_inner_delta "-h_inner_delta " i (0, 4)
---------------------
-
-
-File: problem-gen-test.solution
-language Essence 1.3
-
-letting a be 4
-letting b be 7
-letting c be 9
-letting f be {5, 6, 7}
-letting g be {5, 6, 7}
-letting h be {4, 5, 6, 7}
-letting s be 3
+File: problem-instanceGenerator.essence.irace
+a_min "-a_min " i (1, 10)
+a_max "-a_max " i (1, 10)
+b_min "-b_min " i (1, 10)
+b_max "-b_max " i (1, 10)
+c_min "-c_min " i (1, 10)
+c_max "-c_max " i (1, 10)
+s_min "-s_min " i (1, 10)
+s_max "-s_max " i (1, 10)
+f_cardMin "-f_cardMin " i (0, 100)
+f_cardMax "-f_cardMax " i (0, 100)
+f_inner_min "-f_inner_min " i (1, 10)
+f_inner_max "-f_inner_max " i (1, 10)
+g_cardMin "-g_cardMin " i (1, 10)
+g_cardMax "-g_cardMax " i (1, 10)
+g_inner_min "-g_inner_min " i (1, 10)
+g_inner_max "-g_inner_max " i (1, 10)
+h_cardMin "-h_cardMin " i (1, 100)
+h_cardMax "-h_cardMax " i (1, 100)
+h_inner_min "-h_inner_min " i (1, 10)
+h_inner_max "-h_inner_max " i (1, 10)
 
 --------------------
 
 
-$ conjure parameter-generator problem.essence --essence-out problem-gen.essence --MININT -10 --MAXINT 50
-Generating models for problem-gen.essence
-Generated models: model000001.eprime
-Saved under: conjure-output
-Savile Row: model000001.eprime test.param
-Running minion for domain filtering.
-Running solver: minion
-Copying solution to: problem-gen-test.solution
-File: problem-gen.essence
+File: problem-instanceRepair.essence
 language Essence 1.3
 
-given a_middle: int(1..10)
-given a_delta: int(0..4)
+given a_min: int(1..10)
+given a_max: int(1..10)
+find repaired_a_min: int(1..10)
+find repaired_a_max: int(1..10)
+such that repaired_a_min <= repaired_a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
+find repaired_b_min: int(1..10)
+find repaired_b_max: int(1..10)
+such that repaired_b_min <= repaired_b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
+find repaired_c_min: int(1..10)
+find repaired_c_max: int(1..10)
+such that repaired_c_min <= repaired_c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
+find repaired_s_min: int(1..10)
+find repaired_s_max: int(1..10)
+such that repaired_s_min <= repaired_s_max
+given f_cardMin: int(0..100)
+given f_cardMax: int(0..100)
+given f_inner_min: int(1..10)
+given f_inner_max: int(1..10)
+find repaired_f_cardMin: int(0..100)
+find repaired_f_cardMax: int(0..100)
+find repaired_f_inner_min: int(1..10)
+find repaired_f_inner_max: int(1..10)
+such that repaired_f_inner_min <= repaired_f_inner_max
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_inner_min: int(1..10)
+given g_inner_max: int(1..10)
+find repaired_g_cardMin: int(1..10)
+find repaired_g_cardMax: int(1..10)
+find repaired_g_inner_min: int(1..10)
+find repaired_g_inner_max: int(1..10)
+such that repaired_g_inner_min <= repaired_g_inner_max
+given h_cardMin: int(1..100)
+given h_cardMax: int(1..100)
+given h_inner_min: int(1..10)
+given h_inner_max: int(1..10)
+find repaired_h_cardMin: int(1..100)
+find repaired_h_cardMax: int(1..100)
+find repaired_h_inner_min: int(1..10)
+find repaired_h_inner_max: int(1..10)
+such that repaired_h_inner_min <= repaired_h_inner_max
+minimising
+    sum([|repaired_a_min - a_min|, |repaired_a_max - a_max|, |repaired_b_min - b_min|, |repaired_b_max - b_max|,
+         |repaired_c_min - c_min|, |repaired_c_max - c_max|, |repaired_s_min - s_min|, |repaired_s_max - s_max|,
+         |repaired_f_cardMin - f_cardMin|, |repaired_f_cardMax - f_cardMax|, |repaired_f_inner_min - f_inner_min|,
+         |repaired_f_inner_max - f_inner_max|, |repaired_g_cardMin - g_cardMin|, |repaired_g_cardMax - g_cardMax|,
+         |repaired_g_inner_min - g_inner_min|, |repaired_g_inner_max - g_inner_max|, |repaired_h_cardMin - h_cardMin|,
+         |repaired_h_cardMax - h_cardMax|, |repaired_h_inner_min - h_inner_min|, |repaired_h_inner_max - h_inner_max|;
+             int(1..20)])
+
+--------------------
+
+
+$ conjure parameter-generator problem.essence --MININT -10 --MAXINT 50
+File: problem-instanceGenerator.essence
+language Essence 1.3
+
+given a_min: int(1..10)
+given a_max: int(1..10)
 find a: int(1..10)
 such that
-    a >= a_middle - a_delta,
-    a <= a_middle + a_delta
-given b_middle: int(1..10)
-given b_delta: int(0..4)
+    a >= a_min,
+    a <= a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
 find b: int(1..10)
 such that
-    b >= b_middle - b_delta,
-    b <= b_middle + b_delta
-given c_middle: int(1..10)
-given c_delta: int(0..4)
+    b >= b_min,
+    b <= b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
 find c: int(1..10)
 such that
-    c >= c_middle - c_delta,
-    c <= c_middle + c_delta
-given s_middle: int(1..10)
-given s_delta: int(0..4)
+    c >= c_min,
+    c <= c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
 find s: int(1..10)
 such that
-    s >= s_middle - s_delta,
-    s <= s_middle + s_delta
-given f_cardMiddle: int(-10..50)
-given f_cardDelta: int(0..25)
-given f_inner_middle: int(1..10)
-given f_inner_delta: int(0..4)
+    s >= s_min,
+    s <= s_max
+given f_cardMin: int(-10..50)
+given f_cardMax: int(-10..50)
+given f_inner_min: int(1..10)
+given f_inner_max: int(1..10)
 find f: set (maxSize 50) of int(1..10)
 such that
-    |f| >= f_cardMiddle - f_cardDelta /\ |f| <= f_cardMiddle + f_cardDelta,
-    and([q1 >= f_inner_middle - f_inner_delta | q1 <- f]),
-    and([q1 <= f_inner_middle + f_inner_delta | q1 <- f]),
+    |f| >= f_cardMin /\ |f| <= f_cardMax,
+    and([q1 >= f_inner_min | q1 <- f]),
+    and([q1 <= f_inner_max | q1 <- f]),
     and([q1 >= a | q1 <- f]),
     and([q1 <= b | q1 <- f])
-given g_cardMiddle: int(1..10)
-given g_cardDelta: int(0..25)
-given g_inner_middle: int(1..10)
-given g_inner_delta: int(0..4)
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_inner_min: int(1..10)
+given g_inner_max: int(1..10)
 find g: set (minSize 1, maxSize 10) of int(1..10)
 such that
-    |g| >= g_cardMiddle - g_cardDelta /\ |g| <= g_cardMiddle + g_cardDelta,
+    |g| >= g_cardMin /\ |g| <= g_cardMax,
     |g| >= s,
     |g| <= s,
-    and([q2 >= g_inner_middle - g_inner_delta | q2 <- g]),
-    and([q2 <= g_inner_middle + g_inner_delta | q2 <- g]),
+    and([q2 >= g_inner_min | q2 <- g]),
+    and([q2 <= g_inner_max | q2 <- g]),
     and([q2 >= a | q2 <- g]),
     and([q2 <= b | q2 <- g])
-given h_cardMiddle: int(1..50)
-given h_cardDelta: int(0..25)
-given h_inner_middle: int(1..10)
-given h_inner_delta: int(0..4)
+given h_cardMin: int(1..50)
+given h_cardMax: int(1..50)
+given h_inner_min: int(1..10)
+given h_inner_max: int(1..10)
 find h: set (minSize 1, maxSize 50) of int(1..10)
 such that
-    |h| >= h_cardMiddle - h_cardDelta /\ |h| <= h_cardMiddle + h_cardDelta,
+    |h| >= h_cardMin /\ |h| <= h_cardMax,
     |h| >= s,
-    and([q3 >= h_inner_middle - h_inner_delta | q3 <- h]),
-    and([q3 <= h_inner_middle + h_inner_delta | q3 <- h]),
+    and([q3 >= h_inner_min | q3 <- h]),
+    and([q3 <= h_inner_max | q3 <- h]),
     and([q3 >= a | q3 <- h]),
     and([q3 <= c | q3 <- h])
 such that g != h
@@ -190,40 +225,89 @@ such that f = g intersect h
 --------------------
 
 
-File: problem-gen.essence.irace
-a_middle "-a_middle " i (1, 10)
-a_delta "-a_delta " i (0, 4)
-b_middle "-b_middle " i (1, 10)
-b_delta "-b_delta " i (0, 4)
-c_middle "-c_middle " i (1, 10)
-c_delta "-c_delta " i (0, 4)
-s_middle "-s_middle " i (1, 10)
-s_delta "-s_delta " i (0, 4)
-f_cardMiddle "-f_cardMiddle " i (-10, 50)
-f_cardDelta "-f_cardDelta " i (0, 25)
-f_inner_middle "-f_inner_middle " i (1, 10)
-f_inner_delta "-f_inner_delta " i (0, 4)
-g_cardMiddle "-g_cardMiddle " i (1, 10)
-g_cardDelta "-g_cardDelta " i (0, 25)
-g_inner_middle "-g_inner_middle " i (1, 10)
-g_inner_delta "-g_inner_delta " i (0, 4)
-h_cardMiddle "-h_cardMiddle " i (1, 50)
-h_cardDelta "-h_cardDelta " i (0, 25)
-h_inner_middle "-h_inner_middle " i (1, 10)
-h_inner_delta "-h_inner_delta " i (0, 4)
+File: problem-instanceGenerator.essence.irace
+a_min "-a_min " i (1, 10)
+a_max "-a_max " i (1, 10)
+b_min "-b_min " i (1, 10)
+b_max "-b_max " i (1, 10)
+c_min "-c_min " i (1, 10)
+c_max "-c_max " i (1, 10)
+s_min "-s_min " i (1, 10)
+s_max "-s_max " i (1, 10)
+f_cardMin "-f_cardMin " i (-10, 50)
+f_cardMax "-f_cardMax " i (-10, 50)
+f_inner_min "-f_inner_min " i (1, 10)
+f_inner_max "-f_inner_max " i (1, 10)
+g_cardMin "-g_cardMin " i (1, 10)
+g_cardMax "-g_cardMax " i (1, 10)
+g_inner_min "-g_inner_min " i (1, 10)
+g_inner_max "-g_inner_max " i (1, 10)
+h_cardMin "-h_cardMin " i (1, 50)
+h_cardMax "-h_cardMax " i (1, 50)
+h_inner_min "-h_inner_min " i (1, 10)
+h_inner_max "-h_inner_max " i (1, 10)
+
 --------------------
 
 
-File: problem-gen-test.solution
+File: problem-instanceRepair.essence
 language Essence 1.3
 
-letting a be 4
-letting b be 7
-letting c be 9
-letting f be {5, 6, 7}
-letting g be {5, 6, 7}
-letting h be {4, 5, 6, 7}
-letting s be 3
+given a_min: int(1..10)
+given a_max: int(1..10)
+find repaired_a_min: int(1..10)
+find repaired_a_max: int(1..10)
+such that repaired_a_min <= repaired_a_max
+given b_min: int(1..10)
+given b_max: int(1..10)
+find repaired_b_min: int(1..10)
+find repaired_b_max: int(1..10)
+such that repaired_b_min <= repaired_b_max
+given c_min: int(1..10)
+given c_max: int(1..10)
+find repaired_c_min: int(1..10)
+find repaired_c_max: int(1..10)
+such that repaired_c_min <= repaired_c_max
+given s_min: int(1..10)
+given s_max: int(1..10)
+find repaired_s_min: int(1..10)
+find repaired_s_max: int(1..10)
+such that repaired_s_min <= repaired_s_max
+given f_cardMin: int(-10..50)
+given f_cardMax: int(-10..50)
+given f_inner_min: int(1..10)
+given f_inner_max: int(1..10)
+find repaired_f_cardMin: int(-10..50)
+find repaired_f_cardMax: int(-10..50)
+find repaired_f_inner_min: int(1..10)
+find repaired_f_inner_max: int(1..10)
+such that repaired_f_inner_min <= repaired_f_inner_max
+given g_cardMin: int(1..10)
+given g_cardMax: int(1..10)
+given g_inner_min: int(1..10)
+given g_inner_max: int(1..10)
+find repaired_g_cardMin: int(1..10)
+find repaired_g_cardMax: int(1..10)
+find repaired_g_inner_min: int(1..10)
+find repaired_g_inner_max: int(1..10)
+such that repaired_g_inner_min <= repaired_g_inner_max
+given h_cardMin: int(1..50)
+given h_cardMax: int(1..50)
+given h_inner_min: int(1..10)
+given h_inner_max: int(1..10)
+find repaired_h_cardMin: int(1..50)
+find repaired_h_cardMax: int(1..50)
+find repaired_h_inner_min: int(1..10)
+find repaired_h_inner_max: int(1..10)
+such that repaired_h_inner_min <= repaired_h_inner_max
+minimising
+    sum([|repaired_a_min - a_min|, |repaired_a_max - a_max|, |repaired_b_min - b_min|, |repaired_b_max - b_max|,
+         |repaired_c_min - c_min|, |repaired_c_max - c_max|, |repaired_s_min - s_min|, |repaired_s_max - s_max|,
+         |repaired_f_cardMin - f_cardMin|, |repaired_f_cardMax - f_cardMax|, |repaired_f_inner_min - f_inner_min|,
+         |repaired_f_inner_max - f_inner_max|, |repaired_g_cardMin - g_cardMin|, |repaired_g_cardMax - g_cardMax|,
+         |repaired_g_inner_min - g_inner_min|, |repaired_g_inner_max - g_inner_max|, |repaired_h_cardMin - h_cardMin|,
+         |repaired_h_cardMax - h_cardMax|, |repaired_h_inner_min - h_inner_min|, |repaired_h_inner_max - h_inner_max|;
+             int(1..20)])
 
 --------------------
 

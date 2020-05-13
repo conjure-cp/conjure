@@ -1,5 +1,4 @@
 language ESSENCE' 1.0
-
 given test2: matrix indexed by [int(1..9), int(1..9)] of int(0..9)
 find x: int(0..100)
 find y: int(0..100)
@@ -9,7 +8,3 @@ such that
     x = 45,
     y = sum([test2[q1, 2] | q1 : int(1..9)]),
     z = 6
-
-$ Conjure's
-$ {"finds": [{"Name": "x"}, {"Name": "y"}, {"Name": "z"}],
-$  "givens": [{"Name": "test2"}],

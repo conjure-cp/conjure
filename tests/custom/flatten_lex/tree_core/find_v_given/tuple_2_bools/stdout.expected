@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+given A_1: bool
+given A_2: bool
+find B_1: bool
+find B_2: bool
+branching on [B_1, B_2]
+such that
+    flatten([[-toInt(A_1); int(1)], [-toInt(A_2); int(1)]; int(1..2)]) <lex
+    flatten([[-toInt(B_1); int(1)], [-toInt(B_2); int(1)]; int(1..2)])

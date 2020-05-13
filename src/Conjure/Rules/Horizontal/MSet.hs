@@ -161,7 +161,7 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
         return
             ( "Horizontal rule for mset max"
             , case () of
-                _ | Just (_, xs) <- match setLiteral s, length xs > 0 -> return $ make opMax $ fromList xs
+                _ | Just (_, xs) <- match msetLiteral s, length xs > 0 -> return $ make opMax $ fromList xs
                 _ -> do
                     (iPat, i) <- quantifiedVar
                     return [essence| max([&i | &iPat <- &s]) |]
@@ -171,7 +171,7 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
         return
             ( "Horizontal rule for mset min"
             , case () of
-                _ | Just (_, xs) <- match setLiteral s, length xs > 0 -> return $ make opMin $ fromList xs
+                _ | Just (_, xs) <- match msetLiteral s, length xs > 0 -> return $ make opMin $ fromList xs
                 _ -> do
                     (iPat, i) <- quantifiedVar
                     return [essence| min([&i | &iPat <- &s]) |]

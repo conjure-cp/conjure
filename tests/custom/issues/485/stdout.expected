@@ -1,0 +1,43 @@
+language Essence 1.3
+
+given m_min: int(0..20)
+given m_max: int(0..20)
+find m: int(0..20)
+such that
+    m >= m_min,
+    m <= m_max
+given n_min: int(0..20)
+given n_max: int(0..20)
+find n: int(0..20)
+such that
+    n >= n_min,
+    n <= n_max
+given f_range_min: int(0..20)
+given f_range_max: int(0..20)
+find f: function int(0..40) --> int(0..20)
+such that
+    and([q1 >= min([0, m + 1; int(1..2)]) /\ q1 <= max([m, m + n; int(1..2)]) <-> q1 in defined(f) | q1 : int(0..40)]),
+    and([q1[2] >= f_range_min | q1 <- f]),
+    and([q1[2] <= f_range_max | q1 <- f])
+such that and([o <= 5 | o : int(0..40), o <= m, o >= m + 1, o <= m + n])
+language Essence 1.3
+
+given m_min: int(0..20)
+given m_max: int(0..20)
+find repaired_m_min: int(0..20)
+find repaired_m_max: int(0..20)
+such that repaired_m_min <= repaired_m_max
+given n_min: int(0..20)
+given n_max: int(0..20)
+find repaired_n_min: int(0..20)
+find repaired_n_max: int(0..20)
+such that repaired_n_min <= repaired_n_max
+given f_range_min: int(0..20)
+given f_range_max: int(0..20)
+find repaired_f_range_min: int(0..20)
+find repaired_f_range_max: int(0..20)
+such that repaired_f_range_min <= repaired_f_range_max
+minimising
+    sum([|repaired_m_min - m_min|, |repaired_m_max - m_max|, |repaired_n_min - n_min|, |repaired_n_max - n_max|,
+         |repaired_f_range_min - f_range_min|, |repaired_f_range_max - f_range_max|;
+             int(1..6)])

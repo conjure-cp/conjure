@@ -1,0 +1,28 @@
+language Essence 1.3
+
+given n_periods_min: int(1..100)
+given n_periods_max: int(1..100)
+find n_periods: int(1..100)
+such that
+    n_periods >= n_periods_min,
+    n_periods <= n_periods_max
+given n_periods_plus_min: int(0..100)
+given n_periods_plus_max: int(0..100)
+find n_periods_plus: int(0..100)
+such that
+    n_periods_plus >= n_periods_plus_min,
+    n_periods_plus <= n_periods_plus_max
+given crew_range_min: int(1..100)
+given crew_range_max: int(1..100)
+find crew: function int(1..200) --> int(1..100)
+such that
+    and([q1 >= 1 /\ q1 <= n_periods + n_periods_plus <-> q1 in defined(crew) | q1 : int(1..200)]),
+    and([q1[2] >= crew_range_min | q1 <- crew]),
+    and([q1[2] <= crew_range_max | q1 <- crew])
+given crew_plus_range_min: int(0..100)
+given crew_plus_range_max: int(0..100)
+find crew_plus: function int(1..200) --> int(0..100)
+such that
+    and([q2 >= 1 /\ q2 <= n_periods + n_periods_plus <-> q2 in defined(crew_plus) | q2 : int(1..200)]),
+    and([q2[2] >= crew_plus_range_min | q2 <- crew_plus]),
+    and([q2[2] <= crew_plus_range_max | q2 <- crew_plus])

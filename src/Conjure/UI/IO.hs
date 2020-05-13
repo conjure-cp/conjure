@@ -12,11 +12,10 @@ module Conjure.UI.IO
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.UI
-import Conjure.Language.Definition
+import Conjure.Language
 import qualified Conjure.Language.Parser as Parser
 import qualified Conjure.Language.ParserC as ParserC
-import Conjure.Language.Pretty
-import Conjure.Language.Parser ( Parser)
+import Conjure.Language.Parser ( Parser )
 
 -- aeson
 import qualified Data.Aeson ( decodeStrict )
@@ -151,24 +150,49 @@ onlyPreamble
         discardAfter t = fst . T.breakOn t
 
 
-writeModel :: MonadIO m => Int -> OutputFormat -> Maybe FilePath -> Model -> m ()
-writeModel  lnWidth Plain  Nothing   spec
-    | lnWidth == 0                        = liftIO $    putStrLn     (show           spec)
-    | otherwise                           = liftIO $    putStrLn     (render lnWidth spec)
-writeModel  lnWidth Plain  (Just fp) spec
-    | lnWidth == 0                        = liftIO $    writeFile fp (show           spec)
-    | otherwise                           = liftIO $    writeFile fp (render lnWidth spec)
-writeModel _lnWidth Binary Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
-writeModel _lnWidth Binary (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
-writeModel  lnWidth JSON   Nothing   spec
-    | lnWidth == 0                        = liftIO $    putStrLn     (show           (toJSON spec))
-    | otherwise                           = liftIO $    putStrLn     (render lnWidth (toJSON spec))
-writeModel  lnWidth JSON   (Just fp) spec
-    | lnWidth == 0                        = liftIO $    writeFile fp (show           (toJSON spec))
-    | otherwise                           = liftIO $    writeFile fp (render lnWidth (toJSON spec))
+writeModel ::
+    MonadIO m =>
+    MonadUserError m =>
+    Int ->
+    OutputFormat ->
+    Maybe FilePath ->
+    Model ->
+    m ()
+writeModel  lnWidth Plain   Nothing   spec
+    | lnWidth == 0                         = liftIO $    putStrLn     (show           spec)
+    | otherwise                            = liftIO $    putStrLn     (render lnWidth spec)
+writeModel  lnWidth Plain   (Just fp) spec
+    | lnWidth == 0                         = liftIO $    writeFile fp (show           spec)
+    | otherwise                            = liftIO $    writeFile fp (render lnWidth spec)
+writeModel _lnWidth Binary  Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
+writeModel _lnWidth Binary  (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
+writeModel  lnWidth ASTJSON Nothing   spec
+    | lnWidth == 0                         = liftIO $    putStrLn     (show           (toJSON spec))
+    | otherwise                            = liftIO $    putStrLn     (render lnWidth (toJSON spec))
+writeModel  lnWidth ASTJSON (Just fp) spec
+    | lnWidth == 0                         = liftIO $    writeFile fp (show           (toJSON spec))
+    | otherwise                            = liftIO $    writeFile fp (render lnWidth (toJSON spec))
+writeModel lnWidth JSON Nothing spec = do
+    spec' <- toSimpleJSON spec
+    if lnWidth == 0
+        then liftIO $ putStrLn (show spec')
+        else liftIO $ putStrLn (render lnWidth spec')
+writeModel lnWidth JSON (Just fp) spec = do
+    spec' <- toSimpleJSON spec
+    if lnWidth == 0
+        then liftIO $ writeFile fp (show spec')
+        else liftIO $ writeFile fp (render lnWidth spec')
 
 
-writeModels :: MonadIO m => Int -> OutputFormat -> FilePath -> String -> [Model] -> m ()
+writeModels ::
+    MonadIO m =>
+    MonadUserError m =>
+    Int ->
+    OutputFormat ->
+    FilePath ->
+    String ->
+    [Model] ->
+    m ()
 writeModels lnWidth mode base tag specs = do
     let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
     let outDirname  = base ++ "-" ++ tag

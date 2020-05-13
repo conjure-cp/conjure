@@ -297,6 +297,9 @@ instance EvaluateOp OpLexLt where
 instance EvaluateOp OpLt where
     evaluateOp (OpLt x y) = return $ ConstantBool $ x < y
 
+instance EvaluateOp OpMakeTable where
+    evaluateOp op = na $ "evaluateOp{OpMakeTable}:" <++> pretty (show op)
+
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (childrenBi p) =
             return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
@@ -914,6 +917,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpLexLeq x) = evaluateOp x
     evaluateOp (MkOpLexLt x) = evaluateOp x
     evaluateOp (MkOpLt x) = evaluateOp x
+    evaluateOp (MkOpMakeTable x) = evaluateOp x
     evaluateOp (MkOpMax x) = evaluateOp x
     evaluateOp (MkOpMin x) = evaluateOp x
     evaluateOp (MkOpMinus x) = evaluateOp x

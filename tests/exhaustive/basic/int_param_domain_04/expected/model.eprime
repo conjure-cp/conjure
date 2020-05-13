@@ -4,8 +4,8 @@ given fin1: int
 given fin2: int
 given fin3: int
 given s_Explicit: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
-letting let1 be fin2
-letting let2 be fin3
+letting let1 be s_Explicit[1]
+letting let2 be s_Explicit[fin1]
 find x: int(let1..let2)
 branching on [x]
 such that or([s_Explicit[q2] = x | q2 : int(1..fin1)])

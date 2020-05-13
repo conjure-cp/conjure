@@ -79,6 +79,7 @@ Library
                      , Conjure.Language.Expression.Op.LexLeq
                      , Conjure.Language.Expression.Op.LexLt
                      , Conjure.Language.Expression.Op.Lt
+                     , Conjure.Language.Expression.Op.MakeTable
                      , Conjure.Language.Expression.Op.Max
                      , Conjure.Language.Expression.Op.Min
                      , Conjure.Language.Expression.Op.Minus
@@ -266,7 +267,7 @@ Library
                      , safe
                      , scientific
                      -- 1.6.7, because of the stderr handling fix
-                     , shelly >= 1.6.7
+                     , shelly >= 1.6.7 && <= 1.8.0
                      , split
                      , stm
                      , strict
@@ -287,6 +288,7 @@ Library
                      -- see https://github.com/dreixel/generic-deriving/issues/41
                      , generic-deriving >= 1.10.6
                      , ansi-terminal >= 0.8.2
+                     , timeit >= 2.0
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*

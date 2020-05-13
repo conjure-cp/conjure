@@ -1,0 +1,65 @@
+$ ----- Objects --------
+given minid_aircraft : int
+given maxid_aircraft : int
+given minid_person : int
+given maxid_person : int
+given minid_city : int
+given maxid_city : int
+
+$ ----- Domains --------
+letting aircraft be domain int(minid_aircraft..maxid_aircraft)
+letting person be domain int(minid_person..maxid_person)
+$letting locatable be domain aircraft union person
+$ HACK 
+letting locatable be domain int(minid_aircraft..maxid_person)
+letting city be domain int(minid_city..maxid_city)
+letting Number be domain int(-65536..65536)
+letting Undefined be domain int(0)
+
+given init: record {
+ at_ : function (total) (locatable,city) --> bool,
+ in_ : function (total) (person,aircraft) --> bool,
+ fuel : function (total) (aircraft) --> Number,
+ distance : function (total) (city,city) --> Number,
+ capacity : function (total) (aircraft) --> Number,
+ onboard : function (total) (aircraft) --> Number,
+ total_fuel_used : function (total) (Undefined) --> Number}
+where
+forAll a : aircraft .
+    $; fuel has to be between bounds
+    init[fuel](a) > 0 /\
+    init[fuel](a) <= init[capacity](a),
+
+$ the number of onboard people in a plane
+$ if noone is inside, it should assign it to 0.
+forAll a : aircraft .
+    init[onboard](a) = sum([toInt(value) | ((_,p2),value) <- init[in_], p2 = a ]),
+
+$ total-fuel-used starts at 0, always
+init[total_fuel_used](0) = 0,
+
+$ distances are not weird
+forAll c1 : city .
+    forAll c2 : city .
+        init[distance]((c1,c2)) = init[distance]((c2,c1)) /\
+        init[distance]((c1,c2)) > 0,
+
+$ a plane is only at one place at a time
+forAll a : aircraft .
+   1 = sum([ toInt(value = true) | ((p1,_),value) <- init[at_], p1 = a]),
+
+$ a person can only be either in a city or in a plane.
+forAll p : person .
+    (!(1 = sum([ toInt(value = true) | ((p1,_),value) <- init[at_], p = p1 ]) /\
+       1 = sum([ toInt(value = true) | ((p1,_),value) <- init[in_], p = p1 ]))) /\
+    (1 = sum([ toInt(value = true) | ((p1,_),value) <- init[at_], p = p1]) \/
+       1 = sum([ toInt(value = true) | ((p1,_),value) <- init[in_], p = p1 ])),
+
+given goal: record {
+ at_ : function (locatable,city) --> bool,
+ in_ : function (person,aircraft) --> bool,
+ onboard : function (aircraft) --> Number,
+ }
+where
+forAll a : aircraft .
+    goal[onboard](a) >= 0

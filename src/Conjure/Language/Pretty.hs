@@ -22,7 +22,7 @@ import Conjure.Prelude
 import Text.Printf ( printf )
 
 -- text
-import qualified Data.Text as T ( Text, unpack, replace)
+import qualified Data.Text as T ( Text, unpack, replace, length )
 
 -- pretty
 import Text.PrettyPrint
@@ -124,10 +124,10 @@ instance Pretty JSON.Value where
     pretty Null = "null"
 
 instance Pretty JSON.Object where
-    pretty = prBraces . vcat . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
+    pretty = prBraces . fsep . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
         where
             f (key, Array value)
-                | all (\ v -> case v of String{} -> True ; _ -> False ) value
+                | not (any (\ v -> case v of String t -> T.length t < 20 ; _ -> True ) value)
                 = pretty (show key) <> ":" <++> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <++> pretty value
 

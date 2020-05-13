@@ -1,0 +1,7 @@
+letting n be 10
+find r: record {f : function int(1..100) --> bool}
+such that
+    and([q13 >= 0 /\ q13 <= n
+         <-> q13 in defined(r[f]) | q13 : int(1..400)]),
+    and([r[f](var_s)
+             | var_s : int(1..100), var_s >= 0, var_s <= n])

@@ -1,0 +1,5 @@
+given n : int(1..)
+letting ind be domain int(1..n)
+find P : matrix indexed by [ind] of bool
+such that P <=lex [ P[n+1-i] | i : ind ]
+

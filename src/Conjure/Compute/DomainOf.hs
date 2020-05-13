@@ -82,6 +82,9 @@ instance DomainOf Expression where
     domainOf (AbstractLiteral x) = domainOf x
     domainOf (Op x) = domainOf x
     domainOf (WithLocals h _) = domainOf h
+    domainOf (Comprehension h _) = do
+        domH <- domainOf h
+        return $ DomainMatrix (DomainInt TagInt [RangeLowerBounded 1]) domH
     domainOf x = fail ("domainOf{Expression}:" <+> pretty (show x))
 
     -- if an empty matrix literal has a type annotation
@@ -133,6 +136,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpLexLeq x) = domainOf x
     domainOf (MkOpLexLt x) = domainOf x
     domainOf (MkOpLt x) = domainOf x
+    domainOf (MkOpMakeTable x) = domainOf x
     domainOf (MkOpMax x) = domainOf x
     domainOf (MkOpMin x) = domainOf x
     domainOf (MkOpMinus x) = domainOf x
@@ -206,6 +210,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpLexLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpLexLt x) = indexDomainsOf x
     indexDomainsOf (MkOpLt x) = indexDomainsOf x
+    indexDomainsOf (MkOpMakeTable x) = indexDomainsOf x
     indexDomainsOf (MkOpMax x) = indexDomainsOf x
     indexDomainsOf (MkOpMin x) = indexDomainsOf x
     indexDomainsOf (MkOpMinus x) = indexDomainsOf x
@@ -469,6 +474,9 @@ instance DomainOf (OpLexLt x) where
 instance DomainOf (OpLt x) where
     domainOf _ = return DomainBool
 
+instance DomainOf (OpMakeTable x) where
+    domainOf _ = return DomainBool
+
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMax x) where
     domainOf (OpMax x)
         | Just xs <- listOut x
@@ -640,8 +648,11 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpToRelation x) where
     domainOf op = mkDomainAny ("OpToRelation:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
-    domainOf op = mkDomainAny ("OpToSet:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpToSet x) where
+    domainOf (OpToSet _ x) = do
+        domX <- domainOf x
+        innerDomX <- innerDomainOf domX
+        return $ DomainSet () def innerDomX
 
 instance DomainOf (OpTogether x) where
     domainOf _ = return DomainBool
