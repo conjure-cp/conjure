@@ -15,11 +15,11 @@ branching on
      var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
      var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
-    or([q40 <= var2_ExplicitVarSizeWithMarkerR5_Marker /\
-        sum([toInt(q41 <= var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q40])
-                 | q41 : int(1..2)])
+    or([q34 <= var2_ExplicitVarSizeWithMarkerR5_Marker /\
+        sum([toInt(q35 <= var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q34])
+                 | q35 : int(1..2)])
         >= -7
-            | q40 : int(1..4)]),
+            | q34 : int(1..4)]),
     and([q2 + 1 <= var2_ExplicitVarSizeWithMarkerR5_Marker ->
          flatten([[var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q2]; int(1)],
                   [-toInt(var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q2, q8])
@@ -74,30 +74,24 @@ such that
               var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q15, q17] = false
                   | q17 : int(1..2)])
              | q15 : int(1..4)]),
-    sum([toInt(var2_ExplicitVarSizeWithFlagsR5_Flags[q23]) | q23 : int(1..4)]) =
-    var2_ExplicitVarSizeWithMarkerR5_Marker,
-    sum([toInt(var2_ExplicitVarSizeWithFlagsR5_Flags[q31]) | q31 : int(1..4)]) <=
-    var2_ExplicitVarSizeWithMarkerR5_Marker,
-    and([var2_ExplicitVarSizeWithFlagsR5_Flags[q25] ->
-         or([q27 <= var2_ExplicitVarSizeWithMarkerR5_Marker /\
-             (var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q27] =
-              var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q25]
+    and([var2_ExplicitVarSizeWithFlagsR5_Flags[q23] ->
+         or([q25 <= var2_ExplicitVarSizeWithMarkerR5_Marker /\
+             (var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q25] =
+              var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q23]
               /\
-              and([var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q27, q28] =
-                   var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q25, q28]
-                       | q28 : int(1..2)]))
-                 | q27 : int(1..4)])
-             | q25 : int(1..4)]),
-    var2_ExplicitVarSizeWithMarkerR5_Marker <=
-    sum([toInt(var2_ExplicitVarSizeWithFlagsR5_Flags[q34]) | q34 : int(1..4)]),
-    and([q35 <= var2_ExplicitVarSizeWithMarkerR5_Marker ->
-         or([var2_ExplicitVarSizeWithFlagsR5_Flags[q37] /\
-             (var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q37] =
-              var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q35]
+              and([var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q25, q26] =
+                   var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q23, q26]
+                       | q26 : int(1..2)]))
+                 | q25 : int(1..4)])
+             | q23 : int(1..4)]),
+    and([q29 <= var2_ExplicitVarSizeWithMarkerR5_Marker ->
+         or([var2_ExplicitVarSizeWithFlagsR5_Flags[q31] /\
+             (var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q31] =
+              var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q29]
               /\
-              and([var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q37, q38] =
-                   var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q35, q38]
-                       | q38 : int(1..2)]))
-                 | q37 : int(1..4)])
-             | q35 : int(1..4)])
+              and([var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values[q31, q32] =
+                   var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q29, q32]
+                       | q32 : int(1..2)]))
+                 | q31 : int(1..4)])
+             | q29 : int(1..4)])
 

@@ -11,9 +11,9 @@ branching on
      x_ExplicitVarSizeWithFlags_Values_theVal, x_ExplicitVarSizeWithMarker_Marker,
      x_ExplicitVarSizeWithMarker_Values_isEven, x_ExplicitVarSizeWithMarker_Values_theVal]
 such that
-    and([q23 <= x_ExplicitVarSizeWithMarker_Marker ->
-         (x_ExplicitVarSizeWithMarker_Values_theVal[q23] % 2 = 0 <-> x_ExplicitVarSizeWithMarker_Values_isEven[q23])
-             | q23 : int(1..6)]),
+    and([q17 <= x_ExplicitVarSizeWithMarker_Marker ->
+         (x_ExplicitVarSizeWithMarker_Values_theVal[q17] % 2 = 0 <-> x_ExplicitVarSizeWithMarker_Values_isEven[q17])
+             | q17 : int(1..6)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          flatten([[-toInt(x_ExplicitVarSizeWithMarker_Values_isEven[q1]); int(1)],
                   [x_ExplicitVarSizeWithMarker_Values_theVal[q1]; int(1)];
@@ -39,19 +39,16 @@ such that
          x_ExplicitVarSizeWithFlags_Values_isEven[q5] = false /\ x_ExplicitVarSizeWithFlags_Values_theVal[q5] = 1
              | q5 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q6] | q6 : int(1..5)]),
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q10]) | q10 : int(1..6)]) = x_ExplicitVarSizeWithMarker_Marker,
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q16]) | q16 : int(1..6)]) <= x_ExplicitVarSizeWithMarker_Marker,
-    and([x_ExplicitVarSizeWithFlags_Flags[q12] ->
-         or([q14 <= x_ExplicitVarSizeWithMarker_Marker /\
-             (x_ExplicitVarSizeWithMarker_Values_isEven[q14] = x_ExplicitVarSizeWithFlags_Values_isEven[q12] /\
-              x_ExplicitVarSizeWithMarker_Values_theVal[q14] = x_ExplicitVarSizeWithFlags_Values_theVal[q12])
-                 | q14 : int(1..6)])
-             | q12 : int(1..6)]),
-    x_ExplicitVarSizeWithMarker_Marker <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q19]) | q19 : int(1..6)]),
-    and([q20 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q22] /\
-             (x_ExplicitVarSizeWithFlags_Values_isEven[q22] = x_ExplicitVarSizeWithMarker_Values_isEven[q20] /\
-              x_ExplicitVarSizeWithFlags_Values_theVal[q22] = x_ExplicitVarSizeWithMarker_Values_theVal[q20])
-                 | q22 : int(1..6)])
-             | q20 : int(1..6)])
+    and([x_ExplicitVarSizeWithFlags_Flags[q10] ->
+         or([q12 <= x_ExplicitVarSizeWithMarker_Marker /\
+             (x_ExplicitVarSizeWithMarker_Values_isEven[q12] = x_ExplicitVarSizeWithFlags_Values_isEven[q10] /\
+              x_ExplicitVarSizeWithMarker_Values_theVal[q12] = x_ExplicitVarSizeWithFlags_Values_theVal[q10])
+                 | q12 : int(1..6)])
+             | q10 : int(1..6)]),
+    and([q14 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q16] /\
+             (x_ExplicitVarSizeWithFlags_Values_isEven[q16] = x_ExplicitVarSizeWithMarker_Values_isEven[q14] /\
+              x_ExplicitVarSizeWithFlags_Values_theVal[q16] = x_ExplicitVarSizeWithMarker_Values_theVal[q14])
+                 | q16 : int(1..6)])
+             | q14 : int(1..6)])
 

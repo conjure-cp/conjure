@@ -7,14 +7,15 @@ find fprime_Function1DPartial_Flags: matrix indexed by [bool] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [bool] of bool
 branching on [fprime_Function1DPartial_Flags, fprime_Function1DPartial_Values]
 such that
+    fin1 = sum([toInt(fprime_Function1DPartial_Flags[q7]) | q7 : bool]),
     and([(fprime_Function1DPartial_Values[f_FunctionAsRelation_RelationAsSet_Explicit_1[q5]] /\
           fprime_Function1DPartial_Flags[f_FunctionAsRelation_RelationAsSet_Explicit_1[q5]])
          = f_FunctionAsRelation_RelationAsSet_Explicit_2[q5]
              | q5 : int(1..fin1)]),
-    and([fprime_Function1DPartial_Flags[q6] ->
-         or([f_FunctionAsRelation_RelationAsSet_Explicit_1[q8] = q6 /\
-             f_FunctionAsRelation_RelationAsSet_Explicit_2[q8] = fprime_Function1DPartial_Values[q6]
-                 | q8 : int(1..fin1)])
-             | q6 : bool]),
+    and([fprime_Function1DPartial_Flags[q8] ->
+         or([f_FunctionAsRelation_RelationAsSet_Explicit_1[q10] = q8 /\
+             f_FunctionAsRelation_RelationAsSet_Explicit_2[q10] = fprime_Function1DPartial_Values[q8]
+                 | q10 : int(1..fin1)])
+             | q8 : bool]),
     and([fprime_Function1DPartial_Flags[q1] = false -> fprime_Function1DPartial_Values[q1] = false | q1 : bool])
 

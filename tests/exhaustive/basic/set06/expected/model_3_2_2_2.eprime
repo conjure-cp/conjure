@@ -5,9 +5,9 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1.
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
-    or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q23] = 1 | q23 : int(1..4)]),
-    or([x_ExplicitVarSizeWithDummy[q25] != 5 /\ x_ExplicitVarSizeWithDummy[q25] = 2 | q25 : int(1..4)]),
-    or([x_ExplicitVarSizeWithDummy[q27] != 5 /\ x_ExplicitVarSizeWithDummy[q27] = 3 | q27 : int(1..4)]),
+    or([q17 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q17] = 1 | q17 : int(1..4)]),
+    or([x_ExplicitVarSizeWithDummy[q19] != 5 /\ x_ExplicitVarSizeWithDummy[q19] = 2 | q19 : int(1..4)]),
+    or([x_ExplicitVarSizeWithDummy[q21] != 5 /\ x_ExplicitVarSizeWithDummy[q21] = 3 | q21 : int(1..4)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..3)]),
@@ -17,17 +17,14 @@ such that
              | q4 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q5] = 5 -> x_ExplicitVarSizeWithDummy[q5 + 1] = 5 | q5 : int(1..3)]),
     sum([toInt(x_ExplicitVarSizeWithDummy[q6] != 5) | q6 : int(1..4)]) <= 4,
-    sum([toInt(x_ExplicitVarSizeWithDummy[q9] != 5) | q9 : int(1..4)]) = x_ExplicitVarSizeWithMarker_Marker,
-    sum([toInt(x_ExplicitVarSizeWithDummy[q15] != 5) | q15 : int(1..4)]) <= x_ExplicitVarSizeWithMarker_Marker,
-    and([x_ExplicitVarSizeWithDummy[q11] != 5 ->
-         or([q13 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q13] = x_ExplicitVarSizeWithDummy[q11]
-                 | q13 : int(1..4)])
-             | q11 : int(1..4)]),
-    x_ExplicitVarSizeWithMarker_Marker <= sum([toInt(x_ExplicitVarSizeWithDummy[q18] != 5) | q18 : int(1..4)]),
-    and([q19 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithDummy[q21] != 5 /\
-             x_ExplicitVarSizeWithDummy[q21] = x_ExplicitVarSizeWithMarker_Values[q19]
-                 | q21 : int(1..4)])
-             | q19 : int(1..4)])
+    and([x_ExplicitVarSizeWithDummy[q9] != 5 ->
+         or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q11] = x_ExplicitVarSizeWithDummy[q9]
+                 | q11 : int(1..4)])
+             | q9 : int(1..4)]),
+    and([q13 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithDummy[q15] != 5 /\
+             x_ExplicitVarSizeWithDummy[q15] = x_ExplicitVarSizeWithMarker_Values[q13]
+                 | q15 : int(1..4)])
+             | q13 : int(1..4)])
 

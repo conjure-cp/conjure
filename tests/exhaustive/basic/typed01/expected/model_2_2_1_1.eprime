@@ -6,26 +6,11 @@ find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 find y_Occurrence: matrix indexed by [int(1)] of bool
 branching on [x_Occurrence, x_ExplicitVarSizeWithDummy, y_Occurrence, y_ExplicitVarSizeWithDummy]
 such that
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
-          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1]))
-    = 0,
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
-          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1]))
-    <= 0,
     x_ExplicitVarSizeWithDummy[1] != 2 /\
     (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1])
     -> false,
-    0 <=
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
-          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1])),
-    toInt(x_Occurrence[1]) = toInt(x_ExplicitVarSizeWithDummy[1] != 2),
-    toInt(x_Occurrence[1]) <= toInt(x_ExplicitVarSizeWithDummy[1] != 2),
     x_Occurrence[1] -> x_ExplicitVarSizeWithDummy[1] != 2 /\ x_ExplicitVarSizeWithDummy[1] = 1,
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2) <= toInt(x_Occurrence[1]),
     x_ExplicitVarSizeWithDummy[1] != 2 -> x_Occurrence[x_ExplicitVarSizeWithDummy[1]],
-    toInt(y_Occurrence[1]) = toInt(y_ExplicitVarSizeWithDummy[1] != 2),
-    toInt(y_Occurrence[1]) <= toInt(y_ExplicitVarSizeWithDummy[1] != 2),
     y_Occurrence[1] -> y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = 1,
-    toInt(y_ExplicitVarSizeWithDummy[1] != 2) <= toInt(y_Occurrence[1]),
     y_ExplicitVarSizeWithDummy[1] != 2 -> y_Occurrence[y_ExplicitVarSizeWithDummy[1]]
 

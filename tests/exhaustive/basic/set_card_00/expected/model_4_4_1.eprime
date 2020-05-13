@@ -5,21 +5,15 @@ find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 branching on [s_Occurrence, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
-    or([s_ExplicitVarSizeWithFlags_Flags[q22] /\
-        s_ExplicitVarSizeWithFlags_Values[q22] = sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q24]) | q24 : int(1..2)])
-            | q22 : int(1..2)]),
+    or([s_ExplicitVarSizeWithFlags_Flags[q13] /\
+        s_ExplicitVarSizeWithFlags_Values[q13] = sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q15]) | q15 : int(1..2)])
+            | q13 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
     and([s_ExplicitVarSizeWithFlags_Flags[q2] = false -> s_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Flags[1],
-    sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]) =
-    sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q9]) | q9 : int(1..2)]),
-    sum([toInt(s_Occurrence[q13]) | q13 : int(1..2)]) <=
-    sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q15]) | q15 : int(1..2)]),
-    and([s_Occurrence[q10] ->
-         or([s_ExplicitVarSizeWithFlags_Flags[q12] /\ s_ExplicitVarSizeWithFlags_Values[q12] = q10 | q12 : int(1..2)])
-             | q10 : int(1..2)]),
-    sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q19]) | q19 : int(1..2)]) <=
-    sum([toInt(s_Occurrence[q20]) | q20 : int(1..2)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q17] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q17]]
-             | q17 : int(1..2)])
+    and([s_Occurrence[q7] ->
+         or([s_ExplicitVarSizeWithFlags_Flags[q9] /\ s_ExplicitVarSizeWithFlags_Values[q9] = q7 | q9 : int(1..2)])
+             | q7 : int(1..2)]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q11] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q11]]
+             | q11 : int(1..2)])
 

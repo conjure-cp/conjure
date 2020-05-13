@@ -5,9 +5,6 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
 find y_Occurrence: matrix indexed by [int(1)] of bool
 branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, y_Occurrence]
 such that
-    toInt(1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]]) = 0,
-    toInt(1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]]) <= 0,
     1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]] -> false,
-    0 <= toInt(1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]]),
     1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1
 

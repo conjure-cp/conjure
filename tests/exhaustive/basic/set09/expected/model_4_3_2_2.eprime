@@ -10,9 +10,9 @@ branching on
     [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values,
      y_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values]
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q51] /\ q52 <= y_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithFlags_Values[q51] + 2 = y_ExplicitVarSizeWithMarker_Values[q52]
-             | q51 : int(1..4), q52 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q33] /\ q34 <= y_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithFlags_Values[q33] + 2 = y_ExplicitVarSizeWithMarker_Values[q34]
+             | q33 : int(1..4), q34 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..3)]),
@@ -28,37 +28,28 @@ such that
              | q9 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q10] = 6 -> x_ExplicitVarSizeWithDummy[q10 + 1] = 6 | q10 : int(1..3)]),
     1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q11] != 6) | q11 : int(1..4)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q14] != 6) | q14 : int(1..4)]) =
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q16]) | q16 : int(1..4)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q22] != 6) | q22 : int(1..4)]) <=
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q24]) | q24 : int(1..4)]),
-    and([x_ExplicitVarSizeWithDummy[q18] != 6 ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q20] /\
-             x_ExplicitVarSizeWithFlags_Values[q20] = x_ExplicitVarSizeWithDummy[q18]
+    and([x_ExplicitVarSizeWithDummy[q14] != 6 ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q16] /\
+             x_ExplicitVarSizeWithFlags_Values[q16] = x_ExplicitVarSizeWithDummy[q14]
+                 | q16 : int(1..4)])
+             | q14 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q18] ->
+         or([x_ExplicitVarSizeWithDummy[q20] != 6 /\
+             x_ExplicitVarSizeWithDummy[q20] = x_ExplicitVarSizeWithFlags_Values[q18]
                  | q20 : int(1..4)])
              | q18 : int(1..4)]),
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q30]) | q30 : int(1..4)]) <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q32] != 6) | q32 : int(1..4)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q26] ->
-         or([x_ExplicitVarSizeWithDummy[q28] != 6 /\
-             x_ExplicitVarSizeWithDummy[q28] = x_ExplicitVarSizeWithFlags_Values[q26]
+    and([y_ExplicitVarSizeWithDummy[q21] < y_ExplicitVarSizeWithDummy[q21 + 1] \/ y_ExplicitVarSizeWithDummy[q21] = 6
+             | q21 : int(1..3)]),
+    and([y_ExplicitVarSizeWithDummy[q22] = 6 -> y_ExplicitVarSizeWithDummy[q22 + 1] = 6 | q22 : int(1..3)]),
+    1 <= sum([toInt(y_ExplicitVarSizeWithDummy[q23] != 6) | q23 : int(1..4)]),
+    and([y_ExplicitVarSizeWithDummy[q26] != 6 ->
+         or([q28 <= y_ExplicitVarSizeWithMarker_Marker /\
+             y_ExplicitVarSizeWithMarker_Values[q28] = y_ExplicitVarSizeWithDummy[q26]
                  | q28 : int(1..4)])
              | q26 : int(1..4)]),
-    and([y_ExplicitVarSizeWithDummy[q33] < y_ExplicitVarSizeWithDummy[q33 + 1] \/ y_ExplicitVarSizeWithDummy[q33] = 6
-             | q33 : int(1..3)]),
-    and([y_ExplicitVarSizeWithDummy[q34] = 6 -> y_ExplicitVarSizeWithDummy[q34 + 1] = 6 | q34 : int(1..3)]),
-    1 <= sum([toInt(y_ExplicitVarSizeWithDummy[q35] != 6) | q35 : int(1..4)]),
-    sum([toInt(y_ExplicitVarSizeWithDummy[q38] != 6) | q38 : int(1..4)]) = y_ExplicitVarSizeWithMarker_Marker,
-    sum([toInt(y_ExplicitVarSizeWithDummy[q44] != 6) | q44 : int(1..4)]) <= y_ExplicitVarSizeWithMarker_Marker,
-    and([y_ExplicitVarSizeWithDummy[q40] != 6 ->
-         or([q42 <= y_ExplicitVarSizeWithMarker_Marker /\
-             y_ExplicitVarSizeWithMarker_Values[q42] = y_ExplicitVarSizeWithDummy[q40]
-                 | q42 : int(1..4)])
-             | q40 : int(1..4)]),
-    y_ExplicitVarSizeWithMarker_Marker <= sum([toInt(y_ExplicitVarSizeWithDummy[q47] != 6) | q47 : int(1..4)]),
-    and([q48 <= y_ExplicitVarSizeWithMarker_Marker ->
-         or([y_ExplicitVarSizeWithDummy[q50] != 6 /\
-             y_ExplicitVarSizeWithDummy[q50] = y_ExplicitVarSizeWithMarker_Values[q48]
-                 | q50 : int(1..4)])
-             | q48 : int(1..4)])
+    and([q30 <= y_ExplicitVarSizeWithMarker_Marker ->
+         or([y_ExplicitVarSizeWithDummy[q32] != 6 /\
+             y_ExplicitVarSizeWithDummy[q32] = y_ExplicitVarSizeWithMarker_Values[q30]
+                 | q32 : int(1..4)])
+             | q30 : int(1..4)])
 

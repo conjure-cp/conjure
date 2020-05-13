@@ -77,6 +77,8 @@ interface IAbstractPatternMetaVar {
   contents: string;
 }
 
+type AscDesc = "Ascending" | "Descending";
+
 type AttrName = "AttrName_size" | "AttrName_minSize" | "AttrName_maxSize" | "AttrName_minOccur" | "AttrName_maxOccur" | "AttrName_numParts" | "AttrName_minNumParts" | "AttrName_maxNumParts" | "AttrName_partSize" | "AttrName_minPartSize" | "AttrName_maxPartSize" | "AttrName_total" | "AttrName_injective" | "AttrName_surjective" | "AttrName_bijective" | "AttrName_regular" | "AttrName_reflexive" | "AttrName_irreflexive" | "AttrName_coreflexive" | "AttrName_symmetric" | "AttrName_antiSymmetric" | "AttrName_aSymmetric" | "AttrName_transitive" | "AttrName_connex" | "AttrName_Euclidean" | "AttrName_serial" | "AttrName_equivalence" | "AttrName_partialOrder";
 
 type BinaryRelationAttr = "BinRelAttr_Reflexive" | "BinRelAttr_Irreflexive" | "BinRelAttr_Coreflexive" | "BinRelAttr_Symmetric" | "BinRelAttr_AntiSymmetric" | "BinRelAttr_ASymmetric" | "BinRelAttr_Transitive" | "BinRelAttr_Total" | "BinRelAttr_Connex" | "BinRelAttr_Euclidean" | "BinRelAttr_Serial" | "BinRelAttr_Equivalence" | "BinRelAttr_PartialOrder";
@@ -256,6 +258,14 @@ interface IDomainReference<T1, T2> {
 interface IDomainMetaVar<T1, T2> {
   tag: "DomainMetaVar";
   contents: string;
+}
+
+type Dominance = IDominance;
+
+interface IDominance {
+  dominanceRelation: Expression;
+  incomparability?: [AscDesc, Expression];
+  printToSR: boolean;
 }
 
 type Expression = IConstant | IAbstractLiteral | IDomain | IReference | IWithLocals | IComprehension | ITyped | IOp | IExpressionMetaVar;
@@ -534,7 +544,7 @@ interface IOccurAttr_MinMaxOccur<T> {
   contents: [T, T];
 }
 
-type Op<T> = IMkOpActive<T> | IMkOpAllDiff<T> | IMkOpAllDiffExcept<T> | IMkOpAnd<T> | IMkOpApart<T> | IMkOpAttributeAsConstraint<T> | IMkOpCatchUndef<T> | IMkOpDefined<T> | IMkOpDiv<T> | IMkOpDontCare<T> | IMkOpDotLeq<T> | IMkOpDotLt<T> | IMkOpEq<T> | IMkOpFactorial<T> | IMkOpFlatten<T> | IMkOpFreq<T> | IMkOpGeq<T> | IMkOpGt<T> | IMkOpHist<T> | IMkOpIff<T> | IMkOpImage<T> | IMkOpImageSet<T> | IMkOpImply<T> | IMkOpIn<T> | IMkOpIndexing<T> | IMkOpIntersect<T> | IMkOpInverse<T> | IMkOpLeq<T> | IMkOpLexLeq<T> | IMkOpLexLt<T> | IMkOpLt<T> | IMkOpMakeTable<T> | IMkOpMax<T> | IMkOpMin<T> | IMkOpMinus<T> | IMkOpMod<T> | IMkOpNegate<T> | IMkOpNeq<T> | IMkOpNot<T> | IMkOpOr<T> | IMkOpParticipants<T> | IMkOpParts<T> | IMkOpParty<T> | IMkOpPow<T> | IMkOpPowerSet<T> | IMkOpPreImage<T> | IMkOpPred<T> | IMkOpProduct<T> | IMkOpRange<T> | IMkOpRelationProj<T> | IMkOpRestrict<T> | IMkOpSlicing<T> | IMkOpSubsequence<T> | IMkOpSubset<T> | IMkOpSubsetEq<T> | IMkOpSubstring<T> | IMkOpSucc<T> | IMkOpSum<T> | IMkOpSupset<T> | IMkOpSupsetEq<T> | IMkOpTildeLeq<T> | IMkOpTildeLt<T> | IMkOpToInt<T> | IMkOpToMSet<T> | IMkOpToRelation<T> | IMkOpToSet<T> | IMkOpTogether<T> | IMkOpTransform<T> | IMkOpTrue<T> | IMkOpTwoBars<T> | IMkOpUnion<T> | IMkOpXor<T>;
+type Op<T> = IMkOpActive<T> | IMkOpAllDiff<T> | IMkOpAllDiffExcept<T> | IMkOpAnd<T> | IMkOpApart<T> | IMkOpAttributeAsConstraint<T> | IMkOpCatchUndef<T> | IMkOpDefined<T> | IMkOpDiv<T> | IMkOpDontCare<T> | IMkOpDotLeq<T> | IMkOpDotLt<T> | IMkOpEq<T> | IMkOpFactorial<T> | IMkOpFlatten<T> | IMkOpFreq<T> | IMkOpFromSolution<T> | IMkOpGeq<T> | IMkOpGt<T> | IMkOpHist<T> | IMkOpIff<T> | IMkOpImage<T> | IMkOpImageSet<T> | IMkOpImply<T> | IMkOpIn<T> | IMkOpIndexing<T> | IMkOpIntersect<T> | IMkOpInverse<T> | IMkOpLeq<T> | IMkOpLexLeq<T> | IMkOpLexLt<T> | IMkOpLt<T> | IMkOpMakeTable<T> | IMkOpMax<T> | IMkOpMin<T> | IMkOpMinus<T> | IMkOpMod<T> | IMkOpNegate<T> | IMkOpNeq<T> | IMkOpNot<T> | IMkOpOr<T> | IMkOpParticipants<T> | IMkOpParts<T> | IMkOpParty<T> | IMkOpPow<T> | IMkOpPowerSet<T> | IMkOpPreImage<T> | IMkOpPred<T> | IMkOpProduct<T> | IMkOpRange<T> | IMkOpRelationProj<T> | IMkOpRestrict<T> | IMkOpSlicing<T> | IMkOpSubsequence<T> | IMkOpSubset<T> | IMkOpSubsetEq<T> | IMkOpSubstring<T> | IMkOpSucc<T> | IMkOpSum<T> | IMkOpSupset<T> | IMkOpSupsetEq<T> | IMkOpTildeLeq<T> | IMkOpTildeLt<T> | IMkOpToInt<T> | IMkOpToMSet<T> | IMkOpToRelation<T> | IMkOpToSet<T> | IMkOpTogether<T> | IMkOpTransform<T> | IMkOpTrue<T> | IMkOpTwoBars<T> | IMkOpUnion<T> | IMkOpXor<T>;
 
 interface IMkOpActive<T> {
   tag: "MkOpActive";
@@ -614,6 +624,11 @@ interface IMkOpFlatten<T> {
 interface IMkOpFreq<T> {
   tag: "MkOpFreq";
   contents: OpFreq<T>;
+}
+
+interface IMkOpFromSolution<T> {
+  tag: "MkOpFromSolution";
+  contents: OpFromSolution<T>;
 }
 
 interface IMkOpGeq<T> {
@@ -959,6 +974,10 @@ type IOpFlatten<T> = [number, T];
 type OpFreq<T> = IOpFreq<T>;
 
 type IOpFreq<T> = [T, T];
+
+type OpFromSolution<T> = IOpFromSolution<T>;
+
+type IOpFromSolution<T> = T;
 
 type OpGeq<T> = IOpGeq<T>;
 
@@ -1309,7 +1328,7 @@ interface ISizeAttr_MinMaxSize<T> {
   contents: [T, T];
 }
 
-type Statement = IDeclaration | ISearchOrder | ISearchHeuristic | IWhere | IObjective | ISuchThat;
+type Statement = IDeclaration | ISearchOrder | ISearchHeuristic | IWhere | IObjective | ISuchThat | IDominanceStmt;
 
 interface IDeclaration {
   tag: "Declaration";
@@ -1339,6 +1358,11 @@ interface IObjective {
 interface ISuchThat {
   tag: "SuchThat";
   contents: Expression[];
+}
+
+interface IDominanceStmt {
+  tag: "DominanceStmt";
+  contents: Dominance;
 }
 
 type Strategy = IPickFirst | IPickAll | IInteractive | IAtRandom | ICompact | ISparse | IAuto;

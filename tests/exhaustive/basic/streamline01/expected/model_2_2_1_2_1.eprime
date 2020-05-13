@@ -7,7 +7,6 @@ find s_Explicit: matrix indexed by [int(1)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Occurrence, s_Explicit]
 such that
-    1 <= sum([toInt(f_Function1DPartial_Flags[q15]) | q15 : int(1..2)]),
     f_Function1DPartial_Flags[s_Explicit[1]],
     and([s_Occurrence[i] /\ i != s_Explicit[1] ->
          and([f_Function1DPartial_Values[i] > f_Function1DPartial_Values[s_Explicit[1]], f_Function1DPartial_Flags[i],

@@ -8,7 +8,6 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find conjure_aux1: int(1..2)
 branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Occurrence, s_Explicit]
 such that
-    1 <= sum([toInt(f_Function1DPartial_Flags[q16]) | q16 : int(1..2)]),
     f_Function1DPartial_Flags[s_Explicit[1]],
     and([s_Occurrence[q12] -> q12 >= conjure_aux1 | q12 : int(1..2)]),
     sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)]) > 0 ->

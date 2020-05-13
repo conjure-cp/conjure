@@ -8,19 +8,13 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..6)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..6)] of int(0..5)
 branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..6)]) =
-    sum([1 | q9 : int(1..fin1), or([b_Explicit[q11] = a_Explicit[q9] | q11 : int(1..fin2)])]),
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q19]) | q19 : int(1..6)]) <=
-    sum([1 | q21 : int(1..fin1), or([b_Explicit[q23] = a_Explicit[q21] | q23 : int(1..fin2)])]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q13] ->
-         or([a_Explicit[q15] = x_ExplicitVarSizeWithFlags_Values[q13]
-                 | q15 : int(1..fin1), or([b_Explicit[q17] = a_Explicit[q15] | q17 : int(1..fin2)])])
-             | q13 : int(1..6)]),
-    sum([1 | q26 : int(1..fin1), or([b_Explicit[q28] = a_Explicit[q26] | q28 : int(1..fin2)])]) <=
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q30]) | q30 : int(1..6)]),
-    and([or([x_ExplicitVarSizeWithFlags_Flags[q33] /\ x_ExplicitVarSizeWithFlags_Values[q33] = a_Explicit[q31]
-                 | q33 : int(1..6)])
-             | q31 : int(1..fin1), or([b_Explicit[q35] = a_Explicit[q31] | q35 : int(1..fin2)])]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q7] ->
+         or([a_Explicit[q9] = x_ExplicitVarSizeWithFlags_Values[q7]
+                 | q9 : int(1..fin1), or([b_Explicit[q11] = a_Explicit[q9] | q11 : int(1..fin2)])])
+             | q7 : int(1..6)]),
+    and([or([x_ExplicitVarSizeWithFlags_Flags[q15] /\ x_ExplicitVarSizeWithFlags_Values[q15] = a_Explicit[q13]
+                 | q15 : int(1..6)])
+             | q13 : int(1..fin1), or([b_Explicit[q17] = a_Explicit[q13] | q17 : int(1..fin2)])]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..5)]),

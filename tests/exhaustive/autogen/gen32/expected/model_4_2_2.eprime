@@ -6,17 +6,17 @@ find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int
 find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 branching on [var2_ExplicitVarSizeWithDummy, var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values]
 such that
-    or([var2_ExplicitVarSizeWithFlags_Flags[q31] /\
-        !or([var2_ExplicitVarSizeWithDummy[q33] != 6 /\
-             var2_ExplicitVarSizeWithDummy[q33] = var2_ExplicitVarSizeWithFlags_Values[q31]
-                 | q33 : int(1..11)])
-            | q31 : int(1..11)])
+    or([var2_ExplicitVarSizeWithFlags_Flags[q19] /\
+        !or([var2_ExplicitVarSizeWithDummy[q21] != 6 /\
+             var2_ExplicitVarSizeWithDummy[q21] = var2_ExplicitVarSizeWithFlags_Values[q19]
+                 | q21 : int(1..11)])
+            | q19 : int(1..11)])
     \/
-    or([var2_ExplicitVarSizeWithDummy[q34] != 6 /\
-        !or([var2_ExplicitVarSizeWithFlags_Flags[q36] /\
-             var2_ExplicitVarSizeWithFlags_Values[q36] = var2_ExplicitVarSizeWithDummy[q34]
-                 | q36 : int(1..11)])
-            | q34 : int(1..11)]),
+    or([var2_ExplicitVarSizeWithDummy[q22] != 6 /\
+        !or([var2_ExplicitVarSizeWithFlags_Flags[q24] /\
+             var2_ExplicitVarSizeWithFlags_Values[q24] = var2_ExplicitVarSizeWithDummy[q22]
+                 | q24 : int(1..11)])
+            | q22 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          var2_ExplicitVarSizeWithFlags_Values[q1] < var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..10)]),
@@ -27,20 +27,14 @@ such that
          var2_ExplicitVarSizeWithDummy[q6] = 6
              | q6 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q7] = 6 -> var2_ExplicitVarSizeWithDummy[q7 + 1] = 6 | q7 : int(1..10)]),
-    sum([toInt(var2_ExplicitVarSizeWithDummy[q11] != 6) | q11 : int(1..11)]) =
-    sum([toInt(var2_ExplicitVarSizeWithFlags_Flags[q13]) | q13 : int(1..11)]),
-    sum([toInt(var2_ExplicitVarSizeWithDummy[q19] != 6) | q19 : int(1..11)]) <=
-    sum([toInt(var2_ExplicitVarSizeWithFlags_Flags[q21]) | q21 : int(1..11)]),
-    and([var2_ExplicitVarSizeWithDummy[q15] != 6 ->
-         or([var2_ExplicitVarSizeWithFlags_Flags[q17] /\
-             var2_ExplicitVarSizeWithFlags_Values[q17] = var2_ExplicitVarSizeWithDummy[q15]
+    and([var2_ExplicitVarSizeWithDummy[q11] != 6 ->
+         or([var2_ExplicitVarSizeWithFlags_Flags[q13] /\
+             var2_ExplicitVarSizeWithFlags_Values[q13] = var2_ExplicitVarSizeWithDummy[q11]
+                 | q13 : int(1..11)])
+             | q11 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q15] ->
+         or([var2_ExplicitVarSizeWithDummy[q17] != 6 /\
+             var2_ExplicitVarSizeWithDummy[q17] = var2_ExplicitVarSizeWithFlags_Values[q15]
                  | q17 : int(1..11)])
-             | q15 : int(1..11)]),
-    sum([toInt(var2_ExplicitVarSizeWithFlags_Flags[q27]) | q27 : int(1..11)]) <=
-    sum([toInt(var2_ExplicitVarSizeWithDummy[q29] != 6) | q29 : int(1..11)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q23] ->
-         or([var2_ExplicitVarSizeWithDummy[q25] != 6 /\
-             var2_ExplicitVarSizeWithDummy[q25] = var2_ExplicitVarSizeWithFlags_Values[q23]
-                 | q25 : int(1..11)])
-             | q23 : int(1..11)])
+             | q15 : int(1..11)])
 

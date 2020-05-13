@@ -9,8 +9,8 @@ branching on
     [x_ExplicitVarSizeWithDummy, x_Occurrence, y_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithFlags_Flags,
      y_ExplicitVarSizeWithFlags_Values]
 such that
-    and([x_Occurrence[i] /\ y_ExplicitVarSizeWithFlags_Flags[q49] -> i + 2 = y_ExplicitVarSizeWithFlags_Values[q49]
-             | i : int(2..5), q49 : int(1..4)]),
+    and([x_Occurrence[i] /\ y_ExplicitVarSizeWithFlags_Flags[q28] -> i + 2 = y_ExplicitVarSizeWithFlags_Values[q28]
+             | i : int(2..5), q28 : int(1..4)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(2..5)]),
     and([y_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
          y_ExplicitVarSizeWithFlags_Values[q2] < y_ExplicitVarSizeWithFlags_Values[q2 + 1]
@@ -22,34 +22,22 @@ such that
              | q7 : int(1..3)]),
     and([x_ExplicitVarSizeWithDummy[q8] = 6 -> x_ExplicitVarSizeWithDummy[q8 + 1] = 6 | q8 : int(1..3)]),
     1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q9] != 6) | q9 : int(1..4)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q12] != 6) | q12 : int(1..4)]) =
-    sum([toInt(x_Occurrence[q13]) | q13 : int(2..5)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q17] != 6) | q17 : int(1..4)]) <=
-    sum([toInt(x_Occurrence[q18]) | q18 : int(2..5)]),
-    and([x_ExplicitVarSizeWithDummy[q15] != 6 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q15]] | q15 : int(1..4)]),
-    sum([toInt(x_Occurrence[q22]) | q22 : int(2..5)]) <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q24] != 6) | q24 : int(1..4)]),
-    and([x_Occurrence[q19] ->
-         or([x_ExplicitVarSizeWithDummy[q21] != 6 /\ x_ExplicitVarSizeWithDummy[q21] = q19 | q21 : int(1..4)])
-             | q19 : int(2..5)]),
-    and([y_ExplicitVarSizeWithDummy[q25] < y_ExplicitVarSizeWithDummy[q25 + 1] \/ y_ExplicitVarSizeWithDummy[q25] = 6
-             | q25 : int(1..3)]),
-    and([y_ExplicitVarSizeWithDummy[q26] = 6 -> y_ExplicitVarSizeWithDummy[q26 + 1] = 6 | q26 : int(1..3)]),
-    1 <= sum([toInt(y_ExplicitVarSizeWithDummy[q27] != 6) | q27 : int(1..4)]),
-    sum([toInt(y_ExplicitVarSizeWithDummy[q30] != 6) | q30 : int(1..4)]) =
-    sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q32]) | q32 : int(1..4)]),
-    sum([toInt(y_ExplicitVarSizeWithDummy[q38] != 6) | q38 : int(1..4)]) <=
-    sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q40]) | q40 : int(1..4)]),
-    and([y_ExplicitVarSizeWithDummy[q34] != 6 ->
-         or([y_ExplicitVarSizeWithFlags_Flags[q36] /\
-             y_ExplicitVarSizeWithFlags_Values[q36] = y_ExplicitVarSizeWithDummy[q34]
-                 | q36 : int(1..4)])
-             | q34 : int(1..4)]),
-    sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q46]) | q46 : int(1..4)]) <=
-    sum([toInt(y_ExplicitVarSizeWithDummy[q48] != 6) | q48 : int(1..4)]),
-    and([y_ExplicitVarSizeWithFlags_Flags[q42] ->
-         or([y_ExplicitVarSizeWithDummy[q44] != 6 /\
-             y_ExplicitVarSizeWithDummy[q44] = y_ExplicitVarSizeWithFlags_Values[q42]
-                 | q44 : int(1..4)])
-             | q42 : int(1..4)])
+    and([x_ExplicitVarSizeWithDummy[q12] != 6 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q12]] | q12 : int(1..4)]),
+    and([x_Occurrence[q13] ->
+         or([x_ExplicitVarSizeWithDummy[q15] != 6 /\ x_ExplicitVarSizeWithDummy[q15] = q13 | q15 : int(1..4)])
+             | q13 : int(2..5)]),
+    and([y_ExplicitVarSizeWithDummy[q16] < y_ExplicitVarSizeWithDummy[q16 + 1] \/ y_ExplicitVarSizeWithDummy[q16] = 6
+             | q16 : int(1..3)]),
+    and([y_ExplicitVarSizeWithDummy[q17] = 6 -> y_ExplicitVarSizeWithDummy[q17 + 1] = 6 | q17 : int(1..3)]),
+    1 <= sum([toInt(y_ExplicitVarSizeWithDummy[q18] != 6) | q18 : int(1..4)]),
+    and([y_ExplicitVarSizeWithDummy[q21] != 6 ->
+         or([y_ExplicitVarSizeWithFlags_Flags[q23] /\
+             y_ExplicitVarSizeWithFlags_Values[q23] = y_ExplicitVarSizeWithDummy[q21]
+                 | q23 : int(1..4)])
+             | q21 : int(1..4)]),
+    and([y_ExplicitVarSizeWithFlags_Flags[q25] ->
+         or([y_ExplicitVarSizeWithDummy[q27] != 6 /\
+             y_ExplicitVarSizeWithDummy[q27] = y_ExplicitVarSizeWithFlags_Values[q25]
+                 | q27 : int(1..4)])
+             | q25 : int(1..4)])
 

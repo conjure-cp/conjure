@@ -10,30 +10,15 @@ branching on
     [x_Occurrence, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values,
      y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values, y_ExplicitVarSizeWithDummy]
 such that
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\
-          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1]))
-    = 0,
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\
-          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1]))
-    <= 0,
     x_ExplicitVarSizeWithFlags_Flags[1] /\
     (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1])
     -> false,
-    0 <=
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1] /\
-          (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1])),
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
-    toInt(x_Occurrence[1]) = toInt(x_ExplicitVarSizeWithFlags_Flags[1]),
-    toInt(x_Occurrence[1]) <= toInt(x_ExplicitVarSizeWithFlags_Flags[1]),
     x_Occurrence[1] -> x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = 1,
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1]) <= toInt(x_Occurrence[1]),
     x_ExplicitVarSizeWithFlags_Flags[1] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]],
     1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
-    y_ExplicitVarSizeWithMarker_Marker = toInt(y_ExplicitVarSizeWithDummy[1] != 2),
-    y_ExplicitVarSizeWithMarker_Marker <= toInt(y_ExplicitVarSizeWithDummy[1] != 2),
     1 <= y_ExplicitVarSizeWithMarker_Marker ->
     y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = y_ExplicitVarSizeWithMarker_Values[1],
-    toInt(y_ExplicitVarSizeWithDummy[1] != 2) <= y_ExplicitVarSizeWithMarker_Marker,
     y_ExplicitVarSizeWithDummy[1] != 2 ->
     1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = y_ExplicitVarSizeWithDummy[1]
 

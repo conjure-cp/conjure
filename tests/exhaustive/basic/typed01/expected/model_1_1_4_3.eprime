@@ -10,20 +10,11 @@ branching on
     [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence,
      y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values, y_Occurrence]
 such that
-    toInt(x_Occurrence[1] /\ y_Occurrence[1]) = 0,
-    toInt(x_Occurrence[1] /\ y_Occurrence[1]) <= 0,
     x_Occurrence[1] /\ y_Occurrence[1] -> false,
-    0 <= toInt(x_Occurrence[1] /\ y_Occurrence[1]),
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1]) = toInt(x_Occurrence[1]),
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1]) <= toInt(x_Occurrence[1]),
     x_ExplicitVarSizeWithFlags_Flags[1] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]],
-    toInt(x_Occurrence[1]) <= toInt(x_ExplicitVarSizeWithFlags_Flags[1]),
     x_Occurrence[1] -> x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = 1,
     1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
-    y_ExplicitVarSizeWithMarker_Marker = toInt(y_Occurrence[1]),
-    y_ExplicitVarSizeWithMarker_Marker <= toInt(y_Occurrence[1]),
     1 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[1]],
-    toInt(y_Occurrence[1]) <= y_ExplicitVarSizeWithMarker_Marker,
     y_Occurrence[1] -> 1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = 1
 

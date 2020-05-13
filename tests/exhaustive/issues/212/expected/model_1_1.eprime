@@ -7,15 +7,8 @@ given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
 find x_Occurrence: matrix indexed by [int(0..5)] of bool
 branching on [x_Occurrence]
 such that
-    sum([toInt(x_Occurrence[q2]) | q2 : int(0..5)]) =
-    sum([1 | q4 : int(1..fin1), or([b_Explicit[q6] = a_Explicit[q4] | q6 : int(1..fin2)])]),
-    sum([toInt(x_Occurrence[q12]) | q12 : int(0..5)]) <=
-    sum([1 | q14 : int(1..fin1), or([b_Explicit[q16] = a_Explicit[q14] | q16 : int(1..fin2)])]),
-    and([x_Occurrence[q7] ->
-         or([a_Explicit[q9] = q7 | q9 : int(1..fin1), or([b_Explicit[q11] = a_Explicit[q9] | q11 : int(1..fin2)])])
-             | q7 : int(0..5)]),
-    sum([1 | q22 : int(1..fin1), or([b_Explicit[q24] = a_Explicit[q22] | q24 : int(1..fin2)])]) <=
-    sum([toInt(x_Occurrence[q25]) | q25 : int(0..5)]),
-    and([x_Occurrence[a_Explicit[q18]]
-             | q18 : int(1..fin1), or([b_Explicit[q20] = a_Explicit[q18] | q20 : int(1..fin2)])])
+    and([x_Occurrence[q2] ->
+         or([a_Explicit[q4] = q2 | q4 : int(1..fin1), or([b_Explicit[q6] = a_Explicit[q4] | q6 : int(1..fin2)])])
+             | q2 : int(0..5)]),
+    and([x_Occurrence[a_Explicit[q8]] | q8 : int(1..fin1), or([b_Explicit[q10] = a_Explicit[q8] | q10 : int(1..fin2)])])
 

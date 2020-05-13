@@ -3,10 +3,7 @@ language ESSENCE' 1.0
 find var1: int(1..5, 3..4)
 branching on [var1]
 such that
-    2 = 1 + toInt(!(var1 = -2)),
-    2 <= 1 + toInt(!(var1 = -2)),
     var1 = -2 \/ !(var1 = -2),
     var1 = 3,
-    1 + toInt(!(var1 = -2)) <= 2,
     -2 = var1 \/ 3 = var1
 

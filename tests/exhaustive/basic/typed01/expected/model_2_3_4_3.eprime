@@ -9,28 +9,13 @@ branching on
     [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithDummy,
      y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values]
 such that
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
-          (1 <= y_ExplicitVarSizeWithMarker_Marker /\
-           y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1]))
-    = 0,
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
-          (1 <= y_ExplicitVarSizeWithMarker_Marker /\
-           y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1]))
-    <= 0,
     x_ExplicitVarSizeWithDummy[1] != 2 /\
     (1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1])
     -> false,
-    0 <=
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2 /\
-          (1 <= y_ExplicitVarSizeWithMarker_Marker /\
-           y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithDummy[1])),
     1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1]) = toInt(x_ExplicitVarSizeWithDummy[1] != 2),
-    toInt(x_ExplicitVarSizeWithFlags_Flags[1]) <= toInt(x_ExplicitVarSizeWithDummy[1] != 2),
     x_ExplicitVarSizeWithFlags_Flags[1] ->
     x_ExplicitVarSizeWithDummy[1] != 2 /\ x_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1],
-    toInt(x_ExplicitVarSizeWithDummy[1] != 2) <= toInt(x_ExplicitVarSizeWithFlags_Flags[1]),
     x_ExplicitVarSizeWithDummy[1] != 2 ->
     x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithDummy[1]
 

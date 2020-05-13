@@ -15,15 +15,9 @@ such that
          var2_ExplicitVarSizeWithDummy[q1] = 6
              | q1 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q2] = 6 -> var2_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..10)]),
-    sum([toInt(var2_Occurrence[q10]) | q10 : int(-4..5, 2)]) =
-    sum([toInt(var2_ExplicitVarSizeWithDummy[q12] != 6) | q12 : int(1..11)]),
-    sum([toInt(var2_Occurrence[q16]) | q16 : int(-4..5, 2)]) <=
-    sum([toInt(var2_ExplicitVarSizeWithDummy[q18] != 6) | q18 : int(1..11)]),
-    and([var2_Occurrence[q13] ->
-         or([var2_ExplicitVarSizeWithDummy[q15] != 6 /\ var2_ExplicitVarSizeWithDummy[q15] = q13 | q15 : int(1..11)])
-             | q13 : int(-4..5, 2)]),
-    sum([toInt(var2_ExplicitVarSizeWithDummy[q22] != 6) | q22 : int(1..11)]) <=
-    sum([toInt(var2_Occurrence[q23]) | q23 : int(-4..5, 2)]),
-    and([var2_ExplicitVarSizeWithDummy[q20] != 6 -> var2_Occurrence[var2_ExplicitVarSizeWithDummy[q20]]
-             | q20 : int(1..11)])
+    and([var2_Occurrence[q10] ->
+         or([var2_ExplicitVarSizeWithDummy[q12] != 6 /\ var2_ExplicitVarSizeWithDummy[q12] = q10 | q12 : int(1..11)])
+             | q10 : int(-4..5, 2)]),
+    and([var2_ExplicitVarSizeWithDummy[q14] != 6 -> var2_Occurrence[var2_ExplicitVarSizeWithDummy[q14]]
+             | q14 : int(1..11)])
 

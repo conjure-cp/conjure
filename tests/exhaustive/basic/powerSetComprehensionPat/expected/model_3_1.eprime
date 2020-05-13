@@ -5,21 +5,18 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..7)] of int(1.
 find x_Occurrence: matrix indexed by [int(1..7)] of bool
 branching on [x_Occurrence, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
-    and([q13 <= x_ExplicitVarSizeWithMarker_Marker /\ q14 <= x_ExplicitVarSizeWithMarker_Marker ->
-         |x_ExplicitVarSizeWithMarker_Values[q13] - x_ExplicitVarSizeWithMarker_Values[q14]| >= 3
-             | q13 : int(1..7), q14 : int(1..7), q14 > q13]),
+    and([q10 <= x_ExplicitVarSizeWithMarker_Marker /\ q11 <= x_ExplicitVarSizeWithMarker_Marker ->
+         |x_ExplicitVarSizeWithMarker_Values[q10] - x_ExplicitVarSizeWithMarker_Values[q11]| >= 3
+             | q10 : int(1..7), q11 : int(1..7), q11 > q10]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..6)]),
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..7)]),
     3 <= x_ExplicitVarSizeWithMarker_Marker,
     3 <= sum([toInt(x_Occurrence[q4]) | q4 : int(1..7)]),
-    sum([toInt(x_Occurrence[q5]) | q5 : int(1..7)]) = x_ExplicitVarSizeWithMarker_Marker,
-    sum([toInt(x_Occurrence[q9]) | q9 : int(1..7)]) <= x_ExplicitVarSizeWithMarker_Marker,
-    and([x_Occurrence[q6] ->
-         or([q8 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q8] = q6 | q8 : int(1..7)])
-             | q6 : int(1..7)]),
-    x_ExplicitVarSizeWithMarker_Marker <= sum([toInt(x_Occurrence[q11]) | q11 : int(1..7)]),
-    and([q12 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q12]]
-             | q12 : int(1..7)])
+    and([x_Occurrence[q5] ->
+         or([q7 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q7] = q5 | q7 : int(1..7)])
+             | q5 : int(1..7)]),
+    and([q9 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q9]]
+             | q9 : int(1..7)])
 

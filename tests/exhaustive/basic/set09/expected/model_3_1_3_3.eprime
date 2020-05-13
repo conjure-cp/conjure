@@ -9,8 +9,8 @@ branching on
     [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, y_ExplicitVarSizeWithMarker_Marker,
      y_ExplicitVarSizeWithMarker_Values, y_Occurrence]
 such that
-    and([q16 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[j] -> x_ExplicitVarSizeWithMarker_Values[q16] + 2 = j
-             | q16 : int(1..4), j : int(2..5)]),
+    and([q13 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[j] -> x_ExplicitVarSizeWithMarker_Values[q13] + 2 = j
+             | q13 : int(1..4), j : int(2..5)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..3)]),
@@ -22,13 +22,10 @@ such that
              | q5 : int(1..3)]),
     and([q6 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q6] = 2 | q6 : int(1..4)]),
     1 <= y_ExplicitVarSizeWithMarker_Marker,
-    y_ExplicitVarSizeWithMarker_Marker = sum([toInt(y_Occurrence[q8]) | q8 : int(2..5)]),
-    y_ExplicitVarSizeWithMarker_Marker <= sum([toInt(y_Occurrence[q10]) | q10 : int(2..5)]),
-    and([q11 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[q11]]
-             | q11 : int(1..4)]),
-    sum([toInt(y_Occurrence[q15]) | q15 : int(2..5)]) <= y_ExplicitVarSizeWithMarker_Marker,
-    and([y_Occurrence[q12] ->
-         or([q14 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q14] = q12
-                 | q14 : int(1..4)])
-             | q12 : int(2..5)])
+    and([q9 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[q9]]
+             | q9 : int(1..4)]),
+    and([y_Occurrence[q10] ->
+         or([q12 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q12] = q10
+                 | q12 : int(1..4)])
+             | q10 : int(2..5)])
 
