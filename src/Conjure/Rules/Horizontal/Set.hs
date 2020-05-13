@@ -34,7 +34,8 @@ rule_Eq = "set-eq" `namedRule` theRule where
         TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set equality"
-            , return [essence| |&x| = |&y| /\ &x subsetEq &y /\ &y subsetEq &x |]
+            -- , return [essence| |&x| = |&y| /\ &x subsetEq &y /\ &y subsetEq &x |]
+            , return [essence| &x subsetEq &y /\ &y subsetEq &x |]
             )
     theRule _ = na "rule_Eq"
 
@@ -66,7 +67,8 @@ rule_SubsetEq = "set-subsetEq" `namedRule` theRule where
             ( "Horizontal rule for set subsetEq"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| |&x| <= |&y| /\ forAll &iPat in &x . &i in &y |]
+                 -- return [essence| |&x| <= |&y| /\ forAll &iPat in &x . &i in &y |]
+                 return [essence| forAll &iPat in &x . &i in &y |]
             )
     theRule _ = na "rule_SubsetEq"
 
@@ -78,7 +80,8 @@ rule_Subset = "set-subset" `namedRule` theRule where
         TypeSet{} <- typeOf y
         return
             ( "Horizontal rule for set subset"
-            , return [essence| |&x| < |&y| /\ &x subsetEq &y /\ &x != &y |]
+            -- , return [essence| |&x| < |&y| /\ &x subsetEq &y /\ &x != &y |]
+            , return [essence| &x subsetEq &y /\ &x != &y |]
             )
     theRule _ = na "rule_Subset"
 
