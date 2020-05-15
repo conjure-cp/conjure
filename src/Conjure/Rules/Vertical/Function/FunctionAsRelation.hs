@@ -89,3 +89,31 @@ rule_Comprehension = "function-comprehension{FunctionAsRelation}" `namedRule` th
                     ++ gocAfter
             )
     theRule _ = na "rule_Comprehension"
+
+
+-- TODO
+-- rule_PowerSet_Comprehension :: Rule
+-- rule_PowerSet_Comprehension = "function-powerSet-comprehension{FunctionAsRelation}" `namedRule` theRule where
+--     theRule (Comprehension body gensOrConds) = do
+--         traceM $ show $ "rule_PowerSet_Comprehension [1]" <+> pretty (Comprehension body gensOrConds)
+--         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+--             Generator (GenInExpr pat expr) -> return (pat, expr)
+--             _ -> na "rule_Comprehension"
+--         traceM $ show $ "rule_PowerSet_Comprehension [2]" <+> pretty expr
+--         func                  <- matchDefs [opToSet,opToMSet,opToRelation] <$> match opPowerSet expr
+--         traceM $ show $ "rule_PowerSet_Comprehension [3]" <+> pretty func
+--         repr <- representationOf func
+--         traceM $ show $ "rule_PowerSet_Comprehension [4]" <+> pretty repr
+--         Function_AsRelation{} <- representationOf func
+--         traceM $ "rule_PowerSet_Comprehension [4]"
+--         [rel]                 <- downX1 func
+--         traceM $ show $ "rule_PowerSet_Comprehension [4]" <+> pretty rel
+--         return
+--             ( "Mapping over a function, FunctionAsRelation representation"
+--             , return $
+--                 Comprehension body
+--                     $  gocBefore
+--                     ++ [ Generator (GenInExpr pat (make opPowerSet rel)) ]
+--                     ++ gocAfter
+--             )
+--     theRule _ = na "rule_PowerSet_Comprehension"
