@@ -366,7 +366,8 @@ mainWithArgs config@Solve{..} = do
         conjuring :: m [FilePath]
         conjuring = do
             pp logLevel $ "Generating models for" <+> pretty essence
-            liftIO $ removeDirectoryIfExists outputDirectory
+            -- remove old eprime files
+            liftIO $ getAllFilesWithSuffix ".eprime" outputDirectory >>= mapM_ removeFileIfExists
             let modelling = let savedChoices = def
                                 estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
