@@ -175,6 +175,18 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                     _ -> []
                         unless (null csvLines) $
                             liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                DomainRelation _ _
+                    ([DomainInt{}, DomainInt{}, _]) -> do
+                        let csvLines = 
+                                case c of
+                                    ConstantAbstract (AbsLitRelation rows) -> catMaybes
+                                        [ case row of
+                                            [a, b, _] -> Just (pretty a <> "," <> pretty b)
+                                            _ -> Nothing
+                                        | row <- rows ]
+                                    _ -> []
+                        unless (null csvLines) $
+                            liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
                 _ -> return ()
 
         let essenceFindNames = eprimeModel |> mInfo |> miFinds
