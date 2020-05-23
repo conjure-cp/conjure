@@ -164,6 +164,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpSum x) = domainOf x
     domainOf (MkOpSupset x) = domainOf x
     domainOf (MkOpSupsetEq x) = domainOf x
+    domainOf (MkOpTable x) = domainOf x
     domainOf (MkOpTildeLeq x) = domainOf x
     domainOf (MkOpTildeLt x) = domainOf x
     domainOf (MkOpTogether x) = domainOf x
@@ -237,6 +238,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpSum x) = indexDomainsOf x
     indexDomainsOf (MkOpSupset x) = indexDomainsOf x
     indexDomainsOf (MkOpSupsetEq x) = indexDomainsOf x
+    indexDomainsOf (MkOpTable x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLt x) = indexDomainsOf x
     indexDomainsOf (MkOpTogether x) = indexDomainsOf x
@@ -625,6 +627,9 @@ instance DomainOf (OpSupset x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpSupsetEq x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpTable x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpTildeLeq x) where

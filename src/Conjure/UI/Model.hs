@@ -1456,6 +1456,7 @@ verticalRules =
     , Vertical.Relation.RelationAsSet.rule_Comprehension
     , Vertical.Relation.RelationAsSet.rule_PowerSet_Comprehension
     , Vertical.Relation.RelationAsSet.rule_Card
+    , Vertical.Relation.RelationAsSet.rule_In
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension

@@ -244,6 +244,7 @@ functionals :: [Lexeme]
 functionals =
     [ L_toInt
     , L_makeTable
+    , L_table
     , L_min
     , L_max
     , L_allDiff

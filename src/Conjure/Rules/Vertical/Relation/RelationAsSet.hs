@@ -56,3 +56,36 @@ rule_Card = "relation-card{RelationAsSet}" `namedRule` theRule where
             ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
             , return [essence| |&set| |]
             )
+
+
+rule_In :: Rule
+rule_In = "relation-in{RelationAsSet}" `namedRule` theRule where
+    theRule [essence| &x in &rel |] = do
+        TypeRelation{} <- typeOf rel
+        Relation_AsSet Set_Explicit <- representationOf rel
+        tableCheck x rel
+        xParts <- downX1 x
+        let vars = fromList xParts
+        [set] <- downX1 rel
+        [matrix] <- downX1 set
+        (index:_) <- indexDomainsOf matrix
+        parts <- downX1 matrix
+        (iPat, i) <- quantifiedVar
+        let oneRow = fromList [ [essence| &p[&i] |] | p <- parts ]
+        let table = [essence| [ &oneRow | &iPat : &index ] |]
+        return
+            ( "relation membership to table"
+            , return [essence| table(&vars, &table) |]
+            )
+    theRule _ = na "rule_In"
+
+    tableCheck ::
+        MonadFail m =>
+        (?typeCheckerMode::TypeCheckerMode) =>
+        Expression -> Expression -> m ()
+    tableCheck x rel | categoryOf rel < CatDecision = do
+        tyX <- typeOf x
+        case tyX of
+            TypeTuple ts | and [ case t of TypeInt{} -> True ; _ -> False | t <- ts ] -> return ()
+            _ -> na "rule_In"
+    tableCheck _ _ = na "rule_In"

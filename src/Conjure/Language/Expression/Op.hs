@@ -84,6 +84,7 @@ mkOp op xs =
             L_true         -> inject $ MkOpTrue         $ OpTrue         (arg xs 0 "true")
             L_toInt        -> inject $ MkOpToInt        $ OpToInt        (arg xs 0 "toInt")
             L_makeTable    -> inject $ MkOpMakeTable    $ OpMakeTable    (arg xs 0 "makeTable")
+            L_table        -> inject $ MkOpTable        $ OpTable        (arg xs 0 "table") (arg xs 1 "table")
             L_defined      -> inject $ MkOpDefined      $ OpDefined      (arg xs 0 "defined")
             L_range        -> inject $ MkOpRange        $ OpRange        (arg xs 0 "range")
             L_restrict     -> inject $ MkOpRestrict     $ OpRestrict     (arg xs 0 "restrict") (arg xs 1 "restrict")

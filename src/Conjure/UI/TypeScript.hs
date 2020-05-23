@@ -100,6 +100,7 @@ deriveTypeScript defaultOptions ''OpSucc
 deriveTypeScript defaultOptions ''OpSum
 deriveTypeScript defaultOptions ''OpSupset
 deriveTypeScript defaultOptions ''OpSupsetEq
+deriveTypeScript defaultOptions ''OpTable
 deriveTypeScript defaultOptions ''OpTildeLeq
 deriveTypeScript defaultOptions ''OpTildeLt
 deriveTypeScript defaultOptions ''OpTogether
@@ -216,6 +217,7 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpSum)
     , getTypeScriptDeclarations (Proxy :: Proxy OpSupset)
     , getTypeScriptDeclarations (Proxy :: Proxy OpSupsetEq)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpTable)
     , getTypeScriptDeclarations (Proxy :: Proxy OpTildeLeq)
     , getTypeScriptDeclarations (Proxy :: Proxy OpTildeLt)
     , getTypeScriptDeclarations (Proxy :: Proxy OpTogether)
