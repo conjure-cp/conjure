@@ -117,3 +117,38 @@ rule_Comprehension = "function-comprehension{FunctionAsRelation}" `namedRule` th
 --                     ++ gocAfter
 --             )
 --     theRule _ = na "rule_PowerSet_Comprehension"
+
+
+rule_InDefined :: Rule
+rule_InDefined = "function-inDefined{FunctionAsRelation}" `namedRule` theRule where
+    theRule [essence| &x in defined(&func) |] = do
+        TypeFunction{} <- typeOf func
+        Function_AsRelation (Relation_AsSet Set_Explicit) <- representationOf func
+        tableCheck x func
+        xParts <- downX1 x
+        let vars = fromList xParts
+        [rel] <- downX1 func
+        [set] <- downX1 rel
+        [matrix] <- downX1 set
+        [from, _to] <- downX1 matrix
+        parts <- downX1 from
+        (index:_) <- indexDomainsOf from
+        (iPat, i) <- quantifiedVar
+        let oneRow = fromList [ [essence| &p[&i] |] | p <- parts ]
+        let table = [essence| [ &oneRow | &iPat : &index ] |]
+        return
+            ( "relation membership to table"
+            , return [essence| table(&vars, &table) |]
+            )
+    theRule _ = na "rule_InDefined"
+
+    tableCheck ::
+        MonadFail m =>
+        (?typeCheckerMode::TypeCheckerMode) =>
+        Expression -> Expression -> m ()
+    tableCheck x func | categoryOf func < CatDecision = do
+        tyX <- typeOf x
+        case tyX of
+            TypeTuple ts | and [ case t of TypeInt{} -> True ; _ -> False | t <- ts ] -> return ()
+            _ -> na "rule_In"
+    tableCheck _ _ = na "rule_In"
