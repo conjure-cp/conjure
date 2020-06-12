@@ -24,7 +24,6 @@ export -f download
 
 download https://github.com/SRI-CSL/yices2/archive/Yices-2.6.2.tar.gz
 tar xzf Yices-2.6.2.tar.gz
-ls -l
 cd yices2-Yices-2.6.2/
 autoconf
 ./configure --prefix ${BIN_DIR}
