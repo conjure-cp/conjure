@@ -23,8 +23,8 @@ function download {
 export -f download
 
 download https://github.com/arminbiere/cadical/archive/rel-1.3.0.tar.gz
-ls -l
 tar xzf rel-1.3.0.tar.gz
+cd cadical-rel-1.3.0
 ./configure
 make -j
 mkdir -p ${BIN_DIR}
