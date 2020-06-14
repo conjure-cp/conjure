@@ -27,8 +27,8 @@ tar xzf z3-4.8.8.tar.gz
 cd z3-z3-4.8.8
 python scripts/mk_make.py --prefix=${BIN_DIR}
 cd build
-make
-make install
+make -j
+make -j install
 cp ${BIN_DIR}/bin/z3 ${BIN_DIR}
 echo "z3 executable is at ${BIN_DIR}/z3"
 ls -l ${BIN_DIR}/z3

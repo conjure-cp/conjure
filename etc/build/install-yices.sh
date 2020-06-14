@@ -27,8 +27,8 @@ tar xzf Yices-2.6.2.tar.gz
 cd yices2-Yices-2.6.2/
 autoconf
 ./configure --prefix ${BIN_DIR}
-make
-make install
+make -j
+make -j install
 cp ${BIN_DIR}/bin/yices* ${BIN_DIR}
 echo "yices executables are at ${BIN_DIR}/yices*"
 ls -l ${BIN_DIR}/yices*

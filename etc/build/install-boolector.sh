@@ -27,7 +27,7 @@ tar xzf 3.2.1.tar.gz
 cd boolector-3.2.1
 ./contrib/setup-lingeling.sh
 ./contrib/setup-btor2tools.sh
-./configure.sh && cd build && make
+./configure.sh && cd build && make -j
 cp bin/boolector ${BIN_DIR}
 echo "boolector executable is at ${BIN_DIR}/boolector"
 ls -l ${BIN_DIR}/boolector
