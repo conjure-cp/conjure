@@ -8,9 +8,9 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ${BIN_DIR}/tmp-install-cadical
-mkdir -p ${BIN_DIR}/tmp-install-cadical
-pushd ${BIN_DIR}/tmp-install-cadical
+rm -rf tmp-install-cadical
+mkdir -p tmp-install-cadical
+pushd tmp-install-cadical
 
 download https://github.com/arminbiere/cadical/archive/rel-1.3.0.tar.gz
 tar xzf rel-1.3.0.tar.gz
@@ -22,5 +22,5 @@ cp build/cadical ${BIN_DIR}/cadical
 echo "cadical executable is at ${BIN_DIR}/cadical"
 ls -l ${BIN_DIR}/cadical
 popd
-rm -rf ${BIN_DIR}/tmp-install-cadical
+rm -rf tmp-install-cadical
 

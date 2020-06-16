@@ -8,9 +8,9 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ${BIN_DIR}/tmp-install-yices
-mkdir -p ${BIN_DIR}/tmp-install-yices
-pushd ${BIN_DIR}/tmp-install-yices
+rm -rf tmp-install-yices
+mkdir -p tmp-install-yices
+pushd tmp-install-yices
 
 download https://github.com/SRI-CSL/yices2/archive/Yices-2.6.2.tar.gz
 tar xzf Yices-2.6.2.tar.gz
@@ -23,4 +23,4 @@ cp ${BIN_DIR}/bin/yices* ${BIN_DIR}
 echo "yices executables are at ${BIN_DIR}/yices*"
 ls -l ${BIN_DIR}/yices*
 popd
-rm -rf ${BIN_DIR}/tmp-install-yices
+rm -rf tmp-install-yices

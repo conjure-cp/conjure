@@ -8,9 +8,9 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ${BIN_DIR}/tmp-install-minion
-mkdir -p ${BIN_DIR}/tmp-install-minion
-pushd ${BIN_DIR}/tmp-install-minion
+rm -rf tmp-install-minion
+mkdir -p tmp-install-minion
+pushd tmp-install-minion
 
 OS=$(uname)
 
@@ -33,5 +33,5 @@ fi
 echo "minion executable is at ${BIN_DIR}/minion"
 ls -l ${BIN_DIR}/minion*
 popd
-rm -rf ${BIN_DIR}/tmp-install-minion
+rm -rf tmp-install-minion
 

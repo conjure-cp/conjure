@@ -8,9 +8,9 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ${BIN_DIR}/tmp-install-boolector
-mkdir -p ${BIN_DIR}/tmp-install-boolector
-pushd ${BIN_DIR}/tmp-install-boolector
+rm -rf tmp-install-boolector
+mkdir -p tmp-install-boolector
+pushd tmp-install-boolector
 
 download https://github.com/Boolector/boolector/archive/3.2.1.tar.gz
 tar xzf 3.2.1.tar.gz
@@ -22,4 +22,4 @@ cp bin/boolector ${BIN_DIR}
 echo "boolector executable is at ${BIN_DIR}/boolector"
 ls -l ${BIN_DIR}/boolector
 popd
-rm -rf ${BIN_DIR}/tmp-install-boolector
+rm -rf tmp-install-boolector
