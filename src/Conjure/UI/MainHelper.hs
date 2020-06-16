@@ -199,27 +199,9 @@ mainWithArgs ModelStrengthening{..} =
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
-    let executables = [ ( "minion"          , "minion" )
-                      , ( "gecode"          , "fzn-gecode" )
-                      , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "cadical"         , "cadical" )
-                      , ( "glucose"         , "glucose" )
-                      , ( "glucose-syrup"   , "glucose-syrup" )
-                      , ( "lingeling"       , "lingeling" )
-                      , ( "plingeling"      , "plingeling" )
-                      , ( "treengeling"     , "treengeling" )
-                      , ( "minisat"         , "minisat" )
-                      , ( "bc_minisat_all"  , "bc_minisat_all_release" )
-                      , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
-                      , ( "open-wbo"        , "open-wbo" )
-                      , ( "coin-or"         , "minizinc" )
-                      , ( "cplex"           , "minizinc" )
-                      , ( "yices"           , "yices-smt2" )
-                      , ( "boolector"       , "boolector" )
-                      , ( "z3"              , "z3" )
-                      ]
     -- some sanity checks
-    case lookup (head $ splitOn "-" solver) executables of
+    (solverName, _smtLogicName) <- splitSolverName solver
+    case lookup solverName solverExecutables of
         Nothing -> userErr1 ("Unsupported solver:" <+> pretty solver)
         Just ex -> do
             fp <- liftIO $ findExecutable ex
@@ -775,6 +757,53 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
+
+solverExecutables :: [(String, String)]
+solverExecutables =
+    [ ( "minion"          , "minion" )
+    , ( "gecode"          , "fzn-gecode" )
+    , ( "chuffed"         , "fzn-chuffed" )
+    , ( "cadical"         , "cadical" )
+    , ( "glucose"         , "glucose" )
+    , ( "glucose-syrup"   , "glucose-syrup" )
+    , ( "lingeling"       , "lingeling" )
+    , ( "plingeling"      , "plingeling" )
+    , ( "treengeling"     , "treengeling" )
+    , ( "minisat"         , "minisat" )
+    , ( "bc_minisat_all"  , "bc_minisat_all_release" )
+    , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
+    , ( "open-wbo"        , "open-wbo" )
+    , ( "coin-or"         , "minizinc" )
+    , ( "cplex"           , "minizinc" )
+    , ( "yices"           , "yices-smt2" )
+    , ( "boolector"       , "boolector" )
+    , ( "z3"              , "z3" )
+    ]
+
+
+smtSolvers :: [String]
+smtSolvers = ["boolector", "yices", "z3"]
+
+
+splitSolverName :: MonadUserError m => String -> m (String, String)
+splitSolverName solver = do
+    let supportedLogics = ["bv", "lia", "nia", "idl"]
+
+    (solverName, smtLogicName) <-
+            case splitOn "-" solver of
+                [solverName] | solverName `elem` smtSolvers -> return (solverName, "bv")
+                ["boolector", "bv" ] -> return ("boolector", "bv")
+                ["boolector", logic] -> userErr1 ("boolector does not support logic:" <+> pretty logic)
+                [solverName , logic] | solverName `elem` smtSolvers -> do
+                    unless (logic `elem` supportedLogics) $
+                        userErr1 $ vcat [ "SMT logic not supported by Savile Row:" <+> pretty logic
+                                        , "Supported logics:" <+> prettyList id "," supportedLogics
+                                        ]
+                    return (solverName, logic)
+                _ -> return (solver, "") -- not an smt solver
+    return (solverName, smtLogicName)
+
+
 srMkArgs :: UI -> FilePath -> FilePath -> IO [Text]
 srMkArgs Solve{..} outBase modelPath = do
     let genericOpts =
@@ -793,23 +822,7 @@ srMkArgs Solve{..} outBase modelPath = do
                 then ["-all-solutions"]
                 else ["-num-solutions", stringToText nbSolutions]
             )
-
-    let smtSolvers = ["boolector", "yices", "z3"]
-    let supportedLogics = ["bv", "lia", "nia", "idl"]
-
-    (solverName, smtLogicName) <-
-            case splitOn "-" solver of
-                [solverName] | solverName `elem` smtSolvers -> return (solverName, "bv")
-                ["boolector", "bv" ] -> return ("boolector", "bv")
-                ["boolector", logic] -> userErr1 ("boolector does not support logic:" <+> pretty logic)
-                [solverName , logic] | solverName `elem` smtSolvers -> do
-                    unless (logic `elem` supportedLogics) $
-                        userErr1 $ vcat [ "SMT logic not supported by Savile Row:" <+> pretty logic
-                                        , "Supported logics:" <+> prettyList id "," supportedLogics
-                                        ]
-                    return (solverName, logic)
-                _ -> return (solver, "") -- not an smt solver
-
+    (solverName, smtLogicName) <- splitSolverName solver
     solverSelection <- case solverName of
         "minion"            -> return [ "-minion" ]
         "gecode"            -> return [ "-gecode" ]
@@ -870,7 +883,10 @@ srMkArgs Solve{..} outBase modelPath = do
         _ | solverName `elem` smtSolvers
                             -> return [ "-smt"
                                       , stringToText ("-smt-" ++ smtLogicName)
-                                      , "-smtsolver-bin", stringToText solverName
+                                      , "-smtsolver-bin"
+                                      , case lookup solverName solverExecutables of
+                                          Nothing -> bug ("solverExecutables" <+> pretty solverName)
+                                          Just ex -> stringToText ex
                                       ]
         _ -> userErr1 ("Unknown solver:" <+> pretty solver)
 
