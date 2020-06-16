@@ -214,9 +214,12 @@ mainWithArgs config@Solve{..} = do
                       , ( "open-wbo"        , "open-wbo" )
                       , ( "coin-or"         , "minizinc" )
                       , ( "cplex"           , "minizinc" )
+                      , ( "yices"           , "yices-smt2" )
+                      , ( "boolector"       , "boolector" )
+                      , ( "z3"              , "z3" )
                       ]
     -- some sanity checks
-    case lookup solver executables of
+    case lookup (head $ splitOn "-" solver) executables of
         Nothing -> userErr1 ("Unsupported solver:" <+> pretty solver)
         Just ex -> do
             fp <- liftIO $ findExecutable ex
@@ -791,7 +794,23 @@ srMkArgs Solve{..} outBase modelPath = do
                 else ["-num-solutions", stringToText nbSolutions]
             )
 
-    solverSelection <- case solver of
+    let smtSolvers = ["boolector", "yices", "z3"]
+    let supportedLogics = ["bv", "lia", "nia", "idl"]
+
+    (solverName, smtLogicName) <-
+            case splitOn "-" solver of
+                [solverName] | solverName `elem` smtSolvers -> return (solverName, "bv")
+                ["boolector", "bv" ] -> return ("boolector", "bv")
+                ["boolector", logic] -> userErr1 ("boolector does not support logic:" <+> pretty logic)
+                [solverName , logic] | solverName `elem` smtSolvers -> do
+                    unless (logic `elem` supportedLogics) $
+                        userErr1 $ vcat [ "SMT logic not supported by Savile Row:" <+> pretty logic
+                                        , "Supported logics:" <+> prettyList id "," supportedLogics
+                                        ]
+                    return (solverName, logic)
+                _ -> return (solver, "") -- not an smt solver
+
+    solverSelection <- case solverName of
         "minion"            -> return [ "-minion" ]
         "gecode"            -> return [ "-gecode" ]
         "chuffed"           -> return [ "-chuffed"]
@@ -848,6 +867,11 @@ srMkArgs Solve{..} outBase modelPath = do
                     return [ "-minizinc"
                            , "-solver-options", stringToText ("--solver CPLEX --cplex-dll " ++ cplex_path)
                            ]
+        _ | solverName `elem` smtSolvers
+                            -> return [ "-smt"
+                                      , stringToText ("-smt-" ++ smtLogicName)
+                                      , "-smtsolver-bin", stringToText solverName
+                                      ]
         _ -> userErr1 ("Unknown solver:" <+> pretty solver)
 
     return $ genericOpts

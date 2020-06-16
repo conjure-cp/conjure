@@ -254,7 +254,13 @@
                                                - open-wbo (MaxSAT solver, only works with optimisation problems)
                                                - coin-or (MIP solver, implemented via MiniZinc)
                                                - cplex (MIP solver, implemented via MiniZinc)
+                                               - boolector (SMT solver, supported logics: bv)
+                                               - yices (SMT solver, supported logics: bv, lia, nia, idl)
+                                               - z3 (SMT solver, supported logics: bv, lia, nia, idl)
                                               Default: minion
+                                              Default logic for SMT solvers is bitvector (bv).
+                                              Append a dash and the name of a logic to the solver name to choose a
+                                              different logic. For example yices-idl.
  
  conjure ide [OPTIONS] ESSENCE_FILE
    IDE support features for Conjure.
