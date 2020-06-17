@@ -784,20 +784,24 @@ solverExecutables =
 smtSolvers :: [String]
 smtSolvers = ["boolector", "yices", "z3"]
 
+smtSupportedLogics :: String -> [String]
+smtSupportedLogics "boolector" = ["bv"]
+smtSupportedLogics "yices" = ["bv", "lia", "idl"]
+smtSupportedLogics "z3" = ["bv", "lia", "nia", "idl"]
+smtSupportedLogics s = bug ("Unrecognised SMT solver:" <+> pretty s)
+
 
 splitSolverName :: MonadUserError m => String -> m (String, String)
 splitSolverName solver = do
-    let supportedLogics = ["bv", "lia", "nia", "idl"]
+    let
 
     (solverName, smtLogicName) <-
             case splitOn "-" solver of
                 [solverName] | solverName `elem` smtSolvers -> return (solverName, "bv")
-                ["boolector", "bv" ] -> return ("boolector", "bv")
-                ["boolector", logic] -> userErr1 ("boolector does not support logic:" <+> pretty logic)
                 [solverName , logic] | solverName `elem` smtSolvers -> do
-                    unless (logic `elem` supportedLogics) $
+                    unless (logic `elem` smtSupportedLogics solverName) $
                         userErr1 $ vcat [ "SMT logic not supported by Savile Row:" <+> pretty logic
-                                        , "Supported logics:" <+> prettyList id "," supportedLogics
+                                        , "Supported logics:" <+> prettyList id "," (smtSupportedLogics solverName)
                                         ]
                     return (solverName, logic)
                 _ -> return (solver, "") -- not an smt solver

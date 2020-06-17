@@ -908,7 +908,7 @@ ui = modes
                     \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \ - cplex (MIP solver, implemented via MiniZinc)\n\
                     \ - boolector (SMT solver, supported logics: bv)\n\
-                    \ - yices (SMT solver, supported logics: bv, lia, nia, idl)\n\
+                    \ - yices (SMT solver, supported logics: bv, lia, idl)\n\
                     \ - z3 (SMT solver, supported logics: bv, lia, nia, idl)\n\
                     \Default: minion\n\n\
                     \Default logic for SMT solvers is bitvector (bv).\n\
