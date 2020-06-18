@@ -886,6 +886,7 @@ srMkArgs Solve{..} outBase modelPath = do
                            ]
         _ | solverName `elem` smtSolvers
                             -> return [ "-smt"
+                                      , "-smt-nested" -- alternative is -smt-flat
                                       , stringToText ("-smt-" ++ smtLogicName)
                                       , "-smtsolver-bin"
                                       , case lookup solverName solverExecutables of
