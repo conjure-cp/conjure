@@ -814,6 +814,7 @@ srMkArgs Solve{..} outBase modelPath = do
             [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
             , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
             , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
+            , "-out-smt"        , stringToText $ outputDirectory </> outBase ++ ".eprime-smt"
             , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
             , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
             , "-out-minizinc"   , stringToText $ outputDirectory </> outBase ++ ".eprime.mzn"
