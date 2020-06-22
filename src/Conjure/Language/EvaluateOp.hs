@@ -671,6 +671,15 @@ instance EvaluateOp OpTable where
         table' <- intsOut2D "OpTable-table" table
         return $ ConstantBool $ rows' `elem` table'
 
+instance EvaluateOp OpGCC where
+    evaluateOp op@OpGCC{} = na $ "evaluateOp{OpGCC}" <+> pretty op
+
+instance EvaluateOp OpAtLeast where
+    evaluateOp op@OpAtLeast{} = na $ "evaluateOp{OpAtLeast}" <+> pretty op
+
+instance EvaluateOp OpAtMost where
+    evaluateOp op@OpAtMost{} = na $ "evaluateOp{OpAtMost}" <+> pretty op
+
 instance EvaluateOp OpTildeLeq where
     evaluateOp (OpTildeLeq x y) = do
         flag1 <- evaluateOp (OpEq x y)
@@ -895,11 +904,12 @@ ordTildeLt x y =
 
 instance EvaluateOp Op where
     evaluateOp (MkOpActive x) = evaluateOp x
-
     evaluateOp (MkOpAllDiff x) = evaluateOp x
     evaluateOp (MkOpAllDiffExcept x) = evaluateOp x
     evaluateOp (MkOpAnd x) = evaluateOp x
     evaluateOp (MkOpApart x) = evaluateOp x
+    evaluateOp (MkOpAtLeast x) = evaluateOp x
+    evaluateOp (MkOpAtMost x) = evaluateOp x
     evaluateOp (MkOpAttributeAsConstraint x) = evaluateOp x
     evaluateOp (MkOpCatchUndef x) = evaluateOp x
     evaluateOp (MkOpDefined x) = evaluateOp x
@@ -911,6 +921,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpFactorial x) = evaluateOp x
     evaluateOp (MkOpFlatten x) = evaluateOp x
     evaluateOp (MkOpFreq x) = evaluateOp x
+    evaluateOp (MkOpGCC x) = evaluateOp x
     evaluateOp (MkOpGeq x) = evaluateOp x
     evaluateOp (MkOpGt x) = evaluateOp x
     evaluateOp (MkOpHist x) = evaluateOp x
