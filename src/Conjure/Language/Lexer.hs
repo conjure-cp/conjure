@@ -151,6 +151,9 @@ data Lexeme
     -- global constraints
     | L_allDiff
     | L_alldifferent_except
+    | L_gcc
+    | L_atleast
+    | L_atmost
 
     | L_dontCare
 
@@ -398,6 +401,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_allDiff, "allDiff" )
     , ( L_alldifferent_except, "alldifferent_except" )
+    , ( L_gcc, "gcc" )
+    , ( L_atleast, "atleast" )
+    , ( L_atmost, "atmost" )
 
     , ( L_dontCare, "dontCare" )
     , ( L_catchUndef, "catchUndef" )

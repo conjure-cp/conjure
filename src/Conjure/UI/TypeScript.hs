@@ -45,6 +45,8 @@ deriveTypeScript defaultOptions ''OpAllDiff
 deriveTypeScript defaultOptions ''OpAllDiffExcept
 deriveTypeScript defaultOptions ''OpAnd
 deriveTypeScript defaultOptions ''OpApart
+deriveTypeScript defaultOptions ''OpAtLeast
+deriveTypeScript defaultOptions ''OpAtMost
 deriveTypeScript defaultOptions ''OpAttributeAsConstraint
 deriveTypeScript defaultOptions ''OpCatchUndef
 deriveTypeScript defaultOptions ''OpDefined
@@ -56,6 +58,7 @@ deriveTypeScript defaultOptions ''OpEq
 deriveTypeScript defaultOptions ''OpFactorial
 deriveTypeScript defaultOptions ''OpFlatten
 deriveTypeScript defaultOptions ''OpFreq
+deriveTypeScript defaultOptions ''OpGCC
 deriveTypeScript defaultOptions ''OpGeq
 deriveTypeScript defaultOptions ''OpGt
 deriveTypeScript defaultOptions ''OpHist
@@ -130,6 +133,7 @@ deriveTypeScript defaultOptions ''Tree -- base
 deriveTypeScript defaultOptions ''Type
 
 
+
 tsDef :: IO ()
 tsDef = putStrLn $ formatTSDeclarations $ mconcat
     [ getTypeScriptDeclarations (Proxy :: Proxy AbstractLiteral)
@@ -163,6 +167,8 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpAllDiffExcept)
     , getTypeScriptDeclarations (Proxy :: Proxy OpAnd)
     , getTypeScriptDeclarations (Proxy :: Proxy OpApart)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpAtLeast)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpAtMost)
     , getTypeScriptDeclarations (Proxy :: Proxy OpAttributeAsConstraint)
     , getTypeScriptDeclarations (Proxy :: Proxy OpCatchUndef)
     , getTypeScriptDeclarations (Proxy :: Proxy OpDefined)
@@ -174,6 +180,7 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpFactorial)
     , getTypeScriptDeclarations (Proxy :: Proxy OpFlatten)
     , getTypeScriptDeclarations (Proxy :: Proxy OpFreq)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpGCC)
     , getTypeScriptDeclarations (Proxy :: Proxy OpGeq)
     , getTypeScriptDeclarations (Proxy :: Proxy OpGt)
     , getTypeScriptDeclarations (Proxy :: Proxy OpHist)

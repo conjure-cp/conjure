@@ -249,6 +249,9 @@ functionals =
     , L_max
     , L_allDiff
     , L_alldifferent_except
+    , L_gcc
+    , L_atleast
+    , L_atmost
     , L_catchUndef
     , L_dontCare
     , L_hist
