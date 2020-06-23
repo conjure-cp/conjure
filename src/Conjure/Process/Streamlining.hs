@@ -627,9 +627,10 @@ associative x = do
                 then do
                     (ipat, i) <- quantifiedVar
                     (jpat, j) <- quantifiedVar
+                    (kpat, k) <- quantifiedVar
                     mkStreamliner "FuncAssociative" [essence|
-                        forAll (&ipat,&jpat) in defined(&x) .
-                            &x((&x(&i,&j), &j)) = &x((&i, &x(&i, &j)))
+                        forAll &ipat, &jpat, &kpat in defined(&x) .
+                            &x((&x((&i,&j)), &k)) = &x((&i, &x((&j, &k))))
                     |]
                 else noStreamliner
         _ -> noStreamliner
