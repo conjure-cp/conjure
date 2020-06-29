@@ -5,6 +5,8 @@ import Conjure.Language
 
 import qualified Data.HashMap.Strict as M   -- containers
 
+-- primes
+import Data.Numbers.Primes ( isPrime )
 
 
 -- Ignoring the model for now
@@ -58,7 +60,7 @@ onDomain allIntValues name domain value =
 
 generators1 :: MonadIO m => [Integer] -> [FeatureGenerator1 m]
 generators1 allIntValues =
-    [ intValue, intIsEven, intIsSquare
+    [ intValue, intIsEven, intIsSquare, intIsPrime
     , intIsOffByOne allIntValues, intIsRepeated allIntValues
     ]
 
@@ -76,6 +78,11 @@ intIsSquare :: MonadIO m => FeatureGenerator1 m
 intIsSquare name _ (ConstantInt _ value) =
     emit [name, "intIsSquare"] (round ((sqrt (fromIntegral value)) ** 2 :: Double) == value)
 intIsSquare _ _ _ = return ()
+
+intIsPrime :: MonadIO m => FeatureGenerator1 m
+intIsPrime name _ (ConstantInt _ value) =
+    emit [name, "intIsPrime"] (isPrime value)
+intIsPrime _ _ _ = return ()
 
 intIsOffByOne :: MonadIO m => [Integer] -> FeatureGenerator1 m
 intIsOffByOne allIntValues name _ (ConstantInt _ value) =
