@@ -33,6 +33,7 @@ import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
+import Conjure.Process.Features ( calculateFeatures )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
@@ -194,6 +195,11 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
+mainWithArgs Features{..} = do
+    essence1 <- readModelFromFile essence
+    param1 <- readParamOrSolutionFromFile param
+    [essence2, param2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essence1, param1]
+    calculateFeatures essence2 param2
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
