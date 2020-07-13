@@ -263,17 +263,14 @@
                                                - yices (SMT solver, supported logics: bv, lia, idl)
                                                - z3 (SMT solver, supported logics: bv, lia, nia, idl)
                                               Default: minion
-<<<<<<< HEAD
+                                              Default logic for SMT solvers is bitvector (bv).
+                                              Append a dash and the name of a logic to the solver name to choose a
+                                              different logic. For example yices-idl.
  Streamlining:
       --generate-streamliners=ITEM            A comma separated list of integers.
                                               If provided, the streamlining constraints that correspond to the given
                                               integers will be generated.Run "conjure streamlining ESSENCE_FILE" to
                                               generate a list of all applicable streamliners.
-=======
-                                              Default logic for SMT solvers is bitvector (bv).
-                                              Append a dash and the name of a logic to the solver name to choose a
-                                              different logic. For example yices-idl.
->>>>>>> master
  
  conjure ide [OPTIONS] ESSENCE_FILE
    IDE support features for Conjure.
