@@ -35,7 +35,9 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
+import Conjure.Process.Features ( calculateFeatures )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
+import Conjure.Language.AdHoc ( toSimpleJSON )
 
 
 -- base
@@ -171,10 +173,15 @@ mainWithArgs SymmetryDetection{..} = do
     model <- readModelFromFile essence
     outputVarSymBreaking jsonFilePath model
 mainWithArgs ParameterGenerator{..} = do
-    when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
     model <- readModelFromFile essence
-    (output, classes) <- runNameGen () $ parameterGenerator minInt maxInt model
-    writeModel lineWidth outputFormat (Just essenceOut) output
+    ((genModel, repairModel), classes) <- runNameGen () $ parameterGenerator minInt maxInt model
+
+    let genModelOut = dropExtension essence ++ "-instanceGenerator.essence"
+    writeModel lineWidth outputFormat (Just genModelOut) genModel
+
+    let repairModelOut = dropExtension essence ++ "-instanceRepair.essence"
+    writeModel lineWidth outputFormat (Just repairModelOut) repairModel
+
     let
         toIrace nm lb ub _ | lb == ub =
             pretty nm <+>
@@ -188,9 +195,14 @@ mainWithArgs ParameterGenerator{..} = do
 
         essenceOutFileContents = render lineWidth $ vcat
             [ toIrace nm lb ub (lookup nm classes)
-            | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
+            | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
-    liftIO $ writeFile (essenceOut ++ ".irace") (essenceOutFileContents ++ "\n")
+    liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
+mainWithArgs Features{..} = do
+    essence1 <- readModelFromFile essence
+    param1 <- readParamOrSolutionFromFile param
+    [essence2, param2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essence1, param1]
+    calculateFeatures essence2 param2
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
@@ -198,24 +210,9 @@ mainWithArgs ModelStrengthening{..} =
 mainWithArgs Streamlining{..} = runNameGen essence
     (readModelFromFile essence >>= resolveNames >>= typeCheckModel >>= streamliningToStdout)
 mainWithArgs config@Solve{..} = do
-    let executables = [ ( "minion"          , "minion" )
-                      , ( "gecode"          , "fzn-gecode" )
-                      , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "cadical"         , "cadical" )
-                      , ( "glucose"         , "glucose" )
-                      , ( "glucose-syrup"   , "glucose-syrup" )
-                      , ( "lingeling"       , "lingeling" )
-                      , ( "plingeling"      , "plingeling" )
-                      , ( "treengeling"     , "treengeling" )
-                      , ( "minisat"         , "minisat" )
-                      , ( "bc_minisat_all"  , "bc_minisat_all_release" )
-                      , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
-                      , ( "open-wbo"        , "open-wbo" )
-                      , ( "coin-or"         , "minizinc" )
-                      , ( "cplex"           , "minizinc" )
-                      ]
     -- some sanity checks
-    case lookup solver executables of
+    (solverName, _smtLogicName) <- splitSolverName solver
+    case lookup solverName solverExecutables of
         Nothing -> userErr1 ("Unsupported solver:" <+> pretty solver)
         Just ex -> do
             fp <- liftIO $ findExecutable ex
@@ -366,7 +363,8 @@ mainWithArgs config@Solve{..} = do
         conjuring :: m [FilePath]
         conjuring = do
             pp logLevel $ "Generating models for" <+> pretty essence
-            liftIO $ removeDirectoryIfExists outputDirectory
+            -- remove old eprime files
+            liftIO $ getAllFilesWithSuffix ".eprime" outputDirectory >>= mapM_ removeFileIfExists
             let modelling = let savedChoices = def
                                 estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
@@ -778,12 +776,64 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
+
+solverExecutables :: [(String, String)]
+solverExecutables =
+    [ ( "minion"          , "minion" )
+    , ( "gecode"          , "fzn-gecode" )
+    , ( "chuffed"         , "fzn-chuffed" )
+    , ( "cadical"         , "cadical" )
+    , ( "glucose"         , "glucose" )
+    , ( "glucose-syrup"   , "glucose-syrup" )
+    , ( "lingeling"       , "lingeling" )
+    , ( "plingeling"      , "plingeling" )
+    , ( "treengeling"     , "treengeling" )
+    , ( "minisat"         , "minisat" )
+    , ( "bc_minisat_all"  , "bc_minisat_all_release" )
+    , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
+    , ( "open-wbo"        , "open-wbo" )
+    , ( "coin-or"         , "minizinc" )
+    , ( "cplex"           , "minizinc" )
+    , ( "yices"           , "yices-smt2" )
+    , ( "boolector"       , "boolector" )
+    , ( "z3"              , "z3" )
+    ]
+
+
+smtSolvers :: [String]
+smtSolvers = ["boolector", "yices", "z3"]
+
+smtSupportedLogics :: String -> [String]
+smtSupportedLogics "boolector" = ["bv"]
+smtSupportedLogics "yices" = ["bv", "lia", "idl"]
+smtSupportedLogics "z3" = ["bv", "lia", "nia", "idl"]
+smtSupportedLogics s = bug ("Unrecognised SMT solver:" <+> pretty s)
+
+
+splitSolverName :: MonadUserError m => String -> m (String, String)
+splitSolverName solver = do
+    let
+
+    (solverName, smtLogicName) <-
+            case splitOn "-" solver of
+                [solverName] | solverName `elem` smtSolvers -> return (solverName, "bv")
+                [solverName , logic] | solverName `elem` smtSolvers -> do
+                    unless (logic `elem` smtSupportedLogics solverName) $
+                        userErr1 $ vcat [ "SMT logic not supported by Savile Row:" <+> pretty logic
+                                        , "Supported logics:" <+> prettyList id "," (smtSupportedLogics solverName)
+                                        ]
+                    return (solverName, logic)
+                _ -> return (solver, "") -- not an smt solver
+    return (solverName, smtLogicName)
+
+
 srMkArgs :: UI -> FilePath -> FilePath -> IO [Text]
 srMkArgs Solve{..} outBase modelPath = do
     let genericOpts =
             [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
             , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
             , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
+            , "-out-smt"        , stringToText $ outputDirectory </> outBase ++ ".eprime-smt"
             , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
             , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
             , "-out-minizinc"   , stringToText $ outputDirectory </> outBase ++ ".eprime.mzn"
@@ -796,8 +846,8 @@ srMkArgs Solve{..} outBase modelPath = do
                 then ["-all-solutions"]
                 else ["-num-solutions", stringToText nbSolutions]
             )
-
-    solverSelection <- case solver of
+    (solverName, smtLogicName) <- splitSolverName solver
+    solverSelection <- case solverName of
         "minion"            -> return [ "-minion" ]
         "gecode"            -> return [ "-gecode" ]
         "chuffed"           -> return [ "-chuffed"]
@@ -810,7 +860,7 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , "-satsolver-bin", "glucose-syrup"
                                       ]
         "cadical"           -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
+                                      , "-sat-family", "cadical"
                                       , "-satsolver-bin", "cadical"
                                       ]
         "lingeling"         -> return [ "-sat"
@@ -854,6 +904,15 @@ srMkArgs Solve{..} outBase modelPath = do
                     return [ "-minizinc"
                            , "-solver-options", stringToText ("--solver CPLEX --cplex-dll " ++ cplex_path)
                            ]
+        _ | solverName `elem` smtSolvers
+                            -> return [ "-smt"
+                                      , "-smt-nested" -- alternative is -smt-flat
+                                      , stringToText ("-smt-" ++ smtLogicName)
+                                      , "-smtsolver-bin"
+                                      , case lookup solverName solverExecutables of
+                                          Nothing -> bug ("solverExecutables" <+> pretty solverName)
+                                          Just ex -> stringToText ex
+                                      ]
         _ -> userErr1 ("Unknown solver:" <+> pretty solver)
 
     return $ genericOpts
@@ -913,14 +972,21 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solutions"
                             let filenameEssenceSol = mkFilename ".solutions"
+                            let filenameEssenceSolJSON = mkFilename ".solutions.json"
                             -- remove the solutions files before writing the first solution
                             when (solutionNumber == 1) $ do
                                 removeFileIfExists filenameEprimeSol
                                 removeFileIfExists filenameEssenceSol
-                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
-                            appendFile filenameEprimeSol  ("\n" ++ render lineWidth eprimeSol  ++ "\n\n")
-                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
-                            appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
+                                removeFileIfExists filenameEssenceSolJSON
+                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                            appendFile filenameEprimeSol  (render lineWidth eprimeSol  ++ "\n\n")
+                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                            appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
+                            when (outputFormat == JSON) $ do
+                                appendFile filenameEssenceSolJSON  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                                essenceSol' <- toSimpleJSON essenceSol
+                                appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
+                                appendFile filenameEssenceSolJSON  ("\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"

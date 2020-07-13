@@ -25,6 +25,7 @@ module Conjure.Prelude
     , decodeFromFile
     , RandomM(..)
     , fst3, snd3, thd3
+    , fst4, snd4, thd4, fourth4
     , (|>)
     , allNats
     , jsonOptions
@@ -45,6 +46,7 @@ module Conjure.Prelude
     , JSONValue
     , isTopMostZ
     , getDirectoryContents
+    , RunStateAsWriter, runStateAsWriterT, sawTell
     ) where
 
 import GHC.Err as X ( error )
@@ -54,6 +56,7 @@ import GHC.Stack as X ( HasCallStack )
 import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
 import Data.Int as X ( Int )
 import GHC.Integer as X ( Integer )
+import GHC.Float as X ( sqrt, (**) )
 import GHC.Exts as X ( Double )
 import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^), Real(..) )
 import GHC.Enum as X ( Enum(..), Bounded(..) )
@@ -340,6 +343,18 @@ snd3 (_,b,_) = b
 thd3 :: (a,b,c) -> c
 thd3 (_,_,c) = c
 
+fst4 :: (a,b,c,d) -> a
+fst4 (a,_,_,_) = a
+
+snd4 :: (a,b,c,d) -> b
+snd4 (_,b,_,_) = b
+
+thd4 :: (a,b,c,d) -> c
+thd4 (_,_,c,_) = c
+
+fourth4 :: (a,b,c,d) -> d
+fourth4 (_,_,_,d) = d
+
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
 
@@ -600,3 +615,21 @@ type JSONValue = JSON.Value
 --   i.e. we cannot go any more up.
 isTopMostZ :: Zipper a b -> Bool
 isTopMostZ = isNothing . up
+
+
+class RunStateAsWriter s where
+    -- | We don't have Writer monads around here, they leak space.
+    runStateAsWriterT :: (Monad m, Default s) => StateT s m a -> m (a, s)
+
+instance RunStateAsWriter [s] where
+    runStateAsWriterT m = do
+        (a, out) <- runStateT m def
+        return (a, reverse out)
+
+instance RunStateAsWriter ([a],[b]) where
+    runStateAsWriterT m = do
+        (x, (a,b)) <- runStateT m def
+        return (x, (reverse a, reverse b))
+
+sawTell :: (MonadState s m, Monoid s) => s -> m ()
+sawTell xs = modify (xs `mappend`)

@@ -10,6 +10,7 @@ module Conjure.UI.Model
     , nbUses
     , modelRepresentationsJSON
     , timedF
+    , evaluateModel -- unused, exporting to suppress warning
     ) where
 
 import Conjure.Prelude
@@ -1399,6 +1400,7 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
+    , Vertical.Set.Explicit.rule_In
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
@@ -1439,7 +1441,9 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
+    -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
+    , Vertical.Function.FunctionAsRelation.rule_InDefined
 
     , Vertical.Sequence.ExplicitBounded.rule_Comprehension
     , Vertical.Sequence.ExplicitBounded.rule_Card
@@ -1452,7 +1456,9 @@ verticalRules =
     , Vertical.Relation.RelationAsMatrix.rule_Image
 
     , Vertical.Relation.RelationAsSet.rule_Comprehension
+    , Vertical.Relation.RelationAsSet.rule_PowerSet_Comprehension
     , Vertical.Relation.RelationAsSet.rule_Card
+    , Vertical.Relation.RelationAsSet.rule_In
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
@@ -2517,14 +2523,14 @@ rule_FullEvaluate :: Rule
 rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Constant{} = na "rule_FullEvaluate"
     theRule Domain{} = na "rule_FullEvaluate"
+    theRule (Reference _ (Just (Alias x)))                 -- selectively inline, unless x is huge
+        | Just Comprehension{} <- match opToSet x
+        = return ("Inline alias", return x)
     theRule p = do
         constant <- instantiateExpression [] p
         unless (null [() | ConstantUndefined{} <- universe constant]) $
             na "rule_PartialEvaluate, undefined"
-        return
-            ( "Full evaluator"
-            , return $ Constant constant
-            )
+        return ("Full evaluator", return $ Constant constant)
 
 
 rule_PartialEvaluate :: Rule

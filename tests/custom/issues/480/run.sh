@@ -1,5 +1,5 @@
-rm -rf conjure-output *.solution generator.*
-conjure parameter-generator model.essence --essence-out generator.essence
-conjure solve generator.essence p.param
+rm -rf conjure-output *.solution model-*.*
+conjure parameter-generator model.essence
+conjure solve model-instanceGenerator.essence p.param
 cat *.solution *.irace conjure-output/*.eprime | grep -v '^\$'
-rm -rf conjure-output *.solution generator.*
+rm -rf conjure-output *.solution model-*.*

@@ -159,23 +159,50 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
 
-    when graphSolver $
-        forM_ essenceGivensAndLettings' $ \ (n,d,c) ->
+    when graphSolver $ do
+        forM_ essenceGivensAndLettings' $ \ (n,d,c) -> do
+            let pairs =
+                    case d of
+                        DomainFunction _ _ (DomainTuple [DomainInt{}, DomainInt{}]) _ ->
+                            case c of
+                                ConstantAbstract (AbsLitFunction rows) ->
+                                    [ case row of
+                                        (ConstantAbstract (AbsLitTuple [a, b]), _) -> [a,b]
+                                        _ -> []
+                                    | row <- rows ]
+                                _ -> []
+                        DomainRelation _ _ ([DomainInt{}, DomainInt{}, _]) ->
+                            case c of
+                                ConstantAbstract (AbsLitRelation rows) ->
+                                    [ case row of
+                                        [a, b, _] -> [a,b]
+                                        _ -> []
+                                    | row <- rows ]
+                                _ -> []
+                        _ -> []
+            let csvLines = [ pretty a <> "," <> pretty b | [a,b] <- sortNub pairs ]
+            unless (null pairs) $
+                liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+
+        let essenceFindNames = eprimeModel |> mInfo |> miFinds
+        let essenceFinds = eprimeModel |> mInfo |> miRepresentations |> filter (\ (n,_) -> n `elem` essenceFindNames )
+        forM_ essenceFinds $ \ (n, d) -> do
             case d of
-                DomainFunction _ _
-                    (DomainTuple [DomainInt{}, DomainInt{}])
-                    DomainInt{} -> do
-                        let csvLines = 
-                                case c of
-                                    ConstantAbstract (AbsLitFunction rows) -> catMaybes
-                                        [ case row of
-                                            (ConstantAbstract (AbsLitTuple [a, b]), _) -> Just (pretty a <> "," <> pretty b)
-                                            _ -> Nothing
-                                        | row <- rows ]
-                                    _ -> []
-                        unless (null csvLines) $
-                            liftIO $ writeFile (show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                DomainFunction _ _ (DomainInt _ [RangeBounded a b]) _ -> do
+                        a' <- instantiateExpression allLettings a
+                        b' <- instantiateExpression allLettings b
+                        case (a', b') of
+                            (ConstantInt _ a'', ConstantInt _ b'') -> do
+                                let csvLines =
+                                        [ pretty i <> "," <> name
+                                        | i <- [a''..b'']
+                                        , let name = pretty n <> "_Function1D_" <> pretty (padLeft 5 '0' (show i))
+                                        ]
+                                unless (null csvLines) $
+                                    liftIO $ writeFile ("find-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                            _ -> userErr1 $ "Unsupported domain for --graph-solver:" <+> pretty d
                 _ -> return ()
+
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]

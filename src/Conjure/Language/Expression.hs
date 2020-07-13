@@ -340,6 +340,7 @@ instance FromJSON  Expression where parseJSON = genericParseJSON jsonOptions
 instance SimpleJSON Expression where
     toSimpleJSON x =
         case x of
+            Reference nm _ -> return $ JSON.String $ stringToText $ show $ pretty nm
             Constant c -> toSimpleJSON c
             AbstractLiteral lit -> toSimpleJSON lit
             Typed y _ -> toSimpleJSON y

@@ -259,12 +259,21 @@
                                                - open-wbo (MaxSAT solver, only works with optimisation problems)
                                                - coin-or (MIP solver, implemented via MiniZinc)
                                                - cplex (MIP solver, implemented via MiniZinc)
+                                               - boolector (SMT solver, supported logics: bv)
+                                               - yices (SMT solver, supported logics: bv, lia, idl)
+                                               - z3 (SMT solver, supported logics: bv, lia, nia, idl)
                                               Default: minion
+<<<<<<< HEAD
  Streamlining:
       --generate-streamliners=ITEM            A comma separated list of integers.
                                               If provided, the streamlining constraints that correspond to the given
                                               integers will be generated.Run "conjure streamlining ESSENCE_FILE" to
                                               generate a list of all applicable streamliners.
+=======
+                                              Default logic for SMT solvers is bitvector (bv).
+                                              Append a dash and the name of a logic to the solver name to choose a
+                                              different logic. For example yices-idl.
+>>>>>>> master
  
  conjure ide [OPTIONS] ESSENCE_FILE
    IDE support features for Conjure.
@@ -362,8 +371,12 @@
    Generate an Essence model describing the instances of the problem class defined in the input Essence model.
    An error will be printed if the model has infinitely many instances.
  
+ Integer bounds:
+      --MININT=INT                            The minimum integer value for the parameter values.
+                                              Default: 0
+      --MAXINT=INT                            The maximum integer value for the parameter values.
+                                              Default: 100
  Logging & Output:
-      --essence-out=FILE                      Output file path.
       --log-level=LOGLEVEL                    Log level.
       --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
                                                   plain: default
@@ -372,11 +385,14 @@
                                                   json: a simplified JSON format, best for parameters and solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
- Integer bounds:
-      --MININT=INT                            The minimum integer value for the parameter values.
-                                              Default: 0
-      --MAXINT=INT                            The maximum integer value for the parameter values.
-                                              Default: 100
+ General:
+      --limit-time=INT                        Limit in seconds of real time.
+ 
+ conjure features [OPTIONS] ESSENCE_FILE FILE
+   Calculate instance features.
+ 
+ Logging & Output:
+      --log-level=LOGLEVEL                    Log level.
  General:
       --limit-time=INT                        Limit in seconds of real time.
  
