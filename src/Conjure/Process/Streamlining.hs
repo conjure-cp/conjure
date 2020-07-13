@@ -232,7 +232,7 @@ matrixAll innerStreamliner x = do
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             -- traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                    attachGroup grps [essence| forAll &pat : &indexDom . &innerConstraint |]
+                    attachGroup ("MatrixCardinality": grps) [essence| forAll &pat : &indexDom . &innerConstraint |]
         _ -> noStreamliner
 
 
@@ -254,7 +254,7 @@ matrixAtMostOne innerStreamliner x = do
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence| 1 >= sum &pat : &indexDom . toInt(&innerConstraint) |]
+                attachGroup ("MatrixCardinality": grps) [essence| 1 >= sum &pat : &indexDom . toInt(&innerConstraint) |]
         _ -> noStreamliner
 
 
@@ -276,7 +276,7 @@ matrixHalf innerStreamliner x = do
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence| &size / 2 = (sum &pat : &indexDom . toInt(&innerConstraint)) |]
+                attachGroup ("MatrixCardinality": grps) [essence| &size / 2 = (sum &pat : &indexDom . toInt(&innerConstraint)) |]
         _ -> noStreamliner
 
 
@@ -299,7 +299,7 @@ matrixApproxHalf innerStreamliner x = do
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence|
+                attachGroup ("MatrixCardinality": grps) [essence|
                     (&size/2) + 1 >= (sum &pat : &indexDom . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat : &indexDom . toInt(&innerConstraint))
                     |]
@@ -325,7 +325,7 @@ matrixMoreThanHalf innerStreamliner x = do
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence|
+                attachGroup ("MatrixCardinality": grps) [essence|
                     (&size/2) <= (sum &pat : &indexDom . toInt(&innerConstraint))
                     |]
         _ -> noStreamliner
@@ -350,7 +350,7 @@ matrixLessThanHalf innerStreamliner x = do
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence|
+                attachGroup ("MatrixCardinality": grps) [essence|
                     (&size/2) >= (sum &pat : &indexDom . toInt(&innerConstraint))
                     |]
         _ -> noStreamliner
@@ -370,12 +370,12 @@ setAll innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
-                DomainSet _ _ innerDom -> Just innerDom
-                DomainMSet _ _ innerDom -> Just innerDom
-                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
+                DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
+                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
-        Just innerDom -> do
+        Just (innerDom, newTag) -> do
             nm <- nextName "q"
             -- traceM $ show $ "setAll nm" <+> pretty nm
             let pat = Single nm
@@ -383,7 +383,7 @@ setAll innerStreamliner x = do
             innerConstraints <- innerStreamliner ref
             -- traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                    attachGroup grps [essence| forAll &pat in &x . &innerConstraint |]
+                    attachGroup (newTag: grps) [essence| forAll &pat in &x . &innerConstraint |]
         _ -> noStreamliner
 
 
@@ -396,18 +396,18 @@ setAtMostOne innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
-                DomainSet _ _ innerDom -> Just innerDom
-                DomainMSet _ _ innerDom -> Just innerDom
-                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
+                DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
+                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
-        Just innerDom -> do
+        Just (innerDom, newTag) -> do
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence| 1 >= sum &pat in &x . toInt(&innerConstraint) |]
+                attachGroup (newTag: grps) [essence| 1 >= sum &pat in &x . toInt(&innerConstraint) |]
         _ -> noStreamliner
 
 
@@ -420,19 +420,19 @@ setHalf innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
-                DomainSet _ _ innerDom -> Just innerDom
-                DomainMSet _ _ innerDom -> Just innerDom
-                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
+                DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
+                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
-        Just innerDom -> do
+        Just (innerDom, newTag) -> do
             let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence| &size / 2 = (sum &pat in &x . toInt(&innerConstraint)) |]
+                attachGroup (newTag: grps) [essence| &size / 2 = (sum &pat in &x . toInt(&innerConstraint)) |]
         _ -> noStreamliner
 
 
@@ -445,19 +445,19 @@ setApproxHalf innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
-                DomainSet _ _ innerDom -> Just innerDom
-                DomainMSet _ _ innerDom -> Just innerDom
-                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
+                DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
+                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
-        Just innerDom -> do
+        Just (innerDom, newTag) -> do
             let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence|
+                attachGroup (newTag: grps) [essence|
                     (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
                 |]
@@ -473,19 +473,19 @@ setMoreThanHalf innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
-                DomainSet _ _ innerDom -> Just innerDom
-                DomainMSet _ _ innerDom -> Just innerDom
-                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
+                DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
+                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
-        Just innerDom -> do
+        Just (innerDom, newTag) -> do
             let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence|
+                attachGroup (newTag: grps) [essence|
                     (&size/2) <= (sum &pat in &x . toInt(&innerConstraint))
                 |]
         _ -> noStreamliner
@@ -500,19 +500,19 @@ setLessThanHalf innerStreamliner x = do
     dom <- expandDomainReference <$> domainOf x
     let minnerDom =
             case dom of
-                DomainSet _ _ innerDom -> Just innerDom
-                DomainMSet _ _ innerDom -> Just innerDom
-                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
+                DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
+                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
-        Just innerDom -> do
+        Just (innerDom, newTag) -> do
             let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             forM innerConstraints $ \ (innerConstraint, grps) ->
-                attachGroup grps [essence|
+                attachGroup (newTag: grps) [essence|
                     (&size/2) >= (sum &pat in &x . toInt(&innerConstraint))
                 |]
         _ -> noStreamliner
@@ -534,8 +534,8 @@ relationCardinality x = do
                     "upperBound" -> return ([essence| |&x| <= &maxCard / &slice |], [grp])
                     _ -> bug "relationCardinality"
                 | slice <- [1,2,4,8,16,32]
-                , lowerOrUpper <- ["lowerBound","upperBound"]
-                , let grp = "cardinality-" ++ lowerOrUpper
+                , lowerOrUpper <- ["LowerBound","UpperBound"]
+                , let grp = "RelationCardinality-" ++ lowerOrUpper
                 ]
         _ -> noStreamliner
 
