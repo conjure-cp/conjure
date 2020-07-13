@@ -111,13 +111,15 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , matrixHalf streamlinersForSingleVariable
     , matrixAtMostOne streamlinersForSingleVariable
     , matrixApproxHalf streamlinersForSingleVariable
-    -- TODO: add moreThanHalf and lessThanHalf
+    , matrixMoreThanHalf streamlinersForSingleVariable
+    , matrixLessThanHalf streamlinersForSingleVariable
 
     , setAll streamlinersForSingleVariable
     , setHalf streamlinersForSingleVariable
     , setAtMostOne streamlinersForSingleVariable
     , setApproxHalf streamlinersForSingleVariable
-    -- TODO: add moreThanHalf and lessThanHalf
+    , setMoreThanHalf streamlinersForSingleVariable
+    , setLessThanHalf streamlinersForSingleVariable
 
     , relationCardinality
 
@@ -304,6 +306,56 @@ matrixApproxHalf innerStreamliner x = do
         _ -> noStreamliner
 
 
+matrixMoreThanHalf ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+matrixMoreThanHalf innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    case dom of
+        DomainMatrix indexDom innerDom -> do
+            let size = [essence| |`&indexDom`| |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence|
+                    (&size/2) <= (sum &pat : &indexDom . toInt(&innerConstraint))
+                    |]
+        _ -> noStreamliner
+
+
+matrixLessThanHalf ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+matrixLessThanHalf innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    case dom of
+        DomainMatrix indexDom innerDom -> do
+            let size = [essence| |`&indexDom`| |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence|
+                    (&size/2) >= (sum &pat : &indexDom . toInt(&innerConstraint))
+                    |]
+        _ -> noStreamliner
+
+
 ------------------------------------------------------------------------------
 -- Sets and MSets
 ------------------------------------------------------------------------------
@@ -408,6 +460,60 @@ setApproxHalf innerStreamliner x = do
                 attachGroup grps [essence|
                     (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
+                |]
+        _ -> noStreamliner
+
+
+setMoreThanHalf ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+setMoreThanHalf innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    let minnerDom =
+            case dom of
+                DomainSet _ _ innerDom -> Just innerDom
+                DomainMSet _ _ innerDom -> Just innerDom
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                _ -> Nothing
+    case minnerDom of
+        Just innerDom -> do
+            let size = [essence| |&x| |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+            innerConstraints <- innerStreamliner ref
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence|
+                    (&size/2) <= (sum &pat in &x . toInt(&innerConstraint))
+                |]
+        _ -> noStreamliner
+
+
+setLessThanHalf ::
+    MonadFail m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+setLessThanHalf innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    let minnerDom =
+            case dom of
+                DomainSet _ _ innerDom -> Just innerDom
+                DomainMSet _ _ innerDom -> Just innerDom
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms)
+                _ -> Nothing
+    case minnerDom of
+        Just innerDom -> do
+            let size = [essence| |&x| |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+            innerConstraints <- innerStreamliner ref
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence|
+                    (&size/2) >= (sum &pat in &x . toInt(&innerConstraint))
                 |]
         _ -> noStreamliner
 
