@@ -929,6 +929,8 @@ srStdoutHandler
             return []
         else do
             line <- hGetLine h
+            when (logLevel >= LogDebug) $ do
+                pp logLevel ("SR:" <+> pretty line)
             case stripPrefix "Solution: " line of
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
