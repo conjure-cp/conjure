@@ -752,6 +752,7 @@ instance EvaluateOp OpTwoBars where
             (viewConstantSequence  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength                    xs
             (viewConstantRelation  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
             (viewConstantPartition -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub $ concat xs
+            (viewConstantPermutation -> Just xs)    -> return $ ConstantInt TagInt $ genericLength $ sortNub $ concat xs
 
             -- cardinality of a domain
             DomainInConstant (DomainInt _ rs) -> ConstantInt TagInt . genericLength <$> rangesInts rs
