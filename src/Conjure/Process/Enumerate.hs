@@ -215,6 +215,13 @@ enumerateInConstant constant = case constant of
                                                     ]
     ConstantAbstract (AbsLitRelation  xs) -> return $ map (ConstantAbstract . AbsLitTuple) xs
     ConstantAbstract (AbsLitPartition xs) -> return $ map (ConstantAbstract . AbsLitSet) xs
+    ConstantAbstract (AbsLitPermutation xss) ->
+        let
+            enumPerm [] = []
+            enumPerm xs = [ ConstantAbstract (AbsLitTuple [i,j]) | (i,j) <- zip xs (tail xs) ] ++
+                          [ ConstantAbstract (AbsLitTuple [last xs, head xs]) ]
+        in
+            return $ concatMap enumPerm xss
     TypedConstant c _                     -> enumerateInConstant c
     _ -> fail $ vcat [ "enumerateInConstant"
                      , "constant:" <+> pretty constant

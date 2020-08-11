@@ -5,7 +5,7 @@ module Conjure.Language.EvaluateOp ( EvaluateOp(..) ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
-import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.Enumerate ( EnumerateDomain, enumerateInConstant )
 import Conjure.Compute.DomainOf ( domainOf )
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
@@ -211,7 +211,9 @@ instance EvaluateOp OpIn where
         return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract $ AbsLitTuple [i,j] ) cs
     evaluateOp (OpIn c (viewConstantRelation -> Just cs)) =
         return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
-    evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
+    evaluateOp (OpIn c coll) = do
+        vals <- enumerateInConstant coll
+        return $ ConstantBool $ elem c vals
 
 instance EvaluateOp OpIndexing where
     evaluateOp p@(OpIndexing m i) | isUndef i = do
