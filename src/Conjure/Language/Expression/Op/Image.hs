@@ -36,6 +36,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
                 , "argument     :" <+> pretty x
                 , "argument type:" <+> pretty tyX
                 ]
+
 instance SimplifyOp OpImage x where
     simplifyOp _ = na "simplifyOp{OpImage}"
 

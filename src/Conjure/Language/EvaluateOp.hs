@@ -186,6 +186,17 @@ instance EvaluateOp OpImage where
                     [ "Sequence is multiply defined at this point:" <+> pretty a
                     , "Sequence value:" <+> pretty f
                     ]
+    evaluateOp (OpImage f@(viewConstantPermutation -> Just _) a) = do
+        permVals <- enumerateInConstant f
+        case [ y | ConstantAbstract (AbsLitTuple [x,y]) <- permVals, a == x ] of
+            [y] -> return y
+            []  -> return a -- permutations map things to themselves by default
+            _   -> do
+                TypePermutation tyTo <- typeOf f
+                return $ mkUndef tyTo $ vcat
+                    [ "Permutation is multiply defined at this point:" <+> pretty a
+                    , "Permutation value:" <+> pretty f
+                    ]
     evaluateOp op = na $ "evaluateOp{OpImage}:" <++> pretty (show op)
 
 instance EvaluateOp OpImageSet where
