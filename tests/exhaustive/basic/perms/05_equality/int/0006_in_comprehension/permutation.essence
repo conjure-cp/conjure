@@ -1,0 +1,6 @@
+find p : permutation (size 4) of int(1..4)
+find q : permutation (size 4) of int(1..4)
+
+such that 
+  and([pt != qt | pt <- p, qt <- q])
+
