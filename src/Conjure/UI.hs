@@ -907,6 +907,7 @@ ui = modes
                     \ - glucose-syrup (SAT solver)\n\
                     \ - lingeling/plingeling/treengeling (SAT solver)\n\
                     \ - cadical (SAT solver)\n\
+                    \ - kissat (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\

@@ -770,6 +770,7 @@ solverExecutables =
     , ( "gecode"          , "fzn-gecode" )
     , ( "chuffed"         , "fzn-chuffed" )
     , ( "cadical"         , "cadical" )
+    , ( "kissat"          , "kissat" )
     , ( "glucose"         , "glucose" )
     , ( "glucose-syrup"   , "glucose-syrup" )
     , ( "lingeling"       , "lingeling" )
@@ -849,6 +850,10 @@ srMkArgs Solve{..} outBase modelPath = do
         "cadical"           -> return [ "-sat"
                                       , "-sat-family", "cadical"
                                       , "-satsolver-bin", "cadical"
+                                      ]
+        "kissat"            -> return [ "-sat"
+                                      , "-sat-family", "cadical"
+                                      , "-satsolver-bin", "kissat"
                                       ]
         "lingeling"         -> return [ "-sat"
                                       , "-sat-family", "lingeling"
