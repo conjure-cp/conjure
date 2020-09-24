@@ -8,7 +8,7 @@ export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 rm -rf tmp-install-kissat
 mkdir tmp-install-kissat
 pushd tmp-install-kissat
-git clone git@github.com:arminbiere/kissat.git
+git clone https://github.com/arminbiere/kissat.git
 cd kissat
 # latest on Github as of 24 September 2020, around when they won the SAT competition
 git checkout baef4609163f542dc08f43aef02ce8da0581a2b5
