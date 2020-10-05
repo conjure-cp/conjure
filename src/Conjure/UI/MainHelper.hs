@@ -977,7 +977,6 @@ srStdoutHandler
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                             appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
                             when (outputFormat == JSON) $ do
-                                appendFile filenameEssenceSolJSON  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                                 essenceSol' <- toSimpleJSON essenceSol
                                 appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
                                 appendFile filenameEssenceSolJSON  ("\n")
