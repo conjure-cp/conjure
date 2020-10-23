@@ -39,7 +39,7 @@ import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
 
 -- base
-import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
+import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..), hPutStrLn, stderr )
 import System.Environment ( getEnvironment )
 import System.Info ( os )
 import GHC.Conc ( numCapabilities )
@@ -148,7 +148,7 @@ mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
                 then do
-                    liftIO $ putStrLn "Parsing as a parameter file"
+                    liftIO $ hPutStrLn stderr "Parsing as a parameter file"
                     readParamOrSolutionFromFile essence
                 else readModelFromFile essence
     let model1 = model0
