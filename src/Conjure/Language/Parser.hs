@@ -648,7 +648,7 @@ parseExpr =
             return $ \ x -> mkOp "not" [x]
 
     in
-        makeExprParser (parseAtomicExpr <?> "expression")
+        makeExprParser parseAtomicExpr
             [ [ case descr of
                     BinaryOp op FLeft             -> InfixL $ do lexeme op
                                                                  return $ mergeOp op
@@ -662,7 +662,7 @@ parseExpr =
               | (descr, _) <- operatorsInGroup
               ]
             | operatorsInGroup <- operatorsGrouped
-            ]
+            ] <?> "expression"
 
 parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do

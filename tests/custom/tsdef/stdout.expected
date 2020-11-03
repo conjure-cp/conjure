@@ -544,7 +544,11 @@ interface IOccurAttr_MinMaxOccur<T> {
   contents: [T, T];
 }
 
+<<<<<<< HEAD
 type Op<T> = IMkOpActive<T> | IMkOpAllDiff<T> | IMkOpAllDiffExcept<T> | IMkOpAnd<T> | IMkOpApart<T> | IMkOpAttributeAsConstraint<T> | IMkOpCatchUndef<T> | IMkOpDefined<T> | IMkOpDiv<T> | IMkOpDontCare<T> | IMkOpDotLeq<T> | IMkOpDotLt<T> | IMkOpEq<T> | IMkOpFactorial<T> | IMkOpFlatten<T> | IMkOpFreq<T> | IMkOpFromSolution<T> | IMkOpGeq<T> | IMkOpGt<T> | IMkOpHist<T> | IMkOpIff<T> | IMkOpImage<T> | IMkOpImageSet<T> | IMkOpImply<T> | IMkOpIn<T> | IMkOpIndexing<T> | IMkOpIntersect<T> | IMkOpInverse<T> | IMkOpLeq<T> | IMkOpLexLeq<T> | IMkOpLexLt<T> | IMkOpLt<T> | IMkOpMakeTable<T> | IMkOpMax<T> | IMkOpMin<T> | IMkOpMinus<T> | IMkOpMod<T> | IMkOpNegate<T> | IMkOpNeq<T> | IMkOpNot<T> | IMkOpOr<T> | IMkOpParticipants<T> | IMkOpParts<T> | IMkOpParty<T> | IMkOpPow<T> | IMkOpPowerSet<T> | IMkOpPreImage<T> | IMkOpPred<T> | IMkOpProduct<T> | IMkOpRange<T> | IMkOpRelationProj<T> | IMkOpRestrict<T> | IMkOpSlicing<T> | IMkOpSubsequence<T> | IMkOpSubset<T> | IMkOpSubsetEq<T> | IMkOpSubstring<T> | IMkOpSucc<T> | IMkOpSum<T> | IMkOpSupset<T> | IMkOpSupsetEq<T> | IMkOpTildeLeq<T> | IMkOpTildeLt<T> | IMkOpToInt<T> | IMkOpToMSet<T> | IMkOpToRelation<T> | IMkOpToSet<T> | IMkOpTogether<T> | IMkOpTransform<T> | IMkOpTrue<T> | IMkOpTwoBars<T> | IMkOpUnion<T> | IMkOpXor<T>;
+=======
+type Op<T> = IMkOpActive<T> | IMkOpAllDiff<T> | IMkOpAllDiffExcept<T> | IMkOpAnd<T> | IMkOpApart<T> | IMkOpAtLeast<T> | IMkOpAtMost<T> | IMkOpAttributeAsConstraint<T> | IMkOpCatchUndef<T> | IMkOpDefined<T> | IMkOpDiv<T> | IMkOpDontCare<T> | IMkOpDotLeq<T> | IMkOpDotLt<T> | IMkOpEq<T> | IMkOpFactorial<T> | IMkOpFlatten<T> | IMkOpFreq<T> | IMkOpGCC<T> | IMkOpGeq<T> | IMkOpGt<T> | IMkOpHist<T> | IMkOpIff<T> | IMkOpImage<T> | IMkOpImageSet<T> | IMkOpImply<T> | IMkOpIn<T> | IMkOpIndexing<T> | IMkOpIntersect<T> | IMkOpInverse<T> | IMkOpLeq<T> | IMkOpLexLeq<T> | IMkOpLexLt<T> | IMkOpLt<T> | IMkOpMakeTable<T> | IMkOpMax<T> | IMkOpMin<T> | IMkOpMinus<T> | IMkOpMod<T> | IMkOpNegate<T> | IMkOpNeq<T> | IMkOpNot<T> | IMkOpOr<T> | IMkOpParticipants<T> | IMkOpParts<T> | IMkOpParty<T> | IMkOpPow<T> | IMkOpPowerSet<T> | IMkOpPreImage<T> | IMkOpPred<T> | IMkOpProduct<T> | IMkOpRange<T> | IMkOpRelationProj<T> | IMkOpRestrict<T> | IMkOpSlicing<T> | IMkOpSubsequence<T> | IMkOpSubset<T> | IMkOpSubsetEq<T> | IMkOpSubstring<T> | IMkOpSucc<T> | IMkOpSum<T> | IMkOpSupset<T> | IMkOpSupsetEq<T> | IMkOpTable<T> | IMkOpTildeLeq<T> | IMkOpTildeLt<T> | IMkOpToInt<T> | IMkOpToMSet<T> | IMkOpToRelation<T> | IMkOpToSet<T> | IMkOpTogether<T> | IMkOpTransform<T> | IMkOpTrue<T> | IMkOpTwoBars<T> | IMkOpUnion<T> | IMkOpXor<T>;
+>>>>>>> master
 
 interface IMkOpActive<T> {
   tag: "MkOpActive";
@@ -569,6 +573,16 @@ interface IMkOpAnd<T> {
 interface IMkOpApart<T> {
   tag: "MkOpApart";
   contents: OpApart<T>;
+}
+
+interface IMkOpAtLeast<T> {
+  tag: "MkOpAtLeast";
+  contents: OpAtLeast<T>;
+}
+
+interface IMkOpAtMost<T> {
+  tag: "MkOpAtMost";
+  contents: OpAtMost<T>;
 }
 
 interface IMkOpAttributeAsConstraint<T> {
@@ -626,9 +640,15 @@ interface IMkOpFreq<T> {
   contents: OpFreq<T>;
 }
 
+<<<<<<< HEAD
 interface IMkOpFromSolution<T> {
   tag: "MkOpFromSolution";
   contents: OpFromSolution<T>;
+=======
+interface IMkOpGCC<T> {
+  tag: "MkOpGCC";
+  contents: OpGCC<T>;
+>>>>>>> master
 }
 
 interface IMkOpGeq<T> {
@@ -851,6 +871,11 @@ interface IMkOpSupsetEq<T> {
   contents: OpSupsetEq<T>;
 }
 
+interface IMkOpTable<T> {
+  tag: "MkOpTable";
+  contents: OpTable<T>;
+}
+
 interface IMkOpTildeLeq<T> {
   tag: "MkOpTildeLeq";
   contents: OpTildeLeq<T>;
@@ -931,6 +956,14 @@ type OpApart<T> = IOpApart<T>;
 
 type IOpApart<T> = [T, T];
 
+type OpAtLeast<T> = IOpAtLeast<T>;
+
+type IOpAtLeast<T> = [T, T, T];
+
+type OpAtMost<T> = IOpAtMost<T>;
+
+type IOpAtMost<T> = [T, T, T];
+
 type OpAttributeAsConstraint<T> = IOpAttributeAsConstraint<T>;
 
 type IOpAttributeAsConstraint<T> = [T, AttrName, T];
@@ -975,9 +1008,15 @@ type OpFreq<T> = IOpFreq<T>;
 
 type IOpFreq<T> = [T, T];
 
+<<<<<<< HEAD
 type OpFromSolution<T> = IOpFromSolution<T>;
 
 type IOpFromSolution<T> = T;
+=======
+type OpGCC<T> = IOpGCC<T>;
+
+type IOpGCC<T> = [T, T, T];
+>>>>>>> master
 
 type OpGeq<T> = IOpGeq<T>;
 
@@ -1150,6 +1189,10 @@ type IOpSupset<T> = [T, T];
 type OpSupsetEq<T> = IOpSupsetEq<T>;
 
 type IOpSupsetEq<T> = [T, T];
+
+type OpTable<T> = IOpTable<T>;
+
+type IOpTable<T> = [T, T];
 
 type OpTildeLeq<T> = IOpTildeLeq<T>;
 

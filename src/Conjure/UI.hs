@@ -189,6 +189,12 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | Features
+        { essence                    :: FilePath            -- essence, mandatory
+        , param                      :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        }
     | ModelStrengthening
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
@@ -901,13 +907,19 @@ ui = modes
                     \ - glucose-syrup (SAT solver)\n\
                     \ - lingeling/plingeling/treengeling (SAT solver)\n\
                     \ - cadical (SAT solver)\n\
+                    \ - kissat (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
                     \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \ - cplex (MIP solver, implemented via MiniZinc)\n\
-                    \Default: minion"
+                    \ - boolector (SMT solver, supported logics: bv)\n\
+                    \ - yices (SMT solver, supported logics: bv, lia, idl)\n\
+                    \ - z3 (SMT solver, supported logics: bv, lia, nia, idl)\n\
+                    \Default: minion\n\n\
+                    \Default logic for SMT solvers is bitvector (bv).\n\
+                    \Append a dash and the name of a logic to the solver name to choose a different logic. For example yices-idl."
         , graphSolver
             = False
             &= name "graph-solver"
@@ -1252,6 +1264,30 @@ ui = modes
             &= help "Generate an Essence model describing the instances of the problem class \
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
+    , Features
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
+        , param
+            = def
+            &= typFile
+            &= argPos 1
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Limit in seconds of real time."
+        }   &= name "features"
+            &= explicit
+            &= help "Calculate instance features."
     , ModelStrengthening
         { essence
             = def

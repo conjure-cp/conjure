@@ -109,6 +109,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpAllDiffExcept x) = domainOf x
     domainOf (MkOpAnd x) = domainOf x
     domainOf (MkOpApart x) = domainOf x
+    domainOf (MkOpAtLeast x) = domainOf x
+    domainOf (MkOpAtMost x) = domainOf x
     domainOf (MkOpAttributeAsConstraint x) = domainOf x
     domainOf (MkOpCatchUndef x) = domainOf x
     domainOf (MkOpDefined x) = domainOf x
@@ -121,6 +123,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpFlatten x) = domainOf x
     domainOf (MkOpFreq x) = domainOf x
     domainOf (MkOpFromSolution x) = domainOf x
+    domainOf (MkOpGCC x) = domainOf x
     domainOf (MkOpGeq x) = domainOf x
     domainOf (MkOpGt x) = domainOf x
     domainOf (MkOpHist x) = domainOf x
@@ -165,6 +168,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpSum x) = domainOf x
     domainOf (MkOpSupset x) = domainOf x
     domainOf (MkOpSupsetEq x) = domainOf x
+    domainOf (MkOpTable x) = domainOf x
     domainOf (MkOpTildeLeq x) = domainOf x
     domainOf (MkOpTildeLt x) = domainOf x
     domainOf (MkOpTogether x) = domainOf x
@@ -183,6 +187,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpAllDiffExcept x) = indexDomainsOf x
     indexDomainsOf (MkOpAnd x) = indexDomainsOf x
     indexDomainsOf (MkOpApart x) = indexDomainsOf x
+    indexDomainsOf (MkOpAtLeast x) = indexDomainsOf x
+    indexDomainsOf (MkOpAtMost x) = indexDomainsOf x
     indexDomainsOf (MkOpAttributeAsConstraint x) = indexDomainsOf x
     indexDomainsOf (MkOpCatchUndef x) = indexDomainsOf x
     indexDomainsOf (MkOpDefined x) = indexDomainsOf x
@@ -195,6 +201,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpFlatten x) = indexDomainsOf x
     indexDomainsOf (MkOpFreq x) = indexDomainsOf x
     indexDomainsOf (MkOpFromSolution x) = indexDomainsOf x
+    indexDomainsOf (MkOpGCC x) = indexDomainsOf x
     indexDomainsOf (MkOpGeq x) = indexDomainsOf x
     indexDomainsOf (MkOpGt x) = indexDomainsOf x
     indexDomainsOf (MkOpHist x) = indexDomainsOf x
@@ -239,6 +246,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpSum x) = indexDomainsOf x
     indexDomainsOf (MkOpSupset x) = indexDomainsOf x
     indexDomainsOf (MkOpSupsetEq x) = indexDomainsOf x
+    indexDomainsOf (MkOpTable x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLt x) = indexDomainsOf x
     indexDomainsOf (MkOpTogether x) = indexDomainsOf x
@@ -631,6 +639,18 @@ instance DomainOf (OpSupset x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpSupsetEq x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpTable x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpAtLeast x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpAtMost x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpGCC x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpTildeLeq x) where

@@ -18,7 +18,7 @@ rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
 
 
 rule_Comprehension :: Rule
-rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
+rule_Comprehension = "relation-comprehension{RelationAsMatrix}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, rel), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
@@ -36,7 +36,7 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
 
         -- let out fresh = unroll m [] (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
         return
-            ( "Vertical rule for map_in_expr for relation domains, RelationAsMatrix representation."
+            ( "Vertical rule for comprehension for relation domains, RelationAsMatrix representation."
             , do
                 (iPat, i) <- quantifiedVar
 

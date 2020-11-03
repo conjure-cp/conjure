@@ -83,7 +83,10 @@ instance FromJSON  Model where parseJSON = genericParseJSON jsonOptions
 instance SimpleJSON Model where
     toSimpleJSON m = do
         inners <- mapM toSimpleJSON (mStatements m)
-        return (JSON.Array $ V.fromList $ inners)
+        let (innersAsMaps, rest) = unzip [ case i of JSON.Object mp -> ([mp], []); _ -> ([], [i]) | i <- inners ]
+                                    |> (\ (xs, ys) -> (M.unions (concat xs), concat ys))
+        unless (null rest) $ bug $ "Expected json objects only, but got:" <+> vcat (map pretty rest)
+        return (JSON.Object innersAsMaps)
     fromSimpleJSON _ = noFromSimpleJSON
 
 instance Default Model where

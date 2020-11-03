@@ -52,6 +52,8 @@ Library
                      , Conjure.Language.Expression.Op.AllDiffExcept
                      , Conjure.Language.Expression.Op.And
                      , Conjure.Language.Expression.Op.Apart
+                     , Conjure.Language.Expression.Op.AtLeast
+                     , Conjure.Language.Expression.Op.AtMost
                      , Conjure.Language.Expression.Op.AttributeAsConstraint
                      , Conjure.Language.Expression.Op.CatchUndef
                      , Conjure.Language.Expression.Op.Defined
@@ -64,6 +66,7 @@ Library
                      , Conjure.Language.Expression.Op.Flatten
                      , Conjure.Language.Expression.Op.Freq
                      , Conjure.Language.Expression.Op.FromSolution
+                     , Conjure.Language.Expression.Op.GCC
                      , Conjure.Language.Expression.Op.Geq
                      , Conjure.Language.Expression.Op.Gt
                      , Conjure.Language.Expression.Op.Hist
@@ -108,6 +111,7 @@ Library
                      , Conjure.Language.Expression.Op.Sum
                      , Conjure.Language.Expression.Op.Supset
                      , Conjure.Language.Expression.Op.SupsetEq
+                     , Conjure.Language.Expression.Op.Table
                      , Conjure.Language.Expression.Op.TildeLeq
                      , Conjure.Language.Expression.Op.TildeLt
                      , Conjure.Language.Expression.Op.Together
@@ -142,6 +146,7 @@ Library
                      , Conjure.Process.DealWithCuts
                      , Conjure.Process.Enumerate
                      , Conjure.Process.Enums
+                     , Conjure.Process.Features
                      , Conjure.Process.FiniteGivens
                      , Conjure.Process.InferAttributes
                      , Conjure.Process.LettingsForComplexInDoms
@@ -289,6 +294,7 @@ Library
                      , generic-deriving >= 1.10.6
                      , ansi-terminal >= 0.8.2
                      , timeit >= 2.0
+                     , primes >= 0.2.1.0
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*

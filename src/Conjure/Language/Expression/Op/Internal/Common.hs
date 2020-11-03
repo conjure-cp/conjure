@@ -210,7 +210,7 @@ operators =
     , ( BinaryOp L_Eq           FNone   ,  400 )
     , ( BinaryOp L_Or           FLeft   ,  110 )
     , ( BinaryOp L_And          FLeft   ,  120 )
-    , ( BinaryOp L_Imply        FNone   ,   50 )
+    , ( BinaryOp L_Imply        FLeft   ,   50 )
     , ( BinaryOp L_Iff          FNone   ,   50 )
     , ( BinaryOp L_union        FLeft   ,  600 )
     , ( BinaryOp L_intersect    FLeft   ,  700 )
@@ -244,10 +244,14 @@ functionals :: [Lexeme]
 functionals =
     [ L_toInt
     , L_makeTable
+    , L_table
     , L_min
     , L_max
     , L_allDiff
     , L_alldifferent_except
+    , L_gcc
+    , L_atleast
+    , L_atmost
     , L_catchUndef
     , L_dontCare
     , L_hist

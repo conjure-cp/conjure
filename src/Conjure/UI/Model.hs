@@ -1403,6 +1403,7 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
+    , Vertical.Set.Explicit.rule_In
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
@@ -1443,7 +1444,9 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
+    -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
+    , Vertical.Function.FunctionAsRelation.rule_InDefined
 
     , Vertical.Sequence.ExplicitBounded.rule_Comprehension
     , Vertical.Sequence.ExplicitBounded.rule_Card
@@ -1456,7 +1459,9 @@ verticalRules =
     , Vertical.Relation.RelationAsMatrix.rule_Image
 
     , Vertical.Relation.RelationAsSet.rule_Comprehension
+    , Vertical.Relation.RelationAsSet.rule_PowerSet_Comprehension
     , Vertical.Relation.RelationAsSet.rule_Card
+    , Vertical.Relation.RelationAsSet.rule_In
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension

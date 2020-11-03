@@ -160,22 +160,29 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
         decorateWithType p = return p
 
     when graphSolver $ do
-        forM_ essenceGivensAndLettings' $ \ (n,d,c) ->
-            case d of
-                DomainFunction _ _
-                    (DomainTuple [DomainInt{}, DomainInt{}])
-                    _ -> do
-                        let csvLines = 
-                                case c of
-                                    ConstantAbstract (AbsLitFunction rows) -> catMaybes
-                                        [ case row of
-                                            (ConstantAbstract (AbsLitTuple [a, b]), _) -> Just (pretty a <> "," <> pretty b)
-                                            _ -> Nothing
-                                        | row <- rows ]
-                                    _ -> []
-                        unless (null csvLines) $
-                            liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
-                _ -> return ()
+        forM_ essenceGivensAndLettings' $ \ (n,d,c) -> do
+            let pairs =
+                    case d of
+                        DomainFunction _ _ (DomainTuple [DomainInt{}, DomainInt{}]) _ ->
+                            case c of
+                                ConstantAbstract (AbsLitFunction rows) ->
+                                    [ case row of
+                                        (ConstantAbstract (AbsLitTuple [a, b]), _) -> [a,b]
+                                        _ -> []
+                                    | row <- rows ]
+                                _ -> []
+                        DomainRelation _ _ ([DomainInt{}, DomainInt{}, _]) ->
+                            case c of
+                                ConstantAbstract (AbsLitRelation rows) ->
+                                    [ case row of
+                                        [a, b, _] -> [a,b]
+                                        _ -> []
+                                    | row <- rows ]
+                                _ -> []
+                        _ -> []
+            let csvLines = [ pretty a <> "," <> pretty b | [a,b] <- sortNub pairs ]
+            unless (null pairs) $
+                liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
 
         let essenceFindNames = eprimeModel |> mInfo |> miFinds
         let essenceFinds = eprimeModel |> mInfo |> miRepresentations |> filter (\ (n,_) -> n `elem` essenceFindNames )
