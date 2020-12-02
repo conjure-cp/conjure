@@ -1447,6 +1447,7 @@ verticalRules =
     -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
     , Vertical.Function.FunctionAsRelation.rule_InDefined
+    , Vertical.Function.FunctionAsRelation.rule_InToSet
 
     , Vertical.Sequence.ExplicitBounded.rule_Comprehension
     , Vertical.Sequence.ExplicitBounded.rule_Card
