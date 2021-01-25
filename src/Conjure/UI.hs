@@ -1271,7 +1271,7 @@ ui = modes
             &= argPos 0
         , param
             = def
-            &= typFile
+            &= typ "PARAM_FILE"
             &= argPos 1
         , logLevel
             = def
