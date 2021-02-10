@@ -1,0 +1,2 @@
+find y : sequence (maxSize 3) of (int(1..5), int(6..9))
+such that allDiff([val | (index, val) <- y, index % 2 = 1])
