@@ -2239,13 +2239,10 @@ rule_Decompose_AllDiff_MapToSingleInt = "decompose-allDiff-mapToSingleInt" `name
                         bodyBits <- downX1 body
                         bodyBitSizes <- forM bodyBits $ \ b -> do
                             bDomain <- domainOf b
-                            bSize <- domainSizeOf bDomain
-                            Right constant@ConstantInt{} <- runExceptT (instantiateExpression [] bSize)
-                            return constant
+                            domainSizeOf bDomain
                         case (bodyBits, bodyBitSizes) of
                             ([a,b], [_a',b']) -> do
-                                let b'' = Constant b'
-                                let body'=  [essence| &a * &b'' + &b |]
+                                let body'=  [essence| &a * &b' + &b |]
                                 let m' = Comprehension body' gensOrConds
                                 return
                                     ( "Decomposing allDiff"
@@ -2414,6 +2411,10 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
+        tyBody <- typeOf body
+        case tyBody of
+            TypeInt{} -> return ()
+            _ -> na "rule_InlineConditions_AllDiff, not an int"
         domBody <- domainOf body
         let
             collectLowerBounds (RangeSingle x) = return x
