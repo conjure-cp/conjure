@@ -24,6 +24,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
@@ -1614,6 +1615,7 @@ otherRules =
         [ rule_TrueIsNoOp
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
+        , rule_Decompose_AllDiff_MapToSingleInt
 
         , rule_GeneratorsFirst
         ]
@@ -2203,7 +2205,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _) -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -2222,6 +2224,37 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                     |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
+
+
+rule_Decompose_AllDiff_MapToSingleInt :: Rule
+rule_Decompose_AllDiff_MapToSingleInt = "decompose-allDiff-mapToSingleInt" `namedRule` theRule where
+    theRule [essence| allDiff(&m) |] = do
+        case m of
+            Comprehension body gensOrConds -> do
+                tyBody <- typeOf body
+                case tyBody of
+                    TypeBool -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeInt _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeTuple{} -> do
+                        bodyBits <- downX1 body
+                        bodyBitSizes <- forM bodyBits $ \ b -> do
+                            bDomain <- domainOf b
+                            bSize <- domainSizeOf bDomain
+                            Right constant@ConstantInt{} <- runExceptT (instantiateExpression [] bSize)
+                            return constant
+                        case (bodyBits, bodyBitSizes) of
+                            ([a,b], [_a',b']) -> do
+                                let b'' = Constant b'
+                                let body'=  [essence| &a * &b'' + &b |]
+                                let m' = Comprehension body' gensOrConds
+                                return
+                                    ( "Decomposing allDiff"
+                                    , return [essence| allDiff(&m') |]
+                                    )
+                            _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    _ -> na "allDiff on something other than a comprehension."
+            _ -> na "allDiff on something other than a comprehension."
+    theRule _ = na "rule_Decompose_AllDiff_MapToSingleInt"
 
 
 rule_DomainCardinality :: Rule
