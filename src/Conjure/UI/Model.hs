@@ -80,6 +80,7 @@ import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.Function.Function1DPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
+import qualified Conjure.Rules.Vertical.Function.FunctionNDPartialDummy as Vertical.Function.FunctionNDPartialDummy
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 
 import qualified Conjure.Rules.Horizontal.Sequence as Horizontal.Sequence
@@ -1327,8 +1328,8 @@ allRules config =
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
       ]
-    , bubbleUpRules
-    , [ rule_Eq
+    ] ++ bubbleUpRules ++
+    [ [ rule_Eq
       , rule_Neq
       , rule_Comprehension_Cardinality
       , rule_Flatten_Cardinality
@@ -1440,6 +1441,10 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_Image_NotABool
     , Vertical.Function.FunctionNDPartial.rule_Image_Bool
     , Vertical.Function.FunctionNDPartial.rule_InDefined
+
+    , Vertical.Function.FunctionNDPartialDummy.rule_Comprehension
+    , Vertical.Function.FunctionNDPartialDummy.rule_Image
+    , Vertical.Function.FunctionNDPartialDummy.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
     -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
@@ -1581,14 +1586,18 @@ horizontalRules =
     ]
 
 
-bubbleUpRules :: [Rule]
+bubbleUpRules :: [[Rule]]
 bubbleUpRules =
-    [ BubbleUp.rule_MergeNested
-    , BubbleUp.rule_ToAnd
-    , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
-    , BubbleUp.rule_NotBoolYet
-    , BubbleUp.rule_ConditionInsideGeneratorDomain
-    , BubbleUp.rule_LiftVars
+    [
+        [ BubbleUp.rule_MergeNested
+        , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
+        , BubbleUp.rule_ConditionInsideGeneratorDomain
+        , BubbleUp.rule_LiftVars
+        ]
+    ,
+        [ BubbleUp.rule_NotBoolYet
+        ]
     ]
 
 

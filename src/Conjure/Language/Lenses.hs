@@ -1589,7 +1589,8 @@ maxOfDomain d = fail ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
 maxOfRange :: MonadFail m => Range Expression -> m Expression
 maxOfRange (RangeSingle x) = return x
 maxOfRange (RangeBounded _ x) = return x
-maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty r)
+maxOfRange (RangeUpperBounded x) = return x
+maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty (show r))
 
 minOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
 minOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.minOfDomain []"
@@ -1603,4 +1604,5 @@ minOfDomain d = fail ("rule_DomainMinMax.minOfDomain" <+> pretty d)
 minOfRange :: MonadFail m => Range Expression -> m Expression
 minOfRange (RangeSingle x) = return x
 minOfRange (RangeBounded x _) = return x
-minOfRange r = fail ("rule_DomainMinMax.minOfRange" <+> pretty r)
+minOfRange (RangeLowerBounded x) = return x
+minOfRange r = fail ("rule_DomainMinMax.minOfRange" <+> pretty (show r))

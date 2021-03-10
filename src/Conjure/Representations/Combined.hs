@@ -34,6 +34,7 @@ import Conjure.Representations.Function.Function1D
 import Conjure.Representations.Function.Function1DPartial
 import Conjure.Representations.Function.FunctionND
 import Conjure.Representations.Function.FunctionNDPartial
+import Conjure.Representations.Function.FunctionNDPartialDummy
 import Conjure.Representations.Function.FunctionAsRelation
 import Conjure.Representations.Sequence.ExplicitBounded
 import Conjure.Representations.Relation.RelationAsMatrix
@@ -199,6 +200,7 @@ dispatch domain = do
             Function_1DPartial                -> function1DPartial
             Function_ND                       -> functionND
             Function_NDPartial                -> functionNDPartial
+            Function_NDPartialDummy           -> functionNDPartialDummy
             Function_AsRelation{}             -> functionAsRelation dispatch
                                                     (bug "reprOptions inside dispatch")
             _ -> nope
@@ -235,7 +237,7 @@ reprsStandardOrderNoLevels = return $ concat
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
-      , function1D, function1DPartial, functionND, functionNDPartial
+      , function1D, function1DPartial, functionND, functionNDPartial, functionNDPartialDummy
       , sequenceExplicitBounded
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
@@ -261,7 +263,7 @@ reprsStandardOrder =
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
-      , function1D, function1DPartial, functionND, functionNDPartial
+      , function1D, function1DPartial, functionND, functionNDPartial, functionNDPartialDummy
       , sequenceExplicitBounded
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrder) True
@@ -292,6 +294,7 @@ reprsSparseOrder = map return
     , function1D, functionND
     , functionAsRelation dispatch (reprOptions reprsSparseOrder)
     , function1DPartial, functionNDPartial                    -- redundant
+    , functionNDPartialDummy                                  -- redundant
 
     , sequenceExplicitBounded
 
