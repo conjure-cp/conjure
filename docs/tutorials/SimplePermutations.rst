@@ -135,7 +135,6 @@ We define the size of the permutation to be ``n`` and the permutation ``perm`` t
 
 What the model will tell us is that the permutation is simple (``true``) or not.
 
-We follow the same 
 
 Instances
 ~~~~~~~~~
