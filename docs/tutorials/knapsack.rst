@@ -12,12 +12,11 @@ The Knapsack problem is a classical combinatorial optimisation problem, often us
     #. A maximum weight which we call *capacity*,
 - find a set of the items such that
     #. The sum of the weights of the items in our set is less than or equal to the capacity,and 
-    #. Maximising the sum of the values of the items.
+    #. The sum of the values of the items is maximised.
 
 Informally, think about putting items in a sack such that we maximise the total value of the sack whilst not going over the sack's weight limit.
 
 We begin by showing the entire problem as defined in Essence:
-
 
 .. code-block:: essence
 
@@ -90,20 +89,20 @@ The final parameter -- a weight limit.  Example value in parameter file:
 
 .. code-block:: essence
 
-    letting items be new type enum {a,b,c,d,e}
+    letting capacity be 80
 
 
 .. code-block:: essence
 
     find picked : set of items
 
-The *find* keyword denotes decision variables, these are the variables for which  the solver will search for a valid assignment. As is common in Essence problems, our entire problem is modelled using one decision variable.  *picked* is the name of the variable, its type is *set of items*; a set of any size who's elements are taken from the *items* domain.  Note, the maximum cardinality of the set is implicitly the size of the *items* domain.
+The ``find`` keyword denotes decision variables, these are the variables for which  the solver will search for a valid assignment. As is common in Essence problems, our entire problem is modelled using one decision variable named ``picked``.  Its type is ``set of items``; a set of any size whose elements are taken from the ``items`` domain.  Note, the maximum cardinality of the set is implicitly the size of the ``items`` domain.
 
 .. code-block:: essence
 
     maximising sum i in picked . gain(i)
 
-The *maximising* keyword denotes the objective for the solver; a value for the solver to *maximise*.  *minimise* is also a valid objective keyword.  The expression ``sum i in picked .`` is a quantifier. The ``sum`` says that the values we produce should be summed together.  The ``i in picked`` says we want to list out every element of the set ``picked``.  The expression given to the ``sum`` are described by the expression that follows the full-stop (``.``).  In this case, we are asking for the image of ``i`` in the ``gain`` function.  That is, for each item in the set, we are looking up the integer value that the item maps to in the ``gain`` function and summing these integers.
+The ``maximising`` keyword denotes the objective for the solver; a value for the solver to *maximise*.  ``minimise`` is also a valid objective keyword.  The expression ``sum i in picked .`` is a quantifier. The ``sum`` says that the values we produce should be summed together.  The ``i in picked`` says we want to list out every element of the set ``picked``.  The expression given to the ``sum`` are described by the expression that follows the full-stop (``.``).  In this case, we are asking for the image of ``i`` in the ``gain`` function.  That is, for each item in the set, we are looking up the integer value that the item maps to in the ``gain`` function and summing these integers.
  
 
 .. code-block:: essence
