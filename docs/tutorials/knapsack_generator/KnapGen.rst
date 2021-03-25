@@ -103,7 +103,7 @@ Alternatively one can use another solver that uses randomness by default
                      10 --> 952, 11 --> 228, 12 --> 189, 13 --> 88, 14 --> 270, 15 --> 868, 16 --> 903, 17 --> 743,
                      18 --> 396, 19 --> 174, 20 --> 446)
 
-Now it is starting to look more like a proper instance. At this point we can add some knowledge about the problem to formulate some constraints that will ensure that the instances are not trivial. ie when the sum of all the weights is smaller than the capacity than we can put all the objects in the knapsack or if all the objects are heavier of than the capacity no objects can be picked. Thefore we add constraints such as:
+Now it is starting to look more like a proper instance. At this point we can add some knowledge about the problem to formulate some constraints that will ensure that the instances are not trivial. ie when the sum of all the weights is smaller than the capacity so we can't put all the objects in the knapsack or when all the objects are heavier  than the capacity so that no object can be picked. Thefore we add constraints such as:
 
 .. code-block:: essence
 
@@ -118,13 +118,13 @@ To ensure that the solver does not take it too far we impose an upper bound usin
     such that (sum ([w | (_,w) <- weight]) < capacity*5)
 
 At this point it will be harder to see specific properties of the instances just by eyeballing the parameters but we can be confident that the properties we have imposed are there.
-We can add some extra constraints to refine even more the values of the instances for practice/exercise by enforcing that no object is greater than a third of the capacity
+We can add some more constraints to refine the values of the instances for practice/exercise by enforcing that no object is heavier than a third of the knapsack capacity
 
 .. code-block:: essence
 
     such that forAll (_,w) in weight .  w < capacity / 3
 
-On top of that we can enfore some constraint on the density of the values in each object by limiting the ratio between the weight and gain of each specific object with:
+On top of that we can enfore a constraint on the density of the values in each object by limiting the ratio between the weight and gain of each specific object with:
 
 .. code-block:: essence
 
@@ -149,7 +149,7 @@ Finally the model of the generator is now :
 
 After running once again the solver we can take the output solution file `generator-items.solution` and append it to the items.param (by concatenating the files or simply coping the content into it) 
 We can finally test our instance by running 
-conjure solve knapsack.essence items.param
+"conjure solve knapsack.essence items.param"
 
 **Tada! your model is being tested on some instance!**
 
