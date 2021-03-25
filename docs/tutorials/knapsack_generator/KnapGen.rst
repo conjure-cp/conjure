@@ -1,7 +1,7 @@
 Handcrafting Instance Generators in Essence
 ------------------
 
-Authors: Joan Espasa Arxer and Christopher Stone
+*Authors: Joan Espasa Arxer and Christopher Stone*
 
 In modelling it is common to create an abstract model that expects some input parameters (Also known as "instances") which are required to run and test the model.
 In this tutorial we demonstrate how to use ESSENCE to handcraft a generator of instances that can be used to produce input parameters for a specific model.
