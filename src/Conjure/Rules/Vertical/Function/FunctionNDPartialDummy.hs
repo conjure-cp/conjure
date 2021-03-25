@@ -9,8 +9,12 @@ rule_Image :: Rule
 rule_Image = "function-image{FunctionNDPartialDummy}" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         Function_NDPartialDummy <- representationOf f
-        [values]     <- downX1 f
-        toIndex      <- downX1 x
+        [values] <- downX1 f
+        toIndex <- do
+            ys <- downX1 x
+            case ys of
+                [] -> return [x]
+                _ -> return ys
         let valuesIndexed = make opMatrixIndexing values toIndex
         return
             ( "Function image, FunctionND representation"
@@ -24,7 +28,11 @@ rule_InDefined = "function-in-defined{FunctionNDPartialDummy}" `namedRule` theRu
     theRule [essence| &x in defined(&f) |] = do
         Function_NDPartialDummy <- representationOf f
         [values] <- downX1 f
-        toIndex <- downX1 x
+        toIndex <- do
+            ys <- downX1 x
+            case ys of
+                [] -> return [x]
+                _ -> return ys
         DomainFunction _ _ _ innerDomainTo <- domainOf f
         let valuesIndexed = make opMatrixIndexing values toIndex
         let dummy = [essence| min(`&innerDomainTo`) - 1 |]
@@ -51,12 +59,12 @@ rule_Comprehension = "function-comprehension{FunctionNDPartialDummy}" `namedRule
             , do
                 (jPat, j) <- quantifiedVar
                 let kRange = case innerDomainFr of
-                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
-                        DomainRecord rs -> map (fromName . fst) rs
-                        _ -> bug $ vcat [ "FunctionNDPartialDummy.rule_Comprehension"
-                                        , "innerDomainFr:" <+> pretty innerDomainFr
-                                        ]
-                    toIndex       = [ [essence| &j[&k] |] | k <- kRange ]
+                        DomainTuple ts  -> Just $ map fromInt [1 .. genericLength ts]
+                        DomainRecord rs -> Just $ map (fromName . fst) rs
+                        _ -> Nothing
+                    toIndex       = case kRange of
+                                        Just ks -> [ [essence| &j[&k] |] | k <- ks ]
+                                        Nothing -> [j]
                     valuesIndexed = make opMatrixIndexing values toIndex
                     val           = [essence| (&j, &valuesIndexed) |]
                 return $ Comprehension (upd val body)

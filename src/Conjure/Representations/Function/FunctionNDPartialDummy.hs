@@ -57,19 +57,19 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
 
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
         calcDummyElem dom =
-            let theMax = bugFail "calcDummyElem: maxOfDomain" (maxOfDomain dom)
-            in  [essence| &theMax + 1 |]
+            let theMax = bugFail "calcDummyElem: minOfDomain" (minOfDomain dom)
+            in  [essence| &theMax - 1 |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
         calcDummyElemC (DomainInt _ []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
         calcDummyElemC (DomainInt t rs) = ConstantInt t $
-            1 + maximum [ i
-                        | r <- rs
-                        , i <- case r of
-                            RangeSingle (ConstantInt _ x) -> [x]
-                            RangeBounded (ConstantInt _ x) (ConstantInt _ y) -> [x..y]
-                            _ -> bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty r)
-                        ]
+            minimum [ i
+                    | r <- rs
+                    , i <- case r of
+                        RangeSingle (ConstantInt _ x) -> [x]
+                        RangeBounded (ConstantInt _ x) (ConstantInt _ y) -> [x..y]
+                        _ -> bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty r)
+                    ] - 1
         calcDummyElemC d = bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty d)
 
         downD :: TypeOf_DownD m
