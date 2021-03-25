@@ -3,6 +3,7 @@
 
 The Knapsack problem
 -------------------------
+*Authors: Saad Attieh and Christopher Stone*
 
 The Knapsack problem is a classical combinatorial optimisation problem, often used in areas of resource allocation. A basic variant of the Knapsack problem is defined as follows:
 
