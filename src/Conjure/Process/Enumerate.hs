@@ -130,6 +130,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                 [ "-cpulimit"      , show minionTimelimit
                 ]
             , solver                        = "minion"
+            , graphSolver                   = False
             , cgroups                       = False
             , nbSolutions                   = show enumerateDomainMax
             , copySolutions                 = False
@@ -145,6 +146,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , logRuleSuccesses              = False
             , logRuleAttempts               = False
             , logChoices                    = False
+            , portfolio                     = Nothing
             , strategyQ                     = "f"
             , strategyA                     = "c"
             , representations               = Nothing
@@ -155,6 +157,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , representationsCuts           = Nothing
             , channelling                   = False
             , representationLevels          = True
+            , followModel                   = ""
             , useExistingModels             = []
             , seed                          = Nothing
             , limitModels                   = Nothing

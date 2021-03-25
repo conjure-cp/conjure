@@ -52,6 +52,8 @@ Library
                      , Conjure.Language.Expression.Op.AllDiffExcept
                      , Conjure.Language.Expression.Op.And
                      , Conjure.Language.Expression.Op.Apart
+                     , Conjure.Language.Expression.Op.AtLeast
+                     , Conjure.Language.Expression.Op.AtMost
                      , Conjure.Language.Expression.Op.AttributeAsConstraint
                      , Conjure.Language.Expression.Op.CatchUndef
                      , Conjure.Language.Expression.Op.Defined
@@ -63,6 +65,7 @@ Library
                      , Conjure.Language.Expression.Op.Factorial
                      , Conjure.Language.Expression.Op.Flatten
                      , Conjure.Language.Expression.Op.Freq
+                     , Conjure.Language.Expression.Op.GCC
                      , Conjure.Language.Expression.Op.Geq
                      , Conjure.Language.Expression.Op.Gt
                      , Conjure.Language.Expression.Op.Hist
@@ -78,6 +81,7 @@ Library
                      , Conjure.Language.Expression.Op.LexLeq
                      , Conjure.Language.Expression.Op.LexLt
                      , Conjure.Language.Expression.Op.Lt
+                     , Conjure.Language.Expression.Op.MakeTable
                      , Conjure.Language.Expression.Op.Max
                      , Conjure.Language.Expression.Op.Min
                      , Conjure.Language.Expression.Op.Minus
@@ -106,6 +110,7 @@ Library
                      , Conjure.Language.Expression.Op.Sum
                      , Conjure.Language.Expression.Op.Supset
                      , Conjure.Language.Expression.Op.SupsetEq
+                     , Conjure.Language.Expression.Op.Table
                      , Conjure.Language.Expression.Op.TildeLeq
                      , Conjure.Language.Expression.Op.TildeLt
                      , Conjure.Language.Expression.Op.Together
@@ -140,6 +145,7 @@ Library
                      , Conjure.Process.DealWithCuts
                      , Conjure.Process.Enumerate
                      , Conjure.Process.Enums
+                     , Conjure.Process.Features
                      , Conjure.Process.FiniteGivens
                      , Conjure.Process.InferAttributes
                      , Conjure.Process.LettingsForComplexInDoms
@@ -265,7 +271,7 @@ Library
                      , safe
                      , scientific
                      -- 1.6.7, because of the stderr handling fix
-                     , shelly >= 1.6.7
+                     , shelly >= 1.6.7 && <= 1.8.0
                      , split
                      , stm
                      , strict
@@ -286,6 +292,8 @@ Library
                      -- see https://github.com/dreixel/generic-deriving/issues/41
                      , generic-deriving >= 1.10.6
                      , ansi-terminal >= 0.8.2
+                     , timeit >= 2.0
+                     , primes >= 0.2.1.0
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*

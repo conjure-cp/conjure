@@ -117,3 +117,35 @@ rule_Max = "set-max{Explicit}" `namedRule` theRule where
             ( "Vertical rule for set max, Explicit representation."
             , return [essence| &m[&maxInIndex] |]
             )
+
+
+rule_In :: Rule
+rule_In = "set-in-table{Explicit}" `namedRule` theRule where
+    theRule [essence| &x in &set |] = do
+        TypeSet{} <- typeOf set
+        Set_Explicit <- representationOf set
+        tableCheck x set
+        xParts <- downX1 x
+        let vars = fromList xParts
+        [matrix] <- downX1 set
+        (index:_) <- indexDomainsOf matrix
+        parts <- downX1 matrix
+        (iPat, i) <- quantifiedVar
+        let oneRow = fromList [ [essence| &p[&i] |] | p <- parts ]
+        let table = [essence| [ &oneRow | &iPat : &index ] |]
+        return
+            ( "set membership to table"
+            , return [essence| table(&vars, &table) |]
+            )
+    theRule _ = na "rule_In"
+
+    tableCheck ::
+        MonadFail m =>
+        (?typeCheckerMode::TypeCheckerMode) =>
+        Expression -> Expression -> m ()
+    tableCheck x set | categoryOf set < CatDecision = do
+        tyX <- typeOf x
+        case tyX of
+            TypeTuple ts | and [ case t of TypeInt{} -> True ; _ -> False | t <- ts ] -> return ()
+            _ -> na "rule_In"
+    tableCheck _ _ = na "rule_In"

@@ -25,6 +25,7 @@ translateSolution ::
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
+    MonadIO m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model ->      -- eprime model
     Model ->      -- essence param
@@ -33,7 +34,7 @@ translateSolution ::
 
 translateSolution eprimeModel essenceParam' eprimeSolution = do
 
-    eprimeParam <- translateParameter eprimeModel essenceParam'
+    eprimeParam <- translateParameter False eprimeModel essenceParam'
     (_, essenceParam) <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =

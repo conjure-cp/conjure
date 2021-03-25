@@ -1,0 +1,813 @@
+$ conjure parameter-generator problem.essence
+File: problem-instanceGenerator.essence
+language Essence 1.3
+
+given minid_aircraft_min: int(0..100)
+given minid_aircraft_max: int(0..100)
+find minid_aircraft: int(0..100)
+such that
+    minid_aircraft >= minid_aircraft_min,
+    minid_aircraft <= minid_aircraft_max
+given maxid_aircraft_min: int(0..100)
+given maxid_aircraft_max: int(0..100)
+find maxid_aircraft: int(0..100)
+such that
+    maxid_aircraft >= maxid_aircraft_min,
+    maxid_aircraft <= maxid_aircraft_max
+given minid_person_min: int(0..100)
+given minid_person_max: int(0..100)
+find minid_person: int(0..100)
+such that
+    minid_person >= minid_person_min,
+    minid_person <= minid_person_max
+given maxid_person_min: int(0..100)
+given maxid_person_max: int(0..100)
+find maxid_person: int(0..100)
+such that
+    maxid_person >= maxid_person_min,
+    maxid_person <= maxid_person_max
+given minid_city_min: int(0..100)
+given minid_city_max: int(0..100)
+find minid_city: int(0..100)
+such that
+    minid_city >= minid_city_min,
+    minid_city <= minid_city_max
+given maxid_city_min: int(0..100)
+given maxid_city_max: int(0..100)
+find maxid_city: int(0..100)
+such that
+    maxid_city >= maxid_city_min,
+    maxid_city <= maxid_city_max
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
+given init_fuel_range_min: int(-65536..65536)
+given init_fuel_range_max: int(-65536..65536)
+given init_distance_range_min: int(-65536..65536)
+given init_distance_range_max: int(-65536..65536)
+given init_capacity_range_min: int(-65536..65536)
+given init_capacity_range_max: int(-65536..65536)
+given init_onboard_range_min: int(-65536..65536)
+given init_onboard_range_max: int(-65536..65536)
+given init_total_fuel_used_range_min: int(-65536..65536)
+given init_total_fuel_used_range_max: int(-65536..65536)
+find init:
+        record {at_ : function (int(0..100), int(0..100)) --> bool, in_ : function (int(0..100), int(0..100)) --> bool,
+                fuel : function int(0..100) --> int(-65536..65536),
+                distance : function (int(0..100), int(0..100)) --> int(-65536..65536),
+                capacity : function int(0..100) --> int(-65536..65536),
+                onboard : function int(0..100) --> int(-65536..65536),
+                total_fuel_used : function int(0) --> int(-65536..65536)}
+such that
+    and([q1[1] >= minid_aircraft /\ q1[1] <= maxid_person /\ (q1[2] >= minid_city /\ q1[2] <= maxid_city) <->
+         q1 in defined(init[at_])
+             | q1 : (int(0..100), int(0..100))]),
+    sum([toInt(q1[2]) | q1 <- init[at_]]) <= init_at__percentage_max * |defined(init[at_])| / 100 /\
+    sum([toInt(q1[2]) | q1 <- init[at_]]) >= init_at__percentage_min * |defined(init[at_])| / 100,
+    and([q2[1] >= minid_person /\ q2[1] <= maxid_person /\ (q2[2] >= minid_aircraft /\ q2[2] <= maxid_aircraft) <->
+         q2 in defined(init[in_])
+             | q2 : (int(0..100), int(0..100))]),
+    sum([toInt(q2[2]) | q2 <- init[in_]]) <= init_in__percentage_max * |defined(init[in_])| / 100 /\
+    sum([toInt(q2[2]) | q2 <- init[in_]]) >= init_in__percentage_min * |defined(init[in_])| / 100,
+    and([q3 >= minid_aircraft /\ q3 <= maxid_aircraft <-> q3 in defined(init[fuel]) | q3 : int(0..100)]),
+    and([q3[2] >= init_fuel_range_min | q3 <- init[fuel]]),
+    and([q3[2] <= init_fuel_range_max | q3 <- init[fuel]]),
+    and([q4[1] >= minid_city /\ q4[1] <= maxid_city /\ (q4[2] >= minid_city /\ q4[2] <= maxid_city) <->
+         q4 in defined(init[distance])
+             | q4 : (int(0..100), int(0..100))]),
+    and([q4[2] >= init_distance_range_min | q4 <- init[distance]]),
+    and([q4[2] <= init_distance_range_max | q4 <- init[distance]]),
+    and([q5 >= minid_aircraft /\ q5 <= maxid_aircraft <-> q5 in defined(init[capacity]) | q5 : int(0..100)]),
+    and([q5[2] >= init_capacity_range_min | q5 <- init[capacity]]),
+    and([q5[2] <= init_capacity_range_max | q5 <- init[capacity]]),
+    and([q6 >= minid_aircraft /\ q6 <= maxid_aircraft <-> q6 in defined(init[onboard]) | q6 : int(0..100)]),
+    and([q6[2] >= init_onboard_range_min | q6 <- init[onboard]]),
+    and([q6[2] <= init_onboard_range_max | q6 <- init[onboard]]),
+    and([q7 >= 0 /\ q7 <= 0 <-> q7 in defined(init[total_fuel_used]) | q7 : int(0)]),
+    and([q7[2] >= init_total_fuel_used_range_min | q7 <- init[total_fuel_used]]),
+    and([q7[2] <= init_total_fuel_used_range_max | q7 <- init[total_fuel_used]])
+such that
+    and([init[fuel](a) > 0 /\ init[fuel](a) <= init[capacity](a)
+             | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft]),
+    and([init[onboard](a) = sum([toInt(value) | ((_, p2), value) <- init[in_], p2 = a])
+             | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft]),
+    init[total_fuel_used](0) = 0,
+    and([and([init[distance]((c1, c2)) = init[distance]((c2, c1)) /\ init[distance]((c1, c2)) > 0
+                  | c2 : int(0..100), c2 >= minid_city, c2 <= maxid_city])
+             | c1 : int(0..100), c1 >= minid_city, c1 <= maxid_city]),
+    and([1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p1 = a])
+             | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft]),
+    and([!(1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p = p1]) /\
+           1 = sum([toInt(value = true) | ((p1, _), value) <- init[in_], p = p1]))
+         /\
+         (1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p = p1]) \/
+          1 = sum([toInt(value = true) | ((p1, _), value) <- init[in_], p = p1]))
+             | p : int(0..100), p >= minid_person, p <= maxid_person])
+given goal_at__cardMin: int(0..10201)
+given goal_at__cardMax: int(0..10201)
+given goal_at__defined_tuple1_min: int(0..100)
+given goal_at__defined_tuple1_max: int(0..100)
+given goal_at__defined_tuple2_min: int(0..100)
+given goal_at__defined_tuple2_max: int(0..100)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
+given goal_in__cardMin: int(0..10201)
+given goal_in__cardMax: int(0..10201)
+given goal_in__defined_tuple1_min: int(0..100)
+given goal_in__defined_tuple1_max: int(0..100)
+given goal_in__defined_tuple2_min: int(0..100)
+given goal_in__defined_tuple2_max: int(0..100)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
+given goal_onboard_cardMin: int(0..101)
+given goal_onboard_cardMax: int(0..101)
+given goal_onboard_defined_min: int(0..100)
+given goal_onboard_defined_max: int(0..100)
+given goal_onboard_range_min: int(-65536..65536)
+given goal_onboard_range_max: int(-65536..65536)
+find goal:
+        record {at_ : function (maxSize 100) (int(0..100), int(0..100)) --> bool,
+                in_ : function (maxSize 100) (int(0..100), int(0..100)) --> bool,
+                onboard : function (maxSize 100) int(0..100) --> int(-65536..65536)}
+such that
+    |goal[at_]| >= goal_at__cardMin /\ |goal[at_]| <= goal_at__cardMax,
+    and([q8[1, 1] >= goal_at__defined_tuple1_min | q8 <- goal[at_]]),
+    and([q8[1, 1] <= goal_at__defined_tuple1_max | q8 <- goal[at_]]),
+    and([q8[1, 1] >= minid_aircraft | q8 <- goal[at_]]),
+    and([q8[1, 1] <= maxid_person | q8 <- goal[at_]]),
+    and([q8[1, 2] >= goal_at__defined_tuple2_min | q8 <- goal[at_]]),
+    and([q8[1, 2] <= goal_at__defined_tuple2_max | q8 <- goal[at_]]),
+    and([q8[1, 2] >= minid_city | q8 <- goal[at_]]),
+    and([q8[1, 2] <= maxid_city | q8 <- goal[at_]]),
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) <= goal_at__percentage_max * |defined(goal[at_])| / 100 /\
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) >= goal_at__percentage_min * |defined(goal[at_])| / 100,
+    |goal[in_]| >= goal_in__cardMin /\ |goal[in_]| <= goal_in__cardMax,
+    and([q9[1, 1] >= goal_in__defined_tuple1_min | q9 <- goal[in_]]),
+    and([q9[1, 1] <= goal_in__defined_tuple1_max | q9 <- goal[in_]]),
+    and([q9[1, 1] >= minid_person | q9 <- goal[in_]]),
+    and([q9[1, 1] <= maxid_person | q9 <- goal[in_]]),
+    and([q9[1, 2] >= goal_in__defined_tuple2_min | q9 <- goal[in_]]),
+    and([q9[1, 2] <= goal_in__defined_tuple2_max | q9 <- goal[in_]]),
+    and([q9[1, 2] >= minid_aircraft | q9 <- goal[in_]]),
+    and([q9[1, 2] <= maxid_aircraft | q9 <- goal[in_]]),
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) <= goal_in__percentage_max * |defined(goal[in_])| / 100 /\
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) >= goal_in__percentage_min * |defined(goal[in_])| / 100,
+    |goal[onboard]| >= goal_onboard_cardMin /\ |goal[onboard]| <= goal_onboard_cardMax,
+    and([q10[1] >= goal_onboard_defined_min | q10 <- goal[onboard]]),
+    and([q10[1] <= goal_onboard_defined_max | q10 <- goal[onboard]]),
+    and([q10[1] >= minid_aircraft | q10 <- goal[onboard]]),
+    and([q10[1] <= maxid_aircraft | q10 <- goal[onboard]]),
+    and([q10[2] >= goal_onboard_range_min | q10 <- goal[onboard]]),
+    and([q10[2] <= goal_onboard_range_max | q10 <- goal[onboard]])
+such that and([goal[onboard](a) >= 0 | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft])
+
+--------------------
+
+
+File: problem-instanceGenerator.essence.irace
+minid_aircraft_min "-minid_aircraft_min " i (0, 100)
+minid_aircraft_max "-minid_aircraft_max " i (0, 100)
+maxid_aircraft_min "-maxid_aircraft_min " i (0, 100)
+maxid_aircraft_max "-maxid_aircraft_max " i (0, 100)
+minid_person_min "-minid_person_min " i (0, 100)
+minid_person_max "-minid_person_max " i (0, 100)
+maxid_person_min "-maxid_person_min " i (0, 100)
+maxid_person_max "-maxid_person_max " i (0, 100)
+minid_city_min "-minid_city_min " i (0, 100)
+minid_city_max "-minid_city_max " i (0, 100)
+maxid_city_min "-maxid_city_min " i (0, 100)
+maxid_city_max "-maxid_city_max " i (0, 100)
+init_at__percentage_min "-init_at__percentage_min " i (0, 100)
+init_at__percentage_max "-init_at__percentage_max " i (0, 100)
+init_in__percentage_min "-init_in__percentage_min " i (0, 100)
+init_in__percentage_max "-init_in__percentage_max " i (0, 100)
+init_fuel_range_min "-init_fuel_range_min " i (-65536, 65536)
+init_fuel_range_max "-init_fuel_range_max " i (-65536, 65536)
+init_distance_range_min "-init_distance_range_min " i (-65536, 65536)
+init_distance_range_max "-init_distance_range_max " i (-65536, 65536)
+init_capacity_range_min "-init_capacity_range_min " i (-65536, 65536)
+init_capacity_range_max "-init_capacity_range_max " i (-65536, 65536)
+init_onboard_range_min "-init_onboard_range_min " i (-65536, 65536)
+init_onboard_range_max "-init_onboard_range_max " i (-65536, 65536)
+init_total_fuel_used_range_min "-init_total_fuel_used_range_min " i (-65536, 65536)
+init_total_fuel_used_range_max "-init_total_fuel_used_range_max " i (-65536, 65536)
+goal_at__cardMin "-goal_at__cardMin " i (0, 10201)
+goal_at__cardMax "-goal_at__cardMax " i (0, 10201)
+goal_at__defined_tuple1_min "-goal_at__defined_tuple1_min " i (0, 100)
+goal_at__defined_tuple1_max "-goal_at__defined_tuple1_max " i (0, 100)
+goal_at__defined_tuple2_min "-goal_at__defined_tuple2_min " i (0, 100)
+goal_at__defined_tuple2_max "-goal_at__defined_tuple2_max " i (0, 100)
+goal_at__percentage_min "-goal_at__percentage_min " i (0, 100)
+goal_at__percentage_max "-goal_at__percentage_max " i (0, 100)
+goal_in__cardMin "-goal_in__cardMin " i (0, 10201)
+goal_in__cardMax "-goal_in__cardMax " i (0, 10201)
+goal_in__defined_tuple1_min "-goal_in__defined_tuple1_min " i (0, 100)
+goal_in__defined_tuple1_max "-goal_in__defined_tuple1_max " i (0, 100)
+goal_in__defined_tuple2_min "-goal_in__defined_tuple2_min " i (0, 100)
+goal_in__defined_tuple2_max "-goal_in__defined_tuple2_max " i (0, 100)
+goal_in__percentage_min "-goal_in__percentage_min " i (0, 100)
+goal_in__percentage_max "-goal_in__percentage_max " i (0, 100)
+goal_onboard_cardMin "-goal_onboard_cardMin " i (0, 101)
+goal_onboard_cardMax "-goal_onboard_cardMax " i (0, 101)
+goal_onboard_defined_min "-goal_onboard_defined_min " i (0, 100)
+goal_onboard_defined_max "-goal_onboard_defined_max " i (0, 100)
+goal_onboard_range_min "-goal_onboard_range_min " i (-65536, 65536)
+goal_onboard_range_max "-goal_onboard_range_max " i (-65536, 65536)
+
+--------------------
+
+
+File: problem-instanceRepair.essence
+language Essence 1.3
+
+given minid_aircraft_min: int(0..100)
+given minid_aircraft_max: int(0..100)
+find repaired_minid_aircraft_min: int(0..100)
+find repaired_minid_aircraft_max: int(0..100)
+such that repaired_minid_aircraft_min <= repaired_minid_aircraft_max
+given maxid_aircraft_min: int(0..100)
+given maxid_aircraft_max: int(0..100)
+find repaired_maxid_aircraft_min: int(0..100)
+find repaired_maxid_aircraft_max: int(0..100)
+such that repaired_maxid_aircraft_min <= repaired_maxid_aircraft_max
+given minid_person_min: int(0..100)
+given minid_person_max: int(0..100)
+find repaired_minid_person_min: int(0..100)
+find repaired_minid_person_max: int(0..100)
+such that repaired_minid_person_min <= repaired_minid_person_max
+given maxid_person_min: int(0..100)
+given maxid_person_max: int(0..100)
+find repaired_maxid_person_min: int(0..100)
+find repaired_maxid_person_max: int(0..100)
+such that repaired_maxid_person_min <= repaired_maxid_person_max
+given minid_city_min: int(0..100)
+given minid_city_max: int(0..100)
+find repaired_minid_city_min: int(0..100)
+find repaired_minid_city_max: int(0..100)
+such that repaired_minid_city_min <= repaired_minid_city_max
+given maxid_city_min: int(0..100)
+given maxid_city_max: int(0..100)
+find repaired_maxid_city_min: int(0..100)
+find repaired_maxid_city_max: int(0..100)
+such that repaired_maxid_city_min <= repaired_maxid_city_max
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
+given init_fuel_range_min: int(-65536..65536)
+given init_fuel_range_max: int(-65536..65536)
+given init_distance_range_min: int(-65536..65536)
+given init_distance_range_max: int(-65536..65536)
+given init_capacity_range_min: int(-65536..65536)
+given init_capacity_range_max: int(-65536..65536)
+given init_onboard_range_min: int(-65536..65536)
+given init_onboard_range_max: int(-65536..65536)
+given init_total_fuel_used_range_min: int(-65536..65536)
+given init_total_fuel_used_range_max: int(-65536..65536)
+find repaired_init_at__percentage_min: int(0..100)
+find repaired_init_at__percentage_max: int(0..100)
+find repaired_init_in__percentage_min: int(0..100)
+find repaired_init_in__percentage_max: int(0..100)
+find repaired_init_fuel_range_min: int(-65536..65536)
+find repaired_init_fuel_range_max: int(-65536..65536)
+find repaired_init_distance_range_min: int(-65536..65536)
+find repaired_init_distance_range_max: int(-65536..65536)
+find repaired_init_capacity_range_min: int(-65536..65536)
+find repaired_init_capacity_range_max: int(-65536..65536)
+find repaired_init_onboard_range_min: int(-65536..65536)
+find repaired_init_onboard_range_max: int(-65536..65536)
+find repaired_init_total_fuel_used_range_min: int(-65536..65536)
+find repaired_init_total_fuel_used_range_max: int(-65536..65536)
+such that
+    repaired_init_at__percentage_max >= repaired_init_at__percentage_min,
+    repaired_init_in__percentage_max >= repaired_init_in__percentage_min,
+    repaired_init_fuel_range_min <= repaired_init_fuel_range_max,
+    repaired_init_distance_range_min <= repaired_init_distance_range_max,
+    repaired_init_capacity_range_min <= repaired_init_capacity_range_max,
+    repaired_init_onboard_range_min <= repaired_init_onboard_range_max,
+    repaired_init_total_fuel_used_range_min <= repaired_init_total_fuel_used_range_max
+given goal_at__cardMin: int(0..10201)
+given goal_at__cardMax: int(0..10201)
+given goal_at__defined_tuple1_min: int(0..100)
+given goal_at__defined_tuple1_max: int(0..100)
+given goal_at__defined_tuple2_min: int(0..100)
+given goal_at__defined_tuple2_max: int(0..100)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
+given goal_in__cardMin: int(0..10201)
+given goal_in__cardMax: int(0..10201)
+given goal_in__defined_tuple1_min: int(0..100)
+given goal_in__defined_tuple1_max: int(0..100)
+given goal_in__defined_tuple2_min: int(0..100)
+given goal_in__defined_tuple2_max: int(0..100)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
+given goal_onboard_cardMin: int(0..101)
+given goal_onboard_cardMax: int(0..101)
+given goal_onboard_defined_min: int(0..100)
+given goal_onboard_defined_max: int(0..100)
+given goal_onboard_range_min: int(-65536..65536)
+given goal_onboard_range_max: int(-65536..65536)
+find repaired_goal_at__cardMin: int(0..10201)
+find repaired_goal_at__cardMax: int(0..10201)
+find repaired_goal_at__defined_tuple1_min: int(0..100)
+find repaired_goal_at__defined_tuple1_max: int(0..100)
+find repaired_goal_at__defined_tuple2_min: int(0..100)
+find repaired_goal_at__defined_tuple2_max: int(0..100)
+find repaired_goal_at__percentage_min: int(0..100)
+find repaired_goal_at__percentage_max: int(0..100)
+find repaired_goal_in__cardMin: int(0..10201)
+find repaired_goal_in__cardMax: int(0..10201)
+find repaired_goal_in__defined_tuple1_min: int(0..100)
+find repaired_goal_in__defined_tuple1_max: int(0..100)
+find repaired_goal_in__defined_tuple2_min: int(0..100)
+find repaired_goal_in__defined_tuple2_max: int(0..100)
+find repaired_goal_in__percentage_min: int(0..100)
+find repaired_goal_in__percentage_max: int(0..100)
+find repaired_goal_onboard_cardMin: int(0..101)
+find repaired_goal_onboard_cardMax: int(0..101)
+find repaired_goal_onboard_defined_min: int(0..100)
+find repaired_goal_onboard_defined_max: int(0..100)
+find repaired_goal_onboard_range_min: int(-65536..65536)
+find repaired_goal_onboard_range_max: int(-65536..65536)
+such that
+    repaired_goal_at__cardMin <= repaired_goal_at__cardMax,
+    (repaired_goal_at__defined_tuple1_max - repaired_goal_at__defined_tuple1_min + 1) *
+    (repaired_goal_at__defined_tuple2_max - repaired_goal_at__defined_tuple2_min + 1)
+    >= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_tuple1_min >= repaired_minid_aircraft_min,
+    repaired_goal_at__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_at__defined_tuple2_min >= repaired_minid_city_min,
+    repaired_goal_at__defined_tuple2_max <= repaired_maxid_city_max,
+    repaired_goal_at__percentage_max >= repaired_goal_at__percentage_min,
+    repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
+    repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
+    repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
+    (repaired_goal_in__defined_tuple1_max - repaired_goal_in__defined_tuple1_min + 1) *
+    (repaired_goal_in__defined_tuple2_max - repaired_goal_in__defined_tuple2_min + 1)
+    >= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_tuple1_min >= repaired_minid_person_min,
+    repaired_goal_in__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_in__defined_tuple2_min >= repaired_minid_aircraft_min,
+    repaired_goal_in__defined_tuple2_max <= repaired_maxid_aircraft_max,
+    repaired_goal_in__percentage_max >= repaired_goal_in__percentage_min,
+    repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
+    repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
+    repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_max - repaired_goal_onboard_defined_min + 1 >= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_min >= repaired_minid_aircraft_min,
+    repaired_goal_onboard_defined_max <= repaired_maxid_aircraft_max,
+    repaired_goal_onboard_defined_min <= repaired_goal_onboard_defined_max,
+    repaired_goal_onboard_range_min <= repaired_goal_onboard_range_max
+minimising
+    sum([|repaired_minid_aircraft_min - minid_aircraft_min|, |repaired_minid_aircraft_max - minid_aircraft_max|,
+         |repaired_maxid_aircraft_min - maxid_aircraft_min|, |repaired_maxid_aircraft_max - maxid_aircraft_max|,
+         |repaired_minid_person_min - minid_person_min|, |repaired_minid_person_max - minid_person_max|,
+         |repaired_maxid_person_min - maxid_person_min|, |repaired_maxid_person_max - maxid_person_max|,
+         |repaired_minid_city_min - minid_city_min|, |repaired_minid_city_max - minid_city_max|,
+         |repaired_maxid_city_min - maxid_city_min|, |repaired_maxid_city_max - maxid_city_max|,
+         |repaired_init_at__percentage_min - init_at__percentage_min|,
+         |repaired_init_at__percentage_max - init_at__percentage_max|,
+         |repaired_init_in__percentage_min - init_in__percentage_min|,
+         |repaired_init_in__percentage_max - init_in__percentage_max|,
+         |repaired_init_fuel_range_min - init_fuel_range_min|, |repaired_init_fuel_range_max - init_fuel_range_max|,
+         |repaired_init_distance_range_min - init_distance_range_min|,
+         |repaired_init_distance_range_max - init_distance_range_max|,
+         |repaired_init_capacity_range_min - init_capacity_range_min|,
+         |repaired_init_capacity_range_max - init_capacity_range_max|,
+         |repaired_init_onboard_range_min - init_onboard_range_min|,
+         |repaired_init_onboard_range_max - init_onboard_range_max|,
+         |repaired_init_total_fuel_used_range_min - init_total_fuel_used_range_min|,
+         |repaired_init_total_fuel_used_range_max - init_total_fuel_used_range_max|,
+         |repaired_goal_at__cardMin - goal_at__cardMin|, |repaired_goal_at__cardMax - goal_at__cardMax|,
+         |repaired_goal_at__defined_tuple1_min - goal_at__defined_tuple1_min|,
+         |repaired_goal_at__defined_tuple1_max - goal_at__defined_tuple1_max|,
+         |repaired_goal_at__defined_tuple2_min - goal_at__defined_tuple2_min|,
+         |repaired_goal_at__defined_tuple2_max - goal_at__defined_tuple2_max|,
+         |repaired_goal_at__percentage_min - goal_at__percentage_min|,
+         |repaired_goal_at__percentage_max - goal_at__percentage_max|, |repaired_goal_in__cardMin - goal_in__cardMin|,
+         |repaired_goal_in__cardMax - goal_in__cardMax|,
+         |repaired_goal_in__defined_tuple1_min - goal_in__defined_tuple1_min|,
+         |repaired_goal_in__defined_tuple1_max - goal_in__defined_tuple1_max|,
+         |repaired_goal_in__defined_tuple2_min - goal_in__defined_tuple2_min|,
+         |repaired_goal_in__defined_tuple2_max - goal_in__defined_tuple2_max|,
+         |repaired_goal_in__percentage_min - goal_in__percentage_min|,
+         |repaired_goal_in__percentage_max - goal_in__percentage_max|,
+         |repaired_goal_onboard_cardMin - goal_onboard_cardMin|, |repaired_goal_onboard_cardMax - goal_onboard_cardMax|,
+         |repaired_goal_onboard_defined_min - goal_onboard_defined_min|,
+         |repaired_goal_onboard_defined_max - goal_onboard_defined_max|,
+         |repaired_goal_onboard_range_min - goal_onboard_range_min|,
+         |repaired_goal_onboard_range_max - goal_onboard_range_max|;
+             int(1..48)])
+
+--------------------
+
+
+$ conjure parameter-generator problem.essence --MININT -10 --MAXINT 50
+File: problem-instanceGenerator.essence
+language Essence 1.3
+
+given minid_aircraft_min: int(-10..50)
+given minid_aircraft_max: int(-10..50)
+find minid_aircraft: int(-10..50)
+such that
+    minid_aircraft >= minid_aircraft_min,
+    minid_aircraft <= minid_aircraft_max
+given maxid_aircraft_min: int(-10..50)
+given maxid_aircraft_max: int(-10..50)
+find maxid_aircraft: int(-10..50)
+such that
+    maxid_aircraft >= maxid_aircraft_min,
+    maxid_aircraft <= maxid_aircraft_max
+given minid_person_min: int(-10..50)
+given minid_person_max: int(-10..50)
+find minid_person: int(-10..50)
+such that
+    minid_person >= minid_person_min,
+    minid_person <= minid_person_max
+given maxid_person_min: int(-10..50)
+given maxid_person_max: int(-10..50)
+find maxid_person: int(-10..50)
+such that
+    maxid_person >= maxid_person_min,
+    maxid_person <= maxid_person_max
+given minid_city_min: int(-10..50)
+given minid_city_max: int(-10..50)
+find minid_city: int(-10..50)
+such that
+    minid_city >= minid_city_min,
+    minid_city <= minid_city_max
+given maxid_city_min: int(-10..50)
+given maxid_city_max: int(-10..50)
+find maxid_city: int(-10..50)
+such that
+    maxid_city >= maxid_city_min,
+    maxid_city <= maxid_city_max
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
+given init_fuel_range_min: int(-65536..65536)
+given init_fuel_range_max: int(-65536..65536)
+given init_distance_range_min: int(-65536..65536)
+given init_distance_range_max: int(-65536..65536)
+given init_capacity_range_min: int(-65536..65536)
+given init_capacity_range_max: int(-65536..65536)
+given init_onboard_range_min: int(-65536..65536)
+given init_onboard_range_max: int(-65536..65536)
+given init_total_fuel_used_range_min: int(-65536..65536)
+given init_total_fuel_used_range_max: int(-65536..65536)
+find init:
+        record {at_ : function (int(-10..50), int(-10..50)) --> bool,
+                in_ : function (int(-10..50), int(-10..50)) --> bool,
+                fuel : function int(-10..50) --> int(-65536..65536),
+                distance : function (int(-10..50), int(-10..50)) --> int(-65536..65536),
+                capacity : function int(-10..50) --> int(-65536..65536),
+                onboard : function int(-10..50) --> int(-65536..65536),
+                total_fuel_used : function int(0) --> int(-65536..65536)}
+such that
+    and([q1[1] >= minid_aircraft /\ q1[1] <= maxid_person /\ (q1[2] >= minid_city /\ q1[2] <= maxid_city) <->
+         q1 in defined(init[at_])
+             | q1 : (int(-10..50), int(-10..50))]),
+    sum([toInt(q1[2]) | q1 <- init[at_]]) <= init_at__percentage_max * |defined(init[at_])| / 100 /\
+    sum([toInt(q1[2]) | q1 <- init[at_]]) >= init_at__percentage_min * |defined(init[at_])| / 100,
+    and([q2[1] >= minid_person /\ q2[1] <= maxid_person /\ (q2[2] >= minid_aircraft /\ q2[2] <= maxid_aircraft) <->
+         q2 in defined(init[in_])
+             | q2 : (int(-10..50), int(-10..50))]),
+    sum([toInt(q2[2]) | q2 <- init[in_]]) <= init_in__percentage_max * |defined(init[in_])| / 100 /\
+    sum([toInt(q2[2]) | q2 <- init[in_]]) >= init_in__percentage_min * |defined(init[in_])| / 100,
+    and([q3 >= minid_aircraft /\ q3 <= maxid_aircraft <-> q3 in defined(init[fuel]) | q3 : int(-10..50)]),
+    and([q3[2] >= init_fuel_range_min | q3 <- init[fuel]]),
+    and([q3[2] <= init_fuel_range_max | q3 <- init[fuel]]),
+    and([q4[1] >= minid_city /\ q4[1] <= maxid_city /\ (q4[2] >= minid_city /\ q4[2] <= maxid_city) <->
+         q4 in defined(init[distance])
+             | q4 : (int(-10..50), int(-10..50))]),
+    and([q4[2] >= init_distance_range_min | q4 <- init[distance]]),
+    and([q4[2] <= init_distance_range_max | q4 <- init[distance]]),
+    and([q5 >= minid_aircraft /\ q5 <= maxid_aircraft <-> q5 in defined(init[capacity]) | q5 : int(-10..50)]),
+    and([q5[2] >= init_capacity_range_min | q5 <- init[capacity]]),
+    and([q5[2] <= init_capacity_range_max | q5 <- init[capacity]]),
+    and([q6 >= minid_aircraft /\ q6 <= maxid_aircraft <-> q6 in defined(init[onboard]) | q6 : int(-10..50)]),
+    and([q6[2] >= init_onboard_range_min | q6 <- init[onboard]]),
+    and([q6[2] <= init_onboard_range_max | q6 <- init[onboard]]),
+    and([q7 >= 0 /\ q7 <= 0 <-> q7 in defined(init[total_fuel_used]) | q7 : int(0)]),
+    and([q7[2] >= init_total_fuel_used_range_min | q7 <- init[total_fuel_used]]),
+    and([q7[2] <= init_total_fuel_used_range_max | q7 <- init[total_fuel_used]])
+such that
+    and([init[fuel](a) > 0 /\ init[fuel](a) <= init[capacity](a)
+             | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft]),
+    and([init[onboard](a) = sum([toInt(value) | ((_, p2), value) <- init[in_], p2 = a])
+             | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft]),
+    init[total_fuel_used](0) = 0,
+    and([and([init[distance]((c1, c2)) = init[distance]((c2, c1)) /\ init[distance]((c1, c2)) > 0
+                  | c2 : int(-10..50), c2 >= minid_city, c2 <= maxid_city])
+             | c1 : int(-10..50), c1 >= minid_city, c1 <= maxid_city]),
+    and([1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p1 = a])
+             | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft]),
+    and([!(1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p = p1]) /\
+           1 = sum([toInt(value = true) | ((p1, _), value) <- init[in_], p = p1]))
+         /\
+         (1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p = p1]) \/
+          1 = sum([toInt(value = true) | ((p1, _), value) <- init[in_], p = p1]))
+             | p : int(-10..50), p >= minid_person, p <= maxid_person])
+given goal_at__cardMin: int(0..3721)
+given goal_at__cardMax: int(0..3721)
+given goal_at__defined_tuple1_min: int(-10..50)
+given goal_at__defined_tuple1_max: int(-10..50)
+given goal_at__defined_tuple2_min: int(-10..50)
+given goal_at__defined_tuple2_max: int(-10..50)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
+given goal_in__cardMin: int(0..3721)
+given goal_in__cardMax: int(0..3721)
+given goal_in__defined_tuple1_min: int(-10..50)
+given goal_in__defined_tuple1_max: int(-10..50)
+given goal_in__defined_tuple2_min: int(-10..50)
+given goal_in__defined_tuple2_max: int(-10..50)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
+given goal_onboard_cardMin: int(0..61)
+given goal_onboard_cardMax: int(0..61)
+given goal_onboard_defined_min: int(-10..50)
+given goal_onboard_defined_max: int(-10..50)
+given goal_onboard_range_min: int(-65536..65536)
+given goal_onboard_range_max: int(-65536..65536)
+find goal:
+        record {at_ : function (maxSize 50) (int(-10..50), int(-10..50)) --> bool,
+                in_ : function (maxSize 50) (int(-10..50), int(-10..50)) --> bool,
+                onboard : function (maxSize 50) int(-10..50) --> int(-65536..65536)}
+such that
+    |goal[at_]| >= goal_at__cardMin /\ |goal[at_]| <= goal_at__cardMax,
+    and([q8[1, 1] >= goal_at__defined_tuple1_min | q8 <- goal[at_]]),
+    and([q8[1, 1] <= goal_at__defined_tuple1_max | q8 <- goal[at_]]),
+    and([q8[1, 1] >= minid_aircraft | q8 <- goal[at_]]),
+    and([q8[1, 1] <= maxid_person | q8 <- goal[at_]]),
+    and([q8[1, 2] >= goal_at__defined_tuple2_min | q8 <- goal[at_]]),
+    and([q8[1, 2] <= goal_at__defined_tuple2_max | q8 <- goal[at_]]),
+    and([q8[1, 2] >= minid_city | q8 <- goal[at_]]),
+    and([q8[1, 2] <= maxid_city | q8 <- goal[at_]]),
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) <= goal_at__percentage_max * |defined(goal[at_])| / 100 /\
+    sum([toInt(q8[2]) | q8 <- goal[at_]]) >= goal_at__percentage_min * |defined(goal[at_])| / 100,
+    |goal[in_]| >= goal_in__cardMin /\ |goal[in_]| <= goal_in__cardMax,
+    and([q9[1, 1] >= goal_in__defined_tuple1_min | q9 <- goal[in_]]),
+    and([q9[1, 1] <= goal_in__defined_tuple1_max | q9 <- goal[in_]]),
+    and([q9[1, 1] >= minid_person | q9 <- goal[in_]]),
+    and([q9[1, 1] <= maxid_person | q9 <- goal[in_]]),
+    and([q9[1, 2] >= goal_in__defined_tuple2_min | q9 <- goal[in_]]),
+    and([q9[1, 2] <= goal_in__defined_tuple2_max | q9 <- goal[in_]]),
+    and([q9[1, 2] >= minid_aircraft | q9 <- goal[in_]]),
+    and([q9[1, 2] <= maxid_aircraft | q9 <- goal[in_]]),
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) <= goal_in__percentage_max * |defined(goal[in_])| / 100 /\
+    sum([toInt(q9[2]) | q9 <- goal[in_]]) >= goal_in__percentage_min * |defined(goal[in_])| / 100,
+    |goal[onboard]| >= goal_onboard_cardMin /\ |goal[onboard]| <= goal_onboard_cardMax,
+    and([q10[1] >= goal_onboard_defined_min | q10 <- goal[onboard]]),
+    and([q10[1] <= goal_onboard_defined_max | q10 <- goal[onboard]]),
+    and([q10[1] >= minid_aircraft | q10 <- goal[onboard]]),
+    and([q10[1] <= maxid_aircraft | q10 <- goal[onboard]]),
+    and([q10[2] >= goal_onboard_range_min | q10 <- goal[onboard]]),
+    and([q10[2] <= goal_onboard_range_max | q10 <- goal[onboard]])
+such that and([goal[onboard](a) >= 0 | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft])
+
+--------------------
+
+
+File: problem-instanceGenerator.essence.irace
+minid_aircraft_min "-minid_aircraft_min " i (-10, 50)
+minid_aircraft_max "-minid_aircraft_max " i (-10, 50)
+maxid_aircraft_min "-maxid_aircraft_min " i (-10, 50)
+maxid_aircraft_max "-maxid_aircraft_max " i (-10, 50)
+minid_person_min "-minid_person_min " i (-10, 50)
+minid_person_max "-minid_person_max " i (-10, 50)
+maxid_person_min "-maxid_person_min " i (-10, 50)
+maxid_person_max "-maxid_person_max " i (-10, 50)
+minid_city_min "-minid_city_min " i (-10, 50)
+minid_city_max "-minid_city_max " i (-10, 50)
+maxid_city_min "-maxid_city_min " i (-10, 50)
+maxid_city_max "-maxid_city_max " i (-10, 50)
+init_at__percentage_min "-init_at__percentage_min " i (0, 100)
+init_at__percentage_max "-init_at__percentage_max " i (0, 100)
+init_in__percentage_min "-init_in__percentage_min " i (0, 100)
+init_in__percentage_max "-init_in__percentage_max " i (0, 100)
+init_fuel_range_min "-init_fuel_range_min " i (-65536, 65536)
+init_fuel_range_max "-init_fuel_range_max " i (-65536, 65536)
+init_distance_range_min "-init_distance_range_min " i (-65536, 65536)
+init_distance_range_max "-init_distance_range_max " i (-65536, 65536)
+init_capacity_range_min "-init_capacity_range_min " i (-65536, 65536)
+init_capacity_range_max "-init_capacity_range_max " i (-65536, 65536)
+init_onboard_range_min "-init_onboard_range_min " i (-65536, 65536)
+init_onboard_range_max "-init_onboard_range_max " i (-65536, 65536)
+init_total_fuel_used_range_min "-init_total_fuel_used_range_min " i (-65536, 65536)
+init_total_fuel_used_range_max "-init_total_fuel_used_range_max " i (-65536, 65536)
+goal_at__cardMin "-goal_at__cardMin " i (0, 3721)
+goal_at__cardMax "-goal_at__cardMax " i (0, 3721)
+goal_at__defined_tuple1_min "-goal_at__defined_tuple1_min " i (-10, 50)
+goal_at__defined_tuple1_max "-goal_at__defined_tuple1_max " i (-10, 50)
+goal_at__defined_tuple2_min "-goal_at__defined_tuple2_min " i (-10, 50)
+goal_at__defined_tuple2_max "-goal_at__defined_tuple2_max " i (-10, 50)
+goal_at__percentage_min "-goal_at__percentage_min " i (0, 100)
+goal_at__percentage_max "-goal_at__percentage_max " i (0, 100)
+goal_in__cardMin "-goal_in__cardMin " i (0, 3721)
+goal_in__cardMax "-goal_in__cardMax " i (0, 3721)
+goal_in__defined_tuple1_min "-goal_in__defined_tuple1_min " i (-10, 50)
+goal_in__defined_tuple1_max "-goal_in__defined_tuple1_max " i (-10, 50)
+goal_in__defined_tuple2_min "-goal_in__defined_tuple2_min " i (-10, 50)
+goal_in__defined_tuple2_max "-goal_in__defined_tuple2_max " i (-10, 50)
+goal_in__percentage_min "-goal_in__percentage_min " i (0, 100)
+goal_in__percentage_max "-goal_in__percentage_max " i (0, 100)
+goal_onboard_cardMin "-goal_onboard_cardMin " i (0, 61)
+goal_onboard_cardMax "-goal_onboard_cardMax " i (0, 61)
+goal_onboard_defined_min "-goal_onboard_defined_min " i (-10, 50)
+goal_onboard_defined_max "-goal_onboard_defined_max " i (-10, 50)
+goal_onboard_range_min "-goal_onboard_range_min " i (-65536, 65536)
+goal_onboard_range_max "-goal_onboard_range_max " i (-65536, 65536)
+
+--------------------
+
+
+File: problem-instanceRepair.essence
+language Essence 1.3
+
+given minid_aircraft_min: int(-10..50)
+given minid_aircraft_max: int(-10..50)
+find repaired_minid_aircraft_min: int(-10..50)
+find repaired_minid_aircraft_max: int(-10..50)
+such that repaired_minid_aircraft_min <= repaired_minid_aircraft_max
+given maxid_aircraft_min: int(-10..50)
+given maxid_aircraft_max: int(-10..50)
+find repaired_maxid_aircraft_min: int(-10..50)
+find repaired_maxid_aircraft_max: int(-10..50)
+such that repaired_maxid_aircraft_min <= repaired_maxid_aircraft_max
+given minid_person_min: int(-10..50)
+given minid_person_max: int(-10..50)
+find repaired_minid_person_min: int(-10..50)
+find repaired_minid_person_max: int(-10..50)
+such that repaired_minid_person_min <= repaired_minid_person_max
+given maxid_person_min: int(-10..50)
+given maxid_person_max: int(-10..50)
+find repaired_maxid_person_min: int(-10..50)
+find repaired_maxid_person_max: int(-10..50)
+such that repaired_maxid_person_min <= repaired_maxid_person_max
+given minid_city_min: int(-10..50)
+given minid_city_max: int(-10..50)
+find repaired_minid_city_min: int(-10..50)
+find repaired_minid_city_max: int(-10..50)
+such that repaired_minid_city_min <= repaired_minid_city_max
+given maxid_city_min: int(-10..50)
+given maxid_city_max: int(-10..50)
+find repaired_maxid_city_min: int(-10..50)
+find repaired_maxid_city_max: int(-10..50)
+such that repaired_maxid_city_min <= repaired_maxid_city_max
+given init_at__percentage_min: int(0..100)
+given init_at__percentage_max: int(0..100)
+given init_in__percentage_min: int(0..100)
+given init_in__percentage_max: int(0..100)
+given init_fuel_range_min: int(-65536..65536)
+given init_fuel_range_max: int(-65536..65536)
+given init_distance_range_min: int(-65536..65536)
+given init_distance_range_max: int(-65536..65536)
+given init_capacity_range_min: int(-65536..65536)
+given init_capacity_range_max: int(-65536..65536)
+given init_onboard_range_min: int(-65536..65536)
+given init_onboard_range_max: int(-65536..65536)
+given init_total_fuel_used_range_min: int(-65536..65536)
+given init_total_fuel_used_range_max: int(-65536..65536)
+find repaired_init_at__percentage_min: int(0..100)
+find repaired_init_at__percentage_max: int(0..100)
+find repaired_init_in__percentage_min: int(0..100)
+find repaired_init_in__percentage_max: int(0..100)
+find repaired_init_fuel_range_min: int(-65536..65536)
+find repaired_init_fuel_range_max: int(-65536..65536)
+find repaired_init_distance_range_min: int(-65536..65536)
+find repaired_init_distance_range_max: int(-65536..65536)
+find repaired_init_capacity_range_min: int(-65536..65536)
+find repaired_init_capacity_range_max: int(-65536..65536)
+find repaired_init_onboard_range_min: int(-65536..65536)
+find repaired_init_onboard_range_max: int(-65536..65536)
+find repaired_init_total_fuel_used_range_min: int(-65536..65536)
+find repaired_init_total_fuel_used_range_max: int(-65536..65536)
+such that
+    repaired_init_at__percentage_max >= repaired_init_at__percentage_min,
+    repaired_init_in__percentage_max >= repaired_init_in__percentage_min,
+    repaired_init_fuel_range_min <= repaired_init_fuel_range_max,
+    repaired_init_distance_range_min <= repaired_init_distance_range_max,
+    repaired_init_capacity_range_min <= repaired_init_capacity_range_max,
+    repaired_init_onboard_range_min <= repaired_init_onboard_range_max,
+    repaired_init_total_fuel_used_range_min <= repaired_init_total_fuel_used_range_max
+given goal_at__cardMin: int(0..3721)
+given goal_at__cardMax: int(0..3721)
+given goal_at__defined_tuple1_min: int(-10..50)
+given goal_at__defined_tuple1_max: int(-10..50)
+given goal_at__defined_tuple2_min: int(-10..50)
+given goal_at__defined_tuple2_max: int(-10..50)
+given goal_at__percentage_min: int(0..100)
+given goal_at__percentage_max: int(0..100)
+given goal_in__cardMin: int(0..3721)
+given goal_in__cardMax: int(0..3721)
+given goal_in__defined_tuple1_min: int(-10..50)
+given goal_in__defined_tuple1_max: int(-10..50)
+given goal_in__defined_tuple2_min: int(-10..50)
+given goal_in__defined_tuple2_max: int(-10..50)
+given goal_in__percentage_min: int(0..100)
+given goal_in__percentage_max: int(0..100)
+given goal_onboard_cardMin: int(0..61)
+given goal_onboard_cardMax: int(0..61)
+given goal_onboard_defined_min: int(-10..50)
+given goal_onboard_defined_max: int(-10..50)
+given goal_onboard_range_min: int(-65536..65536)
+given goal_onboard_range_max: int(-65536..65536)
+find repaired_goal_at__cardMin: int(0..3721)
+find repaired_goal_at__cardMax: int(0..3721)
+find repaired_goal_at__defined_tuple1_min: int(-10..50)
+find repaired_goal_at__defined_tuple1_max: int(-10..50)
+find repaired_goal_at__defined_tuple2_min: int(-10..50)
+find repaired_goal_at__defined_tuple2_max: int(-10..50)
+find repaired_goal_at__percentage_min: int(0..100)
+find repaired_goal_at__percentage_max: int(0..100)
+find repaired_goal_in__cardMin: int(0..3721)
+find repaired_goal_in__cardMax: int(0..3721)
+find repaired_goal_in__defined_tuple1_min: int(-10..50)
+find repaired_goal_in__defined_tuple1_max: int(-10..50)
+find repaired_goal_in__defined_tuple2_min: int(-10..50)
+find repaired_goal_in__defined_tuple2_max: int(-10..50)
+find repaired_goal_in__percentage_min: int(0..100)
+find repaired_goal_in__percentage_max: int(0..100)
+find repaired_goal_onboard_cardMin: int(0..61)
+find repaired_goal_onboard_cardMax: int(0..61)
+find repaired_goal_onboard_defined_min: int(-10..50)
+find repaired_goal_onboard_defined_max: int(-10..50)
+find repaired_goal_onboard_range_min: int(-65536..65536)
+find repaired_goal_onboard_range_max: int(-65536..65536)
+such that
+    repaired_goal_at__cardMin <= repaired_goal_at__cardMax,
+    (repaired_goal_at__defined_tuple1_max - repaired_goal_at__defined_tuple1_min + 1) *
+    (repaired_goal_at__defined_tuple2_max - repaired_goal_at__defined_tuple2_min + 1)
+    >= repaired_goal_at__cardMax,
+    repaired_goal_at__defined_tuple1_min >= repaired_minid_aircraft_min,
+    repaired_goal_at__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_at__defined_tuple2_min >= repaired_minid_city_min,
+    repaired_goal_at__defined_tuple2_max <= repaired_maxid_city_max,
+    repaired_goal_at__percentage_max >= repaired_goal_at__percentage_min,
+    repaired_goal_at__defined_tuple1_min <= repaired_goal_at__defined_tuple1_max,
+    repaired_goal_at__defined_tuple2_min <= repaired_goal_at__defined_tuple2_max,
+    repaired_goal_in__cardMin <= repaired_goal_in__cardMax,
+    (repaired_goal_in__defined_tuple1_max - repaired_goal_in__defined_tuple1_min + 1) *
+    (repaired_goal_in__defined_tuple2_max - repaired_goal_in__defined_tuple2_min + 1)
+    >= repaired_goal_in__cardMax,
+    repaired_goal_in__defined_tuple1_min >= repaired_minid_person_min,
+    repaired_goal_in__defined_tuple1_max <= repaired_maxid_person_max,
+    repaired_goal_in__defined_tuple2_min >= repaired_minid_aircraft_min,
+    repaired_goal_in__defined_tuple2_max <= repaired_maxid_aircraft_max,
+    repaired_goal_in__percentage_max >= repaired_goal_in__percentage_min,
+    repaired_goal_in__defined_tuple1_min <= repaired_goal_in__defined_tuple1_max,
+    repaired_goal_in__defined_tuple2_min <= repaired_goal_in__defined_tuple2_max,
+    repaired_goal_onboard_cardMin <= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_max - repaired_goal_onboard_defined_min + 1 >= repaired_goal_onboard_cardMax,
+    repaired_goal_onboard_defined_min >= repaired_minid_aircraft_min,
+    repaired_goal_onboard_defined_max <= repaired_maxid_aircraft_max,
+    repaired_goal_onboard_defined_min <= repaired_goal_onboard_defined_max,
+    repaired_goal_onboard_range_min <= repaired_goal_onboard_range_max
+minimising
+    sum([|repaired_minid_aircraft_min - minid_aircraft_min|, |repaired_minid_aircraft_max - minid_aircraft_max|,
+         |repaired_maxid_aircraft_min - maxid_aircraft_min|, |repaired_maxid_aircraft_max - maxid_aircraft_max|,
+         |repaired_minid_person_min - minid_person_min|, |repaired_minid_person_max - minid_person_max|,
+         |repaired_maxid_person_min - maxid_person_min|, |repaired_maxid_person_max - maxid_person_max|,
+         |repaired_minid_city_min - minid_city_min|, |repaired_minid_city_max - minid_city_max|,
+         |repaired_maxid_city_min - maxid_city_min|, |repaired_maxid_city_max - maxid_city_max|,
+         |repaired_init_at__percentage_min - init_at__percentage_min|,
+         |repaired_init_at__percentage_max - init_at__percentage_max|,
+         |repaired_init_in__percentage_min - init_in__percentage_min|,
+         |repaired_init_in__percentage_max - init_in__percentage_max|,
+         |repaired_init_fuel_range_min - init_fuel_range_min|, |repaired_init_fuel_range_max - init_fuel_range_max|,
+         |repaired_init_distance_range_min - init_distance_range_min|,
+         |repaired_init_distance_range_max - init_distance_range_max|,
+         |repaired_init_capacity_range_min - init_capacity_range_min|,
+         |repaired_init_capacity_range_max - init_capacity_range_max|,
+         |repaired_init_onboard_range_min - init_onboard_range_min|,
+         |repaired_init_onboard_range_max - init_onboard_range_max|,
+         |repaired_init_total_fuel_used_range_min - init_total_fuel_used_range_min|,
+         |repaired_init_total_fuel_used_range_max - init_total_fuel_used_range_max|,
+         |repaired_goal_at__cardMin - goal_at__cardMin|, |repaired_goal_at__cardMax - goal_at__cardMax|,
+         |repaired_goal_at__defined_tuple1_min - goal_at__defined_tuple1_min|,
+         |repaired_goal_at__defined_tuple1_max - goal_at__defined_tuple1_max|,
+         |repaired_goal_at__defined_tuple2_min - goal_at__defined_tuple2_min|,
+         |repaired_goal_at__defined_tuple2_max - goal_at__defined_tuple2_max|,
+         |repaired_goal_at__percentage_min - goal_at__percentage_min|,
+         |repaired_goal_at__percentage_max - goal_at__percentage_max|, |repaired_goal_in__cardMin - goal_in__cardMin|,
+         |repaired_goal_in__cardMax - goal_in__cardMax|,
+         |repaired_goal_in__defined_tuple1_min - goal_in__defined_tuple1_min|,
+         |repaired_goal_in__defined_tuple1_max - goal_in__defined_tuple1_max|,
+         |repaired_goal_in__defined_tuple2_min - goal_in__defined_tuple2_min|,
+         |repaired_goal_in__defined_tuple2_max - goal_in__defined_tuple2_max|,
+         |repaired_goal_in__percentage_min - goal_in__percentage_min|,
+         |repaired_goal_in__percentage_max - goal_in__percentage_max|,
+         |repaired_goal_onboard_cardMin - goal_onboard_cardMin|, |repaired_goal_onboard_cardMax - goal_onboard_cardMax|,
+         |repaired_goal_onboard_defined_min - goal_onboard_defined_min|,
+         |repaired_goal_onboard_defined_max - goal_onboard_defined_max|,
+         |repaired_goal_onboard_range_min - goal_onboard_range_min|,
+         |repaired_goal_onboard_range_max - goal_onboard_range_max|;
+             int(1..48)])
+
+--------------------
+
+

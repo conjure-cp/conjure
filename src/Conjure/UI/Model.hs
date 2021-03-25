@@ -9,6 +9,8 @@ module Conjure.UI.Model
     , Strategy(..), Config(..), parseStrategy
     , nbUses
     , modelRepresentationsJSON
+    , timedF
+    , evaluateModel -- unused, exporting to suppress warning
     ) where
 
 import Conjure.Prelude
@@ -22,6 +24,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
@@ -97,7 +100,7 @@ import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 -- base
 import System.IO ( hFlush, stdout )
-import Data.IORef ( IORef, newIORef, readIORef, writeIORef )
+import Data.IORef ( IORef, newIORef, readIORef, writeIORef, modifyIORef )
 import System.IO.Unsafe ( unsafePerformIO )
 
 -- uniplate
@@ -112,6 +115,9 @@ import qualified Data.Aeson.Types as JSON   -- aeson
 import qualified Data.HashMap.Strict as M   -- containers
 import qualified Data.Vector as V           -- vector
 
+-- containers
+import qualified Data.Set as S
+
 
 outputModels ::
     forall m .
@@ -122,10 +128,13 @@ outputModels ::
     EnumerateDomain m =>
     MonadUserError m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
+    Maybe Int ->                -- portfolioSize
+    S.Set Int ->                -- modelHashesBefore
+    String ->                   -- modelNamePrefix
     Config ->
     Model ->
-    m ()
-outputModels config model = do
+    m (S.Set Int)               -- hash values, identifying the models
+outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
 
     liftIO $ writeIORef recordedResponses (responses config)
     liftIO $ writeIORef recordedResponsesRepresentation (responsesRepresentation config)
@@ -170,45 +179,75 @@ outputModels config model = do
                 Left {} -> limitModelsNeeded n              -- yielded a log, still n models to produce
                 Right{} -> limitModelsNeeded (n-1)          -- yielded a model, produce n-1 more models
 
-        each i logOrModel =
+        limitModelsPortfolioSize :: Pipe LogOrModel LogOrModel m ()
+        limitModelsPortfolioSize =
+            case portfolioSize of
+                Nothing -> Pipes.cat
+                Just s -> do
+                    nb <- liftIO (readIORef nbGeneratedModels)
+                    if nb < s
+                        then do
+                            x <- Pipes.await
+                            Pipes.yield x
+                            limitModelsPortfolioSize
+                        else do
+                            log LogInfo $ "Stopping, generated" <+> pretty nb <+> "models."
+                            return ()
+
+        each (modelHashes, i) logOrModel =
             case logOrModel of
                 Left (l,msg) -> do
                     log l msg
-                    return i
+                    return (modelHashes, i)
                 Right eprime -> do
+                    let newHash = hash eprime { mInfo = def, mStatements = sort (mStatements eprime) }
                     let gen =
-                            if smartFilenames config
-                                then [ choice
-                                     | (_question, choice, numOptions) <-
-                                             eprime |> mInfo |> miTrailCompact
-                                     , numOptions > 1
-                                     ] |> map (('_':) . show)
-                                       |> concat
-                                else padLeft 6 '0' (show i)
-                    let filename = dir </> "model" ++ gen ++ ".eprime"
-                    if estimateNumberOfModels config
+                            if modelNamePrefix `elem` ["01_compact", "02_sparse"]
+                                then modelNamePrefix
+                                else modelNamePrefix ++
+                                        if smartFilenames config
+                                            then [ choice
+                                                 | (_question, choice, numOptions) <-
+                                                         eprime |> mInfo |> miTrailCompact
+                                                 , numOptions > 1
+                                                 ] |> map (('_':) . show)
+                                                   |> concat
+                                            else padLeft 6 '0' (show i)
+                    let filename = dir </> gen ++ ".eprime"
+                    if S.member newHash modelHashes
                         then do
-                            let
-                                estimate :: Integer
-                                estimate = product $ 1 : [ toInteger numOptions
-                                                         | (_question, _choice, numOptions) <-
-                                                             eprime |> mInfo |> miTrailCompact
-                                                         ]
-                            liftIO $ print
-                                        $ "These options would generate at least"
-                                        <+> pretty estimate
-                                        <+> (if estimate == 1 then "model" else "models") <> "."
-                        else writeModel (lineWidth config) Plain (Just filename) eprime
-                    return (i+1)
+                            log LogInfo $ "Skipping duplicate model (" <> pretty filename <> ")"
+                            return (modelHashes, i)
+                        else do
+                            if estimateNumberOfModels config
+                                then do
+                                    let
+                                        estimate :: Integer
+                                        estimate = product $ 1 : [ toInteger numOptions
+                                                                 | (_question, _choice, numOptions) <-
+                                                                     eprime |> mInfo |> miTrailCompact
+                                                                 ]
+                                    log LogInfo $ "These options would generate at least"
+                                                <+> pretty estimate
+                                                <+> (if estimate == 1 then "model" else "models") <> "."
+                                else do
+                                    case portfolioSize of
+                                        Nothing -> return ()
+                                        Just _ -> log LogInfo $ "Saved model in:" <+> pretty filename
+                                    writeModel (lineWidth config) Plain (Just filename) eprime
+                                    liftIO $ modifyIORef nbGeneratedModels (+1)
+                            let modelHashes' = S.insert newHash modelHashes
+                            return (modelHashes', i+1)
 
     let ?typeCheckerMode = RelaxedIntegerTags
 
     Pipes.foldM each
-                (return (numberingStart config))
-                (const $ return ())
+                (return (modelHashesBefore, numberingStart config))
+                (\ (modelHashes, _nbModels) -> return modelHashes )
                 (toCompletion config model
                     >-> limitModelsIfNeeded
-                    >-> limitModelsIfEstimating)
+                    >-> limitModelsIfEstimating
+                    >-> limitModelsPortfolioSize)
 
 
 toCompletion :: forall m .
@@ -497,11 +536,8 @@ strategyToDriver config questions = do
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
             , let upd = addToTrail
                             config
-                            (strategyQ  config) pickedQNumber                   pickedQDescr
-                            (strategyA' config) pickedANumber (length optionsA) pickedADescr
-                            (aText pickedA)
-                            (aBefore pickedA)
-                            (aAnswer pickedA)
+                            (strategyQ  config) pickedQNumber                   pickedQDescr pickedQ
+                            (strategyA' config) pickedANumber (length optionsA) pickedADescr pickedA
             , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
@@ -513,6 +549,10 @@ recordedResponses = unsafePerformIO (newIORef Nothing)
 recordedResponsesRepresentation :: IORef (Maybe [(Name, Int)])
 {-# NOINLINE recordedResponsesRepresentation #-}
 recordedResponsesRepresentation = unsafePerformIO (newIORef Nothing)
+
+nbGeneratedModels :: IORef Int
+{-# NOINLINE nbGeneratedModels #-}
+nbGeneratedModels = unsafePerformIO (newIORef 0)
 
 
 executeStrategy :: (MonadIO m, MonadLog m) => Question -> [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
@@ -613,12 +653,23 @@ executeAnswerStrategy _ _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy _ _ [(doc, option)] (viewAuto -> (_, True)) = do
     logDebug ("Picking the only option:" <+> doc)
     return [(1, doc, option)]
-executeAnswerStrategy _ question options st@(viewAuto -> (strategy, _)) =
-    case strategy of
-        Compact -> do
-            let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
-            return [(n, doc, c)]
-        _  -> executeStrategy question options st
+executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) = do
+    let
+        -- if the trail log does not tell us what to do
+        cacheMiss =
+            case strategy of
+                Compact -> do
+                    let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
+                    return [(n, doc, c)]
+                _  -> executeStrategy question options st
+
+    case M.lookup (hashQuestion question) (followTrail config) of
+        Just aHash -> do
+            case [ (n, doc, option) | (n, (doc, option)) <- zip [1..] options, hashAnswer option == aHash ] of
+                [a] -> do
+                    return [a]
+                _ -> cacheMiss
+        Nothing -> cacheMiss
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -630,24 +681,27 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int ->        Doc
-    -> Strategy -> Int -> Int -> Doc
-    -> Doc -> Expression -> Expression
+    -> Strategy -> Int ->        Doc -> Question
+    -> Strategy -> Int -> Int -> Doc -> Answer
     -> ModelInfo -> ModelInfo
 addToTrail Config{..}
-           questionStrategy questionNumber                 questionDescr
-           answerStrategy   answerNumber   answerNumbers   answerDescr
-           ruleDescr oldExpr newExpr
+           questionStrategy questionNumber                  questionDescr    theQuestion
+           answerStrategy   answerNumber    answerNumbers   answerDescr      theAnswer
            oldInfo = newInfo
     where
-        newInfo = oldInfo { miTrailCompact  = (questionNumber, answerNumber, answerNumbers)
-                                            : miTrailCompact oldInfo
-                          , miTrailVerbose  = if verboseTrail
-                                                    then theA : theQ : miTrailVerbose oldInfo
-                                                    else []
-                          , miTrailRewrites = if rewritesTrail
-                                                    then theRewrite : miTrailRewrites oldInfo
-                                                    else []
+        ruleDescr = aText theAnswer
+        oldExpr = aBefore theAnswer
+        newExpr = aAnswer theAnswer
+        newInfo = oldInfo { miTrailCompact      = (questionNumber, answerNumber, answerNumbers)
+                                                : miTrailCompact oldInfo
+                          , miTrailGeneralised  = (hashQuestion theQuestion, hashAnswer theAnswer)
+                                                : miTrailGeneralised oldInfo
+                          , miTrailVerbose      = if verboseTrail
+                                                      then theA : theQ : miTrailVerbose oldInfo
+                                                      else []
+                          , miTrailRewrites     = if rewritesTrail
+                                                      then theRewrite : miTrailRewrites oldInfo
+                                                      else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
@@ -670,6 +724,14 @@ addToTrail Config{..}
             , trBefore = map stringToText $ lines $ renderWide $ pretty oldExpr
             , trAfter  = map stringToText $ lines $ renderWide $ pretty newExpr
             }
+
+
+hashQuestion :: Question -> Int
+hashQuestion q = hash (qType q, qHole q, qAscendants q)
+
+
+hashAnswer :: Answer -> Int
+hashAnswer a = hash (aBefore a, renderWide (aRuleName a), aAnswer a)
 
 
 -- | Add a true-constraint, for every decision variable (whether it is used or not in the model) and
@@ -1156,6 +1218,7 @@ prologue model = do
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
+    -- >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
 
 
@@ -1338,6 +1401,7 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
+    , Vertical.Set.Explicit.rule_In
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
@@ -1378,7 +1442,10 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
+    -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
+    , Vertical.Function.FunctionAsRelation.rule_InDefined
+    , Vertical.Function.FunctionAsRelation.rule_InToSet
 
     , Vertical.Sequence.ExplicitBounded.rule_Comprehension
     , Vertical.Sequence.ExplicitBounded.rule_Card
@@ -1391,7 +1458,9 @@ verticalRules =
     , Vertical.Relation.RelationAsMatrix.rule_Image
 
     , Vertical.Relation.RelationAsSet.rule_Comprehension
+    , Vertical.Relation.RelationAsSet.rule_PowerSet_Comprehension
     , Vertical.Relation.RelationAsSet.rule_Card
+    , Vertical.Relation.RelationAsSet.rule_In
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
@@ -1546,6 +1615,7 @@ otherRules =
         [ rule_TrueIsNoOp
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
+        , rule_Decompose_AllDiff_MapToSingleInt
 
         , rule_GeneratorsFirst
         ]
@@ -1595,6 +1665,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
         let reprsWhichOrder
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
+                | (forg, representationsFinds  config) == (Find , Sparse) = reprsSparseOrder
                 | representationLevels config == False                    = reprsStandardOrderNoLevels
                 | otherwise                                               = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder inpDom
@@ -1938,14 +2009,7 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
 rule_Flatten_Lex :: Rule
 rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
     theRule [essence| &a <lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
+      reject_flat a b
       fa <- flatten a
       fb <- flatten b
       tfa <- typeOf fa
@@ -1958,14 +2022,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
              , return [essence| &fa <lex &fb |]
              )
     theRule [essence| &a <=lex &b |] = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeList TypeInt{}, TypeList TypeInt{}) ->
-          na "rule_Flatten_Lex" 
-        (TypeMatrix TypeInt{} TypeInt{}, TypeMatrix TypeInt{} TypeInt{}) ->
-          na "rule_Flatten_Lex"
-        _ -> return () 
+      reject_flat a b
       fa <- flatten a
       fb <- flatten b
       tfa <- typeOf fa
@@ -1978,6 +2035,24 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
              , return [essence| &fa <=lex &fb |]
              )
     theRule _ = na "rule_Flatten_Lex"  
+    reject_flat a b = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeMatrix TypeBool TypeInt{}, _) ->
+          na "rule_Flatten_Lex"
+        (TypeMatrix TypeBool TypeBool, _) ->
+          na "rule_Flatten_Lex"
+        (TypeList TypeInt{}, _) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeInt{}, _) ->
+          na "rule_Flatten_Lex"
+        (TypeList TypeBool, _) ->
+          na "rule_Flatten_Lex" 
+        (TypeMatrix TypeInt{} TypeBool, _) ->
+          na "rule_Flatten_Lex"
+        _ -> return () 
+
     flatten a = do
       ta <- typeOf a
       case ta of
@@ -2130,7 +2205,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _) -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -2149,6 +2224,34 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                     |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
+
+
+rule_Decompose_AllDiff_MapToSingleInt :: Rule
+rule_Decompose_AllDiff_MapToSingleInt = "decompose-allDiff-mapToSingleInt" `namedRule` theRule where
+    theRule [essence| allDiff(&m) |] = do
+        case m of
+            Comprehension body gensOrConds -> do
+                tyBody <- typeOf body
+                case tyBody of
+                    TypeBool -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeInt _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeTuple{} -> do
+                        bodyBits <- downX1 body
+                        bodyBitSizes <- forM bodyBits $ \ b -> do
+                            bDomain <- domainOf b
+                            domainSizeOf bDomain
+                        case (bodyBits, bodyBitSizes) of
+                            ([a,b], [_a',b']) -> do
+                                let body'=  [essence| &a * &b' + &b |]
+                                let m' = Comprehension body' gensOrConds
+                                return
+                                    ( "Decomposing allDiff"
+                                    , return [essence| allDiff(&m') |]
+                                    )
+                            _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    _ -> na "allDiff on something other than a comprehension."
+            _ -> na "allDiff on something other than a comprehension."
+    theRule _ = na "rule_Decompose_AllDiff_MapToSingleInt"
 
 
 rule_DomainCardinality :: Rule
@@ -2308,6 +2411,10 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
+        tyBody <- typeOf body
+        case tyBody of
+            TypeInt{} -> return ()
+            _ -> na "rule_InlineConditions_AllDiff, not an int"
         domBody <- domainOf body
         let
             collectLowerBounds (RangeSingle x) = return x
@@ -2393,18 +2500,72 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
     theRule _ = na "rule_AttributeToConstraint"
 
 
+timedF :: MonadIO m => String -> (a -> m b) -> a -> m b
+timedF name comp = \ a -> timeItNamed name (comp a)
+
+
+evaluateModel ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
+evaluateModel m = do
+    let
+        full (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
+            return val
+        full p@Constant{} = return p
+        full p@Domain{} = return p
+        full p = do
+            mconstant <- runExceptT (instantiateExpression [] p)
+            case mconstant of
+                Left{} -> return p
+                Right constant -> do
+                    if null [() | ConstantUndefined{} <- universe constant]
+                        then return p
+                        else return (Constant constant)
+    let
+        partial (Op op)
+            | Just (x, y) <- case op of
+                                MkOpLeq (OpLeq x y) -> Just (x,y)
+                                MkOpGeq (OpGeq x y) -> Just (x,y)
+                                MkOpEq  (OpEq  x y) -> Just (x,y)
+                                _                   -> Nothing
+            , Reference nmX _ <- x
+            , Reference nmY _ <- y
+            , nmX == nmY
+            , categoryOf x <= CatQuantified
+            , categoryOf y <= CatQuantified
+            = return (fromBool True)
+        partial p@(Op x) = do
+            mx' <- runExceptT (simplifyOp x)
+            case mx' of
+                Left{} -> return p
+                Right x' -> do
+                    when (Op x == x') $ bug $ vcat
+                        [ "rule_PartialEvaluate, simplifier returns the input unchanged."
+                        , "input:" <+> vcat [ pretty (Op x)
+                                            , pretty (show (Op x))
+                                            ]
+                        ]
+                    return x'
+        partial p = return p
+
+    (descendBiM full >=> transformBiM partial) m
+
+
 rule_FullEvaluate :: Rule
 rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Constant{} = na "rule_FullEvaluate"
     theRule Domain{} = na "rule_FullEvaluate"
+    theRule (Reference _ (Just (Alias x)))                 -- selectively inline, unless x is huge
+        | Just Comprehension{} <- match opToSet x
+        = return ("Inline alias", return x)
     theRule p = do
         constant <- instantiateExpression [] p
         unless (null [() | ConstantUndefined{} <- universe constant]) $
             na "rule_PartialEvaluate, undefined"
-        return
-            ( "Full evaluator"
-            , return $ Constant constant
-            )
+        return ("Full evaluator", return $ Constant constant)
 
 
 rule_PartialEvaluate :: Rule

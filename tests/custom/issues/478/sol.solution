@@ -1,0 +1,16 @@
+language Essence 1.3
+
+letting goal be
+        record {at_ = function(), in_ = function(), fuel = function(), onboard = function(2 --> -65536),
+                total_fuel_used = function()}
+letting init be
+        record {at_ = function((1, 5) --> false, (1, 6) --> false, (1, 7) --> true, (2, 5) --> false, (2, 6) --> false,
+                               (2, 7) --> true, (3, 5) --> false, (3, 6) --> false, (3, 7) --> false, (4, 5) --> false,
+                               (4, 6) --> false, (4, 7) --> false),
+                in_ = function((3, 1) --> false, (3, 2) --> true, (4, 1) --> false, (4, 2) --> true),
+                fuel = function(1 --> 1, 2 --> 1),
+                distance = function((5, 5) --> -65536, (5, 6) --> -65536, (5, 7) --> -65536, (6, 5) --> -65536,
+                                    (6, 6) --> -65536, (6, 7) --> -65536, (7, 5) --> -65536, (7, 6) --> -65536,
+                                    (7, 7) --> -65536),
+                capacity = function(1 --> 1, 2 --> 1), onboard = function(1 --> 0, 2 --> 2),
+                total_fuel_used = function(0 --> 0)}

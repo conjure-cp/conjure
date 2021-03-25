@@ -3,6 +3,7 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Prelude
     ( module X
@@ -24,6 +25,7 @@ module Conjure.Prelude
     , decodeFromFile
     , RandomM(..)
     , fst3, snd3, thd3
+    , fst4, snd4, thd4, fourth4
     , (|>)
     , allNats
     , jsonOptions
@@ -44,6 +46,7 @@ module Conjure.Prelude
     , JSONValue
     , isTopMostZ
     , getDirectoryContents
+    , RunStateAsWriter, runStateAsWriterT, sawTell
     ) where
 
 import GHC.Err as X ( error )
@@ -53,8 +56,9 @@ import GHC.Stack as X ( HasCallStack )
 import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
 import Data.Int as X ( Int )
 import GHC.Integer as X ( Integer )
+import GHC.Float as X ( sqrt, (**) )
 import GHC.Exts as X ( Double )
-import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^), Real(..) )
+import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^), Real(..), round )
 import GHC.Enum as X ( Enum(..) )
 import Data.Char as X ( Char, toLower, isSpace )
 import Data.String as X ( String, IsString(..) )
@@ -82,6 +86,7 @@ import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, modify
                                          , evalStateT, runStateT, evalState, runState )
+import Control.Monad.State.Strict ( put ) -- only for defining instances
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
@@ -209,6 +214,9 @@ import System.CPUTime ( getCPUTime )
 -- time
 import Data.Time.Clock ( getCurrentTime )
 
+-- timeit
+import System.TimeIt as X ( timeIt, timeItNamed )
+
 import Debug.Trace as X ( trace, traceM )
 
 tracing :: Show a => String -> a -> a
@@ -335,6 +343,18 @@ snd3 (_,b,_) = b
 thd3 :: (a,b,c) -> c
 thd3 (_,_,c) = c
 
+fst4 :: (a,b,c,d) -> a
+fst4 (a,_,_,_) = a
+
+snd4 :: (a,b,c,d) -> b
+snd4 (_,b,_,_) = b
+
+thd4 :: (a,b,c,d) -> c
+thd4 (_,_,c,_) = c
+
+fourth4 :: (a,b,c,d) -> d
+fourth4 (_,_,_,d) = d
+
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
 
@@ -423,6 +443,11 @@ instance MonadTrans ExceptT where
     lift comp = ExceptT $ do
         res <- comp
         return (Right res)
+
+instance MonadState s m => MonadState s (ExceptT m) where
+    get = lift get
+    put = lift . put
+
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
@@ -590,3 +615,21 @@ type JSONValue = JSON.Value
 --   i.e. we cannot go any more up.
 isTopMostZ :: Zipper a b -> Bool
 isTopMostZ = isNothing . up
+
+
+class RunStateAsWriter s where
+    -- | We don't have Writer monads around here, they leak space.
+    runStateAsWriterT :: (Monad m, Default s) => StateT s m a -> m (a, s)
+
+instance RunStateAsWriter [s] where
+    runStateAsWriterT m = do
+        (a, out) <- runStateT m def
+        return (a, reverse out)
+
+instance RunStateAsWriter ([a],[b]) where
+    runStateAsWriterT m = do
+        (x, (a,b)) <- runStateT m def
+        return (x, (reverse a, reverse b))
+
+sawTell :: (MonadState s m, Monoid s) => s -> m ()
+sawTell xs = modify (xs `mappend`)

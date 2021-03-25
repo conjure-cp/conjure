@@ -1,0 +1,40 @@
+language Essence 1.3
+
+given f_cardMin: int(0..10)
+given f_cardMax: int(0..10)
+given f_defined_min: int(1..10)
+given f_defined_max: int(1..10)
+given f_range_min: int(1..100)
+given f_range_max: int(1..100)
+find f: function (maxSize 100) int(1..10) --> int(1..100)
+such that
+    |f| >= f_cardMin /\ |f| <= f_cardMax,
+    and([q1[1] >= f_defined_min | q1 <- f]),
+    and([q1[1] <= f_defined_max | q1 <- f]),
+    and([q1[2] >= f_range_min | q1 <- f]),
+    and([q1[2] <= f_range_max | q1 <- f])
+given g_cardMin: int(0..16)
+given g_cardMax: int(0..16)
+given g_defined_min: int(-5..10)
+given g_defined_max: int(-5..10)
+given g_range_min: int(1..100)
+given g_range_max: int(1..100)
+find g: function (maxSize 100) int(-5..10) --> int(1..100)
+such that
+    |g| >= g_cardMin /\ |g| <= g_cardMax,
+    and([q2[1] >= g_defined_min | q2 <- g]),
+    and([q2[1] <= g_defined_max | q2 <- g]),
+    and([q2[2] >= g_range_min | q2 <- g]),
+    and([q2[2] <= g_range_max | q2 <- g])
+f_cardMin "-f_cardMin " i (0, 10)
+f_cardMax "-f_cardMax " i (0, 10)
+f_defined_min "-f_defined_min " i (1, 10)
+f_defined_max "-f_defined_max " i (1, 10)
+f_range_min "-f_range_min " i (1, 100)
+f_range_max "-f_range_max " i (1, 100)
+g_cardMin "-g_cardMin " i (0, 16)
+g_cardMax "-g_cardMax " i (0, 16)
+g_defined_min "-g_defined_min " i (-5, 10)
+g_defined_max "-g_defined_max " i (-5, 10)
+g_range_min "-g_range_min " i (1, 100)
+g_range_max "-g_range_max " i (1, 100)

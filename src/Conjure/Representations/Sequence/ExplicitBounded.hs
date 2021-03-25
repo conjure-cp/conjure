@@ -78,7 +78,6 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
                       TypeInt _ -> do
                             return $ return $ -- list
                                 [essence| allDiff(&values) |]
-
                       _ ->  do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
@@ -133,18 +132,28 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr jectivityAttr) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
             let injectiveCons marker values = do
-                    (iPat, i) <- quantifiedVar
-                    (jPat, j) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            and([ &values[&i] != &values[&j]
-                                | &iPat : int(1..&maxSize)
-                                , &jPat : int(1..&maxSize)
-                                , &i .< &j
-                                , &i <= &marker
-                                , &j <= &marker
-                                ])
-                        |]
+                    innerType <- typeOfDomain innerDomain
+                    case innerType of
+                        TypeInt _ -> do
+                            (iPat, i) <- quantifiedVar
+                            return $ return $ -- list
+                                [essence| allDiff([ &values[&i]
+                                                  | &iPat : int(1..&maxSize)
+                                                  , &i <= &marker
+                                                  ]) |]
+                        _ -> do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- list
+                                [essence|
+                                    and([ &values[&i] != &values[&j]
+                                        | &iPat : int(1..&maxSize)
+                                        , &jPat : int(1..&maxSize)
+                                        , &i .< &j
+                                        , &i <= &marker
+                                        , &j <= &marker
+                                        ])
+                                |]
 
             let surjectiveCons marker values = do
                     (iPat, i) <- quantifiedVar

@@ -45,6 +45,8 @@ deriveTypeScript defaultOptions ''OpAllDiff
 deriveTypeScript defaultOptions ''OpAllDiffExcept
 deriveTypeScript defaultOptions ''OpAnd
 deriveTypeScript defaultOptions ''OpApart
+deriveTypeScript defaultOptions ''OpAtLeast
+deriveTypeScript defaultOptions ''OpAtMost
 deriveTypeScript defaultOptions ''OpAttributeAsConstraint
 deriveTypeScript defaultOptions ''OpCatchUndef
 deriveTypeScript defaultOptions ''OpDefined
@@ -56,6 +58,7 @@ deriveTypeScript defaultOptions ''OpEq
 deriveTypeScript defaultOptions ''OpFactorial
 deriveTypeScript defaultOptions ''OpFlatten
 deriveTypeScript defaultOptions ''OpFreq
+deriveTypeScript defaultOptions ''OpGCC
 deriveTypeScript defaultOptions ''OpGeq
 deriveTypeScript defaultOptions ''OpGt
 deriveTypeScript defaultOptions ''OpHist
@@ -71,6 +74,7 @@ deriveTypeScript defaultOptions ''OpLeq
 deriveTypeScript defaultOptions ''OpLexLeq
 deriveTypeScript defaultOptions ''OpLexLt
 deriveTypeScript defaultOptions ''OpLt
+deriveTypeScript defaultOptions ''OpMakeTable
 deriveTypeScript defaultOptions ''OpMax
 deriveTypeScript defaultOptions ''OpMin
 deriveTypeScript defaultOptions ''OpMinus
@@ -99,6 +103,7 @@ deriveTypeScript defaultOptions ''OpSucc
 deriveTypeScript defaultOptions ''OpSum
 deriveTypeScript defaultOptions ''OpSupset
 deriveTypeScript defaultOptions ''OpSupsetEq
+deriveTypeScript defaultOptions ''OpTable
 deriveTypeScript defaultOptions ''OpTildeLeq
 deriveTypeScript defaultOptions ''OpTildeLt
 deriveTypeScript defaultOptions ''OpTogether
@@ -126,6 +131,7 @@ deriveTypeScript defaultOptions ''Strategy
 deriveTypeScript defaultOptions ''TrailRewrites
 deriveTypeScript defaultOptions ''Tree -- base
 deriveTypeScript defaultOptions ''Type
+
 
 
 tsDef :: IO ()
@@ -161,6 +167,8 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpAllDiffExcept)
     , getTypeScriptDeclarations (Proxy :: Proxy OpAnd)
     , getTypeScriptDeclarations (Proxy :: Proxy OpApart)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpAtLeast)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpAtMost)
     , getTypeScriptDeclarations (Proxy :: Proxy OpAttributeAsConstraint)
     , getTypeScriptDeclarations (Proxy :: Proxy OpCatchUndef)
     , getTypeScriptDeclarations (Proxy :: Proxy OpDefined)
@@ -172,6 +180,7 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpFactorial)
     , getTypeScriptDeclarations (Proxy :: Proxy OpFlatten)
     , getTypeScriptDeclarations (Proxy :: Proxy OpFreq)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpGCC)
     , getTypeScriptDeclarations (Proxy :: Proxy OpGeq)
     , getTypeScriptDeclarations (Proxy :: Proxy OpGt)
     , getTypeScriptDeclarations (Proxy :: Proxy OpHist)
@@ -215,6 +224,7 @@ tsDef = putStrLn $ formatTSDeclarations $ mconcat
     , getTypeScriptDeclarations (Proxy :: Proxy OpSum)
     , getTypeScriptDeclarations (Proxy :: Proxy OpSupset)
     , getTypeScriptDeclarations (Proxy :: Proxy OpSupsetEq)
+    , getTypeScriptDeclarations (Proxy :: Proxy OpTable)
     , getTypeScriptDeclarations (Proxy :: Proxy OpTildeLeq)
     , getTypeScriptDeclarations (Proxy :: Proxy OpTildeLt)
     , getTypeScriptDeclarations (Proxy :: Proxy OpTogether)

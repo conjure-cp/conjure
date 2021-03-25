@@ -629,13 +629,13 @@ parseExpr =
             return $ \ x -> mkOp "not" [x]
 
     in
-        makeExprParser (parseAtomicExpr <?> "expression")
+        makeExprParser parseAtomicExpr
             [ [ case descr of
-                    Binary op FLeft               -> InfixL $ do lexeme op
+                    BinaryOp op FLeft             -> InfixL $ do lexeme op
                                                                  return $ mergeOp op
-                    Binary op FNone               -> InfixN $ do lexeme op
+                    BinaryOp op FNone             -> InfixN $ do lexeme op
                                                                  return $ mergeOp op
-                    Binary op FRight              -> InfixR $ do lexeme op
+                    BinaryOp op FRight            -> InfixR $ do lexeme op
                                                                  return $ mergeOp op
                     UnaryPrefix L_Minus           -> Prefix $ foldr1 (.) <$> some parseUnaryNegate
                     UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
@@ -643,7 +643,7 @@ parseExpr =
               | (descr, _) <- operatorsInGroup
               ]
             | operatorsInGroup <- operatorsGrouped
-            ]
+            ] <?> "expression"
 
 parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do

@@ -1,6 +1,5 @@
  ========== 1 ==========
 language ESSENCE' 1.0
-
 given n: int
 given fin1: int
 given G_ExplicitR3_Explicit: matrix indexed by [int(1..fin1), int(1..2)] of int(1..n)
@@ -11,29 +10,21 @@ find conjure_aux1_Occurrence: matrix indexed by [int(1..n)] of bool
 branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, c]
 minimising c
 such that
-    and([and([f_Function1DPartial_Values[G_ExplicitR3_Explicit[q4, 1]] !=
-              f_Function1DPartial_Values[G_ExplicitR3_Explicit[q4, 2]],
-              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q4, 1]],
-              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q4, 2]];
+    and([and([f_Function1DPartial_Values[G_ExplicitR3_Explicit[q7, 1]] !=
+              f_Function1DPartial_Values[G_ExplicitR3_Explicit[q7, 2]],
+              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q7, 1]],
+              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q7, 2]];
                   int(1..3)])
-             | q4 : int(1..fin1)]),
-    and([conjure_aux1_Occurrence[f_Function1DPartial_Values[u]] /\ f_Function1DPartial_Flags[u] | u : int(1..n)]),
-    and([conjure_aux1_Occurrence[q5] ->
-         or([q5 = f_Function1DPartial_Values[u] /\ f_Function1DPartial_Flags[u] | u : int(1..n)])
-             | q5 : int(1..n)]),
-    c = sum([toInt(conjure_aux1_Occurrence[q7]) | q7 : int(1..n)]),
+             | q7 : int(1..fin1)]),
+    and([conjure_aux1_Occurrence[f_Function1DPartial_Values[u]] | u : int(1..n)]),
+    and([conjure_aux1_Occurrence[q4] -> or([q4 = f_Function1DPartial_Values[u] | u : int(1..n)]) | q4 : int(1..n)]),
+    c = sum([toInt(conjure_aux1_Occurrence[q6]) | q6 : int(1..n)]),
+    and([f_Function1DPartial_Flags[u] | u : int(1..n)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..n)])
-
-$ Conjure's
-$ {"finds": [{"Name": "f"}, {"Name": "c"}],
-$  "givens": [{"Name": "n"}, {"Name": "G"}],
-$  "enumGivens": [],
-$  "enumLettings": [],
 
 
  ========== 2 ==========
 language ESSENCE' 1.0
-
 given n: int
 given fin1: int
 given G_ExplicitR3_Explicit: matrix indexed by [int(1..fin1), int(1..2)] of int(1..n)
@@ -42,26 +33,19 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..n)] of int(1..n)
 find S_Occurrence: matrix indexed by [int(1..n)] of bool
 find conjure_aux1_Occurrence: matrix indexed by [int(1..n)] of bool
 branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, S_Occurrence]
-minimising sum([toInt(S_Occurrence[q10]) | q10 : int(1..n)])
+minimising sum([toInt(S_Occurrence[q9]) | q9 : int(1..n)])
 such that
-    and([and([f_Function1DPartial_Values[G_ExplicitR3_Explicit[q5, 1]] !=
-              f_Function1DPartial_Values[G_ExplicitR3_Explicit[q5, 2]],
-              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q5, 1]],
-              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q5, 2]];
+    and([and([f_Function1DPartial_Values[G_ExplicitR3_Explicit[q10, 1]] !=
+              f_Function1DPartial_Values[G_ExplicitR3_Explicit[q10, 2]],
+              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q10, 1]],
+              f_Function1DPartial_Flags[G_ExplicitR3_Explicit[q10, 2]];
                   int(1..3)])
-             | q5 : int(1..fin1)]),
-    and([conjure_aux1_Occurrence[f_Function1DPartial_Values[u]] /\ f_Function1DPartial_Flags[u] | u : int(1..n)]),
-    and([conjure_aux1_Occurrence[q6] ->
-         or([q6 = f_Function1DPartial_Values[u] /\ f_Function1DPartial_Flags[u] | u : int(1..n)])
-             | q6 : int(1..n)]),
-    and([S_Occurrence[q8] = conjure_aux1_Occurrence[q8] | q8 : int(1..n)]),
+             | q10 : int(1..fin1)]),
+    and([conjure_aux1_Occurrence[f_Function1DPartial_Values[u]] | u : int(1..n)]),
+    and([conjure_aux1_Occurrence[q5] -> or([q5 = f_Function1DPartial_Values[u] | u : int(1..n)]) | q5 : int(1..n)]),
+    and([S_Occurrence[q7] = conjure_aux1_Occurrence[q7] | q7 : int(1..n)]),
+    and([f_Function1DPartial_Flags[u] | u : int(1..n)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..n)])
-
-$ Conjure's
-$ {"finds": [{"Name": "f"}, {"Name": "S"}],
-$  "givens": [{"Name": "n"}, {"Name": "G"}],
-$  "enumGivens": [],
-$  "enumLettings": [],
 
 
  ========== 3 ==========

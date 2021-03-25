@@ -84,6 +84,17 @@ instance Hashable  Constant
 instance ToJSON    Constant where toJSON = genericToJSON jsonOptions
 instance FromJSON  Constant where parseJSON = genericParseJSON jsonOptions
 
+instance SimpleJSON Constant where
+    toSimpleJSON c =
+        case c of
+            ConstantBool b -> return (toJSON b)
+            ConstantInt _ i -> return (toJSON i)
+            ConstantEnum _ _ nm -> return (toJSON (renderNormal nm))
+            ConstantAbstract lit -> toSimpleJSON lit
+            TypedConstant c' _ -> toSimpleJSON c'
+            _ -> noToSimpleJSON c
+    fromSimpleJSON _ = noFromSimpleJSON
+
 instance Arbitrary Constant where
     arbitrary = oneof
         [ ConstantBool <$> arbitrary

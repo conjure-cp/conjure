@@ -11,7 +11,7 @@ find var7: function function int(3..5, -3) --> bool --> tuple (int(-1))
 find var8: partition from int(3)
 find var9: function bool --> set of int(-5, 5)
 such that
-    (function(var4 --> 10 != -7, var4 --> var5) in ({} : `set of function int --> bool`) -> false \/ true in {true}) ->
+    function(var4 --> 10 != -7, var4 --> var5) in ({} : `set of function int --> bool`) -> false \/ true in {true} ->
     function(({} : `set of partition from int`) --> partition({mset(7)}, {mset(4, -9)}),
              {var8} --> partition({mset(7)}, {(mset() : `mset of int`)}),
              {var8} --> partition({mset(-4, -8)}, {mset(-1, 10), mset(6, 1)}))

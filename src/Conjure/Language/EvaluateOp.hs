@@ -294,6 +294,9 @@ instance EvaluateOp OpLexLt where
 instance EvaluateOp OpLt where
     evaluateOp (OpLt x y) = return $ ConstantBool $ x < y
 
+instance EvaluateOp OpMakeTable where
+    evaluateOp op = na $ "evaluateOp{OpMakeTable}:" <++> pretty (show op)
+
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (childrenBi p) =
             return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
@@ -662,6 +665,21 @@ instance EvaluateOp OpSupset where
 instance EvaluateOp OpSupsetEq where
     evaluateOp (OpSupsetEq a b) = evaluateOp (OpSubsetEq b a)
 
+instance EvaluateOp OpTable where
+    evaluateOp (OpTable rows table) = do
+        rows' <- intsOut "OpTable-rows" rows
+        table' <- intsOut2D "OpTable-table" table
+        return $ ConstantBool $ rows' `elem` table'
+
+instance EvaluateOp OpGCC where
+    evaluateOp op@OpGCC{} = na $ "evaluateOp{OpGCC}" <+> pretty op
+
+instance EvaluateOp OpAtLeast where
+    evaluateOp op@OpAtLeast{} = na $ "evaluateOp{OpAtLeast}" <+> pretty op
+
+instance EvaluateOp OpAtMost where
+    evaluateOp op@OpAtMost{} = na $ "evaluateOp{OpAtMost}" <+> pretty op
+
 instance EvaluateOp OpTildeLeq where
     evaluateOp (OpTildeLeq x y) = do
         flag1 <- evaluateOp (OpEq x y)
@@ -771,14 +789,20 @@ instance EvaluateOp OpXor where
 
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
-boolsOut (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM boolsOut cs
+boolsOut (viewConstantMatrix -> Just (_, cs)) = concatMapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
 intsOut :: MonadFail m => Doc -> Constant -> m [Integer]
-intsOut doc (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM (intsOut doc) cs
-intsOut doc (viewConstantSet -> Just cs) = concat <$> mapM (intsOut doc) cs
-intsOut doc (viewConstantMSet -> Just cs) = concat <$> mapM (intsOut doc) cs
+intsOut doc (viewConstantMatrix -> Just (_, cs)) = concatMapM (intsOut doc) cs
+intsOut doc (viewConstantSet -> Just cs) = concatMapM (intsOut doc) cs
+intsOut doc (viewConstantMSet -> Just cs) = concatMapM (intsOut doc) cs
 intsOut doc b = return <$> intOut ("intsOut" <+> doc) b
+
+intsOut2D :: MonadFail m => Doc -> Constant -> m [[Integer]]
+intsOut2D doc (viewConstantMatrix -> Just (_, cs)) = mapM (intsOut doc) cs
+intsOut2D doc (viewConstantSet -> Just cs) = mapM (intsOut doc) cs
+intsOut2D doc (viewConstantMSet -> Just cs) = mapM (intsOut doc) cs
+intsOut2D doc _ = fail ("intsOut2D" <+> doc)
 
 tildeLt :: Constant -> Constant -> Bool
 tildeLt = tilLt
@@ -884,6 +908,8 @@ instance EvaluateOp Op where
     evaluateOp (MkOpAllDiffExcept x) = evaluateOp x
     evaluateOp (MkOpAnd x) = evaluateOp x
     evaluateOp (MkOpApart x) = evaluateOp x
+    evaluateOp (MkOpAtLeast x) = evaluateOp x
+    evaluateOp (MkOpAtMost x) = evaluateOp x
     evaluateOp (MkOpAttributeAsConstraint x) = evaluateOp x
     evaluateOp (MkOpCatchUndef x) = evaluateOp x
     evaluateOp (MkOpDefined x) = evaluateOp x
@@ -895,6 +921,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpFactorial x) = evaluateOp x
     evaluateOp (MkOpFlatten x) = evaluateOp x
     evaluateOp (MkOpFreq x) = evaluateOp x
+    evaluateOp (MkOpGCC x) = evaluateOp x
     evaluateOp (MkOpGeq x) = evaluateOp x
     evaluateOp (MkOpGt x) = evaluateOp x
     evaluateOp (MkOpHist x) = evaluateOp x
@@ -910,6 +937,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpLexLeq x) = evaluateOp x
     evaluateOp (MkOpLexLt x) = evaluateOp x
     evaluateOp (MkOpLt x) = evaluateOp x
+    evaluateOp (MkOpMakeTable x) = evaluateOp x
     evaluateOp (MkOpMax x) = evaluateOp x
     evaluateOp (MkOpMin x) = evaluateOp x
     evaluateOp (MkOpMinus x) = evaluateOp x
@@ -923,8 +951,8 @@ instance EvaluateOp Op where
     evaluateOp (MkOpParty x) = evaluateOp x
     evaluateOp (MkOpPow x) = evaluateOp x
     evaluateOp (MkOpPowerSet x) = evaluateOp x
-    evaluateOp (MkOpPreImage x) = evaluateOp x
     evaluateOp (MkOpPred x) = evaluateOp x
+    evaluateOp (MkOpPreImage x) = evaluateOp x
     evaluateOp (MkOpProduct x) = evaluateOp x
     evaluateOp (MkOpRange x) = evaluateOp x
     evaluateOp (MkOpRelationProj x) = evaluateOp x
@@ -938,13 +966,14 @@ instance EvaluateOp Op where
     evaluateOp (MkOpSum x) = evaluateOp x
     evaluateOp (MkOpSupset x) = evaluateOp x
     evaluateOp (MkOpSupsetEq x) = evaluateOp x
+    evaluateOp (MkOpTable x) = evaluateOp x
     evaluateOp (MkOpTildeLeq x) = evaluateOp x
     evaluateOp (MkOpTildeLt x) = evaluateOp x
+    evaluateOp (MkOpTogether x) = evaluateOp x
     evaluateOp (MkOpToInt x) = evaluateOp x
     evaluateOp (MkOpToMSet x) = evaluateOp x
     evaluateOp (MkOpToRelation x) = evaluateOp x
     evaluateOp (MkOpToSet x) = evaluateOp x
-    evaluateOp (MkOpTogether x) = evaluateOp x
     evaluateOp (MkOpTransform x) = evaluateOp x
     evaluateOp (MkOpTrue x) = evaluateOp x
     evaluateOp (MkOpTwoBars x) = evaluateOp x

@@ -63,6 +63,13 @@ instance Hashable  Statement
 instance ToJSON    Statement where toJSON = genericToJSON jsonOptions
 instance FromJSON  Statement where parseJSON = genericParseJSON jsonOptions
 
+instance SimpleJSON Statement where
+    toSimpleJSON st =
+        case st of
+            Declaration d -> toSimpleJSON d
+            _ -> noToSimpleJSON st
+    fromSimpleJSON _ = noFromSimpleJSON
+
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
     pretty (SearchOrder nms) = "branching on" <++> prettyList prBrackets "," nms
@@ -144,6 +151,15 @@ instance Serialize Declaration
 instance Hashable  Declaration
 instance ToJSON    Declaration where toJSON = genericToJSON jsonOptions
 instance FromJSON  Declaration where parseJSON = genericParseJSON jsonOptions
+
+instance SimpleJSON Declaration where
+    toSimpleJSON d =
+        case d of
+            Letting nm x -> do
+                x' <- toSimpleJSON x
+                return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
+            _ -> noToSimpleJSON d
+    fromSimpleJSON _ = noFromSimpleJSON
 
 -- this is only used in the instance below
 type Prim = Either Bool (Either Integer Constant)
@@ -320,6 +336,23 @@ instance Serialize Expression
 instance Hashable  Expression
 instance ToJSON    Expression where toJSON = genericToJSON jsonOptions
 instance FromJSON  Expression where parseJSON = genericParseJSON jsonOptions
+
+instance SimpleJSON Expression where
+    toSimpleJSON x =
+        case x of
+            Reference nm _ -> return $ JSON.String $ stringToText $ show $ pretty nm
+            Constant c -> toSimpleJSON c
+            AbstractLiteral lit -> toSimpleJSON lit
+            Typed y _ -> toSimpleJSON y
+            Op (MkOpMinus (OpMinus a b)) -> do
+                a' <- toSimpleJSON a
+                b' <- toSimpleJSON b
+                case (a', b') of
+                    (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
+                    _ -> noToSimpleJSON x
+            _ -> noToSimpleJSON x
+    fromSimpleJSON _ = noFromSimpleJSON
+
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =

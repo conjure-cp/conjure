@@ -13,7 +13,7 @@ import Conjure.Language.Type
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
 --   Replaces unnamed types with integers.
-removeUnnamedsFromModel :: MonadFail m => Model -> m Model
+removeUnnamedsFromModel :: Monad m => Model -> m Model
 removeUnnamedsFromModel model = do
     statements' <- forM (mStatements model) $ \ st ->
             case st of

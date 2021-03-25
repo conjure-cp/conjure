@@ -4,27 +4,27 @@ given n : int
 letting N be domain int(1..n)
 given g : relation of (N * N)
 
-where
-    forAll (i,j) in g .     $ i is directly connected to j
-                            $ there cannot be a path from j to i
-        !(
-
-            $ an immediate connection from j to i
-            ((j,i) in g)
-
-            \/
-
-            $ a path where number of nodes is between 1 and (n-2)
-            (exists path : sequence (minSize 1, maxSize n-2, injective) of N .
-
-                $ j is connected to the first node in `path`
-                   (j, path(1)) in g
-
-                $ the last node in `path` is connected to i
-                /\ (path(|path|), i) in g
-
-                $ and adjacent nodes in `path` are connected
-                /\ and([ (path(x), path(x+1)) in g | x : int(1..|path|-1) ]))
-        )
+$ where
+$     forAll (i,j) in g .     $ i is directly connected to j
+$                             $ there cannot be a path from j to i
+$         !(
+$
+$             $ an immediate connection from j to i
+$             ((j,i) in g)
+$
+$             \/
+$
+$             $ a path where number of nodes is between 1 and (n-2)
+$             (exists path : sequence (minSize 1, maxSize n-2, injective) of N .
+$
+$                 $ j is connected to the first node in `path`
+$                    (j, path(1)) in g
+$
+$                 $ the last node in `path` is connected to i
+$                 /\ (path(|path|), i) in g
+$
+$                 $ and adjacent nodes in `path` are connected
+$                 /\ and([ (path(x), path(x+1)) in g | x : int(1..|path|-1) ]))
+$         )
 
 find b : int(0)
