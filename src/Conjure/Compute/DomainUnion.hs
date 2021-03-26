@@ -155,7 +155,7 @@ instance DomainUnion PartialityAttr where
 
 instance DomainUnion JectivityAttr where
     domainUnion x y | x == y = return x
-    domainUnion _ _ = bug "domainUnion JectivityAttr_Injective"
+    domainUnion _ _ = return JectivityAttr_None
 
 
 instance
