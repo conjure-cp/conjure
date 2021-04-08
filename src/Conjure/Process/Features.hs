@@ -9,6 +9,15 @@ import qualified Data.HashMap.Strict as M   -- containers
 -- primes
 import Data.Numbers.Primes ( isPrime )
 
+-- statistics
+import Statistics.Correlation ( pearson )
+
+-- vector
+import qualified Data.Vector as Vector ( fromList )
+-- import qualified Data.Vector.Generic as Vector ( fromList )
+
+
+
 
 -- Ignoring the model for now
 calculateFeatures ::
@@ -50,8 +59,14 @@ calculateFeatures model param = do
                                  , f <- allFeatureGen2s
                                  ]
 
+        allDirectFeatures :: [Feature]
+        allDirectFeatures = catMaybes [ f p
+                                      | p <- parameters
+                                      , f <- allDirectFeatureGens
+                                      ]
+
         allFeatures :: [Feature]
-        allFeatures = allFeature1s ++ allFeature2s
+        allFeatures = allFeature1s ++ allFeature2s ++ allDirectFeatures
 
     forM_ allFeatures $ \ (names, value) ->
         liftIO $ putStrLn $ renderWide $ pretty (mconcat (intersperse "_" names)) <> ":" <+> pretty value
@@ -82,7 +97,9 @@ calculateFeatures model param = do
 --------------------------------------------------------------------------------
 -- types
 
-type Param = (Name, Maybe (Domain () Expression), Constant)
+type Dom = Maybe (Domain () Expression)
+
+type Param = (Name, Dom, Constant)
 
 -- an indicator is some value (like an int itself, the card of a set of the max of the range of a function)
 type Indicator = ([Name], Constant)
@@ -98,6 +115,8 @@ type FeatureGen1 = [Integer] -> Indicator -> Maybe Feature
 
 -- something like a ratio between two ints
 type FeatureGen2 = [Integer] -> Indicator -> Indicator -> Maybe Feature
+
+type DirectFeatureGen = Param -> Maybe Feature
 
 instance Pretty FeatureValue where
     pretty (B x) = pretty x
@@ -181,15 +200,20 @@ intIsPrime _ = []
 
 
 --------------------------------------------------------------------------------
--- linear
+-- linear, via indicators
 
 allFeatureGen1s :: [FeatureGen1]
-allFeatureGen1s = [valueis, intIsOffByOne, intIsRepeated]
+allFeatureGen1s = [ valueis, intRatioToMaxInt, intIsOffByOne, intIsRepeated ]
 
 valueis :: FeatureGen1
 valueis _ (name, ConstantBool value) = Just (name, B value)
 valueis _ (name, ConstantInt _ value) = Just (name, I value)
 valueis _ _ = Nothing
+
+intRatioToMaxInt :: FeatureGen1
+intRatioToMaxInt allIntValues (name, ConstantInt _ value) =
+    Just (name ++ ["ratioToMax"], D (fromIntegral value / fromIntegral (maximum allIntValues)))
+intRatioToMaxInt _ _ = Nothing
 
 intIsOffByOne :: FeatureGen1
 intIsOffByOne allIntValues (name, ConstantInt _ value) =
@@ -204,12 +228,38 @@ intIsRepeated allIntValues (name, ConstantInt _ value) =
 intIsRepeated _ _ = Nothing
 
 
--- add relation density
+
+--------------------------------------------------------------------------------
+-- linear, directly on the param
+
+allDirectFeatureGens :: [DirectFeatureGen]
+allDirectFeatureGens = [correlation, density]
+
+correlation :: DirectFeatureGen
+correlation (name, Just _, ConstantAbstract (AbsLitFunction xs)) =
+    let nums = [ (fromIntegral a, fromIntegral b) | (ConstantInt _ a, ConstantInt _ b) <- xs ]
+    in  if length nums == length xs
+            then Just ([name, "correlation"], D $ pearson (Vector.fromList nums))
+            else Nothing
+correlation _ = Nothing
+
+
+density :: DirectFeatureGen
+-- density (_, Just DomainBool, _) = Nothing
+-- density (_, Just DomainInt{}, _) = Nothing
+-- density (_, Nothing, _) = Nothing
+-- -- density _ (name, Just domain@(DomainSet{}), ConstantSet _ xs) =
+-- density (name, Just domain, constant) | trace (show $ vcat [ "domain   :" <+> pretty domain
+--                                                            , "domain-  :" <+> pretty (show domain)
+--                                                            , "constant :" <+> pretty constant
+--                                                            , "constant-:" <+> pretty (show constant)
+--                                                            ]) False = bug ""
+density _ = Nothing
 
 
 
 --------------------------------------------------------------------------------
--- quadratic
+-- quadratic, via indicators
 
 allFeatureGen2s :: [FeatureGen2]
 allFeatureGen2s = [intIntRatio]
@@ -218,5 +268,6 @@ intIntRatio :: FeatureGen2
 intIntRatio _ (nmX, ConstantInt _ x) (nmY, ConstantInt _ y) =
     Just (nmX ++ nmY ++ ["intIntRatio"], D (fromIntegral x / fromIntegral y))
 intIntRatio _ _ _ = Nothing
+
 
 
