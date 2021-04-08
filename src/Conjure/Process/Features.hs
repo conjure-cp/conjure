@@ -10,7 +10,7 @@ import qualified Data.HashMap.Strict as M   -- containers
 import Data.Numbers.Primes ( isPrime )
 
 -- statistics
-import Statistics.Sample ( mean, stdDev, harmonicMean, geometricMean, skewness )
+import Statistics.Sample ( mean, stdDev, harmonicMean, geometricMean, skewness, kurtosis )
 import Statistics.Correlation ( pearson )
 
 -- vector
@@ -270,6 +270,7 @@ collectionStats (name, _, ConstantAbstract lit) =
                             , ("harmonicMean", harmonicMean)
                             , ("geometricMean", geometricMean)
                             , ("skewness", skewness)
+                            , ("kurtosis", kurtosis)
                             ]
         ]
 collectionStats _ = []
