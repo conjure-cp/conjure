@@ -31,6 +31,11 @@ calculateFeatures model param = do
                              | Declaration (FindOrGiven Given name domain) <- mStatements model
                              ]
 
+        values :: M.HashMap Name Constant
+        values = M.fromList [ (name, value)
+                            | Declaration (Letting name (Constant value)) <- mStatements param
+                            ]
+
         parameters :: [Param]
         parameters = [ (nm, M.lookup nm domains, value)
                      | Declaration (Letting nm (Constant value)) <- mStatements param
@@ -270,9 +275,9 @@ collectionStats (name, _, ConstantAbstract lit) =
 collectionStats _ = []
 
 density :: DirectFeatureGen
--- density (_, Just DomainBool, _) = Nothing
--- density (_, Just DomainInt{}, _) = Nothing
--- density (_, Nothing, _) = Nothing
+-- density (_, Just DomainBool, _) = []
+-- density (_, Just DomainInt{}, _) = []
+-- density (_, Nothing, _) = []
 -- -- density _ (name, Just domain@(DomainSet{}), ConstantSet _ xs) =
 -- density (name, Just domain, constant) | trace (show $ vcat [ "domain   :" <+> pretty domain
 --                                                            , "domain-  :" <+> pretty (show domain)
