@@ -10,11 +10,11 @@ import qualified Data.HashMap.Strict as M   -- containers
 import Data.Numbers.Primes ( isPrime )
 
 -- statistics
+import Statistics.Sample ( mean, stdDev, harmonicMean, geometricMean, skewness )
 import Statistics.Correlation ( pearson )
 
 -- vector
-import qualified Data.Vector as Vector ( fromList )
--- import qualified Data.Vector.Generic as Vector ( fromList )
+import qualified Data.Vector as Vector
 
 
 
@@ -60,10 +60,10 @@ calculateFeatures model param = do
                                  ]
 
         allDirectFeatures :: [Feature]
-        allDirectFeatures = catMaybes [ f p
-                                      | p <- parameters
-                                      , f <- allDirectFeatureGens
-                                      ]
+        allDirectFeatures = concat [ f p
+                                   | p <- parameters
+                                   , f <- allDirectFeatureGens
+                                   ]
 
         allFeatures :: [Feature]
         allFeatures = allFeature1s ++ allFeature2s ++ allDirectFeatures
@@ -116,7 +116,7 @@ type FeatureGen1 = [Integer] -> Indicator -> Maybe Feature
 -- something like a ratio between two ints
 type FeatureGen2 = [Integer] -> Indicator -> Indicator -> Maybe Feature
 
-type DirectFeatureGen = Param -> Maybe Feature
+type DirectFeatureGen = Param -> [Feature]
 
 instance Pretty FeatureValue where
     pretty (B x) = pretty x
@@ -173,7 +173,6 @@ minMaxOfCollection (name, _, ConstantAbstract lit) =
         , (txt, reducer) <- [("min", minimum), ("max", maximum)]
         ] 
 minMaxOfCollection _ = []
-
 
 extractAllInts :: [Constant] -> [Integer]
 extractAllInts xs = [ x | ConstantInt _ x <- xs ]
@@ -233,16 +232,42 @@ intIsRepeated _ _ = Nothing
 -- linear, directly on the param
 
 allDirectFeatureGens :: [DirectFeatureGen]
-allDirectFeatureGens = [correlation, density]
+allDirectFeatureGens = [correlation, collectionStats, density]
 
 correlation :: DirectFeatureGen
-correlation (name, Just _, ConstantAbstract (AbsLitFunction xs)) =
+correlation (name, _, ConstantAbstract (AbsLitFunction xs)) =
     let nums = [ (fromIntegral a, fromIntegral b) | (ConstantInt _ a, ConstantInt _ b) <- xs ]
-    in  if length nums == length xs
-            then Just ([name, "correlation"], D $ pearson (Vector.fromList nums))
-            else Nothing
-correlation _ = Nothing
+    in  if length nums == length xs && length xs > 0
+            then return ([name, "correlation"], D $ pearson (Vector.fromList nums))
+            else []
+correlation _ = []
 
+collectionStats :: DirectFeatureGen
+collectionStats (name, _, ConstantAbstract lit) =
+    let intss = case lit of
+                    AbsLitMatrix _  xs -> [extractAllInts xs]
+                    AbsLitSet       xs -> [extractAllInts xs]
+                    AbsLitMSet      xs -> [extractAllInts xs]
+                    AbsLitFunction  xs -> [extractAllInts (map fst xs), extractAllInts (map snd xs)]
+                    AbsLitSequence  xs -> [extractAllInts xs]
+                    AbsLitRelation  xss -> map extractAllInts (transpose xss)
+                    AbsLitPartition xss -> [extractAllInts (concat xss)]
+                    _ -> []
+        median v = v Vector.! (Vector.length v `div` 2)
+    in  [ ([name, indexS, txt], D (reducer nums))
+        | (index, ints) <- zip allNats intss
+        , let indexS = Name $ stringToText $ show index
+        , not (null ints)
+        , let nums = Vector.fromList (map fromIntegral ints)
+        , (txt, reducer) <- [ ("median", median)
+                            , ("mean", mean)
+                            , ("stdDev", stdDev)
+                            , ("harmonicMean", harmonicMean)
+                            , ("geometricMean", geometricMean)
+                            , ("skewness", skewness)
+                            ]
+        ]
+collectionStats _ = []
 
 density :: DirectFeatureGen
 -- density (_, Just DomainBool, _) = Nothing
@@ -254,7 +279,7 @@ density :: DirectFeatureGen
 --                                                            , "constant :" <+> pretty constant
 --                                                            , "constant-:" <+> pretty (show constant)
 --                                                            ]) False = bug ""
-density _ = Nothing
+density _ = []
 
 
 
