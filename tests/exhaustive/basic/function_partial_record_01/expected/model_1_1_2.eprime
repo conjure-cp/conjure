@@ -1,0 +1,21 @@
+language ESSENCE' 1.0
+
+find x_FunctionNDPartial_Flags: matrix indexed by [int(7..8), bool] of bool
+find x_FunctionNDPartial_Values: matrix indexed by [int(7..8), bool] of int(13, 17)
+find x_FunctionNDPartialDummy: matrix indexed by [int(7..8), bool] of int(13, 17, 12)
+branching on [x_FunctionNDPartialDummy, x_FunctionNDPartial_Flags, x_FunctionNDPartial_Values]
+such that
+    x_FunctionNDPartial_Values[7, true] = 13,
+    x_FunctionNDPartial_Flags[7, true],
+    x_FunctionNDPartial_Values[8, false] = 17,
+    x_FunctionNDPartial_Flags[8, false],
+    and([x_FunctionNDPartial_Flags[q1_fst, q1_snd] = false -> x_FunctionNDPartial_Values[q1_fst, q1_snd] = 13
+             | q1_fst : int(7..8), q1_snd : bool]),
+    and([x_FunctionNDPartialDummy[q7_fst, q7_snd] != 12 ->
+         x_FunctionNDPartial_Values[q7_fst, q7_snd] = x_FunctionNDPartialDummy[q7_fst, q7_snd] /\
+         x_FunctionNDPartial_Flags[q7_fst, q7_snd]
+             | q7_fst : int(7..8), q7_snd : bool]),
+    and([x_FunctionNDPartial_Flags[q8_fst, q8_snd] ->
+         x_FunctionNDPartialDummy[q8_fst, q8_snd] = x_FunctionNDPartial_Values[q8_fst, q8_snd]
+             | q8_fst : int(7..8), q8_snd : bool])
+

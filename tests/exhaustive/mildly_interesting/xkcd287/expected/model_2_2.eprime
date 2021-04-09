@@ -1,0 +1,16 @@
+language ESSENCE' 1.0
+
+find order_FunctionNDPartialDummy: matrix indexed by [int(1..6)] of int(0..10)
+branching on [order_FunctionNDPartialDummy]
+such that
+    1505 =
+    sum([toInt(order_FunctionNDPartialDummy[q7] != 0) *
+         catchUndef(sum([sum([215 | 1 = q7]), sum([275 | 2 = q7]), sum([335 | 3 = q7]), sum([355 | 4 = q7]),
+                         sum([420 | 5 = q7]), sum([580 | 6 = q7]);
+                             int(1..6)])
+                    * order_FunctionNDPartialDummy[q7],
+                    0)
+             | q7 : int(1..6)]),
+    and([order_FunctionNDPartialDummy[q7] != 0 -> or([1 = q7, 2 = q7, 3 = q7, 4 = q7, 5 = q7, 6 = q7; int(1..6)])
+             | q7 : int(1..6)])
+

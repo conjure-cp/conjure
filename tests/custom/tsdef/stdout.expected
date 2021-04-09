@@ -345,7 +345,7 @@ interface IComprehensionLetting {
   contents: [AbstractPattern, Expression];
 }
 
-type HasRepresentation = INoRepresentation | ISet_Occurrence | ISet_Explicit | ISet_ExplicitVarSizeWithFlags | ISet_ExplicitVarSizeWithMarker | ISet_ExplicitVarSizeWithDummy | IMSet_Occurrence | IMSet_ExplicitWithFlags | IMSet_ExplicitWithRepetition | IFunction_1D | IFunction_1DPartial | IFunction_ND | IFunction_NDPartial | IFunction_AsRelation | ISequence_ExplicitBounded | IRelation_AsMatrix | IRelation_AsSet | IPartition_AsSet | IPartition_Occurrence;
+type HasRepresentation = INoRepresentation | ISet_Occurrence | ISet_Explicit | ISet_ExplicitVarSizeWithFlags | ISet_ExplicitVarSizeWithMarker | ISet_ExplicitVarSizeWithDummy | IMSet_Occurrence | IMSet_ExplicitWithFlags | IMSet_ExplicitWithRepetition | IFunction_1D | IFunction_1DPartial | IFunction_ND | IFunction_NDPartial | IFunction_NDPartialDummy | IFunction_AsRelation | ISequence_ExplicitBounded | IRelation_AsMatrix | IRelation_AsSet | IPartition_AsSet | IPartition_Occurrence;
 
 interface INoRepresentation {
   tag: "NoRepresentation";
@@ -397,6 +397,10 @@ interface IFunction_ND {
 
 interface IFunction_NDPartial {
   tag: "Function_NDPartial";
+}
+
+interface IFunction_NDPartialDummy {
+  tag: "Function_NDPartialDummy";
 }
 
 interface IFunction_AsRelation {
