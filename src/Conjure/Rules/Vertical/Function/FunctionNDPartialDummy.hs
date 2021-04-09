@@ -11,10 +11,11 @@ rule_Image = "function-image{FunctionNDPartialDummy}" `namedRule` theRule where
         Function_NDPartialDummy <- representationOf f
         [values] <- downX1 f
         toIndex <- do
-            ys <- downX1 x
-            case ys of
-                [] -> return [x]
-                _ -> return ys
+            xTy <- typeOf x
+            case xTy of
+                TypeTuple{} -> downX1 x
+                TypeRecord{} -> downX1 x
+                _ -> return [x]
         let valuesIndexed = make opMatrixIndexing values toIndex
         return
             ( "Function image, FunctionND representation"
@@ -29,10 +30,11 @@ rule_InDefined = "function-in-defined{FunctionNDPartialDummy}" `namedRule` theRu
         Function_NDPartialDummy <- representationOf f
         [values] <- downX1 f
         toIndex <- do
-            ys <- downX1 x
-            case ys of
-                [] -> return [x]
-                _ -> return ys
+            xTy <- typeOf x
+            case xTy of
+                TypeTuple{} -> downX1 x
+                TypeRecord{} -> downX1 x
+                _ -> return [x]
         DomainFunction _ _ _ innerDomainTo <- domainOf f
         let valuesIndexed = make opMatrixIndexing values toIndex
         let dummy = [essence| min(`&innerDomainTo`) - 1 |]
