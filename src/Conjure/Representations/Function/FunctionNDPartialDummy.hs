@@ -96,10 +96,8 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                 kRange = case innerDomainFr of
                         DomainTuple ts  -> map fromInt [1 .. genericLength ts]
                         DomainRecord rs -> map (fromName . fst) rs
-                        _ -> bug $ vcat [ "FunctionNDPartialDummy.structuralCons"
-                                        , "innerDomainFr:" <+> pretty innerDomainFr
-                                        ]
-                toIndex x = [ [essence| &x[&k] |] | k <- kRange ]
+                        _ -> []
+                toIndex x = if null kRange then [x] else [ [essence| &x[&k] |] | k <- kRange ]
                 index x m = make opMatrixIndexing m (toIndex x)
                 dummyElem = calcDummyElem innerDomainTo
 
