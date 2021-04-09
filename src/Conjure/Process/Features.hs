@@ -1,8 +1,12 @@
 module Conjure.Process.Features ( calculateFeatures ) where
 
-import Conjure.Bug
 import Conjure.Prelude
 import Conjure.Language
+
+import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Language.Instantiate ( instantiateExpression )
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
+
 
 import qualified Data.HashMap.Strict as M   -- containers
 
@@ -23,6 +27,10 @@ import qualified Data.Vector as Vector
 calculateFeatures ::
     MonadIO m =>
     MonadUserError m =>
+    MonadFail m =>
+    EnumerateDomain m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> Model -> m ()
 calculateFeatures model param = do
     let
@@ -31,10 +39,10 @@ calculateFeatures model param = do
                              | Declaration (FindOrGiven Given name domain) <- mStatements model
                              ]
 
-        values :: M.HashMap Name Constant
-        values = M.fromList [ (name, value)
-                            | Declaration (Letting name (Constant value)) <- mStatements param
-                            ]
+        values :: [(Name, Expression)]
+        values = [ (name, Constant value)
+                 | Declaration (Letting name (Constant value)) <- mStatements param
+                 ]
 
         parameters :: [Param]
         parameters = [ (nm, M.lookup nm domains, value)
@@ -64,12 +72,14 @@ calculateFeatures model param = do
                                  , f <- allFeatureGen2s
                                  ]
 
-        allDirectFeatures :: [Feature]
-        allDirectFeatures = concat [ f p
-                                   | p <- parameters
-                                   , f <- allDirectFeatureGens
-                                   ]
+    allDirectFeatures
+        :: [Feature]
+        <- flip runReaderT values $ concat <$> sequence [ f p
+                                                        | p <- parameters
+                                                        , f <- allDirectFeatureGens
+                                                        ]
 
+    let
         allFeatures :: [Feature]
         allFeatures = allFeature1s ++ allFeature2s ++ allDirectFeatures
 
@@ -122,6 +132,8 @@ type FeatureGen1 = [Integer] -> Indicator -> Maybe Feature
 type FeatureGen2 = [Integer] -> Indicator -> Indicator -> Maybe Feature
 
 type DirectFeatureGen = Param -> [Feature]
+
+type DirectFeatureGenM m = Param -> m [Feature]
 
 instance Pretty FeatureValue where
     pretty (B x) = pretty x
@@ -236,8 +248,14 @@ intIsRepeated _ _ = Nothing
 --------------------------------------------------------------------------------
 -- linear, directly on the param
 
-allDirectFeatureGens :: [DirectFeatureGen]
-allDirectFeatureGens = [correlation, collectionStats, density]
+allDirectFeatureGens ::
+    EnumerateDomain m =>
+    MonadFail m =>
+    MonadReader [(Name, Expression)] m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    [DirectFeatureGenM m]
+allDirectFeatureGens = [return . correlation, return . collectionStats, density]
 
 correlation :: DirectFeatureGen
 correlation (name, _, ConstantAbstract (AbsLitFunction xs)) =
@@ -275,17 +293,34 @@ collectionStats (name, _, ConstantAbstract lit) =
         ]
 collectionStats _ = []
 
-density :: DirectFeatureGen
--- density (_, Just DomainBool, _) = []
--- density (_, Just DomainInt{}, _) = []
--- density (_, Nothing, _) = []
--- -- density _ (name, Just domain@(DomainSet{}), ConstantSet _ xs) =
--- density (name, Just domain, constant) | trace (show $ vcat [ "domain   :" <+> pretty domain
---                                                            , "domain-  :" <+> pretty (show domain)
---                                                            , "constant :" <+> pretty constant
---                                                            , "constant-:" <+> pretty (show constant)
---                                                            ]) False = bug ""
-density _ = []
+density ::
+    EnumerateDomain m =>
+    MonadFail m =>
+    MonadReader [(Name, Expression)] m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    DirectFeatureGenM m
+density (name, Just domain, constant) = do
+    sizes <- case (domain, constant) of
+        (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) innerDomFr _, ConstantAbstract (AbsLitFunction entries)) -> do
+            maxNbEntries <- do
+                dSizeX :: Expression <- domainSizeOf innerDomFr
+                values <- asks id
+                ConstantInt _ dSizeC <- instantiateExpression values dSizeX
+                return dSizeC
+            return $ Just (length entries, maxNbEntries)
+        (DomainRelation _ _ innerDoms, ConstantAbstract (AbsLitRelation entries)) -> do
+            maxNbEntries <- forM innerDoms $ \ d -> do
+                dSizeX :: Expression <- domainSizeOf d
+                values <- asks id
+                ConstantInt _ dSizeC <- instantiateExpression values dSizeX
+                return dSizeC
+            return $ Just (length entries, product maxNbEntries)
+        _ -> return Nothing
+    case sizes of
+        Just (nbEntries, maxNbEntries) -> return [([name, "density"], D (fromIntegral nbEntries / fromIntegral maxNbEntries))]
+        _ -> return []
+density _ = return []
 
 
 

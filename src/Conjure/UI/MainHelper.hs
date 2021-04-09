@@ -199,7 +199,7 @@ mainWithArgs Features{..} = do
     essence1 <- readModelFromFile essence
     param1 <- readParamOrSolutionFromFile param
     [essence2, param2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essence1, param1]
-    calculateFeatures essence2 param2
+    void $ runNameGen () $ calculateFeatures essence2 param2
 mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
