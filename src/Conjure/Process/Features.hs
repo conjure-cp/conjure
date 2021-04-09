@@ -10,6 +10,9 @@ import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 
 import qualified Data.HashMap.Strict as M   -- containers
 
+-- base
+import Text.Printf ( printf )
+
 -- primes
 import Data.Numbers.Primes ( isPrime )
 
@@ -138,7 +141,7 @@ type DirectFeatureGenM m = Param -> m [Feature]
 instance Pretty FeatureValue where
     pretty (B x) = pretty x
     pretty (I x) = pretty x
-    pretty (D x) = pretty x
+    pretty (D x) = pretty (printf "%.6f" x :: String)
 
 
 allIndicatorsGens :: [IndicatorsGen]
