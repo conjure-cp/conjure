@@ -273,7 +273,7 @@ Library
                      , safe
                      , scientific
                      -- 1.6.7, because of the stderr handling fix
-                     , shelly >= 1.6.7 && <= 1.8.0
+                     , shelly >= 1.6.7
                      , split
                      , stm
                      , strict
@@ -311,9 +311,10 @@ Library
         build-depends: template-haskell == 2.13.*
     if impl(ghc == 8.6.*)
         build-depends: template-haskell == 2.14.*
-
-    if impl(ghc < 8.4)
-        build-depends: semigroups >= 0.18.4
+    if impl(ghc == 8.8.*)
+        build-depends: template-haskell == 2.15.*
+    if impl(ghc == 8.10.*)
+        build-depends: template-haskell == 2.16.*
 
     default-extensions:
         FlexibleContexts

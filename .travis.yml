@@ -27,19 +27,6 @@ matrix:
   include:
 
     - os: linux
-      env: GHC=8.0 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.0"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.0.2]}}
-
-    - os: linux
-      env: GHC=8.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.2.2]}}
-    - os: osx
-      env: GHC=8.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.2"
-
-    - os: linux
       env: GHC=8.4 SR="-O2" SOL=minion
       compiler: ": # GHC 8.4"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.4]}}
@@ -66,10 +53,6 @@ matrix:
     - os: osx
       env: GHC=8.6 SR="-O2" SOL=minion
       compiler: ": # GHC 8.6"
-
-  allow_failures:
-    - env: GHC=8.0 SR="-O2" SOL=minion
-    - env: GHC=8.2 SR="-O2" SOL=minion
 
   fast_finish: true
 
