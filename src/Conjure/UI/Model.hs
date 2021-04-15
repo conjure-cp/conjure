@@ -24,6 +24,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
@@ -79,6 +80,7 @@ import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.Function.Function1DPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
+import qualified Conjure.Rules.Vertical.Function.FunctionNDPartialDummy as Vertical.Function.FunctionNDPartialDummy
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 
 import qualified Conjure.Rules.Horizontal.Sequence as Horizontal.Sequence
@@ -1328,8 +1330,8 @@ allRules config =
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
       ]
-    , bubbleUpRules
-    , [ rule_Eq
+    ] ++ bubbleUpRules ++
+    [ [ rule_Eq
       , rule_Neq
       , rule_Comprehension_Cardinality
       , rule_pushFromSolution
@@ -1442,6 +1444,10 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_Image_NotABool
     , Vertical.Function.FunctionNDPartial.rule_Image_Bool
     , Vertical.Function.FunctionNDPartial.rule_InDefined
+
+    , Vertical.Function.FunctionNDPartialDummy.rule_Comprehension
+    , Vertical.Function.FunctionNDPartialDummy.rule_Image
+    , Vertical.Function.FunctionNDPartialDummy.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
     -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
@@ -1583,14 +1589,18 @@ horizontalRules =
     ]
 
 
-bubbleUpRules :: [Rule]
+bubbleUpRules :: [[Rule]]
 bubbleUpRules =
-    [ BubbleUp.rule_MergeNested
-    , BubbleUp.rule_ToAnd
-    , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
-    , BubbleUp.rule_NotBoolYet
-    , BubbleUp.rule_ConditionInsideGeneratorDomain
-    , BubbleUp.rule_LiftVars
+    [
+        [ BubbleUp.rule_MergeNested
+        , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
+        , BubbleUp.rule_ConditionInsideGeneratorDomain
+        , BubbleUp.rule_LiftVars
+        ]
+    ,
+        [ BubbleUp.rule_NotBoolYet
+        ]
     ]
 
 
@@ -1617,6 +1627,7 @@ otherRules =
         [ rule_TrueIsNoOp
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
+        , rule_Decompose_AllDiff_MapToSingleInt
 
         , rule_GeneratorsFirst
         ]
@@ -2206,7 +2217,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _) -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -2225,6 +2236,34 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                     |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
+
+
+rule_Decompose_AllDiff_MapToSingleInt :: Rule
+rule_Decompose_AllDiff_MapToSingleInt = "decompose-allDiff-mapToSingleInt" `namedRule` theRule where
+    theRule [essence| allDiff(&m) |] = do
+        case m of
+            Comprehension body gensOrConds -> do
+                tyBody <- typeOf body
+                case tyBody of
+                    TypeBool -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeInt _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeTuple{} -> do
+                        bodyBits <- downX1 body
+                        bodyBitSizes <- forM bodyBits $ \ b -> do
+                            bDomain <- domainOf b
+                            domainSizeOf bDomain
+                        case (bodyBits, bodyBitSizes) of
+                            ([a,b], [_a',b']) -> do
+                                let body'=  [essence| &a * &b' + &b |]
+                                let m' = Comprehension body' gensOrConds
+                                return
+                                    ( "Decomposing allDiff"
+                                    , return [essence| allDiff(&m') |]
+                                    )
+                            _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    _ -> na "allDiff on something other than a comprehension."
+            _ -> na "allDiff on something other than a comprehension."
+    theRule _ = na "rule_Decompose_AllDiff_MapToSingleInt"
 
 
 rule_DomainCardinality :: Rule
@@ -2384,6 +2423,10 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
+        tyBody <- typeOf body
+        case tyBody of
+            TypeInt{} -> return ()
+            _ -> na "rule_InlineConditions_AllDiff, not an int"
         domBody <- domainOf body
         let
             collectLowerBounds (RangeSingle x) = return x

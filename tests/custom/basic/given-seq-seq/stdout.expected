@@ -13,19 +13,19 @@ given fin1: int
 given fin2: int
 given fin3: int
 given fin4: int
-given stacks_ExplicitBoundedR15_Length: int(fin1)
-given stacks_ExplicitBoundedR15_Values_ExplicitBounded_Length:
+given stacks_ExplicitBoundedR16_Length: int(fin1)
+given stacks_ExplicitBoundedR16_Values_ExplicitBounded_Length:
         matrix indexed by [int(1..fin1)] of int(0..fin2)
-given stacks_ExplicitBoundedR15_Values_ExplicitBounded_Values:
+given stacks_ExplicitBoundedR16_Values_ExplicitBounded_Values:
         matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4)
 find x: int(0..10000)
 branching on [x]
 such that
     x =
-    sum([sum([stacks_ExplicitBoundedR15_Values_ExplicitBounded_Values[q2, q4]
+    sum([sum([stacks_ExplicitBoundedR16_Values_ExplicitBounded_Values[q2, q4]
                   | q4 : int(1..fin2),
                     q4 <=
-                    stacks_ExplicitBoundedR15_Values_ExplicitBounded_Length
+                    stacks_ExplicitBoundedR16_Values_ExplicitBounded_Length
                         [q2]])
              | q2 : int(1..fin1), q2 <= fin1])
 

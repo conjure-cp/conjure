@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given f_FunctionAsRelation_RelationAsSet_Explicit_1: matrix indexed by [int(1..fin1)] of int(0, 1)
+given f_FunctionAsRelation_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of int(0, 1)
+find fprime_FunctionNDPartialDummy: matrix indexed by [int(0, 1)] of int(0, 1, -1)
+branching on [fprime_FunctionNDPartialDummy]
+such that
+    and([fprime_FunctionNDPartialDummy[f_FunctionAsRelation_RelationAsSet_Explicit_1[q4]] =
+         f_FunctionAsRelation_RelationAsSet_Explicit_2[q4]
+             | q4 : int(1..fin1)]),
+    and([fprime_FunctionNDPartialDummy[q5] != -1 ->
+         or([f_FunctionAsRelation_RelationAsSet_Explicit_1[q7] = q5 /\
+             f_FunctionAsRelation_RelationAsSet_Explicit_2[q7] = fprime_FunctionNDPartialDummy[q5]
+                 | q7 : int(1..fin1)])
+             | q5 : int(0, 1)])
+

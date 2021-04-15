@@ -189,12 +189,6 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    | Features
-        { essence                    :: FilePath            -- essence, mandatory
-        , param                      :: FilePath
-        , logLevel                   :: LogLevel
-        , limitTime                  :: Maybe Int
-        }
     | ModelStrengthening
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
@@ -1264,30 +1258,6 @@ ui = modes
             &= help "Generate an Essence model describing the instances of the problem class \
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
-    , Features
-        { essence
-            = def
-            &= typ "ESSENCE_FILE"
-            &= argPos 0
-        , param
-            = def
-            &= typFile
-            &= argPos 1
-        , logLevel
-            = def
-            &= name "log-level"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Log level."
-        , limitTime
-            = Nothing
-            &= name "limit-time"
-            &= groupname "General"
-            &= explicit
-            &= help "Limit in seconds of real time."
-        }   &= name "features"
-            &= explicit
-            &= help "Calculate instance features."
     , ModelStrengthening
         { essence
             = def

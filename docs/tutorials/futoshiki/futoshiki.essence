@@ -1,0 +1,16 @@
+language Essence 1.3
+given n : int
+letting DOMAIN be domain int(1..n)
+given hints : function (DOMAIN, DOMAIN) --> DOMAIN
+given less_than : relation of ((DOMAIN, DOMAIN) * (DOMAIN, DOMAIN))
+find board : matrix indexed by [DOMAIN, DOMAIN] of DOMAIN 
+such that
+    forAll (hint,num) in hints .
+        board[hint[1], hint[2]] = num,
+    forAll i: DOMAIN .
+        allDiff(board[i,..]),
+    forAll j: DOMAIN .
+        allDiff(board[..,j]),
+    forAll (l,g) in less_than .
+        board[l[1],l[2]] < board[g[1],g[2]]
+    
