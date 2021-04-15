@@ -22,6 +22,7 @@ import Statistics.Correlation ( pearson )
 
 -- vector
 import qualified Data.Vector as Vector
+import qualified Data.Vector.Generic.Base as Base
 
 
 
@@ -290,11 +291,17 @@ collectionStats (name, _, ConstantAbstract lit) =
                             , ("stdDev", stdDev)
                             , ("harmonicMean", harmonicMean)
                             , ("geometricMean", geometricMean)
-                            , ("skewness", skewness)
-                            , ("kurtosis", kurtosis)
+                            , ("skewness", skewness0)
+                            , ("kurtosis", kurtosis0)
                             ]
         ]
 collectionStats _ = []
+
+skewness0 :: Base.Vector v Double => v Double -> Double
+skewness0 xs = if stdDev xs == 0 then 0 else skewness xs
+
+kurtosis0 :: Base.Vector v Double => v Double -> Double
+kurtosis0 xs = if stdDev xs == 0 then 0 else kurtosis xs
 
 density ::
     EnumerateDomain m =>
