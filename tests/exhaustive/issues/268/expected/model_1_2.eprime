@@ -5,11 +5,13 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(3..4)
 find f_FunctionNDPartialDummy: matrix indexed by [int(1..2)] of int(2..4)
 branching on [f_FunctionNDPartialDummy, f_Function1DPartial_Flags, f_Function1DPartial_Values]
 such that
-    sum([toInt(f_Function1DPartial_Flags[q10]) | q10 : int(1..2)]) = 1,
+    sum([toInt(f_Function1DPartial_Flags[q14]) | q14 : int(1..2)]) = 1,
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 3 | q1 : int(1..2)]),
+    sum([toInt(f_FunctionNDPartialDummy[q9] != 2) | q9 : int(1..2)]) =
+    sum([toInt(f_Function1DPartial_Flags[q11]) | q11 : int(1..2)]),
     and([f_FunctionNDPartialDummy[q7] != 2 ->
          f_Function1DPartial_Values[q7] = f_FunctionNDPartialDummy[q7] /\ f_Function1DPartial_Flags[q7]
              | q7 : int(1..2)]),
-    and([f_Function1DPartial_Flags[q8] -> f_FunctionNDPartialDummy[q8] = f_Function1DPartial_Values[q8]
-             | q8 : int(1..2)])
+    and([f_Function1DPartial_Flags[q12] -> f_FunctionNDPartialDummy[q12] = f_Function1DPartial_Values[q12]
+             | q12 : int(1..2)])
 

@@ -9,6 +9,7 @@ given p_FunctionAsRelation_RelationAsSet_Explicit_1_snd: matrix indexed by [int(
 given p_FunctionAsRelation_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of int(13, 17)
 branching on [x_FunctionNDPartialDummy, x_FunctionNDPartial_Flags, x_FunctionNDPartial_Values]
 such that
+    fin1 = sum([toInt(x_FunctionNDPartial_Flags[q9_fst, q9_snd]) | q9_fst : int(7..8), q9_snd : bool]),
     and([x_FunctionNDPartial_Values
              [p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q7],
               p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q7]]
@@ -18,19 +19,21 @@ such that
              [p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q7],
               p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q7]]
              | q7 : int(1..fin1)]),
-    and([x_FunctionNDPartial_Flags[q8_fst, q8_snd] ->
-         or([p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q10] = q8_fst /\
-             p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q10] = q8_snd
-             /\ p_FunctionAsRelation_RelationAsSet_Explicit_2[q10] = x_FunctionNDPartial_Values[q8_fst, q8_snd]
-                 | q10 : int(1..fin1)])
-             | q8_fst : int(7..8), q8_snd : bool]),
+    and([x_FunctionNDPartial_Flags[q10_fst, q10_snd] ->
+         or([p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q12] = q10_fst /\
+             p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q12] = q10_snd
+             /\ p_FunctionAsRelation_RelationAsSet_Explicit_2[q12] = x_FunctionNDPartial_Values[q10_fst, q10_snd]
+                 | q12 : int(1..fin1)])
+             | q10_fst : int(7..8), q10_snd : bool]),
     and([x_FunctionNDPartial_Flags[q1_fst, q1_snd] = false -> x_FunctionNDPartial_Values[q1_fst, q1_snd] = 13
              | q1_fst : int(7..8), q1_snd : bool]),
-    and([x_FunctionNDPartialDummy[q12_fst, q12_snd] != 12 ->
-         x_FunctionNDPartial_Values[q12_fst, q12_snd] = x_FunctionNDPartialDummy[q12_fst, q12_snd] /\
-         x_FunctionNDPartial_Flags[q12_fst, q12_snd]
-             | q12_fst : int(7..8), q12_snd : bool]),
-    and([x_FunctionNDPartial_Flags[q13_fst, q13_snd] ->
-         x_FunctionNDPartialDummy[q13_fst, q13_snd] = x_FunctionNDPartial_Values[q13_fst, q13_snd]
-             | q13_fst : int(7..8), q13_snd : bool])
+    sum([toInt(x_FunctionNDPartialDummy[q16_fst, q16_snd] != 12) | q16_fst : int(7..8), q16_snd : bool]) =
+    sum([toInt(x_FunctionNDPartial_Flags[q18_fst, q18_snd]) | q18_fst : int(7..8), q18_snd : bool]),
+    and([x_FunctionNDPartialDummy[q14_fst, q14_snd] != 12 ->
+         x_FunctionNDPartial_Values[q14_fst, q14_snd] = x_FunctionNDPartialDummy[q14_fst, q14_snd] /\
+         x_FunctionNDPartial_Flags[q14_fst, q14_snd]
+             | q14_fst : int(7..8), q14_snd : bool]),
+    and([x_FunctionNDPartial_Flags[q19_fst, q19_snd] ->
+         x_FunctionNDPartialDummy[q19_fst, q19_snd] = x_FunctionNDPartial_Values[q19_fst, q19_snd]
+             | q19_fst : int(7..8), q19_snd : bool])
 

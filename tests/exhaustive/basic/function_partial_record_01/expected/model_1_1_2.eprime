@@ -11,11 +11,13 @@ such that
     x_FunctionNDPartial_Flags[8, false],
     and([x_FunctionNDPartial_Flags[q1_fst, q1_snd] = false -> x_FunctionNDPartial_Values[q1_fst, q1_snd] = 13
              | q1_fst : int(7..8), q1_snd : bool]),
+    sum([toInt(x_FunctionNDPartialDummy[q9_fst, q9_snd] != 12) | q9_fst : int(7..8), q9_snd : bool]) =
+    sum([toInt(x_FunctionNDPartial_Flags[q11_fst, q11_snd]) | q11_fst : int(7..8), q11_snd : bool]),
     and([x_FunctionNDPartialDummy[q7_fst, q7_snd] != 12 ->
          x_FunctionNDPartial_Values[q7_fst, q7_snd] = x_FunctionNDPartialDummy[q7_fst, q7_snd] /\
          x_FunctionNDPartial_Flags[q7_fst, q7_snd]
              | q7_fst : int(7..8), q7_snd : bool]),
-    and([x_FunctionNDPartial_Flags[q8_fst, q8_snd] ->
-         x_FunctionNDPartialDummy[q8_fst, q8_snd] = x_FunctionNDPartial_Values[q8_fst, q8_snd]
-             | q8_fst : int(7..8), q8_snd : bool])
+    and([x_FunctionNDPartial_Flags[q12_fst, q12_snd] ->
+         x_FunctionNDPartialDummy[q12_fst, q12_snd] = x_FunctionNDPartial_Values[q12_fst, q12_snd]
+             | q12_fst : int(7..8), q12_snd : bool])
 

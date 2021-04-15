@@ -5,14 +5,16 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..3)
 find f_FunctionNDPartialDummy: matrix indexed by [int(1..3)] of int(0..3)
 branching on [f_FunctionNDPartialDummy, f_Function1DPartial_Flags, f_Function1DPartial_Values]
 such that
-    or([f_Function1DPartial_Flags[q12] /\ f_Function1DPartial_Values[q12] = 2 /\ q12 = 1 | q12 : int(1..3)]),
-    or([f_Function1DPartial_Flags[q15] /\ f_Function1DPartial_Values[q15] = 2 /\ q15 = 2 | q15 : int(1..3)]),
-    and([f_Function1DPartial_Flags[q18] /\ f_Function1DPartial_Values[q18] = 2 -> 1 = q18 \/ 2 = q18
-             | q18 : int(1..3)]),
+    or([f_Function1DPartial_Flags[q16] /\ f_Function1DPartial_Values[q16] = 2 /\ q16 = 1 | q16 : int(1..3)]),
+    or([f_Function1DPartial_Flags[q19] /\ f_Function1DPartial_Values[q19] = 2 /\ q19 = 2 | q19 : int(1..3)]),
+    and([f_Function1DPartial_Flags[q22] /\ f_Function1DPartial_Values[q22] = 2 -> 1 = q22 \/ 2 = q22
+             | q22 : int(1..3)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)]),
+    sum([toInt(f_FunctionNDPartialDummy[q9] != 0) | q9 : int(1..3)]) =
+    sum([toInt(f_Function1DPartial_Flags[q11]) | q11 : int(1..3)]),
     and([f_FunctionNDPartialDummy[q7] != 0 ->
          f_Function1DPartial_Values[q7] = f_FunctionNDPartialDummy[q7] /\ f_Function1DPartial_Flags[q7]
              | q7 : int(1..3)]),
-    and([f_Function1DPartial_Flags[q8] -> f_FunctionNDPartialDummy[q8] = f_Function1DPartial_Values[q8]
-             | q8 : int(1..3)])
+    and([f_Function1DPartial_Flags[q12] -> f_FunctionNDPartialDummy[q12] = f_Function1DPartial_Values[q12]
+             | q12 : int(1..3)])
 

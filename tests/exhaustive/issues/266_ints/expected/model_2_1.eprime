@@ -8,18 +8,22 @@ find fprime_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
 branching on [fprime_Function1DPartial_Flags, fprime_Function1DPartial_Values, fprime_FunctionNDPartialDummy]
 such that
-    and([fprime_FunctionNDPartialDummy[f_FunctionAsRelation_RelationAsSet_Explicit_1[q10]] =
-         f_FunctionAsRelation_RelationAsSet_Explicit_2[q10]
-             | q10 : int(1..fin1)]),
-    and([fprime_FunctionNDPartialDummy[q11] != -1 ->
-         or([f_FunctionAsRelation_RelationAsSet_Explicit_1[q13] = q11 /\
-             f_FunctionAsRelation_RelationAsSet_Explicit_2[q13] = fprime_FunctionNDPartialDummy[q11]
-                 | q13 : int(1..fin1)])
-             | q11 : int(0, 1)]),
+    fin1 = sum([toInt(fprime_FunctionNDPartialDummy[q16] != -1) | q16 : int(0, 1)]),
+    and([fprime_FunctionNDPartialDummy[f_FunctionAsRelation_RelationAsSet_Explicit_1[q14]] =
+         f_FunctionAsRelation_RelationAsSet_Explicit_2[q14]
+             | q14 : int(1..fin1)]),
+    and([fprime_FunctionNDPartialDummy[q17] != -1 ->
+         or([f_FunctionAsRelation_RelationAsSet_Explicit_1[q19] = q17 /\
+             f_FunctionAsRelation_RelationAsSet_Explicit_2[q19] = fprime_FunctionNDPartialDummy[q17]
+                 | q19 : int(1..fin1)])
+             | q17 : int(0, 1)]),
     and([fprime_Function1DPartial_Flags[q3] = false -> fprime_Function1DPartial_Values[q3] = 0 | q3 : int(0, 1)]),
+    sum([toInt(fprime_Function1DPartial_Flags[q9]) | q9 : int(0, 1)]) =
+    sum([toInt(fprime_FunctionNDPartialDummy[q11] != -1) | q11 : int(0, 1)]),
     and([fprime_Function1DPartial_Flags[q7] -> fprime_FunctionNDPartialDummy[q7] = fprime_Function1DPartial_Values[q7]
              | q7 : int(0, 1)]),
-    and([fprime_FunctionNDPartialDummy[q8] != -1 ->
-         fprime_Function1DPartial_Values[q8] = fprime_FunctionNDPartialDummy[q8] /\ fprime_Function1DPartial_Flags[q8]
-             | q8 : int(0, 1)])
+    and([fprime_FunctionNDPartialDummy[q12] != -1 ->
+         fprime_Function1DPartial_Values[q12] = fprime_FunctionNDPartialDummy[q12] /\
+         fprime_Function1DPartial_Flags[q12]
+             | q12 : int(0, 1)])
 

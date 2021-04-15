@@ -6,19 +6,21 @@ find order_FunctionNDPartialDummy: matrix indexed by [int(1..6)] of int(0..10)
 branching on [order_FunctionNDPartialDummy, order_Function1DPartial_Flags, order_Function1DPartial_Values]
 such that
     1505 =
-    sum([toInt(order_Function1DPartial_Flags[q13]) *
-         catchUndef(sum([sum([215 | 1 = q13]), sum([275 | 2 = q13]), sum([335 | 3 = q13]), sum([355 | 4 = q13]),
-                         sum([420 | 5 = q13]), sum([580 | 6 = q13]);
+    sum([toInt(order_Function1DPartial_Flags[q17]) *
+         catchUndef(sum([sum([215 | 1 = q17]), sum([275 | 2 = q17]), sum([335 | 3 = q17]), sum([355 | 4 = q17]),
+                         sum([420 | 5 = q17]), sum([580 | 6 = q17]);
                              int(1..6)])
-                    * order_Function1DPartial_Values[q13],
+                    * order_Function1DPartial_Values[q17],
                     0)
-             | q13 : int(1..6)]),
-    and([order_Function1DPartial_Flags[q13] -> or([1 = q13, 2 = q13, 3 = q13, 4 = q13, 5 = q13, 6 = q13; int(1..6)])
-             | q13 : int(1..6)]),
+             | q17 : int(1..6)]),
+    and([order_Function1DPartial_Flags[q17] -> or([1 = q17, 2 = q17, 3 = q17, 4 = q17, 5 = q17, 6 = q17; int(1..6)])
+             | q17 : int(1..6)]),
     and([order_Function1DPartial_Flags[q4] = false -> order_Function1DPartial_Values[q4] = 1 | q4 : int(1..6)]),
+    sum([toInt(order_FunctionNDPartialDummy[q12] != 0) | q12 : int(1..6)]) =
+    sum([toInt(order_Function1DPartial_Flags[q14]) | q14 : int(1..6)]),
     and([order_FunctionNDPartialDummy[q10] != 0 ->
          order_Function1DPartial_Values[q10] = order_FunctionNDPartialDummy[q10] /\ order_Function1DPartial_Flags[q10]
              | q10 : int(1..6)]),
-    and([order_Function1DPartial_Flags[q11] -> order_FunctionNDPartialDummy[q11] = order_Function1DPartial_Values[q11]
-             | q11 : int(1..6)])
+    and([order_Function1DPartial_Flags[q15] -> order_FunctionNDPartialDummy[q15] = order_Function1DPartial_Values[q15]
+             | q15 : int(1..6)])
 
