@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
+
 
 rm -rf tmp-install-cadical
 mkdir -p tmp-install-cadical
@@ -16,7 +18,7 @@ download https://github.com/arminbiere/cadical/archive/rel-1.3.0.tar.gz
 tar xzf rel-1.3.0.tar.gz
 cd cadical-rel-1.3.0
 ./configure
-make -j
+make -j${PROCESSES}
 mkdir -p ${BIN_DIR}
 cp build/cadical ${BIN_DIR}/cadical
 echo "cadical executable is at ${BIN_DIR}/cadical"
