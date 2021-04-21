@@ -285,8 +285,8 @@ parseDomainWithRepr = pDomainAtom
 
         pMatrix = do
             lexeme L_matrix
-            lexeme L_indexed
-            lexeme L_by
+            void $ optional $ lexeme L_indexed
+            void $ optional $ lexeme L_by
             xs <- brackets (commaSeparated parseDomain)
             lexeme L_of
             y  <- parseDomainWithRepr
