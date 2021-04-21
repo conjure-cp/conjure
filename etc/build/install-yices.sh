@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
+
 
 rm -rf tmp-install-yices
 mkdir -p tmp-install-yices
@@ -17,8 +19,8 @@ tar xzf Yices-2.6.2.tar.gz
 cd yices2-Yices-2.6.2/
 autoconf
 ./configure --prefix ${BIN_DIR}
-make -j
-make -j install
+make -j${PROCESSES}
+make -j${PROCESSES} install
 cp ${BIN_DIR}/bin/yices* ${BIN_DIR}
 echo "yices executables are at ${BIN_DIR}/yices*"
 ls -l ${BIN_DIR}/yices*

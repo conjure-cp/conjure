@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
+
 
 rm -rf tmp-install-glucose
 mkdir -p tmp-install-glucose
@@ -17,14 +19,14 @@ tar zxf glucose-syrup-4.1.tgz
 cd glucose-syrup-4.1/
 (
     cd simp
-    make -j r
+    make -j${PROCESSES} r
     cp glucose_release ${BIN_DIR}/glucose
     echo "glucose executable is at ${BIN_DIR}/glucose"
     ls -l ${BIN_DIR}/glucose
 )
 (
     cd parallel
-    make -j r
+    make -j${PROCESSES} r
     cp glucose-syrup_release ${BIN_DIR}/glucose-syrup
     echo "glucose-syrup executable is at ${BIN_DIR}/glucose-syrup"
     ls -l ${BIN_DIR}/glucose-syrup
