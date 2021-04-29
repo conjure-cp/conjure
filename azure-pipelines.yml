@@ -29,9 +29,13 @@ jobs:
   - bash: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) BUILD_TESTS=true make
     displayName: "Build Conjure"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh ; fi
-    displayName: "Install Minion"
+    displayName: "Install minion"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh ; fi
-    displayName: "Install Glucose"
+    displayName: "Install glucose"
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-cadical.sh ; fi
+    displayName: "Install cadical"
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-kissat.sh ; fi
+    displayName: "Install kissat"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=0 make test ; fi
     displayName: "Test"
   - task: DownloadSecureFile@1

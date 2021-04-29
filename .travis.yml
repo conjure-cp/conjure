@@ -105,6 +105,12 @@ install:
   # Glucose
   - (glucose --help > /dev/null 2> /dev/null) || etc/build/install-glucose.sh
 
+  # Cadical
+  - (cadical --help > /dev/null 2> /dev/null) || etc/build/install-cadical.sh
+
+  # Kissat
+  - (kissat --help > /dev/null 2> /dev/null) || etc/build/install-kissat.sh
+
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 
 
