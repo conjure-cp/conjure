@@ -5,6 +5,7 @@ module Conjure.Language.AbstractLiteral where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError ( failToUserError )
 import Conjure.Language.Name
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -37,7 +38,7 @@ instance Hashable  x => Hashable  (AbstractLiteral x)
 instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = genericParseJSON jsonOptions
 
-instance (SimpleJSON x, Pretty x) => SimpleJSON (AbstractLiteral x) where
+instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiteral x) where
     toSimpleJSON lit =
         case lit of
             AbsLitTuple xs -> toSimpleJSON xs
@@ -47,7 +48,12 @@ instance (SimpleJSON x, Pretty x) => SimpleJSON (AbstractLiteral x) where
                     return (stringToText (renderNormal nm), x')
                 return $ JSON.Object $ M.fromList xs'
             -- AbsLitVariant (Maybe [(Name, Domain () x)]) Name x
-            AbsLitMatrix _ xs -> toSimpleJSON xs
+            AbsLitMatrix index xs ->
+                case index of
+                    DomainInt _ ranges -> do
+                        indices <- failToUserError $ rangesInts ranges
+                        toSimpleJSON (zip indices xs)
+                    _ -> toSimpleJSON xs
             AbsLitSet xs -> toSimpleJSON xs
             AbsLitMSet xs -> toSimpleJSON xs
             AbsLitFunction xs -> toSimpleJSON xs

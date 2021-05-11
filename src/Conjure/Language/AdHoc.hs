@@ -11,6 +11,9 @@ import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON ( Value )
 import qualified Data.Vector as V               -- vector
 
+-- scientific
+import Data.Scientific ( floatingOrInteger )
+
 
 class ExpressionLike a where
     fromInt :: Integer -> a
@@ -44,6 +47,16 @@ class (:<) a b where
 class SimpleJSON a where
     toSimpleJSON :: MonadUserError m => a -> m JSON.Value
     fromSimpleJSON :: MonadUserError m => JSON.Value -> m a
+
+instance SimpleJSON Integer where
+    toSimpleJSON = return . toJSON
+    fromSimpleJSON x =
+        case x of
+            JSON.Number y ->
+                case floatingOrInteger y of
+                    Right z -> return z
+                    Left (_ :: Double) -> noFromSimpleJSON
+            _ -> noFromSimpleJSON
 
 instance SimpleJSON x => SimpleJSON [x] where
     toSimpleJSON xs = do
