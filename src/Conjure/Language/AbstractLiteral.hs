@@ -52,11 +52,11 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
                 case index of
                     DomainInt _ ranges -> do
                         indices <- failToUserError $ rangesInts ranges
-                        toSimpleJSON (zip indices xs)
+                        toSimpleJSON (AsDictionary (zip indices xs))
                     _ -> toSimpleJSON xs
             AbsLitSet xs -> toSimpleJSON xs
             AbsLitMSet xs -> toSimpleJSON xs
-            AbsLitFunction xs -> toSimpleJSON xs
+            AbsLitFunction xs -> toSimpleJSON (AsDictionary xs)
             AbsLitSequence xs -> toSimpleJSON xs
             AbsLitRelation xs -> toSimpleJSON xs
             AbsLitPartition xs -> toSimpleJSON xs
