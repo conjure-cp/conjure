@@ -757,7 +757,7 @@ pgOnDomain x nm (expandDomainReference -> dom) =
                 let nE = fromInt n
                 let ref = [essence| &i[&nE] |]
                 (d', decl, cons, repairStmts) <- pgOnDomain ref (nm `mappend` (Name $ pack $ "_relation" ++ show n)) d
-                return (d', decl, map liftCons cons, map liftCons repairStmts)
+                return (d', decl, map liftCons cons, repairStmts)
 
             let maxIntN = maxIntTimes (genericLength innerDomains)
 
