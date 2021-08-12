@@ -46,9 +46,13 @@ import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
-import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing
-                                      , normaliseQuantifiedVariablesS, normaliseQuantifiedVariablesE
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars
+                                      , renameQuantifiedVarsToAvoidShadowing
+                                      , normaliseQuantifiedVariables
+                                      , normaliseQuantifiedVariablesS
+                                      , normaliseQuantifiedVariablesE
                                       )
+
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
@@ -201,7 +205,9 @@ outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
                     log l msg
                     return (modelHashes, i)
                 Right eprime -> do
-                    let newHash = hash eprime { mInfo = def, mStatements = sort (mStatements eprime) }
+                    let newHash = eprime { mInfo = def, mStatements = sort (mStatements eprime) }
+                                    |> normaliseQuantifiedVariables
+                                    |> hash
                     let gen =
                             if modelNamePrefix `elem` ["01_compact", "02_sparse"]
                                 then modelNamePrefix

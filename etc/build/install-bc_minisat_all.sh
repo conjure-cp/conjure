@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
+
 
 rm -rf tmp-install-bc_minisat_all
 mkdir -p tmp-install-bc_minisat_all
@@ -15,7 +17,7 @@ pushd tmp-install-bc_minisat_all
 download http://www.sd.is.uec.ac.jp/toda/code/bc_minisat_all-1.1.2.tar.gz
 tar zxf bc_minisat_all-1.1.2.tar.gz
 cd bc_minisat_all-1.1.2/
-make -j bc_minisat_all_release
+make -j${PROCESSES} bc_minisat_all_release
 mv bc_minisat_all_release ${BIN_DIR}/bc_minisat_all_release
 echo "bc_minisat_all executable is at ${BIN_DIR}/bc_minisat_all_release"
 ls -l ${BIN_DIR}/bc_minisat_all_release

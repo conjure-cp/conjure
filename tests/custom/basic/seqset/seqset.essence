@@ -1,0 +1,5 @@
+$testing:numberIterations=500000
+
+letting n be 10
+find s : sequence (size n) of set of int(1..n-1)
+such that forAll i : int(1..n-1) . s(i) subset s(i+1)
