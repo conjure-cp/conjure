@@ -47,12 +47,13 @@ boost ::
     MonadIO m =>
     MonadLog m =>
     MonadUserError m =>
+    NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     LogLevel -> -- ^ Log level to use.
     Bool ->     -- ^ Generate logs for rule applications.
     Model ->    -- ^ Model to strengthen.
     m Model  -- ^ Strengthened model.
-boost logLevel logRuleSuccesses model = runNameGen model $ (resolveNames >=> core . fixRelationProj) model
+boost logLevel logRuleSuccesses = resolveNames >=> core
   where
     core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
     core model1 = do

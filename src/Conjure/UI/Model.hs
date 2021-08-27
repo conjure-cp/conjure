@@ -2535,10 +2535,10 @@ evaluateModel m = do
             mconstant <- runExceptT (instantiateExpression [] p)
             case mconstant of
                 Left{} -> return p
-                Right constant -> do
-                    if null [() | ConstantUndefined{} <- universe constant]
-                        then return p
-                        else return (Constant constant)
+                Right constant ->
+                    if null [() | ConstantUndefined{} <- universe constant] -- if there are no undefined values in it
+                        then return (Constant constant)
+                        else return p
     let
         partial (Op op)
             | Just (x, y) <- case op of

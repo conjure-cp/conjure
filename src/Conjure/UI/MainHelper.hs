@@ -10,7 +10,7 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON, evaluateModel )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -194,10 +194,11 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
-mainWithArgs Boost{..} =
-    readModelFromFile essence >>=
-      boost logLevel logRuleSuccesses >>=
-        writeModel lineWidth outputFormat (Just essenceOut)
+mainWithArgs Boost{..} = do
+    model <- readModelFromFile essence
+    runNameGen model $ do
+        boosted <- (boost logLevel logRuleSuccesses >=> evaluateModel) model
+        writeModel lineWidth outputFormat Nothing boosted
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     (solverName, _smtLogicName) <- splitSolverName solver

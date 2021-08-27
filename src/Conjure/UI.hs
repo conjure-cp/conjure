@@ -191,7 +191,6 @@ data UI
         }
     | Boost
         { essence                    :: FilePath
-        , essenceOut                 :: FilePath
         , logLevel                   :: LogLevel
         , logRuleSuccesses           :: Bool
         , limitTime                  :: Maybe Int
@@ -1263,14 +1262,6 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , essenceOut
-            = def
-            &= typ "ESSENCE_FILE"
-            &= typFile
-            &= name "essence-out"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Output file path."
         , logLevel
             = def
             &= name "log-level"
