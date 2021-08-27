@@ -8,6 +8,7 @@
 -}
 
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Process.Boost ( boost ) where
 
@@ -479,10 +480,17 @@ varSize _ ((n, _), cs) = do
   results <- forM cs $ \c ->
     case matching (hole c) ineqSizeAttrs of
          -- Do not allow find variables to be put in attributes
-         Just ((attr, f), ([essence| |&x| |], e)) | nameExpEq n x && not (isFind e)
+         Just ((attr, f), (cardinalityOf -> Just x, e)) | nameExpEq n x && not (isFind e)
            -> pure (Just (attr, f e), ([], [c]))
          _ -> pure (Nothing, mempty)
   return $ unzipMaybeK results
+
+
+cardinalityOf :: Expression -> Maybe Expression
+cardinalityOf [essence| |&x| |] = Just x
+cardinalityOf [essence| sum([1 | &_ <- &x]) |] = Just x
+cardinalityOf _ = Nothing
+
 
 -- | Set the minimum size of a set based on it being a superset of another.
 setSize :: (MonadFail m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
