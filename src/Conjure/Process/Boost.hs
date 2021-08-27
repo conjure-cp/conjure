@@ -23,7 +23,10 @@ import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Compute.DomainOf ( domainOf )
+import Conjure.UI.Model ( evaluateModel )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
+import Conjure.Process.Enumerate ( EnumerateDomain )
+
 
 -- aeson
 import qualified Data.Aeson as JSON ( decodeStrict )
@@ -48,6 +51,7 @@ boost ::
     MonadLog m =>
     MonadUserError m =>
     NameGen m =>
+    EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     LogLevel -> -- ^ Log level to use.
     Bool ->     -- ^ Generate logs for rule applications.
@@ -55,7 +59,7 @@ boost ::
     m Model  -- ^ Strengthened model.
 boost logLevel logRuleSuccesses = resolveNames >=> core
   where
-    core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
+    -- core :: ... => Model -> m Model
     core model1 = do
       -- Apply attribute rules to each decision (find) variable
       (model2, toAddToRem) <- foldM (\modelAndToKeep findAndCstrs@((n, d), _) ->
@@ -89,9 +93,10 @@ boost logLevel logRuleSuccesses = resolveNames >=> core
                (repeat $ map zipper $ collectConstraints model1))
 
       -- Apply constraint additions and removals
-      model3 <- resolveNames $
-                addConstraints (fst toAddToRem) $
-                remConstraints (snd toAddToRem) model2
+      model3' <- resolveNames $
+                 addConstraints (fst toAddToRem) $
+                 remConstraints (snd toAddToRem) model2
+      model3  <- evaluateModel model3'
 
       -- Apply type change rules to each decision (find) variable
       (model4, toAddToRem') <- foldM (\modelAndToKeep findAndCstrs@((n, d), _) ->
@@ -108,9 +113,10 @@ boost logLevel logRuleSuccesses = resolveNames >=> core
                (repeat $ map zipper $ collectConstraints model3))
 
       -- Apply constraint additions and removals
-      model5 <- resolveNames $
-                addConstraints (fst toAddToRem') $
-                remConstraints (snd toAddToRem') model4
+      model5' <- resolveNames $
+                 addConstraints (fst toAddToRem') $
+                 remConstraints (snd toAddToRem') model4
+      model5  <- evaluateModel model5'
 
       -- Make another pass if the model was updated, but stop if it contains machine names
       if model1 == model5 || any containsMachineName (collectConstraints model5)
