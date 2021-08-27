@@ -58,7 +58,7 @@ boost ::
     Bool ->     -- ^ Generate logs for rule applications.
     Model ->    -- ^ Model to strengthen.
     m Model  -- ^ Strengthened model.
-boost logLevel logRuleSuccesses = resolveNames >=> core
+boost logLevel logRuleSuccesses = resolveNames >=> return . fixRelationProj >=> core
   where
     -- core :: ... => Model -> m Model
     core model1 = do
@@ -645,44 +645,27 @@ mSetOccur _ ((n, DomainMSet _ _ d), cs)
     isConst _                                             = False
 mSetOccur _ _ = return mempty
 
--- | Mark a partition regular if its numParts * partSize = |domain|, or if there
---   is a constraint on its parts constraining them to be of equal size.
+-- | Mark a partition regular if there is a constraint on its parts constraining them to be of equal size.
 partRegular :: (MonadFail m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
             => Model
             -> (FindVar, [ExpressionZ])
             -> m ([AttrPair], ToAddToRem)
-partRegular _ ((n, d@DomainPartition{}), cs)
-  = if inferFromDomain /= mempty
-       then return inferFromDomain
-       else do
-            attrs <- forM cs $ \c ->
-              case hole c of
-                   [essence| forAll &x in parts(&p) . forAll &y in parts(&p') . &e |]
-                     | nameExpEq n p && p == p'
-                       -> case e of
-                               [essence| |&x'| = |&y'| |] | x' `refersTo` x && y' `refersTo` y
-                                   -> pure (Just ("regular", Nothing), ([], [c]))
-                               [essence| &x'' != &y'' -> |&x'| = |&y'| |]
-                                 | x' `refersTo` x && y' `refersTo` y &&
-                                   ((x' == x'' && y' == y'') || (x' == y'' && y' == x''))
-                                   -> pure (Just ("regular", Nothing), ([], [c]))
-                               _ -> pure (Nothing, mempty)
-                   _   -> pure (Nothing, mempty)
-            return $ unzipMaybeK attrs
-  where
-    inferFromDomain :: ([AttrPair], ToAddToRem)
-    inferFromDomain = case d of
-                           DomainPartition _ PartitionAttr { partsNum = SizeAttr_Size pNum@Constant{}
-                                                           , partsSize = SizeAttr_Size pSize@Constant{}
-                                                           } dom
-                             | Just n1 <- domainSizeOf dom >>= e2c
-                             , Just (ConstantInt t pNum') <- e2c pNum
-                             , Just (ConstantInt _ pSize') <- e2c pSize
-                             ,let n2 = ConstantInt t (pNum' * pSize')
-                             , n1 == n2
-                               -> ([("regular", Nothing)], mempty)
-                           _   -> mempty
+partRegular _ ((_, DomainPartition{}), cs) = do
+    attrs <- forM cs $ \c ->
+      case hole c of
+           -- [essence| forAll &x in parts(&p) . forAll &y in parts(&p') . &xCard = &yCard |]
+           [essence| and([ &xCard = &yCard | &x <- parts(&p), &y <- parts(&p') ]) |]
+             | Just (Reference x' _) <- cardinalityOf xCard
+             , Just (Reference y' _) <- cardinalityOf yCard
+             , or [ and [x == Single x', y == Single y']
+                  , and [x == Single y', y == Single x']
+                  ]
+             , p == p'
+             -> pure (Just ("regular", Nothing), ([], [c]))
+           _ -> pure (Nothing, mempty)
+    return $ unzipMaybeK attrs
 partRegular _ _ = return mempty
+
 
 -- | Convert constraints acting on the number of parts in a partition to an attribute.
 numPartsToAttr :: (MonadFail m, MonadLog m)
