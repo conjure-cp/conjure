@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find x : mset (size 10) of int(0..9)
+
+such that
+    true -> forAll i : int(0..9) . freq(x,i) >= 3,
+    forAll i : int(0..9) . freq(x,i) <= 8
