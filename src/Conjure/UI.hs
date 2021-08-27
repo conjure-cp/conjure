@@ -189,7 +189,7 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    | ModelStrengthening
+    | Boost
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
         , logLevel                   :: LogLevel
@@ -1258,7 +1258,7 @@ ui = modes
             &= help "Generate an Essence model describing the instances of the problem class \
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
-    , ModelStrengthening
+    , Boost
         { essence
             = def
             &= typ "ESSENCE_FILE"
@@ -1306,7 +1306,7 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width to use during pretty printing.\nDefault: 120"
-        }   &= name "model-strengthening"
+        }   &= name "boost"
             &= explicit
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\

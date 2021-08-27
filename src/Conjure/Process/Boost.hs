@@ -1,5 +1,5 @@
 {-
- - Module      : Conjure.Process.ModelStrengthening
+ - Module      : Conjure.Process.Boost
  - Description : Strengthen a model using type- and domain-inference.
  - Copyright   : Billy Brown 2017
  - License     : BSD3
@@ -9,10 +9,7 @@
 
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Process.ModelStrengthening
-  (
-    strengthenModel
-  ) where
+module Conjure.Process.Boost ( boost ) where
 
 import Data.List ( find, union )
 import Data.Map.Strict ( Map )
@@ -45,12 +42,17 @@ type AttrPair    = (AttrName, Maybe Expression)
 type ToAddToRem  = ([ExpressionZ], [ExpressionZ])
 
 -- | Strengthen a model using type- and domain-inference.
-strengthenModel :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, ?typeCheckerMode :: TypeCheckerMode)
-                => LogLevel -- ^ Log level to use.
-                -> Bool     -- ^ Generate logs for rule applications.
-                -> Model    -- ^ Model to strengthen.
-                -> m Model  -- ^ Strengthened model.
-strengthenModel logLevel logRuleSuccesses model = runNameGen model $ (resolveNames >=> core . fixRelationProj) model
+boost ::
+    MonadFail m =>
+    MonadIO m =>
+    MonadLog m =>
+    MonadUserError m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    LogLevel -> -- ^ Log level to use.
+    Bool ->     -- ^ Generate logs for rule applications.
+    Model ->    -- ^ Model to strengthen.
+    m Model  -- ^ Strengthened model.
+boost logLevel logRuleSuccesses model = runNameGen model $ (resolveNames >=> core . fixRelationProj) model
   where
     core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
     core model1 = do

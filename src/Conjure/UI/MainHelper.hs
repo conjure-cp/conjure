@@ -32,7 +32,7 @@ import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
-import Conjure.Process.ModelStrengthening ( strengthenModel )
+import Conjure.Process.Boost ( boost )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
@@ -194,9 +194,9 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
-mainWithArgs ModelStrengthening{..} =
+mainWithArgs Boost{..} =
     readModelFromFile essence >>=
-      strengthenModel logLevel logRuleSuccesses >>=
+      boost logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
