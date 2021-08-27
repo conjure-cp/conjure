@@ -713,16 +713,26 @@ partSizeToAttr :: (MonadFail m, MonadLog m)
 partSizeToAttr _ ((n, DomainPartition{}), cs) = do
   attrs <- forM cs $ \c ->
     case hole c of
-         [essence| forAll &x in parts(&p) . |&x'| =  &e |] | valid p x x' e
-           -> pure (Just ("partSize", Just e), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| <  &e |] | valid p x x' e
-           -> pure (Just ("maxPartSize", Just (e - 1)), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| <= &e |] | valid p x x' e
-           -> pure (Just ("maxPartSize", Just e), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| >  &e |] | valid p x x' e
-           -> pure (Just ("minPartSize", Just (e + 1)), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| >= &e |] | valid p x x' e
-           -> pure (Just ("minPartSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . &xCard =  &e |]
+             | Just x' <- cardinalityOf xCard
+             , valid p x x' e
+             -> pure (Just ("partSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . &xCard <  &e |]
+             | Just x' <- cardinalityOf xCard
+             , valid p x x' e
+             -> pure (Just ("maxPartSize", Just (e - 1)), ([], [c]))
+         [essence| forAll &x in parts(&p) . &xCard <= &e |]
+             | Just x' <- cardinalityOf xCard
+             , valid p x x' e
+             -> pure (Just ("maxPartSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . &xCard >  &e |]
+             | Just x' <- cardinalityOf xCard
+             , valid p x x' e
+             -> pure (Just ("minPartSize", Just (e + 1)), ([], [c]))
+         [essence| forAll &x in parts(&p) . &xCard >= &e |]
+             | Just x' <- cardinalityOf xCard
+             , valid p x x' e
+             -> pure (Just ("minPartSize", Just e), ([], [c]))
          _ -> pure (Nothing, mempty)
   return $ unzipMaybeK attrs
   where
