@@ -914,8 +914,12 @@ updateDeclarations model = do
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt TagInt [])) ]
                 Declaration (Letting nm x)             -> do
-                    let usedAfter = nbUses nm afters > 0
-                    let isRefined = (0 :: Int) == sum
+                    let
+                        usedAfter :: Bool
+                        usedAfter = nbUses nm afters > 0
+                    
+                        nbComplexLiterals :: Int
+                        nbComplexLiterals = sum
                                             [ case y of
                                                 Constant (ConstantAbstract AbsLitMatrix{}) -> 0
                                                 Constant ConstantAbstract{} -> 1
@@ -923,6 +927,9 @@ updateDeclarations model = do
                                                 AbstractLiteral{} -> 1
                                                 _ -> 0
                                             | y <- universe x ]
+
+                        isRefined :: Bool
+                        isRefined = nbComplexLiterals == 0
                     return [inStatement | and [usedAfter, isRefined]]
                 Declaration LettingDomainDefnEnum{}    -> return []
                 Declaration LettingDomainDefnUnnamed{} -> return []
@@ -1239,6 +1246,7 @@ epilogue ::
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
     >>= lexSingletons                 >>= logDebugIdModel "[lexSingletons]"
+    >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
