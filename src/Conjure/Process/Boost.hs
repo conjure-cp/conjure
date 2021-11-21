@@ -108,6 +108,7 @@ boost logLevel logRuleSuccesses = resolveNames >=> return . fixRelationProj >=> 
                        (log logLevel $ name <+> pretty n <+> ":" <+> pretty d)
                   return (updateDecl (n, dom) m1, toAddRem tatr2 tatr1))
               modelAndToKeep [ (mSetToSet, "multiset changed to set")
+                             -- , (relationToFunction, "relation to function")
                              ])
           (model3, ([], []))
           (zip (collectFindVariables model3)
@@ -909,3 +910,24 @@ mSetToSet _ ((n, DomainMSet r (MSetAttr sa oa) d), cs) | maxOccur1 oa = do
     maxOccur1 (OccurAttr_MinMaxOccur _ 1) = True
     maxOccur1 _                           = False
 mSetToSet _ ((_, dom), _) = return (dom, mempty)
+
+-- relationToFunction ::
+--     MonadFail m =>
+--     MonadLog m =>
+--     Model ->
+--     (FindVar, [ExpressionZ]) ->
+--     m (Domain () Expression, ToAddToRem)
+-- -- relationToFunction _ ((n, DomainRelation r (MSetAttr sa oa) d), cs) | maxOccur1 oa = do
+-- --   let dom'  = DomainSet r (SetAttr sa) d
+-- --   let torem = filter (any (nameExpEq n) . universe . hole) cs
+-- --   let toadd = map (zipper . transform (\e -> if nameExpEq n e
+-- --                                                 then [essence| toMSet(&e) |]
+-- --                                                 else e)
+-- --                           . hole)
+-- --                   cs
+-- --   return (dom', (toadd, torem))
+-- --   where
+-- --     maxOccur1 (OccurAttr_MaxOccur 1)      = True
+-- --     maxOccur1 (OccurAttr_MinMaxOccur _ 1) = True
+-- --     maxOccur1 _                           = False
+-- relationToFunction _ ((_, dom), _) = return (dom, mempty)
