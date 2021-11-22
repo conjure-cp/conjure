@@ -1,8 +1,8 @@
 language ESSENCE' 1.0
 
-find s_Explicit: matrix indexed by [int(1..2)] of int(1..2)
-branching on [s_Explicit]
+find s_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [s_Occurrence]
 such that
-    or([s_Explicit[q4] = 2 | q4 : int(1..2)]),
-    s_Explicit[1] < s_Explicit[2]
+    s_Occurrence[2],
+    2 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)])
 
