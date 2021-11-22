@@ -260,7 +260,7 @@ reprsStandardOrder ::
     AllRepresentations m
 reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
+      , setExplicit, setOccurrence, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
       , function1D, function1DPartial, functionND, functionNDPartial, functionNDPartialDummy

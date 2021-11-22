@@ -195,9 +195,8 @@ data UI
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         }
-    | ModelStrengthening
+    | Boost
         { essence                    :: FilePath
-        , essenceOut                 :: FilePath
         , logLevel                   :: LogLevel
         , logRuleSuccesses           :: Bool
         , limitTime                  :: Maybe Int
@@ -1288,19 +1287,11 @@ ui = modes
         }   &= name "features"
             &= explicit
             &= help "Calculate instance features."
-    , ModelStrengthening
+    , Boost
         { essence
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , essenceOut
-            = def
-            &= typ "ESSENCE_FILE"
-            &= typFile
-            &= name "essence-out"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Output file path."
         , logLevel
             = def
             &= name "log-level"
@@ -1336,7 +1327,7 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width to use during pretty printing.\nDefault: 120"
-        }   &= name "model-strengthening"
+        }   &= name "boost"
             &= explicit
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\

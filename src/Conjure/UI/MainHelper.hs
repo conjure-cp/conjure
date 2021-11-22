@@ -32,7 +32,7 @@ import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
-import Conjure.Process.ModelStrengthening ( strengthenModel )
+import Conjure.Process.Boost ( boost )
 import Conjure.Process.Features ( calculateFeatures )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
@@ -200,10 +200,11 @@ mainWithArgs Features{..} = do
     param1 <- readParamOrSolutionFromFile param
     [essence2, param2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essence1, param1]
     void $ runNameGen () $ calculateFeatures essence2 param2
-mainWithArgs ModelStrengthening{..} =
-    readModelFromFile essence >>=
-      strengthenModel logLevel logRuleSuccesses >>=
-        writeModel lineWidth outputFormat (Just essenceOut)
+mainWithArgs Boost{..} = do
+    model <- readModelFromFile essence
+    runNameGen model $ do
+        boosted <- boost logLevel logRuleSuccesses model
+        writeModel lineWidth outputFormat Nothing boosted
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     (solverName, _smtLogicName) <- splitSolverName solver
