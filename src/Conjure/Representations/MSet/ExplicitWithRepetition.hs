@@ -85,12 +85,12 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                             forAll &iPat : int(1..&maxIndex) , &i > &flag . dontCare(&values[&i])
                         |]
 
-                minOccurrenceCons mset flag values = do
+                minOccurrenceCons mset = do
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : int(1..&maxIndex) , &i <= &flag .
-                                (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
+                            forAll &iPat : &innerDomain .
+                                freq(&mset, &i) >= &minOccur
                                   |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
@@ -123,7 +123,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                         concat <$> sequence
                             [ orderingUpToFlag  flag values
                             , dontCareAfterFlag flag values
-                            , minOccurrenceCons mset flag values
+                            , minOccurrenceCons mset
                             , maxOccurrenceCons mset flag values
                             , return (mkSizeCons sizeAttrs flag)
                             , innerStructuralCons flag values

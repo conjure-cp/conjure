@@ -92,10 +92,11 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                     return [essence| sum &iPat : int(1..&maxSize) . &flags[&i] |]
 
                 -- maxOccur is enforced by the domain of the flag
-                minOccurrenceCons flags = do
+                minOccurrenceCons flags values = do
                     (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
                     return
-                        [ [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] = 0 \/ &flags[&i] >= &minOccur |]
+                        [ [essence| forAll &iPat : &innerDomain . exists &jPat : int(1..&maxSize) . &flags[&j] >= &minOccur /\ &values[&j] = &i |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
 
@@ -118,7 +119,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                             [ orderingWhenFlagged    flags values
                             , dontCareWhenNotFlagged flags values
                             , flagsToTheLeft         flags
-                            , minOccurrenceCons      flags
+                            , minOccurrenceCons      flags values
                             , mkSizeCons sizeAttrs <$> cardinality flags
                             , innerStructuralCons flags values
                             ]
