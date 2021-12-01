@@ -232,21 +232,7 @@ reprsStandardOrderNoLevels ::
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     AllRepresentations m
-reprsStandardOrderNoLevels = return $ concat
-    [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
-      , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
-      , function1D, function1DPartial, functionND, functionNDPartial, functionNDPartialDummy
-      , sequenceExplicitBounded
-      , relationAsMatrix
-      , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
-      , partitionOccurrence
-      ]
-    , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
-      , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
-      ]
-    ]
+reprsStandardOrderNoLevels = [concat reprsStandardOrder]
 
 
 -- | A list of all representations.
