@@ -189,6 +189,7 @@ addAttrsToModel (n, _) depth attrs m
     addAttrsToDomain level (DomainMSet r as inner)          = addAttrsToDomain (level - 1) inner >=> (pure . DomainMSet r as)
     addAttrsToDomain level (DomainMatrix index inner)       = addAttrsToDomain (level - 1) inner >=> (pure . DomainMatrix index)
     addAttrsToDomain level (DomainFunction r as from inner) = addAttrsToDomain (level - 1) inner >=> (pure . DomainFunction r as from)
+    addAttrsToDomain level (DomainSequence r as inner) = addAttrsToDomain (level - 1) inner >=> (pure . DomainSequence r as)
     addAttrsToDomain level (DomainPartition r as inner)     = addAttrsToDomain (level - 1) inner >=> (pure . DomainPartition r as)
     addAttrsToDomain _ _ = const (fail "[addAttrsToDomain] not a supported nested domain")
     -- Special treatment for functions
@@ -394,6 +395,12 @@ surjectiveIsTotalBijective _ ((_, dom), _)
                (fromSize, toSize) <- functionDomainSizes from to
                if fromSize == toSize
                   then return ([("total", Nothing), ("bijective", Nothing)], mempty)
+                  else return mempty
+         DomainSequence _ (SequenceAttr (SizeAttr_Size s ) j) to
+           | j `elem` [JectivityAttr_Bijective, JectivityAttr_Surjective] -> do
+               toSize <- domainSizeOf to
+               if s == toSize
+                  then return ([("bijective", Nothing)], mempty)
                   else return mempty
          _ -> return mempty
 
