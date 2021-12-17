@@ -141,15 +141,21 @@ instantiateE (Comprehension body gensOrConds) = do
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
 instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantField name ty
-instantiateE (Reference _    (Just (Alias x))) = instantiateE x
-instantiateE (Reference name _) = do
+instantiateE (Reference name refto) = do
     ctxt <- gets id
     case name `lookup` ctxt of
-        Nothing -> fail $ vcat
-            $ ("No value for:" <+> pretty name)
-            : "Bindings in context:"
-            : prettyContext ctxt
         Just x -> instantiateE x
+        Nothing ->
+            case refto of
+                Just (Alias x) ->
+                    -- we do not have this name in context, but we have it stored in the Reference itself
+                    -- reuse that
+                    instantiateE x
+                _ -> 
+                    fail $ vcat
+                    $ ("No value for:" <+> pretty name)
+                    : "Bindings in context:"
+                    : prettyContext ctxt
 
 instantiateE (Constant c) = return c
 instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
