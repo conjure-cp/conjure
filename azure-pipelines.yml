@@ -36,6 +36,8 @@ jobs:
     displayName: "Install cadical"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-kissat.sh ; fi
     displayName: "Install kissat"
+  - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-gnu-parallel.sh ; fi
+    displayName: "Install gnu parallel"
   - bash: if $(runTests) ; then BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} COVERAGE=$(coverage) LIMIT_TIME=0 make test ; fi
     displayName: "Test"
   - task: DownloadSecureFile@1
