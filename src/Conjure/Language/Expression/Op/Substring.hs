@@ -27,7 +27,11 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubstring x) where
         tyb <- typeOf b
         case (tya, tyb) of
             (TypeSequence{}, TypeSequence{}) -> return TypeBool
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected types for operands:"
+                                       , " - " <> pretty tya
+                                       , " - " <> pretty tyb
+                                       ]
 
 instance SimplifyOp OpSubstring x where
     simplifyOp _ = na "simplifyOp{OpSubstring}"

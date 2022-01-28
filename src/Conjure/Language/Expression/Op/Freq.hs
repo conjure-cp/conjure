@@ -23,13 +23,25 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
         tyM <- typeOf m
         tyE <- typeOf e
         case tyM of
+            TypeMatrix _ tyE'
+                | tyE `typeUnify` tyE' -> return $ TypeInt TagInt
+                | otherwise            -> raiseTypeError $ vcat
+                    [ "The first argument of freq is expected to be a matrix or a multi-set."
+                    , "We got:" <+> pretty tyM
+                    , "In expression:" <+> pretty p
+                    ]
             TypeMSet tyE'
                 | tyE `typeUnify` tyE' -> return $ TypeInt TagInt
                 | otherwise            -> raiseTypeError $ vcat
-                    [ "The first argument of freq is expected to be a multi-set."
-                    , pretty p
+                    [ "The first argument of freq is expected to be a matrix or a multi-set."
+                    , "We got:" <+> pretty tyM
+                    , "In expression:" <+> pretty p
                     ]
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat
+                    [ "The first argument of freq is expected to be a matrix or a multi-set."
+                    , "We got:" <+> pretty tyM
+                    , "In expression:" <+> pretty p
+                    ]
 
 instance SimplifyOp OpFreq x where
     simplifyOp _ = na "simplifyOp{OpFreq}"

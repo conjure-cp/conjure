@@ -1410,6 +1410,7 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
     , Vertical.Matrix.rule_ExpandSlices
+    , Vertical.Matrix.rule_Freq
 
     , Vertical.Set.Explicit.rule_Min
     , Vertical.Set.Explicit.rule_Max
