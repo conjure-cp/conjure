@@ -95,6 +95,15 @@ instance SimpleJSON Constant where
             _ -> noToSimpleJSON c
     fromSimpleJSON _ = noFromSimpleJSON
 
+instance ToFromMiniZinc Constant where
+    toMiniZinc c =
+        case c of
+            ConstantBool b -> return (MZNBool b)
+            ConstantInt _ i -> return (MZNInt i)
+            ConstantAbstract lit -> toMiniZinc lit
+            TypedConstant c' _ -> toMiniZinc c'
+            _ -> noToMiniZinc c
+
 instance Arbitrary Constant where
     arbitrary = oneof
         [ ConstantBool <$> arbitrary

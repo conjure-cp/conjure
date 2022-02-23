@@ -70,6 +70,12 @@ instance SimpleJSON Statement where
             _ -> noToSimpleJSON st
     fromSimpleJSON _ = noFromSimpleJSON
 
+instance ToFromMiniZinc Statement where
+    toMiniZinc st =
+        case st of
+            Declaration d -> toMiniZinc d
+            _ -> noToMiniZinc st
+
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
     pretty (SearchOrder nms) = "branching on" <++> prettyList prBrackets "," nms
@@ -160,6 +166,14 @@ instance SimpleJSON Declaration where
                 return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
             _ -> noToSimpleJSON d
     fromSimpleJSON _ = noFromSimpleJSON
+
+instance ToFromMiniZinc Declaration where
+    toMiniZinc st =
+        case st of
+            Letting nm x -> do
+                x' <- toMiniZinc x
+                return $ MZNNamed [(nm, x')]
+            _ -> noToSimpleJSON st
 
 -- this is only used in the instance below
 type Prim = Either Bool (Either Integer Constant)
@@ -353,6 +367,19 @@ instance SimpleJSON Expression where
             _ -> noToSimpleJSON x
     fromSimpleJSON _ = noFromSimpleJSON
 
+instance ToFromMiniZinc Expression where
+    toMiniZinc x =
+        case x of
+            Constant c -> toMiniZinc c
+            AbstractLiteral lit -> toMiniZinc lit
+            Typed y _ -> toMiniZinc y
+            Op (MkOpMinus (OpMinus a b)) -> do
+                a' <- toMiniZinc a
+                b' <- toMiniZinc b
+                case (a', b') of
+                    (MZNInt a'', MZNInt b'') -> return (MZNInt (a'' - b''))
+                    _ -> noToMiniZinc x
+            _ -> noToMiniZinc x
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =

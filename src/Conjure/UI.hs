@@ -209,7 +209,7 @@ instance ToJSON    UI where toJSON = genericToJSON jsonOptions
 instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
-data OutputFormat = Plain | Binary | ASTJSON | JSON
+data OutputFormat = Plain | Binary | ASTJSON | JSON | MiniZinc
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize OutputFormat
@@ -458,7 +458,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -513,7 +514,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -576,7 +578,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -627,7 +630,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -950,7 +954,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1040,7 +1045,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1082,7 +1088,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1148,7 +1155,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1194,7 +1202,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1245,7 +1254,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1290,7 +1300,8 @@ ui = modes
                     \    plain: default\n\
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
-                    \    json: a simplified JSON format, best for parameters and solutions\n"
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"

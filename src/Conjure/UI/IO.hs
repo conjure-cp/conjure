@@ -182,6 +182,16 @@ writeModel lnWidth JSON (Just fp) spec = do
     if lnWidth == 0
         then liftIO $ writeFile fp (show spec')
         else liftIO $ writeFile fp (render lnWidth spec')
+writeModel lnWidth MiniZinc Nothing spec = do
+    spec' <- toMiniZinc spec
+    if lnWidth == 0
+        then liftIO $ putStrLn (show spec')
+        else liftIO $ putStrLn (render lnWidth spec')
+writeModel lnWidth MiniZinc (Just fp) spec = do
+    spec' <- toMiniZinc spec
+    if lnWidth == 0
+        then liftIO $ writeFile fp (show spec')
+        else liftIO $ writeFile fp (render lnWidth spec')
 
 
 writeModels ::

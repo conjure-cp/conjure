@@ -45,6 +45,36 @@ class (:<) a b where
     inject :: a -> b
     project :: MonadFail m => b -> m a
 
+data MiniZincData = MZNBool Bool
+                  | MZNInt Integer
+                  | MZNArray [MiniZincData]
+                  | MZNSet [MiniZincData]
+                  | MZNNamed [(Name, MiniZincData)]
+    deriving (Eq, Ord, Show)
+
+instance Pretty MiniZincData where
+    pretty (MZNBool x) = pretty x
+    pretty (MZNInt x) = pretty x
+    pretty (MZNArray xs) = prettyList prBrackets "," xs
+    pretty (MZNSet xs) = prettyList prBraces "," xs
+    pretty (MZNNamed xs) = vcat [pretty n <+> "=" <+> pretty x <> ";" | (n,x) <- xs]
+
+class ToFromMiniZinc a where
+    toMiniZinc :: MonadUserError m => a -> m MiniZincData
+    -- this is what we would use to support data files
+    -- fromMiniZinc :: MonadUserError m => M.HashMap Name MiniZincData -> m a
+
+noToMiniZinc :: (MonadUserError m, Pretty a) =>  a -> m b
+noToMiniZinc a = userErr1 $ vcat
+    [ "Cannot convert the following to MiniZinc syntax:"
+    , ""
+    , pretty (show a)
+    , pretty a
+    , ""
+    , "Let us know if you need support for this please!"
+    , "As a workaround you can use --output-format=json"
+    ]
+
 class SimpleJSON a where
     toSimpleJSON :: MonadUserError m => a -> m JSON.Value
     fromSimpleJSON :: MonadUserError m => JSON.Value -> m a

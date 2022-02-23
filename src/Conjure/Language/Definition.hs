@@ -88,6 +88,11 @@ instance SimpleJSON Model where
         return (JSON.Object innersAsMaps)
     fromSimpleJSON _ = noFromSimpleJSON
 
+instance ToFromMiniZinc Model where
+    toMiniZinc m = do
+        inners <- mapM toMiniZinc (mStatements m)
+        return $ MZNNamed $ concat [xs | MZNNamed xs <- inners]
+
 instance Default Model where
     def = Model def [] def
 
