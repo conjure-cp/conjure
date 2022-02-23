@@ -954,6 +954,8 @@ srStdoutHandler
                             writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
                             when (outputFormat == JSON) $
                                 writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
+                            when (outputFormat == MiniZinc) $
+                                writeModel lineWidth MiniZinc (Just (filenameEssenceSol ++ ".minizinc")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
                         True -> do
