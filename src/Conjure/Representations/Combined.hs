@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Combined
     ( downD, downC, up

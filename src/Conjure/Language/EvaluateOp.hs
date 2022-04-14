@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Conjure.Language.EvaluateOp ( EvaluateOp(..) ) where
 
 import Conjure.Prelude

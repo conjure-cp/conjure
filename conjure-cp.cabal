@@ -327,6 +327,7 @@ Library
         ScopedTypeVariables
         TypeOperators
         NoMonadFailDesugaring
+        ViewPatterns
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -364,6 +365,7 @@ Executable conjure
         ScopedTypeVariables
         TypeOperators
         NoMonadFailDesugaring
+        ViewPatterns
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -423,6 +425,7 @@ Test-Suite conjure-testing
         ScopedTypeVariables
         TypeOperators
         NoMonadFailDesugaring
+        ViewPatterns
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

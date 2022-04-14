@@ -8,7 +8,6 @@
 -}
 
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Process.Boost ( boost ) where
 

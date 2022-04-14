@@ -1,5 +1,4 @@
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Lenses where
 

@@ -1,6 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 

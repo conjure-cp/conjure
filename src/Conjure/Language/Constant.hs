@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Constant
     ( Constant(..)

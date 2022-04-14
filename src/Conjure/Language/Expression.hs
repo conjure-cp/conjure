@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Expression
     ( Statement(..), SearchOrder(..), Objective(..)

@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 

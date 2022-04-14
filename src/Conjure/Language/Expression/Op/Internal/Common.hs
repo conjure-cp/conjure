@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Internal.Common
     ( module X
