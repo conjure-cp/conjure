@@ -409,11 +409,11 @@ bind :: (Functor m, MonadState [(Name, Expression)] m)
     -> Constant
     -> m Bool -- False means skip
 bind (Single nm) val = modify ((nm, Constant val) :) >> return True
-bind (AbsPatTuple  pats) (ConstantAbstract (AbsLitTuple    vals))
+bind (AbsPatTuple pats) (viewConstantTuple -> Just vals)
     | length pats == length vals = and <$> zipWithM bind pats vals
-bind (AbsPatMatrix pats) (ConstantAbstract (AbsLitMatrix _ vals))
+bind (AbsPatMatrix pats) (viewConstantMatrix -> Just (_, vals))
     | length pats == length vals = and <$> zipWithM bind pats vals
-bind (AbsPatSet    pats) (ConstantAbstract (AbsLitSet      vals))
+bind (AbsPatSet pats) (viewConstantSet -> Just vals)
     | length pats == length vals = and <$> zipWithM bind pats vals
     | otherwise                  = return False
 bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:" <+> pretty val]

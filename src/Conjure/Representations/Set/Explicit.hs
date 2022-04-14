@@ -66,7 +66,7 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain)
-              , ConstantAbstract (AbsLitSet constants)
+              , viewConstantSet -> Just constants
               ) =
             let outIndexDomain = mkDomainIntB 1 size
             in  return $ Just

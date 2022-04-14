@@ -60,7 +60,7 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitRelation xs -> toSimpleJSON xs
             AbsLitPartition xs -> toSimpleJSON xs
             _ -> noToSimpleJSON lit
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON x = noFromSimpleJSON "AbstractLiteral" x
 
 instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (AbstractLiteral x) where
     toMiniZinc lit =

@@ -67,7 +67,7 @@ instance SimpleJSON Statement where
         case st of
             Declaration d -> toSimpleJSON d
             _ -> noToSimpleJSON st
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON = noFromSimpleJSON "Statement"
 
 instance ToFromMiniZinc Statement where
     toMiniZinc st =
@@ -164,7 +164,7 @@ instance SimpleJSON Declaration where
                 x' <- toSimpleJSON x
                 return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
             _ -> noToSimpleJSON d
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON = noFromSimpleJSON "Declaration"
 
 instance ToFromMiniZinc Declaration where
     toMiniZinc st =
@@ -364,7 +364,7 @@ instance SimpleJSON Expression where
                     (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
                     _ -> noToSimpleJSON x
             _ -> noToSimpleJSON x
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON x = Constant <$> fromSimpleJSON x
 
 instance ToFromMiniZinc Expression where
     toMiniZinc x =
@@ -726,7 +726,7 @@ lambdaToFunction (AbsPatSet ts) body = \ p ->
 
         ps :: [Expression]
         ps = case p of
-            Constant (ConstantAbstract (AbsLitSet xs)) -> map Constant xs
+            Constant (viewConstantSet -> Just xs) -> map Constant xs
             AbstractLiteral (AbsLitSet xs) -> xs
             _ -> bug $ "lambdaToFunction, AbsPatSet" <++> vcat [pretty p, pretty (show p)]
     in

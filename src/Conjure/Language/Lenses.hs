@@ -4,6 +4,7 @@ module Conjure.Language.Lenses where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
@@ -1313,7 +1314,7 @@ setLiteral _ =
         return (ty, xs)
     )
     where
-        extract (Constant (ConstantAbstract (AbsLitSet xs))) = return (map Constant xs)
+        extract (Constant (viewConstantSet -> Just xs)) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitSet xs)) = return xs
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
@@ -1337,7 +1338,7 @@ msetLiteral _ =
         return (ty, xs)
     )
     where
-        extract (Constant (ConstantAbstract (AbsLitMSet xs))) = return (map Constant xs)
+        extract (Constant (viewConstantMSet -> Just xs)) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitMSet xs)) = return xs
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
@@ -1361,7 +1362,7 @@ functionLiteral _ =
         return (ty, xs)
     )
     where
-        extract (Constant (ConstantAbstract (AbsLitFunction xs))) = return [ (Constant a, Constant b) | (a,b) <- xs ]
+        extract (Constant (viewConstantFunction -> Just xs)) = return [ (Constant a, Constant b) | (a,b) <- xs ]
         extract (AbstractLiteral (AbsLitFunction xs)) = return xs
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
@@ -1385,7 +1386,7 @@ sequenceLiteral _ =
         return (ty, xs)
     )
     where
-        extract (Constant (ConstantAbstract (AbsLitSequence xs))) = return (map Constant xs)
+        extract (Constant (viewConstantSequence -> Just xs)) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitSequence xs)) = return xs
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
@@ -1409,7 +1410,7 @@ relationLiteral _ =
         return (ty, xs)
     )
     where
-        extract (Constant (ConstantAbstract (AbsLitRelation xs))) = return (map (map Constant) xs)
+        extract (Constant (viewConstantRelation -> Just xs)) = return (map (map Constant) xs)
         extract (AbstractLiteral (AbsLitRelation xs)) = return xs
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
@@ -1433,7 +1434,7 @@ partitionLiteral _ =
         return (ty, xs)
     )
     where
-        extract (Constant (ConstantAbstract (AbsLitPartition xs))) = return (map (map Constant) xs)
+        extract (Constant (viewConstantPartition -> Just xs)) = return (map (map Constant) xs)
         extract (AbstractLiteral (AbsLitPartition xs)) = return xs
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)

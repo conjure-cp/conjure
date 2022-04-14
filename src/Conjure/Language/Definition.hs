@@ -86,7 +86,14 @@ instance SimpleJSON Model where
                                     |> (\ (xs, ys) -> (M.unions (concat xs), concat ys))
         unless (null rest) $ bug $ "Expected json objects only, but got:" <+> vcat (map pretty rest)
         return (JSON.Object innersAsMaps)
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON json =
+        case json of
+            JSON.Object inners -> do
+                stmts <- forM (M.toList inners) $ \ (name, valueJSON) -> do
+                    value <- fromSimpleJSON valueJSON
+                    return $ Declaration (Letting (Name name) value)
+                return def { mStatements = stmts }
+            _ -> noFromSimpleJSON "Model" json
 
 instance ToFromMiniZinc Model where
     toMiniZinc m = do

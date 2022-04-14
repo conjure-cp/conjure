@@ -208,7 +208,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) innerDomain)
-              , ConstantAbstract (AbsLitSequence constants)
+              , viewConstantSequence -> Just constants
               ) =
             return $ Just
                 [ ( nameMarker domain name
@@ -222,7 +222,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
                 ]
         downC ( name
               , domain@(DomainSequence _ (SequenceAttr sizeAttr _) innerDomain)
-              , ConstantAbstract (AbsLitSequence constants)
+              , viewConstantSequence -> Just constants
               ) = do
             maxSize <- getMaxSize sizeAttr
             let indexDomain i = mkDomainIntB (fromInt i) maxSize

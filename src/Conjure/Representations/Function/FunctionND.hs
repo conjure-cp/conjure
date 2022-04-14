@@ -154,7 +154,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , value@(ConstantAbstract (AbsLitFunction vals))
+              , value@(viewConstantFunction -> Just vals)
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             let

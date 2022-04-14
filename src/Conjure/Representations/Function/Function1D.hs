@@ -134,7 +134,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals_)
+              , viewConstantFunction -> Just vals_
               ) | domainCanIndexMatrix innerDomainFr = do
             let vals = M.fromList vals_
             froms            <- domainValues innerDomainFr

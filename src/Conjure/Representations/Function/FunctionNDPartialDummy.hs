@@ -175,7 +175,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTupleS -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , viewConstantFunction -> Just vals
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTupleS innerDomainFr = do
             let

@@ -86,8 +86,8 @@ instance SimpleJSON Integer where
             JSON.Number y ->
                 case floatingOrInteger y of
                     Right z -> return z
-                    Left (_ :: Double) -> noFromSimpleJSON
-            _ -> noFromSimpleJSON
+                    Left (d :: Double) -> noFromSimpleJSON "Integer" d
+            _ -> noFromSimpleJSON "Integer" x
 
 data AsDictionary a b = AsDictionary [(a,b)]
 
@@ -101,26 +101,27 @@ instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y)
             case aJSON of
                 JSON.Bool{}   -> return (Just (aStr, bJSON), abPair)
                 JSON.Number{} -> return (Just (aStr, bJSON), abPair)
+                JSON.String{} -> return (Just (aStr, bJSON), abPair)
                 _             -> return (Nothing           , abPair)
         let zs = catMaybes ys
         if length ys == length zs
             -- all were suitable as keys, great
             then return $ JSON.Object $ M.fromList zs
             else return $ JSON.Array $ V.fromList asList
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON x = noFromSimpleJSON "AsDictionary" x
 
 instance SimpleJSON x => SimpleJSON [x] where
     toSimpleJSON xs = do
         ys <- mapM toSimpleJSON xs
         return $ JSON.Array $ V.fromList ys
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON x = noFromSimpleJSON "list" x
 
 instance (SimpleJSON x, SimpleJSON y) => SimpleJSON (x,y) where
     toSimpleJSON (x,y) = do
         x' <- toSimpleJSON x
         y' <- toSimpleJSON y
         return $ JSON.Array $ V.fromList [x', y']
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON  x = noFromSimpleJSON "pair" x
 
 
 noToSimpleJSON :: (MonadUserError m, Pretty a) =>  a -> m b
@@ -133,9 +134,16 @@ noToSimpleJSON a = userErr1 $ vcat
     , "As a workaround you can use --output-format=astjson"
     ]
 
-noFromSimpleJSON :: MonadUserError m => m a
-noFromSimpleJSON = userErr1 $ vcat
-    [ "Cannot convert simple JSON to Essence yet."
+
+noFromSimpleJSON :: (MonadUserError m, Pretty a, Show a) => String -> a -> m b
+noFromSimpleJSON src a = userErr1 $ vcat
+    [ "Cannot convert this JSON to Essence yet."
+    , ""
+    , pretty a
+    , pretty (show a)
+    , ""
+    , "Source:" <+> pretty src
+    , ""
     , "Let us know if you need support for this please!"
     , "As a workaround you can use --output-format=astjson"
     ]

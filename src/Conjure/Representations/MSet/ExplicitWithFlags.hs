@@ -130,7 +130,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
-              , ConstantAbstract (AbsLitMSet constants')
+              , viewConstantMSet -> Just constants'
               ) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = mkDomainIntB 1 maxSize
