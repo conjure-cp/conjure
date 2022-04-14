@@ -217,16 +217,16 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainReference ename _  , ConstantInt _ i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat  [ "domain  :" <+> pretty domain
-                                                                                  , "constant:" <+> pretty constant
-                                                                                  ]
+                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat [ "domain  :" <+> pretty domain
+                                                                            , "constant:" <+> pretty constant
+                                                                            ]
 
             (DomainTuple ds, viewConstantTuple -> Just cs) ->
                 ConstantAbstract $ AbsLitTuple
                     [ helper d c
                     | (d,c) <- zip ds cs ]
 
-            (DomainRecord ds, viewConstantRecord -> Just cs) ->
+            (DomainRecord (sortOn fst -> ds), viewConstantRecord -> Just cs) ->
                 ConstantAbstract $ AbsLitRecord
                     [ (n, helper d c)
                     | ((n,d),(_,c)) <- zip ds cs ]
@@ -267,6 +267,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
+                                                             , "domain  :" <+> pretty (show domain)
+                                                             , "constant:" <+> pretty (show constant)
                                                              ])
 
 -- first Name is the value, the second Name is the name of the enum domain

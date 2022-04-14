@@ -345,6 +345,7 @@ viewConstantVariant constant = fail ("Expecting a variant, but got:" <++> pretty
 viewConstantMatrix :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
 viewConstantMatrix (ConstantAbstract (AbsLitMatrix ind xs)) = return (expandDomainReference ind, xs)
 viewConstantMatrix (TypedConstant c _) = viewConstantMatrix c
+viewConstantMatrix (ConstantFromJSON xs) = return (DomainInt TagInt [RangeBounded 1 (genericLength xs)] ,xs)
 viewConstantMatrix constant = fail ("Expecting a matrix, but got:" <++> pretty constant)
 
 viewConstantSet :: MonadFail m => Constant -> m [Constant]
