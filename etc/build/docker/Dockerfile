@@ -64,7 +64,13 @@ RUN apt-get install -y --no-install-recommends \
  && curl -fSL https://github.com/commercialhaskell/stack/releases/download/v1.7.1/stack-1.7.1-linux-x86_64.tar.gz.asc -o stack.tar.gz.asc \
  && apt-get purge -y --auto-remove curl \
  && export GNUPGHOME=$WORK \
- && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys C5705533DA4F78D8664B5DC0575159689BEFB442 \
+ && for server in ha.pool.sks-keyservers.net \
+              hkp://p80.pool.sks-keyservers.net:80 \
+              keyserver.ubuntu.com \
+              hkp://keyserver.ubuntu.com:80 \
+              pgp.mit.edu; \
+    do gpg --keyserver "$server" --recv-keys C5705533DA4F78D8664B5DC0575159689BEFB442 && break || echo "Trying new server..."; \
+    done \
  && gpg --batch --verify stack.tar.gz.asc stack.tar.gz \
  && tar -xf stack.tar.gz -C /usr/local/bin --strip-components=1 \
  && /usr/local/bin/stack config set system-ghc --global true \
@@ -78,9 +84,6 @@ RUN git clone https://github.com/conjure-cp/conjure.git
 WORKDIR $WORK/conjure
 RUN git pull
 RUN git checkout v2.3.0
-
-RUN make
-RUN PROCESSES=4 make solvers
 
 RUN apt-get purge -y --auto-remove \
      bison \
@@ -103,6 +106,15 @@ RUN apt-get purge -y --auto-remove \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR $WORK
+
+RUN rm -f pubring.kbx* trustdb.gpg /root/.wget-hsts \
+ && rm -rf crls.d private-keys-v1.d \
+ && rm -rf conjure \
+# remove stack
+ && rm -rf /root/.stack \
+ && rm -rf /usr/local/bin/*
+
+ENV PATH        /root/.local/bin:$PATH
 
 RUN rm -f pubring.kbx* trustdb.gpg /root/.wget-hsts \
  && rm -rf crls.d private-keys-v1.d \
