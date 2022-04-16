@@ -85,6 +85,9 @@ WORKDIR $WORK/conjure
 RUN git pull
 RUN git checkout v2.3.0
 
+RUN make
+RUN PROCESSES=4 make solvers
+
 RUN apt-get purge -y --auto-remove \
      bison \
 # JRE depends on this, don't remove:
