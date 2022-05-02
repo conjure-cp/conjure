@@ -218,7 +218,7 @@ mainWithArgs AutoIG{..} = do
             if null errors
                 then do
                     let essenceOutFileContents = render lineWidth $ vcat iraceStmts
-                    liftIO $ writeFile (essence ++ ".irace") (essenceOutFileContents ++ "\n")
+                    liftIO $ writeFile iracefilepath (essenceOutFileContents ++ "\n")
                 else
                     userErr errors
         else

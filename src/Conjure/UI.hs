@@ -191,6 +191,7 @@ data UI
         }
     | AutoIG
         { essence                    :: FilePath
+        , iracefilepath              :: FilePath
         , generatorToIrace           :: Bool
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
@@ -1280,6 +1281,10 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
+        , iracefilepath
+            = def
+            &= typ "IRACE_FILE"
+            &= argPos 1
         , generatorToIrace
             = False
             &= name "generator-to-irace"
