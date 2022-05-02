@@ -193,6 +193,36 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
+mainWithArgs AutoIG{..} = do
+    if generatorToIrace
+        then do
+            model <- readModelFromFile essence
+            let
+                toIrace nm lb ub | lb == ub =
+                    pretty nm <+>
+                    "\"-" <> pretty nm <> " \" c" <+>
+                    prParens (pretty lb)
+                toIrace nm lb ub =
+                    pretty nm <+>
+                    "\"-" <> pretty nm <> " \" i" <+>
+                    prettyList prParens "," [lb, ub]
+            let (iraceStmts, errors) = mconcat
+                    [ case st of
+                        Declaration (FindOrGiven Given nm domain) ->
+                            case domain of
+                                DomainInt _ [RangeBounded lb ub] -> ([toIrace nm lb ub], [])
+                                _ -> ([], ["Unsupported domain for given" <+> pretty nm <> ":" <+> pretty domain])
+                        _ -> ([], [])
+                    | st <- mStatements model
+                    ]
+            if null errors
+                then do
+                    let essenceOutFileContents = render lineWidth $ vcat iraceStmts
+                    liftIO $ writeFile (essence ++ ".irace") (essenceOutFileContents ++ "\n")
+                else
+                    userErr errors
+        else
+            userErr1 "You must pass --generator-to-irace to this command."
 mainWithArgs Boost{..} = do
     model <- readModelFromFile essence
     runNameGen model $ do
