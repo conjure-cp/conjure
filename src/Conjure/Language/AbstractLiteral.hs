@@ -72,9 +72,7 @@ instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (Abstr
                     (x:_) | Just _ <- intOut "toMiniZinc" x -> MZNSet <$> mapM toMiniZinc xs
                     _ -> MZNArray <$> mapM toMiniZinc xs
             AbsLitMSet xs -> MZNArray <$> mapM toMiniZinc xs
-            AbsLitFunction xs -> do
-                traceM $ show $ vcat $ map pretty $ map fst xs
-                MZNArray <$> mapM (toMiniZinc . snd) xs
+            AbsLitFunction xs -> MZNArray <$> mapM (toMiniZinc . snd) xs
             AbsLitSequence xs -> MZNArray <$> mapM toMiniZinc xs
             AbsLitRelation xss ->
                 MZNArray <$> forM xss (\ xs ->
