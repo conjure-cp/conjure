@@ -55,8 +55,21 @@ data MiniZincData = MZNBool Bool
 instance Pretty MiniZincData where
     pretty (MZNBool x) = pretty x
     pretty (MZNInt x) = pretty x
-    pretty (MZNArray xs) = prettyList prBrackets "," xs
-    pretty (MZNSet xs) = prettyList prBraces "," xs
+    pretty (MZNArray xs) =
+        let
+            nestedPretty (MZNArray ys) = prettyList id "," ys
+            nestedPretty y = pretty y
+
+            calcLengths (MZNArray []) = []
+            calcLengths (MZNArray ys@(y:_)) = length ys : calcLengths y
+            calcLengths _ = []
+            lengths = calcLengths (MZNArray xs)
+            depth = length lengths 
+            indices = [ "1.."<> pretty l | l <- lengths ]
+            args = indices ++ [prettyList prBrackets "," (map nestedPretty xs)]
+        in
+            "array" <> pretty depth <> "d" <> prettyList prParens "," args
+    pretty (MZNSet xs) = prettyList prBraces "," (map pretty xs)
     pretty (MZNNamed xs) = vcat [pretty n <+> "=" <+> pretty x <> ";" | (n,x) <- xs]
 
 class ToFromMiniZinc a where
