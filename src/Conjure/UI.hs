@@ -191,8 +191,9 @@ data UI
         }
     | AutoIG
         { essence                    :: FilePath
-        , iracefilepath              :: FilePath
+        , outputFilepath             :: FilePath
         , generatorToIrace           :: Bool
+        , removeAux                  :: Bool
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
@@ -1281,14 +1282,20 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , iracefilepath
+        , outputFilepath
             = def
-            &= typ "IRACE_FILE"
+            &= typ "OUTPUT_FILE"
             &= argPos 1
         , generatorToIrace
             = False
             &= name "generator-to-irace"
+            &= explicit
             &= help "Convert the givens in a hand written generator model to irace syntax."
+        , removeAux
+            = False
+            &= name "remove-aux"
+            &= explicit
+            &= help "Remove lettings whose name start with Aux"
         , logLevel
             = def
             &= name "log-level"

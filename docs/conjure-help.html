@@ -215,11 +215,12 @@
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
-<tr><td colspan='3'>conjure autoig [OPTIONS] ESSENCE_FILE IRACE_FILE</td></tr>
+<tr><td colspan='3'>conjure autoig [OPTIONS] ESSENCE_FILE OUTPUT_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Generate an Essence model describing the instances of the problem class defined in the input Essence model.<br />An error will be printed if the model has infinitely many instances.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Flags:</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-g</td><td style='padding-left:1ex; white-space:nowrap;'>--generator-to-irace --generatortoirace</td><td style='padding-left:2ex;'>Convert the givens in a hand written generator model to irace syntax.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--generator-to-irace</td><td style='padding-left:2ex;'>Convert the givens in a hand written generator model to irace syntax.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--remove-aux</td><td style='padding-left:2ex;'>Remove lettings whose name start with Aux</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output. All output formats can also be used for input.<br />    plain: default<br />    binary: a binary encoding<br />    astjson: a JSON dump of the internal data structures, quite verbose<br />    json: a simplified JSON format, only used for parameters and solutions<br />    minizinc: minizinc format for data files, only used for solutions<br /></td></tr>
