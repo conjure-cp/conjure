@@ -66,6 +66,7 @@ instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (Abstr
     toMiniZinc lit =
         case lit of
             AbsLitTuple xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitMatrix (DomainInt _ [RangeSingle r]) xs -> MZNArray (Just $ show $ pretty r <> ".." <> pretty r) <$> mapM toMiniZinc xs
             AbsLitMatrix (DomainInt _ [r]) xs -> MZNArray (Just $ show $ pretty r) <$> mapM toMiniZinc xs
             AbsLitMatrix _index xs -> MZNArray Nothing <$> mapM toMiniZinc xs
             AbsLitSet xs ->
