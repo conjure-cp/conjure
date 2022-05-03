@@ -47,7 +47,7 @@ class (:<) a b where
 
 data MiniZincData = MZNBool Bool
                   | MZNInt Integer
-                  | MZNArray [MiniZincData]
+                  | MZNArray (Maybe String) [MiniZincData] -- index if any, then data
                   | MZNSet [MiniZincData]
                   | MZNNamed [(Name, MiniZincData)]
     deriving (Eq, Ord, Show)
@@ -55,18 +55,26 @@ data MiniZincData = MZNBool Bool
 instance Pretty MiniZincData where
     pretty (MZNBool x) = pretty x
     pretty (MZNInt x) = pretty x
-    pretty (MZNArray xs) =
+    pretty (MZNArray index xs) =
         let
-            nestedPretty (MZNArray ys) = prettyList id "," ys
+            nestedPretty (MZNArray _ ys) = prettyList id "," ys
             nestedPretty y = pretty y
 
-            calcLengths (MZNArray []) = []
-            calcLengths (MZNArray ys@(y:_)) = length ys : calcLengths y
-            calcLengths _ = []
-            lengths = calcLengths (MZNArray xs)
-            depth = length lengths 
-            indices = [ "1.."<> pretty l | l <- lengths ]
-            args = indices ++ [prettyList prBrackets "," (map nestedPretty xs)]
+            fillNothingIndices (MZNArray Nothing ys) = MZNArray (Just $ "1.." ++ show (length xs)) (map fillNothingIndices ys)
+            fillNothingIndices (MZNArray (Just index2) ys) = MZNArray (Just index2) (map fillNothingIndices ys)
+            fillNothingIndices m@MZNBool{} = m
+            fillNothingIndices m@MZNInt{} = m
+            fillNothingIndices (MZNSet ys) = MZNSet (map fillNothingIndices ys)
+            fillNothingIndices (MZNNamed ys) = MZNNamed [(n, fillNothingIndices y) | (n, y) <- ys]
+
+            calcIndices (MZNArray index2 []) = [index2]
+            calcIndices (MZNArray index2 (y:_)) = index2 : calcIndices y
+            calcIndices _ = []
+
+            indices = calcIndices $ fillNothingIndices $ MZNArray index xs
+            depth = length indices
+
+            args = [pretty i | Just i <- indices] ++ [prettyList prBrackets "," (map nestedPretty xs)]
         in
             "array" <> pretty depth <> "d" <> prettyList prParens "," args
     pretty (MZNSet xs) = prettyList prBraces "," (map pretty xs)

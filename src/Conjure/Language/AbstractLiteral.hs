@@ -65,21 +65,22 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
 instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (AbstractLiteral x) where
     toMiniZinc lit =
         case lit of
-            AbsLitTuple xs -> MZNArray <$> mapM toMiniZinc xs
-            AbsLitMatrix _index xs -> MZNArray <$> mapM toMiniZinc xs
+            AbsLitTuple xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitMatrix (DomainInt _ [r]) xs -> MZNArray (Just $ show $ pretty r) <$> mapM toMiniZinc xs
+            AbsLitMatrix _index xs -> MZNArray Nothing <$> mapM toMiniZinc xs
             AbsLitSet xs ->
                 case xs of
                     (x:_) | Just _ <- intOut "toMiniZinc" x -> MZNSet <$> mapM toMiniZinc xs
-                    _ -> MZNArray <$> mapM toMiniZinc xs
-            AbsLitMSet xs -> MZNArray <$> mapM toMiniZinc xs
-            AbsLitFunction xs -> MZNArray <$> mapM (toMiniZinc . snd) xs
-            AbsLitSequence xs -> MZNArray <$> mapM toMiniZinc xs
+                    _ -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitMSet xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitFunction xs -> MZNArray Nothing <$> mapM (toMiniZinc . snd) xs
+            AbsLitSequence xs -> MZNArray Nothing <$> mapM toMiniZinc xs
             AbsLitRelation xss ->
-                MZNArray <$> forM xss (\ xs ->
-                    MZNArray <$> mapM toMiniZinc xs)
+                MZNArray Nothing <$> forM xss (\ xs ->
+                    MZNArray Nothing <$> mapM toMiniZinc xs)
             AbsLitPartition xss ->
-                MZNArray <$> forM xss (\ xs ->
-                    MZNArray <$> mapM toMiniZinc xs)
+                MZNArray Nothing <$> forM xss (\ xs ->
+                    MZNArray Nothing <$> mapM toMiniZinc xs)
             _ -> noToMiniZinc lit
 
 instance Pretty a => Pretty (AbstractLiteral a) where
