@@ -60,7 +60,7 @@ instance Pretty MiniZincData where
             nestedPretty (MZNArray _ ys) = prettyList id "," ys
             nestedPretty y = pretty y
 
-            fillNothingIndices (MZNArray Nothing ys) = MZNArray (Just $ "1.." ++ show (length xs)) (map fillNothingIndices ys)
+            fillNothingIndices (MZNArray Nothing ys) = MZNArray (Just $ "1.." ++ show (length ys)) (map fillNothingIndices ys)
             fillNothingIndices (MZNArray (Just index2) ys) = MZNArray (Just index2) (map fillNothingIndices ys)
             fillNothingIndices m@MZNBool{} = m
             fillNothingIndices m@MZNInt{} = m
