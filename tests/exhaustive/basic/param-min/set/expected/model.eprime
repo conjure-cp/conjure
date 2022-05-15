@@ -5,5 +5,5 @@ given b: int(1..200)
 letting c be min([200, a + b; int(1..2)])
 where c >= b
 branching on []
-such that true
+such that allDiff([200, a + b; int(1..2)])
 

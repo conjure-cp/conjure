@@ -1,4 +1,5 @@
 language ESSENCE' 1.0
+
 given A_1: matrix indexed by [int(0..1)] of bool
 given A_2: matrix indexed by [int(0..1)] of bool
 find B_1: matrix indexed by [int(0..1)] of bool
@@ -7,3 +8,4 @@ branching on [B_1, B_2]
 such that
     flatten([flatten([[-toInt(A_1[q2]); int(1)], [-toInt(A_2[q2]); int(1)]; int(1..2)]) | q2 : int(0..1)]) <lex
     flatten([flatten([[-toInt(B_1[q3]); int(1)], [-toInt(B_2[q3]); int(1)]; int(1..2)]) | q3 : int(0..1)])
+

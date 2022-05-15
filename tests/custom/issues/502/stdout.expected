@@ -6,5 +6,7 @@ letting c be max([a, b; int(1..2)])
 letting d be c + 5
 find x: int(1..100)
 branching on [x]
-such that x = d
+such that
+    allDiff([a, b; int(1..2)]),
+    x = d
 
