@@ -122,6 +122,9 @@ import qualified Data.Vector as V           -- vector
 -- containers
 import qualified Data.Set as S
 
+-- text
+import qualified Data.Text as T ( stripPrefix )
+
 
 outputModels ::
     forall m .
@@ -1172,6 +1175,21 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
+removeUnderscores :: Monad m => Model -> m Model
+removeUnderscores model = do
+    let
+        -- SR doesn't support identifiers that start with _
+        -- we replace them with UNDERSCORE_
+        onName :: Name -> Name
+        onName (Name t) =
+            case T.stripPrefix "_" t of
+                Nothing -> Name t
+                Just t' -> Name (mappend "UNDERSCORE__" t')
+        onName n = n
+
+    return $ transformBi onName model
+
+
 lexSingletons :: (?typeCheckerMode :: TypeCheckerMode)
               => Monad m
               => Model -> m Model
@@ -1211,6 +1229,7 @@ prologue ::
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
+    >>= removeUnderscores             >>= logDebugIdModel "[removeUnderscores]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
     >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
     >>= inferAttributes               >>= logDebugIdModel "[inferAttributes]"
