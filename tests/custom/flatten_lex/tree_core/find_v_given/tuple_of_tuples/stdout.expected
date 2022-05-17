@@ -1,4 +1,5 @@
 language ESSENCE' 1.0
+
 given A_1_1: bool
 given A_1_2: bool
 given A_2_1: int(1..5)
@@ -18,3 +19,4 @@ such that
     flatten([flatten([[-toInt(B_1_1); int(1)], [-toInt(B_1_2); int(1)]; int(1..2)]),
              flatten([[B_2_1; int(1)], [B_2_2; int(1)]; int(1..2)]), [-toInt(B_3); int(1)];
                  int(1..3)])
+

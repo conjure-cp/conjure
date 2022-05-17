@@ -189,6 +189,16 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | AutoIG
+        { essence                    :: FilePath
+        , outputFilepath             :: FilePath
+        , generatorToIrace           :: Bool
+        , removeAux                  :: Bool
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
+        }
     | Boost
         { essence                    :: FilePath
         , logLevel                   :: LogLevel
@@ -1263,6 +1273,60 @@ ui = modes
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "parameter-generator"
+            &= explicit
+            &= help "Generate an Essence model describing the instances of the problem class \
+                    \defined in the input Essence model.\n\
+                    \An error will be printed if the model has infinitely many instances."
+    , AutoIG
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
+        , outputFilepath
+            = def
+            &= typ "OUTPUT_FILE"
+            &= argPos 1
+        , generatorToIrace
+            = False
+            &= name "generator-to-irace"
+            &= explicit
+            &= help "Convert the givens in a hand written generator model to irace syntax."
+        , removeAux
+            = False
+            &= name "remove-aux"
+            &= explicit
+            &= help "Remove lettings whose name start with Aux"
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Limit in seconds of real time."
+        , outputFormat
+            = def
+            &= name "output-format"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= typ "FORMAT"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
+        , lineWidth
+            = 120
+            &= name "line-width"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Line width for pretty printing.\nDefault: 120"
+        }   &= name "autoig"
             &= explicit
             &= help "Generate an Essence model describing the instances of the problem class \
                     \defined in the input Essence model.\n\

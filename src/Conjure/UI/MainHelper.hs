@@ -193,6 +193,44 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
+mainWithArgs AutoIG{..} | generatorToIrace = do
+    model <- readModelFromFile essence
+    let
+        toIrace nm lb ub | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            prParens (pretty lb)
+        toIrace nm lb ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" i" <+>
+            prettyList prParens "," [lb, ub]
+    let (iraceStmts, errors) = mconcat
+            [ case st of
+                Declaration (FindOrGiven Given nm domain) ->
+                    case domain of
+                        DomainInt _ [RangeBounded lb ub] -> ([toIrace nm lb ub], [])
+                        _ -> ([], ["Unsupported domain for given" <+> pretty nm <> ":" <+> pretty domain])
+                _ -> ([], [])
+            | st <- mStatements model
+            ]
+    if null errors
+        then do
+            let essenceOutFileContents = render lineWidth $ vcat iraceStmts
+            liftIO $ writeFile outputFilepath (essenceOutFileContents ++ "\n")
+        else
+            userErr errors
+mainWithArgs AutoIG{..} | removeAux = do
+    model <- readModelFromFile essence
+    let stmts' = [ case st of
+                    Declaration (FindOrGiven _ nm _) | "Aux" `isPrefixOf` show (pretty nm) -> Nothing
+                                                     | otherwise -> Just st
+                    Declaration (Letting nm _) | "Aux" `isPrefixOf` show (pretty nm) -> Nothing
+                                               | otherwise -> Just st
+                    _ -> Just st
+                 | st <- mStatements model
+                 ]
+    writeModel lineWidth outputFormat (Just outputFilepath) model {mStatements = catMaybes stmts'}
+mainWithArgs AutoIG{..} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
 mainWithArgs Boost{..} = do
     model <- readModelFromFile essence
     runNameGen model $ do

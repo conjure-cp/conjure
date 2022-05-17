@@ -386,6 +386,26 @@
  General:
       --limit-time=INT                        Limit in seconds of real time.
  
+ conjure autoig [OPTIONS] ESSENCE_FILE OUTPUT_FILE
+   Generate an Essence model describing the instances of the problem class defined in the input Essence model.
+   An error will be printed if the model has infinitely many instances.
+ 
+ Flags:
+      --generator-to-irace                    Convert the givens in a hand written generator model to irace syntax.
+      --remove-aux                            Remove lettings whose name start with Aux
+ Logging & Output:
+      --log-level=LOGLEVEL                    Log level.
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
+      --line-width=INT                        Line width for pretty printing.
+                                              Default: 120
+ General:
+      --limit-time=INT                        Limit in seconds of real time.
+ 
  conjure boost [OPTIONS] ESSENCE_FILE
    Strengthen an Essence model as described in "Reformulating Essence Specifications for Robustness",
    which aims to make search faster.

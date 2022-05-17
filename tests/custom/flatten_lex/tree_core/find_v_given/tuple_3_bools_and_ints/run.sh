@@ -1,3 +1,3 @@
 conjure modelling *.essence
-cat conjure-output/*.eprime | grep "^[^$]"
+cat conjure-output/*.eprime | grep -v "^[$]"
 rm -r conjure-output

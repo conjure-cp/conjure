@@ -3,7 +3,7 @@ conjure solve *.essence *.param --validate-solutions --line-width 80
 # conjure solve *.essence --line-width 80
 for file in conjure-output/*.eprime conjure-output/*.solution; do
     echo "File: $file"
-    cat $file | grep -v '\$'
+    cat $file | grep -v "^[$]"
     echo "--------------------"
     echo ""
 done
