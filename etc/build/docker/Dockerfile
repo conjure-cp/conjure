@@ -6,10 +6,13 @@
 # https://github.com/docker-library/openjdk/blob/master/11/jre/slim/Dockerfile
 # with the other components on top of a slim Debian base image.
 
-FROM debian:sid-slim
+FROM debian:stable-slim
 
 ENV LANG        C.UTF-8
 ENV WORK        /conjure
+
+# Stop tzdata prompt
+ENV DEBIAN_FRONTEND=noninteractive
 
 # create a JAVA_HOME that's cross-architecture-safe
 ENV JAVA_HOME /docker-java-home
@@ -29,29 +32,25 @@ RUN set -ex; \
 # ... and verify it worked for one of the alternatives
     update-alternatives --query java | grep -q 'Status: manual'
 
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update \
+&&  apt-get install -y --no-install-recommends \
      ca-certificates \
      dirmngr \
      git \
      gnupg \
- && echo 'deb http://downloads.haskell.org/debian stretch main' > /etc/apt/sources.list.d/ghc.list \
- && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BA3CBA3FFE22B574 \
-# the following apt-get update is necessary to pick up the Haskell components
- && apt-get update \
  && apt-get install -y --no-install-recommends \
      bison \
-     cabal-install-2.2 \
      cmake \
      flex \
      g++ \
-     ghc-8.4.3 \
      libsqlite3-dev \
      libtinfo-dev \
      make \
      netbase \
      wget \
      zlib1g-dev \
-     xz-utils
+     xz-utils \
+     libgmp-dev
 
 WORKDIR $WORK
 
@@ -63,21 +62,12 @@ RUN apt-get install -y --no-install-recommends \
  && curl -fSL https://github.com/commercialhaskell/stack/releases/download/v1.7.1/stack-1.7.1-linux-x86_64.tar.gz -o stack.tar.gz \
  && curl -fSL https://github.com/commercialhaskell/stack/releases/download/v1.7.1/stack-1.7.1-linux-x86_64.tar.gz.asc -o stack.tar.gz.asc \
  && apt-get purge -y --auto-remove curl \
- && export GNUPGHOME=$WORK \
- && for server in ha.pool.sks-keyservers.net \
-              hkp://p80.pool.sks-keyservers.net:80 \
-              keyserver.ubuntu.com \
-              hkp://keyserver.ubuntu.com:80 \
-              pgp.mit.edu; \
-    do gpg --keyserver "$server" --recv-keys C5705533DA4F78D8664B5DC0575159689BEFB442 && break || echo "Trying new server..."; \
-    done \
- && gpg --batch --verify stack.tar.gz.asc stack.tar.gz \
  && tar -xf stack.tar.gz -C /usr/local/bin --strip-components=1 \
  && /usr/local/bin/stack config set system-ghc --global true \
  && /usr/local/bin/stack config set install-ghc --global false \
  && rm -f stack.tar.gz.asc stack.tar.gz
 
-ENV PATH        /root/.cabal/bin:/root/.local/bin:/opt/cabal/2.2/bin:/opt/ghc/8.4.3/bin:$PATH
+ENV PATH        /root/.cabal/bin:/root/.local/bin:$PATH
 ENV BIN_DIR     /root/.local/bin
 
 RUN git clone https://github.com/conjure-cp/conjure.git
@@ -92,12 +82,10 @@ RUN apt-get purge -y --auto-remove \
      bison \
 # JRE depends on this, don't remove:
 #     ca-certificates \
-     cabal-install-2.2 \
      cmake \
      dirmngr \
      flex \
      g++ \
-     ghc-8.4.3 \
      git \
      gnupg \
      libsqlite3-dev \
