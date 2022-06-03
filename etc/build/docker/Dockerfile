@@ -78,7 +78,7 @@ RUN git checkout v2.3.0
 RUN make
 # RUN PROCESSES=4 make solvers
 RUN etc/build/install-minion.sh
-RUN etc/build/install-cadical.sh
+RUN etc/build/install-lingeling.sh
 
 
 RUN apt-get purge -y --auto-remove \
