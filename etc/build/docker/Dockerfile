@@ -8,6 +8,8 @@
 
 FROM debian:stable-slim
 
+ARG BRANCH=v2.3.0
+
 ENV LANG        C.UTF-8
 ENV WORK        /conjure
 
@@ -73,7 +75,7 @@ ENV BIN_DIR     /root/.local/bin
 RUN git clone https://github.com/conjure-cp/conjure.git
 WORKDIR $WORK/conjure
 RUN git pull
-RUN git checkout v2.3.0
+RUN git checkout $BRANCH
 
 RUN make
 # RUN PROCESSES=4 make solvers
