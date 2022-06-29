@@ -22,7 +22,7 @@ import Conjure.Prelude
 import Text.Printf ( printf )
 
 -- text
-import qualified Data.Text as T ( Text, unpack, replace, length )
+import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap )
 
 -- pretty
 import Text.PrettyPrint
@@ -114,10 +114,19 @@ prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
 -- JSON ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- Not exhaustive, just the ones that are 
+-- likely to appear and cause trouble in output.
+jsonEsc :: Char -> Text
+jsonEsc '"' = "\\\""
+jsonEsc '\\' = "\\\\"
+jsonEsc '\r' = "\\r"
+jsonEsc '\n' = "\\n"
+jsonEsc c = T.singleton c
+
 instance Pretty JSON.Value where
     pretty (Object x) = pretty x
     pretty (Array x) = pretty x
-    pretty (String x) = "\"" <> pretty (T.unpack (T.replace "\"" "\\\"" x)) <> "\""
+    pretty (String x) = "\"" <> pretty (T.unpack (T.concatMap jsonEsc x)) <> "\""
     pretty (Number x) = pretty x
     pretty (Bool False) = "false"
     pretty (Bool True) = "true"
