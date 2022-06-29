@@ -11,7 +11,7 @@ pushd tmp-install-kissat
 git clone https://github.com/arminbiere/kissat.git
 cd kissat
 # latest on Github as of 24 September 2020, around when they won the SAT competition
-git checkout baef4609163f542dc08f43aef02ce8da0581a2b5
+git checkout rel-1.1.1
 ./configure
 make kissat
 cp build/kissat ${BIN_DIR}/kissat
