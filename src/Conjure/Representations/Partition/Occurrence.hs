@@ -1,7 +1,6 @@
 -- {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Partition.Occurrence ( partitionOccurrence ) where
 
@@ -211,7 +210,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
         downC :: TypeOf_DownC m
         downC ( name
               , inDom@(DomainPartition Partition_Occurrence attrs innerDomain)
-              , inConstant@(ConstantAbstract (AbsLitPartition vals))
+              , inConstant@(viewConstantPartition -> Just vals)
               ) = do
             Just [ ( numPartsVar   , numPartsDom   )
                  , ( whichPart     , whichPartDom  )

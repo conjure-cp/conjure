@@ -114,14 +114,15 @@ sanityChecks model = do
 
 
         -- check for function literals
-        --     they cannot contain anything > CatParameter
         --     they cannot map the same element to multiple range elemnets
         -- check for partition literals
-        --     they cannot contain anything > CatParameter
         --     the parts have to be disjoint
         -- TODO: Generate where clauses for when they contain parameters.
         checkLit :: MonadFail m => Expression -> m Expression
         checkLit lit = case lit of
+            AbstractLiteral (AbsLitSet xs) -> do
+                let ys = fromList xs
+                return $ WithLocals lit (DefinednessConstraints [ [essence| allDiff(&ys) |] ])
             AbstractLiteral (AbsLitFunction mappings) -> do
                 let defineds = fromList $ map fst mappings
                 return $ WithLocals lit (DefinednessConstraints [ [essence| allDiff(&defineds) |] ])

@@ -134,7 +134,7 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals_)
+              , viewConstantFunction -> Just vals_
               ) | domainCanIndexMatrix innerDomainFr = do
             let vals = M.fromList vals_
             z <- zeroVal innerDomainTo

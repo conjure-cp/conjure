@@ -165,7 +165,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                     case d of
                         DomainFunction _ _ (DomainTuple [DomainInt{}, DomainInt{}]) _ ->
                             case c of
-                                ConstantAbstract (AbsLitFunction rows) ->
+                                (viewConstantFunction -> Just rows) ->
                                     [ case row of
                                         (ConstantAbstract (AbsLitTuple [a, b]), _) -> [a,b]
                                         _ -> []
@@ -173,7 +173,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                 _ -> []
                         DomainRelation _ _ ([DomainInt{}, DomainInt{}, _]) ->
                             case c of
-                                ConstantAbstract (AbsLitRelation rows) ->
+                                (viewConstantRelation -> Just rows) ->
                                     [ case row of
                                         [a, b, _] -> [a,b]
                                         _ -> []

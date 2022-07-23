@@ -11,6 +11,7 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.Type
 
@@ -201,6 +202,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
         helper domain constant = case (domain, constant) of
 
+            (_, TypedConstant c _) -> helper domain c
+
             (_, c@ConstantUndefined{}) -> c
 
             (DomainBool  , c) -> c
@@ -214,56 +217,58 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainReference ename _  , ConstantInt _ i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat  [ "domain  :" <+> pretty domain
-                                                                                  , "constant:" <+> pretty constant
-                                                                                  ]
+                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat [ "domain  :" <+> pretty domain
+                                                                            , "constant:" <+> pretty constant
+                                                                            ]
 
-            (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
+            (DomainTuple ds, viewConstantTuple -> Just cs) ->
                 ConstantAbstract $ AbsLitTuple
                     [ helper d c
                     | (d,c) <- zip ds cs ]
 
-            (DomainRecord ds, ConstantAbstract (AbsLitRecord cs)) ->
+            (DomainRecord (sortOn fst -> ds), viewConstantRecord -> Just cs) ->
                 ConstantAbstract $ AbsLitRecord
                     [ (n, helper d c)
                     | ((n,d),(_,c)) <- zip ds cs ]
 
-            (DomainVariant ds, ConstantAbstract (AbsLitVariant t n c)) ->
+            (DomainVariant ds, viewConstantVariant -> Just (t, n, c)) ->
                 case lookup n ds of
                     Nothing -> bug $ "addEnumsAndUnnamedsBack Variant:" <++> vcat [ "domain  :" <+> pretty domain
                                                                                   , "constant:" <+> pretty constant
                                                                                   ]
                     Just d  -> ConstantAbstract $ AbsLitVariant t n (helper d c)
 
-            (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
+            (DomainMatrix _ inner, viewConstantMatrix -> Just (index, vals)) ->
                 ConstantAbstract $ AbsLitMatrix index $ map (helper inner) vals
 
-            (DomainSet _ _ inner, ConstantAbstract (AbsLitSet vals)) ->
+            (DomainSet _ _ inner, viewConstantSet -> Just vals) ->
                 ConstantAbstract $ AbsLitSet $ map (helper inner) vals
 
-            (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet vals)) ->
+            (DomainMSet _ _ inner, viewConstantMSet -> Just vals) ->
                 ConstantAbstract $ AbsLitMSet $ map (helper inner) vals
 
-            (DomainFunction _ _ fr to, ConstantAbstract (AbsLitFunction vals)) ->
+            (DomainFunction _ _ fr to, viewConstantFunction -> Just vals) ->
                 ConstantAbstract $ AbsLitFunction
                     [ (helper fr a, helper to b)
                     | (a,b) <- vals ]
 
-            (DomainSequence _ _ inner, ConstantAbstract (AbsLitSequence vals)) ->
+            (DomainSequence _ _ inner, viewConstantSequence -> Just vals) ->
                 ConstantAbstract $ AbsLitSequence $ map (helper inner) vals
 
-            (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
+            (DomainRelation _ _ inners, viewConstantRelation -> Just vals) ->
                 ConstantAbstract $ AbsLitRelation
                     [ [ helper d c | (d,c) <- zip inners line ]
                     | line <- vals ]
 
-            (DomainPartition _ _ inner, ConstantAbstract (AbsLitPartition vals)) ->
+            (DomainPartition _ _ inner, viewConstantPartition -> Just vals) ->
                 ConstantAbstract $ AbsLitPartition
                     [ [ helper inner c | c <- line ]
                     | line <- vals ]
 
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
+                                                             , "domain  :" <+> pretty (show domain)
+                                                             , "constant:" <+> pretty (show constant)
                                                              ])
 
 -- first Name is the value, the second Name is the name of the enum domain

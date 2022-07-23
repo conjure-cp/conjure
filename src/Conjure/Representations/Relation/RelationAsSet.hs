@@ -1,6 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 
@@ -95,7 +94,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
         downC :: TypeOf_DownC m
         downC ( name
               , inDom
-              , ConstantAbstract (AbsLitRelation vals)
+              , viewConstantRelation -> Just  vals
               ) = do
             outDom <- outDomain inDom
             rDownC
@@ -113,7 +112,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation Relation_AsSet{} _ _)) =
             case lookup (outName domain name) ctxt of
-                Just (ConstantAbstract (AbsLitSet tuples)) -> do
+                Just (viewConstantSet -> Just tuples) -> do
                     vals <- mapM viewConstantTuple tuples
                     return (name, ConstantAbstract (AbsLitRelation vals))
                 Nothing -> fail $ vcat $

@@ -1,5 +1,6 @@
  ========== 1 ==========
 language ESSENCE' 1.0
+
 given n: int
 given fin1: int
 given G_ExplicitR3_Explicit: matrix indexed by [int(1..fin1), int(1..2)] of int(1..n)
@@ -23,8 +24,10 @@ such that
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..n)])
 
 
+
  ========== 2 ==========
 language ESSENCE' 1.0
+
 given n: int
 given fin1: int
 given G_ExplicitR3_Explicit: matrix indexed by [int(1..fin1), int(1..2)] of int(1..n)
@@ -46,6 +49,7 @@ such that
     and([S_Occurrence[q7] = conjure_aux1_Occurrence[q7] | q7 : int(1..n)]),
     and([f_Function1DPartial_Flags[u] | u : int(1..n)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..n)])
+
 
 
  ========== 3 ==========

@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Function.FunctionNDPartial ( functionNDPartial ) where
 
@@ -164,7 +163,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , viewConstantFunction -> Just vals
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             z <- zeroVal innerDomainTo

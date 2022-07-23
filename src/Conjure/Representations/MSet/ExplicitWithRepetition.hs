@@ -85,12 +85,12 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                             forAll &iPat : int(1..&maxIndex) , &i > &flag . dontCare(&values[&i])
                         |]
 
-                minOccurrenceCons mset flag values = do
+                minOccurrenceCons mset = do
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : int(1..&maxIndex) , &i <= &flag .
-                                (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
+                            forAll &iPat : &innerDomain .
+                                freq(&mset, &i) >= &minOccur
                                   |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
@@ -123,7 +123,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                         concat <$> sequence
                             [ orderingUpToFlag  flag values
                             , dontCareAfterFlag flag values
-                            , minOccurrenceCons mset flag values
+                            , minOccurrenceCons mset
                             , maxOccurrenceCons mset flag values
                             , return (mkSizeCons sizeAttrs flag)
                             , innerStructuralCons flag values
@@ -135,7 +135,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
-              , ConstantAbstract (AbsLitMSet constants)
+              , viewConstantMSet -> Just constants
               ) = case attrs of
                     MSetAttr (SizeAttr_Size size) _ -> do
                         let indexDomain = mkDomainIntB 1 size

@@ -7,6 +7,7 @@ module Conjure.Representations.Function.FunctionAsRelation ( functionAsRelation 
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -133,7 +134,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         downC :: TypeOf_DownC m
         downC ( name
               , inDom
-              , ConstantAbstract (AbsLitFunction vals)
+              , viewConstantFunction -> Just vals
               ) = do
             outDom <- outDomain inDom
             rDownC
@@ -151,7 +152,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction Function_AsRelation{} _ _ _)) =
             case lookup (outName domain name) ctxt of
-                Just (ConstantAbstract (AbsLitRelation pairs)) -> do
+                Just (viewConstantRelation -> Just  pairs) -> do
                     let pairOut [a,b] = return (a,b)
                         pairOut c = fail $ "Expecting a 2-tuple, but got:" <++> prettyList prParens "," c
                     vals <- mapM pairOut pairs

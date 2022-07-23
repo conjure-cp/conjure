@@ -1,7 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Partition.PartitionAsSet ( partitionAsSet ) where
 
@@ -154,7 +153,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         downC :: TypeOf_DownC m
         downC ( name
               , inDom
-              , ConstantAbstract (AbsLitPartition vals)
+              , viewConstantPartition -> Just vals
               ) = do
             outDom <- outDomain inDom
             rDownC

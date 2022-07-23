@@ -76,7 +76,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainRelation Relation_AsMatrix _ innerDomains)
-              , ConstantAbstract (AbsLitRelation vals)
+              , viewConstantRelation -> Just  vals
               ) | all domainCanIndexMatrix innerDomains = do
             let
                 check :: [Constant] -> Bool

@@ -13,6 +13,7 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TH
@@ -298,7 +299,7 @@ resolveAbsPat context (AbsPatMatrix ps) x =
               ]
 resolveAbsPat context (AbsPatSet ps) x = do
     ys <- case x of
-        Constant (ConstantAbstract (AbsLitSet xs)) -> return (map Constant xs)
+        Constant (viewConstantSet -> Just xs) -> return (map Constant xs)
         AbstractLiteral (AbsLitSet xs) -> return xs
         _ -> userErr1 $ "Abstract set pattern cannot be used in this context:" <++> pretty context
     sequence_ [ resolveAbsPat context p y

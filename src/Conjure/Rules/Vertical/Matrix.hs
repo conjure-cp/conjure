@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Rules.Vertical.Matrix where
 
@@ -583,4 +582,21 @@ rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
         return ( "Expanding a matrix slice"
                , return $ Comprehension (make opMatrixIndexingSlicing m is') (concat gocs)
                )
+
+
+-- freq(matrix,arg) ~~> sum([ toInt(arg = i) | i in matrix ])
+rule_Freq :: Rule
+rule_Freq = "matrix-freq" `namedRule` theRule where
+    theRule p = do
+        (m, arg) <- match opFreq p
+        TypeMatrix{}  <- typeOf m
+        [indexDom] <- indexDomainsOf m
+        return
+            ( "Horizontal rule for matrix-freq."
+            , do
+                (iPat, i) <- quantifiedVar
+                let mis = (make opMatrixIndexing m [i])
+                return $ make opSum $ Comprehension [essence| toInt(&mis = &arg) |]
+                            [Generator (GenDomainNoRepr iPat indexDom)]
+            )
 

@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Expression
     ( Statement(..), SearchOrder(..), Objective(..)
@@ -68,7 +67,13 @@ instance SimpleJSON Statement where
         case st of
             Declaration d -> toSimpleJSON d
             _ -> noToSimpleJSON st
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON = noFromSimpleJSON "Statement"
+
+instance ToFromMiniZinc Statement where
+    toMiniZinc st =
+        case st of
+            Declaration d -> toMiniZinc d
+            _ -> noToMiniZinc st
 
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
@@ -159,7 +164,15 @@ instance SimpleJSON Declaration where
                 x' <- toSimpleJSON x
                 return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
             _ -> noToSimpleJSON d
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON = noFromSimpleJSON "Declaration"
+
+instance ToFromMiniZinc Declaration where
+    toMiniZinc st =
+        case st of
+            Letting nm x -> do
+                x' <- toMiniZinc x
+                return $ MZNNamed [(nm, x')]
+            _ -> noToSimpleJSON st
 
 -- this is only used in the instance below
 type Prim = Either Bool (Either Integer Constant)
@@ -351,8 +364,21 @@ instance SimpleJSON Expression where
                     (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
                     _ -> noToSimpleJSON x
             _ -> noToSimpleJSON x
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON x = Constant <$> fromSimpleJSON x
 
+instance ToFromMiniZinc Expression where
+    toMiniZinc x =
+        case x of
+            Constant c -> toMiniZinc c
+            AbstractLiteral lit -> toMiniZinc lit
+            Typed y _ -> toMiniZinc y
+            Op (MkOpMinus (OpMinus a b)) -> do
+                a' <- toMiniZinc a
+                b' <- toMiniZinc b
+                case (a', b') of
+                    (MZNInt a'', MZNInt b'') -> return (MZNInt (a'' - b''))
+                    _ -> noToMiniZinc x
+            _ -> noToMiniZinc x
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
@@ -700,7 +726,7 @@ lambdaToFunction (AbsPatSet ts) body = \ p ->
 
         ps :: [Expression]
         ps = case p of
-            Constant (ConstantAbstract (AbsLitSet xs)) -> map Constant xs
+            Constant (viewConstantSet -> Just xs) -> map Constant xs
             AbstractLiteral (AbsLitSet xs) -> xs
             _ -> bug $ "lambdaToFunction, AbsPatSet" <++> vcat [pretty p, pretty (show p)]
     in

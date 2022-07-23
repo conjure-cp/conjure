@@ -1,7 +1,12 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
-module Conjure.Representations.Function.FunctionND ( functionND, viewAsDomainTuple, mkLensAsDomainTuple ) where
+module Conjure.Representations.Function.FunctionND
+    ( functionND
+    , viewAsDomainTuple
+    , viewAsDomainTupleS
+    , mkLensAsDomainTuple
+    , mkLensAsDomainTupleS
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -149,7 +154,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , value@(ConstantAbstract (AbsLitFunction vals))
+              , value@(viewConstantFunction -> Just vals)
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             let
@@ -256,6 +261,12 @@ viewAsDomainTuple (DomainTuple doms) = Just doms
 viewAsDomainTuple (DomainRecord doms) = Just (doms |> sortBy (comparing fst) |> map snd)
 viewAsDomainTuple _ = Nothing
 
+-- acts like viewAsDomainTuple, except single domains are returned as singleton tuples too
+viewAsDomainTupleS :: Domain r x -> Maybe [Domain r x]
+viewAsDomainTupleS (DomainTuple doms) = Just doms
+viewAsDomainTupleS (DomainRecord doms) = Just (doms |> sortBy (comparing fst) |> map snd)
+viewAsDomainTupleS d = Just [d]
+
 
 mkLensAsDomainTuple :: Domain r x -> Maybe ( [Constant] -> Constant             -- how to make a literal
                                            , Constant -> Maybe [Constant]       -- how to inspect a literal
@@ -276,3 +287,32 @@ mkLensAsDomainTuple (DomainRecord doms) =
                 _ -> Nothing
         )
 mkLensAsDomainTuple _ = Nothing
+
+
+
+-- acts like mkLensAsDomainTuple, except single domains are returned as singleton tuples too
+mkLensAsDomainTupleS :: Domain r x -> Maybe ( [Constant] -> Constant             -- how to make a literal
+                                            , Constant -> Maybe [Constant]       -- how to inspect a literal
+                                            )
+mkLensAsDomainTupleS (DomainTuple _) =
+    Just
+        ( \ vals -> ConstantAbstract (AbsLitTuple vals)
+        , \ val -> case val of
+                ConstantAbstract (AbsLitTuple vals) -> Just vals
+                _ -> Nothing
+        )
+mkLensAsDomainTupleS (DomainRecord doms) =
+    let names = doms |> sortBy (comparing fst) |> map fst
+    in  Just
+        ( \ vals -> ConstantAbstract (AbsLitRecord (zip names vals))
+        , \ val -> case val of
+                ConstantAbstract (AbsLitRecord vals) -> Just (vals |> sortBy (comparing fst) |> map snd)
+                _ -> Nothing
+        )
+mkLensAsDomainTupleS _ =
+    Just
+        ( \ vals -> case vals of
+                        [v] -> v
+                        _ -> bug "mkLensAsDomainTupleS"
+        , \ v -> Just [v]
+        )

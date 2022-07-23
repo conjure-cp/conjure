@@ -56,7 +56,7 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
                         let
                             minOccur = getMinOccur attrs
                             minOccurCons =
-                                [ [essence| forAll &iPat : &innerDomain . &m[&i] = 0 \/ &m[&i] >= &minOccur |]
+                                [ [essence| forAll &iPat : &innerDomain . &m[&i] >= &minOccur |]
                                 | minOccur /= 0 ]
                         let
                             cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
@@ -68,7 +68,7 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainMSet MSet_Occurrence _attrs innerDomain@(DomainInt t intRanges))
-              , ConstantAbstract (AbsLitMSet constants)
+              , viewConstantMSet -> Just constants
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
                 return $ Just

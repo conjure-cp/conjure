@@ -91,7 +91,7 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                 stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
                 unless (stdoutE == stdoutG) $
                     assertFailure $ renderNormal $ vcat
-                        [ "unexpected stderr:" <++> vcat (map pretty (lines stdoutG))
+                        [ "unexpected stdout:" <++> vcat (map pretty (lines stdoutG))
                         , "was expecting:    " <++> vcat (map pretty (lines stdoutE)) ]
             else []
 

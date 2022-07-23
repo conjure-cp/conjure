@@ -5,5 +5,5 @@ given b: int(1..)
 letting m be max([a, b; int(1..2)])
 find x: int(m)
 branching on [x]
-such that true
+such that allDiff([a, b; int(1..2)])
 

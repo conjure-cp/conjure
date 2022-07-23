@@ -3,6 +3,7 @@ module Conjure.UI.IO
     , readModelFromStdin
     , readModelPreambleFromFile
     , readModelInfoFromFile
+    , readParamJSON
     , readParamOrSolutionFromFile
     , writeModel, writeModels
     , readModel
@@ -18,7 +19,7 @@ import qualified Conjure.Language.ParserC as ParserC
 import Conjure.Language.Parser ( Parser )
 
 -- aeson
-import qualified Data.Aeson ( decodeStrict )
+import qualified Data.Aeson ( eitherDecodeStrict )
 
 -- cereal
 import qualified Data.Serialize ( decode, encode )
@@ -58,18 +59,35 @@ readModelFromStdin = do
     readModel Parser.parseModel (Just id) pair
 
 
+readParamJSON ::
+    MonadIO m =>
+    MonadUserError m =>
+    FilePath -> m Model
+readParamJSON fp = do
+    (_, contents) <- liftIO $ pairWithContents fp
+    let paramJSON = contents
+                    |> T.encodeUtf8                     -- convert Text to ByteString
+                    |> Data.Aeson.eitherDecodeStrict
+    case paramJSON of
+        Left err -> userErr1 (pretty err)
+        Right j -> fromSimpleJSON j
+
+
 readParamOrSolutionFromFile ::
     MonadIO m =>
     MonadFail m =>
     MonadUserError m =>
     FilePath -> m Model
 readParamOrSolutionFromFile fp = do
-    con <- liftIO $ BS.readFile fp
-    case Data.Serialize.decode con of
-        Right res -> return res
-        Left _ -> do
-            pair <- liftIO $ pairWithContents fp
-            readModel ParserC.parseModel (Just id) pair
+    if ".json" `isSuffixOf` fp
+        then readParamJSON fp
+        else do
+            con <- liftIO $ BS.readFile fp
+            case Data.Serialize.decode con of
+                Right res -> return res
+                Left _ -> do
+                    pair <- liftIO $ pairWithContents fp
+                    readModel ParserC.parseModel (Just id) pair
 
 
 readModelPreambleFromFile ::
@@ -124,17 +142,19 @@ readModel modelParser preprocess (fp, con) = do
             |> T.unlines
         infoJson = infoBlock
             |> T.encodeUtf8                     -- convert Text to ByteString
-            |> Data.Aeson.decodeStrict
+            |> Data.Aeson.eitherDecodeStrict
 
     if T.null (T.filter isSpace infoBlock)
         then return model
         else
             case infoJson of
-                Nothing -> userErr1 $ vcat
+                Left err -> userErr1 $ vcat
                     [ "Malformed JSON in a cached Essence Prime model."
                     , "It could be created by a different version of Conjure or modified by hand."
+                    , ""
+                    , pretty err
                     ]
-                Just i  -> return model { mInfo = i }
+                Right i -> return model { mInfo = i }
 
 
 onlyPreamble :: Text -> Text
@@ -179,6 +199,16 @@ writeModel lnWidth JSON Nothing spec = do
         else liftIO $ putStrLn (render lnWidth spec')
 writeModel lnWidth JSON (Just fp) spec = do
     spec' <- toSimpleJSON spec
+    if lnWidth == 0
+        then liftIO $ writeFile fp (show spec')
+        else liftIO $ writeFile fp (render lnWidth spec')
+writeModel lnWidth MiniZinc Nothing spec = do
+    spec' <- toMiniZinc spec
+    if lnWidth == 0
+        then liftIO $ putStrLn (show spec')
+        else liftIO $ putStrLn (render lnWidth spec')
+writeModel lnWidth MiniZinc (Just fp) spec = do
+    spec' <- toMiniZinc spec
     if lnWidth == 0
         then liftIO $ writeFile fp (show spec')
         else liftIO $ writeFile fp (render lnWidth spec')

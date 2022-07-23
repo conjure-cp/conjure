@@ -1,0 +1,21 @@
+language ESSENCE' 1.0
+
+find x_FunctionNDPartialDummy: matrix indexed by [int(7..8), bool] of int(13, 17, 12)
+given fin1: int
+given p_FunctionAsRelation_RelationAsSet_Explicit_1_fst: matrix indexed by [int(1..fin1)] of int(7..8)
+given p_FunctionAsRelation_RelationAsSet_Explicit_1_snd: matrix indexed by [int(1..fin1)] of bool
+given p_FunctionAsRelation_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of int(13, 17)
+branching on [x_FunctionNDPartialDummy]
+such that
+    and([x_FunctionNDPartialDummy
+             [p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q4],
+              p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q4]]
+         = p_FunctionAsRelation_RelationAsSet_Explicit_2[q4]
+             | q4 : int(1..fin1)]),
+    and([x_FunctionNDPartialDummy[q5_fst, q5_snd] != 12 ->
+         or([p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q7] = q5_fst /\
+             p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q7] = q5_snd
+             /\ p_FunctionAsRelation_RelationAsSet_Explicit_2[q7] = x_FunctionNDPartialDummy[q5_fst, q5_snd]
+                 | q7 : int(1..fin1)])
+             | q5_fst : int(7..8), q5_snd : bool])
+

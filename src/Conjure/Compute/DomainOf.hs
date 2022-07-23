@@ -262,11 +262,12 @@ instance DomainOf Constant where
     domainOf ConstantBool{}             = return DomainBool
     domainOf i@(ConstantInt t _)        = return $ DomainInt t [RangeSingle (Constant i)]
     domainOf (ConstantEnum defn _ _ )   = return (DomainEnum defn Nothing Nothing)
-    domainOf ConstantField{}            = fail "DomainOf-Constant-ConstantField"
+    domainOf ConstantField{}            = fail "DomainOf-ConstantField"
     domainOf (ConstantAbstract x)       = domainOf (fmap Constant x)
     domainOf (DomainInConstant dom)     = return (fmap Constant dom)
     domainOf (TypedConstant x ty)       = domainOf (Typed (Constant x) ty)
-    domainOf ConstantUndefined{}        = fail "DomainOf-Constant-ConstantUndefined"
+    domainOf ConstantUndefined{}        = fail "DomainOf-ConstantUndefined"
+    domainOf ConstantFromJSON{}         = fail "DomainOf-ConstantFromJSON"
 
     indexDomainsOf ConstantBool{}       = return []
     indexDomainsOf ConstantInt{}        = return []
@@ -276,6 +277,7 @@ instance DomainOf Constant where
     indexDomainsOf DomainInConstant{}   = return []
     indexDomainsOf (TypedConstant x ty) = indexDomainsOf (Typed (Constant x) ty)
     indexDomainsOf ConstantUndefined{}  = return []
+    indexDomainsOf ConstantFromJSON{}   = return []
 
 instance DomainOf (AbstractLiteral Expression) where
 

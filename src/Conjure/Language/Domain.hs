@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Domain
     ( Domain(..)
@@ -793,6 +792,7 @@ data HasRepresentation
     | Function_1DPartial
     | Function_ND
     | Function_NDPartial
+    | Function_NDPartialDummy
     | Function_AsRelation HasRepresentation                     -- carries: representation for the inner relation
 
     | Sequence_ExplicitBounded
@@ -924,6 +924,7 @@ textToRepresentation t []             | t == "Function1D"                 = retu
 textToRepresentation t []             | t == "Function1DPartial"          = return Function_1DPartial
 textToRepresentation t []             | t == "FunctionND"                 = return Function_ND
 textToRepresentation t []             | t == "FunctionNDPartial"          = return Function_NDPartial
+textToRepresentation t []             | t == "FunctionNDPartialDummy"     = return Function_NDPartialDummy
 textToRepresentation t [repr]         | t == "FunctionAsRelation"         = return (Function_AsRelation repr)
 textToRepresentation t []             | t == "ExplicitBounded"            = return Sequence_ExplicitBounded
 textToRepresentation t []             | t == "RelationAsMatrix"           = return Relation_AsMatrix
@@ -945,6 +946,7 @@ representationToShortText Function_1D                    = "Function1D"
 representationToShortText Function_1DPartial             = "Function1DPartial"
 representationToShortText Function_ND                    = "FunctionND"
 representationToShortText Function_NDPartial             = "FunctionNDPartial"
+representationToShortText Function_NDPartialDummy        = "FunctionNDPartialDummy"
 representationToShortText Function_AsRelation{}          = "FunctionAsRelation"
 representationToShortText Sequence_ExplicitBounded       = "ExplicitBounded"
 representationToShortText Relation_AsMatrix              = "RelationAsMatrix"

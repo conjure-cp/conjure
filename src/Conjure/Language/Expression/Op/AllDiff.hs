@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.AllDiff where
 
@@ -27,6 +27,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
             _ -> raiseTypeError p
 
 instance SimplifyOp OpAllDiff x where
+    simplifyOp (OpAllDiff x)
+        | Just xs <- listOut x
+        , length xs == 1
+        = return $ fromBool True
     simplifyOp _ = na "simplifyOp{OpAllDiff}"
 
 instance Pretty x => Pretty (OpAllDiff x) where

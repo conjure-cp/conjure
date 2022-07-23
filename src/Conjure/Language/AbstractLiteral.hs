@@ -5,6 +5,7 @@ module Conjure.Language.AbstractLiteral where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError ( failToUserError )
 import Conjure.Language.Name
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -37,7 +38,7 @@ instance Hashable  x => Hashable  (AbstractLiteral x)
 instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = genericParseJSON jsonOptions
 
-instance (SimpleJSON x, Pretty x) => SimpleJSON (AbstractLiteral x) where
+instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiteral x) where
     toSimpleJSON lit =
         case lit of
             AbsLitTuple xs -> toSimpleJSON xs
@@ -46,17 +47,42 @@ instance (SimpleJSON x, Pretty x) => SimpleJSON (AbstractLiteral x) where
                     x' <- toSimpleJSON x
                     return (stringToText (renderNormal nm), x')
                 return $ JSON.Object $ M.fromList xs'
-            -- AbsLitVariant (Maybe [(Name, Domain () x)]) Name x
-            AbsLitMatrix _ xs -> toSimpleJSON xs
+            AbsLitMatrix index xs ->
+                case index of
+                    DomainInt _ ranges -> do
+                        indices <- failToUserError $ rangesInts ranges
+                        toSimpleJSON (AsDictionary (zip indices xs))
+                    _ -> toSimpleJSON xs
             AbsLitSet xs -> toSimpleJSON xs
             AbsLitMSet xs -> toSimpleJSON xs
-            AbsLitFunction xs -> toSimpleJSON xs
+            AbsLitFunction xs -> toSimpleJSON (AsDictionary xs)
             AbsLitSequence xs -> toSimpleJSON xs
             AbsLitRelation xs -> toSimpleJSON xs
             AbsLitPartition xs -> toSimpleJSON xs
             _ -> noToSimpleJSON lit
-    fromSimpleJSON _ = noFromSimpleJSON
+    fromSimpleJSON x = noFromSimpleJSON "AbstractLiteral" x
 
+instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (AbstractLiteral x) where
+    toMiniZinc lit =
+        case lit of
+            AbsLitTuple xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitMatrix (DomainInt _ [RangeSingle r]) xs -> MZNArray (Just $ show $ pretty r <> ".." <> pretty r) <$> mapM toMiniZinc xs
+            AbsLitMatrix (DomainInt _ [r]) xs -> MZNArray (Just $ show $ pretty r) <$> mapM toMiniZinc xs
+            AbsLitMatrix _index xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitSet xs ->
+                case xs of
+                    (x:_) | Just _ <- intOut "toMiniZinc" x -> MZNSet <$> mapM toMiniZinc xs
+                    _ -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitMSet xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitFunction xs -> MZNArray Nothing <$> mapM (toMiniZinc . snd) xs
+            AbsLitSequence xs -> MZNArray Nothing <$> mapM toMiniZinc xs
+            AbsLitRelation xss ->
+                MZNArray Nothing <$> forM xss (\ xs ->
+                    MZNArray Nothing <$> mapM toMiniZinc xs)
+            AbsLitPartition xss ->
+                MZNArray Nothing <$> forM xss (\ xs ->
+                    MZNArray Nothing <$> mapM toMiniZinc xs)
+            _ -> noToMiniZinc lit
 
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.TwoBars where

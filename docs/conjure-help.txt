@@ -35,7 +35,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Model generation:
@@ -107,7 +108,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -131,7 +133,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -150,7 +153,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -192,7 +196,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Model generation:
@@ -251,6 +256,7 @@
                                                - glucose-syrup (SAT solver)
                                                - lingeling/plingeling/treengeling (SAT solver)
                                                - cadical (SAT solver)
+                                               - kissat (SAT solver)
                                                - minisat (SAT solver)
                                                - bc_minisat_all (AllSAT solver, only works with
                                               --number-of-solutions=all)
@@ -300,7 +306,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -315,7 +322,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -340,7 +348,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -358,7 +367,8 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
@@ -379,33 +389,46 @@
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  General:
       --limit-time=INT                        Limit in seconds of real time.
  
- conjure features [OPTIONS] ESSENCE_FILE FILE
-   Calculate instance features.
+ conjure autoig [OPTIONS] ESSENCE_FILE OUTPUT_FILE
+   Generate an Essence model describing the instances of the problem class defined in the input Essence model.
+   An error will be printed if the model has infinitely many instances.
  
+ Flags:
+      --generator-to-irace                    Convert the givens in a hand written generator model to irace syntax.
+      --remove-aux                            Remove lettings whose name start with Aux
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
+      --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
+                                                  plain: default
+                                                  binary: a binary encoding
+                                                  astjson: a JSON dump of the internal data structures, quite verbose
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
+      --line-width=INT                        Line width for pretty printing.
+                                              Default: 120
  General:
       --limit-time=INT                        Limit in seconds of real time.
  
- conjure model-strengthening [OPTIONS] ESSENCE_FILE
+ conjure boost [OPTIONS] ESSENCE_FILE
    Strengthen an Essence model as described in "Reformulating Essence Specifications for Robustness",
    which aims to make search faster.
  
  Logging & Output:
-      --essence-out=FILE                      Output file path.
       --log-level=LOGLEVEL                    Log level.
       --log-rule-successes                    Generate logs for rule applications.
       --output-format=FORMAT                  Format to use for output. All output formats can also be used for input.
                                                   plain: default
                                                   binary: a binary encoding
                                                   astjson: a JSON dump of the internal data structures, quite verbose
-                                                  json: a simplified JSON format, best for parameters and solutions
+                                                  json: a simplified JSON format, only used for parameters and solutions
+                                                  minizinc: minizinc format for data files, only used for solutions
       --line-width=INT                        Line width to use during pretty printing.
                                               Default: 120
  General:

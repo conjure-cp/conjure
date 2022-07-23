@@ -1,7 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Conjure.UI.Model
@@ -24,6 +23,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
@@ -45,9 +45,13 @@ import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
-import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars, renameQuantifiedVarsToAvoidShadowing
-                                      , normaliseQuantifiedVariablesS, normaliseQuantifiedVariablesE
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars
+                                      , renameQuantifiedVarsToAvoidShadowing
+                                      , normaliseQuantifiedVariables
+                                      , normaliseQuantifiedVariablesS
+                                      , normaliseQuantifiedVariablesE
                                       )
+
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
@@ -79,6 +83,7 @@ import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.Function.Function1DPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
+import qualified Conjure.Rules.Vertical.Function.FunctionNDPartialDummy as Vertical.Function.FunctionNDPartialDummy
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 
 import qualified Conjure.Rules.Horizontal.Sequence as Horizontal.Sequence
@@ -116,6 +121,9 @@ import qualified Data.Vector as V           -- vector
 
 -- containers
 import qualified Data.Set as S
+
+-- text
+import qualified Data.Text as T ( stripPrefix )
 
 
 outputModels ::
@@ -199,7 +207,9 @@ outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
                     log l msg
                     return (modelHashes, i)
                 Right eprime -> do
-                    let newHash = hash eprime { mInfo = def, mStatements = sort (mStatements eprime) }
+                    let newHash = eprime { mInfo = def, mStatements = sort (mStatements eprime) }
+                                    |> normaliseQuantifiedVariables
+                                    |> hash
                     let gen =
                             if modelNamePrefix `elem` ["01_compact", "02_sparse"]
                                 then modelNamePrefix
@@ -906,8 +916,12 @@ updateDeclarations model = do
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt TagInt [])) ]
                 Declaration (Letting nm x)             -> do
-                    let usedAfter = nbUses nm afters > 0
-                    let isRefined = (0 :: Int) == sum
+                    let
+                        usedAfter :: Bool
+                        usedAfter = nbUses nm afters > 0
+                    
+                        nbComplexLiterals :: Int
+                        nbComplexLiterals = sum
                                             [ case y of
                                                 Constant (ConstantAbstract AbsLitMatrix{}) -> 0
                                                 Constant ConstantAbstract{} -> 1
@@ -915,6 +929,9 @@ updateDeclarations model = do
                                                 AbstractLiteral{} -> 1
                                                 _ -> 0
                                             | y <- universe x ]
+
+                        isRefined :: Bool
+                        isRefined = nbComplexLiterals == 0
                     return [inStatement | and [usedAfter, isRefined]]
                 Declaration LettingDomainDefnEnum{}    -> return []
                 Declaration LettingDomainDefnUnnamed{} -> return []
@@ -1158,6 +1175,21 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
+removeUnderscores :: Monad m => Model -> m Model
+removeUnderscores model = do
+    let
+        -- SR doesn't support identifiers that start with _
+        -- we replace them with UNDERSCORE_
+        onName :: Name -> Name
+        onName (Name t) =
+            case T.stripPrefix "_" t of
+                Nothing -> Name t
+                Just t' -> Name (mappend "UNDERSCORE__" t')
+        onName n = n
+
+    return $ transformBi onName model
+
+
 lexSingletons :: (?typeCheckerMode :: TypeCheckerMode)
               => Monad m
               => Model -> m Model
@@ -1197,6 +1229,7 @@ prologue ::
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
+    >>= removeUnderscores             >>= logDebugIdModel "[removeUnderscores]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
     >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
     >>= inferAttributes               >>= logDebugIdModel "[inferAttributes]"
@@ -1231,6 +1264,7 @@ epilogue ::
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
     >>= lexSingletons                 >>= logDebugIdModel "[lexSingletons]"
+    >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
@@ -1326,8 +1360,8 @@ allRules config =
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
       ]
-    , bubbleUpRules
-    , [ rule_Eq
+    ] ++ bubbleUpRules ++
+    [ [ rule_Eq
       , rule_Neq
       , rule_Comprehension_Cardinality
       , rule_Flatten_Cardinality
@@ -1394,6 +1428,7 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
     , Vertical.Matrix.rule_ExpandSlices
+    , Vertical.Matrix.rule_Freq
 
     , Vertical.Set.Explicit.rule_Min
     , Vertical.Set.Explicit.rule_Max
@@ -1440,10 +1475,15 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_Image_Bool
     , Vertical.Function.FunctionNDPartial.rule_InDefined
 
+    , Vertical.Function.FunctionNDPartialDummy.rule_Comprehension
+    , Vertical.Function.FunctionNDPartialDummy.rule_Image
+    , Vertical.Function.FunctionNDPartialDummy.rule_InDefined
+
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
     -- , Vertical.Function.FunctionAsRelation.rule_PowerSet_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
     , Vertical.Function.FunctionAsRelation.rule_InDefined
+    , Vertical.Function.FunctionAsRelation.rule_InToSet
 
     , Vertical.Sequence.ExplicitBounded.rule_Comprehension
     , Vertical.Sequence.ExplicitBounded.rule_Card
@@ -1579,14 +1619,18 @@ horizontalRules =
     ]
 
 
-bubbleUpRules :: [Rule]
+bubbleUpRules :: [[Rule]]
 bubbleUpRules =
-    [ BubbleUp.rule_MergeNested
-    , BubbleUp.rule_ToAnd
-    , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
-    , BubbleUp.rule_NotBoolYet
-    , BubbleUp.rule_ConditionInsideGeneratorDomain
-    , BubbleUp.rule_LiftVars
+    [
+        [ BubbleUp.rule_MergeNested
+        , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
+        , BubbleUp.rule_ConditionInsideGeneratorDomain
+        , BubbleUp.rule_LiftVars
+        ]
+    ,
+        [ BubbleUp.rule_NotBoolYet
+        ]
     ]
 
 
@@ -1613,6 +1657,7 @@ otherRules =
         [ rule_TrueIsNoOp
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
+        , rule_Decompose_AllDiff_MapToSingleInt
 
         , rule_GeneratorsFirst
         ]
@@ -2202,7 +2247,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _) -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -2221,6 +2266,34 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                     |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
+
+
+rule_Decompose_AllDiff_MapToSingleInt :: Rule
+rule_Decompose_AllDiff_MapToSingleInt = "decompose-allDiff-mapToSingleInt" `namedRule` theRule where
+    theRule [essence| allDiff(&m) |] = do
+        case m of
+            Comprehension body gensOrConds -> do
+                tyBody <- typeOf body
+                case tyBody of
+                    TypeBool -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeInt _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    TypeTuple{} -> do
+                        bodyBits <- downX1 body
+                        bodyBitSizes <- forM bodyBits $ \ b -> do
+                            bDomain <- domainOf b
+                            domainSizeOf bDomain
+                        case (bodyBits, bodyBitSizes) of
+                            ([a,b], [_a',b']) -> do
+                                let body'=  [essence| &a * &b' + &b |]
+                                let m' = Comprehension body' gensOrConds
+                                return
+                                    ( "Decomposing allDiff"
+                                    , return [essence| allDiff(&m') |]
+                                    )
+                            _ -> na "rule_Decompose_AllDiff_MapToSingleInt"
+                    _ -> na "allDiff on something other than a comprehension."
+            _ -> na "allDiff on something other than a comprehension."
+    theRule _ = na "rule_Decompose_AllDiff_MapToSingleInt"
 
 
 rule_DomainCardinality :: Rule
@@ -2380,6 +2453,10 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
+        tyBody <- typeOf body
+        case tyBody of
+            TypeInt{} -> return ()
+            _ -> na "rule_InlineConditions_AllDiff, not an int"
         domBody <- domainOf body
         let
             collectLowerBounds (RangeSingle x) = return x
@@ -2485,10 +2562,10 @@ evaluateModel m = do
             mconstant <- runExceptT (instantiateExpression [] p)
             case mconstant of
                 Left{} -> return p
-                Right constant -> do
-                    if null [() | ConstantUndefined{} <- universe constant]
-                        then return p
-                        else return (Constant constant)
+                Right constant ->
+                    if null [() | ConstantUndefined{} <- universe constant] -- if there are no undefined values in it
+                        then return (Constant constant)
+                        else return p
     let
         partial (Op op)
             | Just (x, y) <- case op of

@@ -1,0 +1,15 @@
+language ESSENCE' 1.0
+
+find f_FunctionNDPartialDummy: matrix indexed by [int(1..2)] of int(2..4)
+find f_Function1DPartial_Flags: matrix indexed by [int(1..2)] of bool
+find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(3..4)
+branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, f_FunctionNDPartialDummy]
+such that
+    sum([toInt(f_FunctionNDPartialDummy[q10] != 2) | q10 : int(1..2)]) = 1,
+    and([f_Function1DPartial_Flags[q3] = false -> f_Function1DPartial_Values[q3] = 3 | q3 : int(1..2)]),
+    and([f_Function1DPartial_Flags[q7] -> f_FunctionNDPartialDummy[q7] = f_Function1DPartial_Values[q7]
+             | q7 : int(1..2)]),
+    and([f_FunctionNDPartialDummy[q8] != 2 ->
+         f_Function1DPartial_Values[q8] = f_FunctionNDPartialDummy[q8] /\ f_Function1DPartial_Flags[q8]
+             | q8 : int(1..2)])
+

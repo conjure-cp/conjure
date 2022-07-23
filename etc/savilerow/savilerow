@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # get savilerow installation directory
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
@@ -21,10 +22,28 @@ else
     GECODE_ARG=""
 fi
 
-if [ -f "$DIR/bin/glucose" ]; then
-    SATSOLVER_ARG="-glucose-bin $DIR/bin/glucose"
+if [ -f "$DIR/bin/cadical" ]; then
+    CADICAL_ARG="-cadical-bin $DIR/bin/cadical"
 else
-    SATSOLVER_ARG=""
+    CADICAL_ARG=""
+fi
+
+if [ -f "$DIR/bin/yices-smt2" ]; then
+    YICES_ARG="-yices2-bin $DIR/bin/yices-smt2"
+else
+    YICES_ARG=""
+fi
+
+if [ -f "$DIR/bin/boolector" ]; then
+    BOOLECTOR_ARG="-boolector-bin $DIR/bin/boolector"
+else
+    BOOLECTOR_ARG=""
+fi
+
+if [ -f "$DIR/bin/z3" ]; then
+    Z3_ARG="-z3-bin $DIR/bin/z3"
+else
+    Z3_ARG=""
 fi
 
 if [ -f "$DIR/bin/symmetry_detect" ]; then
@@ -36,7 +55,8 @@ fi
 case "$@" in
     *"-cgroups"*)
         if [ $(uname) = "Darwin" ]; then
-            java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
+            echo "Ignoring -cgroups on macOS"
+            java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${GLUCOSE_ARG} ${CADICAL_ARG} ${YICES_ARG} ${BOOLECTOR_ARG} ${Z3_ARG} "$@"
         else
             TIMESTAMP=$(date +%s)
             GROUP_NAME="savilerow_${TIMESTAMP}_$$"
@@ -46,11 +66,11 @@ case "$@" in
             cgcreate -g cpu:/$GROUP_NAME
             cgset -r cpu.cfs_quota_us=1000000 $GROUP_NAME
             cgset -r cpu.cfs_period_us=1000000 $GROUP_NAME
-            cgexec -g cpu:$GROUP_NAME java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
+            cgexec -g cpu:$GROUP_NAME java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${GLUCOSE_ARG} ${CADICAL_ARG} ${YICES_ARG} ${BOOLECTOR_ARG} ${Z3_ARG} "$@"
             cgdelete -g cpu:/$GROUP_NAME
         fi
     ;;
     *)
-        java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
+        java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${GLUCOSE_ARG} ${CADICAL_ARG} ${YICES_ARG} ${BOOLECTOR_ARG} ${Z3_ARG} "$@"
     ;;
 esac

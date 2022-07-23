@@ -44,7 +44,7 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt t intRanges))
-              , ConstantAbstract (AbsLitSet constants)
+              , viewConstantSet -> Just constants
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
                 return $ Just

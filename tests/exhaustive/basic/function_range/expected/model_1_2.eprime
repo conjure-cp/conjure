@@ -1,0 +1,18 @@
+language ESSENCE' 1.0
+
+find x_Function1DPartial_Flags: matrix indexed by [int(1..3)] of bool
+find x_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..3)
+find x_FunctionNDPartialDummy: matrix indexed by [int(1..3)] of int(0..3)
+branching on [x_FunctionNDPartialDummy, x_Function1DPartial_Flags, x_Function1DPartial_Values]
+such that
+    or([x_Function1DPartial_Flags[q12] /\ x_Function1DPartial_Values[q12] = 1 | q12 : int(1..3)]),
+    or([x_Function1DPartial_Flags[q15] /\ x_Function1DPartial_Values[q15] = 2 | q15 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q18] -> 1 = x_Function1DPartial_Values[q18] \/ 2 = x_Function1DPartial_Values[q18]
+             | q18 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q1] = false -> x_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)]),
+    and([x_FunctionNDPartialDummy[q7] != 0 ->
+         x_Function1DPartial_Values[q7] = x_FunctionNDPartialDummy[q7] /\ x_Function1DPartial_Flags[q7]
+             | q7 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q8] -> x_FunctionNDPartialDummy[q8] = x_Function1DPartial_Values[q8]
+             | q8 : int(1..3)])
+

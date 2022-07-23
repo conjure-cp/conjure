@@ -1,0 +1,8 @@
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(1..4)] of int(1..4)
+branching on [m]
+such that
+    atmost(m, [2, 3; int(1..2)], [1, 2; int(1..2)]),
+    atleast(m, [2, 1; int(1..2)], [2, 3; int(1..2)])
+

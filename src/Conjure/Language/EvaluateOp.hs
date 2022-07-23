@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Conjure.Language.EvaluateOp ( EvaluateOp(..) ) where
 
 import Conjure.Prelude
@@ -121,6 +119,7 @@ instance EvaluateOp OpFlatten where
 
 instance EvaluateOp OpFreq where
     evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp (OpFreq (viewConstantMatrix -> Just (_, cs)) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
 instance EvaluateOp OpGeq where
@@ -675,9 +674,21 @@ instance EvaluateOp OpGCC where
     evaluateOp op@OpGCC{} = na $ "evaluateOp{OpGCC}" <+> pretty op
 
 instance EvaluateOp OpAtLeast where
+    evaluateOp (OpAtLeast (intsOut "" -> Just vars)
+                          (intsOut "" -> Just bounds)
+                          (intsOut "" -> Just vals)) = do
+        return $ ConstantBool $ and [ sum [1 | x <- vars, x == val] >= bound
+                                    | (bound, val) <- zip bounds vals
+                                    ]
     evaluateOp op@OpAtLeast{} = na $ "evaluateOp{OpAtLeast}" <+> pretty op
 
 instance EvaluateOp OpAtMost where
+    evaluateOp (OpAtMost (intsOut "" -> Just vars)
+                         (intsOut "" -> Just bounds)
+                         (intsOut "" -> Just vals)) = do
+        return $ ConstantBool $ and [ sum [1 | x <- vars, x == val] <= bound
+                                    | (bound, val) <- zip bounds vals
+                                    ]
     evaluateOp op@OpAtMost{} = na $ "evaluateOp{OpAtMost}" <+> pretty op
 
 instance EvaluateOp OpTildeLeq where

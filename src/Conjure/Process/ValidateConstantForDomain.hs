@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -fmax-pmcheck-iterations=50000000 #-} -- stupid cmdargs
 
 module Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain ) where
 
@@ -26,11 +26,11 @@ validateConstantForDomain ::
     Eq r =>
     Name -> Constant -> Domain r Constant -> m ()
 
-validateConstantForDomain _ ConstantBool{} DomainBool{} = return ()
+validateConstantForDomain _ (viewConstantBool -> Just _) DomainBool{} = return ()
 
 validateConstantForDomain _ _ (DomainInt _ []) = return ()              -- no restrictions
 
-validateConstantForDomain name c@(ConstantInt cTag i) d@(DomainInt dTag rs) | cTag == dTag =
+validateConstantForDomain name c@(viewConstantIntWithTag -> Just (cTag, i)) d@(DomainInt dTag rs) | cTag == dTag =
     let
         intInRange RangeOpen                                          = True
         intInRange (RangeSingle (ConstantInt _ a))                    = i == a
@@ -40,7 +40,7 @@ validateConstantForDomain name c@(ConstantInt cTag i) d@(DomainInt dTag rs) | cT
         intInRange _                                                   = False
     in  unless (any intInRange rs) (constantNotInDomain name c d)
 
-validateConstantForDomain _ (ConstantInt _ i) (DomainUnnamed _ (ConstantInt _ a)) | i >= 1 && i <= a = return ()
+validateConstantForDomain _ (viewConstantIntWithTag -> Just (_, i)) (DomainUnnamed _ (ConstantInt _ a)) | i >= 1 && i <= a = return ()
 
 validateConstantForDomain _ _ (DomainEnum _ Nothing _) = return ()    -- no restrictions
 validateConstantForDomain name c d@(DomainEnum _ _ Nothing) =
@@ -50,7 +50,7 @@ validateConstantForDomain name c d@(DomainEnum _ _ Nothing) =
                 , pretty d
                 ]
 validateConstantForDomain name
-    c@(ConstantInt cTag _)
+    c@(viewConstantIntWithTag -> Just (cTag, _))
     d@(DomainEnum _ (Just ranges) (Just mp)) = nested c d $ do
         let
             -- lu :: MonadFail m => Name -> m Constant
@@ -68,11 +68,11 @@ validateConstantForDomain name
         validateConstantForDomain name c (DomainInt cTag rs :: Domain r Constant)
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitTuple cs))
+    c@(viewConstantTuple -> Just cs)
     d@(DomainTuple ds) = nested c d $ zipWithM_ (validateConstantForDomain name) cs ds
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitRecord (sortOn fst -> cs)))
+    c@(viewConstantRecord -> Just cs)
     d@(DomainRecord (sortOn fst -> ds))
         | map fst cs == map fst ds
             = nested c d $ zipWithM_ (validateConstantForDomain name) (map snd cs) (map snd ds)
@@ -80,7 +80,7 @@ validateConstantForDomain name
             = constantNotInDomain name c d
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitVariant _ n c'))
+    c@(viewConstantVariant -> Just (_, n, c'))
     d@(DomainVariant ds)
         | Just d' <- lookup n ds
             = nested c d $ validateConstantForDomain name c' d'
@@ -88,7 +88,7 @@ validateConstantForDomain name
             = constantNotInDomain name c d
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitMatrix cIndex vals))
+    c@(viewConstantMatrix -> Just (cIndex, vals))
     d@(DomainMatrix dIndex dInner) = do
         nested c d $
             mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
@@ -102,7 +102,7 @@ validateConstantForDomain name
             ]
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitSet vals))
+    c@(viewConstantSet -> Just vals)
     d@(DomainSet _ (SetAttr sizeAttr) dInner) = do
         let cardinalityOK = case sizeAttr of
                 SizeAttr_None -> True
@@ -122,7 +122,7 @@ validateConstantForDomain name
         nested c d $ mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitMSet vals))
+    c@(viewConstantMSet -> Just vals)
     d@(DomainMSet _ (MSetAttr sizeAttr occurAttr) dInner) = do
         let cardinalityOK = case sizeAttr of
                 SizeAttr_None -> True
@@ -156,18 +156,18 @@ validateConstantForDomain name
         nested c d $ mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitFunction vals))
+    c@(viewConstantFunction -> Just vals)
     d@(DomainFunction _ _ dFrom dTo) = nested c d $ do
         mapM_ (\ val -> validateConstantForDomain name (fst val) dFrom) vals
         mapM_ (\ val -> validateConstantForDomain name (snd val) dTo  ) vals
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitSequence vals))
+    c@(viewConstantSequence -> Just vals)
     d@(DomainSequence _ _ dInner) = nested c d $
         mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitRelation valss))
+    c@(viewConstantRelation -> Just valss)
     d@(DomainRelation _ (RelationAttr sizeAttr (BinaryRelationAttrs binRelAttrs)) dInners) = do
         let numValss = genericLength valss
         let cardinalityOK = case sizeAttr of
@@ -216,7 +216,7 @@ validateConstantForDomain name
             zipWithM_ (validateConstantForDomain name) vals dInners
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitPartition valss))
+    c@(viewConstantPartition -> Just valss)
     d@(DomainPartition _ _ dInner) = nested c d $
         mapM_ (\ val -> validateConstantForDomain name val dInner ) (concat valss)
 

@@ -145,11 +145,10 @@ Library
                      , Conjure.Process.DealWithCuts
                      , Conjure.Process.Enumerate
                      , Conjure.Process.Enums
-                     , Conjure.Process.Features
                      , Conjure.Process.FiniteGivens
                      , Conjure.Process.InferAttributes
                      , Conjure.Process.LettingsForComplexInDoms
-                     , Conjure.Process.ModelStrengthening
+                     , Conjure.Process.Boost
                      , Conjure.Process.Sanity
                      , Conjure.Process.Streamlining
                      , Conjure.Process.Unnameds
@@ -177,6 +176,7 @@ Library
                      , Conjure.Representations.Function.Function1DPartial
                      , Conjure.Representations.Function.FunctionND
                      , Conjure.Representations.Function.FunctionNDPartial
+                     , Conjure.Representations.Function.FunctionNDPartialDummy
                      , Conjure.Representations.Function.FunctionAsRelation
                      , Conjure.Representations.Sequence.ExplicitBounded
                      , Conjure.Representations.Relation.RelationAsMatrix
@@ -210,6 +210,7 @@ Library
                      , Conjure.Rules.Vertical.Function.Function1DPartial
                      , Conjure.Rules.Vertical.Function.FunctionND
                      , Conjure.Rules.Vertical.Function.FunctionNDPartial
+                     , Conjure.Rules.Vertical.Function.FunctionNDPartialDummy
                      , Conjure.Rules.Vertical.Function.FunctionAsRelation
 
                      , Conjure.Rules.Horizontal.Sequence
@@ -272,7 +273,7 @@ Library
                      , safe
                      , scientific
                      -- 1.6.7, because of the stderr handling fix
-                     , shelly >= 1.6.7 && <= 1.8.0
+                     , shelly >= 1.6.7
                      , split
                      , stm
                      , strict
@@ -295,6 +296,7 @@ Library
                      , ansi-terminal >= 0.8.2
                      , timeit >= 2.0
                      , primes >= 0.2.1.0
+                     , statistics >= 0.15.2.0
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*
@@ -309,9 +311,10 @@ Library
         build-depends: template-haskell == 2.13.*
     if impl(ghc == 8.6.*)
         build-depends: template-haskell == 2.14.*
-
-    if impl(ghc < 8.4)
-        build-depends: semigroups >= 0.18.4
+    if impl(ghc == 8.8.*)
+        build-depends: template-haskell == 2.15.*
+    if impl(ghc == 8.10.*)
+        build-depends: template-haskell == 2.16.*
 
     default-extensions:
         FlexibleContexts
@@ -325,6 +328,7 @@ Library
         ScopedTypeVariables
         TypeOperators
         NoMonadFailDesugaring
+        ViewPatterns
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -362,6 +366,7 @@ Executable conjure
         ScopedTypeVariables
         TypeOperators
         NoMonadFailDesugaring
+        ViewPatterns
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -421,6 +426,7 @@ Test-Suite conjure-testing
         ScopedTypeVariables
         TypeOperators
         NoMonadFailDesugaring
+        ViewPatterns
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

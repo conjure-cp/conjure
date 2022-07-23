@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 
@@ -32,16 +31,16 @@ import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
-import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
-import Conjure.Process.Features ( calculateFeatures )
+import Conjure.Process.Boost ( boost )
+import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
 
 
 -- base
-import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
+import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..), hPutStrLn, stderr )
 import System.Environment ( getEnvironment )
 import System.Info ( os )
 import GHC.Conc ( numCapabilities )
@@ -151,7 +150,7 @@ mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
                 then do
-                    liftIO $ putStrLn "Parsing as a parameter file"
+                    liftIO $ hPutStrLn stderr "Parsing as a parameter file"
                     readParamOrSolutionFromFile essence
                 else readModelFromFile essence
     let model1 = model0
@@ -198,17 +197,51 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
-mainWithArgs Features{..} = do
-    essence1 <- readModelFromFile essence
-    param1 <- readParamOrSolutionFromFile param
-    [essence2, param2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essence1, param1]
-    calculateFeatures essence2 param2
-mainWithArgs ModelStrengthening{..} =
-    readModelFromFile essence >>=
-      strengthenModel logLevel logRuleSuccesses >>=
-        writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs Streamlining{..} = runNameGen essence
     (readModelFromFile essence >>= resolveNames >>= typeCheckModel >>= streamliningToStdout)
+mainWithArgs AutoIG{..} | generatorToIrace = do
+    model <- readModelFromFile essence
+    let
+        toIrace nm lb ub | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            prParens (pretty lb)
+        toIrace nm lb ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" i" <+>
+            prettyList prParens "," [lb, ub]
+    let (iraceStmts, errors) = mconcat
+            [ case st of
+                Declaration (FindOrGiven Given nm domain) ->
+                    case domain of
+                        DomainInt _ [RangeBounded lb ub] -> ([toIrace nm lb ub], [])
+                        _ -> ([], ["Unsupported domain for given" <+> pretty nm <> ":" <+> pretty domain])
+                _ -> ([], [])
+            | st <- mStatements model
+            ]
+    if null errors
+        then do
+            let essenceOutFileContents = render lineWidth $ vcat iraceStmts
+            liftIO $ writeFile outputFilepath (essenceOutFileContents ++ "\n")
+        else
+            userErr errors
+mainWithArgs AutoIG{..} | removeAux = do
+    model <- readModelFromFile essence
+    let stmts' = [ case st of
+                    Declaration (FindOrGiven _ nm _) | "Aux" `isPrefixOf` show (pretty nm) -> Nothing
+                                                     | otherwise -> Just st
+                    Declaration (Letting nm _) | "Aux" `isPrefixOf` show (pretty nm) -> Nothing
+                                               | otherwise -> Just st
+                    _ -> Just st
+                 | st <- mStatements model
+                 ]
+    writeModel lineWidth outputFormat (Just outputFilepath) model {mStatements = catMaybes stmts'}
+mainWithArgs AutoIG{..} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
+mainWithArgs Boost{..} = do
+    model <- readModelFromFile essence
+    runNameGen model $ do
+        boosted <- boost logLevel logRuleSuccesses model
+        writeModel lineWidth outputFormat Nothing boosted
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     (solverName, _smtLogicName) <- splitSolverName solver
@@ -783,6 +816,7 @@ solverExecutables =
     , ( "gecode"          , "fzn-gecode" )
     , ( "chuffed"         , "fzn-chuffed" )
     , ( "cadical"         , "cadical" )
+    , ( "kissat"          , "kissat" )
     , ( "glucose"         , "glucose" )
     , ( "glucose-syrup"   , "glucose-syrup" )
     , ( "lingeling"       , "lingeling" )
@@ -863,6 +897,10 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , "-sat-family", "cadical"
                                       , "-satsolver-bin", "cadical"
                                       ]
+        "kissat"            -> return [ "-sat"
+                                      , "-sat-family", "cadical"
+                                      , "-satsolver-bin", "kissat"
+                                      ]
         "lingeling"         -> return [ "-sat"
                                       , "-sat-family", "lingeling"
                                       , "-satsolver-bin", "lingeling"
@@ -942,6 +980,8 @@ srStdoutHandler
             return []
         else do
             line <- hGetLine h
+            when (logLevel >= LogDebug) $ do
+                pp logLevel ("SR:" <+> pretty line)
             case stripPrefix "Solution: " line of
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
@@ -965,6 +1005,8 @@ srStdoutHandler
                             writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
                             when (outputFormat == JSON) $
                                 writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
+                            when (outputFormat == MiniZinc) $
+                                writeModel lineWidth MiniZinc (Just (filenameEssenceSol ++ ".minizinc")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
                         True -> do
@@ -983,7 +1025,6 @@ srStdoutHandler
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                             appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
                             when (outputFormat == JSON) $ do
-                                appendFile filenameEssenceSolJSON  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                                 essenceSol' <- toSimpleJSON essenceSol
                                 appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
                                 appendFile filenameEssenceSolJSON  ("\n")

@@ -13,12 +13,13 @@ export LIMIT_TIME?=10
 .PHONY: install
 install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
-	@echo "Set the environment variable GHC_VERSION to change this"
+	@echo "Set the environment variable GHC_VERSION to change this location."
 	@echo "For example: \"GHC_VERSION=8.4 make install\""
-	@echo "Supported versions: 8.0, 8.2, 8.4, 8.6"
+	@echo "Supported versions: 8.4, 8.6"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
-	@echo "Set the environment variable BIN_DIR to change this"
+	@echo "Add this directory to your PATH."
+	@echo "Set the environment variable BIN_DIR to change this location"
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
 	@mkdir -p ${BIN_DIR}
@@ -39,6 +40,9 @@ install:
 	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
 	@echo - savilerow
+	@echo
+	@${BIN_DIR}/conjure --version
+	@${BIN_DIR}/savilerow -help | head -n1
 
 .PHONY: test
 test:
@@ -111,14 +115,25 @@ hlint:
 	    -i "Redundant return" \
 	    -i "Monad law, left identity"
 
+# @etc/build/silent-wrapper.sh etc/build/install-glasgow-subgraph-solver.sh
+
 .PHONY: solvers
 solvers:
+	@echo "Installing executables to ${BIN_DIR}"
+	@echo "Add this directory to your PATH."
+	@echo "Set the environment variable BIN_DIR to change this location."
+	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
+	@echo ""
+	@echo "Dependencies: cmake and gmp."
+	@if [ `uname` == "Darwin" ]; then echo "You can run: 'brew install cmake gmp' to install them."; fi
+	@echo ""
+	@mkdir -p ${BIN_DIR}
 	@etc/build/silent-wrapper.sh etc/build/install-bc_minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-boolector.sh
 	@etc/build/silent-wrapper.sh etc/build/install-cadical.sh
+	@etc/build/silent-wrapper.sh etc/build/install-kissat.sh
 	@etc/build/silent-wrapper.sh etc/build/install-chuffed.sh
 	@etc/build/silent-wrapper.sh etc/build/install-gecode.sh
-	@etc/build/silent-wrapper.sh etc/build/install-glasgow-subgraph-solver.sh
 	@etc/build/silent-wrapper.sh etc/build/install-glucose.sh
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minion.sh

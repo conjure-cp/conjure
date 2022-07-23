@@ -93,7 +93,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSet _ (SetAttr attrs) innerDomain)
-              , ConstantAbstract (AbsLitSet constants)
+              , viewConstantSet -> Just constants
               ) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain i = mkDomainIntB (fromInt i) maxSize

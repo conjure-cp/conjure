@@ -1,5 +1,5 @@
 rm -rf conjure-output *.solution
 conjure solve *.essence
-head -n12 conjure-output/model000001.eprime
+cat conjure-output/model000001.eprime | grep -v "^[$]"
 cat *.solution
 rm -rf conjure-output *.solution
