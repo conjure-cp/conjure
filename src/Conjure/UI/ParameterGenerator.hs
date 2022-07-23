@@ -865,6 +865,7 @@ lowerBoundOfIntExpr x | x == minInt = return minInt
 lowerBoundOfIntExpr x | x == maxInt = return maxInt
 lowerBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = minOfIntDomain dom
 lowerBoundOfIntExpr (Reference _ (Just (Alias x))) = lowerBoundOfIntExpr x
+lowerBoundOfIntExpr (Reference _ _) = return minInt
 lowerBoundOfIntExpr (Op (MkOpMinus (OpMinus a b))) = do
     aLower <- lowerBoundOfIntExpr a
     bUpper <- upperBoundOfIntExpr b
@@ -879,9 +880,15 @@ lowerBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
 lowerBoundOfIntExpr (Op (MkOpMin (OpMin x))) | Just xs <- listOut x = do
     bounds <- mapM lowerBoundOfIntExpr xs
     return $ make opMin $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpMin (OpMin (Comprehension body gocs)))) = do
+    body' <- lowerBoundOfIntExpr body
+    return $ make opMin $ Comprehension body' gocs
 lowerBoundOfIntExpr (Op (MkOpMax (OpMax x))) | Just xs <- listOut x = do
     bounds <- mapM lowerBoundOfIntExpr xs
     return $ make opMin $ fromList bounds
+lowerBoundOfIntExpr (Op (MkOpMax (OpMax (Comprehension body gocs)))) = do
+    body' <- lowerBoundOfIntExpr body
+    return $ make opMin $ Comprehension body' gocs
 lowerBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
     bound <- upperBoundOfIntExpr x
     return (make opNegate bound)
@@ -909,6 +916,7 @@ upperBoundOfIntExpr x | x == minInt = return minInt
 upperBoundOfIntExpr x | x == maxInt = return maxInt
 upperBoundOfIntExpr (Reference _ (Just (DeclNoRepr Given _ dom _))) = maxOfIntDomain dom
 upperBoundOfIntExpr (Reference _ (Just (Alias x))) = upperBoundOfIntExpr x
+upperBoundOfIntExpr (Reference _ _) = return maxInt
 upperBoundOfIntExpr (Op (MkOpMinus (OpMinus a b))) = do
     aUpper <- upperBoundOfIntExpr a
     bLower <- lowerBoundOfIntExpr b
@@ -923,10 +931,16 @@ upperBoundOfIntExpr (Op (MkOpProduct (OpProduct x))) | Just xs <- listOut x = do
 upperBoundOfIntExpr (Op (MkOpMin (OpMin x))) | Just xs <- listOut x = do
     bounds <- mapM upperBoundOfIntExpr xs
     return $ make opMax $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpMin (OpMin (Comprehension body gocs)))) = do
+    body' <- lowerBoundOfIntExpr body
+    return $ make opMax $ Comprehension body' gocs
 upperBoundOfIntExpr (Op (MkOpMax (OpMax x))) | Just xs <- listOut x = do
     bounds <- mapM upperBoundOfIntExpr xs
     return $ make opMax $ fromList bounds
+upperBoundOfIntExpr (Op (MkOpMax (OpMax (Comprehension body gocs)))) = do
+    body' <- lowerBoundOfIntExpr body
+    return $ make opMax $ Comprehension body' gocs
 upperBoundOfIntExpr (Op (MkOpNegate (OpNegate x))) = do
     bound <- lowerBoundOfIntExpr x
     return (make opNegate bound)
-upperBoundOfIntExpr x = userErr1 $ "Cannot compute lower bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
+upperBoundOfIntExpr x = userErr1 $ "Cannot compute upper bound of integer expression:" <++> vcat [pretty x, pretty (show x)]
