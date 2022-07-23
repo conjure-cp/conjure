@@ -34,7 +34,6 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
 import Conjure.Process.Boost ( boost )
-import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
 
