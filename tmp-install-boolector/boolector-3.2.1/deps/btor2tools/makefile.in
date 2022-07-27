@@ -1,0 +1,35 @@
+CC=@CC@
+CFLAGS=@CFLAGS@
+BINDIR=@BINDIR@
+BUILDIR=@BUILDIR@
+SRCDIR=@SRCDIR@
+TARGETS=@TARGETS@
+all: $(BUILDIR)/btor2parser.o $(BUILDIR)/libbtor2parser.a $(TARGETS)
+dirs:
+	mkdir -p $(BUILDIR)
+	mkdir -p $(BINDIR)
+$(BUILDIR)/btor2parser.o: dirs makefile
+	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/btor2parser/btor2parser.c -I$(SRCDIR)
+$(BUILDIR)/libbtor2parser.a: $(BUILDIR)/btor2parser.o makefile
+	ar rc $@ $(BUILDIR)/btor2parser.o
+	ranlib $@
+$(BUILDIR)/libbtor2parser.so: $(BUILDIR)/btor2parser.o
+	$(CC) $(CFLAGS) -shared -o $@ $(BUILDIR)/btor2parser.o $(LIBS) -Xlinker -soname=libbtor2parser.so
+$(BUILDIR)/catbtor.o: $(BUILDIR)/btor2parser.o makefile
+	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/catbtor.c -I$(SRCDIR)
+$(BINDIR)/catbtor: dirs $(BUILDIR)/catbtor.o $(BUILDIR)/libbtor2parser.a makefile
+	$(CC) $(CFLAGS) -o $@ $(BUILDIR)/catbtor.o -L$(BUILDIR) -lbtor2parser
+$(BUILDIR)/btorsimrng.o: dirs makefile
+	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/btorsim/btorsimrng.c -I$(SRCDIR)/btorsim
+$(BUILDIR)/btorsimbv.o: $(BUILDIR)/btorsimrng.o makefile
+	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/btorsim/btorsimbv.c -I$(SRCDIR)
+$(BUILDIR)/btorsim.o: $(BUILDIR)/btorsimbv.o $(BUILDIR)/libbtor2parser.a makefile
+	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/btorsim/btorsim.c -Ibtorsim -I$(SRCDIR)
+$(BINDIR)/btorsim: dirs $(BUILDIR)/btorsim.o makefile
+	$(CC) $(CFLAGS) -o $@ $(BUILDIR)/btorsim.o $(BUILDIR)/btorsimbv.o $(BUILDIR)/btorsimrng.o -L$(BUILDIR) -lbtor2parser
+clean:
+	rm -f makefile
+	rm -rf build
+	rm -rf bin
+	rm -f tests/*.log
+	rm -f *.gcno *.gcov *.gcda

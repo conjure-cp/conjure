@@ -1,0 +1,18 @@
+{#
+    basic/localtoc.html
+    ~~~~~~~~~~~~~~~~~~~
+
+    Sphinx sidebar template: local table of contents.
+
+    :copyright: Copyright 2007-2014 by the Sphinx team, see AUTHORS.
+    :license: BSD, see LICENSE for details.
+
+    BD: Fixed bad capitalization "Table Of Contents" --> "Table of contents"
+    + added <div class="localtoc">
+#}
+{%- if display_toc %}
+<div class="localtoc">
+  <h3><a href="{{ pathto(master_doc) }}">{{ _('Table of contents') }}</a></h3>
+  {{ toc }}
+</div>
+{%- endif %}
