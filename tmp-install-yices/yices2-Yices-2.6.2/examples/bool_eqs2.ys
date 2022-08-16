@@ -1,0 +1,23 @@
+(define a::bool)
+(define b::bool)
+(define c::bool)
+(define d::bool)
+(define e::bool)
+
+(assert (= a (or b c)))
+(assert (= d (and b c)))
+(assert (= a d))
+(echo "First check: should be sat\n")
+(check)
+(show-model)
+
+(assert (= e (xor b c)))
+(assert (= e d))
+(echo "\nSecond check: should be sat\n")
+(check)
+(show-model)
+
+
+(assert d)
+(echo "\nThird check: should be unsat\n")
+(check)

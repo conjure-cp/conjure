@@ -1,0 +1,2267 @@
+/*
+ * This file is part of the Yices SMT Solver.
+ * Copyright (C) 2017 SRI International.
+ *
+ * Yices is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Yices is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Yices.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#if defined(CYGWIN) || defined(MINGW)
+#ifndef __YICES_DLLSPEC__
+#define __YICES_DLLSPEC__ __declspec(dllexport)
+#endif
+#endif
+
+#include "mcsat/solver.h"
+
+#include "context/context.h"
+#include "model/models.h"
+#include "model/concrete_values.h"
+#include "io/concrete_value_printer.h"
+
+#include "mcsat/variable_db.h"
+#include "mcsat/variable_queue.h"
+#include "mcsat/trail.h"
+#include "mcsat/conflict.h"
+#include "mcsat/plugin.h"
+#include "mcsat/tracing.h"
+
+#include "utils/int_queues.h"
+#include "utils/bitvectors.h"
+
+#include "mcsat/bool/bool_plugin.h"
+#include "mcsat/ite/ite_plugin.h"
+#include "mcsat/nra/nra_plugin.h"
+#include "mcsat/uf/uf_plugin.h"
+#include "mcsat/bv/bv_plugin.h"
+
+#include "mcsat/preprocessor.h"
+
+#include "mcsat/utils/statistics.h"
+
+#include "utils/dprng.h"
+#include "model/model_queries.h"
+#include "io/model_printer.h"
+
+#include "yices.h"
+#include <inttypes.h>
+
+/**
+ * Notification of new variables for the main solver.
+ */
+typedef struct solver_new_variable_notify_s {
+  void (*new_variable) (struct solver_new_variable_notify_s* self, variable_t x);
+  mcsat_solver_t* mcsat;
+} solver_new_variable_notify_t;
+
+/**
+ * Context of each plugin encapsulate it's essential information, including
+ * the solver itself, it's index in the solver and it's name (for debugging
+ * purposes).
+ */
+typedef struct mcsat_plugin_context_s {
+  /** The regular plugin context */
+  plugin_context_t ctx;
+  /** The solver reference */
+  mcsat_solver_t* mcsat;
+  /** The name of the plugin */
+  const char* plugin_name;
+} mcsat_plugin_context_t;
+
+/**
+ * The token is passed to plugins for trail operations (propagation and
+ * decisions) and encapsulates additional information for debugging purposes.
+ */
+typedef struct {
+  /** The token interface */
+  trail_token_t token_interface;
+  /** Link to the context */
+  mcsat_plugin_context_t* ctx;
+  /** If this is a decision token, this is the suggested variable to decide */
+  variable_t x;
+  /** How many times has the token been used */
+  uint32_t used;
+} plugin_trail_token_t;
+
+/** Type of lemma weight for adding to restart counter */
+typedef enum {
+  /** Just add 1 */
+  LEMMA_WEIGHT_UNIT,
+  /** Add the size of the lemma */
+  LEMMA_WEIGHT_SIZE,
+  /** Add the glue of the lemma */
+  LEMMA_WEIGHT_GLUE
+} lemma_weight_type_t;
+
+#define MCSAT_MAX_PLUGINS 10
+
+typedef struct {
+  /** Main evaluation method */
+  bool (*evaluates) (const mcsat_evaluator_interface_t* data, term_t t, int_mset_t* vars, mcsat_value_t* value);
+  /** The solver */
+  mcsat_solver_t* solver;
+} mcsat_evaluator_t;
+
+struct mcsat_solver_s {
+
+  /** Context of the solver */
+  const context_t* ctx;
+
+  /** Flag to stop the search */
+  bool stop_search;
+
+  /** Exception handler */
+  jmp_buf* exception;
+
+  /** Term manager for everyone to use */
+  term_manager_t tm;
+
+  /** Input types are are from this table */
+  type_table_t* types;
+
+  /** Input terms are from this table */
+  term_table_t* terms;
+
+  /** Size of the input table at entry to solve() */
+  uint32_t terms_size_on_solver_entry;
+
+  /** The status (real status is in trail, this is for context integration) */
+  smt_status_t status;
+
+  /** Number of inconsistent push calls */
+  uint32_t inconsistent_push_calls;
+
+  /** Notifications for new variables */
+  solver_new_variable_notify_t var_db_notify;
+
+  /** Variable database */
+  variable_db_t* var_db;
+
+  /** List of assertions (positive variables) asserted to true. */
+  ivector_t assertion_vars;
+
+  /**
+   * List of assertions (terms) as sent to the solver through the API. These
+   * terms have not been pre-processed.
+   */
+  ivector_t assertion_terms_original;
+
+  /** Temp assertion vector while preprocessing */
+  ivector_t assertions_tmp;
+
+  /** The trail */
+  mcsat_trail_t* trail;
+
+  /** Mark when adding an assertion */
+  bool registration_is_assertion;
+
+  /** Queue for registering new variables */
+  int_queue_t registration_queue;
+
+  /** Has a term been registered already */
+  int_hset_t registration_cache;
+
+  /** Array of individual plugins, and the additional info */
+  struct {
+    plugin_t* plugin;
+    mcsat_plugin_context_t* plugin_ctx;
+    char* plugin_name;
+  } plugins[MCSAT_MAX_PLUGINS];
+
+  /** The evaluator */
+  mcsat_evaluator_t evaluator;
+
+  /** The preprocessor */
+  preprocessor_t preprocessor;
+
+  /**
+   * Array of owners for each term kind. If there are more than one, they
+   * continue at indices mod NUM_TERM_KINDS.
+   */
+  uint32_t kind_owners[NUM_TERM_KINDS * MCSAT_MAX_PLUGINS];
+
+  /**
+   * Array of owners for each type. If there are more than one, they
+   * continue at indices mod NUM_TYPE_KINDS.
+   */
+  uint32_t type_owners[NUM_TYPE_KINDS * MCSAT_MAX_PLUGINS];
+
+  /**
+   * Array of decision makers for each type. There can be only one.
+   */
+  uint32_t decision_makers[NUM_TYPE_KINDS];
+
+  /** Plugin the reported a conflict */
+  mcsat_plugin_context_t* plugin_in_conflict;
+
+  /** Lemmas reported by plugins  */
+  ivector_t plugin_lemmas;
+
+  /** Number of plugins */
+  uint32_t plugins_count;
+
+  /** Variable to decide on first */
+  variable_t top_decision_var;
+
+  /** The queue for variable decisions */
+  var_queue_t var_queue;
+
+  /** All pending requests */
+  struct {
+    bool restart;
+    bool gc_calls;
+  } pending_requests_all;
+
+  /** Any pending requests */
+  bool pending_requests;
+
+  /** Statistics */
+  statistics_t stats;
+
+  struct {
+    // Assertions added
+    statistic_int_t* assertions;
+    // Lemmas added
+    statistic_int_t* lemmas;
+    // Decisions performed
+    statistic_int_t* decisions;
+    // Restarts performed
+    statistic_int_t* restarts;
+    // Conflicts handled
+    statistic_int_t* conflicts;
+    // Average conflict size
+    statistic_avg_t* avg_conflict_size;
+    // GC calls
+    statistic_int_t* gc_calls;
+  } solver_stats;
+
+  struct {
+    // Restart interval (used as multiplier in luby sequence)
+    uint32_t restart_interval;
+    // Type of weight to use for restart counter
+    lemma_weight_type_t lemma_restart_weight_type;
+    // Random decision frequency
+    double random_decision_freq;
+    // Random decision seed
+    double random_decision_seed;
+  } heuristic_params;
+
+  /** Scope holder for backtracking int variables */
+  scope_holder_t scope;
+
+  /** IDs of various plugins, if added */
+  uint32_t bool_plugin_id;
+  uint32_t uf_plugin_id;
+  uint32_t ite_plugin_id;
+  uint32_t nra_plugin_id;
+  uint32_t bv_plugin_id;
+};
+
+static
+void mcsat_add_lemma(mcsat_solver_t* mcsat, ivector_t* lemma, term_t decision_bound);
+
+static
+void propagation_check(const ivector_t* reasons, term_t x, term_t subst);
+
+static
+void mcsat_stats_init(mcsat_solver_t* mcsat) {
+  mcsat->solver_stats.assertions = statistics_new_int(&mcsat->stats, "mcsat::assertions");
+  mcsat->solver_stats.conflicts = statistics_new_int(&mcsat->stats, "mcsat::conflicts");
+  mcsat->solver_stats.avg_conflict_size = statistics_new_avg(&mcsat->stats, "mcsat::avg_conflict_size");
+  mcsat->solver_stats.decisions = statistics_new_int(&mcsat->stats, "mcsat::decisions");
+  mcsat->solver_stats.gc_calls = statistics_new_int(&mcsat->stats, "mcsat::gc_calls");
+  mcsat->solver_stats.lemmas = statistics_new_int(&mcsat->stats, "mcsat::lemmas");
+  mcsat->solver_stats.restarts = statistics_new_int(&mcsat->stats, "mcsat::restarts");
+}
+
+static
+void mcsat_heuristics_init(mcsat_solver_t* mcsat) {
+  mcsat->heuristic_params.restart_interval = 10;
+  mcsat->heuristic_params.lemma_restart_weight_type = LEMMA_WEIGHT_SIZE;
+  mcsat->heuristic_params.random_decision_freq = 0;
+  mcsat->heuristic_params.random_decision_seed = 0;
+}
+
+bool mcsat_evaluates(const mcsat_evaluator_interface_t* self, term_t t, int_mset_t* vars, mcsat_value_t* value) {
+
+  const mcsat_solver_t* mcsat = ((const mcsat_evaluator_t*) self)->solver;
+  assert(value != NULL);
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::resolve")) {
+    FILE* out = trace_out(mcsat->ctx->trace);
+    fprintf(out, "explaining eval of: ");
+    term_print_to_file(out, mcsat->terms, t);
+    fprintf(out, " -> ");
+    mcsat_value_print(value, out);
+    fprintf(out, "\n");
+  }
+
+  uint32_t i;
+  term_kind_t kind;
+  type_kind_t type_kind;
+  bool evaluates = false;
+  plugin_t* plugin;
+
+  kind = term_kind(mcsat->terms, t);
+  bool is_equality = false;
+  switch (kind) {
+  case BV_EQ_ATOM:
+  case EQ_TERM:
+  case ARITH_BINEQ_ATOM:
+    is_equality = true;
+    break;
+  default:
+    // Nothing
+    break;
+  }
+
+  if (!is_equality) {
+    for (i = kind; mcsat->kind_owners[i] != MCSAT_MAX_PLUGINS; i += MCSAT_MAX_PLUGINS) {
+      int_mset_clear(vars);
+      plugin = mcsat->plugins[mcsat->kind_owners[i]].plugin;
+      if (plugin->explain_evaluation) {
+        if (trace_enabled(mcsat->ctx->trace, "mcsat::resolve")) {
+          FILE* out = trace_out(mcsat->ctx->trace);
+          fprintf(out, "explaining eval with: %s\n", mcsat->plugins[mcsat->kind_owners[i]].plugin_name);
+        }
+        evaluates = plugin->explain_evaluation(plugin, t, vars, value);
+        if (evaluates) {
+          return true;
+        }
+      }
+    }
+  } else {
+    composite_term_t* eq_desc = composite_term_desc(mcsat->terms, t);
+    type_kind = term_type_kind(mcsat->terms, eq_desc->arg[0]);
+    for (i = type_kind; mcsat->type_owners[i] != MCSAT_MAX_PLUGINS; i += MCSAT_MAX_PLUGINS) {
+      int_mset_clear(vars);
+      plugin = mcsat->plugins[mcsat->type_owners[i]].plugin;
+      if (plugin->explain_evaluation) {
+        if (trace_enabled(mcsat->ctx->trace, "mcsat::resolve")) {
+          FILE* out = trace_out(mcsat->ctx->trace);
+          fprintf(out, "explaining eval with: %s\n", mcsat->plugins[mcsat->type_owners[i]].plugin_name);
+        }
+        evaluates = plugin->explain_evaluation(plugin, t, vars, value);
+        if (evaluates) {
+          return true;
+        }
+      }
+    }
+  }
+
+  if (!evaluates) {
+    // Maybe the term itself evaluates
+    term_t t_unsigned = unsigned_term(t);
+    variable_t t_var = variable_db_get_variable_if_exists(mcsat->var_db, t_unsigned);
+    if (t_var != variable_null && trail_has_value(mcsat->trail, t_var)) {
+      const mcsat_value_t* t_var_value = trail_get_value(mcsat->trail, t_var);
+      bool negated = is_neg_term(t);
+      if ((negated && t_var_value->b != value->b)
+          || (!negated && t_var_value->b == value->b)) {
+        int_mset_clear(vars);
+        int_mset_add(vars, t_var);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/** Construct the mcsat evaluator */
+void mcsat_evaluator_construct(mcsat_evaluator_t* evaluator, mcsat_solver_t* solver) {
+  evaluator->evaluates = mcsat_evaluates;
+  evaluator->solver = solver;
+}
+
+/** Callback on propagations */
+static
+bool trail_token_add(trail_token_t* token, variable_t x, const mcsat_value_t* value) {
+  plugin_trail_token_t* tk = (plugin_trail_token_t*) token;
+  mcsat_solver_t* mcsat = tk->ctx->mcsat;
+  mcsat_trail_t* trail = mcsat->trail;
+  bool is_decision;
+
+  is_decision = tk->x != variable_null;
+
+  if (ctx_trace_enabled(&tk->ctx->ctx, "trail::add")) {
+    if (is_decision) {
+      ctx_trace_printf(&tk->ctx->ctx, "plugin %s deciding ", tk->ctx->plugin_name);\
+    } else {
+      ctx_trace_printf(&tk->ctx->ctx, "plugin %s propagating ", tk->ctx->plugin_name);\
+    }
+    variable_db_print_variable(mcsat->var_db, x, ctx_trace_out(&tk->ctx->ctx));
+    ctx_trace_printf(&tk->ctx->ctx, " -> ");
+    mcsat_value_print(value, ctx_trace_out(&tk->ctx->ctx));
+    ctx_trace_printf(&tk->ctx->ctx, "\n");
+  }
+
+  if (trail_has_value(trail, x)) {
+    return false;
+  }
+
+  tk->used ++;
+
+  if (is_decision) {
+    trail_add_decision(trail, x, value, tk->ctx->ctx.plugin_id);
+  } else {
+    trail_add_propagation(trail, x, value, tk->ctx->ctx.plugin_id, trail->decision_level);
+  }
+
+  if (ctx_trace_enabled(&tk->ctx->ctx, "mcsat::propagation::check") && !is_decision) {
+    uint32_t plugin_id = tk->ctx->ctx.plugin_id;
+    if (plugin_id != mcsat->bool_plugin_id) {
+      ivector_t reason;
+      init_ivector(&reason, 0);
+      plugin_t* plugin = mcsat->plugins[plugin_id].plugin;
+      term_t substitution = plugin->explain_propagation(plugin, x, &reason);
+      term_t x_term = variable_db_get_term(mcsat->var_db, x);
+      propagation_check(&reason, x_term, substitution);
+      delete_ivector(&reason);
+    }
+  }
+
+  return true;
+}
+
+/** Callback on propagations at lower levels */
+static
+bool trail_token_add_at_level(trail_token_t* token, variable_t x, const mcsat_value_t* value, uint32_t level) {
+  plugin_trail_token_t* tk = (plugin_trail_token_t*) token;
+  mcsat_solver_t* mcsat = tk->ctx->mcsat;
+  mcsat_trail_t* trail = mcsat->trail;
+
+  if (ctx_trace_enabled(&tk->ctx->ctx, "trail::add")) {
+    ctx_trace_printf(&tk->ctx->ctx, "plugin %s propagating ", tk->ctx->plugin_name);
+    variable_db_print_variable(mcsat->var_db, x, ctx_trace_out(&tk->ctx->ctx));
+    ctx_trace_printf(&tk->ctx->ctx, " -> ");
+    mcsat_value_print(value, ctx_trace_out(&tk->ctx->ctx));
+    ctx_trace_printf(&tk->ctx->ctx, "\n");
+  }
+
+  // Only for propagations, we can't decide on lower levels
+  assert(tk->x == variable_null);
+
+  if (trail_has_value(trail, x)) {
+    return false;
+  }
+
+  tk->used ++;
+
+  // Check for trail level
+  if (level < trail->decision_level_base) {
+    level = trail->decision_level_base;
+  }
+
+  // Add the propagation
+  trail_add_propagation(trail, x, value, tk->ctx->ctx.plugin_id, level);
+
+  return true;
+}
+
+
+static
+void trail_token_conflict(trail_token_t* token) {
+  plugin_trail_token_t* tk = (plugin_trail_token_t*) token;
+
+  if (ctx_trace_enabled(&tk->ctx->ctx, "trail::conflict")) {
+    ctx_trace_printf(&tk->ctx->ctx, "plugin %s reporting a conflict\n", tk->ctx->plugin_name);
+  }
+
+  tk->used ++;
+
+  // Remember the plugin that reported the
+  tk->ctx->mcsat->plugin_in_conflict = tk->ctx;
+
+  // Set the trail to be inconsistent
+  trail_set_inconsistent(tk->ctx->mcsat->trail);
+}
+
+static
+void trail_token_lemma(trail_token_t* token, term_t lemma) {
+  plugin_trail_token_t* tk = (plugin_trail_token_t*) token;
+
+  if (ctx_trace_enabled(&tk->ctx->ctx, "trail::lemma")) {
+    ctx_trace_printf(&tk->ctx->ctx, "plugin %s reporting a lemma\n", tk->ctx->plugin_name);
+    ctx_trace_term(&tk->ctx->ctx, lemma);
+  }
+
+  tk->used ++;
+
+  // Remember the lemma
+  ivector_push(&tk->ctx->mcsat->plugin_lemmas, lemma);
+}
+
+
+/** Concstruct the trail token */
+static inline
+void trail_token_construct(plugin_trail_token_t* token, mcsat_plugin_context_t* ctx, variable_t x) {
+  token->token_interface.add = trail_token_add;
+  token->token_interface.add_at_level = trail_token_add_at_level;
+  token->token_interface.conflict = trail_token_conflict;
+  token->token_interface.lemma = trail_token_lemma;
+  token->ctx = ctx;
+  token->x = x;
+  token->used = 0;
+}
+
+void mcsat_plugin_term_notification_by_kind(plugin_context_t* self, term_kind_t kind) {
+  uint32_t i;
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  assert(self->plugin_id != MCSAT_MAX_PLUGINS);
+  for (i = kind; mctx->mcsat->kind_owners[i] != MCSAT_MAX_PLUGINS; i += NUM_TERM_KINDS) {}
+  mctx->mcsat->kind_owners[i] = self->plugin_id;
+}
+
+void mcsat_plugin_term_notification_by_type(plugin_context_t* self, type_kind_t kind) {
+  uint32_t i;
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  assert(self->plugin_id != MCSAT_MAX_PLUGINS);
+  for (i = kind; mctx->mcsat->type_owners[i] != MCSAT_MAX_PLUGINS; i += NUM_TYPE_KINDS) {}
+  mctx->mcsat->type_owners[i] = self->plugin_id;
+}
+
+static
+void mcsat_request_restart(mcsat_solver_t* mcsat) {
+  mcsat->pending_requests = true;
+  mcsat->pending_requests_all.restart = true;
+}
+
+static
+void mcsat_request_gc(mcsat_solver_t* mcsat) {
+  mcsat->pending_requests = true;
+  mcsat->pending_requests_all.gc_calls = true;
+}
+
+static
+void mcsat_plugin_context_restart(plugin_context_t* self) {
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  mcsat_request_restart(mctx->mcsat);
+}
+
+static
+void mcsat_plugin_context_gc(plugin_context_t* self) {
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  mcsat_request_gc(mctx->mcsat);
+}
+
+static inline
+void mcsat_set_top_decision(mcsat_solver_t* mcsat, variable_t x) {
+  assert(mcsat->top_decision_var == variable_null);
+  mcsat->top_decision_var = x;
+}
+
+static inline
+void mcsat_bump_variable(mcsat_solver_t* mcsat, variable_t x, uint32_t factor) {
+  var_queue_bump_variable(&mcsat->var_queue, x, factor);
+}
+
+#if 0
+static inline
+void mcsat_bump_variables_vector(mcsat_solver_t* mcsat, const ivector_t* vars) {
+  uint32_t i;
+  for (i = 0; i < vars->size; ++ i) {
+    mcsat_bump_variable(mcsat, vars->data[i], 1);
+  }
+}
+#endif
+
+static inline
+void mcsat_bump_variables_mset(mcsat_solver_t* mcsat, const int_mset_t* vars) {
+  uint32_t i;
+  for (i = 0; i < vars->element_list.size; ++ i) {
+    variable_t x = vars->element_list.data[i];
+    uint32_t n = int_mset_contains(vars, x);
+    mcsat_bump_variable(mcsat, x, n);
+  }
+}
+
+static
+void mcsat_plugin_context_bump_variable(plugin_context_t* self, variable_t x) {
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  mcsat_bump_variable(mctx->mcsat, x, 1);
+}
+
+static
+void mcsat_plugin_context_bump_variable_n(plugin_context_t* self, variable_t x, uint32_t n) {
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  mcsat_bump_variable(mctx->mcsat, x, n);
+}
+
+static
+int mcsat_plugin_context_cmp_variables(plugin_context_t* self, variable_t x, variable_t y) {
+  mcsat_plugin_context_t* mctx;
+  mctx = (mcsat_plugin_context_t*) self;
+  return var_queue_cmp_variables(&mctx->mcsat->var_queue, x, y);
+}
+
+static
+void mcsat_plugin_context_request_top_decision(plugin_context_t* self, variable_t x) {
+  mcsat_plugin_context_t* mctx;
+  mctx = (mcsat_plugin_context_t*) self;
+  mcsat_set_top_decision(mctx->mcsat, x);
+ }
+
+static
+void mcsat_plugin_context_decision_calls(plugin_context_t* self, type_kind_t type) {
+  mcsat_plugin_context_t* mctx;
+
+  mctx = (mcsat_plugin_context_t*) self;
+  assert(mctx->mcsat->decision_makers[type] == MCSAT_MAX_PLUGINS);
+  mctx->mcsat->decision_makers[type] = self->plugin_id;
+}
+
+void mcsat_plugin_context_construct(mcsat_plugin_context_t* ctx, mcsat_solver_t* mcsat, uint32_t plugin_i, const char* plugin_name) {
+  ctx->ctx.plugin_id = plugin_i;
+  ctx->ctx.var_db = mcsat->var_db;
+  ctx->ctx.tm = &mcsat->tm;
+  ctx->ctx.terms = mcsat->terms;
+  ctx->ctx.types = mcsat->types;
+  ctx->ctx.exception = mcsat->exception;
+  ctx->ctx.options = &mcsat->ctx->mcsat_options;
+  ctx->ctx.trail = mcsat->trail;
+  ctx->ctx.stats = &mcsat->stats;
+  ctx->ctx.tracer = mcsat->ctx->trace;
+  ctx->ctx.stop_search = &mcsat->stop_search;
+  ctx->ctx.request_decision_calls = mcsat_plugin_context_decision_calls;
+  ctx->ctx.request_term_notification_by_kind = mcsat_plugin_term_notification_by_kind;
+  ctx->ctx.request_term_notification_by_type = mcsat_plugin_term_notification_by_type;
+  ctx->ctx.request_restart = mcsat_plugin_context_restart;
+  ctx->ctx.request_gc = mcsat_plugin_context_gc;
+  ctx->ctx.bump_variable = mcsat_plugin_context_bump_variable;
+  ctx->ctx.bump_variable_n = mcsat_plugin_context_bump_variable_n;
+  ctx->ctx.cmp_variables = mcsat_plugin_context_cmp_variables;
+  ctx->ctx.request_top_decision = mcsat_plugin_context_request_top_decision;
+  ctx->mcsat = mcsat;
+  ctx->plugin_name = plugin_name;
+}
+
+static
+void mcsat_term_registration_enqueue(mcsat_solver_t* mcsat, term_t t) {
+  // Make sure it's positive polarity
+  t = unsigned_term(t);
+
+  // Enqueue if not processed already
+  if (!int_hset_member(&mcsat->registration_cache, t)) {
+    int_hset_add(&mcsat->registration_cache, t);
+    int_queue_push(&mcsat->registration_queue, t);
+  }
+}
+
+static
+void mcsat_new_variable_notify(solver_new_variable_notify_t* self, variable_t x) {
+  term_t t;
+  uint32_t size;
+
+  // Enqueue for registration
+  t = variable_db_get_term(self->mcsat->var_db, x);
+  mcsat_term_registration_enqueue(self->mcsat, t);
+
+  // Ensure that the trail/model is aware of this
+  trail_new_variable_notify(self->mcsat->trail, x);
+
+  // Add the variable to the queue
+  if (x >= self->mcsat->var_queue.size) {
+    size = x + x/2 + 1;
+    assert(size > x);
+    var_queue_extend(&self->mcsat->var_queue, size);
+  }
+  var_queue_insert(&self->mcsat->var_queue, x);
+}
+
+static
+uint32_t mcsat_add_plugin(mcsat_solver_t* mcsat, plugin_allocator_t plugin_allocator, const char* plugin_name) {
+
+  // Allocate the plugin
+  plugin_t* plugin = plugin_allocator();
+  // The index of the plugin
+  uint32_t plugin_i = mcsat->plugins_count;
+  // Allocate the request
+  mcsat_plugin_context_t* plugin_ctx = safe_malloc(sizeof(mcsat_plugin_context_t));
+  mcsat_plugin_context_construct(plugin_ctx, mcsat, plugin_i, plugin_name);
+  // Construct the plugin
+  plugin->construct(plugin, (plugin_context_t*) plugin_ctx);
+
+  // Add the plugin to the list of plugins
+  mcsat->plugins[plugin_i].plugin = plugin;
+  mcsat->plugins[plugin_i].plugin_ctx = plugin_ctx;
+  mcsat->plugins[plugin_i].plugin_name = strdup(plugin_name);
+  mcsat->plugins_count ++;
+
+  return plugin_i;
+}
+
+static
+void mcsat_add_plugins(mcsat_solver_t* mcsat) {
+  mcsat->bool_plugin_id = mcsat_add_plugin(mcsat, bool_plugin_allocator, "bool_plugin");
+  mcsat->uf_plugin_id = mcsat_add_plugin(mcsat, uf_plugin_allocator, "uf_plugin");
+  mcsat->ite_plugin_id = mcsat_add_plugin(mcsat, ite_plugin_allocator, "ite_plugin");
+  mcsat->nra_plugin_id = mcsat_add_plugin(mcsat, nra_plugin_allocator, "nra_plugin");
+  mcsat->bv_plugin_id = mcsat_add_plugin(mcsat, bv_plugin_allocator, "bv_plugin");
+}
+
+static
+void mcsat_construct(mcsat_solver_t* mcsat, const context_t* ctx) {
+  uint32_t i;
+
+  assert(ctx != NULL);
+  assert(ctx->arch == CTX_ARCH_MCSAT);
+  assert(ctx->terms != NULL);
+  assert(ctx->types != NULL);
+
+  mcsat->stop_search = false;
+  mcsat->ctx = ctx;
+  mcsat->exception = (jmp_buf*) &ctx->env;
+  mcsat->types = ctx->types;
+  mcsat->terms = ctx->terms;
+  mcsat->terms_size_on_solver_entry = 0;
+  mcsat->status = STATUS_IDLE;
+  mcsat->inconsistent_push_calls = 0;
+
+  // New term manager
+  init_term_manager(&mcsat->tm, mcsat->terms);
+  mcsat->tm.simplify_bveq1 = false;
+  mcsat->tm.simplify_ite = false;
+
+  // The new variable listener
+  mcsat->var_db_notify.mcsat = mcsat;
+  mcsat->var_db_notify.new_variable = mcsat_new_variable_notify;
+
+  // The variable database
+  mcsat->var_db = safe_malloc(sizeof(variable_db_t));
+  variable_db_construct(mcsat->var_db, mcsat->terms, mcsat->types, mcsat->ctx->trace);
+  variable_db_add_new_variable_listener(mcsat->var_db, (variable_db_new_variable_notify_t*)&mcsat->var_db_notify);
+
+  // List of assertions
+  init_ivector(&mcsat->assertion_vars, 0);
+  init_ivector(&mcsat->assertion_terms_original, 0);
+  init_ivector(&mcsat->assertions_tmp, 0);
+
+  // The trail
+  mcsat->trail = safe_malloc(sizeof(mcsat_trail_t));
+  trail_construct(mcsat->trail, mcsat->var_db);
+
+  // Variable registration queue
+  init_int_queue(&mcsat->registration_queue, 0);
+  init_int_hset(&mcsat->registration_cache, 0);
+
+  // Init all the term owners to NULL
+  for (i = 0; i < NUM_TERM_KINDS * MCSAT_MAX_PLUGINS; ++ i) {
+    mcsat->kind_owners[i] = MCSAT_MAX_PLUGINS;
+  }
+
+  // Init all the type owners to NULL
+  for (i = 0; i < NUM_TYPE_KINDS * MCSAT_MAX_PLUGINS; ++ i) {
+    mcsat->type_owners[i] = MCSAT_MAX_PLUGINS;
+  }
+
+  // Init all the decision makers to NULL
+  for (i = 0; i < NUM_TYPE_KINDS; ++ i) {
+    mcsat->decision_makers[i] = MCSAT_MAX_PLUGINS;
+  }
+
+  // Plugin vectors
+  mcsat->plugins_count = 0;
+  mcsat->plugin_in_conflict = 0;
+
+  // Construct the evaluator
+  mcsat_evaluator_construct(&mcsat->evaluator, mcsat);
+
+  // Construct the preprocessor
+  preprocessor_construct(&mcsat->preprocessor, mcsat->terms, mcsat->exception, &mcsat->ctx->mcsat_options);
+
+  // The variable queue
+  mcsat->top_decision_var = variable_null;
+  var_queue_construct(&mcsat->var_queue);
+
+  mcsat->pending_requests_all.restart = false;
+  mcsat->pending_requests_all.gc_calls = false;
+  mcsat->pending_requests = false;
+
+  // Lemmas vector
+  init_ivector(&mcsat->plugin_lemmas, 0);
+
+  // Construct stats
+  statistics_construct(&mcsat->stats);
+  mcsat_stats_init(mcsat);
+
+  // Scope for backtracking
+  scope_holder_construct(&mcsat->scope);
+
+  // Construct the plugins
+  mcsat_add_plugins(mcsat);
+}
+
+void mcsat_destruct(mcsat_solver_t* mcsat) {
+  uint32_t i;
+  plugin_t* plugin;
+
+  // Delete the plugin data
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    // Plugin
+    plugin = mcsat->plugins[i].plugin;
+    plugin->destruct(mcsat->plugins[i].plugin);
+    safe_free(plugin);
+    // Plugin context
+    safe_free(mcsat->plugins[i].plugin_ctx);
+    // The name
+    safe_free(mcsat->plugins[i].plugin_name);
+  }
+
+  delete_term_manager(&mcsat->tm);
+  delete_int_queue(&mcsat->registration_queue);
+  delete_int_hset(&mcsat->registration_cache);
+  delete_ivector(&mcsat->assertion_vars);
+  delete_ivector(&mcsat->assertion_terms_original);
+  delete_ivector(&mcsat->assertions_tmp);
+  trail_destruct(mcsat->trail);
+  safe_free(mcsat->trail);
+  variable_db_destruct(mcsat->var_db);
+  safe_free(mcsat->var_db);
+  preprocessor_destruct(&mcsat->preprocessor);
+  var_queue_destruct(&mcsat->var_queue);
+  delete_ivector(&mcsat->plugin_lemmas);
+  statistics_destruct(&mcsat->stats);
+  scope_holder_destruct(&mcsat->scope);
+}
+
+mcsat_solver_t* mcsat_new(const context_t* ctx) {
+  mcsat_solver_t* mcsat = (mcsat_solver_t*) safe_malloc(sizeof(mcsat_solver_t));
+  mcsat_construct(mcsat, ctx);
+  return mcsat;
+}
+
+
+smt_status_t mcsat_status(const mcsat_solver_t* mcsat) {
+  return mcsat->status;
+}
+
+static
+void mcsat_notify_plugins(mcsat_solver_t* mcsat, plugin_notify_kind_t kind) {
+  uint32_t i;
+  plugin_t* plugin;
+
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin = mcsat->plugins[i].plugin;
+    if (plugin->event_notify) {
+      plugin->event_notify(plugin, kind);
+    }
+  }
+}
+
+void mcsat_reset(mcsat_solver_t* mcsat) {
+  // Pop to level 0
+  while (mcsat->trail->decision_level_base > 0) {
+    mcsat_pop(mcsat);
+  }
+  // Reset everything
+  const context_t* ctx = mcsat->ctx;
+  mcsat_destruct(mcsat);
+  mcsat_construct(mcsat, ctx);
+}
+
+static
+void mcsat_push_internal(mcsat_solver_t* mcsat) {
+  uint32_t i;
+  plugin_t* plugin;
+
+  // Push the plugins
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin = mcsat->plugins[i].plugin;
+    if (plugin->push) {
+      plugin->push(plugin);
+    }
+  }
+}
+
+static
+void mcsat_pop_internal(mcsat_solver_t* mcsat) {
+  uint32_t i;
+  plugin_t* plugin;
+  ivector_t* unassigned;
+
+  // Pop the plugins
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin = mcsat->plugins[i].plugin;
+    if (plugin->pop) {
+      plugin->pop(plugin);
+    }
+  }
+
+  // Re-add the variables that were unassigned
+  unassigned = trail_get_unassigned(mcsat->trail);
+  for (i = 0; i < unassigned->size; ++ i) {
+    var_queue_insert(&mcsat->var_queue, unassigned->data[i]);
+  }
+  ivector_reset(unassigned);
+}
+
+static
+void mcsat_backtrack_to(mcsat_solver_t* mcsat, uint32_t level);
+
+static
+void mcsat_gc(mcsat_solver_t* mcsat, bool mark_internal);
+
+void mcsat_push(mcsat_solver_t* mcsat) {
+
+  assert(mcsat->status == STATUS_IDLE); // We must have clear before
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::push")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat::push start\n");
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+
+  if (!trail_is_consistent(mcsat->trail)) {
+    mcsat->inconsistent_push_calls ++;
+    return;
+  }
+
+  // Internal stuff push
+  scope_holder_push(&mcsat->scope,
+      &mcsat->assertion_vars.size,
+      &mcsat->assertion_terms_original.size,
+      NULL);
+  // Regular push for the internal data structures
+  mcsat_push_internal(mcsat);
+  // Push and set the base level on the trail
+  trail_new_base_level(mcsat->trail);
+  // Push the preprocessor
+  preprocessor_push(&mcsat->preprocessor);
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::push")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat::pop end\n");
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+
+}
+
+
+void mcsat_pop(mcsat_solver_t* mcsat) {
+
+  // External pop:
+  // - internal pop
+  // - assertions
+  // - variables and terms
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::pop")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat::pop start\n");
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+
+  if (mcsat->inconsistent_push_calls > 0) {
+    mcsat->inconsistent_push_calls --;
+    mcsat->status = STATUS_IDLE;
+    return;
+  }
+
+  // Backtrack trail
+  uint32_t new_base_level = trail_pop_base_level(mcsat->trail);
+
+  // Backtrack solver
+  mcsat_backtrack_to(mcsat, new_base_level);
+
+  // Internal stuff pop
+  uint32_t assertion_vars_size = 0;
+  uint32_t assertion_terms_original_size = 0;
+  scope_holder_pop(&mcsat->scope,
+      &assertion_vars_size,
+      &assertion_terms_original_size,
+      NULL);
+  ivector_shrink(&mcsat->assertion_vars, assertion_vars_size);
+  ivector_shrink(&mcsat->assertion_terms_original, assertion_terms_original_size);
+
+  // Pop the preprocessor
+  preprocessor_pop(&mcsat->preprocessor);
+
+  // Notify all the plugins that we just popped
+  mcsat_notify_plugins(mcsat, MCSAT_SOLVER_POP);
+
+  // Garbage collect
+  mcsat_gc(mcsat, false);
+  (*mcsat->solver_stats.gc_calls) ++;
+
+  // Set the status back to idle
+  mcsat->status = STATUS_IDLE;
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::pop")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat::pop end\n");
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+}
+
+void mcsat_clear(mcsat_solver_t* mcsat) {
+  // Clear to be ready for more assertions:
+  // - Pop internal to base level
+  mcsat_backtrack_to(mcsat, mcsat->trail->decision_level_base);
+  mcsat->status = STATUS_IDLE;
+}
+
+/**
+ * Get the indices of the plugins that claim to own the term t by type.
+ */
+static inline
+void mcsat_get_type_owners(mcsat_solver_t* mcsat, term_t t, int_mset_t* owners) {
+  uint32_t i, plugin_i;
+  i = type_kind(mcsat->types, term_type(mcsat->terms, t));
+  plugin_i = mcsat->type_owners[i];
+  assert(plugin_i != MCSAT_MAX_PLUGINS);
+  do  {
+    int_mset_add(owners, plugin_i);
+    i += NUM_TYPE_KINDS;
+    plugin_i = mcsat->type_owners[i];
+  } while (plugin_i != MCSAT_MAX_PLUGINS);
+}
+
+/**
+ * Get the indices of the plugins that claim to own the term t by kind.
+ */
+static inline
+void mcsat_get_kind_owners(mcsat_solver_t* mcsat, term_t t, int_mset_t* owners) {
+  uint32_t i, plugin_i;
+  i = term_kind(mcsat->terms, t);
+  plugin_i = mcsat->kind_owners[i];
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::get_kind_owner")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "get_kind_owner: ");
+    trace_term_ln(mcsat->ctx->trace, mcsat->terms, t);
+  }
+  assert(plugin_i != MCSAT_MAX_PLUGINS || i == UNINTERPRETED_TERM || i == CONSTANT_TERM);
+  while (plugin_i != MCSAT_MAX_PLUGINS) {
+    int_mset_add(owners, plugin_i);
+    i += NUM_TERM_KINDS;
+    plugin_i = mcsat->kind_owners[i];
+  };
+}
+
+
+static void mcsat_process_registeration_queue(mcsat_solver_t* mcsat) {
+  term_t t;
+  uint32_t i, plugin_i;
+  plugin_t* plugin;
+  plugin_trail_token_t prop_token;
+  int_mset_t to_notify;
+  ivector_t* to_notify_list;
+
+  int_mset_construct(&to_notify, MCSAT_MAX_PLUGINS);
+
+  while (!int_queue_is_empty(&mcsat->registration_queue)) {
+    // Next term to register
+    t = int_queue_pop(&mcsat->registration_queue);
+    assert(is_pos_term(t));
+
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::registration")) {
+      mcsat_trace_printf(mcsat->ctx->trace, "term registration: ");
+      trace_term_ln(mcsat->ctx->trace, mcsat->terms, t);
+    }
+
+    // Get who to notify
+    int_mset_clear(&to_notify);
+
+    // We notify the owners of the term type
+    mcsat_get_type_owners(mcsat, t, &to_notify);
+
+    // We also notify the term kind owners, except for equality
+    term_kind_t kind = term_kind(mcsat->terms, t);
+    if (kind == EQ_TERM) {
+      mcsat_get_type_owners(mcsat, composite_term_arg(mcsat->terms, t, 0), &to_notify);
+      mcsat_get_type_owners(mcsat, composite_term_arg(mcsat->terms, t, 1), &to_notify);
+    } else {
+      mcsat_get_kind_owners(mcsat, t, &to_notify);
+    }
+
+    // Notify
+    to_notify_list = int_mset_get_list(&to_notify);
+    for (i = 0; i < to_notify_list->size; ++i) {
+      plugin_i = to_notify_list->data[i];
+      plugin = mcsat->plugins[plugin_i].plugin;
+      trail_token_construct(&prop_token, mcsat->plugins[plugin_i].plugin_ctx, variable_null);
+      plugin->new_term_notify(plugin, t, (trail_token_t*) &prop_token);
+    }
+  }
+
+  int_mset_destruct(&to_notify);
+}
+
+/** Pass true to mark terms and types in the internal yices term tables */
+static
+void mcsat_gc(mcsat_solver_t* mcsat, bool mark_internal) {
+
+  uint32_t i;
+  variable_t var;
+  gc_info_t gc_vars;
+  plugin_t* plugin;
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::gc")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat_gc():\n");
+    mcsat_show_stats(mcsat, mcsat->ctx->trace->file);
+  }
+
+  // Mark previously used term in the term table
+  // set_bitvector(mcsat->terms->mark, mcsat->terms_size_on_solver_entry);
+
+  // Construct the variable info
+  gc_info_construct(&gc_vars, variable_null, true);
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::gc")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat_gc(): marking\n");
+  }
+
+  // Mark the assertion variables as needed
+  for (i = 0; i < mcsat->assertion_vars.size; ++ i) {
+    var = mcsat->assertion_vars.data[i];
+    assert(variable_db_is_variable(mcsat->var_db, var, true));
+    gc_info_mark(&gc_vars, var);
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::gc")) {
+      mcsat_trace_printf(mcsat->ctx->trace, "mcsat_gc(): marking ");
+      trace_term_ln(mcsat->ctx->trace, mcsat->terms, variable_db_get_term(mcsat->var_db, var));
+    }
+  }
+
+  // Mark the top decision variable if any
+  if (mcsat->top_decision_var != variable_null) {
+    gc_info_mark(&gc_vars, mcsat->top_decision_var);
+  }
+
+  // Mark the trail variables as needed
+  trail_gc_mark(mcsat->trail, &gc_vars);
+
+  // Mark variables by plugins
+  for (;;) {
+
+    // Mark with each plugin
+    for (i = 0; i < mcsat->plugins_count; ++ i) {
+      if (trace_enabled(mcsat->ctx->trace, "mcsat::gc")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "mcsat_gc(): marking with %s\n", mcsat->plugins[i].plugin_name);
+      }
+      plugin = mcsat->plugins[i].plugin;
+      if (plugin->gc_mark) {
+        plugin->gc_mark(plugin, &gc_vars);
+      }
+    }
+
+    // If any new ones marked, go to the new level and continue marking
+    if (gc_info_get_level_size(&gc_vars) > 0) {
+      gc_info_new_level(&gc_vars);
+    } else {
+      // Nothing new marked
+      break;
+    }
+  }
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::gc")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat_gc(): sweeping\n");
+  }
+
+  // Collect the unused variables
+  variable_db_gc_sweep(mcsat->var_db, &gc_vars);
+
+  // Do the sweep
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin = mcsat->plugins[i].plugin;
+    if (plugin->gc_sweep) {
+      plugin->gc_sweep(plugin, &gc_vars);
+    }
+  }
+
+  // Trail sweep
+  trail_gc_sweep(mcsat->trail, &gc_vars);
+
+  // Variable queue sweep
+  var_queue_gc_sweep(&mcsat->var_queue, &gc_vars);
+
+  // If asked mark all the terms
+  if (mark_internal) {
+    for (i = 0; i < gc_vars.marked.size; ++ i) {
+      variable_t x = gc_vars.marked.data[i];
+      term_t x_term = variable_db_get_term(mcsat->var_db, x);
+      term_t x_type = term_type(mcsat->terms, x_term);
+      term_table_set_gc_mark(mcsat->terms, index_of(x_term));
+      type_table_set_gc_mark(mcsat->types, x_type);
+    }
+  }
+
+  // Done, destruct
+  gc_info_destruct(&gc_vars);
+
+  // Remove terms from registration cache
+  int_hset_t new_registration_cache;
+  init_int_hset(&new_registration_cache, 0);
+  int_hset_close(&mcsat->registration_cache);
+  for (i = 0; i < mcsat->registration_cache.nelems; ++ i) {
+    term_t t = mcsat->registration_cache.data[i];
+    variable_t x = variable_db_get_variable_if_exists(mcsat->var_db, t);
+    if (x != variable_null) {
+      int_hset_add(&new_registration_cache, t);
+    }
+  }
+  delete_int_hset(&mcsat->registration_cache);
+  mcsat->registration_cache = new_registration_cache;
+
+  // Garbage collect with yices
+  // term_table_gc(mcsat->terms, 1);
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::gc")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat_gc(): done\n");
+  }
+}
+
+static
+void mcsat_backtrack_to(mcsat_solver_t* mcsat, uint32_t level) {
+  while (mcsat->trail->decision_level > level) {
+
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::incremental")) {
+      trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+    }
+
+    // Pop the trail
+    trail_pop(mcsat->trail);
+
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::incremental")) {
+      trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+    }
+
+    // Pop the plugins
+    mcsat_pop_internal(mcsat);
+  }
+}
+
+static
+void mcsat_process_requests(mcsat_solver_t* mcsat) {
+
+  if (mcsat->pending_requests) {
+
+    // Restarts
+    if (mcsat->pending_requests_all.restart) {
+      if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "restarting\n");
+      }
+      mcsat_backtrack_to(mcsat, mcsat->trail->decision_level_base);
+      mcsat->pending_requests_all.restart = false;
+      (*mcsat->solver_stats.restarts) ++;
+      mcsat_notify_plugins(mcsat, MCSAT_SOLVER_RESTART);
+    }
+
+    // GC
+    if (mcsat->pending_requests_all.gc_calls) {
+      if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "garbage collection\n");
+      }
+      mcsat_gc(mcsat, false);
+      mcsat->pending_requests_all.gc_calls = false;
+      (*mcsat->solver_stats.gc_calls) ++;
+    }
+
+    // All services
+    mcsat->pending_requests = false;
+  }
+}
+
+/**
+ * Perform propagation by running all plugins in sequence. Stop if a conflict
+ * is encountered.
+ */
+static
+bool mcsat_propagate(mcsat_solver_t* mcsat) {
+
+  uint32_t plugin_i;
+  plugin_t* plugin;
+  plugin_trail_token_t prop_token;
+  bool someone_propagated;
+
+  do {
+    // Repeat until no plugin makes any progress
+    someone_propagated = false;
+    // Propagate with all the plugins in turn
+    for (plugin_i = 0; trail_is_consistent(mcsat->trail) && plugin_i < mcsat->plugins_count; ++ plugin_i) {
+      if (trace_enabled(mcsat->ctx->trace, "mcsat::propagate")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "mcsat_propagate(): with %s\n", mcsat->plugins[plugin_i].plugin_name);
+      }
+      // Make the token
+      trail_token_construct(&prop_token, mcsat->plugins[plugin_i].plugin_ctx, variable_null);
+      // Propagate
+      plugin = mcsat->plugins[plugin_i].plugin;
+      if (plugin->propagate) {
+        plugin->propagate(plugin, (trail_token_t*) &prop_token);
+      }
+      if (prop_token.used > 0) {
+        someone_propagated = true;
+      }
+    }
+  } while (someone_propagated && trail_is_consistent(mcsat->trail));
+
+  return someone_propagated;
+}
+
+static
+void mcsat_assert_formula(mcsat_solver_t* mcsat, term_t f) {
+
+  term_t f_pos;
+  variable_t f_pos_var;
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat_assert_formula()\n");
+    trace_term_ln(mcsat->ctx->trace, mcsat->terms, f);
+  }
+
+  // If we're unsat, no more assertions
+  if (!trail_is_consistent(mcsat->trail)) {
+    return;
+  }
+
+  (*mcsat->solver_stats.assertions) ++;
+
+  assert(trail_is_at_base_level(mcsat->trail));
+  assert(int_queue_is_empty(&mcsat->registration_queue));
+
+  // Add the terms
+  f_pos = unsigned_term(f);
+  f_pos_var = variable_db_get_variable(mcsat->var_db, f_pos);
+  mcsat_process_registeration_queue(mcsat);
+
+  // Remember the assertion
+  ivector_push(&mcsat->assertion_vars, f_pos_var);
+
+  // Assert the formula
+  if (f_pos == f) {
+    // f = true
+    if (!trail_has_value(mcsat->trail, f_pos_var)) {
+      trail_add_propagation(mcsat->trail, f_pos_var, &mcsat_value_true, MCSAT_MAX_PLUGINS, mcsat->trail->decision_level);
+    } else {
+      // If negative already, we're inconsistent
+      if (!trail_get_boolean_value(mcsat->trail, f_pos_var)) {
+        trail_set_inconsistent(mcsat->trail);
+        return;
+      }
+    }
+  } else {
+    // f = false
+    if (!trail_has_value(mcsat->trail, f_pos_var)) {
+      trail_add_propagation(mcsat->trail, f_pos_var, &mcsat_value_false, MCSAT_MAX_PLUGINS, mcsat->trail->decision_level);
+    } else {
+      // If positive already, we're inconsistent
+      if (trail_get_boolean_value(mcsat->trail, f_pos_var)) {
+        trail_set_inconsistent(mcsat->trail);
+        return;
+      }
+    }
+  }
+
+  // Do propagation
+  mcsat_propagate(mcsat);
+}
+
+/**
+ * Decide one of the unassigned literals. Decide the first literal that is bigger
+ * than the given bound (to make sure we decide on t(x) instead of x).
+ */
+static
+bool mcsat_decide_one_of(mcsat_solver_t* mcsat, ivector_t* literals, term_t bound) {
+
+  uint32_t i;
+  term_t literal;
+  term_t literal_pos;
+  variable_t literal_var;
+
+  term_t to_decide_lit = NULL_TERM;
+  term_t to_decide_atom = NULL_TERM;
+  variable_t to_decide_var = variable_null;
+
+  for (i = 0; i < literals->size; ++ i) {
+
+    literal = literals->data[i];
+    literal_pos = unsigned_term(literal);
+    literal_var = variable_db_get_variable_if_exists(mcsat->var_db, literal_pos);
+
+    assert(literal_var != variable_null);
+
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::lemma")) {
+      mcsat_trace_printf(mcsat->ctx->trace, "trying undecided :\n");
+      trace_term_ln(mcsat->ctx->trace, mcsat->ctx->terms, literal);
+    }
+
+    // Can be decided?
+    if (!trail_has_value(mcsat->trail, literal_var)) {
+      if (trace_enabled(mcsat->ctx->trace, "mcsat::lemma")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "unassigned!\n");
+      }
+      if (bound == NULL_TERM || literal_pos > bound) {
+        to_decide_lit = literal;
+        to_decide_atom = literal_pos;
+        to_decide_var = literal_var;
+        break;
+      }
+    } else {
+      if (trace_enabled(mcsat->ctx->trace, "mcsat::lemma")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "assigned!\n");
+      }
+    }
+  }
+
+  if (to_decide_var != variable_null) {
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::lemma")) {
+      mcsat_trace_printf(mcsat->ctx->trace, "picked:\n");
+      trace_term_ln(mcsat->ctx->trace, mcsat->ctx->terms, to_decide_lit);
+    }
+    mcsat_push_internal(mcsat);
+    const mcsat_value_t* value = to_decide_atom == to_decide_lit ? &mcsat_value_true : &mcsat_value_false;
+    trail_add_decision(mcsat->trail, to_decide_var, value, MCSAT_MAX_PLUGINS);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Add a lemma (a disjunction). Each lemma needs to lead to some progress. This
+ * means that:
+ *  * no literal should evaluate to true
+ *  * if only one literal is false, it should be propagated by one of the plugins
+ *  * if more then one literals is false, one of them should be decided to true
+ *    by one of the plugins
+ */
+static
+void mcsat_add_lemma(mcsat_solver_t* mcsat, ivector_t* lemma, term_t decision_bound) {
+
+  uint32_t i, level, top_level;
+  ivector_t unassigned;
+  term_t disjunct, disjunct_pos;
+  variable_t disjunct_pos_var;
+  plugin_t* plugin;
+
+  (*mcsat->solver_stats.lemmas)++;
+
+  // assert(int_queue_is_empty(&mcsat->registration_queue));
+  // TODO: revisit this. it's done in integer solver to do splitting in
+  // conflict analysis
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::lemma")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "lemma:\n");
+    for (i = 0; i < lemma->size; ++ i) {
+      mcsat_trace_printf(mcsat->ctx->trace, "\t");
+      trace_term_ln(mcsat->ctx->trace, mcsat->ctx->terms, lemma->data[i]);
+    }
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+
+  init_ivector(&unassigned, 0);
+
+  top_level = mcsat->trail->decision_level_base;
+  for (i = 0; i < lemma->size; ++ i) {
+
+    // Get the variables for the disjunct
+    disjunct = lemma->data[i];
+    assert(term_type_kind(mcsat->terms, disjunct) == BOOL_TYPE);
+    disjunct_pos = unsigned_term(disjunct);
+    disjunct_pos_var = variable_db_get_variable(mcsat->var_db, disjunct_pos);
+    if (trace_enabled(mcsat->ctx->trace, "mcsat::lemma")) {
+      mcsat_trace_printf(mcsat->ctx->trace, "literal: ");
+      variable_db_print_variable(mcsat->var_db, disjunct_pos_var, stderr);
+      if (trail_has_value(mcsat->trail, disjunct_pos_var)) {
+        mcsat_trace_printf(mcsat->ctx->trace, "\nvalue: ");
+        const mcsat_value_t* value = trail_get_value(mcsat->trail, disjunct_pos_var);
+        mcsat_value_print(value, stderr);
+        mcsat_trace_printf(mcsat->ctx->trace, "\n");
+      } else {
+        mcsat_trace_printf(mcsat->ctx->trace, "\nno value\n");
+      }
+    }
+
+    // Process any newly registered variables
+    mcsat_process_registeration_queue(mcsat);
+
+    // Check if the literal has value (only negative allowed)
+    if (trail_has_value(mcsat->trail, disjunct_pos_var)) {
+      assert(trail_get_value(mcsat->trail, disjunct_pos_var)->type == VALUE_BOOLEAN);
+      assert(trail_get_value(mcsat->trail, disjunct_pos_var)->b == (disjunct != disjunct_pos));
+      level = trail_get_level(mcsat->trail, disjunct_pos_var);
+      if (level > top_level) {
+        top_level = level;
+      }
+    } else {
+      ivector_push(&unassigned, lemma->data[i]);
+    }
+  }
+
+  assert(unassigned.size > 0);
+  assert(top_level <= mcsat->trail->decision_level);
+
+  // Backtrack to the appropriate level and do some progress
+  if (unassigned.size == 1) {
+    // UIP
+    mcsat_backtrack_to(mcsat, top_level);
+  } else {
+    // Non-UIP, we're already below, and we'll split on a new term, that's enough
+  }
+
+  uint32_t old_trail_size = mcsat->trail->elements.size;
+
+  // Notify the plugins about the lemma
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin = mcsat->plugins[i].plugin;
+    if (plugin->new_lemma_notify) {
+      // Make the token
+      plugin_trail_token_t prop_token;
+      trail_token_construct(&prop_token, mcsat->plugins[i].plugin_ctx, variable_null);
+      plugin->new_lemma_notify(plugin, lemma, (trail_token_t*) &prop_token);
+    }
+  }
+
+  // Propagate any
+  mcsat_propagate(mcsat);
+  bool propagated = old_trail_size < mcsat->trail->elements.size;
+
+  // Decide a literal if necessary. At this point, if it was UIP they are all
+  // assigned. If not, we assign arbitrary.
+  bool decided = false;
+  bool consistent = trail_is_consistent(mcsat->trail);
+  if (consistent) {
+    decided = mcsat_decide_one_of(mcsat, &unassigned, decision_bound);
+  }
+  if(trace_enabled(mcsat->ctx->trace, "mcsat::lemma") && !(propagated || !consistent || decided)) {
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+  assert(propagated || !consistent || decided);
+
+  delete_ivector(&unassigned);
+}
+
+uint32_t mcsat_get_lemma_weight(mcsat_solver_t* mcsat, const ivector_t* lemma, lemma_weight_type_t type) {
+  uint32_t i, weight = 0;
+  term_t atom;
+  variable_t atom_var;
+  int_mset_t levels;
+
+  switch(type) {
+  case LEMMA_WEIGHT_UNIT:
+    weight = 1;
+    break;
+  case LEMMA_WEIGHT_SIZE:
+    weight = lemma->size;
+    break;
+  case LEMMA_WEIGHT_GLUE:
+    int_mset_construct(&levels, UINT32_MAX);
+    for (i = 0; i < lemma->size; ++ i) {
+      atom = unsigned_term(lemma->data[i]);
+      atom_var = variable_db_get_variable_if_exists(mcsat->var_db, atom);
+      assert(atom_var != variable_null);
+      if (trail_has_value(mcsat->trail, atom_var)) {
+        int_mset_add(&levels, trail_get_level(mcsat->trail, atom_var));
+      }
+    }
+    weight = int_mset_get_list(&levels)->size;
+    int_mset_destruct(&levels);
+    break;
+  }
+
+  return weight;
+}
+
+/** Check propagation with Yices: reasons => x = subst */
+static
+void propagation_check(const ivector_t* reasons, term_t x, term_t subst) {
+  ctx_config_t* config = yices_new_config();
+   context_t* ctx = yices_new_context(config);
+   uint32_t i;
+   for (i = 0; i < reasons->size; ++i) {
+     term_t literal = reasons->data[i];
+     int32_t ret = yices_assert_formula(ctx, literal);
+     if (ret != 0) {
+       // unsupported by regular yices
+       fprintf(stderr, "skipping propagation (ret 1)\n");
+       yices_print_error(stderr);
+       return;
+     }
+   }
+   term_t eq = yices_eq(x, subst);
+   int32_t ret = yices_assert_formula(ctx, opposite_term(eq));
+   if (ret != 0) {
+     fprintf(stderr, "skipping propagation (ret 2)\n");
+     yices_print_error(stderr);
+     return;
+   }
+   smt_status_t result = yices_check_context(ctx, NULL);
+   (void) result;
+   assert(result == STATUS_UNSAT);
+   yices_free_context(ctx);
+   yices_free_config(config);
+}
+
+
+static
+void mcsat_analyze_conflicts(mcsat_solver_t* mcsat, uint32_t* restart_resource) {
+
+  conflict_t conflict;
+  plugin_t* plugin;
+  uint32_t plugin_i;
+  tracer_t* trace;
+
+  uint32_t conflict_level, backtrack_level;
+  variable_t var;
+
+  term_t decision_bound = NULL_TERM;
+
+  ivector_t reason;
+  term_t substitution;
+
+  ivector_t* conflict_disjuncts;
+
+  init_ivector(&reason, 0);
+  trace = mcsat->ctx->trace;
+
+  // Plugin that's in conflict
+  plugin_i = mcsat->plugin_in_conflict->ctx.plugin_id;
+  plugin = mcsat->plugins[plugin_i].plugin;
+
+  if (trace_enabled(trace, "mcsat::conflict")) {
+    mcsat_trace_printf(trace, "analyzing conflict from %s\n", mcsat->plugins[plugin_i].plugin_name);
+    mcsat_trace_printf(trace, "trail: ");
+    trail_print(mcsat->trail, trace->file);
+  }
+
+  // Construct the conflict
+  assert(plugin->get_conflict);
+  plugin->get_conflict(plugin, &reason);
+  conflict_construct(&conflict, &reason, (mcsat_evaluator_interface_t*) &mcsat->evaluator, mcsat->var_db, mcsat->trail, &mcsat->tm, mcsat->ctx->trace);
+  if (trace_enabled(trace, "mcsat::conflict::check")) {
+    // Don't check bool conflicts: they are implied by the formula (clauses)
+    if (plugin_i != mcsat->bool_plugin_id) {
+      static int conflict_count = 0;
+      conflict_count ++;
+      conflict_check(&conflict);
+    } else {
+//      fprintf(stderr, "skipping conflict (bool)\n");
+    }
+  }
+  statistic_avg_add(mcsat->solver_stats.avg_conflict_size, conflict.disjuncts.element_list.size);
+
+  if (trace_enabled(trace, "mcsat::conflict") || trace_enabled(trace, "mcsat::lemma")) {
+    mcsat_trace_printf(trace, "conflict from %s\n", mcsat->plugins[plugin_i].plugin_name);
+    conflict_print(&conflict, trace->file);
+  }
+
+  // Get the level of the conflict and backtrack to it
+  conflict_level = conflict_get_level(&conflict);
+  backtrack_level = mcsat->trail->decision_level_base;
+  if (backtrack_level < conflict_level) backtrack_level = conflict_level;
+  mcsat_backtrack_to(mcsat, backtrack_level);
+
+  // Analyze while at least one variable at conflict level
+  while (true) {
+
+    if (conflict_level <= mcsat->trail->decision_level_base) {
+      // Resolved all the way
+      break;
+    }
+
+    if (conflict_get_top_level_vars_count(&conflict) == 1) {
+      // UIP-like situation, we can quit as long as we make progress, as in
+      // the following cases:
+      //
+      // Assume finite basis B, with max{ term_size(t) | t in B } = M
+      //
+      // Termination based on weight(trail) = [..., weight(e), ...]
+      // - weight(propagation) = M + 1
+      // - weight(t -> d) = term_size(t)
+      //
+      // Max lex trail assuming finite basis:
+      // - [prop, ..., prop, decide variables/terms by term size]
+      //
+      // Termination, after we resolve, the weight goes up:
+      //
+      // Examples:
+      //   weight([b  , x -> T, y -> 0, (y + x < 0) -> 0]) =
+      //          [M+1, 1     , 1     , 5]
+      //
+      // [backjump-learn]
+      //   - Only one conflict literal contains the top variable.
+      //   * weight increases by replacing decision with propagation (M+1)
+      // [backjump-decide]
+      //   - More then one conflict literal contains the top variable.
+      //   - Top variable is decision t1 -> v
+      //   - Replace with decision t2 -> v where t2 is larger than t1
+      //   * weight increases by replacing decision with a heavier decision
+      ivector_t* conflict_top_vars = conflict_get_variables(&conflict);
+      assert(conflict_top_vars->size == 1);
+      variable_t top_var = conflict_top_vars->data[0];
+      if (trace_enabled(trace, "mcsat::conflict")) {
+        mcsat_trace_printf(trace, "potential UIP:\n");
+        variable_db_print_variable(mcsat->var_db, top_var, trace_out(trace));
+        mcsat_trace_printf(trace, "conflict:\n");
+        conflict_print(&conflict, trace->file);
+        mcsat_trace_printf(trace, "trail:\n");
+        trail_print(mcsat->trail, trace_out(trace));
+      }
+      // [backjump-learn]
+      uint32_t top_var_lits = conflict_get_literal_count_of(&conflict, top_var);
+      if (top_var_lits == 1) break;
+      // [backjump-decide]
+      assignment_type_t top_var_type = trail_get_assignment_type(mcsat->trail, top_var);
+      if (top_var_type == DECISION) {
+        assert(variable_db_get_term(mcsat->var_db, top_var) < conflict_get_max_literal_of(&conflict, top_var));
+        decision_bound = variable_db_get_term(mcsat->var_db, top_var);
+        break;
+      }
+    }
+
+    if (trace_enabled(trace, "mcsat::conflict")) {
+      mcsat_trace_printf(trace, "current trail:\n");
+      trail_print(mcsat->trail, trace->file);
+      mcsat_trace_printf(trace, "current conflict: ");
+      conflict_print(&conflict, trace->file);
+    }
+
+    // Current variable
+    var = trail_back(mcsat->trail);
+    assert(trail_get_assignment_type(mcsat->trail, var) != DECISION);
+
+    // Resolve if in the conflict and current level
+    if (conflict_contains_as_top(&conflict, var)) {
+
+      // Get the plugin that performed the propagation
+      plugin_i = trail_get_source_id(mcsat->trail, var);
+      plugin = mcsat->plugins[plugin_i].plugin;
+
+      if (trace_enabled(trace, "mcsat::conflict")) {
+        mcsat_trace_printf(trace, "resolving ");
+        variable_db_print_variable(mcsat->var_db, var, trace->file);
+        mcsat_trace_printf(trace, " with %s\n", mcsat->plugins[plugin_i].plugin_name);
+        mcsat_trace_printf(trace, "current conflict:\n");
+        conflict_print(&conflict, trace->file);
+      }
+
+      // Resolve the variable
+      ivector_reset(&reason);
+      assert(plugin->explain_propagation);
+      substitution = plugin->explain_propagation(plugin, var, &reason);
+      if (trace_enabled(trace, "mcsat::propagation::check")) {
+        if (plugin_i != mcsat->bool_plugin_id) {
+          term_t var_term = variable_db_get_term(mcsat->var_db, var);
+          propagation_check(&reason, var_term, substitution);
+        } else {
+//          fprintf(stderr, "skipping propagation (bool)\n");
+        }
+      }
+      conflict_resolve_propagation(&conflict, var, substitution, &reason);
+      // The trail pops with the resolution step
+    } else {
+      // Have to pop the trail manually
+      trail_pop_propagation(mcsat->trail);
+      assert(!conflict_contains(&conflict, var));
+    }
+
+    if (conflict_get_top_level_vars_count(&conflict) == 0) {
+      // We have resolved the conflict even lower
+      conflict_recompute_level_info(&conflict);
+      conflict_level = conflict_get_level(&conflict);
+      mcsat_backtrack_to(mcsat, conflict_level);
+    }
+  }
+
+  if (trace_enabled(trace, "mcsat::conflict")) {
+    mcsat_trace_printf(trace, "current conflict: ");
+    conflict_print(&conflict, trace->file);
+  }
+
+  // UIP conflict resolution
+  assert(conflict_level <= mcsat->trail->decision_level_base || conflict_get_top_level_vars_count(&conflict) == 1);
+
+  if (conflict_level <= mcsat->trail->decision_level_base) {
+    mcsat->status = STATUS_UNSAT;
+  } else {
+    // We should still be in conflict, so back out
+    assert(conflict.level == mcsat->trail->decision_level);
+    mcsat_backtrack_to(mcsat, mcsat->trail->decision_level - 1);
+
+    // Get the literals
+    conflict_disjuncts = conflict_get_literals(&conflict);
+
+    if (trace_enabled(trace, "mcsat::conflict")) {
+      mcsat_trace_printf(trace, "conflict_disjuncts:\n");
+      uint32_t i;
+      for (i = 0; i < conflict_disjuncts->size; ++i) {
+        mcsat_trace_printf(trace, "[%u]: ", i);
+        trace_term_ln(trace, mcsat->ctx->terms, conflict_disjuncts->data[i]);
+      }
+    }
+
+    // Now add the lemma
+    mcsat_add_lemma(mcsat, conflict_disjuncts, decision_bound);
+
+    // Use resources based on conflict size
+    *restart_resource += mcsat_get_lemma_weight(mcsat, conflict_disjuncts,
+        mcsat->heuristic_params.lemma_restart_weight_type);
+
+    // Bump the variables
+    mcsat_bump_variables_mset(mcsat, conflict_get_variables_all(&conflict));
+
+    if (trace_enabled(trace, "mcsat::conflict::trail")) {
+      mcsat_trace_printf(trace, "trail: ");
+      trail_print(mcsat->trail, trace->file);
+    }
+  }
+
+  delete_ivector(&reason);
+  conflict_destruct(&conflict);
+}
+
+/**
+ * Decides a variable using one of the plugins. Returns true if a variable
+ * has been decided, or a conflict detected.
+ */
+static
+bool mcsat_decide(mcsat_solver_t* mcsat) {
+
+  uint32_t i;
+  variable_t var;
+  plugin_t* plugin;
+  plugin_trail_token_t decision_token;
+
+  ivector_t skipped_variables; // Variables we took from the queue but plugin didn't decide
+  init_ivector(&skipped_variables, 0);
+
+  assert(!mcsat->trail->inconsistent);
+
+  bool force_decision = false;
+  while (true) {
+
+    // Use the variable a plugin requested
+    var = mcsat->top_decision_var;
+    if (var != variable_null && trail_has_value(mcsat->trail, var)) {
+      var = variable_null;
+    }
+
+    // If there is an order that was passed in, try that
+    if (var == variable_null) {
+      const ivector_t* order = mcsat->ctx->mcsat_options.var_order;
+      if (order != NULL) {
+        uint32_t i;
+        if (trace_enabled(mcsat->ctx->trace, "mcsat::decide")) {
+          FILE* out = trace_out(mcsat->ctx->trace);
+          fprintf(out, "mcsat_decide(): var_order is ");
+          for (i = 0; i < order->size; ++ i) {
+            term_print_to_file(out, mcsat->ctx->terms, order->data[i]);
+            fprintf(out, " ");
+          }
+          fprintf(out, "\n");
+        }
+        for (i = 0; var == variable_null && i < order->size; ++i) {
+          term_t ovar_term = order->data[i];
+          variable_t ovar = variable_db_get_variable_if_exists(mcsat->var_db, ovar_term);
+          if (ovar == variable_null) continue; // Some variables are not used
+          if (!trail_has_value(mcsat->trail, ovar)) {
+            var = ovar;
+            force_decision = true;
+          }
+        }
+      }
+    }
+
+    // Random decision:
+    if (var == variable_null) {
+      double* seed = &mcsat->heuristic_params.random_decision_seed;
+      double freq = mcsat->heuristic_params.random_decision_freq;
+      if (drand(seed) < freq && !var_queue_is_empty(&mcsat->var_queue)) {
+        var = var_queue_random(&mcsat->var_queue, seed);
+        if (trail_has_value(mcsat->trail, var)) {
+          var = variable_null;
+        } else {
+          // fprintf(stderr, "random\n");
+        }
+      }
+    }
+    
+    // Use the queue
+    while (!var_queue_is_empty(&mcsat->var_queue) && var == variable_null) {
+      // Get the next variable from the queue
+      var = var_queue_pop(&mcsat->var_queue);
+      // If already assigned go on
+      if (trail_has_value(mcsat->trail, var)) {
+        if (trace_enabled(mcsat->ctx->trace, "mcsat::decide")) {
+          FILE* out = trace_out(mcsat->ctx->trace);
+          fprintf(out, "mcsat_decide(): skipping ");
+          variable_db_print_variable(mcsat->var_db, var, out);
+          fprintf(out, "\n");
+        }
+        var = variable_null;
+        continue;
+      }
+    }
+
+    if (var != variable_null) {
+      // Get the owner that will decide that value of the variable
+      i = mcsat->decision_makers[variable_db_get_type_kind(mcsat->var_db, var)];
+      assert(i != MCSAT_MAX_PLUGINS);
+      // Construct the token
+      trail_token_construct(&decision_token, mcsat->plugins[i].plugin_ctx, var);
+      // Decide
+      if (trace_enabled(mcsat->ctx->trace, "mcsat::decide")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "mcsat_decide(): with %s\n", mcsat->plugins[i].plugin_name);
+        mcsat_trace_printf(mcsat->ctx->trace, "mcsat_decide(): variable ");
+        variable_db_print_variable(mcsat->var_db, var, trace_out(mcsat->ctx->trace));
+        mcsat_trace_printf(mcsat->ctx->trace, "\n");
+      }
+      plugin = mcsat->plugins[i].plugin;
+
+      // Ask the owner to decide
+      mcsat_push_internal(mcsat);
+      assert(plugin->decide);
+      plugin->decide(plugin, var, (trail_token_t*) &decision_token, force_decision);
+
+      if (decision_token.used == 0) {
+        // If not decided, remember and go on
+        ivector_push(&skipped_variables, var);
+        mcsat_pop_internal(mcsat);
+      } else {
+        // Decided, we can continue with the search
+        (*mcsat->solver_stats.decisions)++;
+        // If plugin decided to cheat by deciding on another variable, put it back
+        if (!trail_has_value(mcsat->trail, var)) {
+          var_queue_insert(&mcsat->var_queue, var);
+        } else {
+          if (trace_enabled(mcsat->ctx->trace, "mcsat::decide")) {
+            FILE* out = trace_out(mcsat->ctx->trace);
+            fprintf(out, "mcsat_decide(): value = ");
+            mcsat_value_print(trail_get_value(mcsat->trail, var), out);
+            fprintf(out, "\n");
+          }
+        }
+        break;
+      }
+    } else {
+      // No variables left to decide
+      if (skipped_variables.size == 0) {
+        // Didn't skip any, we're done
+        break;
+      } else {
+        // Put the skipped back in the queue, and continue but force next decision
+        for (i = 0; i < skipped_variables.size; ++ i) {
+          var_queue_insert(&mcsat->var_queue, skipped_variables.data[i]);
+        }
+        ivector_reset(&skipped_variables);
+        force_decision = true;
+      }
+    }
+  }
+
+  // Put any skipped variables back into the queue
+  if (skipped_variables.size > 0) {
+    // If we skipped some, we had to decided one, we put the skipped scores to
+    // the decided score
+    assert(var != variable_null);
+    double var_score = var_queue_get_activity(&mcsat->var_queue, var);
+    for (i = 0; i < skipped_variables.size; ++ i) {
+      variable_t skipped_var = skipped_variables.data[i];
+      var_queue_set_activity(&mcsat->var_queue, skipped_var, var_score);
+      var_queue_insert(&mcsat->var_queue, skipped_var);
+    }
+  }
+
+  delete_ivector(&skipped_variables);
+
+  return var != variable_null;
+}
+
+typedef struct {
+  uint32_t u, v;
+  uint32_t restart_threshold;
+  uint32_t interval;
+} luby_t;
+
+static inline
+void luby_init(luby_t* luby, uint32_t interval) {
+  luby->u = 1;
+  luby->v = 1;
+  luby->restart_threshold = interval;
+  luby->interval = interval;
+}
+
+static inline
+void luby_next(luby_t* luby) {
+  if ((luby->u & -luby->u) == luby->v) {
+    luby->u ++;
+    luby->v = 1;
+  } else {
+    luby->v <<= 1;
+  }
+  luby->restart_threshold = luby->v * luby->interval;
+}
+
+void mcsat_solve(mcsat_solver_t* mcsat, const param_t *params) {
+
+  uint32_t restart_resource;
+  luby_t luby;
+
+  mcsat->status = STATUS_SEARCHING;
+
+  // If we're already unsat, just return
+  if (!trail_is_consistent(mcsat->trail)) {
+    mcsat->status = STATUS_UNSAT;
+    return;
+  }
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat::solve")) {
+    static int count = 0;
+    mcsat_trace_printf(mcsat->ctx->trace, "solve %d\n", count ++);
+  }
+
+  // Remember existing terms
+  mcsat->terms_size_on_solver_entry = mcsat->terms->nelems;
+
+  // Initialize for search
+  mcsat_heuristics_init(mcsat);
+  mcsat_notify_plugins(mcsat, MCSAT_SOLVER_START);
+
+  // Initialize the Luby sequence with interval 10
+  restart_resource = 0;
+  luby_init(&luby, mcsat->heuristic_params.restart_interval);
+
+  while (!mcsat->stop_search) {
+
+    // Do we restart
+    if (trail_is_consistent(mcsat->trail) && restart_resource > luby.restart_threshold) {
+      restart_resource = 0;
+      luby_next(&luby);
+      mcsat_request_restart(mcsat);
+    }
+
+    // Process any outstanding requests
+    mcsat_process_requests(mcsat);
+
+    // Do propagation
+    mcsat_propagate(mcsat);
+
+    // If inconsistent, analyze the conflict
+    if (!trail_is_consistent(mcsat->trail)) {
+      goto conflict;
+    }
+
+    // If any requests, process them and go again
+    if (mcsat->pending_requests) {
+      continue;
+    }
+
+    // Time to make a decision
+    if (!mcsat_decide(mcsat)) {
+      if (!trail_is_consistent(mcsat->trail)) {
+        goto conflict;
+      } else {
+        mcsat->status = STATUS_SAT;
+
+        if (trace_enabled(mcsat->ctx->trace, "mcsat::model::check")) {
+          // Check models
+          model_t model;
+          init_model(&model, mcsat->terms, true);
+          mcsat_build_model(mcsat, &model);
+          uint32_t i = 0;
+          for (i = 0; i < mcsat->assertion_terms_original.size; ++i) {
+            term_t assertion = mcsat->assertion_terms_original.data[i];
+            int32_t code = 0;
+            bool assertion_is_true = formula_holds_in_model(&model, assertion, &code);
+            if (false && !assertion_is_true) {
+              FILE* out = trace_out(mcsat->ctx->trace);
+              fprintf(out, "Assertion not true in model: ");
+              trace_term_ln(mcsat->ctx->trace, mcsat->terms, assertion);
+              fprintf(out, "In model:\n");
+              model_print(out, &model);
+            }
+            assert(assertion_is_true);
+          }
+          delete_model(&model);
+        }
+
+        return;
+      }
+    }
+
+    // Decision made, continue with the search
+    continue;
+
+  conflict:
+
+    (*mcsat->solver_stats.conflicts)++;
+    mcsat_notify_plugins(mcsat, MCSAT_SOLVER_CONFLICT);
+
+    // If at level 0 we're unsat
+    if (trail_is_at_base_level(mcsat->trail)) {
+      mcsat->status = STATUS_UNSAT;
+      return;
+    }
+
+    // Analyze the conflicts
+    mcsat_analyze_conflicts(mcsat, &restart_resource);
+
+    // Analysis might have discovered 0-level conflict
+    if (mcsat->status == STATUS_UNSAT) {
+      return;
+    }
+
+    var_queue_decay_activities(&mcsat->var_queue);
+  }
+
+  if (mcsat->stop_search) {
+    if (mcsat->status == STATUS_SEARCHING) {
+      mcsat->status = STATUS_INTERRUPTED;
+    }
+    mcsat->stop_search = false;
+  }
+}
+
+void mcsat_set_tracer(mcsat_solver_t* mcsat, tracer_t* tracer) {
+  uint32_t i;
+  mcsat_plugin_context_t* ctx;
+
+  // Update the contexts with the new tracer
+  variable_db_set_tracer(mcsat->var_db, tracer);
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    ctx = mcsat->plugins[i].plugin_ctx;
+    ctx->ctx.tracer = tracer;
+  }
+
+  // Set the trace for the preprocessor
+  preprocessor_set_tracer(&mcsat->preprocessor, tracer);
+}
+
+int32_t mcsat_assert_formulas(mcsat_solver_t* mcsat, uint32_t n, const term_t *f) {
+  uint32_t i;
+
+  // Remember the original assertions
+  for (i = 0; i < n; ++ i) {
+    ivector_push(&mcsat->assertion_terms_original, f[i]);
+  }
+
+  // Preprocess the formulas (preprocessor might throw)
+  ivector_t* assertions = &mcsat->assertions_tmp;
+  ivector_reset(assertions);
+  ivector_add(assertions, f, n);
+  for (i = 0; i < assertions->size; ++ i) {
+    term_t f = assertions->data[i];
+    term_t f_pre = preprocessor_apply(&mcsat->preprocessor, f, assertions, true);
+    assertions->data[i] = f_pre;
+  }
+
+  // Assert individual formulas
+  for (i = 0; i < assertions->size; ++ i) {
+    // Assert it
+    mcsat_assert_formula(mcsat, assertions->data[i]);
+    // Add any lemmas that were added
+    ivector_add(assertions, mcsat->plugin_lemmas.data, mcsat->plugin_lemmas.size);
+    ivector_reset(&mcsat->plugin_lemmas);
+  }
+
+  // Delete the temp
+  ivector_reset(assertions);
+
+  return CTX_NO_ERROR;
+}
+
+void mcsat_show_stats(mcsat_solver_t* mcsat, FILE* out) {
+  int fd = fileno(out);
+  assert(fd >= 0);
+  statistics_print(&mcsat->stats, fd);
+}
+
+void mcsat_show_stats_fd(mcsat_solver_t* mcsat, int out) {
+  statistics_print(&mcsat->stats, out);
+}
+
+void mcsat_build_model(mcsat_solver_t* mcsat, model_t* model) {
+
+  value_table_t* vtbl = model_get_vtbl(model);
+
+  if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+    mcsat_trace_printf(mcsat->ctx->trace, "mcsat_build_model()\n");
+    trail_print(mcsat->trail, trace_out(mcsat->ctx->trace));
+  }
+
+  // Just copy the trail into the model
+  uint32_t i;
+  ivector_t* trail_elements = &mcsat->trail->elements;
+  for (i = 0; i < trail_elements->size; ++ i) {
+    variable_t x = trail_elements->data[i];
+    term_t x_term = variable_db_get_term(mcsat->var_db, x);
+    term_kind_t x_kind = term_kind(mcsat->terms, x_term);
+
+    if (x_kind == UNINTERPRETED_TERM) {
+
+      if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "var = ");
+        trace_term_ln(mcsat->ctx->trace, mcsat->terms, x_term);
+      }
+
+      // Type of the variable
+      type_t x_type = term_type(mcsat->terms, x_term);
+
+      // Get mcsat value (have to case to remove const because yices api doesn't care for const)
+      mcsat_value_t* x_value_mcsat = (mcsat_value_t*) trail_get_value(mcsat->trail, x);
+
+      if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "value = ");
+        mcsat_value_print(x_value_mcsat, trace_out(mcsat->ctx->trace));
+        mcsat_trace_printf(mcsat->ctx->trace, "\n");
+      }
+
+      // Setup the yices value
+      value_t x_value = mcsat_value_to_value(x_value_mcsat, mcsat->types, x_type, vtbl);
+
+      if (trace_enabled(mcsat->ctx->trace, "mcsat")) {
+        mcsat_trace_printf(mcsat->ctx->trace, "value = ");
+        vtbl_print_object(trace_out(mcsat->ctx->trace), vtbl, x_value);
+        mcsat_trace_printf(mcsat->ctx->trace, "\n");
+      }
+
+      // Add to model
+      model_map_term(model, x_term, x_value);
+    }
+  }
+
+  // Let the plugins run add to the model (e.g. UF, division, ...)
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin_t* plugin = mcsat->plugins[i].plugin;
+    if (plugin->build_model) {
+      plugin->build_model(plugin, model);
+    }
+  }
+
+  // Let the preprocessor add to the model
+  preprocessor_build_model(&mcsat->preprocessor, model);
+}
+
+void mcsat_set_exception_handler(mcsat_solver_t* mcsat, jmp_buf* handler) {
+  uint32_t i;
+  mcsat->exception = handler;
+  preprocessor_set_exception_handler(&mcsat->preprocessor, handler);
+  for (i = 0; i < mcsat->plugins_count; ++ i) {
+    plugin_t* plugin = mcsat->plugins[i].plugin;
+    plugin->set_exception_handler(plugin, handler);
+  }
+}
+
+void mcsat_gc_mark(mcsat_solver_t* mcsat) {
+  mcsat_gc(mcsat, true);
+}
+
+void mcsat_stop_search(mcsat_solver_t* mcsat) {
+  mcsat->stop_search = true;
+}
+

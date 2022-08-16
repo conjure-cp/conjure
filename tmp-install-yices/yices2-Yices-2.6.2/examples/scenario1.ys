@@ -1,0 +1,35 @@
+;;
+;; Simple test of push/pop
+;;
+
+(echo "\nBASE: EMPTY CONTEXT\n")
+(dump-context)
+(push)
+
+(define a::int)
+(define b::int)
+(define c::int)
+(assert (= (+ a b c) 0))
+
+(echo "\nAFTER (assert (= (+ a b c) 0))\n")
+(echo "FIRST CHECK: sat expected\n")
+(check)
+(show-model)
+
+(define d::int)
+(assert (> (+ a d) 0))
+
+(echo "\nAFTER (assert (> (+ a d) 0))\n")
+(echo "SECOND CHECK: sat expected\n")
+(check)
+(show-model)
+
+(pop)
+(echo "\nAFTER (pop)\n")
+(echo "THIRD CHECK: sat expected/empty model\n") 
+(check)
+(show-model)
+
+(echo "\nSTATISTICS\n")
+
+(show-stats)
