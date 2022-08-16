@@ -1,6 +1,0 @@
-(set-logic QF_LIA)
-(declare-fun x () Int)
-(assert ((_ divisible 3) x))
-(check-sat)
-(get-model)
-(get-value (x (div x 3) (mod x 3) ((_ divisible 3) x)))
