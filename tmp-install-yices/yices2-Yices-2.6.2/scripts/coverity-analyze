@@ -1,6 +1,0 @@
-#!/bin/bash
-rm -rf cov-int
-export CC=gcc
-make clean
-cov-build --dir cov-int make
-

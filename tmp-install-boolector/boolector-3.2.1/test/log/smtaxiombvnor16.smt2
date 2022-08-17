@@ -1,6 +1,0 @@
-(set-logic QF_BV)
-(declare-fun s () (_ BitVec 16))
-(declare-fun t () (_ BitVec 16))
-(assert (not (= (bvnor s t) (bvnot (bvor s t)))))
-(check-sat)
-(exit)
