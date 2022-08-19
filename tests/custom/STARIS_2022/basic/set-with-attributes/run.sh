@@ -1,3 +1,3 @@
 conjure solve *.essence
-cat record.solution
+cat set.solution
 rm -r conjure-output
