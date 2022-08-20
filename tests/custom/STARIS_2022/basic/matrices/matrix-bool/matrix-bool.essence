@@ -1,0 +1,9 @@
+$ matrix indexed by a boolean tests
+letting d be domain matrix indexed by [bool, int(1..5)] of int(1..2)
+find a : d such that a[true] = [1, 2, 2, 2, 2], a[false] = [1,1,1,1,2]
+find b : bool
+such that b = (a[true][1] = 1)
+find c : bool
+such that c = (a[false][5] = 2)
+find e : bool
+such that e = (a[false][4] = 2)

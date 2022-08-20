@@ -1,0 +1,6 @@
+$ test of forAll with a matrix
+letting d be domain matrix indexed by [int(1..2),int(1..5)] of int(0..1)
+find a : d 
+such that a[1] = [0, 1, 1, 0, 1], a[2] = [0, 0, 0, 1, 1]
+find b : bool
+such that b = forAll i in a . i=i*i
