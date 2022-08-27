@@ -1,0 +1,22 @@
+{"model":
+     {"children":
+          [{"children": {"domain": {"DomainBool": []}, "forg": "Find", "name": {"Name": "b"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "b"}},
+                       {"children": [{"ConstantBool": true}, {"ConstantBool": false}], "symmetricChildren": true,
+                        "type": "OpOr"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"},
+           {"children": {"domain": {"DomainBool": []}, "forg": "Find", "name": {"Name": "c"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "c"}},
+                       {"children": [{"ConstantBool": true}, {"ConstantBool": false}], "symmetricChildren": true,
+                        "type": "OpOr"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["b", "c"]}
