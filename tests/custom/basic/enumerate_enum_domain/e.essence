@@ -1,0 +1,6 @@
+letting options be new type enum {w,x,y,z}
+$ letting options be domain int(1..4)
+
+find n : int(0..1000)
+
+such that n = sum p : set of options . toInt(|p| = 2)
