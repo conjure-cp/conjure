@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-if ${COVERAGE}; then
+if ${COVERAGE} && [ -z $DOWNLOADSECUREFILE_SECUREFILEPATH ]; then
     # this is from https://cloudblogs.microsoft.com/opensource/2019/04/05/publishing-github-pages-from-azure-pipelines
     mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
     chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
