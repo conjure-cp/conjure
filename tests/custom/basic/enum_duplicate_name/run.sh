@@ -1,4 +1,3 @@
-rm -rf conjure-output *.solution
+rm -rf conjure-output
 conjure solve *.essence
-cat *.solution
-rm -rf conjure-output *.solution
+rm -rf conjure-output
