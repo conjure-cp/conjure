@@ -495,6 +495,7 @@ Cardinality attributes take arguments, but the rest of the arguments do not.
 Sequence domains are total by default, hence they do not take a separate ``total`` attribute.
 
 Sequences are indexed by a contiguous list of increasing integers, beginning at 1.
+The first value in a sequence ``s`` is ``s(1)``.
 
 To explicitly specify a sequence, use a list of values inside round brackets, preceded by the keyword ``sequence``.
 
@@ -615,6 +616,7 @@ Tuple indexing
 ~~~~~~~~~~~~~~
 
 Tuples are indexed by a constant integer, starting at 1.
+The first value in a tuple ``t`` is ``t[1]``.
 Attempting to access a tuple element via an index that is negative, zero, or too large for the tuple, results in an error.
 
 .. code-block:: essence
