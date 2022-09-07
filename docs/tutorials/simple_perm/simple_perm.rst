@@ -1,7 +1,7 @@
 Simple Permutations
 -------------------
 
-Authors: Ruth Hoffmann and Gökberk Koçak
+Authors: Ruth Hoffmann and Gökberk Koçak, edited by András Salamon
 
 Problem
 ~~~~~~~
@@ -21,9 +21,8 @@ Enumeration/Generation Model
 
     language Essence 1.3
     given n : int
-    find perm : sequence (size n) of int(1..n)
+    find perm : sequence (bijective, size n) of int(1..n)
     such that
-        allDiff([perm(k) | k : int(1..n) ]),
         and([ max(subs) - min(subs) + 1 != |subs| | 
             i : int(1..n-1), j : int(2..n), 
             i < j, 
@@ -34,20 +33,16 @@ Enumeration/Generation Model
 .. code-block:: essence
 
     given n : int
-    find perm : sequence (size n) of int(1..n)
+    find perm : sequence (bijective, size n) of int(1..n)
 
-We define the size of the permutation to be ``n`` and we are trying to find all the permutations ``perm`` to contain the integers 1 to ``n``.
+We define the size of the permutation to be ``n`` and we are trying to find all the permutations ``perm`` to contain the integers 1 to ``n``, by specifying that it is ``bijective``.
 
 .. code-block:: essence
-
-    allDiff([perm(k) | k : int(1..n) ]),
-
-This constraint enforces that each element in our permutation is unique and exactly between 1 and ``n``.
 
 The idea of our approach is the property of an interval, where when sorted it creates a complete range. 
 This can be translated to checking that the difference between the maximal and the minimal elements of the interval is not equal to the cardinality of the interval.
 
-We have one constraint to say that there is only intervals of length 0,1 and ``n``.
+We have one constraint to say that there are only intervals of length 0,1 and ``n``.
 This constraint is defined as a matrix comprehension, which will build a matrix consisting of only boolean entries.
 We then check the matrix with an ``and`` constraint, to spot if there are any ``false`` entries, which would mean that we have an interval.
 
@@ -112,7 +107,7 @@ Checking Model
 
     language Essence 1.3
     given n : int
-    given perm : sequence (size n) of int
+    given perm : sequence (bijective, size n) of int
     find result : bool 
     such that
         result = and([ max(subs) - min(subs) + 1 != |subs| | 
@@ -135,7 +130,6 @@ We define the size of the permutation to be ``n`` and the permutation ``perm`` t
 
 What the model will tell us is that the permutation is simple (``true``) or not.
 
-We follow the same 
 
 Instances
 ~~~~~~~~~
