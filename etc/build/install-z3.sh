@@ -19,7 +19,7 @@ pushd tmp-install-z3
 download https://github.com/Z3Prover/z3/archive/z3-$ZSH_VERSION.tar.gz
 tar xzf z3-$ZSH_VERSION.tar.gz
 cd z3-z3-$ZSH_VERSION
-PYTHON=`which python 2> /dev/null || true`
+PYTHON=`command -v python 2> /dev/null || true`
 PYTHON=${PYTHON:-python3}
 $PYTHON scripts/mk_make.py --prefix=${BIN_DIR}
 cd build
