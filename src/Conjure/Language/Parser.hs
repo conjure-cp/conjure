@@ -24,13 +24,13 @@ import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace, lexemeText, runLexer )
 
 -- megaparsec
-import Text.Megaparsec.Prim ( (<?>), label, token, try, eof, ParsecT, getPosition, setPosition )
-import Text.Megaparsec.Error ( ParseError(..), Message(..), errorPos )
+import Text.Megaparsec ( (<?>), label, token, try, eof, ParsecT)
+import Text.Megaparsec.Error ( ParseError(..),ErrorItem, errorOffset )
 import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
-import Text.Megaparsec.Combinator ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
-import Text.Megaparsec.ShowToken ( showToken )
-import Text.Megaparsec.Expr ( makeExprParser, Operator(..) )
-import qualified Text.Megaparsec.Prim as P ( runParser )
+import Control.Applicative.Combinators ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
+import Text.Megaparsec.Stream
+import Control.Monad.Combinators.Expr ( makeExprParser, Operator(..) )
+import qualified Text.Megaparsec as P ( runParser )
 
 -- text
 import qualified Data.Text as T
@@ -1001,7 +1001,7 @@ identifierText = do
 satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
 satisfyT predicate = token nextPos testTok
     where
-        testTok :: LexemePos -> Either [Message] Lexeme
+        testTok :: LexemePos -> Either [ErrorItem] Lexeme
         testTok (LexemePos tok _ _) = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
         nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
         nextPos _ _ (LexemePos _ _ pos) = pos
@@ -1011,7 +1011,7 @@ satisfyL predicate = do
     p <- token nextPos testTok
     p
     where
-        testTok :: LexemePos -> Either [Message] (Parser a)
+        testTok :: LexemePos -> Either [ErrorItem] (Parser a)
         testTok (LexemePos tok _ _) =
             -- trace ("satisfyL: " ++ show pos ++ "\t" ++ show tok) $
             case predicate tok of

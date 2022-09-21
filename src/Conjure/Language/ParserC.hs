@@ -13,11 +13,11 @@ import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace )
 import Conjure.Language.Parser ( Parser, ParserState(..) )
 
 -- megaparsec
-import Text.Megaparsec.Prim ( (<?>), label, token, try, eof, getPosition, setPosition )
+import Text.Megaparsec ( (<?>), label, token, try, eof, getPosition, setPosition )
 import Text.Megaparsec.Error ( Message(..) )
 import Text.Megaparsec.Pos ( SourcePos(..) )
-import Text.Megaparsec.Combinator ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
-import Text.Megaparsec.ShowToken ( showToken )
+import Control.Applicative.Combinators ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
+-- import Text.Megaparsec.ShowToken ( showToken )
 
 -- text
 import qualified Data.Text as T

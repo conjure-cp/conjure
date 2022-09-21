@@ -5,6 +5,7 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+
 module Conjure.Prelude
     ( module X
     , stringToDoc
@@ -160,7 +161,8 @@ import qualified Data.Aeson.Types as JSON
 import Test.QuickCheck ( Gen )
 
 -- megaparsec
-import Text.Megaparsec.Prim ( ParsecT )
+-- megaparsec
+import Text.Megaparsec ( ParsecT, Parsec )
 
 -- pretty
 import Text.PrettyPrint as X
@@ -221,6 +223,7 @@ import Data.Time.Clock ( getCurrentTime )
 import System.TimeIt as X ( timeIt, timeItNamed )
 
 import Debug.Trace as X ( trace, traceM )
+import Data.Void (Void)
 
 tracing :: Show a => String -> a -> a
 tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a

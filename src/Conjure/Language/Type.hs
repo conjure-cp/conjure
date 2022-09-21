@@ -44,6 +44,7 @@ data Type
     | TypePartition Type
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
+
 instance Serialize Type
 instance Hashable  Type
 instance ToJSON    Type where toJSON = genericToJSON jsonOptions

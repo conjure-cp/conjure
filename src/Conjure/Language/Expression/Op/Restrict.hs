@@ -8,6 +8,7 @@ import Conjure.Language.Expression.Op.Internal.Common
 -- import {-# SOURCE #-} Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
@@ -36,7 +37,7 @@ instance Pretty x => Pretty (OpRestrict x) where
     prettyPrec _ (OpRestrict a b) = "restrict" <> prettyList prParens "," [a,b]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRestrict x) where
-    varSymBreakingDescription (OpRestrict a b) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpRestrict a b) = JSON.Object $KM.fromList
         [ ("type", JSON.String "OpRestrict")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

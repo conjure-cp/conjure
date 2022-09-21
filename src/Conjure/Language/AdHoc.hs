@@ -14,6 +14,8 @@ import qualified Data.Vector as V               -- vector
 
 -- scientific
 import Data.Scientific ( floatingOrInteger )
+import qualified Data.Aeson.KeyMap as KM
+import Data.Aeson.Types
 
 
 class ExpressionLike a where
@@ -131,7 +133,7 @@ instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y)
         let zs = catMaybes ys
         if length ys == length zs
             -- all were suitable as keys, great
-            then return $ JSON.Object $ M.fromList zs
+            then return $ JSON.Object $ KM.fromList zs
             else return $ JSON.Array $ V.fromList asList
     fromSimpleJSON = noFromSimpleJSON "AsDictionary"
 

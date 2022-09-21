@@ -82,7 +82,7 @@ instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
-instance (Functor m, Monad m) => NameGen (NameGenM m) where
+instance (Functor m, MonadFail m) => NameGen (NameGenM m) where
     nextName k = do
         mi <- gets (M.lookup k . fst)
         out <- case mi of

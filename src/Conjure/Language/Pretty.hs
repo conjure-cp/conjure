@@ -33,6 +33,7 @@ import Text.PrettyPrint
 
 -- aeson
 import Data.Aeson as JSON
+import qualified Data.Aeson.KeyMap as KM
 import Data.Scientific ( Scientific, floatingOrInteger )    -- scientific
 import qualified Data.HashMap.Strict as M                   -- unordered-containers
 import qualified Data.Vector as V                           -- vector
@@ -133,14 +134,14 @@ instance Pretty JSON.Value where
     pretty Null = "null"
 
 instance Pretty JSON.Object where
-    pretty = prBraces . fsep . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
+    pretty = prBraces . fsep . punctuate "," . map f . sortBy (comp `on` fst) . KM.toList
         where
             f (key, Array value)
                 | not (any (\ v -> case v of String t -> T.length t < 20 ; _ -> True ) value)
                 = pretty (show key) <> ":" <++> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <++> pretty value
 
-            keyOrder :: M.HashMap Text Int
+            keyOrder :: M.HashMap Key Int
             keyOrder = M.fromList $
                 zip [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                     , "strategyQ", "strategyA"
@@ -150,7 +151,7 @@ instance Pretty JSON.Object where
                     , "originalDomains"
                     , "before", "after"
                     ] [1..]
-
+            comp :: Key -> Key -> Ordering
             comp a b =
                 let preferred = compare <$> M.lookup a keyOrder
                                         <*> M.lookup b keyOrder

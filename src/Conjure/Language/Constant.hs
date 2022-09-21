@@ -42,6 +42,7 @@ import Test.QuickCheck ( Arbitrary(..), oneof )
 
 -- aeson
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 

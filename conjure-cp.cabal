@@ -1,16 +1,16 @@
-
+Cabal-version:  2.4
 Name:           conjure-cp
 Version:        2.4.0
 Synopsis:       Conjure: The Automated Constraint Modelling Tool
 Description:    .
 Homepage:       http://github.com/conjure-cp/conjure
-License:        BSD3
+License:        BSD-3-Clause
 License-file:   LICENSE
 Author:         Özgür Akgün
 Maintainer:     ozgurakgun@gmail.com
 Category:       Constraint Programming
 Build-type:     Simple
-Cabal-version:  1.20
+Cabal-version:  >= 1.20
 
 Library
     default-language : Haskell2010
@@ -136,6 +136,7 @@ Library
                      , Conjure.Language.ModelDiff
                      , Conjure.Language.ModelStats
                      , Conjure.Language.Lexer
+                     , Conjure.Language.NewLexer
                      , Conjure.Language.NameResolution
                      , Conjure.Language.Parser
                      , Conjure.Language.ParserC
@@ -244,7 +245,7 @@ Library
                      , Conjure.UI.NormaliseQuantified
                      , Conjure.UI.TypeScript
 
-    build-depends    : base
+    build-depends    : base >= 4.12.0
                      -- the export list have changed
                      , aeson >= 1.2.2.0
                      , aeson-typescript
@@ -261,7 +262,7 @@ Library
                      , integer-gmp
                      -- >= 4.1.1 because of sepEndBy bugfixes
                      -- < 5 because megaparsec-5 is backwards incompatible
-                     , megaparsec >= 4.1.1 && < 5
+                     , megaparsec ^>= 9.2.2
                      , mtl
                      , parallel-io
                      , pipes
@@ -270,7 +271,7 @@ Library
                      , QuickCheck >= 2.9
                      , random
                      , safe
-                     , scientific
+                     , scientific >=0.3.7
                      -- 1.6.7, because of the stderr handling fix
                      , shelly >= 1.6.7
                      , split
@@ -296,6 +297,7 @@ Library
                      , timeit >= 2.0
                      , primes >= 0.2.1.0
                      , statistics >= 0.15.2.0
+                     , parser-combinators
 
     if impl(ghc == 7.8.*)
         build-depends: template-haskell == 2.9.*
@@ -314,6 +316,8 @@ Library
         build-depends: template-haskell == 2.15.*
     if impl(ghc == 8.10.*)
         build-depends: template-haskell == 2.16.*
+    if impl(ghc == 9.0.*)
+        build-depends: template-haskell == 2.17.*
 
     default-extensions:
         FlexibleContexts

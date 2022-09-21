@@ -12,7 +12,7 @@ import Conjure.Language.Lenses as X ( fixTHParsing ) -- reexporting because it i
 
 
 -- megaparsec
-import Text.Megaparsec.Prim ( setPosition )
+import Text.Megaparsec ( setPosition )
 import Text.Megaparsec.Pos ( SourcePos, newPos )
 
 -- template-haskell

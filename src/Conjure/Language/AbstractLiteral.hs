@@ -16,6 +16,7 @@ import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
@@ -46,10 +47,10 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
                 xs' <- forM xs $ \ (nm, x) -> do
                     x' <- toSimpleJSON x
                     return (stringToText (renderNormal nm), x')
-                return $ JSON.Object $ M.fromList xs'
+                return $ JSON.Object $ KM.fromList xs'
             AbsLitVariant _ nm x -> do
                 x' <- toSimpleJSON x
-                return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
+                return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), x')]
             AbsLitMatrix index xs ->
                 case index of
                     DomainInt _ ranges -> do
@@ -101,48 +102,48 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (AbstractLiteral x) where
-    varSymBreakingDescription (AbsLitTuple xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitTuple xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitTuple")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription AbsLitRecord{} = JSON.Object $ M.fromList
+    varSymBreakingDescription AbsLitRecord{} = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitRecord")
         ]
-    varSymBreakingDescription AbsLitVariant{} = JSON.Object $ M.fromList
+    varSymBreakingDescription AbsLitVariant{} = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitVariant")
         ]
-    varSymBreakingDescription (AbsLitMatrix _ xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitMatrix _ xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitMatrix")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (AbsLitSet xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitSet xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitSet")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitMSet xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitMSet xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitMSet")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitFunction xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitFunction xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitFunction")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription (AbsLitTuple [x,y]) | (x,y) <- xs ])
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitSequence xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitSequence xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitSequence")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription (AbsLitTuple [fromInt i, x]) | (i,x) <- zip allNats xs ])
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitRelation xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitRelation xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitRelation")
         , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitTuple) xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitPartition xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitPartition xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitPartition")
         , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitSet) xs)
         , ("symmetricChildren", JSON.Bool True)

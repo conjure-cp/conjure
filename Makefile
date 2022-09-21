@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=8.6 make"
-export GHC_VERSION?=8.6
+export GHC_VERSION?=9.0
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
@@ -15,7 +15,7 @@ install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this location."
 	@echo "For example: \"GHC_VERSION=8.4 make install\""
-	@echo "Supported versions: 8.4, 8.6"
+	@echo "Supported versions: 8.4, 8.6, 9.0"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."

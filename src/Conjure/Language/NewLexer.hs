@@ -1,38 +1,23 @@
-{-# LANGUAGE DeriveGeneric #-}
+
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
 
-module Conjure.Language.Lexer
-    ( Lexeme(..)
-    , LexemePos(..)
-    , runLexer
-    , textToLexeme
-    , lexemeText
-    , lexemeFace
-    ) where
+module Conjure.Language.NewLexer where
 import Conjure.Prelude hiding (some,many)
-
 import Data.Char ( isAlpha, isAlphaNum )
 import Data.Void
-import qualified Data.HashMap.Strict as M
+import Data.Tuple
+import Data.Ord
+import Data.List
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
-import qualified Text.PrettyPrint as Pr
-import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
-
-import Text.Megaparsec --( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
-import Text.Megaparsec.Stream
-
-
-data LexemePos = LexemePos
-                    Lexeme          -- the lexeme
-                    SourcePos       -- source position, the beginning of this lexeme
-                    SourcePos       -- source position, just after this lexeme, including whitespace after the lexeme
-    deriving Show
+import Text.Megaparsec.Debug
+import qualified Text.Megaparsec.Char.Lexer as L
+import Control.Monad (when)
 
 data Lexeme
     = LIntLiteral Integer
@@ -279,48 +264,9 @@ data Lexeme
     | L_transform
     | L_EOF
 
-    deriving (Eq, Ord, Show,Generic) 
-instance Hashable  Lexeme
-
---     deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show) --Generic
 
 -- instance Hashable Lexeme
-
-lexemeText :: Lexeme -> T.Text
-lexemeText l = T.pack $ show (lexemeFace l)
-
-textToLexeme :: T.Text -> Maybe Lexeme
-textToLexeme t = M.lookup t mapTextToLexeme
-
-lexemeFace :: Lexeme -> Pr.Doc
-lexemeFace L_Newline = "new line"
-lexemeFace L_Carriage = "\\r"
-lexemeFace L_Space   = "space character"
-lexemeFace L_Tab     = "tab character"
-lexemeFace (LIntLiteral i) = Pr.integer i
-lexemeFace (LIdentifier i) = Pr.text (T.unpack i)
--- lexemeFace (LComment    i) = Pr.text (T.unpack i)
-lexemeFace l =
-    case M.lookup l mapLexemeToText of
-        Nothing -> Pr.text (show l)
-        Just t  -> Pr.text (T.unpack t)
-
-lexemeWidth :: Lexeme -> Int
-lexemeWidth L_Carriage = 0
-lexemeWidth L_Tab = 4
-lexemeWidth (LIntLiteral i) = length (show i)
-lexemeWidth (LIdentifier i) = T.length i
--- lexemeWidth (LComment    i) = T.length i
-lexemeWidth l =
-    case lookup l (map swap lexemes) of
-        Nothing -> 0
-        Just t  -> T.length t
-
-mapTextToLexeme :: M.HashMap T.Text Lexeme
-mapTextToLexeme = M.fromList lexemes
-
-mapLexemeToText :: M.HashMap Lexeme T.Text
-mapLexemeToText = M.fromList $ map swap lexemes
 
 lexemes :: [(T.Text, Lexeme)]
 lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
@@ -500,87 +446,6 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_transform, "transform")
     ]
 
-mapToLexemePos :: ETok -> LexemePos
-mapToLexemePos tok = LexemePos lex start end where
-                        (sp,en,_,lex) = offsets tok
-                        start = SourcePos  "Test"  (mkPos sp ) (mkPos sp)
-                        end = SourcePos "Test"  (mkPos en ) (mkPos en)
-
-
-
-runLexer :: MonadFailDoc m => T.Text -> m [LexemePos]
-runLexer text = do
-    let x = parseMaybe eLex text
-    case x of 
-        Just y -> return $  mapToLexemePos <$> y
-        Nothing -> failDoc "Error"
-
-    
-    
--- runLexer text = do
---     ls <- go text
---     let lsPaired = calcPos (initialPos "") ls
---     return lsPaired
---     where
---         go t = do
---             let results = catMaybes $  tryLexMetaVar t
---                                     :  map (tryLex t) lexemes
---                                     ++ [ tryLexIntLiteral t
---                                        , tryLexIden t
---                                        , tryLexQuotedIden t
---                                        , tryLexComment t
---                                        ]
---             if T.null t
---                 then return []
---                 else case results of
---                         [] -> fail ("Lexing error:" Pr.<+> Pr.text (T.unpack t))
---                         ((rest,lexeme):_) -> (lexeme:) <$> go rest
-
---         -- attach source positions to lexemes
---         -- discard whitespace, but calculate their contribution to source positions
---         calcPos :: SourcePos -> [Lexeme] -> [LexemePos]
---         calcPos _pos [] = []
---         calcPos  pos (this:rest) | isLexemeSpace this                   -- skip if this one is whitespace
---                                  = calcPos (nextPos pos this) rest      -- can only happen at the beginning
---         calcPos  pos (this:rest) =
---             let (restSpaces, restNonSpace) = span isLexemeSpace rest    -- eat up all the whitespace after "this"
---                 pos' = foldl nextPos pos (this:restSpaces)
---             in
---                 if null restNonSpace
---                     then [LexemePos this pos (nextPos pos this)]        -- if this is the last non-whitespace lexeme
---                                                                         -- do not include the whitespace after it
---                     else LexemePos this pos pos' : calcPos pos' restNonSpace
-
---         nextPos :: SourcePos -> Lexeme -> SourcePos
---         nextPos pos L_Newline  = incSourceLine (setSourceColumn pos 1) 1
---         nextPos pos L_Carriage = pos -- just ignore '\r's
---         nextPos pos l          = incSourceColumn pos (lexemeWidth l)
-
-isLexemeSpace :: Lexeme -> Bool
-isLexemeSpace L_Newline {} = True
-isLexemeSpace L_Carriage{} = True
-isLexemeSpace L_Tab     {} = True
-isLexemeSpace L_Space   {} = True
--- isLexemeSpace LComment  {} = True
-isLexemeSpace _            = False
-
-tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
-tryLex running (face,lexeme) = do
-    rest <- T.stripPrefix face running
-    if T.all isIdentifierLetter face
-        then
-            case T.uncons rest of
-                Just (ch, _) | isIdentifierLetter ch -> Nothing
-                _                                    -> Just (rest, lexeme)
-        else Just (rest, lexeme)
-
-tryLexIntLiteral :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIntLiteral t =
-    case T.decimal t of
-        Left _ -> Nothing
-        Right (x, rest) -> Just (rest, LIntLiteral x)
-
-
 emojis :: [Char]
 emojis = concat [['\x1f600'..'\x1F64F'],
                  ['\x1f300'..'\x1f5ff'],
@@ -594,68 +459,6 @@ isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem
 isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
-tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexMetaVar running = do
-    ('&', rest) <- T.uncons running
-    (rest2, LIdentifier iden) <- tryLexIden rest
-    return (rest2, LMetaVar iden)
-
-tryLexIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIden running = do
-    let (iden,rest) = T.span isIdentifierLetter running
-    (ch, _) <- T.uncons running
-    if isIdentifierFirstLetter ch
-        then
-            if T.null iden
-                then Nothing
-                else Just (rest, LIdentifier iden)
-        else Nothing
-
-tryLexQuotedIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexQuotedIden running = do
-    let
-        go inp = do
-            ('\"', rest) <- T.uncons inp
-            go2 "\"" rest
-
-        -- after the first "
-        go2 sofar inp = do
-            (ch, rest) <- T.uncons inp
-            case ch of
-                -- end
-                '\"'
-                    | sofar /= "\""         -- so we don't allow empty strings
-                    -> Just (rest, LIdentifier (T.pack (reverse ('\"' : sofar))))
-                -- escaped
-                '\\' -> do
-                    (ch2, rest2) <- T.uncons rest
-                    case ch2 of
-                        '\"' -> go2 ('\"':sofar) rest2
-                        '\\' -> go2 ('\\':sofar) rest2
-                        _ -> Nothing
-                _ -> go2 (ch:sofar) rest
-    go running
-
--- tryLexComment :: T.Text -> Maybe (T.Text, Lexeme)
--- tryLexComment running = let (dollar,rest1) = T.span (=='$') running
---                         in  if T.null dollar
---                                 then Nothing
---                                 else let (commentLine,rest2) = T.span (/='\n') rest1
---                                      in  Just (rest2, LComment commentLine)
-
-
--- instance ShowToken [LexemePos] where
---     showToken = intercalate ", " . map showToken
-
--- instance ShowToken LexemePos where
---     showToken (LexemePos tok _ _) = showToken tok
-
--- instance ShowToken Lexeme where
---     showToken = show . lexemeFace
-
---Generic
-
--- instance Hashable Lexeme
 
 type Offsets = (Int,Int,Int,Lexeme)
 type Parser = Parsec Void T.Text
