@@ -84,7 +84,7 @@ import Control.Monad                as X ( Monad(return, (>>), (>>=))
                                          , (<=<), (>=>), (=<<), ap, join
                                          , guard, void, when, unless
                                          , zipWithM, zipWithM_, foldM, filterM, replicateM
-                                         , MonadPlus(..), mzero, msum )
+                                         , MonadPlus(..), mzero, msum)
 import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )

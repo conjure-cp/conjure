@@ -46,7 +46,7 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitRecord xs -> do
                 xs' <- forM xs $ \ (nm, x) -> do
                     x' <- toSimpleJSON x
-                    return (stringToText (renderNormal nm), x')
+                    return (fromString (renderNormal nm), x')
                 return $ JSON.Object $ KM.fromList xs'
             AbsLitVariant _ nm x -> do
                 x' <- toSimpleJSON x

@@ -121,7 +121,7 @@ data AsDictionary a b = AsDictionary [(a,b)]
 instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y) where
     toSimpleJSON (AsDictionary xs) = do
         (ys, asList) <- fmap unzip $ forM xs $ \ (a,b) -> do
-            let aStr = stringToText $ renderNormal $ pretty a
+            let aStr = fromString $ renderNormal $ pretty a
             aJSON <- toSimpleJSON a
             bJSON <- toSimpleJSON b
             let abPair = JSON.Array $ V.fromList [aJSON, bJSON]
