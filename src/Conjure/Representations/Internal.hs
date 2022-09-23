@@ -1,5 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE KindSignatures #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Representations.Internal
     ( Representation(..)
@@ -39,24 +41,24 @@ data Representation (m :: * -> *) = Representation
     , rSymmetryOrdering :: TypeOf_SymmetryOrdering m
     }
 
-type TypeOf_ReprCheck (m :: * -> *) =
+type TypeOf_ReprCheck (m :: * -> *) = (MonadFail m) => 
        forall x . (Data x, Pretty x, ExpressionLike x)
     => (Domain () x -> m [DomainX x])               -- other checkers for inner domains
     -> Domain () x                                  -- this domain
     -> m [DomainX x]                                -- with all repr options
 
-type TypeOf_DownD (m :: * -> *) =
-                 (Name, DomainX Expression)
+type TypeOf_DownD (m :: * -> *) = (MonadFail m) => 
+                (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
 
-type TypeOf_SymmetryOrdering (m :: * -> *) =
+type TypeOf_SymmetryOrdering (m :: * -> *) = (MonadFail m) => 
        ((Expression -> m [Expression]) -> Expression -> DomainX Expression -> m Expression) -- inner S.O.
     -> (Expression -> m [Expression])               -- general downX1
     -> Expression                                   -- this as an expression
     -> DomainX Expression                           -- name and domain
     -> m Expression                                 -- output, of type [int]
 
-type TypeOf_Structural (m :: * -> *) =
+type TypeOf_Structural (m :: * -> *) = (MonadFail m) => 
        (DomainX Expression -> m (Expression -> m [Expression]))
                                                     -- other structural constraints for inner domains
     -> (Expression -> m [Expression])               -- general downX1
@@ -65,11 +67,11 @@ type TypeOf_Structural (m :: * -> *) =
           -> m [Expression]                         -- structural constraints
          )
 
-type TypeOf_DownC (m :: * -> *) =
+type TypeOf_DownC (m :: * -> *) = (MonadFail m) => 
                  (Name, DomainC, Constant)          -- the input name, domain and constant
     -> m (Maybe [(Name, DomainC, Constant)])        -- the outputs names, domains, and constants
 
-type TypeOf_Up (m :: * -> *) =
+type TypeOf_Up (m :: * -> *) = (MonadFail m) => 
         [(Name, Constant)] ->                       -- all known constants, representing a solution at the low level
         (Name, DomainC) ->                          -- the name and domain we are working on
         m (Name, Constant)                          -- the output constant, at the high level
@@ -90,7 +92,7 @@ type ReprOptionsFunction m r x =
 
 
 rDownToX ::
-    Monad m =>
+    (Monad m,MonadFail m) =>
     Representation m ->                             -- for a given representation
     FindOrGiven ->                                  -- and a declaration: forg
     Name ->                                         --                  : name
