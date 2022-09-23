@@ -32,7 +32,7 @@ data LexemePos = LexemePos
                     Lexeme          -- the lexeme
                     SourcePos       -- source position, the beginning of this lexeme
                     SourcePos       -- source position, just after this lexeme, including whitespace after the lexeme
-    deriving Show
+    deriving (Show,Eq, Ord)
 
 data Lexeme
     = LIntLiteral Integer

@@ -26,7 +26,7 @@ import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace, lexemeTex
 -- megaparsec
 import Text.Megaparsec ( (<?>), label, token, try, eof, ParsecT)
 import Text.Megaparsec.Error ( ParseError(..),ErrorItem, errorOffset )
-import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
+import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn , Pos)
 import Control.Applicative.Combinators ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
 import Text.Megaparsec.Stream
 import Control.Monad.Combinators.Expr ( makeExprParser, Operator(..) )
@@ -37,34 +37,38 @@ import qualified Data.Text as T
 
 -- containers
 import qualified Data.Set as S ( null, fromList, toList )
+import Data.Void (Void)
 
 
 parseModel :: Parser Model
-parseModel = inCompleteFile $ do
-    let
-        pLanguage :: Parser LanguageVersion
-        pLanguage = do
-            lexeme L_language
-            pos1 <- getPosition
-            l <- identifierText
-            -- ESSENCE' is accepted, just for convenience
-            unless (l `elem` ["Essence", "ESSENCE", "ESSENCE'"]) $ do
-                setPosition pos1
-                failDoc $ "language name has to be Essence, but given:" <+> pretty l
-            pos2 <- getPosition
-            is <- sepBy1 integer dot
-            unless (is >= [1]) $ do
-                setPosition pos2
-                failDoc $ "language version expected to be at least 1.0, but given:" <+>
-                            pretty (intercalate "." (map show is))
-            return (LanguageVersion (Name l) (map fromInteger is))
-    l  <- optional pLanguage
-    xs <- many parseTopLevels
-    return Model
-        { mLanguage = fromMaybe def l
-        , mStatements = concat xs
-        , mInfo = def
-        }
+parseModel = do 
+                let x = Model {}
+                return x
+    -- inCompleteFile $ do
+    -- let
+    --     pLanguage :: Parser LanguageVersion
+    --     pLanguage = do
+    --         lexeme L_language
+    --         pos1 <- getPosition
+    --         l <- identifierText
+    --         -- ESSENCE' is accepted, just for convenience
+    --         unless (l `elem` ["Essence", "ESSENCE", "ESSENCE'"]) $ do
+    --             setPosition pos1
+    --             fail $ "language name has to be Essence, but given:" <+> pretty l
+    --         pos2 <- getPosition
+    --         is <- sepBy1 integer dot
+    --         unless (is >= [1]) $ do
+    --             setPosition pos2
+    --             fail $ "language version expected to be at least 1.0, but given:" <+>
+    --                         pretty (intercalate "." (map show is))
+    --         return (LanguageVersion (Name l) (map fromInteger is))
+    -- l  <- optional pLanguage
+    -- xs <- many parseTopLevels
+    -- return Model
+    --     { mLanguage = fromMaybe def l
+    --     , mStatements = concat xs
+    --     , mInfo = def
+    --     }
 
 
 parseIO :: MonadFailDoc m => Parser a -> String -> m a
@@ -74,1012 +78,1019 @@ parseIO p s =
         Right x  -> return x
 
 
-translateQnName :: Text -> Text
-translateQnName qnName = case qnName of
-    "forAll" -> "and"
-    "exists" -> "or"
-    _        -> qnName
+-- translateQnName :: Text -> Text
+-- translateQnName qnName = case qnName of
+--     "forAll" -> "and"
+--     "exists" -> "or"
+--     _        -> qnName
 
 
 
 
 
---------------------------------------------------------------------------------
--- Actual parsers --------------------------------------------------------------
---------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- -- Actual parsers --------------------------------------------------------------
+-- --------------------------------------------------------------------------------
 
 parseTopLevels :: Parser [Statement]
-parseTopLevels = do
-    let one = satisfyL $ \case
-                L_find -> Just $ do
-                    decls <- flip sepEndBy1 comma $ do
-                        is <- commaSeparated parseNameOrMeta
-                        j  <- colon >> parseDomain
-                        return [ Declaration (FindOrGiven Find i j)
-                               | i <- is ]
-                    return $ concat decls
-                L_given -> Just $ do
-                    decls <- commaSeparated $ do
-                        is <- commaSeparated parseName
-                        msum
-                            [ do
-                                colon
-                                j <- parseDomain
-                                return [ Declaration (FindOrGiven Given i j)
-                                       | i <- is ]
-                            , do
-                                lexeme L_new
-                                msum
-                                    [ do
-                                        lexeme L_type
-                                        lexeme L_enum
-                                        modify (\ st -> st { enumDomains = is ++ enumDomains st } )
-                                        return [ Declaration (GivenDomainDefnEnum i)
-                                               | i <- is ]
-                                    ]
-                            ]
-                    return $ concat decls
-                L_letting -> Just $ do
-                    decls <- commaSeparated $ do
-                        is <- commaSeparated parseName
-                        lexeme L_be
-                        msum
-                            [ do
-                                lexeme L_new
-                                lexeme L_type
-                                msum
-                                    [ do
-                                        lexeme L_of
-                                        lexeme $ LIdentifier "size"
-                                        j <- parseExpr
-                                        return [ Declaration (LettingDomainDefnUnnamed i j)
-                                               | i <- is
-                                               ]
-                                    , do
-                                        lexeme L_enum
-                                        ys <- braces (commaSeparated parseName) <|> return []
-                                        modify (\ st -> st { enumDomains = is ++ enumDomains st } )
-                                        return [ Declaration (LettingDomainDefnEnum i ys)
-                                               | i <- is
-                                               ]
-                                    ]
-                            , do
-                                lexeme L_domain
-                                j <- parseDomain
-                                return [ Declaration (Letting i (Domain j))
-                                       | i <- is
-                                       ]
-                            , do
-                                j <- parseExpr
-                                return [ Declaration (Letting i j)
-                                       | i <- is
-                                       ]
-                            ]
-                    return $ concat decls
-                L_where -> Just $ do
-                    xs <- commaSeparated parseExpr
-                    return [Where xs]
-                L_such -> Just $ do
-                    lexeme L_that
-                    xs <- commaSeparated parseExpr
-                    return [SuchThat xs]
-                L_minimising -> Just $ do
-                    x <- parseExpr
-                    return [ Objective Minimising x ]
-                L_maximising -> Just $ do
-                    x <- parseExpr
-                    return [ Objective Maximising x ]
-                L_branching -> Just $ do
-                    lexeme L_on
-                    xs <- brackets $ commaSeparated parseSearchOrder
-                    return [ SearchOrder xs ]
-                L_heuristic -> Just $ do
-                    nm <- parseName
-                    return [ SearchHeuristic nm ]
-                _ -> Nothing
-    concat <$> some (one <?> "statement")
+parseTopLevels = do return [] --
+--     let one = satisfyL $ \case
+--                 L_find -> Just $ do
+--                     decls <- flip sepEndBy1 comma $ do
+--                         is <- commaSeparated parseNameOrMeta
+--                         j  <- colon >> parseDomain
+--                         return [ Declaration (FindOrGiven Find i j)
+--                                | i <- is ]
+--                     return $ concat decls
+--                 L_given -> Just $ do
+--                     decls <- commaSeparated $ do
+--                         is <- commaSeparated parseName
+--                         msum
+--                             [ do
+--                                 colon
+--                                 j <- parseDomain
+--                                 return [ Declaration (FindOrGiven Given i j)
+--                                        | i <- is ]
+--                             , do
+--                                 lexeme L_new
+--                                 msum
+--                                     [ do
+--                                         lexeme L_type
+--                                         lexeme L_enum
+--                                         modify (\ st -> st { enumDomains = is ++ enumDomains st } )
+--                                         return [ Declaration (GivenDomainDefnEnum i)
+--                                                | i <- is ]
+--                                     ]
+--                             ]
+--                     return $ concat decls
+--                 L_letting -> Just $ do
+--                     decls <- commaSeparated $ do
+--                         is <- commaSeparated parseName
+--                         lexeme L_be
+--                         msum
+--                             [ do
+--                                 lexeme L_new
+--                                 lexeme L_type
+--                                 msum
+--                                     [ do
+--                                         lexeme L_of
+--                                         lexeme $ LIdentifier "size"
+--                                         j <- parseExpr
+--                                         return [ Declaration (LettingDomainDefnUnnamed i j)
+--                                                | i <- is
+--                                                ]
+--                                     , do
+--                                         lexeme L_enum
+--                                         ys <- braces (commaSeparated parseName) <|> return []
+--                                         modify (\ st -> st { enumDomains = is ++ enumDomains st } )
+--                                         return [ Declaration (LettingDomainDefnEnum i ys)
+--                                                | i <- is
+--                                                ]
+--                                     ]
+--                             , do
+--                                 lexeme L_domain
+--                                 j <- parseDomain
+--                                 return [ Declaration (Letting i (Domain j))
+--                                        | i <- is
+--                                        ]
+--                             , do
+--                                 j <- parseExpr
+--                                 return [ Declaration (Letting i j)
+--                                        | i <- is
+--                                        ]
+--                             ]
+--                     return $ concat decls
+--                 L_where -> Just $ do
+--                     xs <- commaSeparated parseExpr
+--                     return [Where xs]
+--                 L_such -> Just $ do
+--                     lexeme L_that
+--                     xs <- commaSeparated parseExpr
+--                     return [SuchThat xs]
+--                 L_minimising -> Just $ do
+--                     x <- parseExpr
+--                     return [ Objective Minimising x ]
+--                 L_maximising -> Just $ do
+--                     x <- parseExpr
+--                     return [ Objective Maximising x ]
+--                 L_branching -> Just $ do
+--                     lexeme L_on
+--                     xs <- brackets $ commaSeparated parseSearchOrder
+--                     return [ SearchOrder xs ]
+--                 L_heuristic -> Just $ do
+--                     nm <- parseName
+--                     return [ SearchHeuristic nm ]
+--                 _ -> Nothing
+--     concat <$> some (one <?> "statement")
 
-parseSearchOrder :: Parser SearchOrder
-parseSearchOrder = msum [try pBranchingOn, pCut]
-    where
-        pBranchingOn = BranchingOn <$> parseName
-        pCut = Cut <$> parseExpr
+-- parseSearchOrder :: Parser SearchOrder
+-- parseSearchOrder = msum [try pBranchingOn, pCut]
+--     where
+--         pBranchingOn = BranchingOn <$> parseName
+--         pCut = Cut <$> parseExpr
 
-parseRange :: Parser a -> Parser (Range a)
-parseRange p = msum [try pRange, pSingle] <?> "range"
-    where
-        pRange = do
-            fr <- optional p
-            dotdot
-            to <- optional p
-            return $ case (fr,to) of
-                (Nothing, Nothing) -> RangeOpen
-                (Just x , Nothing) -> RangeLowerBounded x
-                (Nothing, Just y ) -> RangeUpperBounded y
-                (Just x , Just y ) -> RangeBounded x y
-        pSingle = do
-            x <- p
-            return (RangeSingle x)
+-- parseRange :: Parser a -> Parser (Range a)
+-- parseRange p = msum [try pRange, pSingle] <?> "range"
+--     where
+--         pRange = do
+--             fr <- optional p
+--             dotdot
+--             to <- optional p
+--             return $ case (fr,to) of
+--                 (Nothing, Nothing) -> RangeOpen
+--                 (Just x , Nothing) -> RangeLowerBounded x
+--                 (Nothing, Just y ) -> RangeUpperBounded y
+--                 (Just x , Just y ) -> RangeBounded x y
+--         pSingle = do
+--             x <- p
+--             return (RangeSingle x)
 
 parseDomain :: Parser (Domain () Expression)
-parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
+parseDomain = do  --(forgetRepr <$> parseDomainWithRepr) <?> "domain"
+                let x = DomainBool
+                return x
+
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
-parseDomainWithRepr = pDomainAtom
-    -- TODO: uncomment the following to parse (union, intersect and minus) for domains
-    -- let
-    --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
-    --
-    -- in
-    --     makeExprParser (pDomainAtom <?> "domain")
-    --         [ [ InfixL $ do lexeme L_Minus
-    --                         return $ mergeOp L_Minus
-    --           , InfixL $ do lexeme L_union
-    --                         return $ mergeOp L_union
-    --           ]
-    --         , [ InfixL $ do lexeme L_intersect
-    --                         return $ mergeOp L_intersect
-    --           ]
-    --         ]
+parseDomainWithRepr = do return DomainBool
+--     -- TODO: uncomment the following to parse (union, intersect and minus) for domains
+--     -- let
+--     --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
+--     --
+--     -- in
+--     --     makeExprParser (pDomainAtom <?> "domain")
+--     --         [ [ InfixL $ do lexeme L_Minus
+--     --                         return $ mergeOp L_Minus
+--     --           , InfixL $ do lexeme L_union
+--     --                         return $ mergeOp L_union
+--     --           ]
+--     --         , [ InfixL $ do lexeme L_intersect
+--     --                         return $ mergeOp L_intersect
+--     --           ]
+--     --         ]
 
-    where
+--     where
 
-        pDomainAtom = msum
-            [ pBool, try pIntFromExpr, pInt, try pEnum, try pReference
-            , pMatrix, try pTupleWithout, pTupleWith
-            , pRecord, pVariant
-            , pSet
-            , pMSet
-            , try pFunction', pFunction
-            , pSequence
-            , pRelation
-            , pPartition
-            , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
-            ]
+--         pDomainAtom = msum
+--             [ pBool, try pIntFromExpr, pInt, try pEnum, try pReference
+--             , pMatrix, try pTupleWithout, pTupleWith
+--             , pRecord, pVariant
+--             , pSet
+--             , pMSet
+--             , try pFunction', pFunction
+--             , pSequence
+--             , pRelation
+--             , pPartition
+--             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
+--             ]
 
-        parseRepr = return NoRepresentation
-        -- -- Parsing set {representation} of ... notation if needed
-        -- parseRepr = msum [ braces parseReprInner
-        --                  , return NoRepresentation
-        --                  ]
-        --
-        -- parseReprInner = do
-        --     pos    <- getPosition
-        --     nm     <- identifierText
-        --     inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
-        --     case textToRepresentation nm inners of
-        --         Nothing -> do
-        --             setPosition pos
-        --             failDoc ("Not a valid representation:" <+> pretty nm)
-        --         Just r  -> return r
+--         parseRepr = return NoRepresentation
+--         -- -- Parsing set {representation} of ... notation if needed
+--         -- parseRepr = msum [ braces parseReprInner
+--         --                  , return NoRepresentation
+--         --                  ]
+--         --
+--         -- parseReprInner = do
+--         --     pos    <- getPosition
+--         --     nm     <- identifierText
+--         --     inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
+--         --     case textToRepresentation nm inners of
+--         --         Nothing -> do
+--         --             setPosition pos
+--         --             fail ("Not a valid representation:" <+> pretty nm)
+--         --         Just r  -> return r
 
-        pBool = do
-            lexeme L_bool
-            -- parse and discard, compatibility with SR
-            _ <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
-            return DomainBool
+--         pBool = do
+--             lexeme L_bool
+--             -- parse and discard, compatibility with SR
+--             _ <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
+--             return DomainBool
 
-        pIntFromExpr = do
-            lexeme L_int
-            x <- parens parseExpr
-            case (let ?typeCheckerMode = StronglyTyped in typeOf x) of
-                Just (TypeInt TagInt) -> return $ DomainInt TagInt [RangeSingle x]
-                _ -> return $ DomainIntE x
+--         pIntFromExpr = do
+--             lexeme L_int
+--             x <- parens parseExpr
+--             case (let ?typeCheckerMode = StronglyTyped in typeOf x) of
+--                 Just (TypeInt TagInt) -> return $ DomainInt TagInt [RangeSingle x]
+--                 _ -> return $ DomainIntE x
 
-        pInt = do
-            lexeme L_int
-            mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
-            let xs = fromMaybe [] mxs
-            return $ DomainInt TagInt xs
+--         pInt = do
+--             lexeme L_int
+--             mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
+--             let xs = fromMaybe [] mxs
+--             return $ DomainInt TagInt xs
 
-        pReference = do
-            r  <- identifierText
-            return $ DomainReference (Name r) Nothing
+--         pReference = do
+--             r  <- identifierText
+--             return $ DomainReference (Name r) Nothing
 
-        pEnum = do
-            r  <- identifierText
-            xs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
-            st <- get
-            guard (Name r `elem` enumDomains st)
-            return $ DomainEnum (Name r) xs Nothing
+--         pEnum = do
+--             r  <- identifierText
+--             xs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
+--             st <- get
+--             guard (Name r `elem` enumDomains st)
+--             return $ DomainEnum (Name r) xs Nothing
 
-        pMatrix = do
-            lexeme L_matrix
-            void $ optional $ lexeme L_indexed
-            void $ optional $ lexeme L_by
-            xs <- brackets (commaSeparated parseDomain)
-            lexeme L_of
-            y  <- parseDomainWithRepr
-            return $ foldr DomainMatrix y xs
+--         pMatrix = do
+--             lexeme L_matrix
+--             void $ optional $ lexeme L_indexed
+--             void $ optional $ lexeme L_by
+--             xs <- brackets (commaSeparated parseDomain)
+--             lexeme L_of
+--             y  <- parseDomainWithRepr
+--             return $ foldr DomainMatrix y xs
 
-        pTupleWith = do
-            lexeme L_tuple
-            xs <- parens $ commaSeparated0 parseDomainWithRepr
-            return $ DomainTuple xs
+--         pTupleWith = do
+--             lexeme L_tuple
+--             xs <- parens $ commaSeparated0 parseDomainWithRepr
+--             return $ DomainTuple xs
 
-        pTupleWithout = do
-            xs <- parens $ countSepAtLeast 2 parseDomainWithRepr comma
-            return $ DomainTuple xs
+--         pTupleWithout = do
+--             xs <- parens $ countSepAtLeast 2 parseDomainWithRepr comma
+--             return $ DomainTuple xs
 
-        pRecord = do
-            lexeme L_record
-            let one = do n <- parseName
-                         lexeme L_Colon
-                         d <- parseDomainWithRepr
-                         return (n,d)
-            xs <- braces $ commaSeparated0 one
-            return $ DomainRecord xs
+--         pRecord = do
+--             lexeme L_record
+--             let one = do n <- parseName
+--                          lexeme L_Colon
+--                          d <- parseDomainWithRepr
+--                          return (n,d)
+--             xs <- braces $ commaSeparated0 one
+--             return $ DomainRecord xs
 
-        pVariant = do
-            lexeme L_variant
-            let one = do n <- parseName
-                         dMaybe <- optional $ lexeme L_Colon >> parseDomainWithRepr
-                         case dMaybe of
-                             Nothing -> return (n, DomainInt TagInt [RangeSingle 0])
-                             Just d -> return (n,d)
-            xs <- braces $ commaSeparated0 one
-            return $ DomainVariant xs
+--         pVariant = do
+--             lexeme L_variant
+--             let one = do n <- parseName
+--                          lexeme L_Colon
+--                          d <- parseDomainWithRepr
+--                          return (n,d)
+--             xs <- braces $ commaSeparated0 one
+--             return $ DomainVariant xs
 
-        pSet = do
-            lexeme L_set
-            r <- parseRepr
-            x <- parseSetAttr
-            y <- lexeme L_of >> parseDomainWithRepr
-            return $ DomainSet r x y
+--         pSet = do
+--             lexeme L_set
+--             r <- parseRepr
+--             x <- parseSetAttr
+--             y <- lexeme L_of >> parseDomainWithRepr
+--             return $ DomainSet r x y
 
-        pMSet = do
-            lexeme L_mset
-            r <- parseRepr
-            x <- parseMSetAttr
-            y <- lexeme L_of >> parseDomainWithRepr
-            return $ DomainMSet r x y
+--         pMSet = do
+--             lexeme L_mset
+--             r <- parseRepr
+--             x <- parseMSetAttr
+--             y <- lexeme L_of >> parseDomainWithRepr
+--             return $ DomainMSet r x y
 
-        pFunction' = do
-            lexeme L_function
-            r <- parseRepr
-            (y,z) <- arrowedPair parseDomainWithRepr
-            return $ DomainFunction r def y z
+--         pFunction' = do
+--             lexeme L_function
+--             r <- parseRepr
+--             (y,z) <- arrowedPair parseDomainWithRepr
+--             return $ DomainFunction r def y z
 
-        pFunction = do
-            lexeme L_function
-            r <- parseRepr
-            x <- parseFunctionAttr
-            (y,z) <- arrowedPair parseDomainWithRepr
-            return $ DomainFunction r x y z
+--         pFunction = do
+--             lexeme L_function
+--             r <- parseRepr
+--             x <- parseFunctionAttr
+--             (y,z) <- arrowedPair parseDomainWithRepr
+--             return $ DomainFunction r x y z
 
-        pSequence = do
-            lexeme L_sequence
-            r <- parseRepr
-            x <- parseSequenceAttr
-            y <- lexeme L_of >> parseDomainWithRepr
-            return $ DomainSequence r x y
+--         pSequence = do
+--             lexeme L_sequence
+--             r <- parseRepr
+--             x <- parseSequenceAttr
+--             y <- lexeme L_of >> parseDomainWithRepr
+--             return $ DomainSequence r x y
 
-        pRelation = do
-            lexeme L_relation
-            r  <- parseRepr
-            pos <- getPosition
-            x  <- parseRelationAttr
-            lexeme L_of
-            ys <- parens (parseDomainWithRepr `sepBy` lexeme L_Times)
-            let RelationAttr _ (BinaryRelationAttrs binAttrs) = x
-            when (length ys /= 2 && not (S.null binAttrs)) $ do
-                setPosition pos
-                failDoc $ "Only binary relations can have these attributes:" <+>
-                            prettyList id "," (S.toList binAttrs)
-            return $ DomainRelation r x ys
+--         pRelation = do
+--             lexeme L_relation
+--             r  <- parseRepr
+--             pos <- getPosition
+--             x  <- parseRelationAttr
+--             lexeme L_of
+--             ys <- parens (parseDomainWithRepr `sepBy` lexeme L_Times)
+--             let RelationAttr _ (BinaryRelationAttrs binAttrs) = x
+--             when (length ys /= 2 && not (S.null binAttrs)) $ do
+--                 setPosition pos
+--                 fail $ "Only binary relations can have these attributes:" <+>
+--                             prettyList id "," (S.toList binAttrs)
+--             return $ DomainRelation r x ys
 
-        pPartition = do
-            lexeme L_partition
-            r <- parseRepr
-            x <- parsePartitionAttr
-            lexeme L_from
-            y <- parseDomainWithRepr
-            return $ DomainPartition r x y
+--         pPartition = do
+--             lexeme L_partition
+--             r <- parseRepr
+--             x <- parsePartitionAttr
+--             lexeme L_from
+--             y <- parseDomainWithRepr
+--             return $ DomainPartition r x y
 
-parseAttributes :: Parser (DomainAttributes Expression)
-parseAttributes = do
-    xs <- parens (commaSeparated0 parseAttribute) <|> return []
-    return $ DomainAttributes xs
-    where
-        parseAttribute = msum [parseDontCare, try parseNameValue, parseDAName]
-        parseNameValue = DANameValue <$> (Name <$> identifierText) <*> parseExpr
-        parseDAName = DAName <$> (Name <$> identifierText)
-        parseDontCare = do dotdot ; return DADotDot
+-- parseAttributes :: Parser (DomainAttributes Expression)
+-- parseAttributes = do
+--     xs <- parens (commaSeparated0 parseAttribute) <|> return []
+--     return $ DomainAttributes xs
+--     where
+--         parseAttribute = msum [parseDontCare, try parseNameValue, parseDAName]
+--         parseNameValue = DANameValue <$> (Name <$> identifierText) <*> parseExpr
+--         parseDAName = DAName <$> (Name <$> identifierText)
+--         parseDontCare = do dotdot ; return DADotDot
 
-parseSetAttr :: Parser (SetAttr Expression)
-parseSetAttr = do
-    pos <- getPosition
-    DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "set" attrs
-        ["size", "minSize", "maxSize"]
-    SetAttr <$> case filterSizey attrs of
-        [] -> return SizeAttr_None
-        [DANameValue "size"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
+-- parseSetAttr :: Parser (SetAttr Expression)
+-- parseSetAttr = do
+--     pos <- getPosition
+--     DomainAttributes attrs <- parseAttributes
+--     checkExtraAttributes pos "set" attrs
+--         ["size", "minSize", "maxSize"]
+--     SetAttr <$> case filterSizey attrs of
+--         [] -> return SizeAttr_None
+--         [DANameValue "size"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
 
-parseMSetAttr :: Parser (MSetAttr Expression)
-parseMSetAttr = do
-    pos <- getPosition
-    DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "mset" attrs
-        [ "size", "minSize", "maxSize"
-        , "minOccur", "maxOccur"
-        ]
-    size <- case filterSizey attrs of
-        [] -> return SizeAttr_None
-        [DANameValue "size"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    occur <- case filterAttrName ["minOccur", "maxOccur"] attrs of
-        [] -> return OccurAttr_None
-        [DANameValue "minOccur" a] -> return (OccurAttr_MinOccur a)
-        [DANameValue "maxOccur" a] -> return (OccurAttr_MaxOccur a)
-        [DANameValue "maxOccur" b, DANameValue "minOccur" a] -> return (OccurAttr_MinMaxOccur a b)
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    return (MSetAttr size occur)
+-- parseMSetAttr :: Parser (MSetAttr Expression)
+-- parseMSetAttr = do
+--     pos <- getPosition
+--     DomainAttributes attrs <- parseAttributes
+--     checkExtraAttributes pos "mset" attrs
+--         [ "size", "minSize", "maxSize"
+--         , "minOccur", "maxOccur"
+--         ]
+--     size <- case filterSizey attrs of
+--         [] -> return SizeAttr_None
+--         [DANameValue "size"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     occur <- case filterAttrName ["minOccur", "maxOccur"] attrs of
+--         [] -> return OccurAttr_None
+--         [DANameValue "minOccur" a] -> return (OccurAttr_MinOccur a)
+--         [DANameValue "maxOccur" a] -> return (OccurAttr_MaxOccur a)
+--         [DANameValue "maxOccur" b, DANameValue "minOccur" a] -> return (OccurAttr_MinMaxOccur a b)
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     return (MSetAttr size occur)
 
-parseFunctionAttr :: Parser (FunctionAttr Expression)
-parseFunctionAttr = do
-    pos <- getPosition
-    DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "function" attrs
-        [ "size", "minSize", "maxSize"
-        , "injective", "surjective", "bijective"
-        , "total"
-        ]
-    size <- case filterSizey attrs of
-        [DANameValue "size"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
-        [] -> return SizeAttr_None
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    let partiality = if DAName "total" `elem` attrs
-                        then PartialityAttr_Total
-                        else PartialityAttr_Partial
-    jectivity  <- case filterJectivity attrs of
-        [] -> return JectivityAttr_None
-        [DAName "bijective" ] -> return JectivityAttr_Bijective
-        [DAName "injective" ] -> return JectivityAttr_Injective
-        [DAName "surjective"] -> return JectivityAttr_Surjective
-        [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    return (FunctionAttr size partiality jectivity)
+-- parseFunctionAttr :: Parser (FunctionAttr Expression)
+-- parseFunctionAttr = do
+--     pos <- getPosition
+--     DomainAttributes attrs <- parseAttributes
+--     checkExtraAttributes pos "function" attrs
+--         [ "size", "minSize", "maxSize"
+--         , "injective", "surjective", "bijective"
+--         , "total"
+--         ]
+--     size <- case filterSizey attrs of
+--         [DANameValue "size"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+--         [] -> return SizeAttr_None
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     let partiality = if DAName "total" `elem` attrs
+--                         then PartialityAttr_Total
+--                         else PartialityAttr_Partial
+--     jectivity  <- case filterJectivity attrs of
+--         [] -> return JectivityAttr_None
+--         [DAName "bijective" ] -> return JectivityAttr_Bijective
+--         [DAName "injective" ] -> return JectivityAttr_Injective
+--         [DAName "surjective"] -> return JectivityAttr_Surjective
+--         [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     return (FunctionAttr size partiality jectivity)
 
-parseSequenceAttr :: Parser (SequenceAttr Expression)
-parseSequenceAttr = do
-    pos <- getPosition
-    DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "sequence" attrs
-        [ "size", "minSize", "maxSize"
-        , "injective", "surjective", "bijective"
-        ]
-    size <- case filterSizey attrs of
-        [DANameValue "size"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
-        [] -> return SizeAttr_None
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    jectivity  <- case filterJectivity attrs of
-        [] -> return JectivityAttr_None
-        [DAName "bijective" ] -> return JectivityAttr_Bijective
-        [DAName "injective" ] -> return JectivityAttr_Injective
-        [DAName "surjective"] -> return JectivityAttr_Surjective
-        [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    return (SequenceAttr size jectivity)
+-- parseSequenceAttr :: Parser (SequenceAttr Expression)
+-- parseSequenceAttr = do
+--     pos <- getPosition
+--     DomainAttributes attrs <- parseAttributes
+--     checkExtraAttributes pos "sequence" attrs
+--         [ "size", "minSize", "maxSize"
+--         , "injective", "surjective", "bijective"
+--         ]
+--     size <- case filterSizey attrs of
+--         [DANameValue "size"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+--         [] -> return SizeAttr_None
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     jectivity  <- case filterJectivity attrs of
+--         [] -> return JectivityAttr_None
+--         [DAName "bijective" ] -> return JectivityAttr_Bijective
+--         [DAName "injective" ] -> return JectivityAttr_Injective
+--         [DAName "surjective"] -> return JectivityAttr_Surjective
+--         [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     return (SequenceAttr size jectivity)
 
-parseRelationAttr :: Parser (RelationAttr Expression)
-parseRelationAttr = do
-    pos <- getPosition
-    DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "relation" attrs (map (Name . stringToText) (["size", "minSize", "maxSize"] ++ binRelNames))
-    size <- case filterSizey attrs of
-        [] -> return SizeAttr_None
-        [DANameValue "size"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    let 
-        readBinRel' (DAName (Name a)) = readBinRel (fromString (textToString a))
-        readBinRel' a = do
-            setPosition pos
-            failDoc $ "Not a binary relation attribute:" <+> pretty a
-    binRels <- mapM readBinRel' (filterBinRel attrs)
-    return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
+-- parseRelationAttr :: Parser (RelationAttr Expression)
+-- parseRelationAttr = do
+--     pos <- getPosition
+--     DomainAttributes attrs <- parseAttributes
+--     checkExtraAttributes pos "relation" attrs
+--         [ "size", "minSize", "maxSize"
+--         , "reflexive", "irreflexive", "coreflexive"
+--         , "symmetric", "antiSymmetric", "aSymmetric"
+--         , "transitive", "total", "leftTotal", "rightTotal", "connex", "Euclidean"
+--         , "serial", "equivalence", "weakOrder", "preOrder", "partialOrder", "strictPartialOrder", "linearOrder"
+--         ]
+--     size <- case filterSizey attrs of
+--         [] -> return SizeAttr_None
+--         [DANameValue "size"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     let readBinRel' (DAName (Name a)) = readBinRel (fromString (textToString a))
+--         readBinRel' a = do
+--             setPosition pos
+--             fail $ "Not a binary relation attribute:" <+> pretty a
+--     binRels <- mapM readBinRel' (filterBinRel attrs)
+--     return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
 
-parsePartitionAttr :: Parser (PartitionAttr Expression)
-parsePartitionAttr = do
-    pos <- getPosition
-    DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "partition" attrs
-        [ "size", "minSize", "maxSize"
-        , "regular"
-        , "numParts", "minNumParts", "maxNumParts"
-        , "partSize", "minPartSize", "maxPartSize"
-        ]
-    unless (null $ filterAttrName ["complete"] attrs) $ do
-        setPosition pos
-        failDoc $ vcat [ "Partitions do not support the 'complete' attribute."
-                    , "They are complete by default."
-                    ]
-    unless (null $ filterSizey attrs) $ do
-        setPosition pos
-        failDoc $ vcat [ "Partitions do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
-                    , "This is because partitions are complete by default."
-                    ]
-    partsNum         <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
-        [] -> return SizeAttr_None
-        [DANameValue "numParts"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minNumParts" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxNumParts" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxNumParts" b, DANameValue "minNumParts" a] -> return (SizeAttr_MinMaxSize a b)
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    partsSize        <- case filterAttrName ["partSize", "minPartSize", "maxPartSize"] attrs of
-        [] -> return SizeAttr_None
-        [DANameValue "partSize"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minPartSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxPartSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
-        as -> do
-            setPosition pos
-            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
-    let isRegular  = DAName "regular"  `elem` attrs
-    return PartitionAttr {..}
+-- parsePartitionAttr :: Parser (PartitionAttr Expression)
+-- parsePartitionAttr = do
+--     pos <- getPosition
+--     DomainAttributes attrs <- parseAttributes
+--     checkExtraAttributes pos "partition" attrs
+--         [ "size", "minSize", "maxSize"
+--         , "regular"
+--         , "numParts", "minNumParts", "maxNumParts"
+--         , "partSize", "minPartSize", "maxPartSize"
+--         ]
+--     unless (null $ filterAttrName ["complete"] attrs) $ do
+--         setPosition pos
+--         fail $ vcat [ "Partitions do not support the 'complete' attribute."
+--                     , "They are complete by default."
+--                     ]
+--     unless (null $ filterSizey attrs) $ do
+--         setPosition pos
+--         fail $ vcat [ "Partitions do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
+--                     , "This is because partitions are complete by default."
+--                     ]
+--     partsNum         <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
+--         [] -> return SizeAttr_None
+--         [DANameValue "numParts"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minNumParts" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxNumParts" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxNumParts" b, DANameValue "minNumParts" a] -> return (SizeAttr_MinMaxSize a b)
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     partsSize        <- case filterAttrName ["partSize", "minPartSize", "maxPartSize"] attrs of
+--         [] -> return SizeAttr_None
+--         [DANameValue "partSize"    a] -> return (SizeAttr_Size a)
+--         [DANameValue "minPartSize" a] -> return (SizeAttr_MinSize a)
+--         [DANameValue "maxPartSize" a] -> return (SizeAttr_MaxSize a)
+--         [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
+--         as -> do
+--             setPosition pos
+--             fail ("incompatible attributes:" <+> stringToDoc (show as))
+--     let isRegular  = DAName "regular"  `elem` attrs
+--     return PartitionAttr {..}
 
 
-checkExtraAttributes :: SourcePos -> Doc -> [DomainAttribute a] -> [Name] -> Parser ()
-checkExtraAttributes pos ty attrs supported = do
-    let extras = mapMaybe f attrs
-    unless (null extras) $ do
-        setPosition pos
-        failDoc $ vcat [ "Unsupported attributes for" <+> ty <> ":" <+> prettyList id "," extras
-                    , "Only these are supported:" <+> prettyList id "," supported
-                    ]
-    where
-        f (DANameValue nm _) | nm `notElem` supported = Just nm
-        f (DAName      nm  ) | nm `notElem` supported = Just nm
-        f _ = Nothing
+-- checkExtraAttributes :: SourcePos -> Doc -> [DomainAttribute a] -> [Name] -> Parser ()
+-- checkExtraAttributes pos ty attrs supported = do
+--     let extras = mapMaybe f attrs
+--     unless (null extras) $ do
+--         setPosition pos
+--         fail $ vcat [ "Unsupported attributes for" <+> ty <> ":" <+> prettyList id "," extras
+--                     , "Only these are supported:" <+> prettyList id "," supported
+--                     ]
+--     where
+--         f (DANameValue nm _) | nm `notElem` supported = Just nm
+--         f (DAName      nm  ) | nm `notElem` supported = Just nm
+--         f _ = Nothing
 
-filterAttrName :: Ord a => [Name] -> [DomainAttribute a] -> [DomainAttribute a]
-filterAttrName keep = sort . filter f
-    where
-        f (DANameValue nm _) | nm `elem` keep = True
-        f (DAName      nm  ) | nm `elem` keep = True
-        f _ = False
+-- filterAttrName :: Ord a => [Name] -> [DomainAttribute a] -> [DomainAttribute a]
+-- filterAttrName keep = sort . filter f
+--     where
+--         f (DANameValue nm _) | nm `elem` keep = True
+--         f (DAName      nm  ) | nm `elem` keep = True
+--         f _ = False
 
-filterSizey :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterSizey = filterAttrName ["size", "minSize", "maxSize"]
+-- filterSizey :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+-- filterSizey = filterAttrName ["size", "minSize", "maxSize"]
 
-filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterJectivity = filterAttrName ["injective", "surjective", "bijective"]
+-- filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+-- filterJectivity = filterAttrName ["injective", "surjective", "bijective"]
 
-filterBinRel :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterBinRel = filterAttrName (map (Name . stringToText) binRelNames)
+-- filterBinRel :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+-- filterBinRel = filterAttrName (map (Name . stringToText) binRelNames)
 
-parseMetaVariable :: Parser String
-parseMetaVariable = do
-    let isMeta LMetaVar{} = True
-        isMeta _          = False
-    LMetaVar iden <- satisfyT isMeta
-    return (T.unpack iden)
+-- parseMetaVariable :: Parser String
+-- parseMetaVariable = do
+--     let isMeta LMetaVar{} = True
+--         isMeta _          = False
+--     LMetaVar iden <- satisfyT isMeta
+--     return (T.unpack iden)
 
-metaVarInE :: String -> Expression
-metaVarInE = ExpressionMetaVar
+-- metaVarInE :: String -> Expression
+-- metaVarInE = ExpressionMetaVar
 
 parseExpr :: Parser Expression
-parseExpr =
-    let
-        mergeOp op = mkBinOp (lexemeText op)
+parseExpr = do return $ Constant $ ConstantBool True
+--     let
+--         mergeOp op = mkBinOp (lexemeText op)
 
-        operatorsGrouped = operators
-            |> sortBy  (\ (_,a) (_,b) -> compare a b )
-            |> groupBy (\ (_,a) (_,b) -> a == b )
-            |> reverse
+--         operatorsGrouped = operators
+--             |> sortBy  (\ (_,a) (_,b) -> compare a b )
+--             |> groupBy (\ (_,a) (_,b) -> a == b )
+--             |> reverse
 
-        parseUnaryNegate = do
-            lexeme L_Minus
-            return $ \ x -> mkOp "negate" [x]
+--         parseUnaryNegate = do
+--             lexeme L_Minus
+--             return $ \ x -> mkOp "negate" [x]
 
-        parseUnaryNot = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "not" [x]
+--         parseUnaryNot = do
+--             lexeme L_ExclamationMark
+--             return $ \ x -> mkOp "not" [x]
 
-    in
-        makeExprParser parseAtomicExpr
-            [ [ case descr of
-                    BinaryOp op FLeft             -> InfixL $ do lexeme op
-                                                                 return $ mergeOp op
-                    BinaryOp op FNone             -> InfixN $ do lexeme op
-                                                                 return $ mergeOp op
-                    BinaryOp op FRight            -> InfixR $ do lexeme op
-                                                                 return $ mergeOp op
-                    UnaryPrefix L_Minus           -> Prefix $ foldr1 (.) <$> some parseUnaryNegate
-                    UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
-                    UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
-              | (descr, _) <- operatorsInGroup
-              ]
-            | operatorsInGroup <- operatorsGrouped
-            ] <?> "expression"
+--     in
+--         makeExprParser parseAtomicExpr
+--             [ [ case descr of
+--                     BinaryOp op FLeft             -> InfixL $ do lexeme op
+--                                                                  return $ mergeOp op
+--                     BinaryOp op FNone             -> InfixN $ do lexeme op
+--                                                                  return $ mergeOp op
+--                     BinaryOp op FRight            -> InfixR $ do lexeme op
+--                                                                  return $ mergeOp op
+--                     UnaryPrefix L_Minus           -> Prefix $ foldr1 (.) <$> some parseUnaryNegate
+--                     UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
+--                     UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
+--               | (descr, _) <- operatorsInGroup
+--               ]
+--             | operatorsInGroup <- operatorsGrouped
+--             ] <?> "expression"
 
-parseAtomicExpr :: Parser Expression
-parseAtomicExpr = do
-    let
-        prefixes = do
-            fs <- some $ msum parsePrefixes
-            return $ foldr1 (.) fs
-        postfixes = do
-            fs <- some $ msum parsePostfixes
-            return $ foldr1 (.) (reverse fs)
-        withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
-        withPostfix x = do i <- x; mf <- optional postfixes; return $ case mf of Nothing -> i
-                                                                                 Just f  -> f i
-    withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
-
-
-parseAtomicExprNoPrePost :: Parser Expression
-parseAtomicExprNoPrePost = msum $ map try $ concat
-    [ [parseQuantifiedExpr]
-    , parseOthers
-    , [metaVarInE <$> parseMetaVariable]
-    , [parseAAC]
-    , [parseReference]
-    , [parseLiteral]
-    , [parseDomainAsExpr]
-    , [parseWithLocals]
-    , [parseComprehension]
-    , [parens parseExpr]
-    ]
-
-parseComprehension :: Parser Expression
-parseComprehension = brackets $ do
-    x   <- parseExpr
-    lexeme L_Bar
-    gens <- commaSeparated (letting <|> try generator <|> condition)
-    return (Comprehension x (concat gens))
-    where
-        generator :: Parser [GeneratorOrCondition]
-        generator = do
-            pats <- commaSeparated parseAbstractPattern
-            msum
-                [ do
-                    lexeme L_Colon
-                    domain <- parseDomain
-                    return [Generator (GenDomainNoRepr pat domain) | pat <- pats]
-                , do
-                    lexeme L_LeftArrow
-                    expr <- parseExpr
-                    return [Generator (GenInExpr       pat expr)   | pat <- pats]
-                ]
-        condition :: Parser [GeneratorOrCondition]
-        condition = return . Condition <$> parseExpr
-        letting :: Parser [GeneratorOrCondition]
-        letting = do
-            lexeme L_letting
-            pat <- parseAbstractPattern
-            lexeme L_be
-            x <- parseExpr
-            return [ComprehensionLetting pat x]
-
-parseDomainAsExpr :: Parser Expression
-parseDomainAsExpr = Domain <$> betweenTicks parseDomain
-
-parsePrefixes :: [Parser (Expression -> Expression)]
-parsePrefixes = [parseUnaryMinus, parseUnaryNot]
-    where
-        parseUnaryMinus = do
-            lexeme L_Minus
-            return $ \ x -> mkOp "negate" [x]
-        parseUnaryNot = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "not" [x]
-
-parsePostfixes :: [Parser (Expression -> Expression)]
-parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
-    where
-        parseIndexed :: Parser (Expression -> Expression)
-        parseIndexed = do
-            let
-                pIndexer = try pRList <|> (do i <- parseExpr ; return $ \ m -> Op (MkOpIndexing (OpIndexing m i)))
-                pRList   = do
-                    i <- optional parseExpr
-                    dotdot
-                    j <- optional parseExpr
-                    return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
-            is <- brackets $ commaSeparated pIndexer
-            return $ \ x -> foldl (\ m f -> f m ) x is
-        parseFactorial :: Parser (Expression -> Expression)
-        parseFactorial = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "factorial" [x]
-        parseFuncApply :: Parser (Expression -> Expression)
-        parseFuncApply = parens $ do
-            xs <- commaSeparated parseExpr
-            let underscore = Reference "_" Nothing
-            let ys = [ if underscore == x then Nothing else Just x | x <- xs ]
-            return $ \ x -> Op $ MkOpRelationProj $ OpRelationProj x ys
-
-parseAAC :: Parser Expression
-parseAAC = do
-    let
-        isAttr (LIdentifier txt) | Just _ <- Name txt `lookup` allSupportedAttributes = True
-        isAttr _ = False
-    LIdentifier attr <- satisfyT isAttr
-    let n = fromMaybe (bug "parseAAC") (lookup (Name attr) allSupportedAttributes)
-    args <- parens $ countSep (n+1) parseExpr comma
-    case (n, args) of
-        (0, [e  ]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
-                                        (fromString (textToString attr)) Nothing
-        (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
-                                        (fromString (textToString attr)) (Just v)
-        _ -> failDoc "parseAAC"
-
-parseOthers :: [Parser Expression]
-parseOthers = [ parseFunctional l
-              | l <- functionals
-              ] ++ [parseTyped, parseTwoBars]
-    where
-
-        parseTwoBars :: Parser Expression
-        parseTwoBars = do
-            x <- between (lexeme L_Bar) (lexeme L_Bar) parseExpr
-            return (mkOp "twoBars" [x])
-
-        parseTyped :: Parser Expression
-        parseTyped = parens $ do
-            x  <- parseExpr
-            lexeme L_Colon
-            d  <- betweenTicks parseDomain
-            ty <- let ?typeCheckerMode = StronglyTyped in typeOfDomain d
-            return (Typed x ty)
-
-        parseFunctional :: Lexeme -> Parser Expression
-        parseFunctional l = do
-            lexeme l
-            xs <- parens $ commaSeparated parseExpr
-            return $ case (l,xs) of
-                (L_image, [y,z]) -> Op $ MkOpImage $ OpImage y z
-                _ -> mkOp (fromString $ show $ lexemeFace l) xs
-
-parseWithLocals :: Parser Expression
-parseWithLocals = braces $ do
-    i  <- parseExpr
-    lexeme L_At
-    js <- parseTopLevels
-    let decls =
-            [ Declaration (FindOrGiven LocalFind nm dom)
-            | Declaration (FindOrGiven Find nm dom) <- js ]
-    let cons = concat
-            [ xs
-            | SuchThat xs <- js
-            ]
-    let locals = if null decls
-                    then DefinednessConstraints cons
-                    else AuxiliaryVars (decls ++ [SuchThat cons])
-    return (WithLocals i locals)
-
-parseNameOrMeta :: Parser Name
-parseNameOrMeta = parseName <|> NameMetaVar <$> parseMetaVariable
-
-parseName :: Parser Name
-parseName = Name <$> identifierText
-
-parseReference :: Parser Expression
-parseReference = Reference <$> parseName <*> pure Nothing
-
-parseQuantifiedExpr :: Parser Expression
-parseQuantifiedExpr = do
-    qnName      <- parseQuantifiedName
-    qnPats      <- commaSeparated parseAbstractPattern
-    qnOver      <- msum [ Left  <$> (colon *> parseDomain)
-                        , Right <$> do
-                            lexeme L_in
-                            over <- parseExpr
-                            return (\ pat -> GenInExpr pat over )
-                        , Right <$> do
-                            lexeme L_subsetEq
-                            over <- parseExpr
-                            return (\ pat -> GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet over) )
-                        ]
-    qnGuard     <- optional (comma *> parseExpr)
-    qnBody      <- dot *> parseExpr <?> "body of a quantified expression"
-
-    let qnMap pat = case qnOver of
-            Left dom -> GenDomainNoRepr pat dom
-            Right op -> op pat
-
-    return $ mkOp (translateQnName qnName)
-           $ return
-           $ Comprehension qnBody
-           $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
-             [ Condition g           | Just g <- [qnGuard] ]
+-- parseAtomicExpr :: Parser Expression
+-- parseAtomicExpr = do
+--     let
+--         prefixes = do
+--             fs <- some $ msum parsePrefixes
+--             return $ foldr1 (.) fs
+--         postfixes = do
+--             fs <- some $ msum parsePostfixes
+--             return $ foldr1 (.) (reverse fs)
+--         withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
+--         withPostfix x = do i <- x; mf <- optional postfixes; return $ case mf of Nothing -> i
+--                                                                                  Just f  -> f i
+--     withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
 
 
-parseQuantifiedName :: Parser Text
-parseQuantifiedName = do
-    let
-        isIdentifier (LIdentifier q) = q `elem` ["forAll", "exists", "sum", "product"]
-        isIdentifier _ = False
-    LIdentifier n <- satisfyT isIdentifier
-    return n
+-- parseAtomicExprNoPrePost :: Parser Expression
+-- parseAtomicExprNoPrePost = msum $ map try $ concat
+--     [ [parseQuantifiedExpr]
+--     , parseOthers
+--     , [metaVarInE <$> parseMetaVariable]
+--     , [parseAAC]
+--     , [parseReference]
+--     , [parseLiteral]
+--     , [parseDomainAsExpr]
+--     , [parseWithLocals]
+--     , [parseComprehension]
+--     , [parens parseExpr]
+--     ]
+
+-- parseComprehension :: Parser Expression
+-- parseComprehension = brackets $ do
+--     x   <- parseExpr
+--     lexeme L_Bar
+--     gens <- commaSeparated (letting <|> try generator <|> condition)
+--     return (Comprehension x (concat gens))
+--     where
+--         generator :: Parser [GeneratorOrCondition]
+--         generator = do
+--             pats <- commaSeparated parseAbstractPattern
+--             msum
+--                 [ do
+--                     lexeme L_Colon
+--                     domain <- parseDomain
+--                     return [Generator (GenDomainNoRepr pat domain) | pat <- pats]
+--                 , do
+--                     lexeme L_LeftArrow
+--                     expr <- parseExpr
+--                     return [Generator (GenInExpr       pat expr)   | pat <- pats]
+--                 ]
+--         condition :: Parser [GeneratorOrCondition]
+--         condition = return . Condition <$> parseExpr
+--         letting :: Parser [GeneratorOrCondition]
+--         letting = do
+--             lexeme L_letting
+--             pat <- parseAbstractPattern
+--             lexeme L_be
+--             x <- parseExpr
+--             return [ComprehensionLetting pat x]
+
+-- parseDomainAsExpr :: Parser Expression
+-- parseDomainAsExpr = Domain <$> betweenTicks parseDomain
+
+-- parsePrefixes :: [Parser (Expression -> Expression)]
+-- parsePrefixes = [parseUnaryMinus, parseUnaryNot]
+--     where
+--         parseUnaryMinus = do
+--             lexeme L_Minus
+--             return $ \ x -> mkOp "negate" [x]
+--         parseUnaryNot = do
+--             lexeme L_ExclamationMark
+--             return $ \ x -> mkOp "not" [x]
+
+-- parsePostfixes :: [Parser (Expression -> Expression)]
+-- parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
+--     where
+--         parseIndexed :: Parser (Expression -> Expression)
+--         parseIndexed = do
+--             let
+--                 pIndexer = try pRList <|> (do i <- parseExpr ; return $ \ m -> Op (MkOpIndexing (OpIndexing m i)))
+--                 pRList   = do
+--                     i <- optional parseExpr
+--                     dotdot
+--                     j <- optional parseExpr
+--                     return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
+--             is <- brackets $ commaSeparated pIndexer
+--             return $ \ x -> foldl (\ m f -> f m ) x is
+--         parseFactorial :: Parser (Expression -> Expression)
+--         parseFactorial = do
+--             lexeme L_ExclamationMark
+--             return $ \ x -> mkOp "factorial" [x]
+--         parseFuncApply :: Parser (Expression -> Expression)
+--         parseFuncApply = parens $ do
+--             xs <- commaSeparated parseExpr
+--             let underscore = Reference "_" Nothing
+--             let ys = [ if underscore == x then Nothing else Just x | x <- xs ]
+--             return $ \ x -> Op $ MkOpRelationProj $ OpRelationProj x ys
+
+-- parseAAC :: Parser Expression
+-- parseAAC = do
+--     let
+--         isAttr (LIdentifier txt) | Just _ <- Name txt `lookup` allSupportedAttributes = True
+--         isAttr _ = False
+--     LIdentifier attr <- satisfyT isAttr
+--     let n = fromMaybe (bug "parseAAC") (lookup (Name attr) allSupportedAttributes)
+--     args <- parens $ countSep (n+1) parseExpr comma
+--     case (n, args) of
+--         (0, [e  ]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
+--                                         (fromString (textToString attr)) Nothing
+--         (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
+--                                         (fromString (textToString attr)) (Just v)
+--         _ -> fail "parseAAC"
+
+-- parseOthers :: [Parser Expression]
+-- parseOthers = [ parseFunctional l
+--               | l <- functionals
+--               ] ++ [parseTyped, parseTwoBars]
+--     where
+
+--         parseTwoBars :: Parser Expression
+--         parseTwoBars = do
+--             x <- between (lexeme L_Bar) (lexeme L_Bar) parseExpr
+--             return (mkOp "twoBars" [x])
+
+--         parseTyped :: Parser Expression
+--         parseTyped = parens $ do
+--             x  <- parseExpr
+--             lexeme L_Colon
+--             d  <- betweenTicks parseDomain
+--             ty <- let ?typeCheckerMode = StronglyTyped in typeOfDomain d
+--             return (Typed x ty)
+
+--         parseFunctional :: Lexeme -> Parser Expression
+--         parseFunctional l = do
+--             lexeme l
+--             xs <- parens $ commaSeparated parseExpr
+--             return $ case (l,xs) of
+--                 (L_image, [y,z]) -> Op $ MkOpImage $ OpImage y z
+--                 _ -> mkOp (fromString $ show $ lexemeFace l) xs
+
+-- parseWithLocals :: Parser Expression
+-- parseWithLocals = braces $ do
+--     i  <- parseExpr
+--     lexeme L_At
+--     js <- parseTopLevels
+--     let decls =
+--             [ Declaration (FindOrGiven LocalFind nm dom)
+--             | Declaration (FindOrGiven Find nm dom) <- js ]
+--     let cons = concat
+--             [ xs
+--             | SuchThat xs <- js
+--             ]
+--     let locals = if null decls
+--                     then DefinednessConstraints cons
+--                     else AuxiliaryVars (decls ++ [SuchThat cons])
+--     return (WithLocals i locals)
+
+-- parseNameOrMeta :: Parser Name
+-- parseNameOrMeta = parseName <|> NameMetaVar <$> parseMetaVariable
+
+-- parseName :: Parser Name
+-- parseName = Name <$> identifierText
+
+-- parseReference :: Parser Expression
+-- parseReference = Reference <$> parseName <*> pure Nothing
+
+-- parseQuantifiedExpr :: Parser Expression
+-- parseQuantifiedExpr = do
+--     qnName      <- parseQuantifiedName
+--     qnPats      <- commaSeparated parseAbstractPattern
+--     qnOver      <- msum [ Left  <$> (colon *> parseDomain)
+--                         , Right <$> do
+--                             lexeme L_in
+--                             over <- parseExpr
+--                             return (\ pat -> GenInExpr pat over )
+--                         , Right <$> do
+--                             lexeme L_subsetEq
+--                             over <- parseExpr
+--                             return (\ pat -> GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet over) )
+--                         ]
+--     qnGuard     <- optional (comma *> parseExpr)
+--     qnBody      <- dot *> parseExpr <?> "body of a quantified expression"
+
+--     let qnMap pat = case qnOver of
+--             Left dom -> GenDomainNoRepr pat dom
+--             Right op -> op pat
+
+--     return $ mkOp (translateQnName qnName)
+--            $ return
+--            $ Comprehension qnBody
+--            $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
+--              [ Condition g           | Just g <- [qnGuard] ]
 
 
-parseAbstractPattern :: Parser AbstractPattern
-parseAbstractPattern = label "pattern" $ msum
-    [ AbstractPatternMetaVar <$> parseMetaVariable
-    , Single <$> parseName
-    , do
-        void $ optional $ lexeme L_tuple
-        xs <- parens $ commaSeparated parseAbstractPattern
-        return (AbsPatTuple xs)
-    , do
-        xs <- brackets $ commaSeparated parseAbstractPattern
-        return (AbsPatMatrix xs)
-    , do
-        xs <- braces $ commaSeparated parseAbstractPattern
-        return (AbsPatSet xs)
-    ]
+-- parseQuantifiedName :: Parser Text
+-- parseQuantifiedName = do
+--     let
+--         isIdentifier (LIdentifier q) = q `elem` ["forAll", "exists", "sum", "product"]
+--         isIdentifier _ = False
+--     LIdentifier n <- satisfyT isIdentifier
+--     return n
 
-parseLiteral :: Parser Expression
-parseLiteral = label "value" $ msum
-    [ Constant <$> pBool
-    , Constant <$> pInt
-    , mkAbstractLiteral <$> pMatrix
-    , mkAbstractLiteral <$> pTupleWith
-    , mkAbstractLiteral <$> pTupleWithout
-    , mkAbstractLiteral <$> pRecord
-    , AbstractLiteral <$> pVariant
-    , mkAbstractLiteral <$> pSet
-    , mkAbstractLiteral <$> pMSet
-    , mkAbstractLiteral <$> pFunction
-    , mkAbstractLiteral <$> pSequence
-    , mkAbstractLiteral <$> pRelation
-    , mkAbstractLiteral <$> pPartition
-    ]
-    where
 
-        -- convert x to a constant if possible
-        -- might save us from evaluating it again and again later
-        mkAbstractLiteral x =
-            case e2c (AbstractLiteral x) of
-                Nothing -> AbstractLiteral x
-                Just c  -> Constant c
+-- parseAbstractPattern :: Parser AbstractPattern
+-- parseAbstractPattern = label "pattern" $ msum
+--     [ AbstractPatternMetaVar <$> parseMetaVariable
+--     , Single <$> parseName
+--     , do
+--         void $ optional $ lexeme L_tuple
+--         xs <- parens $ commaSeparated parseAbstractPattern
+--         return (AbsPatTuple xs)
+--     , do
+--         xs <- brackets $ commaSeparated parseAbstractPattern
+--         return (AbsPatMatrix xs)
+--     , do
+--         xs <- braces $ commaSeparated parseAbstractPattern
+--         return (AbsPatSet xs)
+--     ]
 
-        pBool = do
-            x <- False <$ lexeme L_false
-                 <|>
-                 True  <$ lexeme L_true
-            return (ConstantBool x)
+-- parseLiteral :: Parser Expression
+-- parseLiteral = label "value" $ msum
+--     [ Constant <$> pBool
+--     , Constant <$> pInt
+--     , mkAbstractLiteral <$> pMatrix
+--     , mkAbstractLiteral <$> pTupleWith
+--     , mkAbstractLiteral <$> pTupleWithout
+--     , mkAbstractLiteral <$> pRecord
+--     , AbstractLiteral <$> pVariant
+--     , mkAbstractLiteral <$> pSet
+--     , mkAbstractLiteral <$> pMSet
+--     , mkAbstractLiteral <$> pFunction
+--     , mkAbstractLiteral <$> pSequence
+--     , mkAbstractLiteral <$> pRelation
+--     , mkAbstractLiteral <$> pPartition
+--     ]
+--     where
 
-        pInt = ConstantInt TagInt . fromInteger <$> integer
+--         -- convert x to a constant if possible
+--         -- might save us from evaluating it again and again later
+--         mkAbstractLiteral x =
+--             case e2c (AbstractLiteral x) of
+--                 Nothing -> AbstractLiteral x
+--                 Just c  -> Constant c
 
-        pMatrix = do
-            lexeme L_OpenBracket
-            xs <- commaSeparated0 parseExpr
-            msum
-                [ do
-                    let r = mkDomainIntB 1 (fromInt (genericLength xs))
-                    lexeme L_CloseBracket
-                    return (AbsLitMatrix r xs)
-                , do
-                    lexeme L_SemiColon
-                    r <- parseDomain
-                    lexeme L_CloseBracket
-                    return (AbsLitMatrix r xs)
-                ]
+--         pBool = do
+--             x <- False <$ lexeme L_false
+--                  <|>
+--                  True  <$ lexeme L_true
+--             return (ConstantBool x)
 
-        pTupleWith = do
-            lexeme L_tuple
-            xs <- parens $ commaSeparated0 parseExpr
-            return (AbsLitTuple xs)
+--         pInt = ConstantInt TagInt . fromInteger <$> integer
 
-        pTupleWithout = do
-            xs <- parens $ countSepAtLeast 2 parseExpr comma
-            return (AbsLitTuple xs)
+--         pMatrix = do
+--             lexeme L_OpenBracket
+--             xs <- commaSeparated0 parseExpr
+--             msum
+--                 [ do
+--                     let r = mkDomainIntB 1 (fromInt (genericLength xs))
+--                     lexeme L_CloseBracket
+--                     return (AbsLitMatrix r xs)
+--                 , do
+--                     lexeme L_SemiColon
+--                     r <- parseDomain
+--                     lexeme L_CloseBracket
+--                     return (AbsLitMatrix r xs)
+--                 ]
 
-        pRecord = do
-            lexeme L_record
-            let one = do n <- parseName
-                         lexeme L_Eq
-                         x <- parseExpr
-                         return (n,x)
-            xs <- braces $ commaSeparated0 one
-            return $ AbsLitRecord xs
+--         pTupleWith = do
+--             lexeme L_tuple
+--             xs <- parens $ commaSeparated0 parseExpr
+--             return (AbsLitTuple xs)
 
-        pVariant = do
-            lexeme L_variant
-            let one = do n <- parseName
-                         lexeme L_Eq
-                         x <- parseExpr
-                         return (n,x)
-            (n,x) <- braces one
-            return $ AbsLitVariant Nothing n x
+--         pTupleWithout = do
+--             xs <- parens $ countSepAtLeast 2 parseExpr comma
+--             return (AbsLitTuple xs)
 
-        pSet = do
-            xs <- braces (commaSeparated0 parseExpr)
-            return (AbsLitSet xs)
+--         pRecord = do
+--             lexeme L_record
+--             let one = do n <- parseName
+--                          lexeme L_Eq
+--                          x <- parseExpr
+--                          return (n,x)
+--             xs <- braces $ commaSeparated0 one
+--             return $ AbsLitRecord xs
 
-        pMSet = do
-            lexeme L_mset
-            xs <- parens (commaSeparated0 parseExpr)
-            return (AbsLitMSet xs)
+--         pVariant = do
+--             lexeme L_variant
+--             let one = do n <- parseName
+--                          lexeme L_Eq
+--                          x <- parseExpr
+--                          return (n,x)
+--             (n,x) <- braces one
+--             return $ AbsLitVariant Nothing n x
 
-        pFunction = do
-            lexeme L_function
-            xs <- parens (commaSeparated0 inner)
-            return (AbsLitFunction xs)
-            where
-                inner = arrowedPair parseExpr
+--         pSet = do
+--             xs <- braces (commaSeparated0 parseExpr)
+--             return (AbsLitSet xs)
 
-        pSequence = do
-            lexeme L_sequence
-            xs <- parens (commaSeparated0 parseExpr)
-            return (AbsLitSequence xs)
+--         pMSet = do
+--             lexeme L_mset
+--             xs <- parens (commaSeparated0 parseExpr)
+--             return (AbsLitMSet xs)
 
-        pRelation = do
-            lexeme L_relation
-            xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
-            xsFiltered <- forM xs $ \case
-                -- Constant (ConstantAbstract (AbsLitTuple is)) -> ...
-                AbsLitTuple is -> return is
-                x -> failDoc ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
-            return (AbsLitRelation xsFiltered)
+--         pFunction = do
+--             lexeme L_function
+--             xs <- parens (commaSeparated0 inner)
+--             return (AbsLitFunction xs)
+--             where
+--                 inner = arrowedPair parseExpr
 
-        pPartition = do
-            lexeme L_partition
-            xs <- parens (commaSeparated0 inner)
-            return (AbsLitPartition xs)
-            where
-                inner = braces (commaSeparated0 parseExpr)
+--         pSequence = do
+--             lexeme L_sequence
+--             xs <- parens (commaSeparated0 parseExpr)
+--             return (AbsLitSequence xs)
+
+--         pRelation = do
+--             lexeme L_relation
+--             xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
+--             xsFiltered <- forM xs $ \case
+--                 -- Constant (ConstantAbstract (AbsLitTuple is)) -> ...
+--                 AbsLitTuple is -> return is
+--                 x -> fail ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
+--             return (AbsLitRelation xsFiltered)
+
+--         pPartition = do
+--             lexeme L_partition
+--             xs <- parens (commaSeparated0 inner)
+--             return (AbsLitPartition xs)
+--             where
+--                 inner = braces (commaSeparated0 parseExpr)
 
 
 
 data ParserState = ParserState { enumDomains :: [Name] }
-type Parser a = StateT ParserState (ParsecT [LexemePos] Identity) a
+type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
 
 runLexerAndParser :: MonadFailDoc m => Parser a -> String -> T.Text -> m a
-runLexerAndParser p file inp = do
-    ls <- runLexer inp
-    case runParser p file ls of
-        Left (msg, line, col) ->
-            let theLine = T.lines inp |> drop (line-1) |> take 1
-            in  failDoc $ vcat
-                    [ msg
-                    , vcat (map pretty theLine)
-                    , pretty $ replicate (col-1) ' ' ++ "^"
-                    ]
-        Right x -> return x
+runLexerAndParser p file inp = do fail "Nothing"
+--     ls <- runLexer inp
+--     case runParser p file ls of
+--         Left (msg, line, col) ->
+--             let theLine = T.lines inp |> drop (line-1) |> take 1
+--             in  fail $ vcat
+--                     [ msg
+--                     , vcat (map pretty theLine)
+--                     , pretty $ replicate (col-1) ' ' ++ "^"
+--                     ]
+--         Right x -> return x
 
-runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
-runParser p file ls = either modifyErr Right (P.runParser (evalStateT p (ParserState [])) file ls)
-    where
-        modifyErr :: ParseError -> Either (Doc, Int, Int) a
-        modifyErr e = Left $
-            let pos  = errorPos e
-            in  ( if file `isPrefixOf` show e
-                    then                       pretty (show e)
-                    else pretty file <> ":" <> pretty (show e)
-                , sourceLine   pos
-                , sourceColumn pos
-                )
+-- runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
+-- runParser p file ls = either modifyErr Right (P.runParser (evalStateT p (ParserState [])) file ls)
+--     where
+--         modifyErr :: ParseError Pos Int -> Either (Doc, Int, Int) a
+--         modifyErr e = Left $
+--             let pos  = errorPos e
+--             in  ( if file `isPrefixOf` show e
+--                     then                       pretty (show e)
+--                     else pretty file <> ":" <> pretty (show e)
+--                 , sourceLine   pos
+--                 , sourceColumn pos
+--                 )
 
-identifierText :: Parser T.Text
-identifierText = do
-    LIdentifier i <- satisfyT isIdentifier
-    return i
-    where 
-          isIdentifier (LIdentifier "forAll") = False
-          isIdentifier (LIdentifier "exists") = False
-          isIdentifier LIdentifier{} = True
-          isIdentifier _ = False
+-- identifierText :: Parser T.Text
+-- identifierText = do
+--     LIdentifier i <- satisfyT isIdentifier
+--     return i
+--     where 
+--           isIdentifier (LIdentifier "forAll") = False
+--           isIdentifier (LIdentifier "exists") = False
+--           isIdentifier LIdentifier{} = True
+--           isIdentifier _ = False
 
-satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
-satisfyT predicate = token nextPos testTok
-    where
-        testTok :: LexemePos -> Either [ErrorItem] Lexeme
-        testTok (LexemePos tok _ _) = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
-        nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
-        nextPos _ _ (LexemePos _ _ pos) = pos
+-- satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
+-- satisfyT predicate = token nextPos testTok
+--     where
+--         testTok :: LexemePos -> Either [ErrorItem String] Lexeme
+--         testTok (LexemePos tok _ _) = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
+--         nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
+--         nextPos _ _ (LexemePos _ _ pos) = pos
 
-satisfyL :: forall a . (Lexeme -> Maybe (Parser a)) -> Parser a
-satisfyL predicate = do
-    p <- token nextPos testTok
-    p
-    where
-        testTok :: LexemePos -> Either [ErrorItem] (Parser a)
-        testTok (LexemePos tok _ _) =
-            -- trace ("satisfyL: " ++ show pos ++ "\t" ++ show tok) $
-            case predicate tok of
-                Nothing  -> Left [Unexpected (showToken tok)]
-                Just res -> Right res
+-- satisfyL :: forall a . (Lexeme -> Maybe (Parser a)) -> Parser a
+-- satisfyL predicate = do
+--     p <- token nextPos testTok
+--     p
+--     where
+--         testTok :: LexemePos -> Either [ErrorItem String] (Parser a)
+--         testTok (LexemePos tok _ _) =
+--             -- trace ("satisfyL: " ++ show pos ++ "\t" ++ show tok) $
+--             case predicate tok of
+--                 Nothing  -> Left [Unexpected (showToken tok)]
+--                 Just res -> Right res
 
-        nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
-        nextPos _ _ (LexemePos _ _ pos) = pos
+--         nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
+--         nextPos _ _ (LexemePos _ _ pos) = pos
 
-integer :: Parser Integer
-integer = do
-    LIntLiteral i <- satisfyT isInt
-    return i
-    where isInt LIntLiteral {} = True
-          isInt _ = False
+-- integer :: Parser Integer
+-- integer = do
+--     LIntLiteral i <- satisfyT isInt
+--     return i
+--     where isInt LIntLiteral {} = True
+--           isInt _ = False
 
--- parse a comma separated list of things. can be 0 things.
-commaSeparated0 :: Parser a -> Parser [a]
-commaSeparated0 p = sepEndBy p comma
+-- -- parse a comma separated list of things. can be 0 things.
+-- commaSeparated0 :: Parser a -> Parser [a]
+-- commaSeparated0 p = sepEndBy p comma
 
--- parse a comma separated list of things. has to be at least 1 thing.
-commaSeparated :: Parser a -> Parser [a]
-commaSeparated p = sepEndBy1 p comma
+-- -- parse a comma separated list of things. has to be at least 1 thing.
+-- commaSeparated :: Parser a -> Parser [a]
+-- commaSeparated p = sepEndBy1 p comma
 
-comma :: Parser ()
-comma = lexeme L_Comma <?> "comma"
+-- comma :: Parser ()
+-- comma = lexeme L_Comma <?> "comma"
 
-dot :: Parser ()
-dot = lexeme L_Dot <?> "dot"
+-- dot :: Parser ()
+-- dot = lexeme L_Dot <?> "dot"
 
-dotdot :: Parser ()
-dotdot = (dot >> dot) <?> ".."
+-- dotdot :: Parser ()
+-- dotdot = (dot >> dot) <?> ".."
 
-colon :: Parser ()
-colon = lexeme L_Colon <?> "colon"
+-- colon :: Parser ()
+-- colon = lexeme L_Colon <?> "colon"
 
 
--- parses a specified number of elements separated by the given separator
-countSep :: Int -> Parser a -> Parser sep -> Parser [a]
-countSep 1 p _ = (:[]) <$> p
-countSep i p separator | i > 1 = (:) <$> (p <* separator) <*> countSep (i-1) p separator
-countSep _ _ _ = return []
+-- -- parses a specified number of elements separated by the given separator
+-- countSep :: Int -> Parser a -> Parser sep -> Parser [a]
+-- countSep 1 p _ = (:[]) <$> p
+-- countSep i p separator | i > 1 = (:) <$> (p <* separator) <*> countSep (i-1) p separator
+-- countSep _ _ _ = return []
 
--- parses at least a given number of elements separated by the given separator
-countSepAtLeast :: Int -> Parser a -> Parser sep -> Parser [a]
-countSepAtLeast i p separator = (++) <$> countSep i p separator <*> many (separator *> p)
+-- -- parses at least a given number of elements separated by the given separator
+-- countSepAtLeast :: Int -> Parser a -> Parser sep -> Parser [a]
+-- countSepAtLeast i p separator = (++) <$> countSep i p separator <*> many (separator *> p)
 
-betweenTicks :: Parser a -> Parser a
-betweenTicks = between (lexeme L_BackTick) (lexeme L_BackTick)
+-- betweenTicks :: Parser a -> Parser a
+-- betweenTicks = between (lexeme L_BackTick) (lexeme L_BackTick)
 
-parens :: Parser a -> Parser a
-parens = between (lexeme L_OpenParen) (lexeme L_CloseParen)
+-- parens :: Parser a -> Parser a
+-- parens = between (lexeme L_OpenParen) (lexeme L_CloseParen)
 
-braces :: Parser a -> Parser a
-braces = between (lexeme L_OpenCurly) (lexeme L_CloseCurly)
+-- braces :: Parser a -> Parser a
+-- braces = between (lexeme L_OpenCurly) (lexeme L_CloseCurly)
 
-brackets :: Parser a -> Parser a
-brackets = between (lexeme L_OpenBracket) (lexeme L_CloseBracket)
+-- brackets :: Parser a -> Parser a
+-- brackets = between (lexeme L_OpenBracket) (lexeme L_CloseBracket)
 
-lexeme :: Lexeme -> Parser ()
-lexeme l = void (satisfyT (l==)) <?> show (lexemeFace l)
+-- lexeme :: Lexeme -> Parser ()
+-- lexeme l = void (satisfyT (l==)) <?> show (lexemeFace l)
 
-arrowedPair :: Parser a -> Parser (a,a)
-arrowedPair p = do
-    i <- p
-    lexeme L_LongArrow
-    j <- p
-    return (i,j)
+-- arrowedPair :: Parser a -> Parser (a,a)
+-- arrowedPair p = do
+--     i <- p
+--     lexeme L_LongArrow
+--     j <- p
+--     return (i,j)
 
 inCompleteFile :: Parser a -> Parser a
 inCompleteFile parser = do
