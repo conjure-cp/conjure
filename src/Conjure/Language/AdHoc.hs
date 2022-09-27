@@ -99,8 +99,8 @@ noToMiniZinc a = userErr1 $ vcat
     ]
 
 class SimpleJSON a where
-    toSimpleJSON :: MonadUserError m => a -> m JSON.Value
-    fromSimpleJSON :: MonadUserError m => Type -> JSON.Value -> m a
+    toSimpleJSON :: (MonadFail m,MonadUserError m) => a -> m JSON.Value
+    fromSimpleJSON ::(MonadFail m, MonadUserError m) => Type -> JSON.Value -> m a
 
 instance SimpleJSON Integer where
     toSimpleJSON = return . toJSON

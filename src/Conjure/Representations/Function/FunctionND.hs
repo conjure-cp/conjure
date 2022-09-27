@@ -60,7 +60,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
             let
                 kRange = case innerDomainFr of
-                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                        DomainTuple ts  -> map fromInt [1 .. genericLength ts] :: [Constant]
                         DomainRecord rs -> map (fromName . fst) rs
                         _ -> bug $ vcat [ "FunctionNDPartial.structuralCons"
                                         , "innerDomainFr:" <+> pretty innerDomainFr
@@ -255,6 +255,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
+
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
 viewAsDomainTuple (DomainTuple doms) = Just doms

@@ -217,8 +217,8 @@ refersTo _ _               = False
 nameFromAbstractPattern :: (MonadFail m) => AbstractPattern -> m Name
 nameFromAbstractPattern a = case namesFromAbstractPattern a of
                                  [n] -> pure n
-                                 []  -> fail "[nameFromAbstractPattern] no names in abstract pattern"
-                                 _   -> fail "[nameFromAbstractPattern] more than one name in abstract pattern"
+                                 []  -> failDoc "[nameFromAbstractPattern] no names in abstract pattern"
+                                 _   -> failDoc "[nameFromAbstractPattern] more than one name in abstract pattern"
 
 -- | Get the list of names from an abstract pattern.
 namesFromAbstractPattern :: AbstractPattern -> [Name]

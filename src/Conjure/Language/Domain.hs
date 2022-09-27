@@ -472,7 +472,7 @@ getMaxFrom_SizeAttr :: MonadFail m => SizeAttr a -> m a
 getMaxFrom_SizeAttr (SizeAttr_Size n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MaxSize n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MinMaxSize _ n) = return n
-getMaxFrom_SizeAttr _ = fail "getMaxFrom_SizeAttr"
+getMaxFrom_SizeAttr _ = failDoc "getMaxFrom_SizeAttr"
 
 intersectSizeAttr :: SizeAttr a -> SizeAttr a -> SizeAttr a
 intersectSizeAttr SizeAttr_None s = s
@@ -518,7 +518,7 @@ instance Pretty a => Pretty (OccurAttr a) where
 getMaxFrom_OccurAttr :: MonadFail m => OccurAttr a -> m a
 getMaxFrom_OccurAttr (OccurAttr_MaxOccur n) = return n
 getMaxFrom_OccurAttr (OccurAttr_MinMaxOccur _ n) = return n
-getMaxFrom_OccurAttr _ = fail "getMaxFrom_OccurAttr"
+getMaxFrom_OccurAttr _ = failDoc "getMaxFrom_OccurAttr"
 
 
 data FunctionAttr x

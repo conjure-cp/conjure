@@ -2,6 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+
 module Conjure.UI.TypeScript ( tsDef ) where
 
 import Conjure.Prelude hiding ( (<>) )
@@ -14,7 +15,7 @@ import Data.Aeson.Types ( defaultOptions )
 import Data.Aeson.TypeScript.TH
 
 
-deriveTypeScript defaultOptions ''AbstractLiteral
+deriveTypeScript defaultOptions ''AbstractLiteral 
 deriveTypeScript defaultOptions ''AbstractPattern
 deriveTypeScript defaultOptions ''AttrName
 deriveTypeScript defaultOptions ''BinaryRelationAttr

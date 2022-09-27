@@ -63,6 +63,7 @@ readModelFromStdin = do
 readParamJSON ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
+    MonadFail m =>
     MonadUserError m =>
     MonadLog m =>
     Model -> FilePath -> m Model
@@ -176,6 +177,7 @@ onlyPreamble
 
 
 writeModel ::
+    MonadFail m =>
     MonadIO m =>
     MonadUserError m =>
     Int ->
@@ -221,6 +223,7 @@ writeModel _ _ _ _ = bug "writeModels"
 
 
 writeModels ::
+    MonadFail m =>
     MonadIO m =>
     MonadUserError m =>
     Int ->

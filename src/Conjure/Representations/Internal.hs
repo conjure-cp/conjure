@@ -41,24 +41,24 @@ data Representation (m :: * -> *) = Representation
     , rSymmetryOrdering :: TypeOf_SymmetryOrdering m
     }
 
-type TypeOf_ReprCheck (m :: * -> *) = (MonadFail m) => 
+type TypeOf_ReprCheck (m :: * -> *) = 
        forall x . (Data x, Pretty x, ExpressionLike x)
     => (Domain () x -> m [DomainX x])               -- other checkers for inner domains
     -> Domain () x                                  -- this domain
     -> m [DomainX x]                                -- with all repr options
 
-type TypeOf_DownD (m :: * -> *) = (MonadFail m) => 
+type TypeOf_DownD (m :: * -> *) = 
                 (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
 
-type TypeOf_SymmetryOrdering (m :: * -> *) = (MonadFail m) => 
+type TypeOf_SymmetryOrdering (m :: * -> *) = 
        ((Expression -> m [Expression]) -> Expression -> DomainX Expression -> m Expression) -- inner S.O.
     -> (Expression -> m [Expression])               -- general downX1
     -> Expression                                   -- this as an expression
     -> DomainX Expression                           -- name and domain
     -> m Expression                                 -- output, of type [int]
 
-type TypeOf_Structural (m :: * -> *) = (MonadFail m) => 
+type TypeOf_Structural (m :: * -> *) = 
        (DomainX Expression -> m (Expression -> m [Expression]))
                                                     -- other structural constraints for inner domains
     -> (Expression -> m [Expression])               -- general downX1
@@ -67,11 +67,11 @@ type TypeOf_Structural (m :: * -> *) = (MonadFail m) =>
           -> m [Expression]                         -- structural constraints
          )
 
-type TypeOf_DownC (m :: * -> *) = (MonadFail m) => 
+type TypeOf_DownC (m :: * -> *) = 
                  (Name, DomainC, Constant)          -- the input name, domain and constant
     -> m (Maybe [(Name, DomainC, Constant)])        -- the outputs names, domains, and constants
 
-type TypeOf_Up (m :: * -> *) = (MonadFail m) => 
+type TypeOf_Up (m :: * -> *) = 
         [(Name, Constant)] ->                       -- all known constants, representing a solution at the low level
         (Name, DomainC) ->                          -- the name and domain we are working on
         m (Name, Constant)                          -- the output constant, at the high level

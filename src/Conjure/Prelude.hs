@@ -4,6 +4,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 
 
 module Conjure.Prelude
@@ -95,6 +96,8 @@ import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
 import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
+
+import Control.Monad.Fail 
 import Control.Arrow                as X ( first, second, (***), (&&&) )
 import Control.Category             as X ( (<<<), (>>>) )
 
