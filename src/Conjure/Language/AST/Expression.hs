@@ -6,7 +6,7 @@ import Conjure.Language.AST.Syntax
 
 parseExpression :: Parser ExpressionNode
 parseExpression = do
-        IntLiteral . RealToken <$> intLiteral
+        Literal . IntLiteral . RealToken <$> intLiteral
 
 parseExpressionStrict :: Parser ExpressionNode --can fail
 parseExpressionStrict  = do

@@ -145,12 +145,65 @@ newtype NameNode = NameNode LToken
 
 --Expressions
 data ExpressionNode =
-                    IntLiteral LToken
-                    | BinaryOpNode ExpressionNode LToken ExpressionNode
-                    | UnaryPrefixOpNode LToken ExpressionNode
+                        Literal LiteralNode
+                    |   IdentifierNode NameNode
+                    |   QuantificationExpr QuantificationExpressionNode
+                    |   ComprehensionExpr ComprehensionExpressionNode
+                    |   OperatorExpressionNode OperatorExpressionNode
                     | MissingExpressionNode LToken
     deriving (Show)
 
+newtype ShortTuple = ShortTuple (ListNode ExpressionNode)   deriving (Show)
+data LongTuple = LongTuple LToken (ListNode ExpressionNode) deriving (Show)   
+data LiteralNode = 
+        IntLiteral LToken
+    |   BoolLiteral LToken
+    |   MatrixLiteral MatrixLiteralNode
+    |   TupleLiteralNode LongTuple
+    |   TupleLiteralNodeShort ShortTuple
+    |   RecordLiteral (ListNode RecordMemberNode)
+    -- |   VariantLiteral VariantLiteralNode special case of record handled by type checker
+    |   SetLiteral (ListNode ExpressionNode)
+    |   MSetLiteral LToken (ListNode ExpressionNode)
+    |   FunctionLiteral LToken (ListNode ArrowPairNode)
+    |   SequenceLiteral LToken (ListNode ExpressionNode)
+    |   RelationLiteral LToken (ListNode RelationElemNode)
+    |   PartitionLiteral LToken (ListNode PartitionElemNode)
+    deriving (Show)
+
+data MatrixLiteralNode = 
+        MatrixLiteralExplicitDomain (ListNode ExpressionNode) LToken DomainNode
+    |   MatrixLiteralImplicitDomain (ListNode ExpressionNode)
+    deriving (Show)
+
+data RecordMemberNode = RecordMemberNode NameNode LToken ExpressionNode
+    deriving (Show)
+
+data ArrowPairNode = ArrowPairNode ExpressionNode LToken ExpressionNode
+    deriving (Show)
+
+data RelationElemNode = RelationElemNodeLabeled ShortTuple
+    | RelationElemNodeShort ShortTuple
+    deriving (Show)
+
+data PartitionElemNode = PartitionElemNode (ListNode ExpressionNode)
+    deriving (Show)
+
+data QuantificationExpressionNode = QuantificationExpressionNode
+    LToken
+    (Sequence QuantificationPattern)
+    
+    deriving (Show)
+
+data QuantificationPattern = QuantificationPattern
+    deriving (Show)
+data ComprehensionExpressionNode = 
+    ComprehensionExprv
+    deriving (Show)
+
+data OperatorExpressionNode = 
+    OperatorExpressionNodev
+    deriving (Show)
 
 
 
