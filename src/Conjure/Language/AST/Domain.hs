@@ -1,58 +1,60 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use <$>" #-}
 module Conjure.Language.AST.Domain where
 
-import Conjure.Prelude
-import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Expression
-import Text.Megaparsec
-import Conjure.Language.NewLexer hiding (Parser)
+import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Syntax
+import Conjure.Language.NewLexer hiding (Parser)
+import Conjure.Prelude
+import Text.Megaparsec
 
 parseDomain :: Parser DomainNode
-parseDomain =  do
-        choice [
-                BoolDomainNode <$> need L_bool,
-                parseIntDomain,
-                parseTuple,
-                parseRecord,
-                parseVariant,
-                parseMatrix,
-                parseSet,
-                parseMSet,
-                parseFunction,
-                parseSequenceDomain,
-                parseRelation,
-                parsePartition,
-                parseEnumDomain,
-                parseMissingDomain
-                ]
-parseIntDomain  :: Parser DomainNode
-parseIntDomain  = do
+parseDomain = do
+    choice
+        [ BoolDomainNode <$> need L_bool
+        , parseIntDomain
+        , parseTuple
+        , parseRecord
+        , parseVariant
+        , parseMatrix
+        , parseSet
+        , parseMSet
+        , parseFunction
+        , parseSequenceDomain
+        , parseRelation
+        , parsePartition
+        , parseEnumDomain
+        , parseMissingDomain
+        ]
+
+parseIntDomain :: Parser DomainNode
+parseIntDomain = do
     lInt <- need L_int
     ranges <- parenList $ commaList parseRange
     return $ RangedIntDomainNode lInt ranges
 
-parseTuple      :: Parser DomainNode
-parseTuple      = do
+parseTuple :: Parser DomainNode
+parseTuple = do
     lTuple <- need L_tuple
     members <- parenList $ commaList parseDomain
     return $ TupleDomainNode lTuple members
 
-parseRecord     :: Parser DomainNode
-parseRecord     = do
+parseRecord :: Parser DomainNode
+parseRecord = do
     lRecord <- need L_record
     members <- curlyBracketList $ commaList parseNameDomain
     return $ RecordDomainNode lRecord members
 
-parseVariant    :: Parser DomainNode
-parseVariant    = do
+parseVariant :: Parser DomainNode
+parseVariant = do
     lVariant <- need L_variant
     members <- curlyBracketList $ commaList parseNameDomain
     return $ VariantDomainNode lVariant members
 
-parseMatrix     :: Parser DomainNode
-parseMatrix     = do
+parseMatrix :: Parser DomainNode
+parseMatrix = do
     lMatrix <- need L_matrix
     lIndexed <- want L_indexed
     lBy <- want L_by
@@ -61,24 +63,24 @@ parseMatrix     = do
     domain <- parseDomain
     return $ MatrixDomainNode lMatrix lIndexed lBy members lOf domain
 
-parseSet        :: Parser DomainNode
-parseSet        = do
+parseSet :: Parser DomainNode
+parseSet = do
     lSet <- need L_set
     attributes <- parenList $ commaList parseAttribute
     lOf <- want L_of
     domain <- parseDomain
     return $ SetDomainNode lSet attributes lOf domain
 
-parseMSet       :: Parser DomainNode
-parseMSet       = do
+parseMSet :: Parser DomainNode
+parseMSet = do
     lMSet <- need L_mset
     attributes <- parenList $ commaList parseAttribute
     lOf <- want L_of
     domain <- parseDomain
     return $ MSetDomainNode lMSet attributes lOf domain
 
-parseFunction   :: Parser DomainNode
-parseFunction   = do
+parseFunction :: Parser DomainNode
+parseFunction = do
     lFunction <- need L_function
     attributes <- parenList $ commaList parseAttribute
     fromDomain <- parseDomain
@@ -86,24 +88,24 @@ parseFunction   = do
     toDomain <- parseDomain
     return $ FunctionDomainNode lFunction attributes fromDomain arrow toDomain
 
-parseSequenceDomain   :: Parser DomainNode
-parseSequenceDomain   = do
+parseSequenceDomain :: Parser DomainNode
+parseSequenceDomain = do
     lSequence <- need L_sequence
     attributes <- parenList $ commaList parseAttribute
     lOf <- want L_of
     domain <- parseDomain
     return $ SequenceDomainNode lSequence attributes lOf domain
 
-parseRelation   :: Parser DomainNode
-parseRelation   = do
+parseRelation :: Parser DomainNode
+parseRelation = do
     lRelation <- need L_relation
     attributes <- parenList $ commaList parseAttribute
     lOf <- want L_of
     domains <- parenList $ parseSequence L_Times parseDomain
     return $ RelationDomainNode lRelation attributes lOf domains
 
-parsePartition  :: Parser DomainNode
-parsePartition  = do
+parsePartition :: Parser DomainNode
+parsePartition = do
     lPartition <- need L_partition
     attributes <- parenList $ commaList parseAttribute
     lFrom <- want L_from
@@ -113,10 +115,10 @@ parsePartition  = do
 parseEnumDomain :: Parser DomainNode
 parseEnumDomain = do
     name <- parseIdentifierStrict
-    (RangedEnumNode name <$> try (parenList (commaList parseRange))) 
+    (RangedEnumNode name <$> try (parenList (commaList parseRange)))
         <|> return (EnumDomainNode name)
 
---Util
+-- Util
 parseNameDomain :: Parser NamedDomainNode
 parseNameDomain = do
     name <- parseIdentifierStrict
@@ -125,18 +127,17 @@ parseNameDomain = do
     return $ NameDomainNode name lColon domain
 
 parseRange :: Parser RangeNode
-parseRange = do
-    lExpr <- optional parseExpressionStrict
-    dots <- parseDoubleDot
-    rExpr <- optional parseExpressionStrict
-    case (lExpr,rExpr) of
-        (Nothing,Nothing) ->  return $ OpenRangeNode dots
-        (Just l , Nothing) -> return $ RightUnboundedRangeNode l dots
-        (Nothing, Just r) ->  return $ LeftUnboundedRangeNode dots r
-        (Just l , Just r) ->  return $ BoundedRangeNode l dots r 
-    <|> SingleRangeNode <$> parseExpression
-    
-
+parseRange =
+    do
+        lExpr <- optional parseExpressionStrict
+        dots <- parseDoubleDot
+        rExpr <- optional parseExpressionStrict
+        case (lExpr, rExpr) of
+            (Nothing, Nothing) -> return $ OpenRangeNode dots
+            (Just l, Nothing) -> return $ RightUnboundedRangeNode l dots
+            (Nothing, Just r) -> return $ LeftUnboundedRangeNode dots r
+            (Just l, Just r) -> return $ BoundedRangeNode l dots r
+        <|> SingleRangeNode <$> parseExpression
 
 parseDoubleDot :: Parser DoubleDotNode
 parseDoubleDot = do
@@ -146,7 +147,7 @@ parseDoubleDot = do
 
 parseAttribute :: Parser AttributeNode
 parseAttribute = do
-    name <- parseIdentifier --TODO This is wrong
+    name <- parseIdentifier -- TODO This is wrong
     NamedExpressionAttribute name <$> parseExpression
         <|> return (NamedAttributeNode name)
 
