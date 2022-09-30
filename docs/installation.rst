@@ -57,3 +57,21 @@ Savile Row can be downloaded from `its website <http://savilerow.cs.st-andrews.a
 You do not need to download Savile Row separately when you compile Conjure from source.
 An up-to-date version of Savile Row is also copied next to the Conjure executable.
 
+
+Compiling the documentation
+---------------------------
+
+The Makefile target `docs` builds the manual in PDF and HTML format.
+This requires some Python packages to already be installed.
+With a recent Python 3 the following should work to install the needed Python dependencies:
+
+.. code-block:: bash
+
+    pip3 install sphinx-rtd-theme sphinxcontrib-bibtex
+
+Without specifying versions this currently installs Sphinx-5.x and recent versions of related dependencies.
+However, ``sphinx-rtd-theme`` forces ``opendoc < 0.18`` rather than a more recent version.
+Some packages used by ``sphinxcontrib-bibtex`` also seem to require an older version ``opendoc`` but do not explicitly declare this dependency, and just running ``pip3 install sphinxcontrib-bibtex`` will install packages which cannot successfully build the PDF documentation.
+
+The PDF target needs a fairly comprehensive TeX installation, with many styles and fonts beyond a minimal installation.
+The default packages installed by MacTeX should work on macOS.

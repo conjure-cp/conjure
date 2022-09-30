@@ -27,13 +27,30 @@ import qualified Data.HashMap.Strict as M
 
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
-removeEnumsFromModel :: (MonadFail m, MonadLog m, MonadUserError m) => Model -> m Model
+removeEnumsFromModel ::
+    MonadFail m =>
+    MonadLog m =>
+    MonadUserError m =>
+    Model -> m Model
 removeEnumsFromModel =
+    preCheckForNameReuse >=>
     removeEnumsFromModel_LettingEnums >=>
     removeEnumsFromModel_GivenEnums   >=>
     checkEnums
 
     where
+
+        -- check if names defined as part of enumerated types are later used as names of top-level or quantified declarations
+        preCheckForNameReuse model = do
+            let enumNames = concat [ names | Declaration (LettingDomainDefnEnum _ names) <- mStatements model ]
+            let redefinedTopLevel = [ name | Declaration (FindOrGiven _ name _) <- mStatements model, name `elem` enumNames ]
+            let redefinedQuantified = [ name | Generator gen <- universeBi (mStatements model), name@Name{} <- universeBi gen, name `elem` enumNames ]
+            let redefined = redefinedTopLevel ++ redefinedQuantified
+            unless (null redefined) $ userErr1 $ vcat
+                [ "Members of an enum domain are later redefined as top-level or quantified variables."
+                , "Check:" <+> prettyList id "," redefined
+                ]
+            return model
 
         removeEnumsFromModel_LettingEnums model = do
             (statements', ( enumDomainNames :: [(Name, Domain () Expression)]

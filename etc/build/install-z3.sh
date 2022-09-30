@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ZSH_VERSION=4.11.2
+
 source "download.sh" 2> /dev/null               # if called from the script dir
 source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
 
@@ -14,10 +16,12 @@ rm -rf tmp-install-z3
 mkdir -p tmp-install-z3
 pushd tmp-install-z3
 
-download https://github.com/Z3Prover/z3/archive/z3-4.8.8.tar.gz
-tar xzf z3-4.8.8.tar.gz
-cd z3-z3-4.8.8
-python scripts/mk_make.py --prefix=${BIN_DIR}
+download https://github.com/Z3Prover/z3/archive/z3-$ZSH_VERSION.tar.gz
+tar xzf z3-$ZSH_VERSION.tar.gz
+cd z3-z3-$ZSH_VERSION
+PYTHON=`command -v python 2> /dev/null || true`
+PYTHON=${PYTHON:-python3}
+$PYTHON scripts/mk_make.py --prefix=${BIN_DIR}
 cd build
 make -j${PROCESSES}
 make -j${PROCESSES} install

@@ -1,5 +1,5 @@
 Handcrafting Instance Generators in Essence
-------------------
+-------------------------------------------
 
 *Authors: Joan Espasa Arxer and Christopher Stone*
 
@@ -7,7 +7,7 @@ In modelling it is common to create an abstract model that expects some input pa
 In this tutorial we demonstrate how to use ESSENCE to handcraft a generator of instances that can be used to produce input parameters for a specific model.
 
 Instances for the Knapsack problem
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Here is the model of the Knapsack Problem from (<link to other tutorial>) - knapsack.essence
 
 .. code-block:: essence

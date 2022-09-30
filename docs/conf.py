@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinxcontrib.bibtex',
 ]
+bibtex_bibfiles = ['refs.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -51,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Conjure'
-copyright = u'2009-2019, Conjure developers'
+copyright = u'2009–2022, Conjure developers'
 author = u'Özgür Akgün, Saad Attieh, Juliana Bowles, Nguyen Dang, Joan Espasa Arxer, Jordina Francès de Mas, Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, Ian Miguel, András Salamon and Christopher Stone'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -68,7 +69,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+#language = None
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -383,6 +384,6 @@ inline_highlight_literals = True
 
 def setup(sphinx):
     from BNFLexer import BNFLexer
-    sphinx.add_lexer("bnf", BNFLexer())
+    sphinx.add_lexer("bnf", BNFLexer)
     from EssenceLexer import EssenceLexer
-    sphinx.add_lexer("essence", EssenceLexer())
+    sphinx.add_lexer("essence", EssenceLexer)

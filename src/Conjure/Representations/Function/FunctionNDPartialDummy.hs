@@ -268,28 +268,6 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            [flags, values] <- downX1 inp
-            Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
-            (iPat, i) <- quantifiedVar
-            
-            -- setting up the quantification
-            let kRange = case innerDomainFr of
-                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
-                    DomainRecord rs -> map (fromName . fst) rs
-                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
-                                    , "indexDomain:" <+> pretty innerDomainFr
-                                    ]
-                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
-                flagsIndexed = make opMatrixIndexing flags toIndex
-                valuesIndexed = make opMatrixIndexing values toIndex
-
-            soValues <- innerSO downX1 valuesIndexed innerDomainTo
-
-            return $ 
-                Comprehension
-                    [essence| ( -&flagsIndexed
-                              , &soValues
-                              )
-                            |]
-                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
-
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix _innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            innerSO downX1 values innerDomainTo
