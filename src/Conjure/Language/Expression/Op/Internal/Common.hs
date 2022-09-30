@@ -236,6 +236,8 @@ operators =
     , ( BinaryOp L_TildeGeq     FNone   ,  400 )
     , ( UnaryPrefix L_Minus           , 2000 )
     , ( UnaryPrefix L_ExclamationMark , 2000 )
+    , ( UnaryPrefix L_Minus           , 2000 )
+    , ( UnaryPrefix L_ExclamationMark , 2000 )
     ]
 
 functionals :: [Lexeme]

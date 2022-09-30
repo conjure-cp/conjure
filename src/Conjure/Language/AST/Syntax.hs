@@ -1,3 +1,4 @@
+
 module Conjure.Language.AST.Syntax where
 
 import Conjure.Language.NewLexer (ETok)
@@ -7,10 +8,17 @@ data LToken
     = RealToken ETok
     | MissingToken ETok
     | SkippedToken ETok
-    deriving (Show, Eq, Ord)
+    deriving (Eq, Ord)
+
+instance Show LToken where
+    show (RealToken x) = show x
+    show (MissingToken x) = "MISSING[" ++ show x ++ "]"
+    show (SkippedToken x) = "SKIPPED[" ++ show x ++ "]"
 
 newtype ProgramTree = ProgramTree [StatementNode]
-    deriving (Show)
+
+instance Show ProgramTree where
+    show (ProgramTree  x) = intercalate "\n" (map show x)
 
 data StatementNode
     = Declaration DeclarationStatementNode
@@ -158,13 +166,20 @@ data ExpressionNode
     | QuantificationExpr QuantificationExpressionNode
     | ComprehensionExpr ComprehensionExpressionNode
     | OperatorExpressionNode OperatorExpressionNode
+    | ParenExpression ParenExpressionNode
+    | AbsExpression ParenExpressionNode
+    | FunctionalApplicationNode LToken (ListNode ExpressionNode)
     | MissingExpressionNode LToken
+    deriving (Show)
+
+data ParenExpressionNode = ParenExpressionNode LToken ExpressionNode LToken
     deriving (Show)
 
 newtype ShortTuple = ShortTuple (ListNode ExpressionNode) deriving (Show)
 
 data LongTuple = LongTuple LToken (ListNode ExpressionNode) deriving (Show)
 
+-- Literals
 data LiteralNode
     = IntLiteral LToken
     | BoolLiteral LToken
@@ -205,27 +220,47 @@ data QuantificationExpressionNode
         LToken
         (Sequence QuantificationPattern)
         LToken
-        StatementNode
+        ExpressionNode
     deriving (Show) -- MAYBE?
 
-data QuantificationPattern = QuantificationPattern
+data QuantificationPattern =
+    QuantificationPattern ExpressionNode
     deriving (Show)
 
 data ComprehensionExpressionNode
-    = ComprehensionExprv
+    = ComprehensionExpressionNode
+        LToken
+        ExpressionNode
         LToken
         (Sequence ComprehensionBodyNode)
+        LToken
     deriving (Show)
 
 data ComprehensionBodyNode
-    = CompBodyExpression ExpressionNode
+    = CompBodyCondition ExpressionNode
     | CompBodyDomain NamedDomainNode
+    | CompBodyLettingNode LToken NameNode LToken ExpressionNode
     deriving (Show)
 
 data OperatorExpressionNode
-    = OperatorExpressionNodev
+    = PostfixOpNode ExpressionNode PostfixOpNode
+    | PrefixOpNode LToken ExpressionNode
+    | BinaryOpNode ExpressionNode LToken ExpressionNode
     deriving (Show)
 
+
+data PostfixOpNode
+    = IndexedNode LToken IndexerNode LToken
+    | OpFactorial  LToken
+    | ApplicationNode (ListNode ExpressionNode)
+    deriving (Show)
+
+-- data FunctionApplicationNode 
+--     = FunctionApplicationNode LToken (ListNode ExpressionNode) 
+
+data IndexerNode
+    = Indexer
+    deriving (Show)
 data ListNode itemType = ListNode
     { lOpBracket :: LToken
     , items :: Sequence itemType

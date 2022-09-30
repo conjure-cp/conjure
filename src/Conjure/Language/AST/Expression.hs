@@ -4,16 +4,16 @@ module Conjure.Language.AST.Expression where
 
 import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Syntax
-import Conjure.Language.NewLexer hiding (Parser)
-import Conjure.Prelude hiding (many)
+import Conjure.Language.Lexemes
+import Conjure.Prelude hiding (many,some)
 import Text.Megaparsec
 
+import Control.Monad.Combinators.Expr (Operator (..), makeExprParser)
+
+import Conjure.Language.Expression.Op.Internal.Common
+
 parseExpression :: Parser ExpressionNode
-parseExpression = do
-    choice [
-        Literal <$> parseLiteral
-        ]
-    
+parseExpression = do parseOperator
 
 parseExpressionStrict :: Parser ExpressionNode -- can fail
 parseExpressionStrict = do
@@ -21,6 +21,31 @@ parseExpressionStrict = do
     case expr of
         MissingExpressionNode _ -> empty
         _ -> return expr
+
+parseAtomicExpression :: Parser ExpressionNode
+parseAtomicExpression = do
+    choice [
+            Literal <$> parseLiteral,
+            parseFunction,
+            IdentifierNode <$> parseIdentifierStrict,
+            ParenExpression <$> parseParenExpression parensPair,
+            AbsExpression <$> parseParenExpression (L_Bar,L_Bar),
+            QuantificationExpr <$> parseQuantificationStatement,
+            ComprehensionExpr <$> parseComprehension
+            ]
+    -- mPostfix <- optional parsePostfixOp
+    -- case mPostfix of
+    --   Nothing -> return e
+    --   Just f -> return $ f e
+
+parseParenExpression :: (Lexeme,Lexeme) -> Parser ParenExpressionNode
+parseParenExpression (open,close)= do
+    lParen <- need open
+    body <- parseExpression
+    rParen <- want close
+    return $ ParenExpressionNode lParen body rParen
+
+
 
 parseLiteral :: Parser LiteralNode
 parseLiteral =
@@ -73,14 +98,17 @@ parseRecordMember = do
     return $ RecordMemberNode name lEqual val
 
 parseSetLiteral :: Parser LiteralNode
-parseSetLiteral = SetLiteral <$> curlyBracketList (commaList parseExpression)
-    
+parseSetLiteral = do -- cant just recycle list as it does not require first char
+    lOpen <- need L_OpenCurly
+    members <- commaList parseExpression
+    lClose <- want L_CloseCurly
+    return $ SetLiteral (ListNode lOpen members lClose)
 
 parseMSetLiteral :: Parser LiteralNode
-parseMSetLiteral = do 
-    lMSet <- need L_mset 
+parseMSetLiteral = do
+    lMSet <- need L_mset
     members <- parenList (commaList parseExpression)
-    return $ MSetLiteral lMSet members 
+    return $ MSetLiteral lMSet members
 
 parseFunctionLiteral :: Parser LiteralNode
 parseFunctionLiteral = do
@@ -89,20 +117,20 @@ parseFunctionLiteral = do
     return $ FunctionLiteral lFunc args
 
 parseArrowPair :: Parser ArrowPairNode
-parseArrowPair = try $ do 
+parseArrowPair = try $ do
     lhs <- parseExpression
     arrow <- want L_LongArrow
     rhs <- parseExpression
     return $ ArrowPairNode lhs arrow rhs
 
 parseSequenceLiteral :: Parser LiteralNode
-parseSequenceLiteral = do 
+parseSequenceLiteral = do
     lSeq <- need L_sequence
     members <- parenList (commaList parseExpression)
-    return $ SequenceLiteral lSeq members 
+    return $ SequenceLiteral lSeq members
 
 parseRelationLiteral :: Parser LiteralNode
-parseRelationLiteral = do 
+parseRelationLiteral = do
     lRel <- need L_relation
     members <- parenList (commaList parseRelationMember)
     return $ RelationLiteral lRel members
@@ -111,15 +139,283 @@ parseRelationMember :: Parser RelationElemNode
 parseRelationMember = do
     f <- optional $ need L_tuple
     members <- parenList $ commaList parseExpression
-    return $ case f of 
+    return $ case f of
         Nothing -> RelationElemNodeShort $ ShortTuple members
         Just lTup -> RelationElemNodeLabeled $ LongTuple lTup members
 
 parsePartitionLiteral :: Parser LiteralNode
-parsePartitionLiteral = do 
+parsePartitionLiteral = do
     lPartition <- need L_partition
     members <- parenList (commaList parsePartitionElem)
     return $ PartitionLiteral lPartition members
 
 parsePartitionElem :: Parser PartitionElemNode
 parsePartitionElem = PartitionElemNode <$> parenList (commaList parseExpression)
+
+parseQuantificationStatement :: Parser QuantificationExpressionNode
+parseQuantificationStatement = do
+    lType <- need L_branching --TODO addNew
+    terms <- commaList (QuantificationPattern <$> parseExpression)
+    lDot <- want L_Dot
+    expr <- parseExpression
+    return $ QuantificationExpressionNode lType terms lDot expr
+
+
+parseComprehension :: Parser ComprehensionExpressionNode
+parseComprehension = do
+    lOpen <- need L_OpenBracket
+    gens <- parseExpression
+    lBar <- want L_Bar
+    conditions <- commaList parseComprehensionConditions
+    lClose <- want L_CloseBracket
+    return $ ComprehensionExpressionNode lOpen gens lBar conditions lClose
+
+parseComprehensionConditions :: Parser ComprehensionBodyNode
+parseComprehensionConditions = do
+    letting <|> generator <|> condition
+    where
+        letting = do
+            lLetting <- need L_letting
+            v <- parseIdentifier
+            lBe <- want L_be
+            expr <- parseExpression
+            return $ CompBodyLettingNode lLetting v lBe expr
+        generator = try $ do
+            lIdent <- parseIdentifierStrict
+            lColon <- need L_Colon
+            domain <- parseDomain 
+            return $ CompBodyDomain (NameDomainNode lIdent lColon domain)
+        condition = CompBodyCondition <$> parseExpression
+        --TODO look over this, asignment of domains should happen in next stage
+        --Current implementation is hacky
+
+parseOperator :: Parser ExpressionNode
+parseOperator =  makeExprParser parseAtomicExpression operatorTable
+
+parseFunction :: Parser ExpressionNode
+parseFunction = do
+    name <- choice $ map need functionals
+    args <- parenList $ commaList parseExpression
+    return $ FunctionalApplicationNode name args
+
+
+parsePostfixOp :: Parser (ExpressionNode -> ExpressionNode)
+parsePostfixOp = do
+    op <- choice [
+        indexed,
+        factorial,
+        application
+        ]
+    return $  \e -> OperatorExpressionNode $ PostfixOpNode e op
+    where
+        indexed = do
+            lBracket <- need L_OpenBracket
+            indexer <- parseIndexer
+            rBracket <- want L_CloseBracket
+            return $ IndexedNode lBracket indexer rBracket
+        factorial = OpFactorial <$> need L_ExclamationMark
+        application = do
+            lBracket <- need L_OpenParen
+            args <- commaList parseExpression
+            rBracket <- want L_CloseParen
+            return $ ApplicationNode $ ListNode lBracket args rBracket
+
+
+--TODO treat funcitonals differently or actually don't but why
+
+parseIndexer :: Parser IndexerNode
+parseIndexer = return Indexer
+
+operatorTable :: [[Operator Parser ExpressionNode]]
+operatorTable = let operatorsGrouped = operators
+                            |> sortBy  (\ (_,a) (_,b) -> compare a b )
+                            |> groupBy (\ (_,a) (_,b) -> a == b )
+                            |> reverse
+                in
+                    postfixOps: [ [ case descr of
+                            BinaryOp op FLeft             -> InfixL $ prefixBinary <$> need op
+                            BinaryOp op FNone             -> InfixN $ prefixBinary <$> need op
+                            BinaryOp op FRight            -> InfixR $ prefixBinary <$> need op
+                            UnaryPrefix op           -> Prefix $ prefixUnary <$> need op
+                            -- UnaryPrefix L_ExclamationMark -> Prefix $ prefixBinary--foldr1 (.) <$> some parseUnaryNot
+                            -- UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
+                    | (descr, _) <- operatorsInGroup
+                    ]
+                    | operatorsInGroup <- operatorsGrouped
+                    ]
+
+
+
+prefixBinary :: LToken -> ExpressionNode -> ExpressionNode -> ExpressionNode
+prefixBinary t l = OperatorExpressionNode . BinaryOpNode l t
+
+prefixUnary:: LToken -> ExpressionNode -> ExpressionNode
+prefixUnary l = OperatorExpressionNode . PrefixOpNode l
+
+
+postfixOps :: [Operator Parser ExpressionNode]
+postfixOps = [
+    Postfix $  foldr1 (.) <$> some parsePostfixOp
+    ]
+
+
+
+
+
+
+
+
+
+
+--DOMAINS
+parseDomain :: Parser DomainNode
+parseDomain = do
+    choice
+        [ BoolDomainNode <$> need L_bool
+        , parseIntDomain
+        , parseTuple
+        , parseRecord
+        , parseVariant
+        , parseMatrix
+        , parseSet
+        , parseMSet
+        , parseFunctionDomain
+        , parseSequenceDomain
+        , parseRelation
+        , parsePartition
+        , parseEnumDomain
+        , parseMissingDomain
+        ]
+
+parseIntDomain :: Parser DomainNode
+parseIntDomain = do
+    lInt <- need L_int
+    ranges <- parenList $ commaList parseRange
+    return $ RangedIntDomainNode lInt ranges
+
+parseTuple :: Parser DomainNode
+parseTuple = do
+    lTuple <- need L_tuple
+    members <- parenList $ commaList parseDomain
+    return $ TupleDomainNode lTuple members
+
+parseRecord :: Parser DomainNode
+parseRecord = do
+    lRecord <- need L_record
+    members <- curlyBracketList $ commaList parseNameDomain
+    return $ RecordDomainNode lRecord members
+
+parseVariant :: Parser DomainNode
+parseVariant = do
+    lVariant <- need L_variant
+    members <- curlyBracketList $ commaList parseNameDomain
+    return $ VariantDomainNode lVariant members
+
+parseMatrix :: Parser DomainNode
+parseMatrix = do
+    lMatrix <- need L_matrix
+    lIndexed <- want L_indexed
+    lBy <- want L_by
+    members <- squareBracketList $ commaList parseDomain
+    lOf <- want L_of
+    domain <- parseDomain
+    return $ MatrixDomainNode lMatrix lIndexed lBy members lOf domain
+
+parseSet :: Parser DomainNode
+parseSet = do
+    lSet <- need L_set
+    attributes <- parenList $ commaList parseAttribute
+    lOf <- want L_of
+    domain <- parseDomain
+    return $ SetDomainNode lSet attributes lOf domain
+
+parseMSet :: Parser DomainNode
+parseMSet = do
+    lMSet <- need L_mset
+    attributes <- parenList $ commaList parseAttribute
+    lOf <- want L_of
+    domain <- parseDomain
+    return $ MSetDomainNode lMSet attributes lOf domain
+
+parseFunctionDomain :: Parser DomainNode
+parseFunctionDomain = do
+    lFunction <- need L_function
+    attributes <- parenList $ commaList parseAttribute
+    fromDomain <- parseDomain
+    arrow <- want L_LongArrow
+    toDomain <- parseDomain
+    return $ FunctionDomainNode lFunction attributes fromDomain arrow toDomain
+
+parseSequenceDomain :: Parser DomainNode
+parseSequenceDomain = do
+    lSequence <- need L_sequence
+    attributes <- parenList $ commaList parseAttribute
+    lOf <- want L_of
+    domain <- parseDomain
+    return $ SequenceDomainNode lSequence attributes lOf domain
+
+parseRelation :: Parser DomainNode
+parseRelation = do
+    lRelation <- need L_relation
+    attributes <- parenList $ commaList parseAttribute
+    lOf <- want L_of
+    domains <- parenList $ parseSequence L_Times parseDomain
+    return $ RelationDomainNode lRelation attributes lOf domains
+
+parsePartition :: Parser DomainNode
+parsePartition = do
+    lPartition <- need L_partition
+    attributes <- parenList $ commaList parseAttribute
+    lFrom <- want L_from
+    domain <- parseDomain
+    return $ PartitionDomainNode lPartition attributes lFrom domain
+
+parseEnumDomain :: Parser DomainNode
+parseEnumDomain = do
+    name <- parseIdentifierStrict
+    brackets <- optional $ parenListStrict (commaList parseRange)
+    case brackets of 
+        Nothing -> return $ EnumDomainNode name
+        Just parens -> return $ RangedEnumNode name parens
+    -- (RangedEnumNode name <$> try (parenList (commaList parseRange)))
+    --     <|> return (EnumDomainNode name)
+
+-- Util
+parseNameDomain :: Parser NamedDomainNode
+parseNameDomain = do
+    name <- parseIdentifierStrict
+    lColon <- want L_Colon
+    domain <- parseDomain
+    return $ NameDomainNode name lColon domain
+
+parseRange :: Parser RangeNode
+parseRange =
+    do
+        lExpr <- optional parseExpressionStrict
+        dots <- parseDoubleDot
+        rExpr <- optional parseExpressionStrict
+        case (lExpr, rExpr) of
+            (Nothing, Nothing) -> return $ OpenRangeNode dots
+            (Just l, Nothing) -> return $ RightUnboundedRangeNode l dots
+            (Nothing, Just r) -> return $ LeftUnboundedRangeNode dots r
+            (Just l, Just r) -> return $ BoundedRangeNode l dots r
+        <|> SingleRangeNode <$> parseExpression
+
+parseDoubleDot :: Parser DoubleDotNode
+parseDoubleDot = do
+    a <- need L_Dot
+    b <- want L_Dot
+    return $ DoubleDotNode a b
+
+parseAttribute :: Parser AttributeNode
+parseAttribute = do
+    name <-  choice $ map need functionAttributes -- TODO This is wrong
+    expr <-  optional parseExpressionStrict 
+    case expr of 
+      Nothing -> return $ NamedAttributeNode (NameNode name)
+      Just en -> return $ NamedExpressionAttribute (NameNode name) en
+
+parseMissingDomain :: Parser DomainNode
+parseMissingDomain = do
+    m <- makeMissing L_domain
+    return $ MissingDomainNode m

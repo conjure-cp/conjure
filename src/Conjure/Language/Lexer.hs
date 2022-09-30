@@ -14,7 +14,7 @@ module Conjure.Language.Lexer
     , lexemeFace
     ) where
 import Conjure.Prelude hiding (some,many)
-
+import Conjure.Language.Lexemes hiding (lexemeFace,mapLexemeToText)
 import Data.Char ( isAlpha, isAlphaNum )
 import Data.Void
 import qualified Data.HashMap.Strict as M
@@ -25,7 +25,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Text.Megaparsec.Char
 
 import Text.Megaparsec --( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
-import Text.Megaparsec.Stream
+import Text.Megaparsec.Stream ()
 
 
 data LexemePos = LexemePos
@@ -34,253 +34,253 @@ data LexemePos = LexemePos
                     SourcePos       -- source position, just after this lexeme, including whitespace after the lexeme
     deriving (Show,Eq, Ord)
 
-data Lexeme
-    = LIntLiteral Integer
-    | LMissingIntLiteral   --helper for missing symbol
-    | LIdentifier T.Text
-    | LMissingIdentifier --helper for missing symbol
-    | LMetaVar T.Text
-    | LMissingMetaVar --helper for missing symbol
-    -- general
-    | L_be
-    | L_from
-    | L_of
-    | L_domain
+-- data Lexeme
+--     = LIntLiteral Integer
+--     | LMissingIntLiteral   --helper for missing symbol
+--     | LIdentifier T.Text
+--     | LMissingIdentifier --helper for missing symbol
+--     | LMetaVar T.Text
+--     | LMissingMetaVar --helper for missing symbol
+--     -- general
+--     | L_be
+--     | L_from
+--     | L_of
+--     | L_domain
 
-    | L_language
-    | L_dim
-    | L_find
-    | L_given
-    | L_letting
-    | L_where
-    | L_such
-    | L_that
-    | L_minimising
-    | L_maximising
-    | L_branching
-    | L_on
-    | L_heuristic
+--     | L_language
+--     | L_dim
+--     | L_find
+--     | L_given
+--     | L_letting
+--     | L_where
+--     | L_such
+--     | L_that
+--     | L_minimising
+--     | L_maximising
+--     | L_branching
+--     | L_on
+--     | L_heuristic
 
-    -- type: boolean
-    | L_bool
-    | L_false
-    | L_true
+--     -- type: boolean
+--     | L_bool
+--     | L_false
+--     | L_true
 
-    -- type: integer
-    | L_int
+--     -- type: integer
+--     | L_int
 
-    -- creating a new type
-    | L_new
-    | L_type
-    | L_enum
+--     -- creating a new type
+--     | L_new
+--     | L_type
+--     | L_enum
 
-    -- type tuple
-    | L_tuple
+--     -- type tuple
+--     | L_tuple
 
-    -- type record
-    | L_record
+--     -- type record
+--     | L_record
 
-    -- type variant
-    | L_variant
-    | L_active
+--     -- type variant
+--     | L_variant
+--     | L_active
 
-    -- type: matrix
-    | L_matrix
-    | L_indexed
-    | L_by
+--     -- type: matrix
+--     | L_matrix
+--     | L_indexed
+--     | L_by
 
-    -- type set
-    | L_set
-    | L_size
-    | L_minSize
-    | L_maxSize
+--     -- type set
+--     | L_set
+--     | L_size
+--     | L_minSize
+--     | L_maxSize
 
-    -- type: mset
-    | L_mset
-    | L_minOccur
-    | L_maxOccur
+--     -- type: mset
+--     | L_mset
+--     | L_minOccur
+--     | L_maxOccur
 
-    -- type: function
-    | L_function
-    | L_total
-    | L_partial
-    | L_injective
-    | L_surjective
-    | L_bijective
+--     -- type: function
+--     | L_function
+--     | L_total
+--     | L_partial
+--     | L_injective
+--     | L_surjective
+--     | L_bijective
 
-    -- type: sequence
-    | L_sequence
+--     -- type: sequence
+--     | L_sequence
 
-    -- type: relation
-    | L_relation
+--     -- type: relation
+--     | L_relation
 
-    -- type: partition
-    | L_partition
-    | L_regular
-    | L_partSize
-    | L_minPartSize
-    | L_maxPartSize
-    | L_numParts
-    | L_minNumParts
-    | L_maxNumParts
+--     -- type: partition
+--     | L_partition
+--     | L_regular
+--     | L_partSize
+--     | L_minPartSize
+--     | L_maxPartSize
+--     | L_numParts
+--     | L_minNumParts
+--     | L_maxNumParts
 
-    -- operators, page 21 of the holy paper
-    | L_union
-    | L_intersect
-    | L_subset
-    | L_subsetEq
-    | L_supset
-    | L_supsetEq
-    | L_in
-    | L_max
-    | L_min
-    | L_toSet
-    | L_toMSet
-    | L_toRelation
-    | L_defined
-    | L_range
-    | L_restrict
-    | L_image
-    | L_imageSet
-    | L_preImage
-    | L_inverse
-    | L_together
-    | L_apart
-    | L_party
-    | L_participants
-    | L_parts
-    | L_freq
-    | L_hist
+--     -- operators, page 21 of the holy paper
+--     | L_union
+--     | L_intersect
+--     | L_subset
+--     | L_subsetEq
+--     | L_supset
+--     | L_supsetEq
+--     | L_in
+--     | L_max
+--     | L_min
+--     | L_toSet
+--     | L_toMSet
+--     | L_toRelation
+--     | L_defined
+--     | L_range
+--     | L_restrict
+--     | L_image
+--     | L_imageSet
+--     | L_preImage
+--     | L_inverse
+--     | L_together
+--     | L_apart
+--     | L_party
+--     | L_participants
+--     | L_parts
+--     | L_freq
+--     | L_hist
 
-    | L_toInt
-    | L_makeTable
-    | L_table
+--     | L_toInt
+--     | L_makeTable
+--     | L_table
 
-    -- global constraints
-    | L_allDiff
-    | L_alldifferent_except
-    | L_gcc
-    | L_atleast
-    | L_atmost
+--     -- global constraints
+--     | L_allDiff
+--     | L_alldifferent_except
+--     | L_gcc
+--     | L_atleast
+--     | L_atmost
 
-    | L_dontCare
+--     | L_dontCare
 
-    | L_catchUndef
+--     | L_catchUndef
 
-    -- matrix only operators
-    | L_flatten
-    | L_concatenate
-    | L_normIndices
+--     -- matrix only operators
+--     | L_flatten
+--     | L_concatenate
+--     | L_normIndices
 
-    -- in the rule language
-    -- | L_lambda
-    -- | L_quantifier
-    -- | L_representation
+--     -- in the rule language
+--     -- | L_lambda
+--     -- | L_quantifier
+--     -- | L_representation
 
-    -- arithmetic operators
+--     -- arithmetic operators
 
-    | L_Plus                --    +           -- sum, infix : (int,int) -> int
-    | L_Minus               --    -           -- (subtraction, infix : (int,int) -> int) OR (unary minus : int -> int)
-    | L_Times               --    *           -- multiplication, infix : (int,int) -> int
-    | L_Div                 --    /           -- integer division, infix
-    | L_Mod                 --    %           -- modulo, infix
-    | L_Pow                 --    **          -- exponentiation, infix : (int,int) -> int
-    | L_factorial
+--     | L_Plus                --    +           -- sum, infix : (int,int) -> int
+--     | L_Minus               --    -           -- (subtraction, infix : (int,int) -> int) OR (unary minus : int -> int)
+--     | L_Times               --    *           -- multiplication, infix : (int,int) -> int
+--     | L_Div                 --    /           -- integer division, infix
+--     | L_Mod                 --    %           -- modulo, infix
+--     | L_Pow                 --    **          -- exponentiation, infix : (int,int) -> int
+--     | L_factorial
 
-    -- equality
+--     -- equality
 
-    | L_Eq                  --    =           -- equals, infix.
-    | L_Neq                 --    !=          -- not-equals, infix
+--     | L_Eq                  --    =           -- equals, infix.
+--     | L_Neq                 --    !=          -- not-equals, infix
 
-    -- comparison
+--     -- comparison
 
-    | L_Lt                  --    <           -- less-than, infix.
-    | L_Leq                 --    <=          -- less-than-or-eq, infix.
-    | L_Gt                  --    >           -- greater-than, infix.
-    | L_Geq                 --    >=          -- greater-than-or-eq, infix.
+--     | L_Lt                  --    <           -- less-than, infix.
+--     | L_Leq                 --    <=          -- less-than-or-eq, infix.
+--     | L_Gt                  --    >           -- greater-than, infix.
+--     | L_Geq                 --    >=          -- greater-than-or-eq, infix.
 
-    -- logical operators
+--     -- logical operators
 
-    | L_And                 --    /\          -- logical-and, infix
-    | L_Or                  --    \/          -- logical-or, infix.
-    | L_Imply               --    ->          -- implication, infix
-    | L_Iff                 --    <->         -- iff, infix.
-    -- | L_Not                 --    !           -- negation, prefix
-    | L_ExclamationMark     -- for poth L_Factorial and L_ExclamationMark
+--     | L_And                 --    /\          -- logical-and, infix
+--     | L_Or                  --    \/          -- logical-or, infix.
+--     | L_Imply               --    ->          -- implication, infix
+--     | L_Iff                 --    <->         -- iff, infix.
+--     -- | L_Not                 --    !           -- negation, prefix
+--     | L_ExclamationMark     -- for poth L_Factorial and L_ExclamationMark
 
-    -- the function arrow
+--     -- the function arrow
 
-    | L_LongArrow           --    -->         -- function domains and constants
+--     | L_LongArrow           --    -->         -- function domains and constants
 
-    -- in rule language
+--     -- in rule language
 
-    | L_Colon               --    :           -- has-domain, infix, (expr,domain) -> bool. also does pattern matching.
-    | L_DoubleColon         --    ::          -- has-type, infix, (expr,type) -> bool. also does pattern matching.
-    | L_At                  --    @           -- bubble operator.
+--     | L_Colon               --    :           -- has-domain, infix, (expr,domain) -> bool. also does pattern matching.
+--     | L_DoubleColon         --    ::          -- has-type, infix, (expr,type) -> bool. also does pattern matching.
+--     | L_At                  --    @           -- bubble operator.
 
-    -- lex operators
+--     -- lex operators
 
-    | L_LexGeq              --    >=lex
-    | L_LexGt               --    >lex
-    | L_LexLt               --    <=lex
-    | L_LexLeq              --    <lex
+--     | L_LexGeq              --    >=lex
+--     | L_LexGt               --    >lex
+--     | L_LexLt               --    <=lex
+--     | L_LexLeq              --    <lex
 
-    -- for "abs" and "card"
-    | L_Bar                 --    |
+--     -- for "abs" and "card"
+--     | L_Bar                 --    |
 
-    -- attaching a type to an expression
-    | L_BackTick            --    `
+--     -- attaching a type to an expression
+--     | L_BackTick            --    `
 
-    -- others
-    | L_Dot
-    | L_Comma
-    | L_SemiColon
+--     -- others
+--     | L_Dot
+--     | L_Comma
+--     | L_SemiColon
 
-    | L_OpenParen
-    | L_CloseParen
-    | L_OpenBracket
-    | L_CloseBracket
-    | L_OpenCurly
-    | L_CloseCurly
+--     | L_OpenParen
+--     | L_CloseParen
+--     | L_OpenBracket
+--     | L_CloseBracket
+--     | L_OpenCurly
+--     | L_CloseCurly
 
-    | L_Newline
-    | L_Carriage
-    | L_Space
-    | L_Tab
+--     | L_Newline
+--     | L_Carriage
+--     | L_Space
+--     | L_Tab
 
-    | L_SquigglyArrow
-    | L_CaseSeparator
+--     | L_SquigglyArrow
+--     | L_CaseSeparator
 
-    | L_HasRepr
-    | L_HasType
-    | L_HasDomain
-    | L_indices
+--     | L_HasRepr
+--     | L_HasType
+--     | L_HasDomain
+--     | L_indices
 
-    | L_DotLt
-    | L_DotLeq
-    | L_DotGt
-    | L_DotGeq
+--     | L_DotLt
+--     | L_DotLeq
+--     | L_DotGt
+--     | L_DotGeq
 
-    | L_TildeLt
-    | L_TildeLeq
-    | L_TildeGt
-    | L_TildeGeq
+--     | L_TildeLt
+--     | L_TildeLeq
+--     | L_TildeGt
+--     | L_TildeGeq
 
-    | L_LeftArrow
+--     | L_LeftArrow
 
-    | L_subsequence
-    | L_substring
-    | L_powerSet
+--     | L_subsequence
+--     | L_substring
+--     | L_powerSet
 
-    | L_pred
-    | L_succ
+--     | L_pred
+--     | L_succ
 
-    -- type functional
-    | L_transform
-    | L_EOF
+--     -- type functional
+--     | L_transform
+--     | L_EOF
 
-    deriving (Eq, Ord, Show,Generic) 
-instance Hashable  Lexeme
+--     deriving (Eq, Ord, Show,Generic) 
+-- instance Hashable  Lexeme
 
 --     deriving (Eq, Ord, Show, Generic)
 
@@ -322,183 +322,183 @@ mapTextToLexeme = M.fromList lexemes
 mapLexemeToText :: M.HashMap Lexeme T.Text
 mapLexemeToText = M.fromList $ map swap lexemes
 
-lexemes :: [(T.Text, Lexeme)]
-lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
-    [ ( L_be         , "be"         )
-    , ( L_from       , "from"       )
-    , ( L_of         , "of"         )
-    , ( L_domain     , "domain"     )
-    , ( L_language   , "language"   )
-    , ( L_dim        , "dim"        )
-    , ( L_find       , "find"       )
-    , ( L_given      , "given"      )
-    , ( L_letting    , "letting"    )
-    , ( L_where      , "where"      )
-    , ( L_such       , "such"       )
-    , ( L_that       , "that"       )
-    , ( L_minimising , "minimising" )
-    , ( L_maximising , "maximising" )
-    , ( L_minimising , "minimizing" )
-    , ( L_maximising , "maximizing" )
-    , ( L_branching  , "branching"  )
-    , ( L_on         , "on"         )
-    , ( L_heuristic  , "heuristic"  )
+-- lexemes :: [(T.Text, Lexeme)]
+-- lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
+--     [ ( L_be         , "be"         )
+--     , ( L_from       , "from"       )
+--     , ( L_of         , "of"         )
+--     , ( L_domain     , "domain"     )
+--     , ( L_language   , "language"   )
+--     , ( L_dim        , "dim"        )
+--     , ( L_find       , "find"       )
+--     , ( L_given      , "given"      )
+--     , ( L_letting    , "letting"    )
+--     , ( L_where      , "where"      )
+--     , ( L_such       , "such"       )
+--     , ( L_that       , "that"       )
+--     , ( L_minimising , "minimising" )
+--     , ( L_maximising , "maximising" )
+--     , ( L_minimising , "minimizing" )
+--     , ( L_maximising , "maximizing" )
+--     , ( L_branching  , "branching"  )
+--     , ( L_on         , "on"         )
+--     , ( L_heuristic  , "heuristic"  )
 
-    , ( L_bool, "bool" )
-    , ( L_false, "false" )
-    , ( L_true, "true" )
-    , ( L_int, "int" )
-    , ( L_new, "new" )
-    , ( L_type, "type" )
-    , ( L_enum, "enum" )
-    , ( L_tuple, "tuple" )
-    , ( L_record, "record" )
-    , ( L_variant, "variant" )
-    , ( L_active, "active" )
-    , ( L_matrix, "matrix" )
-    , ( L_indexed, "indexed" )
-    , ( L_by, "by" )
-    , ( L_set, "set" )
-    -- , ( L_size, "size" )
-    -- , ( L_minSize, "minSize" )
-    -- , ( L_maxSize, "maxSize" )
-    , ( L_mset, "mset" )
-    -- , ( L_minOccur, "minOccur" )
-    -- , ( L_maxOccur, "maxOccur" )
-    , ( L_function, "function" )
-    -- , ( L_total, "total" )
-    -- , ( L_partial, "partial" )
-    -- , ( L_injective, "injective" )
-    -- , ( L_surjective, "surjective" )
-    -- , ( L_bijective, "bijective" )
-    , ( L_sequence, "sequence" )
-    , ( L_relation, "relation" )
-    , ( L_partition, "partition" )
-    -- , ( L_regular, "regular" )
-    -- , ( L_partSize, "partSize" )
-    -- , ( L_minPartSize, "minPartSize" )
-    -- , ( L_maxPartSize, "maxPartSize" )
-    -- , ( L_numParts, "numParts" )
-    -- , ( L_minNumParts, "minNumParts" )
-    -- , ( L_maxNumParts, "maxNumParts" )
-    , ( L_union, "union" )
-    , ( L_intersect, "intersect" )
-    , ( L_subset, "subset" )
-    , ( L_subsetEq, "subsetEq" )
-    , ( L_supset, "supset" )
-    , ( L_supsetEq, "supsetEq" )
-    , ( L_in, "in" )
-    , ( L_max, "max" )
-    , ( L_min, "min" )
-    , ( L_toSet, "toSet" )
-    , ( L_toMSet, "toMSet" )
-    , ( L_toRelation, "toRelation" )
-    , ( L_defined, "defined" )
-    , ( L_range, "range" )
-    , ( L_restrict, "restrict" )
-    , ( L_image, "image" )
-    , ( L_imageSet, "imageSet" )
-    , ( L_preImage, "preImage" )
-    , ( L_inverse, "inverse" )
-    , ( L_together, "together" )
-    , ( L_apart, "apart" )
-    , ( L_party, "party" )
-    , ( L_participants, "participants" )
-    , ( L_parts, "parts" )
-    , ( L_freq, "freq" )
-    , ( L_hist, "hist" )
-    , ( L_toInt, "toInt" )
-    , ( L_makeTable, "makeTable" )
-    , ( L_table, "table" )
+--     , ( L_bool, "bool" )
+--     , ( L_false, "false" )
+--     , ( L_true, "true" )
+--     , ( L_int, "int" )
+--     , ( L_new, "new" )
+--     , ( L_type, "type" )
+--     , ( L_enum, "enum" )
+--     , ( L_tuple, "tuple" )
+--     , ( L_record, "record" )
+--     , ( L_variant, "variant" )
+--     , ( L_active, "active" )
+--     , ( L_matrix, "matrix" )
+--     , ( L_indexed, "indexed" )
+--     , ( L_by, "by" )
+--     , ( L_set, "set" )
+--     -- , ( L_size, "size" )
+--     -- , ( L_minSize, "minSize" )
+--     -- , ( L_maxSize, "maxSize" )
+--     , ( L_mset, "mset" )
+--     -- , ( L_minOccur, "minOccur" )
+--     -- , ( L_maxOccur, "maxOccur" )
+--     , ( L_function, "function" )
+--     -- , ( L_total, "total" )
+--     -- , ( L_partial, "partial" )
+--     -- , ( L_injective, "injective" )
+--     -- , ( L_surjective, "surjective" )
+--     -- , ( L_bijective, "bijective" )
+--     , ( L_sequence, "sequence" )
+--     , ( L_relation, "relation" )
+--     , ( L_partition, "partition" )
+--     -- , ( L_regular, "regular" )
+--     -- , ( L_partSize, "partSize" )
+--     -- , ( L_minPartSize, "minPartSize" )
+--     -- , ( L_maxPartSize, "maxPartSize" )
+--     -- , ( L_numParts, "numParts" )
+--     -- , ( L_minNumParts, "minNumParts" )
+--     -- , ( L_maxNumParts, "maxNumParts" )
+--     , ( L_union, "union" )
+--     , ( L_intersect, "intersect" )
+--     , ( L_subset, "subset" )
+--     , ( L_subsetEq, "subsetEq" )
+--     , ( L_supset, "supset" )
+--     , ( L_supsetEq, "supsetEq" )
+--     , ( L_in, "in" )
+--     , ( L_max, "max" )
+--     , ( L_min, "min" )
+--     , ( L_toSet, "toSet" )
+--     , ( L_toMSet, "toMSet" )
+--     , ( L_toRelation, "toRelation" )
+--     , ( L_defined, "defined" )
+--     , ( L_range, "range" )
+--     , ( L_restrict, "restrict" )
+--     , ( L_image, "image" )
+--     , ( L_imageSet, "imageSet" )
+--     , ( L_preImage, "preImage" )
+--     , ( L_inverse, "inverse" )
+--     , ( L_together, "together" )
+--     , ( L_apart, "apart" )
+--     , ( L_party, "party" )
+--     , ( L_participants, "participants" )
+--     , ( L_parts, "parts" )
+--     , ( L_freq, "freq" )
+--     , ( L_hist, "hist" )
+--     , ( L_toInt, "toInt" )
+--     , ( L_makeTable, "makeTable" )
+--     , ( L_table, "table" )
 
-    , ( L_allDiff, "allDiff" )
-    , ( L_alldifferent_except, "alldifferent_except" )
-    , ( L_gcc, "gcc" )
-    , ( L_atleast, "atleast" )
-    , ( L_atmost, "atmost" )
+--     , ( L_allDiff, "allDiff" )
+--     , ( L_alldifferent_except, "alldifferent_except" )
+--     , ( L_gcc, "gcc" )
+--     , ( L_atleast, "atleast" )
+--     , ( L_atmost, "atmost" )
 
-    , ( L_dontCare, "dontCare" )
-    , ( L_catchUndef, "catchUndef" )
+--     , ( L_dontCare, "dontCare" )
+--     , ( L_catchUndef, "catchUndef" )
 
-    , ( L_flatten, "flatten" )
-    , ( L_concatenate, "concatenate" )
-    , ( L_normIndices, "normIndices" )
-    -- , ( L_lambda, "lambda" )
-    -- , ( L_quantifier, "quantifier" )
-    -- , ( L_representation, "representation" )
-    , ( L_Plus            , "+"     )
-    , ( L_Minus           , "-"     )
-    , ( L_Times           , "*"     )
-    , ( L_Div             , "/"     )
-    , ( L_Mod             , "%"     )
-    , ( L_Pow             , "**"    )
-    , ( L_factorial       , "factorial" )
-    , ( L_Eq              , "="     )
-    , ( L_Neq             , "!="    )
-    , ( L_Lt              , "<"     )
-    , ( L_Leq             , "<="    )
-    , ( L_Gt              , ">"     )
-    , ( L_Geq             , ">="    )
-    , ( L_And             , "/\\"   )
-    , ( L_Or              , "\\/"   )
-    , ( L_Imply           , "->"    )
-    , ( L_Iff             , "<->"   )
-    , ( L_ExclamationMark , "!"     )
-    , ( L_LongArrow       , "-->"   )
-    , ( L_Colon           , ":"     )
-    , ( L_DoubleColon     , "::"    )
-    , ( L_At              , "@"     )
-    , ( L_LexGeq          , ">=lex" )
-    , ( L_LexGt           , ">lex"  )
-    , ( L_LexLeq          , "<=lex" )
-    , ( L_LexLt           , "<lex"  )
-    , ( L_Bar             , "|"     )
-    , ( L_BackTick        , "`"     )
-    , ( L_Dot             , "."     )
-    , ( L_Comma           , ","     )
-    , ( L_SemiColon       , ";"     )
-    , ( L_OpenParen       , "("     )
-    , ( L_CloseParen      , ")"     )
-    , ( L_OpenBracket     , "["     )
-    , ( L_CloseBracket    , "]"     )
-    , ( L_OpenCurly       , "{"     )
-    , ( L_CloseCurly      , "}"     )
+--     , ( L_flatten, "flatten" )
+--     , ( L_concatenate, "concatenate" )
+--     , ( L_normIndices, "normIndices" )
+--     -- , ( L_lambda, "lambda" )
+--     -- , ( L_quantifier, "quantifier" )
+--     -- , ( L_representation, "representation" )
+--     , ( L_Plus            , "+"     )
+--     , ( L_Minus           , "-"     )
+--     , ( L_Times           , "*"     )
+--     , ( L_Div             , "/"     )
+--     , ( L_Mod             , "%"     )
+--     , ( L_Pow             , "**"    )
+--     , ( L_factorial       , "factorial" )
+--     , ( L_Eq              , "="     )
+--     , ( L_Neq             , "!="    )
+--     , ( L_Lt              , "<"     )
+--     , ( L_Leq             , "<="    )
+--     , ( L_Gt              , ">"     )
+--     , ( L_Geq             , ">="    )
+--     , ( L_And             , "/\\"   )
+--     , ( L_Or              , "\\/"   )
+--     , ( L_Imply           , "->"    )
+--     , ( L_Iff             , "<->"   )
+--     , ( L_ExclamationMark , "!"     )
+--     , ( L_LongArrow       , "-->"   )
+--     , ( L_Colon           , ":"     )
+--     , ( L_DoubleColon     , "::"    )
+--     , ( L_At              , "@"     )
+--     , ( L_LexGeq          , ">=lex" )
+--     , ( L_LexGt           , ">lex"  )
+--     , ( L_LexLeq          , "<=lex" )
+--     , ( L_LexLt           , "<lex"  )
+--     , ( L_Bar             , "|"     )
+--     , ( L_BackTick        , "`"     )
+--     , ( L_Dot             , "."     )
+--     , ( L_Comma           , ","     )
+--     , ( L_SemiColon       , ";"     )
+--     , ( L_OpenParen       , "("     )
+--     , ( L_CloseParen      , ")"     )
+--     , ( L_OpenBracket     , "["     )
+--     , ( L_CloseBracket    , "]"     )
+--     , ( L_OpenCurly       , "{"     )
+--     , ( L_CloseCurly      , "}"     )
 
-    , ( L_Newline         , "\n"    )
-    , ( L_Carriage        , "\r"    )
-    , ( L_Space           , " "     )
-    , ( L_Tab             , "\t"    )
+--     , ( L_Newline         , "\n"    )
+--     , ( L_Carriage        , "\r"    )
+--     , ( L_Space           , " "     )
+--     , ( L_Tab             , "\t"    )
 
-    , ( L_SquigglyArrow   , "~~>"   )
-    , ( L_CaseSeparator   , "***"   )
+--     , ( L_SquigglyArrow   , "~~>"   )
+--     , ( L_CaseSeparator   , "***"   )
 
-    , ( L_HasRepr         , "hasRepr"   )
-    , ( L_HasType         , "hasType"   )
-    , ( L_HasDomain       , "hasDomain" )
-    , ( L_indices         , "indices"   )
+--     , ( L_HasRepr         , "hasRepr"   )
+--     , ( L_HasType         , "hasType"   )
+--     , ( L_HasDomain       , "hasDomain" )
+--     , ( L_indices         , "indices"   )
 
-    , ( L_DotLt           , ".<"    )
-    , ( L_DotLeq          , ".<="   )
-    , ( L_DotGt           , ".>"    )
-    , ( L_DotGeq          , ".>="   )
+--     , ( L_DotLt           , ".<"    )
+--     , ( L_DotLeq          , ".<="   )
+--     , ( L_DotGt           , ".>"    )
+--     , ( L_DotGeq          , ".>="   )
 
-    , ( L_TildeLt         , "~<"    )
-    , ( L_TildeLeq        , "~<="   )
-    , ( L_TildeGt         , "~>"    )
-    , ( L_TildeGeq        , "~>="   )
+--     , ( L_TildeLt         , "~<"    )
+--     , ( L_TildeLeq        , "~<="   )
+--     , ( L_TildeGt         , "~>"    )
+--     , ( L_TildeGeq        , "~>="   )
 
-    , ( L_LeftArrow       , "<-"   )
+--     , ( L_LeftArrow       , "<-"   )
 
-    , ( L_subsequence     , "subsequence"  )
-    , ( L_substring       , "substring"    )
-    , ( L_powerSet        , "powerSet"     )
+--     , ( L_subsequence     , "subsequence"  )
+--     , ( L_substring       , "substring"    )
+--     , ( L_powerSet        , "powerSet"     )
 
-    , ( L_pred, "pred" )
-    , ( L_succ, "succ" )
+--     , ( L_pred, "pred" )
+--     , ( L_succ, "succ" )
 
 
-    , ( L_transform, "transform")
-    ]
+--     , ( L_transform, "transform")
+--     ]
 
 mapToLexemePos :: ETok -> LexemePos
 mapToLexemePos tok = LexemePos lex start end where

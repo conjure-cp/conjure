@@ -1,6 +1,7 @@
 module Conjure.Language.AST.Helpers where
 
 import Conjure.Language.AST.Syntax
+import Conjure.Language.Lexemes
 import Conjure.Language.NewLexer hiding (Parser)
 import Conjure.Prelude hiding (many)
 import qualified Data.Set as Set
@@ -20,7 +21,7 @@ identifier :: Parser ETok
 identifier = token test Set.empty <?> "Identifier"
   where
     test x = case x of
-        ETok _ _ (LIdentifier _) -> Just x
+        ETok {lexeme=(LIdentifier _) } -> Just x
         ETok{} -> Nothing
 
 lIdent :: Lexeme
@@ -30,26 +31,26 @@ intLiteral :: Parser ETok
 intLiteral = token test Set.empty <?> "Int Literal"
   where
     test x = case x of
-        ETok _ _ (LIntLiteral _) -> Just x
+        ETok {lexeme=(LIntLiteral _)} -> Just x
         ETok{} -> Nothing
 
 makeMissing :: Lexeme -> Parser LToken
 makeMissing l = do
-    (ETok (s, _, _, _) _ _) <- lookAhead anySingle
-    return (MissingToken (ETok (s, s, 0, l) [] l))
+    ETok {offsets=(s, _, _, _)} <- lookAhead anySingle
+    return (MissingToken (ETok (s, s, 0, l) [] l ""))
 
 -- try to get a token from the stream but allow failiure
 want :: Lexeme -> Parser LToken
 want (LIdentifier _) = do
-    (ETok (s, ts, _, _) t lex) <- lookAhead anySingle
+    (ETok (s, ts, _, _) t lex _ ) <- lookAhead anySingle
     case lex of
         (LIdentifier _) -> RealToken <$> anySingle
-        _ -> return $ MissingToken $ ETok (s, ts, 0, LMissingIdentifier) t LMissingIdentifier
+        _ -> return $ MissingToken $ ETok (s, ts, 0, LMissingIdentifier) t LMissingIdentifier ""
 want a = do
-    (ETok (s, ts, _, _) t lex) <- lookAhead anySingle
+    (ETok (s, ts, _, _) t lex _) <- lookAhead anySingle
     if lex == a
         then RealToken <$> anySingle
-        else return $ MissingToken $ ETok (s, ts, 0, a) t a
+        else return $ MissingToken $ ETok (s, ts, 0, a) t a ""
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser LToken
@@ -78,9 +79,19 @@ curlyBracketList = parseList L_OpenCurly L_CloseCurly
 parenList :: Parser (Sequence a) -> Parser (ListNode a)
 parenList = parseList L_OpenParen L_CloseParen
 
+parenListStrict :: Parser (Sequence a) -> Parser (ListNode a)
+parenListStrict = parseListStrict L_OpenParen L_CloseParen
+
 parseList :: Lexeme -> Lexeme -> Parser (Sequence a) -> Parser (ListNode a)
 parseList startB endB seq = do
     startB' <- want startB
+    vals <- seq
+    endB' <- want endB
+    return $ ListNode startB' vals endB'
+
+parseListStrict :: Lexeme -> Lexeme -> Parser (Sequence a) -> Parser (ListNode a)
+parseListStrict startB endB seq = do
+    startB' <- need startB
     vals <- seq
     endB' <- want endB
     return $ ListNode startB' vals endB'
@@ -98,3 +109,13 @@ parseSequence divider pElem = do
         v <- pElem
         s <- need divider
         return $ SeqElem v (Just s)
+
+
+parensPair :: (Lexeme,Lexeme)
+parensPair = (L_OpenParen,L_CloseParen)
+
+squarBracketPair :: (Lexeme,Lexeme)
+squarBracketPair = (L_OpenBracket,L_CloseBracket)
+
+curlyPair :: (Lexeme,Lexeme)
+curlyPair = (L_OpenCurly,L_CloseCurly)
