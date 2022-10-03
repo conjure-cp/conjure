@@ -29,7 +29,7 @@ parseBranching = do
     lBranching <- need L_branching
     lOn <- want L_on
     statements <- squareBracketList (commaList parseBranchingPart)
-    return $ Branching $ BranchingStatementNode lBranching lOn statements
+    return $ BranchingStatement $ BranchingStatementNode lBranching lOn statements
 
 parseBranchingPart :: Parser BranchingOnNode
 parseBranchingPart =
@@ -42,21 +42,21 @@ parseSuchThat = do
     lSuch <- need L_such
     lThat <- want L_that
     exprs <- commaList parseExpression
-    return $ SuchThat $ SuchThatStatementNode lSuch lThat exprs
+    return $ SuchThatStatement $ SuchThatStatementNode lSuch lThat exprs
 
 parseWhere :: Parser StatementNode
 parseWhere = do
     lWhere <- need L_where
     exprs <- commaList parseExpression
-    return $ Where $ WhereStatementNode lWhere exprs
+    return $ WhereStatement $ WhereStatementNode lWhere exprs
 
 parseObjective :: Parser StatementNode
 parseObjective = do
-    Objective <$> parseObjectiveStatement
+    ObjectiveStatement <$> parseObjectiveStatement
 
 parseDeclaration :: Parser StatementNode
 parseDeclaration =
-    Declaration
+    DeclarationStatement
         <$> do
             (LettingStatement <$> parseLetting)
                 <|> (GivenStatement <$> parseGiven)

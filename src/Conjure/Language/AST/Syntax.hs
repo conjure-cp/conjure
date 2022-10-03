@@ -21,11 +21,11 @@ instance Show ProgramTree where
     show (ProgramTree  x) = intercalate "\n" (map show x)
 
 data StatementNode
-    = Declaration DeclarationStatementNode
-    | Branching BranchingStatementNode
-    | SuchThat SuchThatStatementNode
-    | Where WhereStatementNode
-    | Objective ObjectiveStatementNode
+    = DeclarationStatement DeclarationStatementNode
+    | BranchingStatement BranchingStatementNode
+    | SuchThatStatement SuchThatStatementNode
+    | WhereStatement WhereStatementNode
+    | ObjectiveStatement ObjectiveStatementNode
     deriving (Show)
 
 data SuchThatStatementNode
