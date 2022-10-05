@@ -39,6 +39,9 @@ makeMissing l = do
     ETok {offsets=(s, _, _, _)} <- lookAhead anySingle
     return (MissingToken (ETok (s, s, 0, l) [] l ""))
 
+makeUnexpected :: Parser LToken
+makeUnexpected = SkippedToken <$> anySingle
+
 -- try to get a token from the stream but allow failiure
 want :: Lexeme -> Parser LToken
 want (LIdentifier _) = do

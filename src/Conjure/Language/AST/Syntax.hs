@@ -1,8 +1,12 @@
+{-# LANGUAGE InstanceSigs #-}
 
 module Conjure.Language.AST.Syntax where
 
 import Conjure.Language.NewLexer (ETok)
 import Conjure.Prelude
+
+
+
 
 data LToken
     = RealToken ETok
@@ -17,6 +21,9 @@ instance Show LToken where
 
 newtype ProgramTree = ProgramTree [StatementNode]
 
+
+
+
 instance Show ProgramTree where
     show (ProgramTree  x) = intercalate "\n" (map show x)
 
@@ -26,7 +33,10 @@ data StatementNode
     | SuchThatStatement SuchThatStatementNode
     | WhereStatement WhereStatementNode
     | ObjectiveStatement ObjectiveStatementNode
+    | UnexpectedToken LToken
     deriving (Show)
+
+
 
 data SuchThatStatementNode
     = SuchThatStatementNode

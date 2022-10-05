@@ -14,6 +14,8 @@ import Conjure.Language.Lexemes
 import Text.Megaparsec
 
 import Data.Text (pack)
+import Data.Void (Void)
+import Conjure.Language.AST.Reformer (Flattenable(..))
 
 parseTopLevel :: Parser StatementNode
 parseTopLevel =
@@ -23,6 +25,7 @@ parseTopLevel =
         <|> parseSuchThat
         <|> parseWhere
         <|> parseObjective
+        <|> UnexpectedToken <$> makeUnexpected
 
 parseBranching :: Parser StatementNode
 parseBranching = do
@@ -133,7 +136,7 @@ parseObjectiveStatement = do
 parseProgram :: Parser ProgramTree
 parseProgram = do
     tl <- many parseTopLevel
-    eof 
+    eof
     return $ ProgramTree tl
 
 example :: String -> IO ()
@@ -163,7 +166,7 @@ demo2 :: String
 demo2 = intercalate "\n"[
     "given n : int(1..2)"
     ,"find perm : sequence (size n) of int(1..n)"
-    ,"such that"
+    ,"such that $comment"
     ,"    allDiff([perm(k) | k : int(1..n) ]),"
     ,"    and([ max(subs) - min(subs) + 1 != |subs| |"
     ,"        i : int(1..n-1), j : int(2..n),"
@@ -172,3 +175,31 @@ demo2 = intercalate "\n"[
     ,"        letting subs be [perm(k) | k : int(i..j)]]"
     ,"    )"
     ]
+
+parsePrint :: String -> IO ()
+parsePrint text = do
+    toks <- parseAndRevalidate (pack text) eLex (concatMap reform) text
+    case toks of
+      Left (a,b)-> do
+            putStrLn "Lexer wasn't reversible"
+            showDiff a b
+      Right ets -> putStrLn "Lexer success" >> do
+            tree <- parseAndRevalidate (ETokenStream (pack text) ets) parseProgram (\v -> reformList (flatten v :: [ETok]) ) text
+            case tree of
+              Left (a,b) -> do
+                        putStrLn "Parser wasn't reversible:"
+                        showDiff a b
+              Right _ -> putStrLn "Success"
+    where
+        showDiff a b = do
+            putStrLn "got vvvvvvvvv"
+            putStrLn a
+            putStrLn "expected vvvvvvvvv"
+            putStrLn b
+
+
+parseAndRevalidate ::(VisualStream a,Stream a) => a -> ParsecT Void a Identity b -> (b -> String) -> String -> IO (Either (String,String) b)
+parseAndRevalidate src p f ref = do
+                            case runParser p "" src of
+                                Left _ -> putStrLn "Parse error" >> empty
+                                Right res -> return  (if f res == ref then Right res else Left (f res,ref))

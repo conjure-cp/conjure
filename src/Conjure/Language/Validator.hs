@@ -8,7 +8,6 @@ import Conjure.Language.Definition
 import Conjure.Language.Lexemes
 import Conjure.Prelude
 import Control.Applicative
-import Control.Monad.State
 import Conjure.Language.NewLexer (ETok (lexeme, capture, ETok), ETokenStream (ETokenStream), eLex)
 import Conjure.Language.Domain
 
@@ -62,7 +61,6 @@ data ValidatorError
 --                                     raise "missing synbol"
 --                                     return ""
 
-
 data Validator a = Validator
     { value :: Maybe a
     , errors :: [ValidatorError]
@@ -96,6 +94,7 @@ instance Functor Validator where
                 (Just a) -> Just $ fab a
             , errors = ves
             }
+        
 instance Applicative Validator where
     pure :: a -> Validator a
     pure x = Validator (Just x) []
@@ -180,7 +179,7 @@ type DomainValidator = Validator (Domain () Expression)
 validateDomain :: DomainNode -> DomainValidator
 validateDomain dm = case dm of
   BoolDomainNode lt -> validateSymbol lt >> return DomainBool
-  r@(RangedIntDomainNode _ _) -> validateRangedInt r
+  RangedIntDomainNode l1 rs -> checkSymbols [l1] >> validateRangedInt rs
   RangedEnumNode nn ranges -> validateEnumRange nn ranges
   EnumDomainNode nn -> validateNamedEnumDomain nn
   TupleDomainNode l1 doms -> checkSymbols [l1] >> validateTupleDomain doms
@@ -195,6 +194,10 @@ validateDomain dm = case dm of
   PartitionDomainNode l1 attrs l2 dom -> checkSymbols [l1,l2] >> validatePartitionDomain attrs dom
   MissingDomainNode lt -> invalid $ TokenError lt
   where
+    validateRangedInt :: ListNode RangeNode ->DomainValidator
+    validateRangedInt ranges = do
+        ranges' <- validateList validateRange ranges
+        return $ DomainInt TagInt ranges'
     validateEnumRange :: NameNode -> ListNode RangeNode -> DomainValidator
     validateEnumRange name ranges = do
         name' <- validate $ validateIdentifier name
@@ -259,14 +262,7 @@ validateDomain dm = case dm of
 todo:: Validator a
 todo = invalid NotImplemented
 
-validateRangedInt :: DomainNode ->DomainValidator
-validateRangedInt (RangedIntDomainNode lt ranges) =
-    do
-        _ <- validate $ validateSymbol lt
-        ranges' <- validateList validateRange ranges
-        return $ DomainInt TagInt ranges'
 
-validateRangedInt _ =  invalid IllegalToken {}
 
 --TODO:THIS IS NOT DONE
 validateSetAttributes :: ListNode AttributeNode -> Validator (SetAttr Expression)

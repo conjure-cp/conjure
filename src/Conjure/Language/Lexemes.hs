@@ -12,6 +12,7 @@ data Lexeme
     | LIdentifier T.Text
     | LMissingIdentifier --helper for missing symbol
     | LMetaVar T.Text
+    | LUnexpected T.Text
     | LMissingMetaVar --helper for missing symbol
     -- general
     | L_be
