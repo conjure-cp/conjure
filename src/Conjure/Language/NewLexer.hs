@@ -20,14 +20,17 @@ import Data.List (splitAt)
 import qualified Data.List.NonEmpty as NE
 import qualified Text.Megaparsec.Char.Lexer as L
 
+sourcePos0 :: SourcePos
+sourcePos0 = SourcePos "" (mkPos  0) (mkPos 0)
+
 class Reformable a where
     reform :: a -> String
 
 instance Reformable ETok where
-    reform (ETok{capture=cap,trivia=triv}) = concatMap showTrivia triv ++ T.unpack cap 
+    reform (ETok{capture=cap,trivia=triv}) = concatMap showTrivia triv ++ T.unpack cap
         where
             showTrivia :: Trivia -> String
-            showTrivia x = case x of              
+            showTrivia x = case x of
               WhiteSpace txt -> T.unpack txt
               LineComment txt -> T.unpack txt
               BlockComment txt -> T.unpack txt
@@ -50,7 +53,7 @@ isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem
 isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
-type Offsets = (Int, Int, Int, Lexeme)
+type Offsets = (Int, Int, Int, SourcePos)
 type Parser = Parsec Void T.Text
 
 
@@ -72,11 +75,17 @@ totalLength (ETok{offsets = (_, _, l, _)}) = l
 tokenStart :: ETok -> Int
 tokenStart (ETok{offsets = (_, s, _, _)}) = s
 
+tokenSourcePos :: ETok -> SourcePos
+tokenSourcePos ETok{offsets=(_,_,_,s)} = s
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 
 eLex :: Parser [ETok]
-eLex = manyTill aToken eof
+eLex = 
+    do 
+        main <- many $ try aToken 
+        end <- pEOF
+        return $ main ++ [end]
 
 aToken :: Parser ETok
 aToken = do
@@ -86,27 +95,36 @@ aToken = do
     spos <- getSourcePos
     (tok,cap) <- aLexeme
     tokenEnd <- getOffset
-    return $ makeToken (start, wse, tokenEnd - start, tok) whiteSpace tok cap
+    return $ makeToken (start, wse, tokenEnd - start, spos) whiteSpace tok cap
+
+pEOF :: Parser ETok
+pEOF = do
+    start <- getOffset
+    whiteSpace <- pTrivia
+    wse <- getOffset
+    spos <- getSourcePos
+    eof
+    tokenEnd <- getOffset
+    return $ makeToken (start, wse, tokenEnd - start, spos) whiteSpace L_EOF ""
+
 
 aLexeme :: Parser (Lexeme,Text)
 aLexeme = aLexemeStrict <|> pFallback
 
 aLexemeStrict :: Parser (Lexeme,Text)
 aLexemeStrict =
-    try pEOF
-        <|> try pNumber
-        <|> try (choice $ map pLexeme lexemes)
+    try
+        pNumber
+        <|> try  (choice (map pLexeme lexemes) <?> "Lexeme")
         <|> try pIdentifier
         <|> try pMetaVar
-pEOF :: Parser (Lexeme,Text)
-pEOF = do
-    eof
-    return (L_EOF,"")
+
 
 pNumber :: Parser (Lexeme,Text)
 pNumber = do
     v <- L.decimal
     return (LIntLiteral v,T.pack $ show  v)
+    <?> "Numeric Literal"
 
 pMetaVar :: Parser (Lexeme,Text)
 pMetaVar = do
@@ -120,21 +138,21 @@ pIdentifier = do
     rest <- takeWhileP Nothing isIdentifierLetter
     let ident = T.append firstLetter rest
     return ( LIdentifier ident, ident)
-
+    <?> "Identifier"
 pFallback :: Parser (Lexeme,Text)
 pFallback = do
     q <- T.pack <$> someTill anySingle (lookAhead $ try somethingValid)
-
     return (LUnexpected  q,q)
   where
     somethingValid :: Parser ()
-    somethingValid = void pTrivia <|> void aLexemeStrict
+    somethingValid = void pTrivia <|> void aLexemeStrict <|> eof
 
 pLexeme :: (T.Text, Lexeme) -> Parser (Lexeme,Text)
 pLexeme (s, l) = do
     tok <- string s
     notFollowedBy $ if isIdentifierLetter $ T.last tok then nonIden else empty
     return (l,tok)
+    <?> "Lexeme :" ++ show l
     where
         nonIden = takeWhile1P Nothing isIdentifierLetter
 
@@ -153,7 +171,7 @@ lineComment :: Parser Trivia
 lineComment = do
     _ <- try (chunk "$")
     (text,end) <- manyTill_ L.charLiteral lineEnd
-    return $ LineComment $ T.pack ('$' : text++end) 
+    return $ LineComment $ T.pack ('$' : text++end)
 
 blockComment :: Parser Trivia
 blockComment = do
@@ -198,7 +216,7 @@ buildStream xs = case NE.nonEmpty xs of
     Just s -> ETokenStream (T.pack $ showTokens pxy s) xs
 
 instance VisualStream ETokenStream where
-    showTokens p = concatMap reform
+    showTokens p =  concatMap reform
     tokensLength p ls = sum $ len <$> ls
       where
         len ETok{offsets = (_, _, x, _)} = x
@@ -224,11 +242,10 @@ instance TraversableStream ETokenStream where
         newSourcePos =
             case post of
                 [] -> pstateSourcePos
-                (x : _) -> pstateSourcePos{sourceLine = mkPos $ tokenStart x, sourceColumn = mkPos $ tokenStart x}
+                (x : _) -> tokenSourcePos x
         (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
         (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
         preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
-        tokensConsumed = o
         restOfLine = takeWhile (/= '\n') postStr
 
 pxy :: Proxy ETokenStream

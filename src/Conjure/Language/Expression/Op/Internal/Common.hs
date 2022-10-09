@@ -6,7 +6,7 @@ module Conjure.Language.Expression.Op.Internal.Common
     , BinaryOperator(..)
 
     , prettyPrecBinOp
-    , Fixity(..), operators, functionals
+    , Fixity(..), operators, functionals,quantifiers
     , EssenceOperatorParsingDescr(..)
 
     , raiseTypeError
@@ -296,6 +296,12 @@ functionals =
 
     , L_powerSet
 
+    ]
+
+quantifiers :: [Lexeme]
+quantifiers = [
+    L_ForAll,
+    L_Exists
     ]
 
 raiseTypeError :: MonadFailDoc m => Pretty a => a -> m b

@@ -8,7 +8,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Lexemes
 import Conjure.Prelude
 import Control.Applicative
-import Conjure.Language.NewLexer (ETok (lexeme, capture, ETok), ETokenStream (ETokenStream), eLex)
+import Conjure.Language.NewLexer (ETok (lexeme, capture, ETok), ETokenStream (ETokenStream), eLex, sourcePos0)
 import Conjure.Language.Domain
 
 import Data.Text (unpack, pack)
@@ -21,7 +21,7 @@ validateModel model = Left "TODO"
 
 
 validateProgramTree :: ProgramTree -> Validator [Declaration]
-validateProgramTree (ProgramTree (x:xs)) = validateStatement x
+validateProgramTree (ProgramTree (x:xs) l) = validateStatement x
 validateProgramTree _ = todo
 
 
@@ -397,7 +397,7 @@ validateSequenceElem f (SeqElem i Nothing) = f i
 val :: String -> IO ()
 val s = do
     let str = s
-    let other = [ETok (0, 0, 0, L_EOF) [] L_EOF ""]
+    let other = [ETok (0, 0, 0, sourcePos0) [] L_EOF ""]
     let txt  = pack str
     let lexed = parseMaybe eLex  txt
     let stream = ETokenStream txt $ fromMaybe other lexed
@@ -405,5 +405,5 @@ val s = do
     let progStruct = parseMaybe parseProgram stream
     case progStruct of
         Nothing -> putStrLn "error"
-        Just p@(ProgramTree a) -> print (validateProgramTree p)
+        Just p@(ProgramTree{}) -> print (validateProgramTree p)
     -- putStrLn validateFind

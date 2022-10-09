@@ -19,13 +19,12 @@ instance Show LToken where
     show (MissingToken x) = "MISSING[" ++ show x ++ "]"
     show (SkippedToken x) = "SKIPPED[" ++ show x ++ "]"
 
-newtype ProgramTree = ProgramTree [StatementNode]
-
-
-
-
+data ProgramTree = ProgramTree [StatementNode] LToken
+    
 instance Show ProgramTree where
-    show (ProgramTree  x) = intercalate "\n" (map show x)
+    show (ProgramTree xs eof) = "ProgramTree \n" ++ 
+                                intercalate "\n\n" (map show xs)
+                                 ++ "\n\n" ++ show eof
 
 data StatementNode
     = DeclarationStatement DeclarationStatementNode
@@ -132,16 +131,17 @@ data BranchingOnNode = BranchingOnName NameNode | BranchingOnExpression Expressi
 
 data DomainNode
     = BoolDomainNode LToken
-    | RangedIntDomainNode LToken (ListNode RangeNode)
+    | RangedIntDomainNode LToken (Maybe (ListNode RangeNode))
     | RangedEnumNode NameNode (ListNode RangeNode)
     | EnumDomainNode NameNode
+    | ShortTupleDomainNode (ListNode DomainNode)
     | TupleDomainNode LToken (ListNode DomainNode)
     | RecordDomainNode LToken (ListNode NamedDomainNode)
     | VariantDomainNode LToken (ListNode NamedDomainNode)
     | MatrixDomainNode LToken LToken LToken (ListNode DomainNode) LToken DomainNode
     | SetDomainNode LToken (ListNode AttributeNode) LToken DomainNode
     | MSetDomainNode LToken (ListNode AttributeNode) LToken DomainNode
-    | FunctionDomainNode LToken (ListNode AttributeNode) DomainNode LToken DomainNode
+    | FunctionDomainNode LToken (Maybe (ListNode AttributeNode) ) DomainNode LToken DomainNode
     | SequenceDomainNode LToken (ListNode AttributeNode) LToken DomainNode
     | RelationDomainNode LToken (ListNode AttributeNode) LToken (ListNode DomainNode)
     | PartitionDomainNode LToken (ListNode AttributeNode) LToken DomainNode
@@ -156,7 +156,8 @@ data RangeNode
     | BoundedRangeNode ExpressionNode DoubleDotNode ExpressionNode
     deriving (Show)
 
-data DoubleDotNode = DoubleDotNode LToken LToken deriving (Show)
+type DoubleDotNode = LToken
+-- data DoubleDotNode = DoubleDotNode LToken LToken deriving (Show)
 
 data AttributeNode = NamedAttributeNode NameNode | NamedExpressionAttribute NameNode ExpressionNode
     deriving (Show)
@@ -174,7 +175,6 @@ data ExpressionNode
     = Literal LiteralNode
     | IdentifierNode NameNode
     | QuantificationExpr QuantificationExpressionNode
-    | ComprehensionExpr ComprehensionExpressionNode
     | OperatorExpressionNode OperatorExpressionNode
     | ParenExpression ParenExpressionNode
     | AbsExpression ParenExpressionNode
@@ -207,9 +207,19 @@ data LiteralNode
     deriving (Show)
 
 data MatrixLiteralNode
-    = MatrixLiteralExplicitDomain (ListNode ExpressionNode) LToken DomainNode
-    | MatrixLiteralImplicitDomain (ListNode ExpressionNode)
+    = MatrixLiteralNode 
+        LToken --openBracket
+        (Sequence ExpressionNode)
+        (Maybe OverDomainNode) -- explicitDomain
+        (Maybe ComprehensionNode) --compBody
+        LToken --close
     deriving (Show)
+
+data ComprehensionNode 
+    = ComprehensionNode 
+        LToken -- |
+        (Sequence ComprehensionBodyNode)
+    deriving (Show) 
 
 data RecordMemberNode = RecordMemberNode NameNode LToken ExpressionNode
     deriving (Show)
@@ -228,11 +238,30 @@ newtype PartitionElemNode = PartitionElemNode (ListNode ExpressionNode)
 data QuantificationExpressionNode
     = QuantificationExpressionNode
         LToken
-        (Sequence QuantificationPattern)
-        LToken
+        (Sequence AbstractPatternNode)
+        QuantificationOverNode
+        (Maybe QuanticationGuard)
+        LToken --dot
         ExpressionNode
     deriving (Show) -- MAYBE?
 
+data QuantificationOverNode = 
+    QuantifiedSubsetOfNode LToken ExpressionNode
+    | QuantifiedMemberOfNode LToken ExpressionNode
+    | QuantifiedDomainNode OverDomainNode
+    deriving (Show)
+
+data OverDomainNode = OverDomainNode LToken DomainNode
+    deriving (Show)
+data AbstractPatternNode = 
+    AbstractIdentifier NameNode
+    | AbstractPatternMetaVar LToken
+    | AbstractPatternTuple (Maybe LToken) (ListNode AbstractPatternNode)
+    | AbstractPatternMatrix (ListNode AbstractPatternNode)
+    | AbstractPatternSet (ListNode AbstractPatternNode)
+    deriving (Show)
+data QuanticationGuard = QuanticationGuard LToken ExpressionNode
+    deriving (Show)
 data QuantificationPattern =
     QuantificationPattern ExpressionNode
     deriving (Show)
@@ -249,6 +278,7 @@ data ComprehensionExpressionNode
 data ComprehensionBodyNode
     = CompBodyCondition ExpressionNode
     | CompBodyDomain NamedDomainNode
+    | CompBodyGenExpr AbstractPatternNode LToken ExpressionNode
     | CompBodyLettingNode LToken NameNode LToken ExpressionNode
     deriving (Show)
 
@@ -260,7 +290,7 @@ data OperatorExpressionNode
 
 
 data PostfixOpNode
-    = IndexedNode LToken IndexerNode LToken
+    = IndexedNode (ListNode RangeNode)
     | OpFactorial  LToken
     | ApplicationNode (ListNode ExpressionNode)
     deriving (Show)
@@ -281,13 +311,15 @@ data ListNode itemType = ListNode
 newtype Sequence itemType = Seq
     { elems :: [SeqElem itemType]
     }
+    deriving (Show)
 
 -- deriving (Show)
-instance (Show a) => Show (Sequence a) where
-    show (Seq e) = "Seq:\n" ++ intercalate "\n\t" (map show e) ++ "\n"
+-- instance (Show a) => Show (Sequence a) where
+--     show (Seq e) = "Seq:\n" ++ intercalate "\n\t" (map show e) ++ "\n"
 
 data SeqElem itemType = SeqElem
-    { item :: itemType
-    , separator :: Maybe LToken
+    { 
+        separator :: Maybe LToken,
+        item :: itemType
     }
     deriving (Show)

@@ -204,8 +204,14 @@ data Lexeme
     -- attaching a type to an expression
     | L_BackTick            --    `
 
+    --Quantifiers
+
+    | L_ForAll
+    | L_Exists
+
     -- others
     | L_Dot
+    | L_DoubleDot
     | L_Comma
     | L_SemiColon
 
@@ -250,6 +256,9 @@ data Lexeme
 
     -- type functional
     | L_transform
+
+    -- helper
+    | L_Missing
     | L_EOF
 
     deriving (Eq, Ord, Show,Generic) --Generic
@@ -345,6 +354,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_makeTable, "makeTable" )
     , ( L_table, "table" )
 
+
     , ( L_allDiff, "allDiff" )
     , ( L_alldifferent_except, "alldifferent_except" )
     , ( L_gcc, "gcc" )
@@ -360,6 +370,11 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     -- , ( L_lambda, "lambda" )
     -- , ( L_quantifier, "quantifier" )
     -- , ( L_representation, "representation" )
+
+    , ( L_ForAll            , "forAll"     )
+    , ( L_Exists           , "exists"     )
+
+
     , ( L_Plus            , "+"     )
     , ( L_Minus           , "-"     )
     , ( L_Times           , "*"     )
@@ -389,6 +404,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_Bar             , "|"     )
     , ( L_BackTick        , "`"     )
     , ( L_Dot             , "."     )
+    , ( L_DoubleDot       , ".."    )
     , ( L_Comma           , ","     )
     , ( L_SemiColon       , ";"     )
     , ( L_OpenParen       , "("     )

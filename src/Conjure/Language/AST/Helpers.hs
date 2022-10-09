@@ -36,8 +36,9 @@ intLiteral = token test Set.empty <?> "Int Literal"
 
 makeMissing :: Lexeme -> Parser LToken
 makeMissing l = do
-    ETok {offsets=(s, _, _, _)} <- lookAhead anySingle
-    return (MissingToken (ETok (s, s, 0, l) [] l ""))
+    spos <- getSourcePos
+    s <- getOffset
+    return (MissingToken (ETok (s, s, 0, spos) [] l ""))
 
 makeUnexpected :: Parser LToken
 makeUnexpected = SkippedToken <$> anySingle
@@ -45,19 +46,19 @@ makeUnexpected = SkippedToken <$> anySingle
 -- try to get a token from the stream but allow failiure
 want :: Lexeme -> Parser LToken
 want (LIdentifier _) = do
-    (ETok (s, ts, _, _) t lex _ ) <- lookAhead anySingle
+    (ETok (s, ts, _, spos) t lex _ ) <- lookAhead anySingle
     case lex of
         (LIdentifier _) -> RealToken <$> anySingle
-        _ -> return $ MissingToken $ ETok (s, ts, 0, LMissingIdentifier) t LMissingIdentifier ""
+        _ -> return $ MissingToken $ ETok (s, ts, 0, spos) t LMissingIdentifier ""
 want a = do
-    (ETok (s, ts, _, _) t lex _) <- lookAhead anySingle
+    (ETok (s, ts, _, spos) t lex _) <- lookAhead anySingle
     if lex == a
         then RealToken <$> anySingle
-        else return $ MissingToken $ ETok (s, ts, 0, a) t a ""
+        else return $ MissingToken $ ETok (s, ts, 0, spos) t a ""
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser LToken
-need a = RealToken <$> eSymbol a
+need a = RealToken <$> eSymbol a <?> "\"" ++ lexemeFace a ++ "\""
 
 parseIdentifier :: Parser NameNode
 parseIdentifier = do
@@ -72,6 +73,9 @@ parseIdentifierStrict = do
 
 commaList :: Parser a -> Parser (Sequence a)
 commaList = parseSequence L_Comma
+
+commaList1 ::(Show a) => Parser a -> Parser (Sequence a)
+commaList1 = parseNESequence L_Comma
 
 squareBracketList :: Parser (Sequence a) -> Parser (ListNode a)
 squareBracketList = parseList L_OpenBracket L_CloseBracket
@@ -101,17 +105,27 @@ parseListStrict startB endB seq = do
 
 parseSequence :: Lexeme -> Parser a -> Parser (Sequence a)
 parseSequence divider pElem = do
-    (a, b) <- manyTill_ (try seqElemSep) (try seqElemNoSep)
-    return $ Seq (a ++ [b])
-  where
+    start <- optional seqElemNoSep
+    rest <- many $ try seqElemSep
+    case start of
+      Nothing -> return $ Seq rest
+      Just se -> return $ Seq (se:rest)
+    where
     seqElemNoSep = do
-        v <- pElem
-        notFollowedBy $ eSymbol divider
-        return $ SeqElem v Nothing
+        SeqElem Nothing <$> pElem
     seqElemSep = do
-        v <- pElem
         s <- need divider
-        return $ SeqElem v (Just s)
+        SeqElem (Just s) <$> pElem
+
+parseNESequence :: (Show a) => Lexeme -> Parser a -> Parser (Sequence a)
+parseNESequence divider pElem = do
+    lst <- try $ parseSequence divider pElem
+    q <- return $ trace ("test" ++ show lst) ()
+    case lst of
+        Seq {elems=[]} -> empty
+        Seq _ -> return lst
+
+
 
 
 parensPair :: (Lexeme,Lexeme)
