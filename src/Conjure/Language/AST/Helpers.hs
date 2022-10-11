@@ -2,7 +2,7 @@ module Conjure.Language.AST.Helpers where
 
 import Conjure.Language.AST.Syntax
 import Conjure.Language.Lexemes
-import Conjure.Language.NewLexer hiding (Parser)
+import Conjure.Language.NewLexer
 import Conjure.Prelude hiding (many)
 import qualified Data.Set as Set
 import Data.Void
@@ -24,9 +24,19 @@ identifier = token test Set.empty <?> "Identifier"
         ETok {lexeme=(LIdentifier _) } -> Just x
         ETok{} -> Nothing
 
-lIdent :: Lexeme
-lIdent = LIdentifier ""
+metaVar :: Parser ETok
+metaVar = token test Set.empty <?> "Metavar"
+  where
+    test x = case x of
+        ETok {lexeme=(LMetaVar _) } -> Just x
+        ETok{} -> Nothing
 
+
+anIdent :: Lexeme
+anIdent = LIdentifier ""
+
+aMetaVar :: Lexeme
+aMetaVar = LMetaVar ""
 intLiteral :: Parser ETok
 intLiteral = token test Set.empty <?> "Int Literal"
   where
@@ -62,8 +72,11 @@ need a = RealToken <$> eSymbol a <?> "\"" ++ lexemeFace a ++ "\""
 
 parseIdentifier :: Parser NameNode
 parseIdentifier = do
-    x <- want lIdent
+    x <- want anIdent
     return $ NameNode x
+
+parseMetaVar :: Parser LToken
+parseMetaVar = RealToken <$> metaVar
 
 parseIdentifierStrict :: Parser NameNode
 parseIdentifierStrict = do

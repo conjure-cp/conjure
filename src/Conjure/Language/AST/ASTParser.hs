@@ -7,7 +7,7 @@ import Conjure.Prelude hiding (many)
 
 import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Syntax
-import Conjure.Language.NewLexer hiding (Parser)
+import Conjure.Language.NewLexer
 
 import Conjure.Language.AST.Expression
 import Conjure.Language.Lexemes
@@ -17,11 +17,21 @@ import Data.Text (pack)
 import Data.Void (Void)
 import Conjure.Language.AST.Reformer (Flattenable(..))
 
+data ParserError = ParserError
+    deriving (Show)
+runASTParser :: Parser a -> ETokenStream -> Either ParserError a
+runASTParser p str = case runParser p "Parser" str of
+  Left peb -> Left ParserError
+  Right res -> Right res
+
 parseProgram :: Parser ProgramTree
 parseProgram =  do
     (tl,ending) <- manyTill_ parseTopLevel pEnding
     return $ ProgramTree tl ending
     <?> "Program"
+
+parseTopLevels :: Parser [StatementNode]
+parseTopLevels = manyTill parseTopLevel pEnding
 
 parseTopLevel :: Parser StatementNode
 parseTopLevel = 

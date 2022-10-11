@@ -11,11 +11,11 @@ import Conjure.Language.Parser
 import Conjure.Language.Lenses as X ( fixTHParsing ) -- reexporting because it is needed by the QQ
 
 
--- megaparsec
-import Text.Megaparsec ( setOffset , SourcePos)
-import qualified Text.Megaparsec as MP
+-- -- megaparsec
+-- import Text.Megaparsec ( setOffset , SourcePos)
+-- import qualified Text.Megaparsec as MP
 
--- template-haskell
+-- -- template-haskell
 import Language.Haskell.TH ( Q, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 
@@ -26,13 +26,13 @@ import Data.Generics.Aliases ( extQ )
 essenceStmts :: QuasiQuoter
 essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
-        l <- locationTH
-        e :: [Statement] <- do return [] --parseIO (setOffset 1000000000000000 *> parseTopLevels) str
+        -- l <- locationTH
+        e :: [Statement] <- parseIO parseTopLevels str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
-        l <- locationTH
-        e :: [Statement] <- do return [] --parseIO (setOffset 1000000000000000 *> parseTopLevels) str
+        -- l <- locationTH
+        e :: [Statement] <- parseIO  parseTopLevels str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
@@ -41,13 +41,13 @@ essenceStmts = QuasiQuoter
 essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
-        l <- locationTH
-        e <- do return $ Constant $ ConstantBool True --parseIO (setOffset 100000000000 *> parseExpr) str
+        -- l <- locationTH
+        e <- do parseIO parseExpr str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
-        l <- locationTH
-        e <- do return $ Constant $ ConstantBool True--parseIO (setOffset 100000000000000 *> parseExpr) str
+        -- l <- locationTH
+        e <- do parseIO  parseExpr str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
@@ -56,24 +56,24 @@ essence = QuasiQuoter
 essenceDomain :: QuasiQuoter
 essenceDomain = QuasiQuoter
     { quoteExp = \ str -> do
-        l <- locationTH
-        e :: Domain () () <- do return $ DomainBool--parseIO (setOffset 100000000000 *> parseDomain) str
+        -- l <- locationTH
+        e <- parseIO  parseDomain str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
-        l <- locationTH
-        e :: Domain () () <- do return $ DomainBool--parseIO (setOffset 1 *> parseDomain) str
+        -- l <- locationTH
+        e <- do parseIO parseDomain str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
 
-locationTH :: Q SourcePos
-locationTH = do
-    loc <- location
-    let file = loc_filename loc
-    let (line, col) = loc_start loc
-    return (MP.SourcePos file (MP.mkPos line) (MP.mkPos col))
+-- locationTH :: Q SourcePos
+-- locationTH = do
+--     loc <- location
+--     let file = loc_filename loc
+--     let (line, col) = loc_start loc
+--     return (MP.SourcePos file (MP.mkPos line) (MP.mkPos col))
 
 expE :: Expression -> Maybe ExpQ
 expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]

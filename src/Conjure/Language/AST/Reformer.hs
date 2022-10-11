@@ -76,6 +76,7 @@ instance Flattenable ETok ExpressionNode where
     flatten x =  case x of
         Literal ln -> flatten ln
         IdentifierNode nn -> flatten nn
+        MetaVarExpr tk -> flatten tk
         QuantificationExpr qen -> flatten qen
         OperatorExpressionNode oen -> flatten oen
         ParenExpression pen ->flatten pen
@@ -171,7 +172,7 @@ instance Flattenable ETok ComprehensionExpressionNode where
 instance Flattenable ETok ComprehensionBodyNode where
     flatten x =  case x of
         CompBodyCondition en -> flatten en
-        CompBodyDomain ndn -> flatten ndn
+        CompBodyDomain a b c -> flatten a ++ flatten b ++ flatten c
         CompBodyGenExpr a b c -> flatten a ++ flatten b ++ flatten c
         CompBodyLettingNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
 
@@ -191,6 +192,7 @@ instance Flattenable ETok DomainNode where
     flatten x =  case x of
         BoolDomainNode lt -> flatten lt
         RangedIntDomainNode lt ln -> flatten lt ++ flatten ln
+        MetaVarDomain a -> flatten a
         RangedEnumNode nn ln -> flatten nn ++ flatten ln
         EnumDomainNode nn -> flatten nn
         ShortTupleDomainNode ln -> flatten ln

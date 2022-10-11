@@ -119,6 +119,7 @@ import Pipes ( Pipe, Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 import qualified Data.Aeson.Types as JSON   -- aeson
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as M   -- containers
 import qualified Data.Vector as V           -- vector
 
@@ -309,13 +310,13 @@ modelRepresentationsJSON ::
 modelRepresentationsJSON model = do
     reprs <- modelRepresentations model
     return $ JSON.Array $ V.fromList
-        [ JSON.Object $ M.fromList
+        [ JSON.Object $ KM.fromList
             [ "name" ~~ r name
             , "representations" ~~ representationsJSON
             ]
         | (name, domains) <- reprs
         , let representationsJSON = JSON.Array $ V.fromList
-                [ JSON.Object $ M.fromList
+                [ JSON.Object $ KM.fromList
                     [ "description" ~~ r d
                     , "answer" ~~ toJSON i
                     ]
@@ -323,8 +324,8 @@ modelRepresentationsJSON model = do
                 ]
         ]
     where
-        (~~) :: Text -> JSONValue -> (Text, JSONValue)
-        x ~~ y = (x, y)
+        (~~) :: JSON.Key -> JSONValue -> (JSON.Key, JSONValue)
+        x ~~ y = ( x, y)
         r s = JSON.String $ stringToText $ render 100000 $ pretty s
 
 

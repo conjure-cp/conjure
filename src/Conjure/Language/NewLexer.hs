@@ -54,8 +54,9 @@ isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
 type Offsets = (Int, Int, Int, SourcePos)
-type Parser = Parsec Void T.Text
+type Lexer = Parsec Void T.Text
 
+-- type Lexer = Parsec Void T.Text ETokenStream
 
 data Trivia = WhiteSpace T.Text | LineComment T.Text | BlockComment T.Text
     deriving (Show, Eq, Ord)
@@ -80,14 +81,23 @@ tokenSourcePos ETok{offsets=(_,_,_,s)} = s
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 
-eLex :: Parser [ETok]
+data LexerError = LexerError
+    deriving (Show)
+
+runLexer :: Text -> Either LexerError ETokenStream
+runLexer txt = case runParser eLex "Lexer" txt of
+  Left peb -> Left LexerError
+  Right ets -> Right $ ETokenStream txt ets
+
+
+eLex :: Lexer [ETok]
 eLex = 
     do 
         main <- many $ try aToken 
         end <- pEOF
         return $ main ++ [end]
 
-aToken :: Parser ETok
+aToken :: Lexer ETok
 aToken = do
     start <- getOffset
     whiteSpace <- pTrivia
@@ -97,7 +107,7 @@ aToken = do
     tokenEnd <- getOffset
     return $ makeToken (start, wse, tokenEnd - start, spos) whiteSpace tok cap
 
-pEOF :: Parser ETok
+pEOF :: Lexer ETok
 pEOF = do
     start <- getOffset
     whiteSpace <- pTrivia
@@ -108,10 +118,10 @@ pEOF = do
     return $ makeToken (start, wse, tokenEnd - start, spos) whiteSpace L_EOF ""
 
 
-aLexeme :: Parser (Lexeme,Text)
+aLexeme :: Lexer (Lexeme,Text)
 aLexeme = aLexemeStrict <|> pFallback
 
-aLexemeStrict :: Parser (Lexeme,Text)
+aLexemeStrict :: Lexer (Lexeme,Text)
 aLexemeStrict =
     try
         pNumber
@@ -120,34 +130,34 @@ aLexemeStrict =
         <|> try pMetaVar
 
 
-pNumber :: Parser (Lexeme,Text)
+pNumber :: Lexer (Lexeme,Text)
 pNumber = do
     v <- L.decimal
     return (LIntLiteral v,T.pack $ show  v)
     <?> "Numeric Literal"
 
-pMetaVar :: Parser (Lexeme,Text)
+pMetaVar :: Lexer (Lexeme,Text)
 pMetaVar = do
     amp <- chunk "&"
     (_,cap) <- pIdentifier
     return (LMetaVar cap,amp `T.append` cap)
 
-pIdentifier :: Parser (Lexeme,Text)
+pIdentifier :: Lexer (Lexeme,Text)
 pIdentifier = do
     firstLetter <- takeWhile1P Nothing isIdentifierFirstLetter
     rest <- takeWhileP Nothing isIdentifierLetter
     let ident = T.append firstLetter rest
     return ( LIdentifier ident, ident)
     <?> "Identifier"
-pFallback :: Parser (Lexeme,Text)
+pFallback :: Lexer (Lexeme,Text)
 pFallback = do
     q <- T.pack <$> someTill anySingle (lookAhead $ try somethingValid)
     return (LUnexpected  q,q)
   where
-    somethingValid :: Parser ()
+    somethingValid :: Lexer ()
     somethingValid = void pTrivia <|> void aLexemeStrict <|> eof
 
-pLexeme :: (T.Text, Lexeme) -> Parser (Lexeme,Text)
+pLexeme :: (T.Text, Lexeme) -> Lexer (Lexeme,Text)
 pLexeme (s, l) = do
     tok <- string s
     notFollowedBy $ if isIdentifierLetter $ T.last tok then nonIden else empty
@@ -156,24 +166,24 @@ pLexeme (s, l) = do
     where
         nonIden = takeWhile1P Nothing isIdentifierLetter
 
-pTrivia :: Parser [Trivia]
+pTrivia :: Lexer [Trivia]
 pTrivia = many (whiteSpace <|> lineComment <|> blockComment)
 
-whiteSpace :: Parser Trivia
+whiteSpace :: Lexer Trivia
 whiteSpace = do
     s <- some spaceChar
     return $ WhiteSpace $ T.pack s
 
-lineEnd :: Parser [Char]
+lineEnd :: Lexer [Char]
 lineEnd = T.unpack <$> eol <|> ( eof >> return [])
 
-lineComment :: Parser Trivia
+lineComment :: Lexer Trivia
 lineComment = do
     _ <- try (chunk "$")
     (text,end) <- manyTill_ L.charLiteral lineEnd
     return $ LineComment $ T.pack ('$' : text++end)
 
-blockComment :: Parser Trivia
+blockComment :: Lexer Trivia
 blockComment = do
     _ <- try (chunk "/*")
     text <- manyTill L.charLiteral (chunk "*/")

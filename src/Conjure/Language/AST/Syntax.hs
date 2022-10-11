@@ -129,6 +129,7 @@ data DomainNode
     | RangedIntDomainNode LToken (Maybe (ListNode RangeNode))
     | RangedEnumNode NameNode (ListNode RangeNode)
     | EnumDomainNode NameNode
+    | MetaVarDomain LToken
     | ShortTupleDomainNode (ListNode DomainNode)
     | TupleDomainNode LToken (ListNode DomainNode)
     | RecordDomainNode LToken (ListNode NamedDomainNode)
@@ -169,6 +170,7 @@ newtype NameNode = NameNode LToken
 data ExpressionNode
     = Literal LiteralNode
     | IdentifierNode NameNode
+    | MetaVarExpr LToken
     | QuantificationExpr QuantificationExpressionNode
     | OperatorExpressionNode OperatorExpressionNode
     | DomainExpression DomainExpressionNode
@@ -276,9 +278,9 @@ data ComprehensionExpressionNode
 
 data ComprehensionBodyNode
     = CompBodyCondition ExpressionNode
-    | CompBodyDomain NamedDomainNode
-    | CompBodyGenExpr AbstractPatternNode LToken ExpressionNode
-    | CompBodyLettingNode LToken NameNode LToken ExpressionNode
+    | CompBodyDomain (Sequence AbstractPatternNode) LToken DomainNode
+    | CompBodyGenExpr (Sequence AbstractPatternNode) LToken ExpressionNode
+    | CompBodyLettingNode LToken AbstractPatternNode LToken ExpressionNode
     deriving (Show)
 
 data OperatorExpressionNode

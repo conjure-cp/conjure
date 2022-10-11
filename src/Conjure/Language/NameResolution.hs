@@ -13,6 +13,10 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+    ( changeRepr,
+      typeOfDomain,
+      Domain(DomainUnnamed, DomainReference, DomainRecord,
+             DomainVariant) )
 import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.Pretty
@@ -310,12 +314,12 @@ resolveAbsPat _ (Single nm) x = addName nm $ Alias x
 resolveAbsPat context (AbsPatTuple ps) x =
     sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
               | (p, i_) <- zip ps allNats
-              , let i :: Constant  = fromInt i_ 
+              , let i   = fromInt i_ 
               ]
 resolveAbsPat context (AbsPatMatrix ps) x =
     sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
               | (p, i_) <- zip ps allNats
-              , let i :: Constant = fromInt i_
+              , let i  = fromInt i_
               ]
 resolveAbsPat context (AbsPatSet ps) x = do
     ys <- case x of

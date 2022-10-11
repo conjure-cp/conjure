@@ -34,6 +34,7 @@ parseAtomicExpression = do
             [ Literal <$> parseLiteral
             , parseFunction
             , IdentifierNode <$> parseIdentifierStrict
+            , MetaVarExpr <$> parseMetaVar
             , ParenExpression <$> parseParenExpression parensPair
             , AbsExpression <$> parseParenExpression (L_Bar, L_Bar)
             , QuantificationExpr <$> parseQuantificationStatement
@@ -215,7 +216,7 @@ parseAbstractPattern = do
     parseAbstractId :: Parser AbstractPatternNode
     parseAbstractId = AbstractIdentifier <$> parseIdentifierStrict
     parseAbstractMetaVar :: Parser AbstractPatternNode
-    parseAbstractMetaVar = AbstractIdentifier <$> parseIdentifierStrict
+    parseAbstractMetaVar = AbstractMetaVar <$> parseMetaVar
     parseAbstractPatternTuple :: Parser AbstractPatternNode
     parseAbstractPatternTuple = do
         lTuple <- optional $ need L_tuple
@@ -242,22 +243,21 @@ parseComprehensionCondition = do
   where
     letting = do
         lLetting <- need L_letting
-        v <- parseIdentifier
+        v <- parseAbstractPattern
         lBe <- want L_be
         expr <- parseExpression
         return $ CompBodyLettingNode lLetting v lBe expr
-    generator =
+    generator = try $ do
+        pats <- commaList parseAbstractPattern
         choice
             [ try $ do
-                ident <- parseIdentifierStrict
                 lColon <- need L_Colon
                 domain <- parseDomain
-                return $ CompBodyDomain (NameDomainNode ident lColon domain)
+                return $ CompBodyDomain pats lColon domain
             , try $ do
-                pat <- parseAbstractPattern
                 lArrow <- need L_LeftArrow
                 expr <- parseExpression
-                return $ CompBodyGenExpr pat lArrow expr
+                return $ CompBodyGenExpr pats lArrow expr
             ]
 
     condition = CompBodyCondition <$> parseExpressionStrict
@@ -337,6 +337,7 @@ parseDomain =
         choice
             [ BoolDomainNode <$> need L_bool
             , parseIntDomain
+            , MetaVarDomain <$> parseMetaVar
             , parseTuple
             , parseRecord
             , parseVariant

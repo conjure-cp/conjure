@@ -12,15 +12,27 @@ import Conjure.Prelude
 import Control.Applicative
 
 import Conjure.Language.Type
+import Conjure.Language.Definition
 import Data.Text (pack, unpack)
 import Text.Megaparsec (parseMaybe, runParser)
-import Conjure.Language (mkOp, mkBinOp, Op (MkOpRelationProj, MkOpSlicing, MkOpIndexing), OpRelationProj (OpRelationProj), OpIndexing (OpIndexing), opPowerSet)
-import Conjure.Language.Expression.Op (OpSlicing(..))
-import Conjure.Language (Op(..))
-import Conjure.Language (OpPowerSet(..), OpImage (OpImage))
 
-validateModel :: ProgramTree -> Either Doc Model
-validateModel model = Left "TODO"
+import Conjure.Language.Expression.Op
+    ( OpSlicing(..),
+      Op(..),
+      OpPowerSet(..),
+      OpImage(OpImage),
+      mkOp,
+      mkBinOp,
+      Op(MkOpRelationProj, MkOpSlicing, MkOpIndexing),
+      OpRelationProj(OpRelationProj),
+      OpIndexing(OpIndexing),
+      )
+
+validateModel :: ProgramTree -> Validator Model
+validateModel model = do
+        sts <- validateProgramTree model
+        return $ Model (LanguageVersion "Essence" [1] ) sts def
+
 
 validateProgramTree :: ProgramTree -> Validator [Statement]
 validateProgramTree (ProgramTree sts _) = do
@@ -105,6 +117,7 @@ validateLettingAssignment (LettingAnon l1 l2 l3 l4 szExp) = do
 
 data ValidatorError
     = TypeError String
+    | StateError String
     | TokenError LToken
     | IllegalToken LToken -- Should not occur in practice and indicates a logical error somewhere
     | NotImplemented String
@@ -213,8 +226,12 @@ validateFind (FindStatementNode find names colon domain) = do
 
 type DomainValidator = Validator (Domain () Expression)
 
+validateDomainWithRepr :: DomainNode -> Validator (Domain HasRepresentation Expression)
+validateDomainWithRepr dom = changeRepr NoRepresentation <$> validateDomain dom
+
 validateDomain :: DomainNode -> DomainValidator
 validateDomain dm = case dm of
+    MetaVarDomain lt -> DomainMetaVar <$> validateMetaVar lt
     BoolDomainNode lt -> validateSymbol lt >> return DomainBool
     RangedIntDomainNode l1 rs -> checkSymbols [l1] >> validateRangedInt rs
     RangedEnumNode nn ranges -> validateEnumRange nn ranges
@@ -353,6 +370,7 @@ validateExpression :: ExpressionNode -> Validator Expression
 validateExpression expr = case expr of
     Literal ln -> validateLiteral ln
     IdentifierNode nn -> validateIdentifierExpr nn
+    MetaVarExpr tok -> ExpressionMetaVar <$> validateMetaVar tok
     QuantificationExpr qen -> validateQuantificationExpression qen
     OperatorExpressionNode oen -> validateOperatorExpression oen
     DomainExpression dex -> validateDomainExpression dex
@@ -407,12 +425,19 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
 
 validateAbstractPattern :: AbstractPatternNode -> Validator AbstractPattern
 validateAbstractPattern (AbstractIdentifier nn) = Single <$> validateName nn
-validateAbstractPattern (AbstractMetaVar lt) = AbstractPatternMetaVar <$>  todo "absMetaVar"
+validateAbstractPattern (AbstractMetaVar lt) = AbstractPatternMetaVar <$>  validateMetaVar lt
 validateAbstractPattern (AbstractPatternMatrix ln) = AbsPatMatrix <$> validateList validateAbstractPattern ln
 validateAbstractPattern (AbstractPatternSet ln) = AbsPatSet <$> validateList validateAbstractPattern ln
 validateAbstractPattern (AbstractPatternTuple m_lt ln) = do
     maybe (pure ()) (\n ->checkSymbols [n]) m_lt
     AbsPatTuple <$> validateList validateAbstractPattern ln
+
+validateMetaVar :: LToken -> Validator String
+validateMetaVar tok = do
+    lx <- validateSymbol tok
+    case lx of
+        LMetaVar s -> return $ unpack s
+        _ -> invalid $ IllegalToken tok
 
 validateDomainExpression :: DomainExpressionNode -> Validator Expression
 validateDomainExpression (DomainExpressionNode  l1 dom l2) = do
@@ -423,8 +448,8 @@ validateFunctionApplication :: LToken -> ListNode ExpressionNode -> Validator Ex
 validateFunctionApplication name args = do
     name' <- validate $ validateSymbol name
     args' <- validate $ validateList validateExpression args
-    verify $ do 
-                n <- name' 
+    verify $ do
+                n <- name'
                 a <- args'
                 return $ case (n,a) of
                     (L_image,[y,z]) -> Op $  MkOpImage $ OpImage y z
@@ -434,11 +459,14 @@ validateIdentifierExpr :: NameNode -> Validator Expression
 validateIdentifierExpr name = Reference <$> ( Name <$> validateIdentifier name) <*> pure Nothing
 
 validateOperatorExpression :: OperatorExpressionNode -> Validator Expression
-
 validateOperatorExpression (PrefixOpNode lt expr) = do
-    checkSymbols [lt]
+    op <- validate $ validateSymbol lt
+    expr <- validate $ validateExpression expr
+    verify $ do
+        op' <- op
+        expr' <- expr        
+        return $ mkOp (mapPrefixToOp op') [expr']
     --lookup symbol
-    todo "operator expression prefix"
 validateOperatorExpression (BinaryOpNode lexp op rexp) = do
     lExpr <- validate $ validateExpression lexp
     rExpr <- validate $ validateExpression rexp
@@ -492,9 +520,74 @@ validateLiteral ln = case ln of
     PartitionLiteral lt ln' -> todo "Partition literal"
 
 validateMatrixLiteral :: MatrixLiteralNode -> Validator Expression
-validateMatrixLiteral (MatrixLiteralNode l1 se m_dom m_comp l2) = do
+validateMatrixLiteral (MatrixLiteralNode l1 se m_dom Nothing l2) = do
     checkSymbols [l1,l2]
-    todo "matrix literal"
+    elems <- validate $ validateSequence validateExpression se
+    dom <- validate $ validateOverDomain m_dom
+    let lit = do
+            xs <- elems
+            case dom of
+              Just (Just d) ->return $ AbsLitMatrix d xs
+              _ -> return $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
+    verify $ mkAbstractLiteral <$> lit
+    where
+        validateOverDomain :: Maybe OverDomainNode -> Validator (Maybe (Domain () Expression))
+        validateOverDomain Nothing = pure Nothing
+        validateOverDomain (Just (OverDomainNode l3 dom)) = checkSymbols [l3] >> Just<$> validateDomain dom
+
+
+
+validateMatrixLiteral (MatrixLiteralNode l1 se m_dom (Just comp) l2) = do
+    checkSymbols [l1,l2]
+    elems <- validate $ validateSequence validateExpression se
+    gens <- validate $ validateComprehension comp
+    enforceConstraint ((\x -> length x == 1 )<$> elems) "List comprehension must contain exactly one expression before |"
+    verify $ do 
+            ms <- elems 
+            gs <- gens
+            case ms of 
+              [x] -> return $ Comprehension x gs
+              _ -> Nothing 
+            
+
+
+validateComprehension :: ComprehensionNode -> Validator [GeneratorOrCondition]
+validateComprehension (ComprehensionNode l1 body) = checkSymbols [l1] >> concat <$> validateSequence validateComprehensionBody body
+
+validateComprehensionBody :: ComprehensionBodyNode -> Validator [GeneratorOrCondition]
+validateComprehensionBody (CompBodyCondition en) = (:[]) . Condition <$> validateExpression en
+validateComprehensionBody (CompBodyDomain apn l1 dom) = do
+    checkSymbols [l1]
+    pats <- validate $ validateSequence validateAbstractPattern apn
+    domain <- validate $ validateDomain dom
+    verify $ do 
+        ps <- pats
+        d <- domain
+        return [Generator  (GenDomainNoRepr pat d) | pat <- ps]
+
+validateComprehensionBody (CompBodyGenExpr apn lt en) = do
+    checkSymbols [lt]
+    pats <- validate $ validateSequence validateAbstractPattern apn
+    exp <- validate $ validateExpression en
+    verify $ do 
+        ps <- pats
+        e <- exp
+        return [Generator (GenInExpr pat e)| pat <- ps]
+validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
+    checkSymbols [l1,l2]
+    pat <- validate $ validateAbstractPattern nn
+    expr <- validate $ validateExpression en
+    verify $ (:[]) <$> (ComprehensionLetting <$> pat <*> expr)
+
+--placeholder for pre-evaluation
+mkAbstractLiteral :: AbstractLiteral Expression -> Expression
+mkAbstractLiteral  = AbstractLiteral
+
+enforceConstraint :: Maybe Bool -> String -> Validator ()
+enforceConstraint p msg = do 
+    case p of
+        Just True-> pure () 
+        _ -> invalid $ StateError msg
 
 
 
@@ -544,6 +637,12 @@ validateList validator (ListNode st seq end) = do
     _ <- validateSymbol end
     validateSequence validator seq
 
+
+mapPrefixToOp :: Lexeme -> Text
+mapPrefixToOp x = case x of
+    L_Minus -> "negate"
+    L_ExclamationMark -> "not"
+    _ -> pack $ lexemeFace x
 validateSequence :: (a -> Validator b) -> Sequence a -> Validator [b]
 validateSequence f (Seq vals) = validateArray (validateSequenceElem f) vals
 

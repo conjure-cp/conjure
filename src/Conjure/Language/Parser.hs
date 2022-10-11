@@ -8,40 +8,66 @@ module Conjure.Language.Parser
     , parseExpr
     , parseDomain
     , parseDomainWithRepr
-    , Parser, ParserState(..)
+    , Pipeline 
     ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
+-- import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Domain.AddAttributes
-import Conjure.Language.Type
-import Conjure.Language.TypeOf
-import Conjure.Language.Expression.Op
-import Conjure.Language.Pretty
+-- import Conjure.Language.Domain.AddAttributes
+-- import Conjure.Language.Type
+-- import Conjure.Language.TypeOf
+-- import Conjure.Language.Expression.Op
+-- import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace, lexemeText, runLexer )
-
+import qualified Conjure.Language.NewLexer as L
 -- megaparsec
-import Text.Megaparsec ( (<?>), label, token, try, eof, ParsecT)
-import Text.Megaparsec.Error ( ParseError(..),ErrorItem, errorOffset )
-import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn , Pos)
-import Control.Applicative.Combinators ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
-import Text.Megaparsec.Stream
-import Control.Monad.Combinators.Expr ( makeExprParser, Operator(..) )
-import qualified Text.Megaparsec as P ( runParser )
+-- megaparsec
+-- megaparsec
+-- megaparsec
+import Text.Megaparsec ( (<?>), label, token, try, eof, ParsecT,Parsec, runParser, errorBundlePretty)
+-- import Text.Megaparsec.Error ( ParseError(..),ErrorItem, errorOffset )
+-- import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn , Pos)
+-- import Control.Applicative.Combinators ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
+-- import Text.Megaparsec.Stream
+-- import Control.Monad.Combinators.Expr ( makeExprParser, Operator(..) )
+-- import qualified Text.Megaparsec as P ( runParser )
 
 -- text
 import qualified Data.Text as T
-
+import Conjure.Language.NewLexer (ETokenStream, LexerError)
+import Conjure.Language.Validator (Validator(..))
+import qualified Conjure.Language.Validator as V
+import qualified Conjure.Language.AST.ASTParser as P
+import qualified Conjure.Language.AST.Syntax as S
+import qualified Conjure.Language.AST.Expression as E
+import Conjure.Language.AST.ASTParser (ParserError, runASTParser, parseProgram)
 -- containers
-import qualified Data.Set as S ( null, fromList, toList )
+-- import qualified Data.Set as S ( null, fromList, toList )
 import Data.Void (Void)
+import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
+import Conjure.Language.AST.Expression (parseExpression)
+
+
+type Pipeline a b = (Parsec Void ETokenStream a,a -> Validator b)
+
+
+data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError [V.ValidatorError]
+    deriving (Show)
+
+runPipeline :: Pipeline a b -> Text -> Either PipelineError b
+runPipeline (parse,val) txt = do
+            lexResult <- either (Left . LexErr) Right $ L.runLexer txt
+            parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
+            case val parseResult of 
+                Validator (Just res) [] -> Right res
+                Validator _ xs -> Left $ ValidatorError xs          
 
 
 dummyModel :: Model 
-dummyModel = Model (LanguageVersion "Essence" [1]) [] dummyModelInfo
+dummyModel = Model (LanguageVersion "Essence" [1]) [] def
 
 dummyModelInfo :: ModelInfo
 dummyModelInfo = ModelInfo 
@@ -63,10 +89,8 @@ dummyModelInfo = ModelInfo
                     [] --Int
                     0
 
-parseModel :: Parser Model
-parseModel = do 
-                let x = dummyModel
-                return x
+parseModel :: Pipeline ProgramTree Model
+parseModel = (parseProgram,V.validateModel)
     -- inCompleteFile $ do
     -- let
     --     pLanguage :: Parser LanguageVersion
@@ -94,11 +118,11 @@ parseModel = do
     --     }
 
 
-parseIO :: MonadFailDoc m => Parser a -> String -> m a
-parseIO p s =
-    case runLexerAndParser (inCompleteFile p) "" (T.pack s) of
-        Left err -> failDoc err
-        Right x  -> return x
+parseIO :: MonadFailDoc m => Pipeline i a -> String -> m a
+parseIO p s = do
+            case runPipeline p $ T.pack s of
+                Left err -> failDoc $ show errorBundlePretty err
+                Right x  -> return x
 
 
 -- translateQnName :: Text -> Text
@@ -115,8 +139,8 @@ parseIO p s =
 -- -- Actual parsers --------------------------------------------------------------
 -- --------------------------------------------------------------------------------
 
-parseTopLevels :: Parser [Statement]
-parseTopLevels = do return [] --
+parseTopLevels :: Pipeline ProgramTree [Statement]
+parseTopLevels = (P.parseProgram,V.validateProgramTree)
 --     let one = satisfyL $ \case
 --                 L_find -> Just $ do
 --                     decls <- flip sepEndBy1 comma $ do
@@ -228,14 +252,12 @@ parseTopLevels = do return [] --
 --             x <- p
 --             return (RangeSingle x)
 
-parseDomain :: Parser (Domain () Expression)
-parseDomain = do  --(forgetRepr <$> parseDomainWithRepr) <?> "domain"
-                let x = DomainBool
-                return x
+parseDomain :: Pipeline DomainNode (Domain () Expression)
+parseDomain = (E.parseDomain,V.validateDomain)
 
 
-parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
-parseDomainWithRepr = do return DomainBool
+parseDomainWithRepr :: Pipeline DomainNode (Domain HasRepresentation Expression)
+parseDomainWithRepr = (E.parseDomain,V.validateDomainWithRepr)
 --     -- TODO: uncomment the following to parse (union, intersect and minus) for domains
 --     -- let
 --     --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
@@ -626,8 +648,8 @@ parseDomainWithRepr = do return DomainBool
 -- metaVarInE :: String -> Expression
 -- metaVarInE = ExpressionMetaVar
 
-parseExpr :: Parser Expression
-parseExpr = do return $ Constant $ ConstantBool True
+parseExpr :: Pipeline S.ExpressionNode Expression
+parseExpr = (E.parseExpression,V.validateExpression)
 --     let
 --         mergeOp op = mkBinOp (lexemeText op)
 
@@ -993,11 +1015,13 @@ parseExpr = do return $ Constant $ ConstantBool True
 
 
 
-data ParserState = ParserState { enumDomains :: [Name] }
-type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
+-- data ParserState = ParserState { enumDomains :: [Name] }
+-- type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
 
-runLexerAndParser :: MonadFailDoc m => Parser a -> String -> T.Text -> m a
-runLexerAndParser p file inp = do failDoc "Nothing"
+runLexerAndParser :: MonadFailDoc m => Pipeline n a -> String -> T.Text -> m a
+runLexerAndParser p file inp = case runPipeline p inp of
+  Left pe -> failDoc $ errorBundlePretty pe
+  Right a -> return a
 --     ls <- runLexer inp
 --     case runParser p file ls of
 --         Left (msg, line, col) ->
@@ -1115,8 +1139,8 @@ runLexerAndParser p file inp = do failDoc "Nothing"
 --     j <- p
 --     return (i,j)
 
-inCompleteFile :: Parser a -> Parser a
-inCompleteFile parser = do
-    result <- parser
-    eof
-    return result
+-- inCompleteFile :: Parser a -> Parser a
+-- inCompleteFile parser = do
+--     result <- parser
+--     eof
+--     return result

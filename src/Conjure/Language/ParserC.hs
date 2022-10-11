@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Conjure.Language.ParserC ( parseModel ) where
+module Conjure.Language.ParserC ( module X ) where
 
 -- conjure
 import Conjure.Prelude
@@ -10,7 +10,7 @@ import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace )
-import Conjure.Language.Parser ( Parser, ParserState(..) )
+import Conjure.Language.Parser as X
 
 -- megaparsec
 import Text.Megaparsec ( (<?>), label, token, try, eof )
@@ -25,33 +25,14 @@ import qualified Data.Text as T
 -- containers
 import qualified Data.Set as S ( null, fromList, toList )
 
-dummyModel :: Model 
-dummyModel = Model (LanguageVersion "Essence" [1]) [] dummyModelInfo
 
-dummyModelInfo :: ModelInfo
-dummyModelInfo = ModelInfo 
-                    []--([Name]) 
-                    []--([(Name, Expression)]) 
-                    []--([Name])
-                    []--([Declaration])
-                    []--([(Name, Expression)]) 
-                    []--([(Name, Domain () Expression)])
-                    []--([(Name, Domain HasRepresentation Expression)])
-                    []--([(Name, [Tree (Maybe HasRepresentation)])]) 
-                    []--Strategy 
-                    (PickFirst)
-                    (PickFirst)--([(Int, Int, Int)]) 
-                    []--([(Int, Int)])
-                    []--([Decision]) 
-                    []--([TrailRewrites]) 
-                    []--([(Text, Int)]) 
-                    [] --Int
-                    0
 
-parseModel :: Parser Model
-parseModel = do 
-    let m = dummyModel
-    return m 
+
+
+-- parseModel :: Parser Model
+-- parseModel = do 
+--     let m = dummyModel
+--     return m 
 --     inCompleteFile $ do
 --     let
 --         pLanguage :: Parser LanguageVersion

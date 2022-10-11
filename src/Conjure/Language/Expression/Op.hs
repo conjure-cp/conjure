@@ -19,7 +19,7 @@ import Conjure.Language.Expression.Op.Internal.Generated
 
 mkBinOp :: (Op x :< x, ExpressionLike x) => Text -> x -> x -> x
 mkBinOp op a b =
-    trace ("BINOP["++ show op ++ "]") $ case textToLexeme op of
+    case textToLexeme op of
         Nothing -> bug ("Unknown binary operator:" <+> pretty op)
         Just l  ->
             let
