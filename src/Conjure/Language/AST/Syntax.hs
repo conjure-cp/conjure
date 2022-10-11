@@ -85,29 +85,24 @@ data GivenStatementNode
     deriving (Show)
 
 data LettingStatementNode
-    = LettingExpr
-        LToken -- lLetting
-        (Sequence NameNode) -- name
-        LToken -- lBe
+    = LettingStatementNode
+      LToken
+      (Sequence NameNode)
+      LToken --
+      LettingAssignmentNode
+    deriving (Show)
+data LettingAssignmentNode
+    =  LettingExpr
         ExpressionNode
     | LettingDomain
-        LToken -- lLetting
-        (Sequence NameNode) -- name
-        LToken -- lBe
         LToken -- domain
         DomainNode
     | LettingEnum
-        LToken -- lLetting
-        (Sequence NameNode) -- name
-        LToken -- lBe
         LToken -- lNew
         LToken -- lType
         LToken -- lEnum
         (ListNode NameNode) -- nameList
     | LettingAnon
-        LToken -- lLettingAnon
-        (Sequence NameNode) -- name
-        LToken -- lBe
         LToken -- lNew
         LToken -- lType
         LToken -- lOf
@@ -176,12 +171,16 @@ data ExpressionNode
     | IdentifierNode NameNode
     | QuantificationExpr QuantificationExpressionNode
     | OperatorExpressionNode OperatorExpressionNode
+    | DomainExpression DomainExpressionNode
     | ParenExpression ParenExpressionNode
     | AbsExpression ParenExpressionNode
     | FunctionalApplicationNode LToken (ListNode ExpressionNode)
     | MissingExpressionNode LToken
     deriving (Show)
 
+data DomainExpressionNode 
+    = DomainExpressionNode LToken DomainNode LToken
+    deriving (Show) 
 data ParenExpressionNode = ParenExpressionNode LToken ExpressionNode LToken
     deriving (Show)
 
@@ -255,7 +254,7 @@ data OverDomainNode = OverDomainNode LToken DomainNode
     deriving (Show)
 data AbstractPatternNode = 
     AbstractIdentifier NameNode
-    | AbstractPatternMetaVar LToken
+    | AbstractMetaVar LToken
     | AbstractPatternTuple (Maybe LToken) (ListNode AbstractPatternNode)
     | AbstractPatternMatrix (ListNode AbstractPatternNode)
     | AbstractPatternSet (ListNode AbstractPatternNode)

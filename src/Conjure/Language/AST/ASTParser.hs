@@ -79,33 +79,31 @@ parseLetting = do
     lLetting <- need L_letting
     names <- commaList parseIdentifier
     lBe <- want L_be
-    choice
-        [ finishDomain $ LettingDomain lLetting names lBe
-        , try $ finishEnum $ LettingEnum lLetting names lBe
-        , try $ finishAnon $ LettingAnon lLetting names lBe
-        , finishExpression $ LettingExpr lLetting names lBe
+    let start = LettingStatementNode lLetting names lBe
+    start <$> choice
+        [ finishDomain 
+        , try finishEnum 
+        , try finishAnon 
+        , LettingExpr <$> parseExpression 
         ]
   where
-    finishDomain start = do
+    finishDomain = do
         lDomain <- need L_domain
         domain <- parseDomain
-        return $ start lDomain domain
-    finishExpression start = do
-        expr <- parseExpression
-        return $ start expr
-    finishEnum start = do
+        return $ LettingDomain lDomain domain
+    finishEnum = do
         lNew <- need L_new
         lType <- need L_type
         lEnum <- need L_enum
         members <- curlyBracketList $ commaList parseIdentifier
-        return $ start lNew lType lEnum members
-    finishAnon start = do
+        return $ LettingEnum lNew lType lEnum members
+    finishAnon = do
         lNew <- need L_new
         lType <- want L_type
         lOf <- want L_of
         lSize <- want L_size
         expr <- parseExpression
-        return $ start lNew lType lOf lSize expr
+        return $ LettingAnon lNew lType lOf lSize expr
 
 parseGiven :: Parser GivenStatementNode
 parseGiven = do

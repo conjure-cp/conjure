@@ -450,6 +450,12 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_transform, "transform")
     ]
 
+textToLexeme :: T.Text -> Maybe Lexeme
+textToLexeme t = M.lookup t mapTextToLexeme
+
+mapTextToLexeme :: M.HashMap T.Text Lexeme
+mapTextToLexeme = M.fromList lexemes
+
 mapLexemeToText :: M.HashMap Lexeme T.Text
 mapLexemeToText = M.fromList $ map swap lexemes
 
@@ -465,6 +471,9 @@ lexemeFace l =
     case M.lookup l mapLexemeToText of
         Nothing ->  (show l)
         Just t  ->  (T.unpack t)
+
+lexemeText :: Lexeme -> T.Text
+lexemeText l = T.pack $ show (lexemeFace l)
 
 --Categories
 functionAttributes :: [Lexeme]

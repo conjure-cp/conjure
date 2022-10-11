@@ -25,12 +25,16 @@ instance Flattenable ETok DeclarationStatementNode where
         GivenStatement gsn -> flatten gsn
         LettingStatement lsn -> flatten lsn
 
-instance Flattenable ETok LettingStatementNode where
+
+instance Flattenable ETok LettingStatementNode where 
+    flatten (LettingStatementNode a b c d) = concat[ flatten a, flatten b, flatten c,flatten d]
+
+instance Flattenable ETok LettingAssignmentNode where
     flatten x = case x of
-        LettingExpr a b c d ->  concat [flatten a, flatten b, flatten c, flatten d]
-        LettingDomain a b c d e -> concat [flatten a, flatten b, flatten c, flatten d, flatten e]
-        LettingEnum a b c d e f g -> concat [flatten a, flatten b, flatten c, flatten d, flatten e, flatten f, flatten g]
-        LettingAnon a b c d e f g h -> concat [flatten a, flatten b, flatten c, flatten d, flatten e, flatten f, flatten g, flatten h]
+        LettingExpr d ->  flatten d
+        LettingDomain d e -> flatten d ++ flatten e
+        LettingEnum d e f g -> concat [flatten d, flatten e, flatten f, flatten g]
+        LettingAnon d e f g h -> concat [flatten d, flatten e, flatten f, flatten g, flatten h]
 
 instance Flattenable ETok FindStatementNode where
     flatten (FindStatementNode a b c d) = concat  [flatten a, flatten b, flatten c, flatten d]
@@ -76,9 +80,13 @@ instance Flattenable ETok ExpressionNode where
         OperatorExpressionNode oen -> flatten oen
         ParenExpression pen ->flatten pen
         AbsExpression pen ->  flatten pen
+        DomainExpression dex -> flatten dex
         FunctionalApplicationNode lt ln ->  flatten lt ++ flatten ln
         MissingExpressionNode _ ->  []
 
+
+instance Flattenable ETok DomainExpressionNode where
+    flatten (DomainExpressionNode a b c) = flatten a ++ flatten b ++ flatten c
 instance Flattenable ETok QuantificationExpressionNode where
     flatten (QuantificationExpressionNode a b c d e f) = concat [
         flatten a, flatten b, flatten c, flatten d, flatten e, flatten f]
@@ -97,7 +105,7 @@ instance Flattenable ETok QuanticationGuard where
 instance Flattenable ETok AbstractPatternNode where
     flatten x = case x of
       AbstractIdentifier nn -> flatten nn
-      AbstractPatternMetaVar lt -> flatten lt
+      AbstractMetaVar lt -> flatten lt
       AbstractPatternTuple a b -> flatten a ++ flatten b
       AbstractPatternMatrix ln -> flatten ln
       AbstractPatternSet ln -> flatten ln
@@ -164,6 +172,7 @@ instance Flattenable ETok ComprehensionBodyNode where
     flatten x =  case x of
         CompBodyCondition en -> flatten en
         CompBodyDomain ndn -> flatten ndn
+        CompBodyGenExpr a b c -> flatten a ++ flatten b ++ flatten c
         CompBodyLettingNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
 
 instance Flattenable ETok OperatorExpressionNode where

@@ -37,16 +37,23 @@ parseAtomicExpression = do
             , ParenExpression <$> parseParenExpression parensPair
             , AbsExpression <$> parseParenExpression (L_Bar, L_Bar)
             , QuantificationExpr <$> parseQuantificationStatement
+            , DomainExpression <$> parseDomainExpression
             , MissingExpressionNode <$> makeMissing L_Missing
             ]
 
--- mPostfix <- optional parsePostfixOp
--- case mPostfix of
---   Nothing -> return e
---   Just f -> return $ f e
+
+
+parseDomainExpression :: Parser DomainExpressionNode
+parseDomainExpression = do 
+    lTick <- need L_BackTick
+    domain <- parseDomain
+    rTick <- want L_BackTick
+    return $ DomainExpressionNode lTick domain rTick
 
 -- [a,b,c : int (1..2)]
 -- [a,b,c : int (1..4) | x < 3,letting x be int]
+
+
 
 parseMatrixBasedExpression :: Parser LiteralNode
 parseMatrixBasedExpression = do

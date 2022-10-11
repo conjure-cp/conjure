@@ -14,7 +14,7 @@ module Conjure.Language.Lexer
     , lexemeFace
     ) where
 import Conjure.Prelude hiding (some,many)
-import Conjure.Language.Lexemes hiding (lexemeFace,mapLexemeToText)
+import Conjure.Language.Lexemes hiding (lexemeFace)
 import Data.Char ( isAlpha, isAlphaNum )
 import Data.Void
 import qualified Data.HashMap.Strict as M
@@ -286,11 +286,11 @@ data LexemePos = LexemePos
 
 -- instance Hashable Lexeme
 
-lexemeText :: Lexeme -> T.Text
-lexemeText l = T.pack $ show (lexemeFace l)
+-- lexemeText :: Lexeme -> T.Text
+-- lexemeText l = T.pack $ show (lexemeFace l)
 
-textToLexeme :: T.Text -> Maybe Lexeme
-textToLexeme t = M.lookup t mapTextToLexeme
+-- textToLexeme :: T.Text -> Maybe Lexeme
+-- textToLexeme t = M.lookup t mapTextToLexeme
 
 lexemeFace :: Lexeme -> Pr.Doc
 lexemeFace L_Newline = "new line"
@@ -316,11 +316,11 @@ lexemeWidth l =
         Nothing -> 0
         Just t  -> T.length t
 
-mapTextToLexeme :: M.HashMap T.Text Lexeme
-mapTextToLexeme = M.fromList lexemes
+-- mapTextToLexeme :: M.HashMap T.Text Lexeme
+-- mapTextToLexeme = M.fromList lexemes
 
-mapLexemeToText :: M.HashMap Lexeme T.Text
-mapLexemeToText = M.fromList $ map swap lexemes
+-- mapLexemeToText :: M.HashMap Lexeme T.Text
+-- mapLexemeToText = M.fromList $ map swap lexemes
 
 -- lexemes :: [(T.Text, Lexeme)]
 -- lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
