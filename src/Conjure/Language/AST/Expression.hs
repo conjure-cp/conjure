@@ -39,7 +39,7 @@ parseAtomicExpression = do
             , AbsExpression <$> parseParenExpression (L_Bar, L_Bar)
             , QuantificationExpr <$> parseQuantificationStatement
             , DomainExpression <$> parseDomainExpression
-            , MissingExpressionNode <$> makeMissing L_Missing
+            , MissingExpressionNode <$> makeMissing (L_Missing "Expression")
             ]
 
 
@@ -86,6 +86,7 @@ parseLiteral =
         , parseBoolLiteral
         , parseMatrixBasedExpression
         , parseTupleLiteral
+        , parseShortTupleLiteral
         , parseRecordLiteral
         , parseSetLiteral
         , parseMSetLiteral
@@ -94,6 +95,15 @@ parseLiteral =
         , parseRelationLiteral
         , parsePartitionLiteral
         ]
+
+parseShortTupleLiteral :: Parser LiteralNode
+parseShortTupleLiteral = try $ do
+    lOpen <- need L_OpenParen
+    exprs <- commaList parseExpression
+    let Seq xs = exprs 
+    guard (length xs > 1)
+    lClose <- want L_CloseParen
+    return $ TupleLiteralNodeShort $ ShortTuple (ListNode lOpen exprs lClose)
 
 parseIntLiteral :: Parser LiteralNode
 parseIntLiteral = IntLiteral . RealToken <$> intLiteral
@@ -499,6 +509,6 @@ parseAttribute = do
 parseMissingDomain :: Parser DomainNode
 parseMissingDomain =
     do
-        m <- makeMissing L_Missing
+        m <- makeMissing (L_Missing "Domain")
         return $ MissingDomainNode m
         <?> "Anything"

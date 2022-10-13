@@ -208,6 +208,7 @@ data Lexeme
 
     | L_ForAll
     | L_Exists
+    | L_Sum
 
     -- others
     | L_Dot
@@ -258,7 +259,7 @@ data Lexeme
     | L_transform
 
     -- helper
-    | L_Missing
+    | L_Missing String
     | L_EOF
 
     deriving (Eq, Ord, Show,Generic) --Generic
@@ -373,7 +374,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_ForAll            , "forAll"     )
     , ( L_Exists           , "exists"     )
-
+    , ( L_Sum           , "sum"     )
 
     , ( L_Plus            , "+"     )
     , ( L_Minus           , "-"     )

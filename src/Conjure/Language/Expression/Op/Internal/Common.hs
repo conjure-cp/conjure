@@ -285,7 +285,7 @@ functionals =
 
     , LIdentifier "and"
     , LIdentifier "or"
-    , LIdentifier "sum"
+    , L_Sum
     , LIdentifier "product"
     , LIdentifier "xor"
 
@@ -301,7 +301,8 @@ functionals =
 quantifiers :: [Lexeme]
 quantifiers = [
     L_ForAll,
-    L_Exists
+    L_Exists,
+    L_Sum
     ]
 
 raiseTypeError :: MonadFailDoc m => Pretty a => a -> m b

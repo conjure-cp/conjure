@@ -508,8 +508,8 @@ validateLiteral ln = case ln of
     IntLiteral lt -> Constant <$> validateIntLiteral lt
     BoolLiteral lt -> Constant <$> validateBoolLiteral lt
     MatrixLiteral mln -> validateMatrixLiteral mln
-    TupleLiteralNode lt -> todo "Tuple literal"
-    TupleLiteralNodeShort st -> todo "Short tuple literal"
+    TupleLiteralNode lt -> mkAbstractLiteral . AbsLitTuple <$> validateLongTuple lt
+    TupleLiteralNodeShort st -> mkAbstractLiteral . AbsLitTuple <$> validateShortTuple st
     RecordLiteral lt ln' -> todo "Record literal"
     VariantLiteral lt ln' -> todo "Variant literal"
     SetLiteral ln' -> todo "Set literal"
