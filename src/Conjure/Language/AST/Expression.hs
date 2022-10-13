@@ -12,6 +12,8 @@ import Text.Megaparsec
 import Control.Monad.Combinators.Expr (Operator (..), makeExprParser)
 
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Language.NewLexer (ETok(..))
+import Conjure.Language.Expression.Op.Internal.Common (overloadedFunctionals)
 
 -- import Text.Megaparsec.Debug (dbg)
 
@@ -279,11 +281,14 @@ parseOperator :: Parser ExpressionNode
 parseOperator = try (makeExprParser parseAtomicExpression operatorTable <?> "Expression")
 
 parseFunction :: Parser ExpressionNode
-parseFunction = do
+parseFunction = try $ do
     name <- choice $ map need functionals
-    args <- parenList $ commaList parseExpression
+    let parenP = if  isOverloaded name then parenListStrict else parenList
+    args <-  parenP $ commaList parseExpression
     return $ FunctionalApplicationNode name args
-
+    where
+        isOverloaded (RealToken ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
+        isOverloaded _ = False
 parsePostfixOp :: Parser (ExpressionNode -> ExpressionNode)
 parsePostfixOp = do
     op <-

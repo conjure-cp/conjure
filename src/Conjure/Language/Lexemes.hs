@@ -178,7 +178,7 @@ data Lexeme
     | L_Or                  --    \/          -- logical-or, infix.
     | L_Imply               --    ->          -- implication, infix
     | L_Iff                 --    <->         -- iff, infix.
-    -- | L_Not                 --    !           -- negation, prefix
+    | L_Not                 --    !           -- negation, prefix
     | L_ExclamationMark     -- for poth L_Factorial and L_ExclamationMark
 
     -- the function arrow
@@ -209,6 +209,12 @@ data Lexeme
     | L_ForAll
     | L_Exists
     | L_Sum
+    | L_Product
+    | L_fXor
+
+    | L_fAnd
+    | L_fOr
+
 
     -- others
     | L_Dot
@@ -375,6 +381,11 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_ForAll            , "forAll"     )
     , ( L_Exists           , "exists"     )
     , ( L_Sum           , "sum"     )
+    , ( L_Product           , "product"     )
+    , ( L_Not           , "not"     )
+    , ( L_fXor           , "xor"     )
+    , ( L_fAnd           , "and"     )
+    , ( L_fOr           , "or"     )
 
     , ( L_Plus            , "+"     )
     , ( L_Minus           , "-"     )
@@ -479,4 +490,6 @@ lexemeText l = T.pack $ show (lexemeFace l)
 --Categories
 functionAttributes :: [Lexeme]
 functionAttributes = [L_injective,L_size]
+
+
 

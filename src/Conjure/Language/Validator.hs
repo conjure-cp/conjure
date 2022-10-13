@@ -25,7 +25,7 @@ import Conjure.Language.Expression.Op
       mkBinOp,
       Op(MkOpRelationProj, MkOpSlicing, MkOpIndexing),
       OpRelationProj(OpRelationProj),
-      OpIndexing(OpIndexing),
+      OpIndexing(OpIndexing), OpType (..),
       )
 
 validateModel :: ProgramTree -> Validator Model
@@ -378,15 +378,15 @@ validateExpression expr = case expr of
     AbsExpression (ParenExpressionNode l1 exp l2) -> do
         checkSymbols [l1,l2]
         exp' <- validateExpression exp
-        return $ mkOp "twoBars"  [exp']
+        return $ mkOp TwoBarOp  [exp']
     FunctionalApplicationNode lt ln -> validateFunctionApplication  lt ln
     MissingExpressionNode lt -> invalid $ TokenError lt
 
-translateQnName :: Lexeme -> Text
+translateQnName :: Lexeme -> OpType
 translateQnName qnName = case qnName of
-    L_ForAll -> "and"
-    L_Exists -> "or"
-    _        -> lexemeText qnName
+    L_ForAll -> FunctionOp L_fAnd
+    L_Exists -> FunctionOp L_fOr
+    _        -> FunctionOp qnName
 
 validateQuantificationExpression :: QuantificationExpressionNode -> Validator Expression
 validateQuantificationExpression (QuantificationExpressionNode name pats over m_guard dot expr) =
@@ -453,7 +453,7 @@ validateFunctionApplication name args = do
                 a <- args'
                 return $ case (n,a) of
                     (L_image,[y,z]) -> Op $  MkOpImage $ OpImage y z
-                    _ -> mkOp (pack . lexemeFace $ n) a
+                    _ -> mkOp (FunctionOp n) a
 
 validateIdentifierExpr :: NameNode -> Validator Expression
 validateIdentifierExpr name = Reference <$> ( Name <$> validateIdentifier name) <*> pure Nothing
@@ -465,7 +465,7 @@ validateOperatorExpression (PrefixOpNode lt expr) = do
     verify $ do
         op' <- op
         expr' <- expr        
-        return $ mkOp (mapPrefixToOp op') [expr']
+        return $ mkOp (PrefixOp op') [expr']
     --lookup symbol
 validateOperatorExpression (BinaryOpNode lexp op rexp) = do
     lExpr <- validate $ validateExpression lexp
@@ -480,7 +480,7 @@ validateOperatorExpression (PostfixOpNode expr pon) = do
 validatePostfixOp :: PostfixOpNode -> Validator (Expression -> Expression)
 validatePostfixOp (OpFactorial lt) = do
         checkSymbols [lt]
-        return (\x -> mkOp "factorial" [x])
+        return (\x -> mkOp FactorialOp [x])
 validatePostfixOp (ApplicationNode args) = do
         args' <- validateList validateExpression args
         let underscore = Reference "_" Nothing
@@ -638,11 +638,11 @@ validateList validator (ListNode st seq end) = do
     validateSequence validator seq
 
 
-mapPrefixToOp :: Lexeme -> Text
-mapPrefixToOp x = case x of
-    L_Minus -> "negate"
-    L_ExclamationMark -> "not"
-    _ -> pack $ lexemeFace x
+-- mapPrefixToOp :: Lexeme -> Text
+-- mapPrefixToOp x = case x of
+--     L_Minus -> "negate"
+--     L_ExclamationMark -> "not"
+--     _ -> pack $ lexemeFace x
 validateSequence :: (a -> Validator b) -> Sequence a -> Validator [b]
 validateSequence f (Seq vals) = validateArray (validateSequenceElem f) vals
 

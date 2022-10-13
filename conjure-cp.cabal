@@ -39,6 +39,13 @@ Library
                      , Conjure.Language.TH
                      , Conjure.Language.Type
 
+                     , Conjure.Language.Lexemes
+                     , Conjure.Language.Validator
+                     , Conjure.Language.AST.ASTParser
+                     , Conjure.Language.AST.Expression
+                     , Conjure.Language.AST.Helpers
+                     , Conjure.Language.AST.Reformer
+                     , Conjure.Language.AST.Syntax
 
                      , Conjure.Language.Expression.Internal.Generated
                      , Conjure.Language.Expression.DomainSizeOf
@@ -142,6 +149,8 @@ Library
                      , Conjure.Language.ParserC
                      , Conjure.Language.Pretty
                      , Conjure.Language.ZeroVal
+
+
                      , Conjure.Process.AttributeAsConstraints
                      , Conjure.Process.DealWithCuts
                      , Conjure.Process.Enumerate
