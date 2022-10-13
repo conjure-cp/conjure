@@ -128,7 +128,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                 sumOfParts rel = do
                     case domainSizeOf innerDomain of
                         Left _err -> return []
-                        Right (n::Expression)   -> do
+                        Right n   -> do
                             (iPat, i) <- quantifiedVar
                             return $ return [essence| &n = sum([ |&i| | &iPat <- &rel ]) |]
 
