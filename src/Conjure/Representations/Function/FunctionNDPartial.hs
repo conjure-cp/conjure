@@ -63,7 +63,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let
                 kRange = case innerDomainFr of
-                        DomainTuple ts  -> map fromInt [1 .. genericLength ts] :: [Constant]
+                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
                         DomainRecord rs -> map (fromName . fst) rs
                         _ -> bug $ vcat [ "FunctionNDPartial.structuralCons"
                                         , "innerDomainFr:" <+> pretty innerDomainFr
@@ -284,7 +284,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
 
             -- setting up the quantification
             let kRange = case innerDomainFr of
-                    DomainTuple ts  -> map fromInt [1 .. genericLength ts] ::[Constant]
+                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
                     DomainRecord rs -> map (fromName . fst) rs
                     _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
                                     , "indexDomain:" <+> pretty innerDomainFr

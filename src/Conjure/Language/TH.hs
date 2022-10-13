@@ -27,12 +27,12 @@ essenceStmts :: QuasiQuoter
 essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         -- l <- locationTH
-        e :: [Statement] <- parseIO parseTopLevels str
+        e <- parseIO parseTopLevels str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         -- l <- locationTH
-        e :: [Statement] <- parseIO  parseTopLevels str
+        e <- parseIO  parseTopLevels str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"

@@ -93,7 +93,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let
                 kRange = case innerDomainFr of
-                        DomainTuple ts  -> map fromInt [1 .. genericLength ts] :: [Constant]
+                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
                         DomainRecord rs -> map (fromName . fst) rs
                         _ -> []
                 toIndex x = if null kRange then [x] else [ [essence| &x[&k] |] | k <- kRange ]
