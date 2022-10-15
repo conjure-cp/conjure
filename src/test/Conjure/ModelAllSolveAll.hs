@@ -42,7 +42,8 @@ import qualified Data.Text.IO as T ( readFile )
 import qualified Data.Set as S ( fromList, toList, empty, null, difference )
 
 -- Diff
-import Data.Algorithm.Diff ( Diff(..), getGroupedDiff )
+-- Diff
+import Data.Algorithm.Diff ( Diff(..), getGroupedDiff, PolyDiff (..) )
 import Data.Algorithm.DiffOutput ( ppDiff )
 
 

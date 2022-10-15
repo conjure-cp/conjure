@@ -15,7 +15,7 @@ import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
 import Data.Text.IO as T ( readFile, writeFile )
 
 -- shelly
-import Shelly ( cd, bash, errExit, lastStderr )
+import Shelly ( cd, bash, errExit, lastStderr,FilePath )
 
 -- system-filepath
 import Filesystem.Path.CurrentOS as Path ( fromText )
@@ -68,7 +68,7 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                 step "Running"
                 (stdout, stderr) <- sh $ errExit False $ do
                     -- stdout <- run (tBaseDir </> "run.sh") []
-                    cd (Path.fromText $ stringToText $ tBaseDir)
+                    cd (tBaseDir)
                     stdout <- bash "./run.sh" []
                     stderr <- lastStderr
                     return (stdout, stderr)
