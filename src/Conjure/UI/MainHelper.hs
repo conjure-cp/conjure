@@ -51,7 +51,7 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
 
 -- system-filepath
-import qualified Filesystem.Path as Sys ( FilePath )
+-- import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile, findExecutable )
@@ -743,7 +743,7 @@ pp LogNone = const $ return ()
 pp _       = liftIO . putStrLn . renderNormal
 
 
-savilerowScriptName :: Sys.FilePath
+savilerowScriptName :: FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"

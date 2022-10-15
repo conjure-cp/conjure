@@ -42,13 +42,11 @@ import Conjure.Language.Validator (Validator(..))
 import qualified Conjure.Language.Validator as V
 import qualified Conjure.Language.AST.ASTParser as P
 import qualified Conjure.Language.AST.Syntax as S
-import qualified Conjure.Language.AST.Expression as E
 import Conjure.Language.AST.ASTParser (ParserError, runASTParser, parseProgram)
 -- containers
 -- import qualified Data.Set as S ( null, fromList, toList )
 import Data.Void (Void)
 import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
-import Conjure.Language.AST.Expression (parseExpression)
 
 
 type Pipeline a b = (Parsec Void ETokenStream a,a -> Validator b)
@@ -253,11 +251,11 @@ parseTopLevels = (P.parseProgram,V.validateProgramTree)
 --             return (RangeSingle x)
 
 parseDomain :: Pipeline DomainNode (Domain () Expression)
-parseDomain = (E.parseDomain,V.validateDomain)
+parseDomain = (P.parseDomain,V.validateDomain)
 
 
 parseDomainWithRepr :: Pipeline DomainNode (Domain HasRepresentation Expression)
-parseDomainWithRepr = (E.parseDomain,V.validateDomainWithRepr)
+parseDomainWithRepr = (P.parseDomain,V.validateDomainWithRepr)
 --     -- TODO: uncomment the following to parse (union, intersect and minus) for domains
 --     -- let
 --     --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
@@ -649,7 +647,7 @@ parseDomainWithRepr = (E.parseDomain,V.validateDomainWithRepr)
 -- metaVarInE = ExpressionMetaVar
 
 parseExpr :: Pipeline S.ExpressionNode Expression
-parseExpr = (E.parseExpression,V.validateExpression)
+parseExpr = (P.parseExpression,V.validateExpression)
 --     let
 --         mergeOp op = mkBinOp (lexemeText op)
 

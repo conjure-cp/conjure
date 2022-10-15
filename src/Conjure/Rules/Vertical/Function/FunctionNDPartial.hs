@@ -21,7 +21,7 @@ rule_Image_NotABool = "function-image{FunctionNDPartial}-not-a-bool" `namedRule`
 
         return
             ( "Function image, FunctionNDPartial representation, not-a-bool"
-            , return [essence| { &valuesIndexed
+            , return [essence| ?#{ &valuesIndexed
                                @ such that &flagsIndexed
                                } |]
             )
@@ -52,7 +52,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
                 let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Function image, FunctionNDPartial representation, bool"
-                    , return [essence| { &p' @ such that &flagsCombined } |]
+                    , return [essence| ?#{ &p' @ such that &flagsCombined } |]
                     )
 
 

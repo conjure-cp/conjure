@@ -61,7 +61,7 @@ rule_Image_NotABool = "sequence-image{ExplicitBounded}-not-a-bool" `namedRule` t
         [sLength,sValues] <- downX1 sequ
         return
             ( "Sequence image, ExplicitBounded representation, not-a-bool"
-            , return [essence| { &sValues[&x]
+            , return [essence| ?#{ &sValues[&x]
                                @ such that &x <= &sLength
                                }
                              |]
@@ -90,7 +90,7 @@ rule_Image_Bool = "sequence-image{ExplicitBounded}-bool" `namedRule` theRule whe
                 let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Sequence image, ExplicitBounded representation, bool"
-                    , return [essence| { &p' @ such that &flagsCombined } |]
+                    , return [essence| ?#{ &p' @ such that &flagsCombined } |]
                     )
 
 rule_Leq :: Rule

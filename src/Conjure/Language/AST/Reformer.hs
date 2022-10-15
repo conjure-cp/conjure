@@ -83,8 +83,13 @@ instance Flattenable ETok ExpressionNode where
         AbsExpression pen ->  flatten pen
         DomainExpression dex -> flatten dex
         FunctionalApplicationNode lt ln ->  flatten lt ++ flatten ln
+        SpecialCase lt nd -> flatten lt ++ flatten nd
+        AttributeAsConstriant l1 exprs -> flatten l1 ++ flatten exprs
         MissingExpressionNode _ ->  []
 
+instance Flattenable ETok SpecialCaseNode where 
+    flatten x = case x of 
+        ExprWithDecls l1 en l2 sns l3 -> concat [flatten l1,flatten l2, flatten l2, flatten sns , flatten l3]
 
 instance Flattenable ETok DomainExpressionNode where
     flatten (DomainExpressionNode a b c) = flatten a ++ flatten b ++ flatten c
@@ -187,6 +192,7 @@ instance Flattenable ETok PostfixOpNode where
         IndexedNode l -> flatten l
         OpFactorial lt -> flatten lt
         ApplicationNode ln -> flatten ln
+        ExplicitDomain l1 l2 dom l3 -> concat  [flatten l1,flatten l2,flatten dom,flatten l3]
 
 instance Flattenable ETok DomainNode where
     flatten x =  case x of
@@ -245,6 +251,8 @@ instance Flattenable ETok b => Flattenable ETok (Sequence b) where
 instance Flattenable ETok b => Flattenable ETok (SeqElem b) where
     flatten (SeqElem s v) =  flatten s ++ flatten v
 
+instance Flattenable ETok b => Flattenable ETok [b] where
+    flatten = concatMap flatten 
 
 
 

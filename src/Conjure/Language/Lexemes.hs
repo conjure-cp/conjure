@@ -267,6 +267,7 @@ data Lexeme
     -- helper
     | L_Missing String
     | L_EOF
+    | L_SpecialCase
 
     deriving (Eq, Ord, Show,Generic) --Generic
 
@@ -460,6 +461,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
 
     , ( L_transform, "transform")
+
+    , ( L_SpecialCase, "?#")
     ]
 
 textToLexeme :: T.Text -> Maybe Lexeme
@@ -485,7 +488,7 @@ lexemeFace l =
         Just t  ->  (T.unpack t)
 
 lexemeText :: Lexeme -> T.Text
-lexemeText l = T.pack $ show (lexemeFace l)
+lexemeText l = fromMaybe (T.pack $ show l) (M.lookup l mapLexemeToText)
 
 --Categories
 functionAttributes :: [Lexeme]

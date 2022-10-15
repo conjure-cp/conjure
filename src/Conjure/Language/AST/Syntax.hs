@@ -170,15 +170,21 @@ newtype NameNode = NameNode LToken
 data ExpressionNode
     = Literal LiteralNode
     | IdentifierNode NameNode
-    | MetaVarExpr LToken
+    | MetaVarExpr LToken 
     | QuantificationExpr QuantificationExpressionNode
     | OperatorExpressionNode OperatorExpressionNode
     | DomainExpression DomainExpressionNode
     | ParenExpression ParenExpressionNode
     | AbsExpression ParenExpressionNode
     | FunctionalApplicationNode LToken (ListNode ExpressionNode)
+    | AttributeAsConstriant LToken (ListNode ExpressionNode)
     | MissingExpressionNode LToken
+    | SpecialCase LToken SpecialCaseNode
     deriving (Show)
+
+data SpecialCaseNode = ExprWithDecls LToken ExpressionNode LToken [StatementNode] LToken
+    deriving (Show)
+
 
 data DomainExpressionNode 
     = DomainExpressionNode LToken DomainNode LToken
@@ -293,6 +299,7 @@ data OperatorExpressionNode
 data PostfixOpNode
     = IndexedNode (ListNode RangeNode)
     | OpFactorial  LToken
+    | ExplicitDomain LToken LToken DomainNode LToken
     | ApplicationNode (ListNode ExpressionNode)
     deriving (Show)
 

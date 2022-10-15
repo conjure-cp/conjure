@@ -25,8 +25,9 @@ import Conjure.Language.Expression.Op
       mkBinOp,
       Op(MkOpRelationProj, MkOpSlicing, MkOpIndexing),
       OpRelationProj(OpRelationProj),
-      OpIndexing(OpIndexing), OpType (..),
+      OpIndexing(OpIndexing), OpType (..), OpAttributeAsConstraint (OpAttributeAsConstraint),
       )
+import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 
 validateModel :: ProgramTree -> Validator Model
 validateModel model = do
@@ -380,7 +381,42 @@ validateExpression expr = case expr of
         exp' <- validateExpression exp
         return $ mkOp TwoBarOp  [exp']
     FunctionalApplicationNode lt ln -> validateFunctionApplication  lt ln
+    AttributeAsConstriant lt exprs -> validateAttributeAsConstraint lt exprs
+    SpecialCase l1  scn -> checkSymbols [l1] >> validateSpecialCase scn
     MissingExpressionNode lt -> invalid $ TokenError lt
+
+validateAttributeAsConstraint :: LToken -> ListNode ExpressionNode -> Validator Expression
+validateAttributeAsConstraint l1 exprs = do
+    checkSymbols [l1]
+    es <- validateList validateExpression exprs
+    do
+        lx <- validateSymbol l1
+        let n = lookup (Name (lexemeText lx)) allSupportedAttributes
+        case (n,es) of
+          (Just 1 , [e,v]) -> return $ aacBuilder e lx (Just v)
+          (Just 1 , _) -> invalid $ StateError $ "Expected 2 args to " ++ (show lx)  ++ "got" ++ (show $ length es)
+          (Just 0 , [e]) -> return $ aacBuilder e lx Nothing
+          (Just 0 , _) -> invalid $ StateError $ "Expected 1 arg to " ++ (show lx)  ++ "got" ++ (show $ length es)
+          (_,_) -> invalid (IllegalToken l1)
+    where
+        aacBuilder e lx y= Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e (fromString (lexemeFace lx)) y
+
+validateSpecialCase :: SpecialCaseNode -> Validator Expression
+validateSpecialCase (ExprWithDecls l1 ex l2 sts l3) = do
+    checkSymbols [l1,l2,l3]
+    expr <- validateExpression ex
+    conds <- validateProgramTree $ ProgramTree sts l3
+    let decls =
+            [ Declaration (FindOrGiven LocalFind nm dom)
+            | Declaration (FindOrGiven Find nm dom) <- conds ]
+    let cons = concat
+            [ xs
+            | SuchThat xs <- conds
+            ]
+    let locals = if null decls
+                    then DefinednessConstraints cons
+                    else AuxiliaryVars (decls ++ [SuchThat cons])
+    return (WithLocals expr locals)
 
 translateQnName :: Lexeme -> OpType
 translateQnName qnName = case qnName of
@@ -464,7 +500,7 @@ validateOperatorExpression (PrefixOpNode lt expr) = do
     expr <- validate $ validateExpression expr
     verify $ do
         op' <- op
-        expr' <- expr        
+        expr' <- expr
         return $ mkOp (PrefixOp op') [expr']
     --lookup symbol
 validateOperatorExpression (BinaryOpNode lexp op rexp) = do
@@ -502,6 +538,16 @@ validatePostfixOp (IndexedNode ln) = do
                 in case a of
                   Left ex -> \m -> Op $ MkOpIndexing (OpIndexing m ex)
                   Right (i,j) -> \m -> Op $ MkOpSlicing (OpSlicing m i j)
+validatePostfixOp (ExplicitDomain l1 l2 dom l3) = do
+    checkSymbols [l1,l2,l3]
+    dom' <- validateDomain dom
+    let t =  getType dom'
+    case t of
+      Nothing -> invalid $ StateError $ "Some type bug with:" ++ show dom'
+      Just ty -> return (\ex -> Typed ex ty)
+    where
+        getType :: Domain () Expression -> Maybe Type
+        getType d = let ?typeCheckerMode = StronglyTyped in typeOfDomain d
 
 validateLiteral :: LiteralNode -> Validator Expression
 validateLiteral ln = case ln of
@@ -542,13 +588,13 @@ validateMatrixLiteral (MatrixLiteralNode l1 se m_dom (Just comp) l2) = do
     elems <- validate $ validateSequence validateExpression se
     gens <- validate $ validateComprehension comp
     enforceConstraint ((\x -> length x == 1 )<$> elems) "List comprehension must contain exactly one expression before |"
-    verify $ do 
-            ms <- elems 
+    verify $ do
+            ms <- elems
             gs <- gens
-            case ms of 
+            case ms of
               [x] -> return $ Comprehension x gs
-              _ -> Nothing 
-            
+              _ -> Nothing
+
 
 
 validateComprehension :: ComprehensionNode -> Validator [GeneratorOrCondition]
@@ -560,7 +606,7 @@ validateComprehensionBody (CompBodyDomain apn l1 dom) = do
     checkSymbols [l1]
     pats <- validate $ validateSequence validateAbstractPattern apn
     domain <- validate $ validateDomain dom
-    verify $ do 
+    verify $ do
         ps <- pats
         d <- domain
         return [Generator  (GenDomainNoRepr pat d) | pat <- ps]
@@ -569,7 +615,7 @@ validateComprehensionBody (CompBodyGenExpr apn lt en) = do
     checkSymbols [lt]
     pats <- validate $ validateSequence validateAbstractPattern apn
     exp <- validate $ validateExpression en
-    verify $ do 
+    verify $ do
         ps <- pats
         e <- exp
         return [Generator (GenInExpr pat e)| pat <- ps]
@@ -584,9 +630,9 @@ mkAbstractLiteral :: AbstractLiteral Expression -> Expression
 mkAbstractLiteral  = AbstractLiteral
 
 enforceConstraint :: Maybe Bool -> String -> Validator ()
-enforceConstraint p msg = do 
+enforceConstraint p msg = do
     case p of
-        Just True-> pure () 
+        Just True-> pure ()
         _ -> invalid $ StateError msg
 
 

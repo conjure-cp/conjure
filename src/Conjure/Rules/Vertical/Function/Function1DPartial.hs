@@ -78,7 +78,7 @@ rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule`
         [flags,values] <- downX1 f
         return
             ( "Function image, Function1DPartial representation, not-a-bool"
-            , return [essence| { &values[&x]
+            , return [essence| ?#{ &values[&x]
                                @ such that &flags[&x]
                                }
                              |]
@@ -97,7 +97,7 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
                     TypeBool -> do
                         [flags,values] <- downX1 f
                         tell $ return [essence| &flags[&x] |]
-                        return [essence| { &values[&x] @ such that &flags[&x] } |]
+                        return [essence| ?#{ &values[&x] @ such that &flags[&x] } |]
                     _ -> return ch
             imageChild ch = return ch
         topMost <- asks isTopMostZ
