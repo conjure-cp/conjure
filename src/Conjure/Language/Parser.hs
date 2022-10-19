@@ -313,9 +313,10 @@ parseDomainWithRepr = pDomainAtom
         pVariant = do
             lexeme L_variant
             let one = do n <- parseName
-                         lexeme L_Colon
-                         d <- parseDomainWithRepr
-                         return (n,d)
+                         dMaybe <- optional $ lexeme L_Colon >> parseDomainWithRepr
+                         case dMaybe of
+                             Nothing -> return (n, DomainInt TagInt [RangeSingle 0])
+                             Just d -> return (n,d)
             xs <- braces $ commaSeparated0 one
             return $ DomainVariant xs
 
