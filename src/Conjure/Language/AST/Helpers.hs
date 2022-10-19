@@ -147,7 +147,7 @@ parseSequence divider pElem = do
                     (Just a, True) -> [SeqElem a $ if null rest then Nothing else Just sep ]
                     (a,False) | isMissing a -> [MissingSeqElem plc sep]
                     (Just a,_) -> [SeqElem a $ Just sep]
-                    _ -> []
+                    _ -> [] 
             return $ Seq $ newElem++rest 
 
                     

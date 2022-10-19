@@ -525,7 +525,7 @@ prefixUnary l = OperatorExpressionNode . PrefixOpNode l
 
 postfixOps :: [Operator Parser ExpressionNode]
 postfixOps =
-    [ Postfix $ foldr1 (.) <$> some parsePostfixOp
+    [ Postfix $ foldr1 (.) . reverse <$> some parsePostfixOp
     ]
 
 -- DOMAINS

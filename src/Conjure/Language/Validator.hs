@@ -525,7 +525,7 @@ validatePostfixOp (ApplicationNode args) = do
 validatePostfixOp (IndexedNode ln) = do
         ranges <-validateList validateRange ln
         let indices = map interpretRange ranges
-        return $ flip (foldl (\m f -> f m)) indices
+        return $ \x -> (foldl (\m f -> f m)) x indices
         where
             interpretRange :: Range Expression -> (Expression-> Expression)
             interpretRange x =
@@ -636,7 +636,10 @@ validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
 
 --placeholder for pre-evaluation
 mkAbstractLiteral :: AbstractLiteral Expression -> Expression
-mkAbstractLiteral  = AbstractLiteral
+mkAbstractLiteral x = case e2c (AbstractLiteral x) of
+                        Nothing -> AbstractLiteral x
+                        Just c -> Constant c
+
 
 enforceConstraint :: Maybe Bool -> String -> Validator ()
 enforceConstraint p msg = do
