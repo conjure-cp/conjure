@@ -47,6 +47,9 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
                     x' <- toSimpleJSON x
                     return (stringToText (renderNormal nm), x')
                 return $ JSON.Object $ M.fromList xs'
+            AbsLitVariant _ nm x -> do
+                x' <- toSimpleJSON x
+                return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
             AbsLitMatrix index xs ->
                 case index of
                     DomainInt _ ranges -> do
