@@ -89,7 +89,7 @@ instance Flattenable ETok ExpressionNode where
 
 instance Flattenable ETok SpecialCaseNode where 
     flatten x = case x of 
-        ExprWithDecls l1 en l2 sns l3 -> concat [flatten l1,flatten l2, flatten l2, flatten sns , flatten l3]
+        ExprWithDecls l1 en l2 sns l3 -> concat [flatten l1,flatten en,flatten l2, flatten l2, flatten sns , flatten l3]
 
 instance Flattenable ETok DomainExpressionNode where
     flatten (DomainExpressionNode a b c) = flatten a ++ flatten b ++ flatten c
@@ -249,8 +249,8 @@ instance Flattenable ETok b => Flattenable ETok (Sequence b) where
     flatten (Seq es) = concatMap flatten es
 
 instance Flattenable ETok b => Flattenable ETok (SeqElem b) where
-    flatten (SeqElem s v) =  flatten s ++ flatten v
-
+    flatten (SeqElem v s) =  flatten v ++ flatten s
+    flatten (MissingSeqElem v s) =  flatten v ++ flatten s
 instance Flattenable ETok b => Flattenable ETok [b] where
     flatten = concatMap flatten 
 

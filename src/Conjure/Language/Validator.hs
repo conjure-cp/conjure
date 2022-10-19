@@ -39,7 +39,7 @@ validateProgramTree :: ProgramTree -> Validator [Statement]
 validateProgramTree (ProgramTree sts _) = do
     q <- validateArray validateStatement sts
     return $ concat q
-    -- todo "all"
+
 
 validateStatement :: StatementNode -> Validator [Statement]
 validateStatement (DeclarationStatement dsn) = validateDeclarationStatement dsn
@@ -550,7 +550,7 @@ validatePostfixOp (ExplicitDomain l1 l2 dom l3) = do
         getType d = let ?typeCheckerMode = StronglyTyped in typeOfDomain d
 
 validateLiteral :: LiteralNode -> Validator Expression
-validateLiteral ln = case ln of
+validateLiteral litNode = case litNode of
     IntLiteral lt -> Constant <$> validateIntLiteral lt
     BoolLiteral lt -> Constant <$> validateBoolLiteral lt
     MatrixLiteral mln -> validateMatrixLiteral mln
@@ -558,13 +558,22 @@ validateLiteral ln = case ln of
     TupleLiteralNodeShort st -> mkAbstractLiteral . AbsLitTuple <$> validateShortTuple st
     RecordLiteral lt ln' -> todo "Record literal"
     VariantLiteral lt ln' -> todo "Variant literal"
-    SetLiteral ln' -> todo "Set literal"
-    MSetLiteral lt ln' -> todo "MSet Literal"
+    SetLiteral ls -> validateSetLiteral ls
+    MSetLiteral lt ls -> checkSymbols [lt] >> validateMSetLiteral ls
     FunctionLiteral lt ln' -> todo "Function Literal"
     SequenceLiteral lt ln' -> todo "Sequence Literal"
     RelationLiteral lt ln' -> todo "Relation literal"
     PartitionLiteral lt ln' -> todo "Partition literal"
 
+validateSetLiteral :: ListNode ExpressionNode -> Validator Expression
+validateSetLiteral ls = do
+    xs <- validateList validateExpression ls
+    return $mkAbstractLiteral $ AbsLitSet xs
+
+validateMSetLiteral :: ListNode ExpressionNode -> Validator Expression
+validateMSetLiteral ls = do
+        xs <- validateList validateExpression ls
+        return $mkAbstractLiteral $ AbsLitMSet xs
 validateMatrixLiteral :: MatrixLiteralNode -> Validator Expression
 validateMatrixLiteral (MatrixLiteralNode l1 se m_dom Nothing l2) = do
     checkSymbols [l1,l2]
@@ -693,8 +702,9 @@ validateSequence :: (a -> Validator b) -> Sequence a -> Validator [b]
 validateSequence f (Seq vals) = validateArray (validateSequenceElem f) vals
 
 validateSequenceElem :: (a -> Validator b) -> SeqElem a -> Validator b
-validateSequenceElem f (SeqElem (Just x) i) = validate (validateSymbol x) >> f i
-validateSequenceElem f (SeqElem Nothing i) = f i
+validateSequenceElem f (SeqElem i (Just x)) = validate (validateSymbol x) >> f i
+validateSequenceElem f (SeqElem i Nothing) = f i
+validateSequenceElem f (MissingSeqElem plc sep) = checkSymbols [sep] >> invalid (TokenError plc)
 
 val :: String -> IO ()
 val s = do
@@ -706,7 +716,15 @@ val s = do
     -- parseTest parseProgram stream
     let progStruct = runParser parseProgram "TEST" stream
     case progStruct of
-        Left a -> putStrLn "error"
+        Left _ -> putStrLn "error"
         Right p@(ProgramTree{}) -> print (validateProgramTree p)
 
+
+valFile :: String -> IO ()
+valFile p = do
+    path <- readFileIfExists p
+    case path of
+      Nothing -> putStrLn "NO such file"
+      Just s -> val s
+    return ()
 -- putStrLn validateFind

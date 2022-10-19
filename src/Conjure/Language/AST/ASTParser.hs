@@ -16,13 +16,15 @@ import Text.Megaparsec
 import Data.Text (pack)
 import Data.Void (Void)
 import Conjure.Language.AST.Reformer (Flattenable(..))
-import Conjure.Language.Expression.Op (Fixity(..))
 import Conjure.Language.Expression.Op.Internal.Common
 import Control.Monad.Combinators.Expr
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
+import Language.Haskell.TH.PprLib (rparen)
 
 data ParserError = ParserError
     deriving (Show)
+
+
 runASTParser :: Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str = case runParser p "Parser" str of
   Left peb -> Left ParserError
@@ -192,7 +194,7 @@ parseAtomicExpression = do
             , IdentifierNode <$> parseIdentifierStrict
             , MetaVarExpr <$> parseMetaVar
             , ParenExpression <$> parseParenExpression parensPair
-            , AbsExpression <$> parseParenExpression (L_Bar, L_Bar)
+            , AbsExpression <$> parseAbsExpression
             , QuantificationExpr <$> parseQuantificationStatement
             , DomainExpression <$> parseDomainExpression
             , MissingExpressionNode <$> makeMissing (L_Missing "Expression")
@@ -222,9 +224,7 @@ parseMatrixBasedExpression = do
     range <- optional pOverDomain
     comprehension <- optional pComp
     closeB <- want L_CloseBracket
-    let es = case exprs of 
-            Seq [SeqElem Nothing (MissingExpressionNode _)] -> Seq []
-            _ -> exprs
+    let es = exprs
     return $ MatrixLiteral $ MatrixLiteralNode openB es range comprehension closeB
   where
     pOverDomain = OverDomainNode <$> need L_SemiColon <*> parseDomain
@@ -232,6 +232,14 @@ parseMatrixBasedExpression = do
         bar <- need L_Bar
         body <- commaList parseComprehensionCondition
         return $ ComprehensionNode bar body
+
+--TODO look into adding enviorment to the parser to configure forgiveness
+parseAbsExpression :: Parser ParenExpressionNode
+parseAbsExpression = try $ do
+    lParen <- need   L_Bar
+    expr <- parseExpression
+    rParen <- need  L_Bar
+    return $ ParenExpressionNode lParen expr rParen
 
 parseParenExpression :: (Lexeme, Lexeme) -> Parser ParenExpressionNode
 parseParenExpression (open, close) = try $ do
@@ -554,10 +562,10 @@ parseSpecialCase = do
             do
                 p1 <- need L_OpenCurly
                 exp1 <- parseExpression
-                at <- need L_At
+                lAt <- need L_At
                 (decsl,p2) <- manyTill_ parseTopLevel  (need L_CloseCurly)
 
-                return $ ExprWithDecls p1  exp1  at decsl p2
+                return $ ExprWithDecls p1  exp1  lAt decsl p2
 
 
 
@@ -730,6 +738,14 @@ example s = do
     putStrLn $ show  lexed
     let stream = ETokenStream txt $ fromMaybe other lexed
     parseTest parseProgram stream
+
+exampleFile :: String -> IO ()
+exampleFile p = do
+    path <- readFileIfExists p
+    case path of 
+      Nothing -> putStrLn "NO such file"
+      Just s -> example s
+    return ()
 
 demoString :: String
 demoString =
