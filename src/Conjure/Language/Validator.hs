@@ -151,21 +151,6 @@ data Validator a = Validator
     }
     deriving (Show)
 
--- data Validated a = Just a | Nothing
-
--- instance Functor Validated where
---     fmap :: (a -> b) -> Validated a -> Validated b
---     fmap fab (Just a) = Just (fab a)
---     fmap _ Nothing = Nothing
-
--- instance Applicative Validated where
---     pure :: a -> Validated a
---     pure = Valid
---     (<*>) :: Validated (a -> b) -> Validated a -> Validated b
---     (Just fab) <*> (Just a) = Just (fab a)
---     Nothing <*> (Just _) = Nothing
---     _ <*> Nothing = Nothing
-
 data Foo = Foo Int Int Int
     deriving (Show)
 
@@ -690,7 +675,7 @@ validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
     expr <- validate $ validateExpression en
     verify $ (:[]) <$> (ComprehensionLetting <$> pat <*> expr)
 
---placeholder for pre-evaluation
+
 mkAbstractLiteral :: AbstractLiteral Expression -> Expression
 mkAbstractLiteral x = case e2c (AbstractLiteral x) of
                         Nothing -> AbstractLiteral x
@@ -707,6 +692,13 @@ enforceConstraint p msg = do
 
 checkSymbols :: [LToken] -> Validator ()
 checkSymbols = mapM_ (validate . validateSymbol)
+
+--Raise a non structural error (i.e type error)
+raiseError :: ValidatorError -> Validator ()
+raiseError e = Validator  (Just ()) [e]
+
+--todo warn and info
+
 
 validateShortTuple :: ShortTuple -> Validator [Expression]
 validateShortTuple (ShortTuple exs) = validateList validateExpression exs
