@@ -18,5 +18,5 @@ such that forAll i,j : NODE . active(covering[i,j], clique3) -> exists k : NODE 
 find numEdgeCovers : int(0..numNodes**2) such that numEdgeCovers = sum([toInt(active(covering[i,j], edgeCover)) | i,j : NODE ])
 find numClique3s   : int(0..numNodes**2) such that numClique3s   = sum([toInt(active(covering[i,j], clique3)) | i,j : NODE ])
 
-maximising numClique3s
-
+such that numClique3s >= 40
+$ maximising numClique3s
