@@ -136,9 +136,11 @@ readModel modelParser preprocess (fp, con) = do
     model <- case preprocess of
         Nothing -> return def
         Just prep ->
-            case Parser.runLexerAndParser modelParser fp (prep con) of
-                Left  e -> userErr1 e
-                Right x -> return x
+            do 
+                let res = Parser.runLexerAndParser modelParser fp (prep con)
+                case res of
+                    Left  e -> userErr1 e
+                    Right x -> return x
 
     let
         infoBlock = con

@@ -47,6 +47,7 @@ import Conjure.Language.AST.ASTParser (ParserError, runASTParser, parseProgram)
 -- import qualified Data.Set as S ( null, fromList, toList )
 import Data.Void (Void)
 import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
+import Text.PrettyPrint (text)
 
 
 type Pipeline a b = (Parsec Void ETokenStream a,a -> Validator b)
@@ -63,29 +64,6 @@ runPipeline (parse,val) txt = do
                 Validator (Just res) [] -> Right res
                 Validator _ xs -> Left $ ValidatorError xs          
 
-
-dummyModel :: Model 
-dummyModel = Model (LanguageVersion "Essence" [1]) [] def
-
-dummyModelInfo :: ModelInfo
-dummyModelInfo = ModelInfo 
-                    []--([Name]) 
-                    []--([(Name, Expression)]) 
-                    []--([Name])
-                    []--([Declaration])
-                    []--([(Name, Expression)]) 
-                    []--([(Name, Domain () Expression)])
-                    []--([(Name, Domain HasRepresentation Expression)])
-                    []--([(Name, [Tree (Maybe HasRepresentation)])]) 
-                    []--Strategy 
-                    (PickFirst)
-                    (PickFirst)--([(Int, Int, Int)]) 
-                    []--([(Int, Int)])
-                    []--([Decision]) 
-                    []--([TrailRewrites]) 
-                    []--([(Text, Int)]) 
-                    [] --Int
-                    0
 
 parseModel :: Pipeline ProgramTree Model
 parseModel = (parseProgram,V.validateModel)
@@ -1016,10 +994,10 @@ parseExpr = (P.parseExpression,V.validateExpression)
 -- data ParserState = ParserState { enumDomains :: [Name] }
 -- type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
 
-runLexerAndParser :: MonadFailDoc m => Pipeline n a -> String -> T.Text -> m a
+runLexerAndParser :: Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p inp of
-  Left pe -> failDoc $ errorBundlePretty pe
-  Right a -> return a
+  Left pe -> Left $ "Parser error:" <+> errorBundlePretty pe
+  Right a -> Right a
 --     ls <- runLexer inp
 --     case runParser p file ls of
 --         Left (msg, line, col) ->

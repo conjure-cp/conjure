@@ -32,7 +32,7 @@ import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 validateModel :: ProgramTree -> Validator Model
 validateModel model = do
         sts <- validateProgramTree model
-        return $ Model (LanguageVersion "Essence" [1] ) sts def
+        return $ Model (LanguageVersion "Essence" [1,3] ) sts def
 
 
 validateProgramTree :: ProgramTree -> Validator [Statement]
@@ -119,6 +119,7 @@ validateLettingAssignment (LettingAnon l1 l2 l3 l4 szExp) = do
 data ValidatorError
     = TypeError String
     | StateError String
+    | SyntaxError String
     | TokenError LToken
     | IllegalToken LToken -- Should not occur in practice and indicates a logical error somewhere
     | NotImplemented String
@@ -556,14 +557,49 @@ validateLiteral litNode = case litNode of
     MatrixLiteral mln -> validateMatrixLiteral mln
     TupleLiteralNode lt -> mkAbstractLiteral . AbsLitTuple <$> validateLongTuple lt
     TupleLiteralNodeShort st -> mkAbstractLiteral . AbsLitTuple <$> validateShortTuple st
-    RecordLiteral lt ln' -> todo "Record literal"
-    VariantLiteral lt ln' -> todo "Variant literal"
+    RecordLiteral lt ln -> checkSymbols [lt] >> validateRecordLiteral ln
+    VariantLiteral lt ln -> checkSymbols [lt] >> validateVariantLiteral ln
     SetLiteral ls -> validateSetLiteral ls
     MSetLiteral lt ls -> checkSymbols [lt] >> validateMSetLiteral ls
-    FunctionLiteral lt ln' -> todo "Function Literal"
-    SequenceLiteral lt ln' -> todo "Sequence Literal"
-    RelationLiteral lt ln' -> todo "Relation literal"
-    PartitionLiteral lt ln' -> todo "Partition literal"
+    FunctionLiteral lt ln -> checkSymbols [lt] >> validateFunctionLiteral ln
+    SequenceLiteral lt ln -> checkSymbols [lt] >> mkAbstractLiteral . AbsLitSequence <$> validateExprList ln
+    RelationLiteral lt ln -> todo "Relation literal"
+    PartitionLiteral lt ln -> checkSymbols [lt] >> validatePartitionLiteral ln
+
+validatePartitionLiteral :: ListNode PartitionElemNode -> Validator Expression
+validatePartitionLiteral ln = do
+    members <- validateList (\(PartitionElemNode exprs) -> validateExprList exprs) ln
+    return . mkAbstractLiteral $ AbsLitPartition members
+
+
+
+
+validateRecordLiteral :: ListNode RecordMemberNode -> Validator Expression
+validateRecordLiteral ln = do
+    members <- validateList validateRecordMember ln
+    return $ mkAbstractLiteral $ AbsLitRecord members
+
+validateVariantLiteral :: ListNode RecordMemberNode -> Validator Expression
+validateVariantLiteral ln = do
+    members <- validateList validateRecordMember ln
+    case members of
+      [] -> invalid $ SyntaxError "Variants must contain exactly one member"
+      [(n,x)]-> return $ mkAbstractLiteral $ AbsLitVariant Nothing n x
+      _:_ -> invalid $ SyntaxError "Variants must contain exactly one member" --tag subsequent members as unexpected 
+
+
+
+validateRecordMember :: RecordMemberNode -> Validator (Name,Expression)
+validateRecordMember (RecordMemberNode name lEq expr) = do
+    checkSymbols [lEq]
+    name' <- validate $ validateName name
+    expr' <- validate $ validateExpression expr
+    verify $ (,) <$> name' <*> expr'
+
+validateFunctionLiteral :: ListNode ArrowPairNode -> Validator Expression
+validateFunctionLiteral ln = do
+    pairs <- validateList validateArrowPair ln
+    return $ mkAbstractLiteral $ AbsLitFunction pairs
 
 validateSetLiteral :: ListNode ExpressionNode -> Validator Expression
 validateSetLiteral ls = do
@@ -695,7 +731,6 @@ validateList validator (ListNode st seq end) = do
     _ <- validateSymbol end
     validateSequence validator seq
 
-
 -- mapPrefixToOp :: Lexeme -> Text
 -- mapPrefixToOp x = case x of
 --     L_Minus -> "negate"
@@ -708,6 +743,10 @@ validateSequenceElem :: (a -> Validator b) -> SeqElem a -> Validator b
 validateSequenceElem f (SeqElem i (Just x)) = validate (validateSymbol x) >> f i
 validateSequenceElem f (SeqElem i Nothing) = f i
 validateSequenceElem f (MissingSeqElem plc sep) = checkSymbols [sep] >> invalid (TokenError plc)
+
+validateExprList :: ListNode ExpressionNode -> Validator [Expression]
+validateExprList = validateList validateExpression
+
 
 val :: String -> IO ()
 val s = do

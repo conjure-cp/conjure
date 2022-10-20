@@ -149,7 +149,7 @@ rule_Eq_Comprehension = "sequence-eq-comprehension" `namedRule` theRule where
                 let cardinality = Comprehension 1 goc
                 return
                     [essence|
-                        |&x| = sum (&cardinality) /\
+                        |&x| = sum(&cardinality) /\
                         and([ &y[&i[1]] = &i[2]
                             | &iPat <- &x
                             ])

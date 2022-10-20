@@ -453,11 +453,13 @@ parseFunction = try $ do
     name <- choice $ map need functionals
     let parenP = if  isOverloaded name then parenListStrict else parenList
     args <-  parenP $ commaList parseExpression
+    guard $ argsHasNoLeadingTrivia args
     return $ FunctionalApplicationNode name args
     where
         isOverloaded (RealToken ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
         isOverloaded _ = False
-
+        argsHasNoLeadingTrivia (ListNode (RealToken ETok{trivia=[]}) y z) =  True
+        argsHasNoLeadingTrivia _ = False
 parseAttributeAsConstraint :: Parser ExpressionNode
 parseAttributeAsConstraint = do
     name <- choice $ map need (attributesAsLexemes allSupportedAttributes)
