@@ -25,14 +25,11 @@ instance FromJSON  x => FromJSON  (OpRestrict x) where parseJSON = genericParseJ
 instance (TypeOf x, Pretty x, Domain () x :< x) => TypeOf (OpRestrict x) where
     typeOf p@(OpRestrict f domX) = do
         dom :: Domain () x   <- project domX
-        typeOfF <- typeOf f --TODO: not sure about this change
-        case typeOfF of
-            TypeFunction from to -> do
-                from'                <- typeOfDomain dom
-                if typesUnify [from, from']
-                    then return (TypeFunction (mostDefined [from', from]) to)
-                else raiseTypeError p
-            _ -> raiseTypeError p
+        TypeFunction from to <- typeOf f
+        from'                <- typeOfDomain dom
+        if typesUnify [from, from']
+            then return (TypeFunction (mostDefined [from', from]) to)
+            else raiseTypeError p
         
 
 instance SimplifyOp OpRestrict x where

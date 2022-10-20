@@ -21,10 +21,11 @@ instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = genericParse
 
 instance (TypeOf x, Pretty x) => TypeOf (OpFactorial x) where
     typeOf p@(OpFactorial a) = do
-        typeOfA <- typeOf a --TODO: Not sure on this
-        case typeOfA of
-            TypeInt _ -> return typeOfA
+        TypeInt t <- typeOf a
+        case t of
+            TagInt -> return ()
             _ -> raiseTypeError p
+        return (TypeInt t)
 
 instance SimplifyOp OpFactorial x where
     simplifyOp _ = na "simplifyOp{OpFactorial}"

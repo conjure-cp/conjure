@@ -20,15 +20,12 @@ instance ToJSON    x => ToJSON    (OpInverse x) where toJSON = genericToJSON jso
 instance FromJSON  x => FromJSON  (OpInverse x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpInverse x) where
-    typeOf p@(OpInverse f g) = do --TODO: not sure on this refactor
-        typeOfF <- typeOf f
-        typeOfG <- typeOf g
-        case (typeOfF,typeOfG) of 
-            (TypeFunction fFrom fTo,TypeFunction gFrom gTo) ->
-                if typesUnify [fFrom, gTo] && typesUnify [fTo, gFrom]
-                    then return TypeBool
-                    else raiseTypeError p
-            _ -> raiseTypeError p
+    typeOf p@(OpInverse f g) = do
+        TypeFunction fFrom fTo <- typeOf f
+        TypeFunction gFrom gTo <- typeOf g
+        if typesUnify [fFrom, gTo] && typesUnify [fTo, gFrom]
+            then return TypeBool
+            else raiseTypeError p
 
 instance SimplifyOp OpInverse x where
     simplifyOp _ = na "simplifyOp{OpInverse}"
