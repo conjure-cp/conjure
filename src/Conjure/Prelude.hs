@@ -228,6 +228,7 @@ import System.TimeIt as X ( timeIt, timeItNamed )
 import Debug.Trace as X ( trace, traceM )
 import Data.Void (Void)
 
+
 tracing :: Show a => String -> a -> a
 tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
 
