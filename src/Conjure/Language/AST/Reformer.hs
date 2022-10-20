@@ -8,8 +8,10 @@ class Flattenable v a where
     flatten :: Flattenable v a => a -> [v]
 
 instance Flattenable ETok ProgramTree where
-    flatten (ProgramTree sts end) = concatMap flatten sts ++ flatten end
+    flatten (ProgramTree lv sts end) = flatten lv ++ concatMap flatten sts ++ flatten end
 
+instance Flattenable ETok LangVersionNode where
+    flatten (LangVersionNode l1 l2 l3) = flatten l1 ++ flatten l2 ++ flatten l3
 instance Flattenable ETok StatementNode where
     flatten x = case x of
         DeclarationStatement dsn -> flatten dsn

@@ -32,9 +32,18 @@ runASTParser p str = case runParser p "Parser" str of
 
 parseProgram :: Parser ProgramTree
 parseProgram =  do
+    langV <- optional parseLangVersion
     (tl,ending) <- manyTill_ parseTopLevel pEnding
-    return $ ProgramTree tl ending
+    return $ ProgramTree langV tl ending
     <?> "Program"
+
+parseLangVersion :: Parser LangVersionNode
+parseLangVersion = do
+    lLang <- need L_language
+    lLName <- parseIdentifier
+    nums <- parseSequence L_Dot (RealToken <$> intLiteral)
+    return $ LangVersionNode lLang lLName nums
+
 
 parseTopLevels :: Parser [StatementNode]
 parseTopLevels = manyTill parseTopLevel pEnding

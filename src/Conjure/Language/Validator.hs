@@ -31,14 +31,34 @@ import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 
 validateModel :: ProgramTree -> Validator Model
 validateModel model = do
-        sts <- validateProgramTree model
-        return $ Model (LanguageVersion "Essence" [1,3] ) sts def
+        sts <- validateProgramTree (statements  model)
+        langVersion <- validateLanguageVersion $ langVersionInfo model
+        return $ Model langVersion sts def
 
 
-validateProgramTree :: ProgramTree -> Validator [Statement]
-validateProgramTree (ProgramTree sts _) = do
+validateProgramTree :: [StatementNode] -> Validator [Statement]
+validateProgramTree sts = do
     q <- validateArray validateStatement sts
     return $ concat q
+
+
+validateLanguageVersion :: Maybe LangVersionNode -> Validator LanguageVersion
+validateLanguageVersion Nothing = return $  LanguageVersion "Essence" [1,3] 
+validateLanguageVersion (Just (LangVersionNode l1 n v)) = do
+    checkSymbols [l1]
+    name <- validate $ validateIdentifier n
+    nums <- validate $ validateSequence getNum v
+    return $
+        LanguageVersion 
+            (Name $ fromMaybe "Essence" name)
+            (fromMaybe [1,3] nums)
+    where 
+        getNum :: LToken -> Validator Int
+        getNum c = do
+            c' <- validateSymbol c
+            case c' of
+                LIntLiteral x -> return $ fromInteger x
+                _ -> invalid $ TokenError c
 
 
 validateStatement :: StatementNode -> Validator [Statement]
@@ -406,7 +426,7 @@ validateSpecialCase :: SpecialCaseNode -> Validator Expression
 validateSpecialCase (ExprWithDecls l1 ex l2 sts l3) = do
     checkSymbols [l1,l2,l3]
     expr <- validateExpression ex
-    conds <- validateProgramTree $ ProgramTree sts l3
+    conds <- validateProgramTree sts
     let decls =
             [ Declaration (FindOrGiven LocalFind nm dom)
             | Declaration (FindOrGiven Find nm dom) <- conds ]
@@ -759,7 +779,7 @@ val s = do
     let progStruct = runParser parseProgram "TEST" stream
     case progStruct of
         Left _ -> putStrLn "error"
-        Right p@(ProgramTree{}) -> print (validateProgramTree p)
+        Right p@(ProgramTree{}) -> print (validateModel p)
 
 
 valFile :: String -> IO ()

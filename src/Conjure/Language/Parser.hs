@@ -115,8 +115,8 @@ parseIO p s = do
 -- -- Actual parsers --------------------------------------------------------------
 -- --------------------------------------------------------------------------------
 
-parseTopLevels :: Pipeline ProgramTree [Statement]
-parseTopLevels = (P.parseProgram,V.validateProgramTree)
+parseTopLevels :: Pipeline [S.StatementNode] [Statement]
+parseTopLevels = (P.parseTopLevels,V.validateProgramTree)
 --     let one = satisfyL $ \case
 --                 L_find -> Just $ do
 --                     decls <- flip sepEndBy1 comma $ do

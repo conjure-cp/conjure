@@ -23,10 +23,16 @@ instance Show LToken where
     show (MissingToken x) = "MISSING[" ++ show x ++ "]"
     show (SkippedToken x) = "SKIPPED[" ++ show x ++ "]"
 
-data ProgramTree = ProgramTree [StatementNode] LToken
-    
+data ProgramTree = ProgramTree {
+    langVersionInfo :: Maybe LangVersionNode,
+    statements :: [StatementNode],
+    eofToken :: LToken
+} 
+
+data LangVersionNode = LangVersionNode LToken NameNode (Sequence LToken)
+
 instance Show ProgramTree where
-    show (ProgramTree xs eof) = "ProgramTree \n" ++ 
+    show (ProgramTree lv xs eof) = "ProgramTree \n" ++ 
                                 intercalate "\n\n" (map show xs)
                                  ++ "\n\n" ++ show eof
 
