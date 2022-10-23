@@ -1,4 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Language.Lexemes where
 
@@ -86,7 +88,18 @@ data Lexeme
 
     -- type: relation
     | L_relation
-
+    | L_reflexive
+    | L_irreflexive
+    | L_coreflexive
+    | L_symmetric
+    | L_antiSymmetric
+    | L_aSymmetric
+    | L_transitive
+    | L_connex
+    | L_Euclidean
+    | L_serial
+    | L_equivalence
+    | L_partialOrder
     -- type: partition
     | L_partition
     | L_regular
@@ -323,15 +336,27 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_surjective, "surjective" )
     , ( L_bijective, "bijective" )
     , ( L_sequence, "sequence" )
-    , ( L_relation, "relation" )
+    , ( L_relation, "relation")
+    , ( L_reflexive, "reflexive")
+    , ( L_irreflexive, "irreflexive")
+    , ( L_coreflexive, "coreflexive")
+    , ( L_symmetric, "symmetric")
+    , ( L_antiSymmetric, "antiSymmetric")
+    , ( L_aSymmetric, "aSymmetric")
+    , ( L_transitive, "transitive")
+    , ( L_connex, "connex")
+    , ( L_Euclidean, "Euclidean")
+    , ( L_serial, "serial")
+    , ( L_equivalence, "equivalence")
+    , ( L_partialOrder, "partialOrder")
     , ( L_partition, "partition" )
-    -- , ( L_regular, "regular" )
-    -- , ( L_partSize, "partSize" )
-    -- , ( L_minPartSize, "minPartSize" )
-    -- , ( L_maxPartSize, "maxPartSize" )
-    -- , ( L_numParts, "numParts" )
-    -- , ( L_minNumParts, "minNumParts" )
-    -- , ( L_maxNumParts, "maxNumParts" )
+    , ( L_regular, "regular" )
+    , ( L_partSize, "partSize" )
+    , ( L_minPartSize, "minPartSize" )
+    , ( L_maxPartSize, "maxPartSize" )
+    , ( L_numParts, "numParts" )
+    , ( L_minNumParts, "minNumParts" )
+    , ( L_maxNumParts, "maxNumParts" )
     , ( L_union, "union" )
     , ( L_intersect, "intersect" )
     , ( L_subset, "subset" )

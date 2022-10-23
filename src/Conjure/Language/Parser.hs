@@ -50,7 +50,7 @@ import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
 import Text.PrettyPrint (text)
 
 
-type Pipeline a b = (Parsec Void ETokenStream a,a -> Validator b)
+type Pipeline a b = (Parsec Void ETokenStream a,a -> V.ValidatorS b)
 
 
 data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError [V.ValidatorError]
@@ -60,13 +60,17 @@ runPipeline :: Pipeline a b -> Text -> Either PipelineError b
 runPipeline (parse,val) txt = do
             lexResult <- either (Left . LexErr) Right $ L.runLexer txt
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
-            case val parseResult of 
-                Validator (Just res) [] -> Right res
-                Validator _ xs -> Left $ ValidatorError xs          
+            let x = V.runValidator (val parseResult) (V.SymbolTable [])
+            case x of 
+                (Just m, []) -> Right m
+                (_, ves) -> Left $ ValidatorError ves
+
+                -- Validator (Just res) [] -> Right res
+                -- Validator _ xs -> Left $ ValidatorError xs          
 
 
 parseModel :: Pipeline ProgramTree Model
-parseModel = (parseProgram,V.validateModel)
+parseModel = (parseProgram,V.strict . V.validateModel)
     -- inCompleteFile $ do
     -- let
     --     pLanguage :: Parser LanguageVersion
@@ -116,7 +120,7 @@ parseIO p s = do
 -- --------------------------------------------------------------------------------
 
 parseTopLevels :: Pipeline [S.StatementNode] [Statement]
-parseTopLevels = (P.parseTopLevels,V.validateProgramTree)
+parseTopLevels = (P.parseTopLevels,V.strict . V.validateProgramTree)
 --     let one = satisfyL $ \case
 --                 L_find -> Just $ do
 --                     decls <- flip sepEndBy1 comma $ do
@@ -229,11 +233,11 @@ parseTopLevels = (P.parseTopLevels,V.validateProgramTree)
 --             return (RangeSingle x)
 
 parseDomain :: Pipeline DomainNode (Domain () Expression)
-parseDomain = (P.parseDomain,V.validateDomain)
+parseDomain = (P.parseDomain,V.strict . V.validateDomain)
 
 
 parseDomainWithRepr :: Pipeline DomainNode (Domain HasRepresentation Expression)
-parseDomainWithRepr = (P.parseDomain,V.validateDomainWithRepr)
+parseDomainWithRepr = (P.parseDomain,V.strict . V.validateDomainWithRepr)
 --     -- TODO: uncomment the following to parse (union, intersect and minus) for domains
 --     -- let
 --     --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
@@ -625,7 +629,7 @@ parseDomainWithRepr = (P.parseDomain,V.validateDomainWithRepr)
 -- metaVarInE = ExpressionMetaVar
 
 parseExpr :: Pipeline S.ExpressionNode Expression
-parseExpr = (P.parseExpression,V.validateExpression)
+parseExpr = (P.parseExpression,V.strict . V.validateExpression)
 --     let
 --         mergeOp op = mkBinOp (lexemeText op)
 

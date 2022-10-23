@@ -20,6 +20,7 @@ import Conjure.Language.Expression.Op.Internal.Common
 import Control.Monad.Combinators.Expr
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 import Language.Haskell.TH.PprLib (rparen)
+import Conjure.Language.Attributes (allAttributLexemes)
 
 data ParserError = ParserError
     deriving (Show)
@@ -715,11 +716,9 @@ parseRange = ranged <|> singleR
 
 parseAttribute :: Parser AttributeNode
 parseAttribute = do
-    name <- choice $ map need functionAttributes -- TODO This is wrong
+    name <- (choice (map need allAttributLexemes))  <|> RealToken <$> identifier
     expr <- optional parseExpressionStrict
-    case expr of
-        Nothing -> return $ NamedAttributeNode (NameNode name)
-        Just en -> return $ NamedExpressionAttribute (NameNode name) en
+    return $ NamedAttributeNode name expr
 
 parseMissingDomain :: Parser DomainNode
 parseMissingDomain =

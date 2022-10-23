@@ -177,13 +177,13 @@ type DoubleDotNode = LToken
 -- data DoubleDotNode = DoubleDotNode LToken LToken deriving (Show)
 
 data AttributeNode 
-    = NamedAttributeNode NameNode 
-    | NamedExpressionAttribute NameNode ExpressionNode
+    = NamedAttributeNode LToken (Maybe ExpressionNode)
+    -- | TODO: Add dont care
     deriving (Show)
 
 instance Null AttributeNode where
-    isMissing (NamedAttributeNode n) = isMissing n
-    isMissing (NamedExpressionAttribute n e) = isMissing n && isMissing e
+    isMissing (NamedAttributeNode n m_e) = isMissing n && isMissing m_e 
+    -- isMissing (NamedExpressionAttribute n e) = isMissing n && isMissing e
 
 data NamedDomainNode = NameDomainNode NameNode LToken DomainNode
     deriving (Show)

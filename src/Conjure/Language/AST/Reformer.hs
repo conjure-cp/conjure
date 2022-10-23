@@ -221,8 +221,8 @@ instance (Flattenable ETok a) => Flattenable ETok (Maybe a) where
     flatten Nothing = []
 instance Flattenable ETok AttributeNode where
     flatten x =  case x of
-        NamedAttributeNode nn -> flatten nn
-        NamedExpressionAttribute nn en -> flatten nn ++ flatten en
+        NamedAttributeNode nn m_e -> flatten nn ++ flatten m_e
+        -- NamedExpressionAttribute nn en -> flatten nn ++ flatten en
 
 instance Flattenable ETok RangeNode where
     flatten x =  case x of
