@@ -42,6 +42,7 @@ data StatementNode
     | SuchThatStatement SuchThatStatementNode
     | WhereStatement WhereStatementNode
     | ObjectiveStatement ObjectiveStatementNode
+    | HeuristicStatement LToken ExpressionNode
     | UnexpectedToken LToken
     deriving (Show)
 
@@ -126,35 +127,31 @@ data BranchingStatementNode
     = BranchingStatementNode
         LToken
         LToken
-        (ListNode BranchingOnNode)
+        (ListNode ExpressionNode)
     deriving (Show)
 
 
-data BranchingOnNode = BranchingOnName NameNode | BranchingOnExpression ExpressionNode
-    deriving (Show)
-
-instance Null BranchingOnNode where
-    isMissing (BranchingOnName n) = isMissing n
-    isMissing (BranchingOnExpression e) = isMissing e
 -- Domains
+
+type MAttributes = Maybe (ListNode AttributeNode)
 
 data DomainNode
     = BoolDomainNode LToken
     | RangedIntDomainNode LToken (Maybe (ListNode RangeNode))
-    | RangedEnumNode NameNode (ListNode RangeNode)
-    | EnumDomainNode NameNode
+    | RangedEnumNode NameNode (Maybe (ListNode RangeNode))
+    -- | EnumDomainNode NameNode
     | MetaVarDomain LToken
     | ShortTupleDomainNode (ListNode DomainNode)
     | TupleDomainNode LToken (ListNode DomainNode)
     | RecordDomainNode LToken (ListNode NamedDomainNode)
     | VariantDomainNode LToken (ListNode NamedDomainNode)
     | MatrixDomainNode LToken LToken LToken (ListNode DomainNode) LToken DomainNode
-    | SetDomainNode LToken (ListNode AttributeNode) LToken DomainNode
-    | MSetDomainNode LToken (ListNode AttributeNode) LToken DomainNode
-    | FunctionDomainNode LToken (Maybe (ListNode AttributeNode) ) DomainNode LToken DomainNode
-    | SequenceDomainNode LToken (ListNode AttributeNode) LToken DomainNode
-    | RelationDomainNode LToken (ListNode AttributeNode) LToken (ListNode DomainNode)
-    | PartitionDomainNode LToken (ListNode AttributeNode) LToken DomainNode
+    | SetDomainNode LToken MAttributes LToken DomainNode
+    | MSetDomainNode LToken MAttributes LToken DomainNode
+    | FunctionDomainNode LToken MAttributes DomainNode LToken DomainNode
+    | SequenceDomainNode LToken MAttributes LToken DomainNode
+    | RelationDomainNode LToken MAttributes LToken (ListNode DomainNode)
+    | PartitionDomainNode LToken MAttributes LToken DomainNode
     | MissingDomainNode LToken
     deriving (Show)
 instance Null DomainNode where

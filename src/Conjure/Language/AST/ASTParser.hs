@@ -57,21 +57,23 @@ parseTopLevel =
         <|> parseSuchThat
         <|> parseWhere
         <|> parseObjective
+        <|> parseHeuristic
         <|> UnexpectedToken <$> makeUnexpected
 
+
+parseHeuristic :: Parser StatementNode
+parseHeuristic = do
+    lHeuristic <- need L_heuristic
+    expr <- parseExpression
+    return $ HeuristicStatement lHeuristic expr
 
 parseBranching :: Parser StatementNode
 parseBranching = do
     lBranching <- need L_branching
     lOn <- want L_on
-    statements <- squareBracketList (commaList parseBranchingPart)
+    statements <- squareBracketList (commaList parseExpression)
     return $ BranchingStatement $ BranchingStatementNode lBranching lOn statements
 
-parseBranchingPart :: Parser BranchingOnNode
-parseBranchingPart =
-    do
-        BranchingOnName <$> parseIdentifier
-        <|> (BranchingOnExpression <$> parseExpression)
 
 parseSuchThat :: Parser StatementNode
 parseSuchThat = do
@@ -216,7 +218,7 @@ parseDomainExpression :: Parser DomainExpressionNode
 parseDomainExpression = try $ do
     lTick <- need L_BackTick
     domain <- parseDomain
-    case domain of 
+    case domain of
         MissingDomainNode _ -> empty
         _ -> pure ()
     rTick <- want L_BackTick
@@ -268,6 +270,7 @@ parseLiteral =
         , parseTupleLiteral
         , parseShortTupleLiteral
         , parseRecordLiteral
+        , parseVariantLiteral
         , parseSetLiteral
         , parseMSetLiteral
         , parseFunctionLiteral
@@ -307,7 +310,7 @@ parseVariantLiteral :: Parser LiteralNode
 parseVariantLiteral = do
     lVariant <- need L_variant
     members <- curlyBracketList (commaList parseRecordMember)
-    return $ RecordLiteral lVariant members
+    return $ VariantLiteral lVariant members
 
 parseRecordMember :: Parser RecordMemberNode
 parseRecordMember = do
@@ -356,12 +359,15 @@ parseRelationLiteral = do
     return $ RelationLiteral lRel members
 
 parseRelationMember :: Parser RelationElemNode
-parseRelationMember = do
+parseRelationMember = try $ do
     f <- optional $ need L_tuple
     members <- parenList $ commaList parseExpression
-    return $ case f of
-        Nothing -> RelationElemNodeShort $ ShortTuple members
-        Just lTup -> RelationElemNodeLabeled $ LongTuple lTup members
+    case f of
+        Just lTup -> return $ RelationElemNodeLabeled $ LongTuple lTup members
+        Nothing -> case members of 
+            ListNode l c r | (isMissing l || isMissing r) && isMissing c -> empty
+            _ -> return $ RelationElemNodeShort $ ShortTuple members
+        
 
 parsePartitionLiteral :: Parser LiteralNode
 parsePartitionLiteral = do
@@ -370,7 +376,7 @@ parsePartitionLiteral = do
     return $ PartitionLiteral lPartition members
 
 parsePartitionElem :: Parser PartitionElemNode
-parsePartitionElem = PartitionElemNode <$> parenList (commaList parseExpression)
+parsePartitionElem = PartitionElemNode <$> parseList L_OpenCurly L_CloseCurly (commaList parseExpression)
 
 parseQuantificationStatement :: Parser QuantificationExpressionNode
 parseQuantificationStatement = do
@@ -584,11 +590,8 @@ parseSpecialCase = do
 parseIntDomain :: Parser DomainNode
 parseIntDomain = do
     lInt <- need L_int
-    ranges <- parenList $ commaList parseRange
-    let range = case ranges of
-            ListNode (MissingToken _) (Seq []) (MissingToken _) -> Nothing
-            _ -> Just ranges
-    return $ RangedIntDomainNode lInt range
+    ranges <- optional $ parenListStrict $ commaList parseRange
+    return $ RangedIntDomainNode lInt ranges
 
 parseTuple :: Parser DomainNode
 parseTuple = do
@@ -628,7 +631,7 @@ parseMatrix = do
 parseSet :: Parser DomainNode
 parseSet = do
     lSet <- need L_set
-    attributes <- parenList $ commaList parseAttribute
+    attributes <- optional parseAttributes
     lOf <- want L_of
     domain <- parseDomain
     return $ SetDomainNode lSet attributes lOf domain
@@ -636,7 +639,7 @@ parseSet = do
 parseMSet :: Parser DomainNode
 parseMSet = do
     lMSet <- need L_mset
-    attributes <- parenList $ commaList parseAttribute
+    attributes <- optional parseAttributes
     lOf <- want L_of
     domain <- parseDomain
     return $ MSetDomainNode lMSet attributes lOf domain
@@ -644,23 +647,23 @@ parseMSet = do
 parseFunctionDomain :: Parser DomainNode
 parseFunctionDomain = do
     lFunction <- need L_function
-    attributes <- optional parseFunctionAttributes
+    attributes <- optional parseAttributes
     fromDom <- parseDomain
     arrow <- want L_LongArrow
     toDom <- parseDomain
     return $ FunctionDomainNode lFunction attributes fromDom arrow toDom
-  where
-    parseFunctionAttributes :: Parser (ListNode AttributeNode)
-    parseFunctionAttributes = try $ do
-        openB <- want L_OpenParen
-        lst <- commaList1 parseAttribute
-        closeB <- want L_CloseBracket
-        return $ ListNode openB lst closeB
+--   where
+--     parseFunctionAttributes :: Parser (ListNode AttributeNode)
+--     parseFunctionAttributes = try $ do
+--         openB <- want L_OpenParen
+--         lst <- commaList1 parseAttribute
+--         closeB <- want L_CloseParen
+--         return $ ListNode openB lst closeB
 
 parseSequenceDomain :: Parser DomainNode
 parseSequenceDomain = do
     lSequence <- need L_sequence
-    attributes <- parenList $ commaList parseAttribute
+    attributes <- optional parseAttributes
     lOf <- want L_of
     domain <- parseDomain
     return $ SequenceDomainNode lSequence attributes lOf domain
@@ -668,7 +671,7 @@ parseSequenceDomain = do
 parseRelation :: Parser DomainNode
 parseRelation = do
     lRelation <- need L_relation
-    attributes <- parenList $ commaList parseAttribute
+    attributes <- optional parseAttributes
     lOf <- want L_of
     domains <- parenList $ parseSequence L_Times parseDomain
     return $ RelationDomainNode lRelation attributes lOf domains
@@ -676,7 +679,7 @@ parseRelation = do
 parsePartition :: Parser DomainNode
 parsePartition = do
     lPartition <- need L_partition
-    attributes <- parenList $ commaList parseAttribute
+    attributes <- optional parseAttributes
     lFrom <- want L_from
     domain <- parseDomain
     return $ PartitionDomainNode lPartition attributes lFrom domain
@@ -685,9 +688,7 @@ parseEnumDomain :: Parser DomainNode
 parseEnumDomain = do
     name <- parseIdentifierStrict
     brackets <- optional $ parenListStrict (commaList parseRange)
-    case brackets of
-        Nothing -> return $ EnumDomainNode name
-        Just parens -> return $ RangedEnumNode name parens
+    return $ RangedEnumNode name brackets
 
 -- (RangedEnumNode name <$> try (parenList (commaList parseRange)))
 --     <|> return (EnumDomainNode name)
@@ -713,6 +714,21 @@ parseRange = ranged <|> singleR
             (Nothing, Just r) -> return $ LeftUnboundedRangeNode dots r
             (Just l, Just r) -> return $ BoundedRangeNode l dots r
     singleR = SingleRangeNode <$> parseExpressionStrict
+
+parseAttributes :: Parser (ListNode AttributeNode)
+parseAttributes = try $ do
+    attrs <- parenList (commaList parseAttribute)
+    case attrs of
+            ListNode _(Seq xs) _| not (validInterior xs) -> empty
+            _ -> return attrs
+    where
+        validInterior :: [SeqElem AttributeNode] -> Bool
+        validInterior members = not $ null  [x |
+           (SeqElem (NamedAttributeNode x _) _) <- members,isNonIdentifier x
+           ]
+        isNonIdentifier :: LToken -> Bool
+        isNonIdentifier (RealToken ETok{lexeme=(LIdentifier _)}) = False
+        isNonIdentifier _ = True
 
 parseAttribute :: Parser AttributeNode
 parseAttribute = do
@@ -752,7 +768,7 @@ example s = do
 exampleFile :: String -> IO ()
 exampleFile p = do
     path <- readFileIfExists p
-    case path of 
+    case path of
       Nothing -> putStrLn "NO such file"
       Just s -> example s
     return ()

@@ -46,14 +46,16 @@ data ValidatorError
     | SyntaxError String
     | RegionError String -- Add region
     | TokenError LToken
+    | TaggedTokenError String LToken
     | IllegalToken LToken -- Should not occur in practice and indicates a logical error somewhere
     | NotImplemented String
     deriving (Show)
 
-data SymbolTable = SymbolTable [String]
+data SymbolTable = SymbolTable [(Text,String)]
+    deriving (Show)
 
-newtype ValidatorT r w a = ValidatorT (MaybeT (ReaderT r (Writer [w])) a)
-    deriving (Monad,Applicative ,Functor,MonadReader r ,MonadWriter [w],MonadFail)
+newtype ValidatorT r w a = ValidatorT (MaybeT (StateT r (Writer [w])) a)
+    deriving (Monad,Applicative ,Functor,MonadState r ,MonadWriter [w],MonadFail)
 
 
 --synonym wrapped in maybe to allow errors to propagate
@@ -62,12 +64,22 @@ type Validator a = ValidatorT SymbolTable ValidatorError (Maybe a)
 --Non maybe version used in outward facing applications/ lists 
 type ValidatorS a = ValidatorT SymbolTable ValidatorError a
 
+addEnumDefns ::  [Text] -> SymbolTable -> SymbolTable 
+addEnumDefns names (SymbolTable enums) = SymbolTable $ enums ++  map (\m -> (m,"Enum")) names
+
+lookupSymbol :: Text -> ValidatorS (Maybe String)
+lookupSymbol name = do
+    SymbolTable a <- get 
+    return $ lookup name a
+
 strict :: Validator a -> ValidatorS a
 strict a = do Just res <- a; return res
 
+deState :: ((a,r),n) -> (a,n)
+deState ((a,_),n) = (a,n)
 
-runValidator :: (ValidatorT r w a) -> r -> (Maybe a,[w])
-runValidator (ValidatorT r) d = runWriter (runReaderT (runMaybeT r) d)
+runValidator :: (ValidatorT r w a) -> r -> ((Maybe a),[w])
+runValidator (ValidatorT r) d = deState $ runWriter (runStateT (runMaybeT r) d)
 -- data Validator a = Validator
 --     { value :: Maybe a
 --     , errors :: [ValidatorError]
@@ -147,7 +159,18 @@ validateStatement (BranchingStatement bsn) = validateBranchingStatement bsn
 validateStatement (SuchThatStatement stsn) = validateSuchThatStatement stsn
 validateStatement (WhereStatement wsn) = validateWhereStatement wsn
 validateStatement (ObjectiveStatement osn) = validateObjectiveStatement osn
+validateStatement (HeuristicStatement lt exp) = validateHeuristicStatement lt exp
 validateStatement (UnexpectedToken lt) = invalid $ TokenError lt
+
+validateHeuristicStatement :: LToken -> ExpressionNode -> Validator [Statement]
+validateHeuristicStatement lt exp = do
+    checkSymbols [lt]
+    _ <- validateExpression exp
+    case exp of
+      IdentifierNode nn -> do
+                    x <- validateName nn
+                    return  $ sequence [SearchHeuristic <$> x]
+      _ -> invalid $ StateError "Only identifiers are allowed as heuristics"
 
 validateWhereStatement :: WhereStatementNode -> Validator [Statement]
 validateWhereStatement (WhereStatementNode l1 exprs) = do
@@ -172,10 +195,18 @@ validateSuchThatStatement (SuchThatStatementNode l1 l2 exprs) = do
     return . pure $ [SuchThat  exprs']
 
 validateBranchingStatement :: BranchingStatementNode -> Validator [Statement]
-validateBranchingStatement (BranchingStatementNode l1 l2 statements) = do
+validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
     checkSymbols [l1, l2]
-    statements <- todo "branching"
-    todo "branching"
+    branchings <- validateList validateBranchingParts sts
+    return . pure $ [SearchOrder branchings]
+    where 
+        validateBranchingParts :: ExpressionNode -> Validator SearchOrder
+        validateBranchingParts (IdentifierNode nn) =  do
+            n <- validateName nn
+            return $ BranchingOn <$> n
+        validateBranchingParts exp = do
+            x <- validateExpression exp
+            return $ Cut <$> x
 
 validateDeclarationStatement :: DeclarationStatementNode -> Validator [Statement]
 validateDeclarationStatement stmt = do
@@ -196,6 +227,7 @@ validateGiven (GivenEnumNode l1 se l2 l3 l4) =
     do
         checkSymbols [l1, l2, l3, l4]
         names <-  validateNameList se
+        modify $ addEnumDefns [ n | Name n <-names]
         return . pure $  [GivenDomainDefnEnum n | n <- names]
 
 validateLetting :: LettingStatementNode -> Validator [Declaration]
@@ -203,25 +235,25 @@ validateLetting :: LettingStatementNode -> Validator [Declaration]
 validateLetting (LettingStatementNode l1 names l2 assign) = do
     checkSymbols [l1, l2]
     names' <-  validateNameList names
-    assignment <- validateLettingAssignment assign
-    return $ fmap <$> assignment <*> pure  names'
+    validateLettingAssignment names' assign 
 
-validateLettingAssignment :: LettingAssignmentNode -> Validator (Name -> Declaration)
-validateLettingAssignment (LettingExpr en) = do
+validateLettingAssignment :: [Name] -> LettingAssignmentNode -> Validator [Declaration]
+validateLettingAssignment names (LettingExpr en)  = do
     Just expr <- validateExpression en
-    return . pure $ (`Letting` expr)
-validateLettingAssignment (LettingDomain lt dn) = do
+    return . pure $ [Letting n expr | n <- names]
+validateLettingAssignment names (LettingDomain lt dn) = do
     checkSymbols [lt]
     Just domain <- validateDomain dn
-    return . pure $ (`Letting` Domain domain)
-validateLettingAssignment (LettingEnum l1 l2 l3 names) = do
+    return . pure $ [Letting n  (Domain domain)| n <- names]
+validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
     checkSymbols [l1, l2, l3]
-    members <- validateList validateName names
-    return . pure $ (`LettingDomainDefnEnum` members)
-validateLettingAssignment (LettingAnon l1 l2 l3 l4 szExp) = do
+    members <- validateList validateName enames
+    modify $ addEnumDefns [ n | Name n <-names]
+    return . pure $ [LettingDomainDefnEnum n members| n <- names]
+validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
     checkSymbols [l1, l2, l3, l4]
     Just size <- validateExpression szExp
-    return . pure $ (`LettingDomainDefnUnnamed` size)
+    return . pure $ [LettingDomainDefnUnnamed n size| n <- names]
 
 
 -- validate :: Validator a -> Validator (Maybe a)
@@ -288,7 +320,7 @@ validateDomain dm = case dm of
     BoolDomainNode lt -> pure <$> (validateSymbol lt >> return DomainBool)
     RangedIntDomainNode l1 rs -> checkSymbols [l1] >> validateRangedInt rs
     RangedEnumNode nn ranges -> validateEnumRange nn ranges
-    EnumDomainNode nn -> validateNamedEnumDomain nn
+    -- EnumDomainNode nn -> validateNamedEnumDomain nn
     ShortTupleDomainNode lst -> validateTupleDomain lst
     TupleDomainNode l1 doms -> checkSymbols [l1] >> validateTupleDomain doms
     RecordDomainNode l1 ndom -> checkSymbols [l1] >> validateRecordDomain ndom
@@ -307,17 +339,22 @@ validateDomain dm = case dm of
         ranges' <- validateList validateRange ranges
         return . pure $ DomainInt TagInt ranges'
     validateRangedInt Nothing = return . pure $ DomainInt TagInt []
-    validateEnumRange :: NameNode -> ListNode RangeNode -> DomainValidator
+    validateEnumRange :: NameNode -> Maybe (ListNode RangeNode) -> DomainValidator
     validateEnumRange name ranges = do
-        name' <- validateIdentifier name
-        -- vars <- get
-        ranges' <- validateList validateRange ranges
-        -- scopecheck (see parser:313)
-        return $ (\n -> DomainEnum (Name n) (Just ranges') Nothing) <$> name'
-    validateNamedEnumDomain :: NameNode -> DomainValidator
-    validateNamedEnumDomain name = do
-        name' <- validateName name
-        return $ DomainReference <$> name' <*> pure Nothing
+        ranges' <- case ranges of 
+            Just r -> pure <$> validateList validateRange r
+            Nothing -> pure Nothing
+        Just name' <- validateIdentifier name
+        a <- lookupSymbol name'
+        case a of
+            Just "Enum" ->return . pure $ DomainEnum (Name name') ranges' Nothing
+            Just t -> invalid $ StateError $ "Unknown type :" ++ t
+            Nothing -> case ranges' of
+              Nothing -> return . pure $  DomainReference (Name name') Nothing
+              Just _ -> do
+                raiseError (StateError "range not supported on non enum ranges") 
+                return . pure $  DomainReference (Name name') Nothing
+
     validateTupleDomain :: ListNode DomainNode -> DomainValidator
     validateTupleDomain doms = pure . DomainTuple <$> validateList validateDomain doms
     validateRecordDomain :: ListNode NamedDomainNode -> DomainValidator
@@ -331,17 +368,21 @@ validateDomain dm = case dm of
         idoms <-  validateList validateDomain indexes
         dom' <-  validateDomain dom
         return $ foldr DomainMatrix <$> dom' <*> pure idoms
-    validateSetDomain :: ListNode AttributeNode -> DomainNode -> DomainValidator
+    validateSetDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> DomainValidator
     validateSetDomain attrs dom = do
         let repr = Just ()
-        attrs' <- validateSetAttributes attrs
+        attrs' <- case attrs of
+            Just a ->  validateSetAttributes a
+            Nothing -> return $ Just def
         dom' <-  validateDomain dom
         return $ DomainSet <$> repr <*> attrs' <*> dom'
 
-    validateMSetDomain :: ListNode AttributeNode -> DomainNode -> DomainValidator
+    validateMSetDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> DomainValidator
     validateMSetDomain attrs dom = do
         let repr = Just ()
-        attrs' <-  validateMSetAttributes attrs
+        attrs' <- case attrs of
+            Just a ->  validateMSetAttributes a
+            Nothing -> return $ Just def
         dom' <-  validateDomain dom
         return $ DomainMSet <$> repr <*> attrs' <*> dom'
     validateFunctionDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> DomainNode -> DomainValidator
@@ -355,22 +396,28 @@ validateDomain dm = case dm of
         return $ DomainFunction <$> repr <*> attrs' <*> dom1' <*> dom2'
 
     -- attrs <- validateAttributes
-    validateSequenceDomain :: ListNode AttributeNode -> DomainNode -> DomainValidator
+    validateSequenceDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> DomainValidator
     validateSequenceDomain attrs dom = do
         let repr = Just ()
-        attrs' <-  validateSeqAttributes attrs
+        attrs' <- case attrs of
+            Just a ->  validateSeqAttributes a
+            Nothing -> return $ Just def
         dom' <-  validateDomain dom
         return $ DomainSequence <$> repr <*> attrs' <*> dom'
-    validateRelationDomain :: ListNode AttributeNode -> ListNode DomainNode -> DomainValidator
+    validateRelationDomain ::Maybe (ListNode AttributeNode)-> ListNode DomainNode -> DomainValidator
     validateRelationDomain attrs doms = do
         let repr = Just ()
-        attrs' <-  validateRelationAttributes attrs
+        attrs' <- case attrs of
+            Just a ->  validateRelationAttributes a
+            Nothing -> return $ Just def
         doms' <-  validateList validateDomain doms
         return $ DomainRelation <$> repr <*> attrs' <*> pure doms'
-    validatePartitionDomain :: ListNode AttributeNode -> DomainNode -> DomainValidator
+    validatePartitionDomain :: Maybe (ListNode AttributeNode)-> DomainNode -> DomainValidator
     validatePartitionDomain attrs dom = do
         let repr = Just ()
-        attrs' <-  validatePartitionAttributes attrs
+        attrs' <- case attrs of
+            Just a ->  validatePartitionAttributes a
+            Nothing -> return $ Just def
         dom' <-  validateDomain dom
         return $ DomainPartition <$> repr <*> attrs' <*> dom'
 
@@ -387,7 +434,7 @@ validateSizeAttributes attrs = do
       [(L_minSize, Just a)] -> return $ Just (SizeAttr_MinSize a)
       [(L_maxSize, Just a)] -> return $ Just (SizeAttr_MaxSize a)
       [(L_minSize, Just a),(L_maxSize, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
-      as -> do invalid $ RegionError "Incompatible attributes"
+      as -> do invalid $ RegionError $ "Incompatible attributes size:" ++ show as
 
 validatePartSizeAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Expression)
 validatePartSizeAttributes attrs = do
@@ -395,11 +442,11 @@ validatePartSizeAttributes attrs = do
     let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
     case filtered of 
       [] -> return $ Just SizeAttr_None
-      [(L_size,Just a)] -> return $ Just (SizeAttr_Size a)
+      [(L_partSize,Just a)] -> return $ Just (SizeAttr_Size a)
       [(L_minPartSize, Just a)] -> return $ Just (SizeAttr_MinSize a)
       [(L_maxPartSize, Just a)] -> return $ Just (SizeAttr_MaxSize a)
       [(L_minPartSize, Just a),(L_maxPartSize, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
-      as -> do invalid $ RegionError "Incompatible attributes"
+      as -> do invalid $ RegionError $ "Incompatible attributes partitionSize :" ++ show as
 
 validateJectivityAttributes :: [(Lexeme,Maybe Expression)] -> Validator JectivityAttr
 validateJectivityAttributes attrs = do
@@ -413,7 +460,7 @@ validateJectivityAttributes attrs = do
       [(L_injective, _),(L_surjective, _)] -> do 
         info "Inj and Sur can be combined to bijective" 
         return $ Just JectivityAttr_Bijective
-      as -> do invalid $ RegionError "Incompatible attributes"
+      as -> do invalid $ RegionError $ "Incompatible attributes jectivity" ++ show as
 
 
 validateSetAttributes :: ListNode AttributeNode -> Validator (SetAttr Expression)
@@ -431,14 +478,14 @@ validateMSetAttributes atts = do
     return $ MSetAttr <$> size <*> occurs
         where 
             validateOccursAttrs attrs = do
-                let sizeAttrs = [L_size,L_minSize,L_maxSize]
+                let sizeAttrs = [L_minOccur,L_maxOccur]
                 let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
                 case filtered of 
                     [] -> return $ Just OccurAttr_None
                     [(L_minOccur,Just a)] -> return $ Just (OccurAttr_MinOccur a)
                     [(L_maxOccur, Just a)] -> return $ Just (OccurAttr_MaxOccur a)
-                    [(L_minSize, Just a),(L_maxSize, Just b)] -> return $ Just (OccurAttr_MinMaxOccur a b)
-                    _ -> invalid $ StateError "Bad args to occurs"
+                    [(L_minOccur, Just a),(L_maxOccur, Just b)] -> return $ Just (OccurAttr_MinMaxOccur a b)
+                    as -> invalid $ StateError $ "Bad args to occurs" ++ show as
 
 
 validateFuncAttributes :: ListNode AttributeNode -> Validator (FunctionAttr Expression)
@@ -461,7 +508,7 @@ validateRelationAttributes :: ListNode AttributeNode -> Validator (RelationAttr 
 validateRelationAttributes atts = do
     attrs <- validateList (validateAttributeNode relAttrs) atts
     size <- validateSizeAttributes attrs
-    others <- validateArray validateBinaryRel (filter (const True) attrs)
+    others <- validateArray validateBinaryRel (filter (\x -> fst x `elem` map fst binRelAttrs) attrs)
     return $ RelationAttr <$>  size <*> pure (BinaryRelationAttrs $ S.fromList others )
         where 
             validateBinaryRel :: (Lexeme , Maybe Expression) -> Validator BinaryRelationAttr
@@ -490,7 +537,7 @@ validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
     expr <- validateExpression e
     Just name <- validateSymbol t
     case M.lookup name vs of
-      Nothing -> invalid $ TokenError t
+      Nothing -> invalid $ TaggedTokenError "Not a valid attr " t
       Just False -> invalid $ RegionError "name: does not take an argument"
       Just True -> return $(\x -> (name,Just x)) <$> expr
 

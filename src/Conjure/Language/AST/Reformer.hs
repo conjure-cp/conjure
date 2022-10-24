@@ -19,6 +19,7 @@ instance Flattenable ETok StatementNode where
         SuchThatStatement stsn -> flatten stsn
         WhereStatement wsn -> flatten wsn
         ObjectiveStatement osn -> flatten osn
+        HeuristicStatement l1 ex -> flatten l1 ++ flatten ex
         UnexpectedToken tok -> flatten tok
 
 instance Flattenable ETok DeclarationStatementNode where
@@ -51,10 +52,6 @@ instance Flattenable ETok GivenStatementNode where
 instance Flattenable ETok BranchingStatementNode where
     flatten (BranchingStatementNode lt lt' ln) = concat [flatten lt, flatten lt', flatten ln]
 
-instance Flattenable ETok BranchingOnNode where
-    flatten x = case x of
-      BranchingOnName nn -> flatten nn
-      BranchingOnExpression en -> flatten en
 
 instance Flattenable ETok SuchThatStatementNode where
     flatten (SuchThatStatementNode l1 l2 l3) =  flatten l1 ++ flatten l2 ++ flatten l3
@@ -202,7 +199,7 @@ instance Flattenable ETok DomainNode where
         RangedIntDomainNode lt ln -> flatten lt ++ flatten ln
         MetaVarDomain a -> flatten a
         RangedEnumNode nn ln -> flatten nn ++ flatten ln
-        EnumDomainNode nn -> flatten nn
+        -- EnumDomainNode nn -> flatten nn
         ShortTupleDomainNode ln -> flatten ln
         TupleDomainNode lt ln -> flatten lt ++ flatten ln
         RecordDomainNode lt ln -> flatten lt ++ flatten ln
