@@ -448,6 +448,19 @@ validatePartSizeAttributes attrs = do
       [(L_minPartSize, Just a),(L_maxPartSize, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
       as -> do invalid $ RegionError $ "Incompatible attributes partitionSize :" ++ show as
 
+validateNumPartAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Expression)
+validateNumPartAttributes attrs = do
+    let sizeAttrs = [L_numParts,L_maxNumParts,L_minNumParts]
+    let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
+    case filtered of 
+      [] -> return $ Just SizeAttr_None
+      [(L_numParts,Just a)] -> return $ Just (SizeAttr_Size a)
+      [(L_minNumParts, Just a)] -> return $ Just (SizeAttr_MinSize a)
+      [(L_maxNumParts, Just a)] -> return $ Just (SizeAttr_MaxSize a)
+      [(L_minNumParts, Just a),(L_maxNumParts, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
+      as -> do invalid $ RegionError $ "Incompatible attributes partitionSize :" ++ show as
+
+
 validateJectivityAttributes :: [(Lexeme,Maybe Expression)] -> Validator JectivityAttr
 validateJectivityAttributes attrs = do
     let sizeAttrs = [L_injective,L_surjective,L_bijective]
@@ -520,7 +533,8 @@ validateRelationAttributes atts = do
 validatePartitionAttributes :: ListNode AttributeNode -> Validator (PartitionAttr Expression)
 validatePartitionAttributes atts = do
     attrs <- validateList (validateAttributeNode partitionAttrs) atts
-    size <- validateSizeAttributes attrs
+    --guard size attrs and complete as this is default
+    size <- validateNumPartAttributes attrs
     partSize <- validatePartSizeAttributes attrs
     regular <- return . Just $ L_regular `elem` map fst attrs 
     return $ PartitionAttr <$> size <*> partSize <*> regular
