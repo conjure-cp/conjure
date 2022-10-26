@@ -127,6 +127,7 @@ aLexemeStrict =
         pNumber
         <|> try  (choice (map pLexeme lexemes) <?> "Lexeme")
         <|> try pIdentifier
+        <|> try pQuotedIdentifier
         <|> try pMetaVar
 
 
@@ -149,6 +150,12 @@ pIdentifier = do
     let ident = T.append firstLetter rest
     return ( LIdentifier ident, ident)
     <?> "Identifier"
+
+pQuotedIdentifier :: Lexer (Lexeme,Text)
+pQuotedIdentifier = do 
+    l <- quoted 
+    return (LIdentifier l,l)
+
 pFallback :: Lexer (Lexeme,Text)
 pFallback = do
     q <- T.pack <$> someTill anySingle (lookAhead $ try somethingValid)
@@ -174,6 +181,11 @@ whiteSpace = do
     s <- some spaceChar
     return $ WhiteSpace $ T.pack s
 
+quoted :: Lexer Text
+quoted = do
+    open <- char '\"'
+    (body,end) <- manyTill_ L.charLiteral $ char '\"' 
+    return $ T.pack  $ open:body++[end]
 lineEnd :: Lexer [Char]
 lineEnd = T.unpack <$> eol <|> ( eof >> return [])
 

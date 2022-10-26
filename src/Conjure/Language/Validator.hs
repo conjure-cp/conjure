@@ -211,29 +211,33 @@ validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
 validateDeclarationStatement :: DeclarationStatementNode -> Validator [Statement]
 validateDeclarationStatement stmt = do
     Just stmt' <- case stmt of
-        FindStatement fsn -> validateFind fsn
-        GivenStatement gsn -> validateGiven gsn
-        LettingStatement lsn -> validateLetting lsn
+        FindStatement l1 fs -> checkSymbols [l1] >> validateStatementSeq validateFind fs
+        GivenStatement l1 gs -> checkSymbols [l1] >> validateStatementSeq validateGiven gs
+        LettingStatement l1 ls -> checkSymbols [l1] >> validateStatementSeq validateLetting ls
     return . pure $ Declaration <$> stmt'
+    where
+        validateStatementSeq v l= do
+            decls <- validateSequence v l
+            return $ pure $ concat decls 
 
 validateGiven :: GivenStatementNode -> Validator [Declaration]
-validateGiven (GivenStatementNode l1 idents l2 domain) =
+validateGiven (GivenStatementNode idents l1 domain) =
     do
-        checkSymbols [l1, l2]
+        checkSymbols [l1]
         names <-  validateNameList idents
         Just dom <-  validateDomain domain
         return . pure $ [ FindOrGiven Given nm dom|nm <- names ]
-validateGiven (GivenEnumNode l1 se l2 l3 l4) =
+validateGiven (GivenEnumNode se l1 l2 l3) =
     do
-        checkSymbols [l1, l2, l3, l4]
+        checkSymbols [l1, l2, l3]
         names <-  validateNameList se
         modify $ addEnumDefns [ n | Name n <-names]
         return . pure $  [GivenDomainDefnEnum n | n <- names]
 
 validateLetting :: LettingStatementNode -> Validator [Declaration]
 -- Letting [names] be
-validateLetting (LettingStatementNode l1 names l2 assign) = do
-    checkSymbols [l1, l2]
+validateLetting (LettingStatementNode names l1 assign) = do
+    checkSymbols [l1]
     names' <-  validateNameList names
     validateLettingAssignment names' assign 
 
@@ -298,8 +302,8 @@ validateSymbol s =
 -- [MissingTokenError ]
 
 validateFind :: FindStatementNode -> Validator [Declaration]
-validateFind (FindStatementNode find names colon domain) = do
-    checkSymbols [find, colon]
+validateFind (FindStatementNode names colon domain) = do
+    checkSymbols [colon]
     names' <- validateNameList names
     domain' <- validateDomain domain
     return $ map <$> (makeFind <$> domain') <*> pure names'
@@ -960,8 +964,13 @@ validateIdentifier :: NameNode -> Validator Text
 validateIdentifier (NameNode iden) = do
     Just q <-  validateSymbol iden
     case q of
-        LIdentifier x -> return $ Just x
+        LIdentifier x -> checkName x
         _ -> return Nothing
+    where 
+        checkName :: Text -> Validator Text
+        checkName "" = invalid $ StateError "Empty names not allowed"
+        checkName "\"\"" = invalid $ StateError "Empty names not allowed"
+        checkName x = return . pure $ x
 
 validateName :: NameNode -> Validator Name
 validateName name = do

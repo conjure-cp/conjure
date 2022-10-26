@@ -96,18 +96,22 @@ parseDeclaration :: Parser StatementNode
 parseDeclaration =
     DeclarationStatement
         <$> choice [
-                    LettingStatement <$> parseLetting,
-                    GivenStatement <$> parseGiven,
-                    FindStatement <$> parseFind
+                    declaration LettingStatement L_letting parseLetting,
+                    declaration GivenStatement L_given parseGiven,
+                    declaration FindStatement L_find parseFind
         ]
-
+    where
+        declaration :: (Null a) => (LToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
+        declaration c t p = do
+                            l <- need t
+                            seq <- commaList p
+                            return $ c l seq
 
 parseLetting :: Parser LettingStatementNode
 parseLetting = do
-    lLetting <- need L_letting
     names <- commaList parseIdentifier
     lBe <- want L_be
-    let start = LettingStatementNode lLetting names lBe
+    let start = LettingStatementNode names lBe
     start <$> choice
         [ finishDomain
         , try finishEnum
@@ -135,11 +139,10 @@ parseLetting = do
 
 parseGiven :: Parser GivenStatementNode
 parseGiven = do
-    lGiven <-  need L_given
     names <- commaList parseIdentifier
     choice
-        [ finishEnum (GivenEnumNode lGiven names)
-        , finishDomain (GivenStatementNode lGiven names)
+        [ finishEnum (GivenEnumNode names)
+        , finishDomain (GivenStatementNode names)
         ]
   where
     finishEnum start =  do
@@ -155,11 +158,10 @@ parseGiven = do
 
 parseFind :: Parser FindStatementNode
 parseFind = do
-    lFind <- need L_find
     names <- commaList parseIdentifier
     lColon <- want L_Colon
     domain <- parseDomain
-    return $ FindStatementNode lFind names lColon domain
+    return $ FindStatementNode names lColon domain
     <?> "Find Statement"
 parseObjectiveStatement :: Parser ObjectiveStatementNode
 parseObjectiveStatement = do
@@ -209,7 +211,6 @@ parseAtomicExpression = do
             , AbsExpression <$> parseAbsExpression
             , QuantificationExpr <$> parseQuantificationStatement
             , DomainExpression <$> parseDomainExpression
-            , MissingExpressionNode <$> makeMissing (L_Missing "Expression")
             ]
 
 
@@ -364,10 +365,10 @@ parseRelationMember = try $ do
     members <- parenList $ commaList parseExpression
     case f of
         Just lTup -> return $ RelationElemNodeLabeled $ LongTuple lTup members
-        Nothing -> case members of 
+        Nothing -> case members of
             ListNode l c r | (isMissing l || isMissing r) && isMissing c -> empty
             _ -> return $ RelationElemNodeShort $ ShortTuple members
-        
+
 
 parsePartitionLiteral :: Parser LiteralNode
 parsePartitionLiteral = do
@@ -462,7 +463,7 @@ parseComprehensionCondition = do
 -- Current implementation is hacky
 
 parseOperator :: Parser ExpressionNode
-parseOperator = try (makeExprParser parseAtomicExpression operatorTable <?> "Expression")
+parseOperator = try (makeExprParser parseAtomicExpressionAndFixes operatorTable <?> "Expression")
 
 parseFunction :: Parser ExpressionNode
 parseFunction = try $ do
@@ -527,7 +528,7 @@ operatorTable =
                     BinaryOp op FLeft -> InfixL $ prefixBinary <$> need op
                     BinaryOp op FNone -> InfixN $ prefixBinary <$> need op
                     BinaryOp op FRight -> InfixR $ prefixBinary <$> need op
-                    UnaryPrefix op -> Prefix $ prefixUnary <$> need op
+                    UnaryPrefix op -> prefixOps op
                 | -- UnaryPrefix L_ExclamationMark -> Prefix $ prefixBinary--foldr1 (.) <$> some parseUnaryNot
                 -- UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
                 (descr, _) <- operatorsInGroup
@@ -535,13 +536,41 @@ operatorTable =
               | operatorsInGroup <- operatorsGrouped
               ]
 
+parseAtomicExpressionAndFixes :: Parser ExpressionNode
+parseAtomicExpressionAndFixes = try $ do
+    let
+        prefixes = do
+            fs <- some parsePrefixes
+            return $ foldr1 (.) fs
+        postfixes = do
+            fs <- some parsePostfixOp
+            return $ foldr1 (.) (reverse fs)
+        withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
+        withPostfix x = do i <- x; guard $ not $ isMissing i ; mf <- optional postfixes; return $ fromMaybe id mf i
+    withPrefix (withPostfix parseAtomicExpression) <?> "expression"    
+
+
+parsePrefixes :: Parser (ExpressionNode -> ExpressionNode)
+parsePrefixes = choice [parseUnary L_Minus,parseUnary L_ExclamationMark]
+    where
+        parseUnary l = (\e -> OperatorExpressionNode . PrefixOpNode e ) <$> need l
+
+
+
 prefixBinary :: LToken -> ExpressionNode -> ExpressionNode -> ExpressionNode
 prefixBinary t l = OperatorExpressionNode . BinaryOpNode l t
 
 prefixUnary :: LToken -> ExpressionNode -> ExpressionNode
 prefixUnary l = OperatorExpressionNode . PrefixOpNode l
 
-postfixOps :: [Operator Parser ExpressionNode]
+prefixOps ::Lexeme -> Operator Parser ExpressionNode
+prefixOps l = Prefix $ foldr1 (. ) <$> some (try opBuilder)
+    where
+        opBuilder :: Parser (ExpressionNode -> ExpressionNode)
+        opBuilder = do
+            t <- need l
+            return (OperatorExpressionNode . PrefixOpNode t)
+postfixOps ::  [Operator Parser ExpressionNode]
 postfixOps =
     [ Postfix $ foldr1 (.) . reverse <$> some parsePostfixOp
     ]
@@ -772,51 +801,6 @@ exampleFile p = do
       Just s -> example s
     return ()
 
-demoString :: String
-demoString =
-    intercalate
-        "\n"
-        [ "letting letters be new type enum {S,E,N,D,M,O,R,Y}"
-        , "find f : function (injective) letters --> int(0..9)"
-        , "such that"
-        , "                   1000 * f(S) + 100 * f(E) + 10 * f(N) + f(D) +"
-        , "                   1000 * f(M) + 100 * f(O) + 10 * f(R) + f(E) ="
-        , "    10000 * f(M) + 1000 * f(O) + 100 * f(N) + 10 * f(E) + f(Y)"
-        , ""
-        , "such that f(S) > 0, f(M) > 0"
-        ]
-
-demo2 :: String
-demo2 = intercalate "\n"[
-    "given n : int"
-    ,"find perm : sequence (size n) of int(1..n)"
-    ,"such that $comment"
-    ,"    allDiff([perm(k) | k : int(1..n) ]),"
-    ,"    and([ max(subs) - min(subs) + 1 != |subs| |"
-    ,"        i : int(1..n-1), j : int(2..n),"
-    ,"        i < j,"
-    ,"        !(i = 1 /\\ j = n),"
-    ,"        letting subs be [perm(k) | k : int(i..j)]]"
-    ,"    )"
-    ]
-
-demo3 :: String
-demo3 = intercalate "\n" [ "$COMMENT"
-    ,"given n : int"
-    ,"letting DOMAIN be domain int(1..n)"
-    ,"given hints : function (DOMAIN, DOMAIN) --> DOMAIN"
-    ,"given less_than : relation of ((DOMAIN, DOMAIN) * (DOMAIN, DOMAIN))"
-    ,"find board : matrix indexed by [DOMAIN, DOMAIN] of DOMAIN"
-    ,"such that"
-    ,"    forAll (hint,num) in hints ."
-    ,"        board[hint[1], hint[2]] = num,"
-    ,"    forAll i: DOMAIN ."
-    ,"        allDiff(board[i,..]),"
-    ,"    forAll j: DOMAIN ."
-    ,"        allDiff(board[..,j]),"
-    ,"    forAll (l,g) in less_than ."
-    ,"        board[l[1],l[2]] < board[g[1],g[2]]"
-    ]
 
 parsePrint :: String -> IO ()
 parsePrint text = do

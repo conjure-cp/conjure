@@ -70,6 +70,12 @@ want a = do
 need :: Lexeme -> Parser LToken
 need a = RealToken <$> eSymbol a <?> "\"" ++ lexemeFace a ++ "\""
 
+adjacent :: Parser a -> Parser a
+adjacent p = do 
+    next <- lookAhead anySingle
+    guard $ null $ trivia next
+    p
+
 parseIdentifier :: Parser NameNode
 parseIdentifier = do
     x <- want anIdent

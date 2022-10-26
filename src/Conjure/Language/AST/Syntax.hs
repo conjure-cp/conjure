@@ -68,40 +68,45 @@ data ObjectiveStatementNode
 
 -- Declaration statements
 data DeclarationStatementNode
-    = FindStatement FindStatementNode
-    | GivenStatement GivenStatementNode
-    | LettingStatement LettingStatementNode
+    = FindStatement LToken (Sequence FindStatementNode)
+    | GivenStatement LToken (Sequence GivenStatementNode)
+    | LettingStatement LToken (Sequence LettingStatementNode)
     deriving (Show)
 
 data FindStatementNode
     = FindStatementNode
-        LToken -- find
         (Sequence NameNode) -- names
         LToken -- colon
         DomainNode -- domain
     deriving (Show)
-
+instance Null FindStatementNode where
+    isMissing (FindStatementNode n l d) = isMissing n && isMissing l && isMissing d
 data GivenStatementNode
     = GivenStatementNode
-        LToken -- given
         (Sequence NameNode) -- name
         LToken -- colon
         DomainNode -- domain
     | GivenEnumNode
-        LToken
         (Sequence NameNode)
         LToken -- new
         LToken -- type
         LToken -- enum
     deriving (Show)
 
+instance Null GivenStatementNode where
+    isMissing (GivenStatementNode l t d) = isMissing l && isMissing t && isMissing d
+    isMissing (GivenEnumNode l a b c) = isMissing l && isMissing a && isMissing b && isMissing c
+
 data LettingStatementNode
     = LettingStatementNode
-      LToken
       (Sequence NameNode)
       LToken --
       LettingAssignmentNode
     deriving (Show)
+
+
+instance Null LettingStatementNode where
+    isMissing (LettingStatementNode l t a) = isMissing l && isMissing t && isMissing a 
 data LettingAssignmentNode
     =  LettingExpr
         ExpressionNode
@@ -120,6 +125,13 @@ data LettingAssignmentNode
         LToken -- lSize
         ExpressionNode -- expr
     deriving (Show)
+instance Null LettingAssignmentNode where
+    isMissing x = case x of
+      LettingExpr en -> isMissing en
+      LettingDomain lt dn -> isMissing lt && isMissing dn
+      LettingEnum l1 l2 l3 ln -> all isMissing [l1,l2,l3] && isMissing ln
+      LettingAnon l1 l2 l3 l4 en ->  all isMissing [l1,l2,l3,l4] && isMissing en
+
 
 -- Branching on
 

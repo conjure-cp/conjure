@@ -24,13 +24,13 @@ instance Flattenable ETok StatementNode where
 
 instance Flattenable ETok DeclarationStatementNode where
     flatten x = case x of
-        FindStatement fsn -> flatten fsn
-        GivenStatement gsn -> flatten gsn
-        LettingStatement lsn -> flatten lsn
+        FindStatement f fsn -> flatten f ++ flatten fsn
+        GivenStatement g gsn -> flatten g ++ flatten gsn
+        LettingStatement t lsn -> flatten t ++ flatten lsn
 
 
 instance Flattenable ETok LettingStatementNode where 
-    flatten (LettingStatementNode a b c d) = concat[ flatten a, flatten b, flatten c,flatten d]
+    flatten (LettingStatementNode a b c) = concat[ flatten a, flatten b, flatten c]
 
 instance Flattenable ETok LettingAssignmentNode where
     flatten x = case x of
@@ -40,12 +40,12 @@ instance Flattenable ETok LettingAssignmentNode where
         LettingAnon d e f g h -> concat [flatten d, flatten e, flatten f, flatten g, flatten h]
 
 instance Flattenable ETok FindStatementNode where
-    flatten (FindStatementNode a b c d) = concat  [flatten a, flatten b, flatten c, flatten d]
+    flatten (FindStatementNode a b c) = concat  [flatten a, flatten b, flatten c]
 
 instance Flattenable ETok GivenStatementNode where
     flatten x = case x of
-        GivenStatementNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
-        GivenEnumNode a b c d e -> concat [flatten a, flatten b, flatten c, flatten d, flatten e]
+        GivenStatementNode a b c -> concat [flatten a, flatten b, flatten c]
+        GivenEnumNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
 
 
 
