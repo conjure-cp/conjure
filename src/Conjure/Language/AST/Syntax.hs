@@ -208,7 +208,7 @@ data ExpressionNode
     | FunctionalApplicationNode LToken (ListNode ExpressionNode)
     | AttributeAsConstriant LToken (ListNode ExpressionNode)
     | MissingExpressionNode LToken
-    | SpecialCase LToken SpecialCaseNode
+    | SpecialCase SpecialCaseNode
     deriving (Show)
 
 instance Null ExpressionNode where

@@ -597,7 +597,7 @@ validateExpression expr = case expr of
         return . pure $ mkOp TwoBarOp  [exp']
     FunctionalApplicationNode lt ln -> validateFunctionApplication  lt ln
     AttributeAsConstriant lt exprs -> validateAttributeAsConstraint lt exprs
-    SpecialCase l1  scn -> checkSymbols [l1] >> validateSpecialCase scn
+    SpecialCase  scn ->  validateSpecialCase scn
     MissingExpressionNode lt -> invalid $ TokenError lt
 
 validateAttributeAsConstraint :: LToken -> ListNode ExpressionNode -> Validator Expression

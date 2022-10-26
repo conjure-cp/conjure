@@ -573,10 +573,9 @@ parseDomain =
 
 parseSpecialCase :: Parser ExpressionNode
 parseSpecialCase = do
-    lt <- need L_SpecialCase
-    SpecialCase lt <$> choice [parseWithDecls]
+    SpecialCase <$> choice [parseWithDecls]
     where
-        parseWithDecls =
+        parseWithDecls = try $
             do
                 p1 <- need L_OpenCurly
                 exp1 <- parseExpression

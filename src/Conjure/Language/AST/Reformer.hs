@@ -82,7 +82,7 @@ instance Flattenable ETok ExpressionNode where
         AbsExpression pen ->  flatten pen
         DomainExpression dex -> flatten dex
         FunctionalApplicationNode lt ln ->  flatten lt ++ flatten ln
-        SpecialCase lt nd -> flatten lt ++ flatten nd
+        SpecialCase nd -> flatten nd
         AttributeAsConstriant l1 exprs -> flatten l1 ++ flatten exprs
         MissingExpressionNode _ ->  []
 
