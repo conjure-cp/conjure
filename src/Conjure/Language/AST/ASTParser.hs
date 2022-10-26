@@ -187,7 +187,7 @@ pEnding =  do
 ---------------------------------------
 
 parseExpression :: Parser ExpressionNode
-parseExpression = parseSpecialCase <|>
+parseExpression = 
     parseOperator
         <|> parseAtomicExpression
 
@@ -202,7 +202,9 @@ parseAtomicExpression :: Parser ExpressionNode
 parseAtomicExpression = do
     try $
         choice
-            [ Literal <$> parseLiteral
+            [ 
+              parseSpecialCase
+            , Literal <$> parseLiteral
             , parseFunction
             , parseAttributeAsConstraint
             , IdentifierNode <$> parseIdentifierStrict
