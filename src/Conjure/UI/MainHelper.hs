@@ -750,7 +750,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                                 (liftIO . srStdoutHandler
                                     (outBase, modelPath, "<no param file>", ui)
                                     tr (1::Int))
-    srCleanUp (stringToText $ unlines stdoutSR) solutions
+    srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
@@ -791,7 +791,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                                         (liftIO . srStdoutHandler
                                             (outBase, modelPath, paramPath, ui)
                                             tr (1::Int))
-            srCleanUp (stringToText $ unlines stdoutSR) solutions
+            srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
@@ -1006,6 +1006,7 @@ srStdoutHandler
                                 removeFileIfExists filenameEprimeSol
                                 removeFileIfExists filenameEssenceSol
                                 removeFileIfExists filenameEssenceSolJSON
+                                writeFile filenameEssenceSolJSON "[\n"
                             appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                             appendFile filenameEprimeSol  (render lineWidth eprimeSol  ++ "\n\n")
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
@@ -1013,14 +1014,24 @@ srStdoutHandler
                             when (outputFormat == JSON) $ do
                                 essenceSol' <- toSimpleJSON essenceSol
                                 appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
-                                appendFile filenameEssenceSolJSON  ("\n")
+                                appendFile filenameEssenceSolJSON  (",\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
-srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
-srCleanUp stdoutSR solutions = do
+srCleanUp :: FilePath -> UI -> Text -> sols -> Sh (Either [Doc] sols)
+srCleanUp outBase Solve{..} stdoutSR solutions = do
+
+    -- closing the array in the all solutions json file
+    case solutionsInOneFile of
+        False -> return ()
+        True -> do
+            let mkFilename ext = outputDirectory </> outBase
+                                        ++ ext
+            let filenameEssenceSolJSON = mkFilename ".solutions.json"
+            liftIO $ appendFile filenameEssenceSolJSON "]\n"
+
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
     let combinedSR = T.unlines [stdoutSR, stderrSR]
@@ -1044,6 +1055,7 @@ srCleanUp stdoutSR solutions = do
                                , "Savile Row stderr:"    <+> pretty stderrSR
                                , "Savile Row exit-code:" <+> pretty exitCodeSR
                                ]])
+srCleanUp _ _ _ _ = bug "srCleanUp"
 
 
 validateSolutionNoParam ::
