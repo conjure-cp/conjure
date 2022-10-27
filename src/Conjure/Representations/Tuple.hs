@@ -47,7 +47,7 @@ tuple = Representation chck downD structuralCons downC up symmetryOrdering
         structuralCons _ _ _ = na "{structuralCons} tuple"
 
         downC :: TypeOf_DownC m
-        downC (name, DomainTuple ds, ConstantAbstract (AbsLitTuple cs))
+        downC (name, DomainTuple ds, viewConstantTuple -> Just cs)
             | length ds == length cs = return $ Just
                 [ (mkName name i, d, c)
                 | i <- [1..]
