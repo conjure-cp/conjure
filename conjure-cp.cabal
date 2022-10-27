@@ -394,6 +394,7 @@ Test-Suite conjure-testing
     hs-source-dirs   : src/test
     other-modules    : Conjure.Language.DomainSizeTest
                      , Conjure.RepresentationsTest
+                     , Conjure.JSONReprs
                      , Conjure.ModelAllSolveAll
                      , Conjure.TypeCheckAll
                      , Conjure.ParsePrint
@@ -406,6 +407,8 @@ Test-Suite conjure-testing
                      , containers
                      , Diff
                      , shelly
+                     , aeson 
+                     , aeson-diff
                      , system-filepath
                      -- see https://github.com/feuerbach/tasty/issues/220
                      -- see https://github.com/feuerbach/tasty/issues/221
