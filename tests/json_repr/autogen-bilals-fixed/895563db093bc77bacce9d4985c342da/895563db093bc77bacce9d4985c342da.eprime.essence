@@ -1,0 +1,61 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..0)] of int(0..0)
+find var2_ExplicitVarSizeWithFlags_Values_Function1DPartial_Flags:
+        matrix indexed by [int(1..0), bool] of bool
+find var2_ExplicitVarSizeWithFlags_Values_Function1DPartial_Values:
+        matrix indexed by [int(1..0), bool] of bool
+find var3_RelationAsMatrix:
+        matrix indexed by [int(3, 2..2), bool, bool, bool, bool] of bool
+find var4_Explicit_RelationAsMatrix:
+        matrix indexed by [int(1..-1), bool] of bool
+find var5_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..1)] of int(0..1)
+find var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..1), int(1..6)] of int(0..3)
+find var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..1), int(1..6)] of bool
+such that
+    var1,
+    and([1 <=
+         sum([sum([sum([sum([var3_RelationAsMatrix[q10, q11, q12, q13, q14]
+                                 | q14 : bool])
+                            | q13 : bool])
+                       | q12 : bool])
+                  | q11 : bool])
+             | q10 : int(3, 2..2)]),
+    var5_ExplicitVarSizeWithFlags_Flags[1] = 0 ->
+    and([var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[1, q30]
+         = 0 | q30 : int(1..6)])
+    /\
+    and([var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[1,
+                                                                              q31]
+         = false
+             | q31 : int(1..6)]),
+    var5_ExplicitVarSizeWithFlags_Flags[1] >= 0,
+    1 = var5_ExplicitVarSizeWithFlags_Flags[1],
+    var5_ExplicitVarSizeWithFlags_Flags[1] > 0 ->
+    and([var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[1,
+                                                                             q24 + 1]
+         > 0
+         ->
+         var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[1, q24] <
+         var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[1, q24 + 1]
+             | q24 : int(1..5)]),
+    var5_ExplicitVarSizeWithFlags_Flags[1] > 0 ->
+    and([var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[1, q25]
+         = 0
+         ->
+         var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[1, q25] =
+         false
+             | q25 : int(1..6)]),
+    var5_ExplicitVarSizeWithFlags_Flags[1] > 0 ->
+    and([var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[1,
+                                                                             q26 + 1]
+         > 0
+         ->
+         var5_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[1, q26] > 0
+             | q26 : int(1..5)])
+

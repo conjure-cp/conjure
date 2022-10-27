@@ -1,0 +1,9 @@
+language Essence 1.3
+
+find var1:
+        matrix indexed by [int(1..5, 5..5)] of partition (minNumParts 2 , maxNumParts 2,
+                                                          maxPartSize 5) from
+                                                   bool
+find var2:
+        matrix indexed by [int(2..2, 2..5)] of mset (size 0, maxOccur 2) of bool
+such that true

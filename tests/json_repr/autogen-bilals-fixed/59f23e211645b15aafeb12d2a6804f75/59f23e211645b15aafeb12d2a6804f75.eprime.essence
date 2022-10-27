@@ -1,0 +1,15 @@
+language ESSENCE' 1.0
+
+given given1_PartitionOccurrence_NumParts: int(1..5)
+given given1_PartitionOccurrence_WhichPart: matrix indexed by [int(2..5, 4)] of int(1..5)
+given given1_PartitionOccurrence_PartSizes: matrix indexed by [int(1..5)] of int(0..5)
+given given1_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..5)] of int(2..5, 4)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker: int(0..0)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit:
+        matrix indexed by [int(1..0), int(1..5)] of int(5..5, 1)
+given given2_1: bool
+given given2_2: bool
+given given2_3: bool
+given given2_4: int(3, 0..1)
+such that false
+

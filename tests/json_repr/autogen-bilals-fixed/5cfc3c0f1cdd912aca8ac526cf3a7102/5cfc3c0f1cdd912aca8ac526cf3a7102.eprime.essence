@@ -1,0 +1,242 @@
+language ESSENCE' 1.0
+
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..16)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..16)] of int(0..4)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..16), int(1..4), int(1..2)] of int(0..2)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..16), int(1..4), int(1..2)] of int(2..4, 4)
+such that
+    and([1 =
+         sum([q22 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+              or([q25 <=
+                  var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q22]
+                  /\
+                  (and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q22,
+                                                                                                                                             q25,
+                                                                                                                                             q27]
+                        > 0
+                        ->
+                        sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q22,
+                                                                                                                                                    q25,
+                                                                                                                                                    q28]
+                              =
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q22,
+                                                                                                                                                    q25,
+                                                                                                                                                    q27])
+                             *
+                             var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q22,
+                                                                                                                                                  q25,
+                                                                                                                                                  q28]
+                                 | q28 : int(1..2)])
+                        =
+                        sum([(q1_ExplicitVarSizeWithFlags_Values[q29] =
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q22,
+                                                                                                                                                    q25,
+                                                                                                                                                    q27])
+                             * q1_ExplicitVarSizeWithFlags_Flags[q29]
+                                 | q29 : int(1..2)])
+                            | q27 : int(1..2)])
+                   /\
+                   and([sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q22,
+                                                                                                                                                    q25,
+                                                                                                                                                    q31]
+                              = q1_ExplicitVarSizeWithFlags_Values[q30])
+                             *
+                             var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q22,
+                                                                                                                                                  q25,
+                                                                                                                                                  q31]
+                                 | q31 : int(1..2)])
+                        =
+                        sum([q1_ExplicitVarSizeWithFlags_Flags[q32]
+                                 | q32 : int(1..2),
+                                   q1_ExplicitVarSizeWithFlags_Values[q32] =
+                                   q1_ExplicitVarSizeWithFlags_Values[q30]])
+                            | q30 : int(1..2), q1_ExplicitVarSizeWithFlags_Flags[q30] > 0]))
+                      | q25 : int(1..4)])
+                  | q22 : int(1..16)])
+             | q1_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of int(0..2),
+               q1_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..2)] of int(2..4,
+                                                                                         4),
+               q1_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
+               q1_ExplicitVarSizeWithFlags_Values[1] < q1_ExplicitVarSizeWithFlags_Values[2],
+               and([q1_ExplicitVarSizeWithFlags_Flags[q17] = 0 ->
+                    q1_ExplicitVarSizeWithFlags_Values[q17] = 2
+                        | q17 : int(1..2)]),
+               q1_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
+               q1_ExplicitVarSizeWithFlags_Flags[1] > 0,
+               sum([q1_ExplicitVarSizeWithFlags_Flags[q20] | q20 : int(1..2)]) <= 2]),
+    and([q23 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q23]
+         >= 1
+             | q23 : int(1..16)]),
+    and([q4 + 1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4]
+         <
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4
+                                                                                               + 1]
+         \/
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4]
+         =
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4
+                                                                                               + 1]
+         /\
+         (flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q4,
+                                                                                                                                       ..,
+                                                                                                                                       ..])
+          <lex
+          flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q4
+                                                                                                                                       +
+                                                                                                                                       1,
+                                                                                                                                       ..,
+                                                                                                                                       ..])
+          \/
+          and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q4,
+                                                                                                                                         q33,
+                                                                                                                                         q35]
+                    =
+                    var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q4
+                                                                                                                                         +
+                                                                                                                                         1,
+                                                                                                                                         q33,
+                                                                                                                                         q35]
+                        | q35 : int(1..2)])
+                   | q33 : int(1..4)])
+          /\
+          flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q4,
+                                                                                                                                        ..,
+                                                                                                                                        ..])
+          <lex
+          flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q4
+                                                                                                                                        +
+                                                                                                                                        1,
+                                                                                                                                        ..,
+                                                                                                                                        ..]))
+             | q4 : int(1..15)]),
+    and([q5 > var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5]
+         = 0
+         /\
+         and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q5,
+                                                                                                                                        q39,
+                                                                                                                                        q40]
+                   = 0 | q40 : int(1..2)])
+              /\
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q5,
+                                                                                                                                         q39,
+                                                                                                                                         q41]
+                   = 2 | q41 : int(1..2)])
+                  | q39 : int(1..4)])
+             | q5 : int(1..16)]),
+    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q7 + 1 <=
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                   q7,
+                                                                                                                                   ..]
+              <lex
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                   q7
+                                                                                                                                   +
+                                                                                                                                   1,
+                                                                                                                                   ..]
+              \/
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                        q7,
+                                                                                                                                        q37]
+                   =
+                   var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                        q7
+                                                                                                                                        +
+                                                                                                                                        1,
+                                                                                                                                        q37]
+                       | q37 : int(1..2)])
+              /\
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q6,
+                                                                                                                                    q7,
+                                                                                                                                    ..]
+              <lex
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q6,
+                                                                                                                                    q7
+                                                                                                                                    +
+                                                                                                                                    1,
+                                                                                                                                    ..]
+                  | q7 : int(1..3)])
+             | q6 : int(1..16)]),
+    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q8 >
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                        q8,
+                                                                                                                                        q42]
+                   = 0 | q42 : int(1..2)])
+              /\
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q6,
+                                                                                                                                         q8,
+                                                                                                                                         q43]
+                   = 2 | q43 : int(1..2)])
+                  | q8 : int(1..4)])
+             | q6 : int(1..16)]),
+    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q9 <=
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              (var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                    q9,
+                                                                                                                                    2]
+               > 0
+               ->
+               var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q6,
+                                                                                                                                     q9,
+                                                                                                                                     1]
+               <
+               var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q6,
+                                                                                                                                     q9,
+                                                                                                                                     2])
+                  | q9 : int(1..4)])
+             | q6 : int(1..16)]),
+    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q9 <=
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                        q9,
+                                                                                                                                        q11]
+                   = 0
+                   ->
+                   var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values[q6,
+                                                                                                                                         q9,
+                                                                                                                                         q11]
+                   = 2 | q11 : int(1..2)])
+                  | q9 : int(1..4)])
+             | q6 : int(1..16)]),
+    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q9 <=
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              (var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                    q9,
+                                                                                                                                    2]
+               > 0
+               ->
+               var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                    q9,
+                                                                                                                                    1]
+               > 0)
+                  | q9 : int(1..4)])
+             | q6 : int(1..16)]),
+    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q9 <=
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              sum([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags[q6,
+                                                                                                                                        q9,
+                                                                                                                                        q14]
+                       | q14 : int(1..2)])
+              <= 2
+                  | q9 : int(1..4)])
+             | q6 : int(1..16)])
+

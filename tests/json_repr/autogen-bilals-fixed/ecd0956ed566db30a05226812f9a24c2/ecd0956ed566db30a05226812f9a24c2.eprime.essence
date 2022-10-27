@@ -1,0 +1,19 @@
+language ESSENCE' 1.0
+
+find var1_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..0)] of int(0..0)
+find var1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..0)] of bool
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find var2_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..2)] of bool
+find var3: bool
+such that
+    var3,
+    2 <= var2_ExplicitVarSizeWithMarker_Marker ->
+    var2_ExplicitVarSizeWithMarker_Values[1] <
+    var2_ExplicitVarSizeWithMarker_Values[2],
+    and([q8 > var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_ExplicitVarSizeWithMarker_Values[q8] = false
+             | q8 : int(1..2)]),
+    var2_ExplicitVarSizeWithMarker_Marker <= 2
+

@@ -1,0 +1,408 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1_1"}, {"DomainBool": []}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var1_2"}, {"DomainBool": []}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var1_3"}, {"DomainBool": []}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2_PartitionOccurrence_NumParts"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2_PartitionOccurrence_WhichPart"},
+                 {"DomainMatrix":
+                      [{"DomainBool": []},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2_PartitionOccurrence_PartSizes"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2_PartitionOccurrence_FirstIndex"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                       {"DomainBool": []}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                              {"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}]]},
+                       {"DomainBool": []}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var4_Function1DPartial_Flags"},
+                 {"DomainMatrix": [{"DomainBool": []}, {"DomainBool": []}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var4_Function1DPartial_Values"},
+                 {"DomainMatrix": [{"DomainBool": []}, {"DomainBool": []}]}]}},
+      {"SuchThat":
+           [{"Op": {"MkOpAllDiff": {"Reference": [{"Name": "var3"}, null]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpGt":
+                                                 [{"Reference": [{"Name": "q2"}, null]},
+                                                  {"Reference":
+                                                       [{"Name": "var2_PartitionOccurrence_NumParts"}, null]}]}},
+                                       {"Op":
+                                            {"MkOpEq":
+                                                 [{"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Reference":
+                                                                  [{"Name": "var2_PartitionOccurrence_PartSizes"},
+                                                                   null]},
+                                                             {"Reference": [{"Name": "q2"}, null]}]}},
+                                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q2"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpEq":
+                      [{"Reference": [{"Name": "var2_PartitionOccurrence_NumParts"}, null]},
+                       {"Op":
+                            {"MkOpMax":
+                                 {"Comprehension":
+                                      [{"Op":
+                                            {"MkOpIndexing":
+                                                 [{"Reference": [{"Name": "var2_PartitionOccurrence_WhichPart"}, null]},
+                                                  {"Reference": [{"Name": "q5"}, null]}]}},
+                                       [{"Generator":
+                                             {"GenDomainNoRepr":
+                                                  [{"Single": {"Name": "q5"}}, {"DomainBool": []}]}}]]}}}]}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpEq":
+                                      [{"Op":
+                                            {"MkOpIndexing":
+                                                 [{"Reference": [{"Name": "var2_PartitionOccurrence_PartSizes"}, null]},
+                                                  {"Reference": [{"Name": "q6"}, null]}]}},
+                                       {"Op":
+                                            {"MkOpSum":
+                                                 {"Comprehension":
+                                                      [{"Op":
+                                                            {"MkOpToInt":
+                                                                 {"Op":
+                                                                      {"MkOpEq":
+                                                                           [{"Op":
+                                                                                 {"MkOpIndexing":
+                                                                                      [{"Reference":
+                                                                                            [{"Name":
+                                                                                                  "var2_PartitionOccurrence_WhichPart"},
+                                                                                             null]},
+                                                                                       {"Reference":
+                                                                                            [{"Name": "q7"}, null]}]}},
+                                                                            {"Reference": [{"Name": "q6"}, null]}]}}}},
+                                                       [{"Generator":
+                                                             {"GenDomainNoRepr":
+                                                                  [{"Single": {"Name": "q7"}},
+                                                                   {"DomainBool": []}]}}]]}}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q6"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpLeq":
+                                                 [{"Reference": [{"Name": "q8"}, null]},
+                                                  {"Reference":
+                                                       [{"Name": "var2_PartitionOccurrence_NumParts"}, null]}]}},
+                                       {"Op":
+                                            {"MkOpAnd":
+                                                 {"Comprehension":
+                                                      [{"Op":
+                                                            {"MkOpImply":
+                                                                 [{"Op":
+                                                                       {"MkOpEq":
+                                                                            [{"Op":
+                                                                                  {"MkOpIndexing":
+                                                                                       [{"Reference":
+                                                                                             [{"Name":
+                                                                                                   "var2_PartitionOccurrence_WhichPart"},
+                                                                                              null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "q9"}, null]}]}},
+                                                                             {"Reference": [{"Name": "q8"}, null]}]}},
+                                                                  {"Op":
+                                                                       {"MkOpLeq":
+                                                                            [{"Op":
+                                                                                  {"MkOpIndexing":
+                                                                                       [{"Reference":
+                                                                                             [{"Name":
+                                                                                                   "var2_PartitionOccurrence_FirstIndex"},
+                                                                                              null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "q8"}, null]}]}},
+                                                                             {"Reference":
+                                                                                  [{"Name": "q9"}, null]}]}}]}},
+                                                       [{"Generator":
+                                                             {"GenDomainNoRepr":
+                                                                  [{"Single": {"Name": "q9"}},
+                                                                   {"DomainBool": []}]}}]]}}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q8"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpLeq":
+                                                 [{"Reference": [{"Name": "q8"}, null]},
+                                                  {"Reference":
+                                                       [{"Name": "var2_PartitionOccurrence_NumParts"}, null]}]}},
+                                       {"Op":
+                                            {"MkOpOr":
+                                                 {"Comprehension":
+                                                      [{"Op":
+                                                            {"MkOpAnd":
+                                                                 {"AbstractLiteral":
+                                                                      {"AbsLitMatrix":
+                                                                           [{"DomainInt":
+                                                                                 [{"TagInt": []},
+                                                                                  [{"RangeBounded":
+                                                                                        [{"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    1]}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    2]}}]}]]},
+                                                                            [{"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Op":
+                                                                                             {"MkOpIndexing":
+                                                                                                  [{"Reference":
+                                                                                                        [{"Name":
+                                                                                                              "var2_PartitionOccurrence_WhichPart"},
+                                                                                                         null]},
+                                                                                                   {"Reference":
+                                                                                                        [{"Name": "q9"},
+                                                                                                         null]}]}},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "q8"}, null]}]}},
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Op":
+                                                                                             {"MkOpIndexing":
+                                                                                                  [{"Reference":
+                                                                                                        [{"Name":
+                                                                                                              "var2_PartitionOccurrence_FirstIndex"},
+                                                                                                         null]},
+                                                                                                   {"Reference":
+                                                                                                        [{"Name": "q8"},
+                                                                                                         null]}]}},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "q9"},
+                                                                                              null]}]}}]]}}}},
+                                                       [{"Generator":
+                                                             {"GenDomainNoRepr":
+                                                                  [{"Single": {"Name": "q9"}},
+                                                                   {"DomainBool": []}]}}]]}}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q8"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpEq":
+                                                 [{"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Reference":
+                                                                  [{"Name": "var2_PartitionOccurrence_PartSizes"},
+                                                                   null]},
+                                                             {"Reference": [{"Name": "q8"}, null]}]}},
+                                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}},
+                                       {"Op":
+                                            {"MkOpEq":
+                                                 [{"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Reference":
+                                                                  [{"Name": "var2_PartitionOccurrence_FirstIndex"},
+                                                                   null]},
+                                                             {"Reference": [{"Name": "q8"}, null]}]}},
+                                                  {"Constant": {"ConstantBool": false}}]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q8"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpAnd":
+                                                 {"AbstractLiteral":
+                                                      {"AbsLitMatrix":
+                                                           [{"DomainInt":
+                                                                 [{"TagInt": []},
+                                                                  [{"RangeBounded":
+                                                                        [{"Constant":
+                                                                              {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                                         {"Constant":
+                                                                              {"ConstantInt":
+                                                                                   [{"TagInt": []}, 2]}}]}]]},
+                                                            [{"Op":
+                                                                  {"MkOpLeq":
+                                                                       [{"Reference": [{"Name": "q10"}, null]},
+                                                                        {"Reference":
+                                                                             [{"Name":
+                                                                                   "var2_PartitionOccurrence_NumParts"},
+                                                                              null]}]}},
+                                                             {"Op":
+                                                                  {"MkOpLeq":
+                                                                       [{"Reference": [{"Name": "q11"}, null]},
+                                                                        {"Reference":
+                                                                             [{"Name":
+                                                                                   "var2_PartitionOccurrence_NumParts"},
+                                                                              null]}]}}]]}}}},
+                                       {"Op":
+                                            {"MkOpIff":
+                                                 [{"Op":
+                                                       {"MkOpLt":
+                                                            [{"Reference": [{"Name": "q10"}, null]},
+                                                             {"Reference": [{"Name": "q11"}, null]}]}},
+                                                  {"Op":
+                                                       {"MkOpLt":
+                                                            [{"Op":
+                                                                  {"MkOpIndexing":
+                                                                       [{"Reference":
+                                                                             [{"Name":
+                                                                                   "var2_PartitionOccurrence_FirstIndex"},
+                                                                              null]},
+                                                                        {"Reference": [{"Name": "q10"}, null]}]}},
+                                                             {"Op":
+                                                                  {"MkOpIndexing":
+                                                                       [{"Reference":
+                                                                             [{"Name":
+                                                                                   "var2_PartitionOccurrence_FirstIndex"},
+                                                                              null]},
+                                                                        {"Reference":
+                                                                             [{"Name": "q11"}, null]}]}}]}}]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q10"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}},
+                             {"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q11"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpEq":
+                                                 [{"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Reference":
+                                                                  [{"Name": "var4_Function1DPartial_Flags"}, null]},
+                                                             {"Reference": [{"Name": "q12"}, null]}]}},
+                                                  {"Constant": {"ConstantBool": false}}]}},
+                                       {"Op":
+                                            {"MkOpEq":
+                                                 [{"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Reference":
+                                                                  [{"Name": "var4_Function1DPartial_Values"}, null]},
+                                                             {"Reference": [{"Name": "q12"}, null]}]}},
+                                                  {"Constant": {"ConstantBool": false}}]}}]}},
+                            [{"Generator": {"GenDomainNoRepr": [{"Single": {"Name": "q12"}}, {"DomainBool": []}]}}]]}}},
+            {"Op":
+                 {"MkOpLeq":
+                      [{"Op":
+                            {"MkOpSum":
+                                 {"Comprehension":
+                                      [{"Op":
+                                            {"MkOpToInt":
+                                                 {"Op":
+                                                      {"MkOpIndexing":
+                                                           [{"Reference":
+                                                                 [{"Name": "var4_Function1DPartial_Flags"}, null]},
+                                                            {"Reference": [{"Name": "q13"}, null]}]}}}},
+                                       [{"Generator":
+                                             {"GenDomainNoRepr":
+                                                  [{"Single": {"Name": "q13"}}, {"DomainBool": []}]}}]]}}},
+                       {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}}]}]}

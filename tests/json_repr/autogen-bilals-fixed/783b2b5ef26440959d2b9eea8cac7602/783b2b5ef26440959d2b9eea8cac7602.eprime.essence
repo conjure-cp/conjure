@@ -1,0 +1,22 @@
+language ESSENCE' 1.0
+
+find var1_ExplicitVarSizeWithMarker_Marker: int(0..0)
+find var1_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..0)] of bool
+find var2: bool
+find var3_RelationAsMatrix: matrix indexed by [bool, bool] of bool
+find var4_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find var4_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
+such that
+    var2,
+    var1_ExplicitVarSizeWithMarker_Marker <= 0,
+    3 <= sum([sum([var3_RelationAsMatrix[q4, q5] | q5 : bool]) | q4 : bool]),
+    sum([sum([var3_RelationAsMatrix[q4, q5] | q5 : bool]) | q4 : bool]) <= 4,
+    var4_ExplicitVarSizeWithFlags_Flags[2] ->
+    var4_ExplicitVarSizeWithFlags_Values[1] <
+    var4_ExplicitVarSizeWithFlags_Values[2],
+    and([var4_ExplicitVarSizeWithFlags_Flags[q7] = false ->
+         var4_ExplicitVarSizeWithFlags_Values[q7] = false
+             | q7 : int(1..2)]),
+    var4_ExplicitVarSizeWithFlags_Flags[2] -> var4_ExplicitVarSizeWithFlags_Flags[1]
+

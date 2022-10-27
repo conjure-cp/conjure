@@ -1,0 +1,6 @@
+language ESSENCE' 1.0
+
+find var3: int(0, 0..3)
+minimising [var3, var3; int(4, 5..5)][var3 ** 0]
+such that true
+

@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find var6: set of bool
+such that
+    mset([{{false}, ({} : `set of bool`)}; int(1..1)],
+         [{{false}, ({} : `set of bool`)}, ({} : `set of set of bool`); int(1..2)])
+    = mset([({} : `set of set of bool`), {var6}; int(1..2)])

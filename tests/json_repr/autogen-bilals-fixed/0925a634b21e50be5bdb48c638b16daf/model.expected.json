@@ -1,0 +1,258 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var4"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpNeq":
+                      [{"Op":
+                            {"MkOpToMSet":
+                                 {"Op":
+                                      {"MkOpParts":
+                                           {"AbstractLiteral":
+                                                {"AbsLitPartition":
+                                                     [[{"AbstractLiteral":
+                                                            {"AbsLitRelation":
+                                                                 [[{"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Op":
+                                                                        {"MkOpAnd":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Constant":
+                                                                                              {"ConstantBool": false}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   false}}]]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpNeq":
+                                                                             [{"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 9]}},
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 0]}}]}}],
+                                                                  [{"Op":
+                                                                        {"MkOpNeq":
+                                                                             [{"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 6]}},
+                                                                              {"Op":
+                                                                                   {"MkOpNegate":
+                                                                                        {"Constant":
+                                                                                             {"ConstantInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   4]}}}}]}},
+                                                                   {"Op":
+                                                                        {"MkOpNeq":
+                                                                             [{"Constant": {"ConstantBool": true}},
+                                                                              {"Constant": {"ConstantBool": false}}]}},
+                                                                   {"Op":
+                                                                        {"MkOpIff":
+                                                                             [{"Constant": {"ConstantBool": true}},
+                                                                              {"Constant": {"ConstantBool": true}}]}}],
+                                                                  [{"Constant": {"ConstantBool": false}},
+                                                                   {"Op":
+                                                                        {"MkOpNeq":
+                                                                             [{"Constant": {"ConstantBool": false}},
+                                                                              {"Constant": {"ConstantBool": false}}]}},
+                                                                   {"Op":
+                                                                        {"MkOpImply":
+                                                                             [{"Constant": {"ConstantBool": false}},
+                                                                              {"Constant":
+                                                                                   {"ConstantBool": true}}]}}]]}},
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitRelation":
+                                                                 [[{"Op":
+                                                                        {"MkOpEq":
+                                                                             [{"Constant": {"ConstantBool": false}},
+                                                                              {"Constant": {"ConstantBool": true}}]}},
+                                                                   {"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Reference": [{"Name": "var1"}, null]}],
+                                                                  [{"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Op":
+                                                                        {"MkOpNeq":
+                                                                             [{"Constant": {"ConstantBool": false}},
+                                                                              {"Constant": {"ConstantBool": true}}]}},
+                                                                   {"Op":
+                                                                        {"MkOpOr":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Constant":
+                                                                                              {"ConstantBool": true}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   false}}]]}}}}],
+                                                                  [{"Op":
+                                                                        {"MkOpOr":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Constant":
+                                                                                              {"ConstantBool": true}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   true}}]]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpAnd":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Constant":
+                                                                                              {"ConstantBool": true}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   false}}]]}}}},
+                                                                   {"Reference": [{"Name": "var1"}, null]}]]}},
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitRelation":
+                                                                 [[{"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Constant": {"ConstantBool": false}}],
+                                                                  [{"Op":
+                                                                        {"MkOpOr":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Constant":
+                                                                                              {"ConstantBool": false}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   false}}]]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpOr":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Constant":
+                                                                                              {"ConstantBool": false}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   true}}]]}}}},
+                                                                   {"Constant": {"ConstantBool": false}}],
+                                                                  [{"Op":
+                                                                        {"MkOpEq":
+                                                                             [{"Op":
+                                                                                   {"MkOpNegate":
+                                                                                        {"Constant":
+                                                                                             {"ConstantInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   7]}}}},
+                                                                              {"Op":
+                                                                                   {"MkOpNegate":
+                                                                                        {"Constant":
+                                                                                             {"ConstantInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   2]}}}}]}},
+                                                                   {"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Op":
+                                                                        {"MkOpNeq":
+                                                                             [{"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 9]}},
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 6]}}]}}]]}},
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitRelation":
+                                                                 [[{"Op":
+                                                                        {"MkOpIff":
+                                                                             [{"Constant": {"ConstantBool": true}},
+                                                                              {"Constant": {"ConstantBool": false}}]}},
+                                                                   {"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Constant": {"ConstantBool": true}}],
+                                                                  [{"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Constant": {"ConstantBool": true}},
+                                                                   {"Constant": {"ConstantBool": true}}],
+                                                                  [{"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Reference": [{"Name": "var4"}, null]},
+                                                                   {"Op":
+                                                                        {"MkOpImply":
+                                                                             [{"Constant": {"ConstantBool": false}},
+                                                                              {"Constant":
+                                                                                   {"ConstantBool":
+                                                                                        true}}]}}]]}}]]}}}}}},
+                       {"Typed":
+                            [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                             {"TypeMSet":
+                                  {"TypeSet":
+                                       {"TypeRelation":
+                                            [{"TypeBool": []}, {"TypeBool": []}, {"TypeBool": []}]}}}]}]}}]}]}

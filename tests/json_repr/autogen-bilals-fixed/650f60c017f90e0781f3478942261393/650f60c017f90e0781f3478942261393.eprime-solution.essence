@@ -1,0 +1,8 @@
+language ESSENCE' 1.0
+letting var1_ExplicitVarSizeWithFlags_Flags be [[1, 1, 1, 1, 1;int(1..5)], 
+[1, 1, 1, 1, 1;int(1..5)];int(2..3)]
+letting var1_ExplicitVarSizeWithFlags_Values be [[0, 1, 2, 3, 5;int(1..5)], 
+[0, 1, 2, 3, 5;int(1..5)];int(2..3)]
+letting var2_RelationAsSet_ExplicitVarSizeWithMarker_Marker be 0
+letting var2_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_RelationAsMatrix be ([] : `matrix indexed by [int(),bool] of bool`)
+letting var2_RelationAsSet_ExplicitVarSizeWithMarker_Values_2 be ([] : `matrix indexed by [int(),int(1,4)] of bool`)

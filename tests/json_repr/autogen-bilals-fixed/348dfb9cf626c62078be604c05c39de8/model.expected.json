@@ -1,0 +1,73 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]}]}},
+      {"Objective": ["Minimising", {"Reference": [{"Name": "var1"}, null]}]},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"Constant": {"ConstantBool": false}},
+                       {"Op":
+                            {"MkOpIndexing":
+                                 [{"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitMatrix":
+                                                 [{"DomainInt":
+                                                       [{"TagInt": []},
+                                                        [{"RangeBounded":
+                                                              [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                               {"ConstantInt": [{"TagInt": []}, 2]}]}]]},
+                                                  [{"ConstantBool": false}, {"ConstantBool": true}]]}}},
+                                  {"Op":
+                                       {"MkOpPow":
+                                            [{"Reference": [{"Name": "var1"}, null]},
+                                             {"Op":
+                                                  {"MkOpPow":
+                                                       [{"Reference": [{"Name": "var1"}, null]},
+                                                        {"Op":
+                                                             {"MkOpPow":
+                                                                  [{"Reference": [{"Name": "var1"}, null]},
+                                                                   {"Reference":
+                                                                        [{"Name": "var1"}, null]}]}}]}}]}}]}}]}},
+            {"Op":
+                 {"MkOpEq":
+                      [{"Op":
+                            {"MkOpIndexing":
+                                 [{"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitMatrix":
+                                                 [{"DomainInt":
+                                                       [{"TagInt": []},
+                                                        [{"RangeBounded":
+                                                              [{"ConstantInt": [{"TagInt": []}, 0]},
+                                                               {"ConstantInt": [{"TagInt": []}, 0]}]},
+                                                         {"RangeBounded":
+                                                              [{"ConstantInt": [{"TagInt": []}, 4]},
+                                                               {"ConstantInt": [{"TagInt": []}, 4]}]},
+                                                         {"RangeBounded":
+                                                              [{"ConstantInt": [{"TagInt": []}, 5]},
+                                                               {"ConstantInt": [{"TagInt": []}, 5]}]},
+                                                         {"RangeBounded":
+                                                              [{"ConstantInt": [{"TagInt": []}, 11]},
+                                                               {"ConstantInt": [{"TagInt": []}, 11]}]}]]},
+                                                  [{"ConstantBool": false}, {"ConstantBool": false},
+                                                   {"ConstantBool": true}, {"ConstantBool": true}]]}}},
+                                  {"Reference": [{"Name": "var2"}, null]}]}},
+                       {"Constant": {"ConstantBool": false}}]}}]}]}

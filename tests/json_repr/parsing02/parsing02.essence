@@ -1,0 +1,25 @@
+language Essence 1.3
+
+given n_upper : int(1..100)
+given n_boats, n_periods : int(1..100)
+
+letting Boat be domain int(1..n_boats)
+
+given capacity, crew : function (total) Boat --> int(1..n_upper)
+
+where forAll i : Boat .
+    crew(i) <= capacity(i),
+
+find hosts : set of Boat,
+     sched : set (size n_periods) of function (total) Boat --> Boat
+
+minimising |hosts|
+
+such that
+    forAll p in sched . range(p) subsetEq hosts,
+    forAll p in sched . forAll h in hosts . p(h) = h,
+    forAll p in sched . forAll h in hosts . (sum b in preImage(p,h) . crew(b))
+                                            <= capacity(h),
+    forAll b1,b2 : Boat
+        , b1 != b2
+        . (sum p in sched .  toInt(p(b1) = p(b2)) ) <= 1

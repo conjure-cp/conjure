@@ -1,0 +1,193 @@
+language ESSENCE' 1.0
+
+find var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker:
+        int(0..8)
+find var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags:
+        matrix indexed by [int(1..8), int(-4, 4)] of bool
+find var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values:
+        matrix indexed by [int(1..8), int(-4, 4)] of int(4)
+find var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2:
+        matrix indexed by [int(1..8)] of bool
+find var2_1_Occurrence: matrix indexed by [int(4..4, 2..2)] of bool
+find aux1_Occurrence: matrix indexed by [int(1..7), int(-4, 4)] of bool
+find aux2_Occurrence: matrix indexed by [int(1..7), int(-4, 4)] of bool
+find aux3_Occurrence:
+        matrix indexed by [matrix indexed by [int(-4, 4)] of bool, int(-4, 4)] of bool
+find aux4_Occurrence:
+        matrix indexed by [matrix indexed by [int(-4, 4)] of bool, int(-4, 4)] of bool
+such that
+    and([and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                               q24]
+              -> aux1_Occurrence[q1, q24]
+                  | q24 : int(-4, 4)])
+             | q1 : int(1..7)]),
+    and([and([aux1_Occurrence[q1, q21] ->
+              or([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                                   q25]
+                  /\ q25 = q21
+                      | q25 : int(-4, 4)])
+                  | q21 : int(-4, 4)])
+             | q1 : int(1..7)]),
+    and([and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                               + 1,
+                                                                                                               q31]
+              -> aux2_Occurrence[q1, q31]
+                  | q31 : int(-4, 4)])
+             | q1 : int(1..7)]),
+    and([and([aux2_Occurrence[q1, q28] ->
+              or([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                                   + 1,
+                                                                                                                   q32]
+                  /\ q32 = q28
+                      | q32 : int(-4, 4)])
+                  | q28 : int(-4, 4)])
+             | q1 : int(1..7)]),
+    and([q1 + 1 <=
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
+         ->
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                          ..]
+         <lex
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                          + 1,
+                                                                                                          ..]
+         \/
+         and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                               q14]
+              =
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                               + 1,
+                                                                                                               q14]
+                  | q14 : int(-4, 4)])
+         /\
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q1,
+                                                                                                           ..]
+         <lex
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q1
+                                                                                                           + 1,
+                                                                                                           ..]
+         \/
+         and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                               q17]
+              ->
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q1
+                                                                                                                + 1,
+                                                                                                                q17]
+              =
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q1,
+                                                                                                                q17]
+              /\
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                               + 1,
+                                                                                                               q17]
+                  | q17 : int(-4, 4)])
+         /\
+         and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                               + 1,
+                                                                                                               q18]
+              ->
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q1,
+                                                                                                                q18]
+              =
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q1
+                                                                                                                + 1,
+                                                                                                                q18]
+              /\
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                               q18]
+                  | q18 : int(-4, 4)])
+         /\
+         (and([aux1_Occurrence[q1, q20] ->
+               var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1
+                                                                                                                + 1,
+                                                                                                                q20]
+                   | q20 : int(-4, 4)])
+          /\
+          and([aux2_Occurrence[q1, q27] ->
+               var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q1,
+                                                                                                                q27]
+                   | q27 : int(-4, 4)]))
+         /\
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q1] <
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q1 + 1]
+             | q1 : int(1..7)]),
+    and([q2 > var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
+         ->
+         and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q2,
+                                                                                                               q50]
+              = false
+                  | q50 : int(-4, 4)])
+         /\
+         and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q2,
+                                                                                                                q51]
+              = 4 | q51 : int(-4, 4)])
+         /\
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q2] =
+         false
+             | q2 : int(1..8)]),
+    and([q3 <=
+         var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
+         ->
+         and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q3,
+                                                                                                               q4]
+              = false
+              ->
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q3,
+                                                                                                                q4]
+              = 4 | q4 : int(-4, 4)])
+             | q3 : int(1..8)]),
+    and([and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q13,
+                                                                                                               q41]
+              -> aux3_Occurrence[q7_Function1DPartial_Flags, q41]
+                  | q41 : int(-4, 4)])
+             | q7_Function1DPartial_Flags : matrix indexed by [int(-4, 4)] of bool]),
+    and([and([aux3_Occurrence[q7_Function1DPartial_Flags, q38] ->
+              or([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q13,
+                                                                                                                   q42]
+                  /\ q42 = q38
+                      | q42 : int(-4, 4)])
+                  | q38 : int(-4, 4)])
+             | q7_Function1DPartial_Flags : matrix indexed by [int(-4, 4)] of bool]),
+    and([and([aux4_Occurrence[q7_Function1DPartial_Flags, q48]
+                  | q48 : int(-4, 4), q7_Function1DPartial_Flags[q48]])
+             | q7_Function1DPartial_Flags : matrix indexed by [int(-4, 4)] of bool]),
+    and([and([aux4_Occurrence[q7_Function1DPartial_Flags, q45] ->
+              or([q49 = q45 | q49 : int(-4, 4), q7_Function1DPartial_Flags[q49]])
+                  | q45 : int(-4, 4)])
+             | q7_Function1DPartial_Flags : matrix indexed by [int(-4, 4)] of bool]),
+    and([1 >=
+         sum([q13 <=
+              var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
+              /\
+              (and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q13,
+                                                                                                                     q34]
+                    ->
+                    q7_Function1DPartial_Values[q34] =
+                    var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q13,
+                                                                                                                      q34]
+                    /\ q7_Function1DPartial_Flags[q34]
+                        | q34 : int(-4, 4)])
+               /\
+               and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Values[q13,
+                                                                                                                      q35]
+                    = q7_Function1DPartial_Values[q35]
+                    /\
+                    var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q13,
+                                                                                                                     q35]
+                        | q35 : int(-4, 4), q7_Function1DPartial_Flags[q35]])
+               /\
+               (and([aux3_Occurrence[q7_Function1DPartial_Flags, q37] ->
+                     q7_Function1DPartial_Flags[q37]
+                         | q37 : int(-4, 4)])
+                /\
+                and([aux4_Occurrence[q7_Function1DPartial_Flags, q44] ->
+                     var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1DPartial_Flags[q13,
+                                                                                                                      q44]
+                         | q44 : int(-4, 4)])))
+                  | q13 : int(1..8)])
+             | q7_Function1DPartial_Flags : matrix indexed by [int(-4, 4)] of bool,
+               q7_Function1DPartial_Values : matrix indexed by [int(-4, 4)] of int(4),
+               and([q7_Function1DPartial_Flags[q10] = false ->
+                    q7_Function1DPartial_Values[q10] = 4
+                        | q10 : int(-4, 4)])])
+

@@ -1,0 +1,85 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given given1_RelationAsMatrix: matrix indexed by [bool, int(0, 2), int(0..5, 0..5)] of bool
+find var1_RelationAsMatrix: matrix indexed by [bool, int(3..4, 0)] of bool
+given given2_ExplicitWithFlags_Flags: matrix indexed by [int(1..20)] of int(0..4)
+given given2_ExplicitWithFlags_Values: matrix indexed by [int(1..20)] of int(3, 1..4)
+find var2_ExplicitWithRepetition_Flag: int(0..10)
+find var2_ExplicitWithRepetition_Values: matrix indexed by [int(1..10)] of bool
+find var2_ExplicitWithFlags_Flags: matrix indexed by [int(1..2)] of int(0..5)
+find var2_ExplicitWithFlags_Values: matrix indexed by [int(1..2)] of bool
+given fin2: int
+given given3_Function1DPartial_Flags: matrix indexed by [int(3..5, 5..5)] of bool
+given given3_Function1DPartial_Values: matrix indexed by [int(3..5, 5..5)] of bool
+find var3_Function1D: matrix indexed by [bool] of bool
+find var4_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find var4_Function1DPartial_Values: matrix indexed by [bool] of int(0..2, 3..5)
+such that
+    and([q40 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(q43 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q43] = var2_ExplicitWithRepetition_Values[q40])
+                  | q43 : int(1..10)])
+         <=
+         sum([toInt(var2_ExplicitWithFlags_Values[q41] = var2_ExplicitWithRepetition_Values[q40]) *
+              var2_ExplicitWithFlags_Flags[q41]
+                  | q41 : int(1..2)])
+             | q40 : int(1..10)]),
+    var3_Function1D[false],
+    and([q1 + 1 <= var2_ExplicitWithRepetition_Flag ->
+         var2_ExplicitWithRepetition_Values[q1] <= var2_ExplicitWithRepetition_Values[q1 + 1]
+             | q1 : int(1..9)]),
+    and([q2 > var2_ExplicitWithRepetition_Flag -> var2_ExplicitWithRepetition_Values[q2] = false | q2 : int(1..10)]),
+    and([q3 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(q7 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q7] = var2_ExplicitWithRepetition_Values[q3])
+                  | q7 : int(1..10)])
+         = 0
+         \/
+         sum([toInt(q9 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q9] = var2_ExplicitWithRepetition_Values[q3])
+                  | q9 : int(1..10)])
+         >= 5
+             | q3 : int(1..10)]),
+    and([q4 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(q11 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q11] = var2_ExplicitWithRepetition_Values[q4])
+                  | q11 : int(1..10)])
+         <= 5
+             | q4 : int(1..10)]),
+    2 <= var2_ExplicitWithRepetition_Flag,
+    var2_ExplicitWithRepetition_Flag <= 2,
+    var2_ExplicitWithFlags_Flags[2] > 0 -> var2_ExplicitWithFlags_Values[1] < var2_ExplicitWithFlags_Values[2],
+    and([var2_ExplicitWithFlags_Flags[q13] = 0 -> var2_ExplicitWithFlags_Values[q13] = false | q13 : int(1..2)]),
+    var2_ExplicitWithFlags_Flags[2] > 0 -> var2_ExplicitWithFlags_Flags[1] > 0,
+    and([var2_ExplicitWithFlags_Flags[q15] = 0 \/ var2_ExplicitWithFlags_Flags[q15] >= 5 | q15 : int(1..2)]),
+    2 <= sum([var2_ExplicitWithFlags_Flags[q16] | q16 : int(1..2)]),
+    sum([var2_ExplicitWithFlags_Flags[q16] | q16 : int(1..2)]) <= 2,
+    and([var2_ExplicitWithFlags_Flags[q19] > 0 ->
+         sum([toInt(var2_ExplicitWithFlags_Values[q20] = var2_ExplicitWithFlags_Values[q19]) *
+              var2_ExplicitWithFlags_Flags[q20]
+                  | q20 : int(1..2)])
+         =
+         sum([toInt(q22 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q22] = var2_ExplicitWithFlags_Values[q19])
+                  | q22 : int(1..10)])
+             | q19 : int(1..2)]),
+    and([q23 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(var2_ExplicitWithFlags_Values[q24] = var2_ExplicitWithRepetition_Values[q23]) *
+              var2_ExplicitWithFlags_Flags[q24]
+                  | q24 : int(1..2)])
+         =
+         sum([toInt(q26 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q26] = var2_ExplicitWithRepetition_Values[q23])
+                  | q26 : int(1..10)])
+             | q23 : int(1..10)]),
+    allDiff(var3_Function1D),
+    and([or([var3_Function1D[q28] = q27 | q28 : bool]) | q27 : bool]),
+    and([var4_Function1DPartial_Flags[q32] /\ var4_Function1DPartial_Flags[q33] ->
+         var4_Function1DPartial_Values[q32] != var4_Function1DPartial_Values[q33]
+             | q32 : bool, q33 : bool, q32 < q33]),
+    and([or([var4_Function1DPartial_Flags[q35] /\ var4_Function1DPartial_Values[q35] = q34 | q35 : bool])
+             | q34 : int(0..2, 3..5)]),
+    and([var4_Function1DPartial_Flags[q36] = false -> var4_Function1DPartial_Values[q36] = 0 | q36 : bool]),
+    0 = sum([toInt(var4_Function1DPartial_Flags[q37]) | q37 : bool])
+

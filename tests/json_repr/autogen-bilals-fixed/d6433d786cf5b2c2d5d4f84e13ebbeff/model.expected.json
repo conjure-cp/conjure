@@ -1,0 +1,77 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainTuple":
+                      [{"DomainFunction":
+                            [[],
+                             [{"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}},
+                              "PartialityAttr_Total", "JectivityAttr_Surjective"],
+                             {"DomainBool": []}, {"DomainBool": []}]},
+                       {"DomainMSet":
+                            [[],
+                             [{"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}},
+                              {"OccurAttr_MaxOccur": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}],
+                             {"DomainBool": []}]},
+                       {"DomainPartition":
+                            [[],
+                             {"isRegular": true,
+                              "partsNum": {"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                              "partsSize":
+                                  {"SizeAttr_MinMaxSize":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}},
+                             {"DomainBool": []}]},
+                       {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainFunction":
+                      [[],
+                       [{"SizeAttr_MaxSize":
+                             {"Op":
+                                  {"MkOpMinus":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}}},
+                        "PartialityAttr_Total", "JectivityAttr_Injective"],
+                       {"DomainTuple": [{"DomainBool": []}]},
+                       {"DomainSet":
+                            [[],
+                             {"SizeAttr_MinMaxSize":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainTuple":
+                      [{"DomainMSet":
+                            [[],
+                             [{"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}},
+                              {"OccurAttr_MinOccur": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}],
+                             {"DomainBool": []}]},
+                       {"DomainMSet":
+                            [[],
+                             [{"SizeAttr_MinMaxSize":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                              {"OccurAttr_MinMaxOccur":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}],
+                             {"DomainBool": []}]},
+                       {"DomainPartition":
+                            [[],
+                             {"isRegular": true,
+                              "partsNum": {"SizeAttr_MaxSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}},
+                              "partsSize":
+                                  {"SizeAttr_MinMaxSize":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
+                             {"DomainBool": []}]}]}]}},
+      {"SuchThat": [{"Constant": {"ConstantBool": false}}]}]}

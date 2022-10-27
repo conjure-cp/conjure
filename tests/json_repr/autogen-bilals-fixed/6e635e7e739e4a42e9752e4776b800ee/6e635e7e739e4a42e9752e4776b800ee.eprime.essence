@@ -1,0 +1,38 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_1_Occurrence:
+        matrix indexed by [int(1..fin1), int(5, 4..5)] of bool
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker:
+        matrix indexed by [int(1..fin1)] of int(0..4)
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..fin1), int(1..4)] of int(0..2)
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..fin1), int(1..4), int(1..2)] of bool
+find var1_Function1DPartialR9_Flags: matrix indexed by [int(4..5, 5..5)] of bool
+find var1_Function1DPartialR9_Values_Function1D: matrix indexed by [int(4..5, 5..5), int(4, 3)] of int(3, 2)
+such that
+    false,
+    and([var1_Function1DPartialR9_Flags[q1] /\ var1_Function1DPartialR9_Flags[q2] ->
+         or([!(var1_Function1DPartialR9_Values_Function1D[q2, q12] =
+               var1_Function1DPartialR9_Values_Function1D[q1, q12])
+                 | q12 : int(4, 3)])
+         \/
+         or([!(var1_Function1DPartialR9_Values_Function1D[q1, q13] =
+               var1_Function1DPartialR9_Values_Function1D[q2, q13])
+                 | q13 : int(4, 3)])
+             | q1 : int(4..5, 5..5), q2 : int(4..5, 5..5), q1 < q2]),
+    and([or([var1_Function1DPartialR9_Flags[q4] /\
+             (and([q3_Function1D[q18] = var1_Function1DPartialR9_Values_Function1D[q4, q18] | q18 : int(4, 3)]) /\
+              and([var1_Function1DPartialR9_Values_Function1D[q4, q19] = q3_Function1D[q19] | q19 : int(4, 3)]))
+                 | q4 : int(4..5, 5..5)])
+             | q3_Function1D : matrix indexed by [int(4, 3)] of int(3, 2),
+               and([or([q3_Function1D[q15] = q14 | q15 : int(4, 3)]) | q14 : int(3, 2)])]),
+    and([var1_Function1DPartialR9_Flags[q5] = false ->
+         and([var1_Function1DPartialR9_Values_Function1D[q5, q20] = 3 | q20 : int(4, 3)])
+             | q5 : int(4..5, 5..5)]),
+    2 = sum([toInt(var1_Function1DPartialR9_Flags[q6]) | q6 : int(4..5, 5..5)]),
+    and([var1_Function1DPartialR9_Flags[q7] ->
+         and([or([var1_Function1DPartialR9_Values_Function1D[q7, q9] = q8 | q9 : int(4, 3)]) | q8 : int(3, 2)])
+             | q7 : int(4..5, 5..5)])
+

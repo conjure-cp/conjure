@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find var2: bool
+find var3: set of int(1)
+such that
+    or([|var3| = -3 | q_128 : set of int(1), |toMSet({false, var2})| != 0])

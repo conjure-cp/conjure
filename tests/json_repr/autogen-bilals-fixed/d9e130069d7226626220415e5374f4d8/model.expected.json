@@ -1,0 +1,25 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}},
+                        {"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var2"}, {"DomainBool": []}]}},
+      {"Objective": ["Minimising", {"Reference": [{"Name": "given1"}, null]}]},
+      {"SuchThat":
+           [{"Reference": [{"Name": "var2"}, null]},
+            {"Op":
+                 {"MkOpLeq":
+                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                       {"Reference": [{"Name": "given1"}, null]}]}}]}]}

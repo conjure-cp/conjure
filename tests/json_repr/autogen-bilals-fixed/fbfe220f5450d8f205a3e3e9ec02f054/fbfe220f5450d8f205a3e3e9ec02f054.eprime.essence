@@ -1,0 +1,7 @@
+language ESSENCE' 1.0
+
+find unused: bool
+such that
+    [[true; int(1..1)]; int(1..1)][2, ..] <lex
+    [false, false, false, false; int(1..4)]
+

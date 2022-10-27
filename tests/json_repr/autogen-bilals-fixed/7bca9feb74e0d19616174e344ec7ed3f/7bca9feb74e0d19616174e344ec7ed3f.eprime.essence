@@ -1,0 +1,6 @@
+language ESSENCE' 1.0
+
+find var2: int(2..3, 2..2)
+maximising [var2, var2; int(0..1)][var2 ** var2]
+such that true
+

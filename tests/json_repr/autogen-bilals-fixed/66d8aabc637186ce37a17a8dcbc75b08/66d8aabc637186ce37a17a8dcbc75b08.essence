@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find var5: set of tuple (int(2..2))
+such that
+    and([true
+             | q_9 <- var5, true, tuple (5) = tuple (-4), tuple (5) = q_9,
+               tuple (-4) = tuple (-4), tuple (-4) = q_9,
+               tuple (min(mset(-2, -2))) = tuple (-4), tuple (min(mset(-2, -2))) = q_9,
+               tuple (min((mset() : `mset of int`))) = tuple (-4),
+               tuple (min((mset() : `mset of int`))) = q_9])

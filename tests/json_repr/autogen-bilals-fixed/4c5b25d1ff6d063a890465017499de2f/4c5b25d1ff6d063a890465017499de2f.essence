@@ -1,0 +1,12 @@
+language Essence 1.3
+
+find var1: int(2, 4..4)
+find var2: int(4..5, 5..5)
+such that
+    true,
+    image(function(true --> false, true --> false, false --> false, true --> true),
+          var2 < var2),
+    ({} : `set of bool`) subsetEq {true},
+    or([false, true, true, false, false; int(7, 15, 11, 4, 13..13)]),
+    tuple (false)[1]
+minimising var1

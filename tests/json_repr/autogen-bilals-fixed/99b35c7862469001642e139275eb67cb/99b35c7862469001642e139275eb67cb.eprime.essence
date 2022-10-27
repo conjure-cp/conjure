@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+find unused: bool
+given given3_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker: int(0..4)
+given given3_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..4)] of int(0..2)
+given given3_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..4), int(1..2)] of bool
+such that true
+

@@ -1,0 +1,8 @@
+language ESSENCE' 1.0
+letting var1 be true
+letting var2_ExplicitVarSizeWithFlags_Flags be ([] : `matrix indexed by [int()] of int(0..4)`)
+letting var2_ExplicitVarSizeWithFlags_Values be ([] : `matrix indexed by [int()] of bool`)
+letting var3_RelationAsMatrix be [[[false, false;bool], 
+[false, false;bool];bool], 
+[[false, false;bool], 
+[false, false;bool];bool];bool]

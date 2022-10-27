@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find var1: bool
+find var2: mset (maxOccur 2 % 1) of function (minSize 3) bool --> bool
+find var3:
+        matrix indexed by [int(3, 2..2)] of relation (minSize 1) of
+                                                (bool * bool * bool * bool)
+find var4: set (size 3 - 4) of relation (size 3) of (bool)
+find var5: mset (size toInt(true), minOccur 2 / 5) of mset (maxOccur 3) of bool
+such that var1

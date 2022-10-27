@@ -1,0 +1,102 @@
+language ESSENCE' 1.0
+
+find var1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find var1_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..2)] of int(0, 4)
+find var2_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..0)] of int(0..0)
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..0)] of bool
+find var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..3)
+find var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..3)] of int(0..4)
+find var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..3), int(1..4)] of bool
+such that
+    var1_ExplicitVarSizeWithFlags_Flags[2] ->
+    var1_ExplicitVarSizeWithFlags_Values[1] <
+    var1_ExplicitVarSizeWithFlags_Values[2],
+    and([var1_ExplicitVarSizeWithFlags_Flags[q2] = false ->
+         var1_ExplicitVarSizeWithFlags_Values[q2] = 0
+             | q2 : int(1..2)]),
+    var1_ExplicitVarSizeWithFlags_Flags[2] ->
+    var1_ExplicitVarSizeWithFlags_Flags[1],
+    and([1 =
+         sum([q23 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+              or([q28 <=
+                  var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q23]
+                  /\
+                  var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q23,
+                                                                                                        q28]
+                  = q12
+                      | q28 : int(1..4)])
+                  | q23 : int(1..3)])
+             | q12 : bool]),
+    and([q24 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+         q25 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker
+         ->
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q24]
+         =
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q25]
+             | q24 : int(1..3), q25 : int(1..3)]),
+    and([q26 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q26]
+         >= 1
+             | q26 : int(1..3)]),
+    and([q17 + 1 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q17]
+         <
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q17
+                                                                                               + 1]
+         \/
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q17]
+         =
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q17
+                                                                                               + 1]
+         /\
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q17,
+                                                                                               ..]
+         <lex
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q17
+                                                                                               + 1,
+                                                                                               ..]
+             | q17 : int(1..2)]),
+    and([q18 > var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q18]
+         = 0
+         /\
+         and([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q18,
+                                                                                                    q29]
+              = false
+                  | q29 : int(1..4)])
+             | q18 : int(1..3)]),
+    2 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker,
+    var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker <= 3,
+    and([q19 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q20 + 1 <=
+              var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q19]
+              ->
+              var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q19,
+                                                                                                    q20]
+              <
+              var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q19,
+                                                                                                    q20 + 1]
+                  | q20 : int(1..3)])
+             | q19 : int(1..3)]),
+    and([q19 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q21 >
+              var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q19]
+              ->
+              var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q19,
+                                                                                                    q21]
+              = false
+                  | q21 : int(1..4)])
+             | q19 : int(1..3)]),
+    and([q19 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         1 <=
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q19]
+             | q19 : int(1..3)]),
+    and([q19 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q19]
+         <= 4
+             | q19 : int(1..3)])
+

@@ -1,0 +1,180 @@
+language Essence 1.3
+
+find var1:
+        partition (minNumParts -toInt(false) , maxNumParts 3, regular) from
+            partition (maxNumParts 4 % 4, partSize -5, regular) from
+                set (minSize 5) of int(3, 1)
+such that
+    image(function(mset(function(relation(tuple (2), tuple (2),
+                                          tuple (1)) --> mset(4),
+                                 relation(tuple (0), tuple (2)) --> mset(0, 4, 2),
+                                 relation(tuple (0), tuple (4), tuple (4), tuple (2)) --> mset(3, 3)),
+                        function(relation(tuple (0), tuple (1), tuple (0), tuple (1)) --> mset(1, 4, 3),
+                                 relation(tuple (5), tuple (0)) --> mset(1, 3, 5),
+                                 relation(tuple (5), tuple (5), tuple (0), tuple (0)) --> mset(2, 1),
+                                 (relation() : `relation of (int)`) --> mset(2),
+                                 relation(tuple (4)) --> (mset() : `mset of int`)),
+                        function(relation(tuple (3), tuple (3), tuple (3)) --> mset(1, 2))) --> 2 ** 3
+                                                                                                ** (4 - 4)
+                                                                                                >=
+                                                                                                freq(mset(1), 0 ** 5),
+                   mset(function(relation(tuple (5), tuple (0), tuple (1), tuple (5),
+                                          tuple (1)) --> mset(5),
+                                 relation(tuple (4), tuple (5), tuple (4), tuple (4)) --> mset(5, 5, 1),
+                                 (relation() : `relation of (int)`) --> mset(5),
+                                 relation(tuple (3),
+                                          tuple (1)) --> (mset() : `mset of int`))) --> (relation() : `relation of (bool *
+                                                                                                                    bool *
+                                                                                                                    function bool --> bool)`)
+                                                                                        subsetEq
+                                                                                        (relation() : `relation of (bool *
+                                                                                                                    bool *
+                                                                                                                    function bool --> bool)`),
+                   mset(function(relation(tuple (5), tuple (5)) --> mset(2),
+                                 relation(tuple (4)) --> mset(5, 1),
+                                 relation(tuple (0)) --> mset(4))) --> relation((function(true --> true,
+                                                                                          false --> false,
+                                                                                          true --> true),
+                                                                                 relation(tuple (2), tuple (1)),
+                                                                                 mset(5, 5), -5),
+                                                                                (function(false --> false,
+                                                                                          false --> true,
+                                                                                          true --> true),
+                                                                                 relation(tuple (1), tuple (1),
+                                                                                          tuple (3), tuple (5)),
+                                                                                 mset(2), 3 / 1),
+                                                                                (function(true --> true,
+                                                                                          false --> true),
+                                                                                 relation(tuple (2), tuple (1),
+                                                                                          tuple (4)),
+                                                                                 mset(2, 3), 1))
+                                                                       !=
+                                                                       relation((function(true --> true),
+                                                                                 (relation() : `relation of (int)`),
+                                                                                 mset(1, 2), toInt(true))),
+                   mset(function(relation(tuple (5)) --> mset(3),
+                                 relation(tuple (4), tuple (0)) --> mset(4, 4, 4),
+                                 relation(tuple (2), tuple (4), tuple (2)) --> mset(5, 2, 4),
+                                 relation(tuple (3)) --> mset(1, 0, 0),
+                                 (relation() : `relation of (int)`) --> (mset() : `mset of int`)),
+                        function(relation(tuple (1)) --> mset(4, 5)),
+                        function(relation(tuple (3)) --> mset(3, 3, 0),
+                                 relation(tuple (0), tuple (3)) --> mset(0),
+                                 relation(tuple (2),
+                                          tuple (1)) --> (mset() : `mset of int`))) --> inverse(function(false --> 3,
+                                                                                                         false --> 3,
+                                                                                                         true --> 3),
+                                                                                                function(5 --> false,
+                                                                                                         0 --> true,
+                                                                                                         0 --> true,
+                                                                                                         0 --> false))
+                                                                                        <->
+                                                                                        relation((true, 1, false, true),
+                                                                                                 (false, 4, true, true),
+                                                                                                 (true, 4, true, true))
+                                                                                        supsetEq
+                                                                                        (relation() : `relation of (bool *
+                                                                                                                    int *
+                                                                                                                    bool *
+                                                                                                                    bool)`)),
+          mset(function(relation(tuple (2), tuple (4)) --> mset(0, 5, 2)) intersect
+               function(relation(tuple (4), tuple (2), tuple (3), tuple (3),
+                                 tuple (5)) --> mset(0)),
+               (function() : `function relation of (int) --> mset of int`) intersect
+               (function() : `function relation of (int) --> mset of int`))),
+    function({relation((tuple (false), ([] : `matrix indexed by [int] of bool`),
+                        (relation() : `relation of (bool * int * int)`))),
+              relation((tuple (false), [false; int(2..2)],
+                        relation((false, 3, 5), (true, 2, 1), (true, 3, 4), (false, 2, 0),
+                                 (false, 4, 1))),
+                       (tuple (true), [false, false, true, false, false; int(0, 8..11)],
+                        (relation() : `relation of (bool * int * int)`)),
+                       (tuple (false), [false; int(2..2)],
+                        relation((true, 2, 0), (true, 1, 5), (false, 1, 1)))),
+              relation((tuple (true), [false, false, true; int(0, 3..4)],
+                        relation((false, 0, 3), (true, 1, 3), (true, 2, 5), (true, 2, 3),
+                                 (true, 1, 2))))} --> mset(product([1, 3, 0, 0; int(3..6)]), -(0 % 4), 0),
+             ({} : `set of relation of (tuple(bool) * matrix indexed by [int] of bool *
+                                        relation of (bool * int * int))`) --> mset(toInt(0 > 2), toInt(true) / (3 % 4)))
+    subsetEq
+    function({relation((tuple (true), [true, false; int(2..3)],
+                        relation((false, 3, 0), (false, 3, 3), (true, 2, 4))))} --> mset(toInt(false ->
+                                                                                               false),
+                                                                                         image(function(true --> 4,
+                                                                                                        false --> 5,
+                                                                                                        false --> 0,
+                                                                                                        false --> 4,
+                                                                                                        false --> 5),
+                                                                                               5 >= 3),
+                                                                                         |function(true --> true,
+                                                                                                   true --> true,
+                                                                                                   false --> false,
+                                                                                                   false --> true)|),
+             {relation((tuple (true),
+                        [false, false, true, false, true; int(8, 7..8, 6, 2..2)],
+                        relation((false, 3, 5))),
+                       (tuple (false), ([] : `matrix indexed by [int] of bool`),
+                        relation((true, 5, 5), (true, 4, 1), (false, 3, 2), (true, 1, 1),
+                                 (true, 1, 0))),
+                       (tuple (true), [true, true; int(4, 3..3)],
+                        relation((false, 2, 4), (false, 4, 5), (false, 5, 0))),
+                       (tuple (false), ([] : `matrix indexed by [int] of bool`),
+                        relation((true, 5, 3), (false, 0, 1), (true, 5, 0), (true, 1, 3))),
+                       (tuple (false), ([] : `matrix indexed by [int] of bool`),
+                        relation((true, 1, 2), (true, 5, 0), (true, 2, 0), (true, 0, 4),
+                                 (false, 0, 4)))),
+              relation((tuple (true), ([] : `matrix indexed by [int] of bool`),
+                        relation((false, 5, 4), (true, 4, 3), (false, 5, 4), (true, 4, 3),
+                                 (true, 5, 2))))} --> ((2, 3, false, 5), mset(0, 1, 3), (true, true),
+                                                       false >= true)[2]),
+    [l_1 | l_1 : int(5, 2..5)] <=lex
+    [l_2 | l_2 : int(1..2, 2), and(([] : `matrix indexed by [int] of bool`))],
+    allDiff([partition({(mset() : `mset of partition from bool`),
+                        mset(partition({true}, {true, false, true, true, false}, {true, true, false},
+                                       {true, true, false, true}),
+                             partition({true, true, true, false, true}, {true, true, false, true, false},
+                                       {true, true, true, false}, {false, false, true, true},
+                                       {false, false, true, false, true})),
+                        (mset() : `mset of partition from bool`)},
+                       {mset(partition({true}, {false, false, true}, {true, true, true, false, false},
+                                       {true, true, true}),
+                             (partition() : `partition from bool`),
+                             partition({false, false, true, false}, {false, false, true, true, false})),
+                        (mset() : `mset of partition from bool`),
+                        mset((partition() : `partition from bool`), partition({true}),
+                             partition({false, true, true, false})),
+                        mset(partition({true, true, true, true}, {false, false}),
+                             partition({true, false, true}, {false, true, false, true, true},
+                                       {false, false, true, false}, {true, false, true, true}),
+                             partition({false})),
+                        (mset() : `mset of partition from bool`)}),
+             partition({mset((partition() : `partition from bool`),
+                             partition({false, false, true, false}, {false, true, true},
+                                       {false, false, true, true}, {false}),
+                             partition({true, true, true}, {false, false, true, true, true}, {false, false},
+                                       {false, false, false}))},
+                       {mset(partition({false, true, true, false, false}, {false},
+                                       {false, false, false}, {true, true, false, false}, {true, true}),
+                             partition({true, true, true}, {true, false, false, true}))}),
+             (partition() : `partition from mset of partition from bool`); int(3, 4, 2..2)]),
+    [l_3 | l_3 : int(2, 0), false] <lex
+    [l_5 | l_4 : int(3, 4..4), l_5 : int(5, 2..4),
+           image(function(relation((false, l_5, l_4, true)) --> !true,
+                          relation((false, l_5, l_5, true), (false, l_5, l_5, true)) --> true = true,
+                          relation((true, l_5, l_5, false), (false, l_5, l_4, true),
+                                   (true, l_5, l_5, false)) --> true = true),
+                 (relation() : `relation of (bool * int * int * bool)`)),
+           allDiff(([] : `matrix indexed by [int] of function bool --> bool`))],
+    [l_7 | l_6 : bool,
+           l_7 : bool][freq(mset((relation() : `relation of (mset of int *
+                                                             partition from int)`)),
+                            relation((mset(factorial(1), toInt(true), factorial(0)),
+                                      partition({0 / 0}, {2 - 4})),
+                                     (toMSet({2}), partition({factorial(1), 5 % 2, -1}, {1 % 2, 4 % 4, -3})),
+                                     (mset(4, 0, 4) - mset(4),
+                                      (partition() : `partition from int`) - (partition() : `partition from int`)),
+                                     (toMSet({3}), partition({0 ** 3, 0}, {0 / 5}, {-0, 5 ** 0})),
+                                     (mset(toInt(true)),
+                                      partition({0 ** 5, 4 ** 4}, {toInt(false), 2 % 1, toInt(false)},
+                                                {1 / 4, toInt(true), 3 % 2, toInt(false)}, {4 % 3, factorial(3), 3 - 2},
+                                                {-0, -0, 3 - 0}))))]

@@ -1,0 +1,16 @@
+language Essence 1.3
+
+given given1: bool
+find var1: set (maxSize 5) of mset (maxSize 3) of bool
+given given2: bool
+find var2: mset (minSize 0, maxSize 0) of tuple (bool)
+given given3:
+        relation (maxSize 2) of
+            (function (maxSize 0, total, surjective) bool --> bool * matrix indexed by [int(2..4, 2)] of bool)
+find var3: partition (maxNumParts 4, maxPartSize 3) from tuple (bool)
+find var4: (relation (maxSize 4) of (bool * int(3..3, 4..4)), int(0..2, 1), matrix indexed by [int(4..4, 3)] of bool)
+find var5: set (maxSize toInt(true)) of relation (minSize 3) of (bool * bool * int(4..5, 0) * int(5..5, 1..1))
+such that
+    given2,
+    given2,
+    given1
