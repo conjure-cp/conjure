@@ -192,7 +192,7 @@ lineEnd = T.unpack <$> eol <|> ( eof >> return [])
 lineComment :: Lexer Trivia
 lineComment = do
     _ <- try (chunk "$")
-    (text,end) <- manyTill_ L.charLiteral lineEnd
+    (text,end) <- manyTill_ anySingle lineEnd
     return $ LineComment $ T.pack ('$' : text++end)
 
 blockComment :: Lexer Trivia
