@@ -63,6 +63,8 @@ instance Monad EnumerateDomainNoIO where
 
 instance MonadFailDoc EnumerateDomainNoIO where
     failDoc = Failed
+instance MonadFail EnumerateDomainNoIO where
+    fail = Failed . stringToDoc 
 
 instance MonadUserError EnumerateDomainNoIO where
     userErr docs = Failed (vcat $ "User error:" : docs)

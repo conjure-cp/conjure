@@ -12,7 +12,7 @@ import Test.Tasty ( TestTree, testGroup )
 import Test.Tasty.HUnit ( testCase, (@?=) )
 
 
-domainSizeConstant :: MonadFail m => Domain () Constant -> m Integer
+domainSizeConstant :: (MonadFail m,MonadFailDoc m ) => Domain () Constant -> m Integer
 domainSizeConstant = domainSizeOf
 
 tests :: TestTree
