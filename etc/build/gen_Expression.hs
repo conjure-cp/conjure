@@ -35,7 +35,7 @@ main = do
                 [ [ "instance Op" ++ m ++ " Expression :< Expression where"
                   , "    inject = Op . MkOp" ++ m
                   , "    project (Op (MkOp" ++ m ++ " x)) = return x"
-                  , "    project _ = fail \"projecting Op" ++ m ++ "\""
+                  , "    project _ = failDoc \"projecting Op" ++ m ++ "\""
                   ]
                 | m <- operators
                 ]
