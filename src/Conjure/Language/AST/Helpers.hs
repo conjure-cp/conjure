@@ -94,7 +94,7 @@ commaList ::(Null a) => Parser a -> Parser (Sequence a)
 commaList = parseSequence L_Comma
 
 commaList1 ::(Null a) => Parser a -> Parser (Sequence a)
-commaList1 = parseNESequence L_Comma
+commaList1 = parseSequence1 L_Comma
 
 squareBracketList :: Parser (Sequence a) -> Parser (ListNode a)
 squareBracketList = parseList L_OpenBracket L_CloseBracket
@@ -135,6 +135,17 @@ parseListStrict startB endB seq = do
 --     seqElemSep = do
 --         s <- need divider
 --         SeqElem (Just s) <$> pElem
+
+parseSequence1 :: (Null a) => Lexeme -> Parser a -> Parser (Sequence a)
+parseSequence1 divider pElem = do
+    s <- parseSequence divider pElem
+    case s of 
+        Seq [] -> do
+                q <- pElem
+                return $ Seq [SeqElem q Nothing]
+        Seq _ -> return s
+
+           
 
 parseSequence :: (Null a) => Lexeme -> Parser a -> Parser (Sequence a)
 parseSequence divider pElem = do

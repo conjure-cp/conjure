@@ -72,6 +72,7 @@ binRelAttrs =
     , (L_antiSymmetric, False)
     , (L_aSymmetric, False)
     , (L_transitive, False)
+    , (L_total,False)
     , (L_connex, False)
     , (L_Euclidean, False)
     , (L_serial, False)
@@ -87,7 +88,7 @@ lexemeToBinRel L_symmetric = Just BinRelAttr_Symmetric
 lexemeToBinRel L_antiSymmetric = Just BinRelAttr_AntiSymmetric
 lexemeToBinRel L_aSymmetric = Just BinRelAttr_ASymmetric
 lexemeToBinRel L_transitive = Just BinRelAttr_Transitive
--- lexemeToBinRel L_total = Just BinRelAttr_Total
+lexemeToBinRel L_total = Just BinRelAttr_Total
 lexemeToBinRel L_connex = Just BinRelAttr_Connex
 lexemeToBinRel L_Euclidean = Just BinRelAttr_Euclidean
 lexemeToBinRel L_serial = Just BinRelAttr_Serial

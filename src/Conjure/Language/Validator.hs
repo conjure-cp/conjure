@@ -19,9 +19,9 @@ import Conjure.Language.Type
 
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-import qualified Data.Set as S 
+import qualified Data.Set as S
 
-import Data.Text (pack, unpack)
+import Data.Text (pack, unpack, toLower)
 import Text.Megaparsec (parseMaybe, runParser)
 
 import Conjure.Language.Expression.Op
@@ -64,12 +64,12 @@ type Validator a = ValidatorT SymbolTable ValidatorError (Maybe a)
 --Non maybe version used in outward facing applications/ lists 
 type ValidatorS a = ValidatorT SymbolTable ValidatorError a
 
-addEnumDefns ::  [Text] -> SymbolTable -> SymbolTable 
+addEnumDefns ::  [Text] -> SymbolTable -> SymbolTable
 addEnumDefns names (SymbolTable enums) = SymbolTable $ enums ++  map (\m -> (m,"Enum")) names
 
 lookupSymbol :: Text -> ValidatorS (Maybe String)
 lookupSymbol name = do
-    SymbolTable a <- get 
+    SymbolTable a <- get
     return $ lookup name a
 
 strict :: Validator a -> ValidatorS a
@@ -134,11 +134,16 @@ validateProgramTree sts = do
     return . pure $ concat q
 
 
+isValidLanguageName :: Text -> Bool
+isValidLanguageName t = Data.Text.toLower t `elem` ["essence","essence'"]
+
 validateLanguageVersion :: Maybe LangVersionNode -> Validator LanguageVersion
 validateLanguageVersion Nothing = return $ pure $ LanguageVersion "Essence" [1,3]
 validateLanguageVersion (Just (LangVersionNode l1 n v)) = do
+    let NameNode nt = n
     checkSymbols [l1]
     name <- validateIdentifier n
+    unless (maybe False isValidLanguageName name) (raiseError $ IllegalToken nt)
     nums <- validateSequence getNum v
     return . pure $
         LanguageVersion
@@ -199,7 +204,7 @@ validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
     checkSymbols [l1, l2]
     branchings <- validateList validateBranchingParts sts
     return . pure $ [SearchOrder branchings]
-    where 
+    where
         validateBranchingParts :: ExpressionNode -> Validator SearchOrder
         validateBranchingParts (IdentifierNode nn) =  do
             n <- validateName nn
@@ -218,7 +223,7 @@ validateDeclarationStatement stmt = do
     where
         validateStatementSeq v l= do
             decls <- validateSequence v l
-            return $ pure $ concat decls 
+            return $ pure $ concat decls
 
 validateGiven :: GivenStatementNode -> Validator [Declaration]
 validateGiven (GivenStatementNode idents l1 domain) =
@@ -239,7 +244,7 @@ validateLetting :: LettingStatementNode -> Validator [Declaration]
 validateLetting (LettingStatementNode names l1 assign) = do
     checkSymbols [l1]
     names' <-  validateNameList names
-    validateLettingAssignment names' assign 
+    validateLettingAssignment names' assign
 
 validateLettingAssignment :: [Name] -> LettingAssignmentNode -> Validator [Declaration]
 validateLettingAssignment names (LettingExpr en)  = do
@@ -329,7 +334,7 @@ validateDomain dm = case dm of
     TupleDomainNode l1 doms -> checkSymbols [l1] >> validateTupleDomain doms
     RecordDomainNode l1 ndom -> checkSymbols [l1] >> validateRecordDomain ndom
     VariantDomainNode l1 ndom -> checkSymbols [l1] >> validateVariantDomain ndom
-    MatrixDomainNode l1 l2 l3 idoms l4 dom -> checkSymbols [l1, l2, l3, l4] >> validateMatrixDomain idoms dom
+    MatrixDomainNode l1 m_ib idoms l2 dom -> checkSymbols [l1, l2] >> validateIndexedByNode m_ib >> validateMatrixDomain idoms dom
     SetDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validateSetDomain attrs dom
     MSetDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validateMSetDomain attrs dom
     FunctionDomainNode l1 attrs dom1 l2 dom2 -> checkSymbols [l1, l2] >> validateFunctionDomain attrs dom1 dom2
@@ -345,7 +350,7 @@ validateDomain dm = case dm of
     validateRangedInt Nothing = return . pure $ DomainInt TagInt []
     validateEnumRange :: NameNode -> Maybe (ListNode RangeNode) -> DomainValidator
     validateEnumRange name ranges = do
-        ranges' <- case ranges of 
+        ranges' <- case ranges of
             Just r -> pure <$> validateList validateRange r
             Nothing -> pure Nothing
         Just name' <- validateIdentifier name
@@ -356,7 +361,7 @@ validateDomain dm = case dm of
             Nothing -> case ranges' of
               Nothing -> return . pure $  DomainReference (Name name') Nothing
               Just _ -> do
-                raiseError (StateError "range not supported on non enum ranges") 
+                raiseError (StateError "range not supported on non enum ranges")
                 return . pure $  DomainReference (Name name') Nothing
 
     validateTupleDomain :: ListNode DomainNode -> DomainValidator
@@ -425,6 +430,10 @@ validateDomain dm = case dm of
         dom' <-  validateDomain dom
         return $ DomainPartition <$> repr <*> attrs' <*> dom'
 
+validateIndexedByNode :: Maybe IndexedByNode -> ValidatorS ()
+validateIndexedByNode Nothing = return ()
+validateIndexedByNode (Just (IndexedByNode a b)) = checkSymbols [a,b]
+
 todo :: String -> Validator a
 todo s = invalid $ NotImplemented s
 
@@ -432,7 +441,7 @@ validateSizeAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Exp
 validateSizeAttributes attrs = do
     let sizeAttrs = [L_size,L_minSize,L_maxSize]
     let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
-    case filtered of 
+    case filtered of
       [] -> return $ Just SizeAttr_None
       [(L_size,Just a)] -> return $ Just (SizeAttr_Size a)
       [(L_minSize, Just a)] -> return $ Just (SizeAttr_MinSize a)
@@ -442,9 +451,9 @@ validateSizeAttributes attrs = do
 
 validatePartSizeAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Expression)
 validatePartSizeAttributes attrs = do
-    let sizeAttrs = [L_partSize,L_maxPartSize,L_maxPartSize]
+    let sizeAttrs = [L_partSize,L_minPartSize,L_maxPartSize]
     let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
-    case filtered of 
+    case filtered of
       [] -> return $ Just SizeAttr_None
       [(L_partSize,Just a)] -> return $ Just (SizeAttr_Size a)
       [(L_minPartSize, Just a)] -> return $ Just (SizeAttr_MinSize a)
@@ -456,7 +465,7 @@ validateNumPartAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr 
 validateNumPartAttributes attrs = do
     let sizeAttrs = [L_numParts,L_maxNumParts,L_minNumParts]
     let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
-    case filtered of 
+    case filtered of
       [] -> return $ Just SizeAttr_None
       [(L_numParts,Just a)] -> return $ Just (SizeAttr_Size a)
       [(L_minNumParts, Just a)] -> return $ Just (SizeAttr_MinSize a)
@@ -469,13 +478,13 @@ validateJectivityAttributes :: [(Lexeme,Maybe Expression)] -> Validator Jectivit
 validateJectivityAttributes attrs = do
     let sizeAttrs = [L_injective,L_surjective,L_bijective]
     let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
-    case filtered of 
+    case filtered of
       [] -> return $ Just JectivityAttr_None
       [(L_injective,_)] -> return $ Just JectivityAttr_Injective
       [(L_surjective, _)] -> return $ Just JectivityAttr_Surjective
       [(L_bijective, _)] -> return $ Just JectivityAttr_Bijective
-      [(L_injective, _),(L_surjective, _)] -> do 
-        info "Inj and Sur can be combined to bijective" 
+      [(L_injective, _),(L_surjective, _)] -> do
+        info "Inj and Sur can be combined to bijective"
         return $ Just JectivityAttr_Bijective
       as -> do invalid $ RegionError $ "Incompatible attributes jectivity" ++ show as
 
@@ -485,19 +494,19 @@ validateSetAttributes atts = do
     attrs <- validateList (validateAttributeNode setValidAttrs) atts
     size <- validateSizeAttributes attrs
     return $ SetAttr <$> size
-      
+
 
 validateMSetAttributes :: ListNode AttributeNode -> Validator (MSetAttr Expression)
 validateMSetAttributes atts = do
     attrs <- validateList (validateAttributeNode msetValidAttrs) atts
     size <- validateSizeAttributes attrs
-    occurs <- validateOccursAttrs attrs 
+    occurs <- validateOccursAttrs attrs
     return $ MSetAttr <$> size <*> occurs
-        where 
+        where
             validateOccursAttrs attrs = do
                 let sizeAttrs = [L_minOccur,L_maxOccur]
                 let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
-                case filtered of 
+                case filtered of
                     [] -> return $ Just OccurAttr_None
                     [(L_minOccur,Just a)] -> return $ Just (OccurAttr_MinOccur a)
                     [(L_maxOccur, Just a)] -> return $ Just (OccurAttr_MaxOccur a)
@@ -527,12 +536,12 @@ validateRelationAttributes atts = do
     size <- validateSizeAttributes attrs
     others <- validateArray validateBinaryRel (filter (\x -> fst x `elem` map fst binRelAttrs) attrs)
     return $ RelationAttr <$>  size <*> pure (BinaryRelationAttrs $ S.fromList others )
-        where 
+        where
             validateBinaryRel :: (Lexeme , Maybe Expression) -> Validator BinaryRelationAttr
-            validateBinaryRel (l,_) = do 
-                case lexemeToBinRel l of 
+            validateBinaryRel (l,_) = do
+                case lexemeToBinRel l of
                     Just b -> return . pure $ b
-                    Nothing -> invalid $ StateError  $ "Not found (bin rel) " ++ show l 
+                    Nothing -> invalid $ StateError  $ "Not found (bin rel) " ++ show l
 
 validatePartitionAttributes :: ListNode AttributeNode -> Validator (PartitionAttr Expression)
 validatePartitionAttributes atts = do
@@ -540,7 +549,7 @@ validatePartitionAttributes atts = do
     --guard size attrs and complete as this is default
     size <- validateNumPartAttributes attrs
     partSize <- validatePartSizeAttributes attrs
-    regular <- return . Just $ L_regular `elem` map fst attrs 
+    regular <- return . Just $ L_regular `elem` map fst attrs
     return $ PartitionAttr <$> size <*> partSize <*> regular
 
 validateAttributeNode :: Map Lexeme Bool -> AttributeNode -> Validator (Lexeme,Maybe Expression)
@@ -653,7 +662,7 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
         guard' <-  validateQuantificationGuard m_guard
         body <-  validateExpression expr
         let gens = map  <$>  over' <*> pure patterns
-        let qBody =  Comprehension <$> body  <*> ((++) <$> guard' <*> gens)
+        let qBody =  Comprehension <$> body  <*> ((++) <$>  gens <*> guard')
         return  $ mkOp <$> (translateQnName <$> name') <*> ((:[]) <$> qBody)
     where
         validateQuantificationGuard :: Maybe QuanticationGuard -> Validator [GeneratorOrCondition]
@@ -776,8 +785,8 @@ validateLiteral litNode = case litNode of
     IntLiteral lt -> validateIntLiteral lt >>= \x -> return $ Constant <$> x
     BoolLiteral lt -> validateBoolLiteral lt >>= \x -> return $ Constant <$> x
     MatrixLiteral mln -> validateMatrixLiteral mln
-    TupleLiteralNode lt ->  Just . mkAbstractLiteral . AbsLitTuple <$> validateLongTuple lt 
-    TupleLiteralNodeShort st -> Just . mkAbstractLiteral.AbsLitTuple <$> validateShortTuple st 
+    TupleLiteralNode lt ->  Just . mkAbstractLiteral . AbsLitTuple <$> validateLongTuple lt
+    TupleLiteralNodeShort st -> Just . mkAbstractLiteral.AbsLitTuple <$> validateShortTuple st
     RecordLiteral lt ln -> checkSymbols [lt] >> validateRecordLiteral ln
     VariantLiteral lt ln -> checkSymbols [lt] >> validateVariantLiteral ln
     SetLiteral ls -> validateSetLiteral ls
@@ -800,7 +809,7 @@ validateRelationLiteral ln = do
     where
         validateRelationMember :: RelationElemNode -> Validator [Expression]
         validateRelationMember x = case x of
-          RelationElemNodeLabeled lt -> Just <$> validateLongTuple lt 
+          RelationElemNodeLabeled lt -> Just <$> validateLongTuple lt
           RelationElemNodeShort st -> Just <$> validateShortTuple st
 
 
@@ -966,7 +975,7 @@ validateIdentifier (NameNode iden) = do
     case q of
         LIdentifier x -> checkName x
         _ -> return Nothing
-    where 
+    where
         checkName :: Text -> Validator Text
         checkName "" = invalid $ StateError "Empty names not allowed"
         checkName "\"\"" = invalid $ StateError "Empty names not allowed"
@@ -1012,7 +1021,7 @@ val s = do
     let stream = ETokenStream txt $ fromMaybe other lexed
     -- parseTest parseProgram stream
     let progStruct = runParser parseProgram "TEST" stream
-    
+
     case progStruct of
         Left _ -> putStrLn "error"
         Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (SymbolTable []) in

@@ -204,7 +204,7 @@ instance Flattenable ETok DomainNode where
         TupleDomainNode lt ln -> flatten lt ++ flatten ln
         RecordDomainNode lt ln -> flatten lt ++ flatten ln
         VariantDomainNode lt ln -> flatten lt ++ flatten ln
-        MatrixDomainNode a b c d e f -> concat [flatten a, flatten b, flatten c, flatten d, flatten e, flatten f]
+        MatrixDomainNode a m_ib b c d -> concat [flatten a, flatten m_ib, flatten b, flatten c, flatten d]
         SetDomainNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
         MSetDomainNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
         FunctionDomainNode a b c d e -> concat [flatten a, flatten b, flatten c, flatten d, flatten e]
@@ -212,6 +212,9 @@ instance Flattenable ETok DomainNode where
         RelationDomainNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
         PartitionDomainNode a b c d -> concat [flatten a, flatten b, flatten c, flatten d]
         MissingDomainNode _ -> []
+
+instance Flattenable ETok IndexedByNode where
+    flatten (IndexedByNode a b ) = flatten a ++ flatten b
 
 instance (Flattenable ETok a) => Flattenable ETok (Maybe a) where
     flatten (Just x) = flatten x

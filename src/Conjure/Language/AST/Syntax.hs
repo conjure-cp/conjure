@@ -157,7 +157,7 @@ data DomainNode
     | TupleDomainNode LToken (ListNode DomainNode)
     | RecordDomainNode LToken (ListNode NamedDomainNode)
     | VariantDomainNode LToken (ListNode NamedDomainNode)
-    | MatrixDomainNode LToken LToken LToken (ListNode DomainNode) LToken DomainNode
+    | MatrixDomainNode LToken (Maybe IndexedByNode) (ListNode DomainNode) LToken DomainNode
     | SetDomainNode LToken MAttributes LToken DomainNode
     | MSetDomainNode LToken MAttributes LToken DomainNode
     | FunctionDomainNode LToken MAttributes DomainNode LToken DomainNode
@@ -170,7 +170,8 @@ instance Null DomainNode where
     isMissing (MissingDomainNode {}) = True
     isMissing _ = False 
 
-
+data IndexedByNode = IndexedByNode LToken LToken
+    deriving (Show)
 data RangeNode
     = SingleRangeNode ExpressionNode
     | OpenRangeNode DoubleDotNode
@@ -386,16 +387,22 @@ data ListNode itemType = ListNode
     , lClBracket :: LToken
     }
     deriving (Show)
-instance Null (ListNode a) where
+instance (Null a) => Null (ListNode a) where
     isMissing (ListNode l1 s l2 ) = isMissing l1 && isMissing s && isMissing l2
 newtype Sequence itemType = Seq
     { elems :: [SeqElem itemType]
     }
     deriving (Show)
 
-instance Null (Sequence a) where
+instance (Null a) => Null (SeqElem a) where
+    isMissing (SeqElem i Nothing)= isMissing i
+    isMissing (SeqElem i x) = isMissing x
+    isMissing (MissingSeqElem{}) = True
+
+instance (Null a) => Null (Sequence a) where
     isMissing (Seq []) = True
-    isMissing _ = False
+    isMissing (Seq [a]) = isMissing a
+    isMissing (Seq _) = False
 
 -- deriving (Show)
 -- instance (Show a) => Show (Sequence a) where
