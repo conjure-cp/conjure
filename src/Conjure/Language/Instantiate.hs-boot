@@ -9,6 +9,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 
 instantiateExpression ::
     MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

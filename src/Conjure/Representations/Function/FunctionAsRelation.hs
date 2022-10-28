@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 
 
 functionAsRelation
-    :: forall m . (MonadFailDoc m, NameGen m)
+    :: forall m . (MonadFail m,MonadFailDoc m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m
@@ -178,11 +178,10 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            i <- downX1 inp
-            d <- downD ("SO", domain)
-            case (i,d) of 
-                ([rel],Just [(_,relDomain)]) -> innerSO downX1 rel relDomain
-                _ -> na "Pattern match error{symetryOrderingFuncAsRel}"
-        -- symOrdNMF = 
+
+            [rel] <- downX1 inp
+            Just [(_,relDomain)]<- downD ("SO", domain)
+            innerSO downX1 rel relDomain
+
 
 

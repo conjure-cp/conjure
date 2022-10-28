@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+setExplicitVarSizeWithFlags :: forall m . (MonadFail m, MonadFailDoc  m, NameGen m, EnumerateDomain m) => Representation m
 setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -112,7 +112,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
             maxSizeInt <-
                 case maxSize of
                     ConstantInt _ x -> return x
-                    _ -> fail $ vcat
+                    _ -> failDoc $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
@@ -158,26 +158,26 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up 
                                                     | (i,v) <- zip flags vals
                                                     , viewConstantBool i == Just True
                                                     ] )
-                                _ -> fail $ vcat
+                                _ -> failDoc $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (nameFlag domain name)
                                 , "But got:" <+> pretty flagMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in Set ExplicitVarSizeWithFlags up 1)"
                     , "No value for:" <+> pretty (nameFlag domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in Set ExplicitVarSizeWithFlags up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name

@@ -26,6 +26,7 @@ import Data.Text ( pack )
 --   (Just dropping wrong category stuff from attribute list isn't acceptable, because mset.)
 parameterGenerator ::
     MonadLog m =>
+    MonadFailDoc m =>
     MonadFail m =>
     MonadUserError m =>
     EnumerateDomain m =>

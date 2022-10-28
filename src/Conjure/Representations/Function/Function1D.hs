@@ -22,7 +22,7 @@ import Conjure.Representations.Common
 import qualified Data.HashMap.Strict as M
 
 
-function1D :: forall m . (MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+function1D :: forall m . (MonadFailDoc m,MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -183,11 +183,9 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
         symmetryOrdering ::TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            i <- downX1 inp
-            d <- downD ("SO", domain)
-            case (i,d) of 
-                ([inner],Just [(_,innerDomain)]) -> innerSO downX1 inner innerDomain
-                _ -> na "Pattern match error{symetryOrderingFunc1D}"
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner innerDomain
             
 
 

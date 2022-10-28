@@ -9,7 +9,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
+setOccurrence :: forall m . (MonadFailDoc m,MonadFail m, NameGen m) => Representation m
 setOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -71,13 +71,13 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
                                             | (v,b) <- zip innerDomainVals vals
                                             , viewConstantBool b == Just True
                                             ] )
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constantMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in Set Occurrence up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name

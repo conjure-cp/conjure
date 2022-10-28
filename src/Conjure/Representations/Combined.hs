@@ -46,6 +46,7 @@ import Conjure.Representations.Partition.PartitionAsSet
 --   The domain is allowed to be at the class level.
 downToX1 ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -56,6 +57,7 @@ downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 --   The domain is allowed to be at the class level.
 downD1 ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -66,6 +68,7 @@ downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 --   The domain has to be fully instantiated.
 downC1 ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -78,6 +81,7 @@ downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, consta
 --   The domain has to be fully instantiated.
 up1 ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -89,6 +93,7 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 --   The domain is allowed to be at the class level.
 downD ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -103,6 +108,7 @@ downD inp@(_, domain) = do
 --   The domain has to be fully instantiated.
 downC ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -120,6 +126,7 @@ downC inp0 = do
 --   The domain has to be fully instantiated.
 up ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -131,7 +138,7 @@ up ctxt (name, highDomain) = do
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
-                Nothing -> fail $ vcat
+                Nothing -> failDoc $ vcat
                     $ ("No value for:" <+> pretty name)
                     : "Bindings in context:"
                     : prettyContext ctxt
@@ -149,6 +156,7 @@ up ctxt (name, highDomain) = do
 -- | ...
 symmetryOrderingDispatch ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -167,6 +175,7 @@ symmetryOrderingDispatch downX1 inp domain =
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
 dispatch ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     Pretty x =>
@@ -227,6 +236,7 @@ type AllRepresentations m = [[Representation m]]
 -- | No levels!
 reprsStandardOrderNoLevels ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -239,6 +249,7 @@ reprsStandardOrderNoLevels = [concat reprsStandardOrder]
 --   We shouldn't have levels between representations in the long run.
 reprsStandardOrder ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -263,6 +274,7 @@ reprsStandardOrder =
 -- | Sparser representations are to be preferred for parameters.
 reprsSparseOrder ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -317,6 +329,7 @@ reprOptions reprs (expandDomainReference -> domain) = go reprs
 --   Takes in a function to refine inner guys.
 getStructurals ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

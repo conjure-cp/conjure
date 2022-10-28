@@ -47,6 +47,7 @@ type ToAddToRem  = ([ExpressionZ], [ExpressionZ])
 -- | Strengthen a model using type- and domain-inference.
 boost ::
     MonadFail m =>
+    MonadFailDoc m =>
     MonadIO m =>
     MonadLog m =>
     MonadUserError m =>
@@ -182,7 +183,7 @@ addAttrsToModel (n, _) depth attrs m
                 Just d' -> updateDecl (n, d') m
                 Nothing -> m
   where
-    addAttrsToDomain :: (MonadFail m) => Int -> Domain () Expression -> [AttrPair] -> m (Domain () Expression)
+    addAttrsToDomain :: (MonadFailDoc m) => Int -> Domain () Expression -> [AttrPair] -> m (Domain () Expression)
     addAttrsToDomain 0 dom = addAttributesToDomain dom . map mkAttr
     addAttrsToDomain level (DomainSet r as inner)           = addAttrsToDomain (level - 1) inner >=> (pure . DomainSet r as)
     addAttrsToDomain level (DomainMSet r as inner)          = addAttrsToDomain (level - 1) inner >=> (pure . DomainMSet r as)
@@ -190,7 +191,7 @@ addAttrsToModel (n, _) depth attrs m
     addAttrsToDomain level (DomainFunction r as from inner) = addAttrsToDomain (level - 1) inner >=> (pure . DomainFunction r as from)
     addAttrsToDomain level (DomainSequence r as inner) = addAttrsToDomain (level - 1) inner >=> (pure . DomainSequence r as)
     addAttrsToDomain level (DomainPartition r as inner)     = addAttrsToDomain (level - 1) inner >=> (pure . DomainPartition r as)
-    addAttrsToDomain _ _ = const (fail "[addAttrsToDomain] not a supported nested domain")
+    addAttrsToDomain _ _ = const (failDoc "[addAttrsToDomain] not a supported nested domain")
     -- Special treatment for functions
     mkAttr (attr, Just [essence| image(&f, &_) |])     = (attr, Just [essence| max(range(&f)) |])
     mkAttr (attr, Just [essence| image(&f, &_) - 1 |]) = (attr, Just [essence| max(range(&f)) - 1 |])
@@ -281,7 +282,7 @@ matching :: Expression
          -> Maybe (a, (Expression, Expression))
 matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
                       [x] -> pure x
-                      _   -> fail $ "no matching operator for expression:" <+> pretty e
+                      _   -> failDoc $ "no matching operator for expression:" <+> pretty e
 
 -- | (In)equality operator lens pairs.
 ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
@@ -350,7 +351,7 @@ toAddRem :: ToAddToRem -> ToAddToRem -> ToAddToRem
 toAddRem (ta, tr) = toAdd ta . toRem tr
 
 -- | Apply a rule to arbitrary levels of nested domains.
-nested :: (MonadFail m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
+nested :: (MonadFail m,MonadFailDoc m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
        => (Model -> (FindVar, [ExpressionZ])
                  -> m ([AttrPair], ToAddToRem))
        -> Model
@@ -382,7 +383,7 @@ nested rule m fc@(fv, cs) = do
 
 -- | If a function is surjective or bijective, and its domain and codomain
 --   are of equal size, then it is total and bijective.
-surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
+surjectiveIsTotalBijective :: (MonadFailDoc m, MonadLog m)
                            => Model
                            -> (FindVar, [ExpressionZ])
                            -> m ([AttrPair], ToAddToRem)
@@ -404,7 +405,7 @@ surjectiveIsTotalBijective _ ((_, dom), _)
          _ -> return mempty
 
 -- | Calculate the sizes of the domain and codomain of a function.
-functionDomainSizes :: (MonadFail m)
+functionDomainSizes :: (MonadFailDoc m)
                     => Domain () Expression       -- ^ The function's domain.
                     -> Domain () Expression       -- ^ The function's codomain.
                     -> m (Expression, Expression) -- ^ The sizes of the two.
@@ -412,7 +413,7 @@ functionDomainSizes from to = (,) <$> domainSizeOf from <*> domainSizeOf to
 
 -- | If a function is total and injective, and its domain and codomain
 --   are of equal size, then it is bijective.
-totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
+totalInjectiveIsBijective :: (MonadFailDoc m, MonadLog m)
                           => Model
                           -> (FindVar, [ExpressionZ])
                           -> m ([AttrPair], ToAddToRem)

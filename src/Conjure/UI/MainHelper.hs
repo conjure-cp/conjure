@@ -70,6 +70,7 @@ mainWithArgs :: forall m .
     MonadIO m =>
     MonadLog m =>
     MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
@@ -461,6 +462,7 @@ mainWithArgs_Modelling :: forall m .
     MonadIO m =>
     MonadLog m =>
     MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     String ->                   -- modelNamePrefix

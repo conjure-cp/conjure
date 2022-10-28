@@ -22,7 +22,7 @@ import Conjure.Process.Sanity ( sanityChecks )
 
 
 typeCheckModel_StandAlone ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     MonadLog m =>
     NameGen m =>

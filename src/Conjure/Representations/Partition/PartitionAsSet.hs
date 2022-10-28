@@ -17,7 +17,7 @@ import Conjure.Representations.Internal
 
 
 partitionAsSet
-    :: forall m . (MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
+    :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
@@ -199,8 +199,6 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            i <- downX1 inp
-            d <- downD ("SO", domain)
-            case (i,d) of 
-                ([inner],Just [(_,innerDomain)]) -> innerSO downX1 inner innerDomain
-                _ -> na "Pattern match error{symetryOrderingFunc1D}"
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner innerDomain

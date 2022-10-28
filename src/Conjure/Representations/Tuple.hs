@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 import Data.Text ( pack )
 
 
-tuple :: forall m . (MonadFailDoc m, NameGen m) => Representation m
+tuple :: forall m . (MonadFailDoc m,MonadFail m, NameGen m) => Representation m
 tuple = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

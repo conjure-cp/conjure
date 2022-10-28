@@ -17,6 +17,7 @@ import Conjure.Representations.Function.FunctionND ( viewAsDomainTupleS, mkLensA
 
 functionNDPartialDummy :: forall m .
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -209,7 +210,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return $ ConstantAbstract $ AbsLitMatrix i matrixVals
-                unrollC is prevIndices = fail $ vcat [ "FunctionNDPartialDummy.up.unrollC"
+                unrollC is prevIndices = failDoc $ vcat [ "FunctionNDPartialDummy.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
@@ -242,7 +243,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
-                                Nothing -> fail "Value not found. FunctionND.up.index"
+                                Nothing -> failDoc "Value not found. FunctionND.up.index"
                                 Just v  -> index v is
                         index m is = bug ("FunctionND.up.index" <+> pretty m <+> pretty (show is))
 
@@ -257,7 +258,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                     return ( name
                            , ConstantAbstract $ AbsLitFunction (catMaybes vals)
                            )
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in FunctionNDPartialDummy up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name

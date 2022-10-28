@@ -39,6 +39,8 @@ newtype NameGenM m a = NameGenM (StateT NameGenState m a)
              , MonadIO
              )
 
+instance (Functor m,Applicative m , Monad m,MonadFail m) => MonadFailDoc (NameGenM m) where
+    failDoc = lift . fail . show
 class (Functor m, Applicative m, Monad m) => NameGen m where
     nextName :: NameKind -> m Name
     exportNameGenState :: m [(NameKind, Int)]
@@ -106,7 +108,7 @@ instance NameGen Identity where
     exportNameGenState = failDoc "exportNameGenState{Identity}"
     importNameGenState _ = failDoc "importNameGenState{Identity}"
 
-runNameGen :: (Monad m, Data x) => x -> NameGenM m a -> m a
+runNameGen :: (Monad m, Data x,MonadFailDoc m,MonadFail m) => x -> NameGenM m a -> m a
 runNameGen avoid (NameGenM comp) =
     let initState = (M.empty, S.fromList (universeBi avoid))
     in  evalStateT comp initState

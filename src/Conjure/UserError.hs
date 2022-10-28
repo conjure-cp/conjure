@@ -101,6 +101,9 @@ instance MonadTrans UserErrorT where
         res <- comp
         return (Right res)
 
+instance (MonadFailDoc m, MonadFail m) => MonadFailDoc (UserErrorT m) where
+    failDoc = lift . failDoc
+
 instance MonadFail m => MonadFail (UserErrorT m) where
     fail = lift . fail
 

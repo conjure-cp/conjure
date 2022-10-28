@@ -23,7 +23,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 --      (indicating the total number of parts)
 --   only use part numbers from 1.._NumParts, never use the others
 --      part(i) is used -> part(i-1) is used, forAll i:int(3..maxNumParts)
-partitionOccurrence :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+partitionOccurrence :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 partitionOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -284,7 +284,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
                             | bucket <- [1..numPartsValue]
                             ]
                         )
-                (Just val, _) -> fail $ vcat $
+                (Just val, _) -> failDoc $ vcat $
                     [ "(in Partition Occurrence up)"
                     , "Expecting an integer literal for:" <+> pretty (nameNumParts domain name)
                     , "But got:" <+> pretty val
@@ -292,7 +292,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Just val) -> fail $ vcat $
+                (_, Just val) -> failDoc $ vcat $
                     [ "(in Partition Occurrence up)"
                     , "Expecting a matrix literal for:" <+> pretty (nameWhichPart domain name)
                     , "But got:" <+> pretty val
@@ -300,7 +300,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in Partition Occurrence up)"
                     , "No value for:" <+> pretty (nameNumParts domain name)
                     , "When working on:" <+> pretty name

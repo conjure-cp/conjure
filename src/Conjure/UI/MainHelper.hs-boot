@@ -10,6 +10,7 @@ mainWithArgs ::
     MonadIO m =>
     MonadLog m =>
     MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()

@@ -16,6 +16,7 @@ import Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 validateSolution ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -156,7 +157,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
 
 
 introduceRecordFields ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     Pretty r =>
     Pretty x =>

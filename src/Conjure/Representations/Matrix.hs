@@ -16,7 +16,7 @@ import Conjure.Representations.Internal
 -- | The matrix "representation rule".
 --   This rule handles the plumbing for matrices.
 matrix
-    :: forall m . (MonadFail m, NameGen m, MonadUserError m, EnumerateDomain m, ?typeCheckerMode :: TypeCheckerMode)
+    :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, MonadUserError m, EnumerateDomain m, ?typeCheckerMode :: TypeCheckerMode)
     => ((Name, DomainX Expression) -> m (Maybe [(Name, DomainX Expression)]))
     -> ((Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)]))
     -> ((Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant))
@@ -107,7 +107,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                 | (n, d, cs) <- mids3
                                 ]
                         else
-                            fail $ vcat
+                            failDoc $ vcat
                                 [ "This is weird. Heterogeneous matrix literal?"
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
@@ -127,7 +127,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     -- there needs to be a binding with "name"
                     -- and we just pass it through
                     case lookup name ctxt of
-                        Nothing -> fail $ vcat $
+                        Nothing -> failDoc $ vcat $
                             [ "(in Matrix up 1)"
                             , "No value for:" <+> pretty name
                             , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
@@ -142,7 +142,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                         :: [(Name, [Constant])]
                         <- forM mid2 $ \ (n, _) ->
                             case lookup n ctxt of
-                                Nothing -> fail $ vcat $
+                                Nothing -> failDoc $ vcat $
                                     [ "(in Matrix up 2)"
                                     , "No value for:" <+> pretty n
                                     , "When working on:" <+> pretty name
@@ -153,7 +153,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                     -- this constant is a ConstantMatrix, containing one component of the things to go into up1
                                     case viewConstantMatrix constant of
                                         Just (_, vals) -> return (n, vals)
-                                        _ -> fail $ vcat
+                                        _ -> failDoc $ vcat
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant
                                             , "When working on:" <+> pretty name
@@ -178,7 +178,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
 
                     -- -- assertion, midConstants should not be rugged
                     -- case midConstants of
-                    --     (x:xs) | any (length x /=) (map length xs) -> fail $ vcat
+                    --     (x:xs) | any (length x /=) (map length xs) -> failDoc $ vcat
                     --         [ "midConstants is rugged"
                     --         , "midConstants      :" <+> vcat (map (prettyList prBrackets ",") midConstants)
                     --         , "midConstantsPadded:" <+> vcat (map (prettyList prBrackets ",") midConstantsPadded)

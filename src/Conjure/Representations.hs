@@ -23,6 +23,7 @@ import Conjure.Representations.Combined
 -- | Refine (down) an expression (X), one level (1).
 downX1 ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -34,7 +35,7 @@ downX1 (Op x) = onOp x
 downX1 (Comprehension body stmts) = do
     xs <- downX1 body
     return [Comprehension x stmts | x <- xs]
-downX1 x@WithLocals{} = fail ("downX1:" <++> pretty (show x))
+downX1 x@WithLocals{} = failDoc ("downX1:" <++> pretty (show x))
 downX1 x = bug ("downX1:" <++> pretty (show x))
 
 
@@ -54,6 +55,7 @@ downX x = do
 
 onConstant ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -76,6 +78,7 @@ onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 
 onAbstractLiteral ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -96,6 +99,7 @@ onAbstractLiteral x = bug ("downX1.onAbstractLiteral:" <++> pretty (show x))
 
 onReference ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -103,14 +107,15 @@ onReference ::
 onReference nm refTo =
     case refTo of
         Alias x                   -> downX1 x
-        InComprehension{}         -> fail ("downX1.onReference.InComprehension:" <++> pretty (show nm))
-        DeclNoRepr{}              -> fail ("downX1.onReference.DeclNoRepr:"      <++> pretty (show nm))
+        InComprehension{}         -> failDoc ("downX1.onReference.InComprehension:" <++> pretty (show nm))
+        DeclNoRepr{}              -> failDoc ("downX1.onReference.DeclNoRepr:"      <++> pretty (show nm))
         DeclHasRepr forg _ domain -> downToX1 forg nm domain
-        RecordField{}             -> fail ("downX1.onReference.RecordField:"     <++> pretty (show nm))
-        VariantField{}            -> fail ("downX1.onReference.VariantField:"    <++> pretty (show nm))
+        RecordField{}             -> failDoc ("downX1.onReference.RecordField:"     <++> pretty (show nm))
+        VariantField{}            -> failDoc ("downX1.onReference.VariantField:"    <++> pretty (show nm))
 
 onOp ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -120,7 +125,7 @@ onOp p@(MkOpIndexing (OpIndexing m i)) = do
     case ty of
         TypeMatrix{} -> return ()
         TypeList{}   -> return ()
-        _ -> fail $ "[onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty p]
+        _ -> failDoc $ "[onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty p]
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
@@ -132,12 +137,13 @@ onOp (MkOpImage (OpImage (match functionLiteral -> Just (_, xs)) a)) | length xs
     let outs = map (zip keys) (transpose vals)
     return [ Op $ MkOpImage $ OpImage (AbstractLiteral (AbsLitFunction out)) a
            | out <- outs ]
-onOp op = fail ("downX1.onOp:" <++> pretty op)
+onOp op = failDoc ("downX1.onOp:" <++> pretty op)
 
 
 
 symmetryOrdering ::
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

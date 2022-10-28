@@ -11,7 +11,7 @@ import Conjure.Language
 import Conjure.Representations.Internal
 
 
-record :: forall m . (MonadFail m, NameGen m) => Representation m
+record :: forall m . (MonadFail m,MonadFailDoc m, NameGen m) => Representation m
 record = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -65,7 +65,7 @@ record = Representation chck downD structuralCons downC up symmetryOrdering
             let names = map (mkName name . fst) ds
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
-                    Nothing -> fail $ vcat $
+                    Nothing -> failDoc $ vcat $
                         [ "(in Record up)"
                         , "No value for:" <+> pretty n
                         , "When working on:" <+> pretty name

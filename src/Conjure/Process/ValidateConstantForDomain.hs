@@ -19,6 +19,7 @@ import Data.Set as S ( size, size, toList )
 validateConstantForDomain ::
     forall m r .
     MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -44,7 +45,7 @@ validateConstantForDomain _ (viewConstantIntWithTag -> Just (_, i)) (DomainUnnam
 
 validateConstantForDomain _ _ (DomainEnum _ Nothing _) = return ()    -- no restrictions
 validateConstantForDomain name c d@(DomainEnum _ _ Nothing) =
-    fail $ vcat [ "validateConstantForDomain: enum not handled"
+    failDoc $ vcat [ "validateConstantForDomain: enum not handled"
                 , pretty name
                 , pretty c
                 , pretty d
@@ -56,10 +57,10 @@ validateConstantForDomain name
             -- lu :: MonadFail m => Name -> m Constant
             lu (ConstantEnum _ _ nm) =
                 case lookup nm mp of
-                    Nothing -> fail $ "No value for:" <+> pretty nm
+                    Nothing -> failDoc $ "No value for:" <+> pretty nm
                     Just v  -> return (ConstantInt cTag v)
             lu (ConstantInt t v) = return (ConstantInt t v)
-            lu x = fail $ "validateConstantForDomain.lu" <+> pretty x
+            lu x = failDoc $ "validateConstantForDomain.lu" <+> pretty x
 
             -- lu2 :: MonadFail m => Range Name -> m (Range Constant)
             lu2 = mapM lu
@@ -95,7 +96,7 @@ validateConstantForDomain name
         let
             isEmptyIntDomain (DomainInt _ []) = True
             isEmptyIntDomain _ = False
-        unless (cIndex == dIndex || isEmptyIntDomain cIndex) $ fail $ vcat
+        unless (cIndex == dIndex || isEmptyIntDomain cIndex) $ failDoc $ vcat
             [ "The indices do not match between the value and the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -112,7 +113,7 @@ validateConstantForDomain name
                 SizeAttr_MinMaxSize (ConstantInt _ smin) (ConstantInt _ smax) ->
                     smin <= genericLength vals && genericLength vals <= smax
                 _ -> False
-        unless cardinalityOK $ fail $ vcat
+        unless cardinalityOK $ failDoc $ vcat
             [ "The value is not a member of the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -132,7 +133,7 @@ validateConstantForDomain name
                 SizeAttr_MinMaxSize (ConstantInt _ smin) (ConstantInt _ smax) ->
                     smin <= genericLength vals && genericLength vals <= smax
                 _ -> False
-        unless cardinalityOK $ fail $ vcat
+        unless cardinalityOK $ failDoc $ vcat
             [ "The value is not a member of the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -146,7 +147,7 @@ validateConstantForDomain name
                 OccurAttr_MinMaxOccur (ConstantInt _ smin) (ConstantInt _ smax) ->
                     and [ smin <= occ && occ <= smax | (_, occ) <- histogram vals ]
                 _ -> False
-        unless occurOK $ fail $ vcat
+        unless occurOK $ failDoc $ vcat
             [ "The value is not a member of the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -178,14 +179,14 @@ validateConstantForDomain name
                 SizeAttr_MinMaxSize (ConstantInt _ smin) (ConstantInt _ smax) ->
                     smin <= numValss && numValss <= smax
                 _ -> False
-        unless cardinalityOK $ fail $ vcat
+        unless cardinalityOK $ failDoc $ vcat
             [ "The value is not a member of the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
             , "Reason: Domain attributes are not satisfied."
             , "Specifically:" <+> pretty sizeAttr
             ]
-        when (S.size binRelAttrs > 0 && length dInners /= 2) $ fail $ vcat
+        when (S.size binRelAttrs > 0 && length dInners /= 2) $ failDoc $ vcat
             [ "The value is not a member of the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -197,14 +198,14 @@ validateConstantForDomain name
             evaluated <- instantiateExpression [] constraint
             case evaluated of
                 ConstantBool True -> return ()
-                ConstantBool False -> fail $ vcat
+                ConstantBool False -> failDoc $ vcat
                     [ "The value is not a member of the domain."
                     , "Value :" <+> pretty c
                     , "Domain:" <+> pretty d
                     , "Reason: Domain attributes are not satisfied."
                     , "Specifically:" <+> pretty a
                     ]
-                evaluatedC -> fail $ vcat
+                evaluatedC -> failDoc $ vcat
                     [ "The value is not a member of the domain."
                     , "Value :" <+> pretty c
                     , "Domain:" <+> pretty d
@@ -226,7 +227,7 @@ validateConstantForDomain name c d = constantNotInDomain name c d
 
 
 nested ::
-    MonadFail m =>
+    MonadFailDoc m =>
     Pretty c =>
     Pretty d =>
     c -> d -> ExceptT m () -> m ()
@@ -235,7 +236,7 @@ nested c d inner = do
     case mres of
         Right () -> return ()
         Left err ->
-            fail $ vcat
+            failDoc $ vcat
                 [ "The value is not a member of the domain."
                 , "Value :" <+> pretty c
                 , "Domain:" <+> pretty d
@@ -244,8 +245,8 @@ nested c d inner = do
                 ]
 
 
-constantNotInDomain :: (MonadFail m, Pretty r) => Name -> Constant -> Domain r Constant -> m ()
-constantNotInDomain n c d = fail $ vcat
+constantNotInDomain :: (MonadFailDoc m, Pretty r) => Name -> Constant -> Domain r Constant -> m ()
+constantNotInDomain n c d = failDoc $ vcat
     [ "The value is not a member of the domain."
     , "Name  :" <+> pretty n
     , "Value :" <+> pretty c

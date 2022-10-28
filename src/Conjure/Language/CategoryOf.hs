@@ -58,7 +58,7 @@ instance CategoryOf FindOrGiven where
 
 -- | Category checking to check if domains have anything >CatParameter in them.
 --   Run only after name resolution.
-categoryChecking :: (MonadFail m, MonadUserError m) => Model -> m Model
+categoryChecking :: (MonadFailDoc m, MonadUserError m) => Model -> m Model
 categoryChecking m = do
     errors1 <- fmap concat $ forM (mStatements m) $ \ st -> case st of
         Declaration (FindOrGiven _forg name domain) -> do

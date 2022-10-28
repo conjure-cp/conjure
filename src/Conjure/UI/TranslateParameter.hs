@@ -19,6 +19,7 @@ import Conjure.Representations ( downC )
 
 translateParameter ::
     MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>

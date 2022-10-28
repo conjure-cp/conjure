@@ -388,6 +388,9 @@ instance MonadFailDoc Maybe where
 instance (a ~ Doc) => MonadFailDoc (Either a) where
     failDoc = Left
 
+instance MonadFail (Either Doc) where
+    fail = failDoc . stringToDoc
+
 instance MonadFailDoc m => MonadFailDoc (IdentityT m) where
     failDoc = lift . failDoc
 
@@ -437,7 +440,8 @@ instance (Monad m) => Monad (ExceptT m) where
             Right x -> runExceptT (k x)
     -- fail = ExceptT . return . Left . stringToDoc
 
-instance (MonadFail m) => MonadFail (ExceptT m) where
+
+instance (MonadFailDoc m) => MonadFail (ExceptT m) where
     fail = ExceptT . return . Left . stringToDoc
 
 instance MonadIO m => MonadIO (ExceptT m) where
