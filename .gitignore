@@ -8,6 +8,7 @@ src/Conjure/Language/Expression/Op/Internal/Generated.hs
 stack.yaml
 cabal.config
 dist
+dist-newstyle
 cabal.sandbox.config
 .cabal-sandbox
 .stack-work
@@ -19,6 +20,8 @@ tests/parse_print/**/stdout
 tests/parse_print/**/stderr
 tests/custom/**/stdout
 tests/custom/**/stderr
+tests/json_repr/model.json
+tests/json_repr/stderr
 
 # docs
 docs/_build
