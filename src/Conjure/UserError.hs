@@ -4,15 +4,15 @@ module Conjure.UserError
     , failToUserError, failToBug
     ) where
 
-import Conjure.Prelude hiding ( fail )
-import qualified Conjure.Prelude as Prelude ( MonadFail(..) )
+import Conjure.Prelude 
+-- import qualified Conjure.Prelude as Prelude ( MonadFail(..) )
 import Conjure.Bug
 import Conjure.Language.Pretty
 
 -- base
 import System.Exit ( exitWith, ExitCode(..) )
 import System.IO as X ( stderr, hPutStrLn )
-import Control.Monad ( fail )
+
 
 -- pipes
 import qualified Pipes
@@ -88,8 +88,9 @@ instance (MonadFail m) => Monad (UserErrorT m) where
         case a of
             Left e -> return (Left e)
             Right x -> runUserErrorT (k x)
-    fail = lift . fail
 
+-- instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
+--     failDoc = lift . failDoc
 instance (MonadIO m, MonadFail m) => MonadIO (UserErrorT m) where
     liftIO comp = UserErrorT $ do
         res <- liftIO comp
@@ -101,7 +102,7 @@ instance MonadTrans UserErrorT where
         return (Right res)
 
 instance MonadFail m => MonadFail (UserErrorT m) where
-    fail = lift . Prelude.fail
+    fail = lift . fail
 
 instance MonadFail m => MonadUserError (UserErrorT m) where
     userErr msgs = UserErrorT $ return $ Left msgs

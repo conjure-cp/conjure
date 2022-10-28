@@ -14,7 +14,7 @@ import Conjure.Representations.Function.FunctionND ( viewAsDomainTuple, mkLensAs
 
 
 functionNDPartial :: forall m .
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -179,7 +179,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                 unrollD is j = foldr DomainMatrix j is
 
             let
-                unrollC :: MonadFail m
+                unrollC :: MonadFailDoc m
                         => [Domain () Constant]
                         -> [Constant]               -- indices
                         -> m (Constant, Constant)
@@ -202,7 +202,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                     return ( ConstantAbstract $ AbsLitMatrix i matrixFlags
                            , ConstantAbstract $ AbsLitMatrix i matrixVals
                            )
-                unrollC is prevIndices = fail $ vcat [ "FunctionNDPartial.up.unrollC"
+                unrollC is prevIndices = failDoc $ vcat [ "FunctionNDPartial.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
@@ -231,15 +231,15 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
             case (lookup (nameFlags domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just flagMatrix, Just valuesMatrix) -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (MonadFailDoc m, Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc m => Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
-                                Nothing -> fail "Value not found. FunctionNDPartial.up.index"
+                                Nothing -> failDoc "Value not found. FunctionNDPartial.up.index"
                                 Just v  -> index v is
                         index m is = bug ("FunctionNDPartial.up.index" <+> pretty m <+> pretty (show is))
 
@@ -250,7 +250,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                         case viewConstantBool flag of
                             Just False -> return Nothing
                             Just True  -> return (Just (mk these, value))
-                            _ -> fail $ vcat
+                            _ -> failDoc $ vcat
                                 [ "Expecting a boolean literal, but got:" <++> pretty flag
                                 , "                           , and    :" <+> pretty value
                                 , "When working on:" <+> pretty name
@@ -260,14 +260,14 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                            , ConstantAbstract $ AbsLitFunction $ catMaybes vals
                            )
 
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in FunctionNDPartial up 1)"
                     , "No value for:" <+> pretty (nameFlags domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in FunctionNDPartial up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
@@ -278,28 +278,35 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            [flags, values] <- downX1 inp
-            Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            -- [flags, values] <- downX1 inp
+            fv <- downX1 inp
+            -- Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            dom <- downD ("SO", domain)
+
             (iPat, i) <- quantifiedVar
             
-            -- setting up the quantification
-            let kRange = case innerDomainFr of
-                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
-                    DomainRecord rs -> map (fromName . fst) rs
-                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
-                                    , "indexDomain:" <+> pretty innerDomainFr
-                                    ]
-                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
-                flagsIndexed = make opMatrixIndexing flags toIndex
-                valuesIndexed = make opMatrixIndexing values toIndex
+            case (fv,dom) of
+                ([flags, values],Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)]) -> do
+                            
+                    -- setting up the quantification
+                    let kRange = case innerDomainFr of
+                            DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                            DomainRecord rs -> map (fromName . fst) rs
+                            _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                            , "indexDomain:" <+> pretty innerDomainFr
+                                            ]
+                        toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
+                        flagsIndexed = make opMatrixIndexing flags toIndex
+                        valuesIndexed = make opMatrixIndexing values toIndex
 
-            soValues <- innerSO downX1 valuesIndexed innerDomainTo
+                    soValues <- innerSO downX1 valuesIndexed innerDomainTo
 
-            return $ 
-                Comprehension
-                    [essence| ( -&flagsIndexed
-                              , &soValues
-                              )
-                            |]
-                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
+                    return $ 
+                        Comprehension
+                            [essence| ( -&flagsIndexed
+                                    , &soValues
+                                    )
+                                    |]
+                            [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
+                _ -> na "Pattern match error in Function ND partial"
 

@@ -117,7 +117,7 @@ instance Arbitrary x => Arbitrary (Domain r x) where
 
 
 typeOfDomain ::
-    MonadFail m =>
+    MonadFailDoc m =>
     Pretty r =>
     TypeOf x =>
     Pretty x =>
@@ -132,7 +132,7 @@ typeOfDomain d@(DomainIntE x)          = do
         TypeList     (TypeInt TagInt) -> return ()
         TypeMatrix _ (TypeInt TagInt) -> return ()
         TypeSet      (TypeInt TagInt) -> return ()
-        _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
+        _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
     return (TypeInt TagInt)
@@ -141,7 +141,7 @@ typeOfDomain d@(DomainInt t rs)        = do
         ty <- typeOf x
         case ty of
             TypeInt{} -> return ()
-            _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
+            _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
                              , "For:" <+> pretty x
                              , "In domain:" <+> pretty d
                              ]
@@ -164,7 +164,7 @@ typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
         then return (mostDefined ts)
-        else fail ("Type error in" <+> pretty p)
+        else failDoc ("Type error in" <+> pretty p)
 typeOfDomain (DomainReference _ (Just d)) = typeOfDomain d
 typeOfDomain (DomainReference nm Nothing) = bug $ "typeOfDomain: DomainReference" <+> pretty nm
 typeOfDomain (DomainMetaVar nm) = bug $ "typeOfDomain: DomainMetaVar &" <> pretty nm
@@ -257,7 +257,7 @@ reprTree DomainMetaVar{}   = Tree Nothing []
 reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel = rootLabel . reprTree
 
-applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
+applyReprTree :: (MonadFailDoc m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
 applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainIntE{}    (Tree Nothing []) = return (defRepr dom)
@@ -279,7 +279,7 @@ applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainParti
 applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
-applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
+applyReprTree dom _ = failDoc $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
@@ -663,7 +663,7 @@ instance Pretty BinaryRelationAttr where
     pretty BinRelAttr_StrictPartialOrder = "strictPartialOrder"
 
 
-readBinRel :: MonadFail m => AttrName -> m BinaryRelationAttr
+readBinRel :: MonadFailDoc m => AttrName -> m BinaryRelationAttr
 readBinRel AttrName_reflexive          = return BinRelAttr_Reflexive
 readBinRel AttrName_irreflexive        = return BinRelAttr_Irreflexive
 readBinRel AttrName_coreflexive        = return BinRelAttr_Coreflexive
@@ -683,7 +683,7 @@ readBinRel AttrName_strictPartialOrder = return BinRelAttr_StrictPartialOrder
 readBinRel AttrName_linearOrder        = return BinRelAttr_LinearOrder
 readBinRel AttrName_weakOrder          = return BinRelAttr_WeakOrder
 readBinRel AttrName_preOrder           = return BinRelAttr_PreOrder
-readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
+readBinRel a = failDoc $ "Not a binary relation attribute:" <+> pretty a
 
 binRelToAttrName :: BinaryRelationAttr -> AttrName
 binRelToAttrName BinRelAttr_Reflexive          = AttrName_reflexive
@@ -793,14 +793,14 @@ instance Arbitrary a => Arbitrary (Range a) where
         , RangeBounded <$> arbitrary <*> arbitrary
         ]
 
-rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Integer]
+rangesInts :: (MonadFailDoc m, ExpressionLike c) => [Range c] -> m [Integer]
 rangesInts = fmap (sortNub . concat) . mapM rangeInts
     where
         rangeInts (RangeSingle x) = return <$> intOut "rangeInts 1" x
         rangeInts (RangeBounded x y) = do x' <- intOut "rangeInts 2" x
                                           y' <- intOut "rangeInts 3" y
                                           return [x' .. y']
-        rangeInts _ = fail "Infinite range (or not an integer range)"
+        rangeInts _ = failDoc "Infinite range (or not an integer range)"
 
 expandRanges :: ExpressionLike c => [Range c] -> [Range c]
 expandRanges [RangeBounded a b] = [RangeBounded a b]
@@ -1051,14 +1051,14 @@ normaliseRange  norm (RangeLowerBounded x) = RangeLowerBounded (norm x)
 normaliseRange  norm (RangeUpperBounded x) = RangeUpperBounded (norm x)
 normaliseRange  norm (RangeBounded x y)    = RangeBounded (norm x) (norm y)
 
-innerDomainOf :: (MonadFail m, Show x) => Domain () x -> m (Domain () x)
+innerDomainOf :: (MonadFailDoc m, Show x) => Domain () x -> m (Domain () x)
 innerDomainOf (DomainMatrix _ t) = return t
 innerDomainOf (DomainSet _ _ t) = return t
 innerDomainOf (DomainMSet _ _ t) = return t
 innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
 innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
 innerDomainOf (DomainPartition _ _ t) = return (DomainSet () def t)
-innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
+innerDomainOf t = failDoc ("innerDomainOf:" <+> pretty (show t))
 
 singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x
 singletonDomainInt (DomainInt _ [RangeSingle a]) = Just a

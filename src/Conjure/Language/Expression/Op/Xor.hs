@@ -22,6 +22,8 @@ instance FromJSON  x => FromJSON  (OpXor x) where parseJSON = genericParseJSON j
 instance BinaryOperator (OpXor x) where
     opLexeme _ = L_Or
 
+
+
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpXor x) where
     typeOf p@(OpXor x) = do
         ty <- typeOf x

@@ -49,7 +49,7 @@ matchDefs fs inp =
 opMinus
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -68,7 +68,7 @@ opMinus _ =
 opDiv
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -87,7 +87,7 @@ opDiv _ =
 opMod
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -106,7 +106,7 @@ opMod _ =
 opPow
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -125,7 +125,7 @@ opPow _ =
 opNegate
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -144,7 +144,7 @@ opNegate _ =
 opDontCare
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -161,7 +161,7 @@ opDontCare _ =
 
 
 opDefined
-    :: MonadFail m
+    :: MonadFailDoc m
     => Proxy (m :: * -> *)
     -> ( Expression -> Expression
        , Expression -> m Expression
@@ -176,7 +176,7 @@ opDefined _ =
 
 
 opRange
-    :: MonadFail m
+    :: MonadFailDoc m
     => Proxy (m :: * -> *)
     -> ( Expression -> Expression
        , Expression -> m Expression
@@ -193,7 +193,7 @@ opRange _ =
 opDefinedOrRange
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
@@ -209,7 +209,7 @@ opDefinedOrRange _ =
 
 
 opRestrict
-    :: MonadFail m
+    :: MonadFailDoc m
     => Proxy (m :: * -> *)
     -> ( Expression -> Domain () Expression -> Expression
        , Expression -> m (Expression, Domain () Expression)
@@ -226,7 +226,7 @@ opRestrict _ =
 opToInt
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -245,7 +245,7 @@ opToInt _ =
 opPowerSet
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -264,7 +264,7 @@ opPowerSet _ =
 opToSet
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -283,7 +283,7 @@ opToSet _ =
 opToSetWithFlag
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( Bool -> x -> x
@@ -302,7 +302,7 @@ opToSetWithFlag _ =
 opToMSet
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -321,7 +321,7 @@ opToMSet _ =
 opToRelation
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -340,7 +340,7 @@ opToRelation _ =
 opParts
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -359,7 +359,7 @@ opParts _ =
 opParty
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -378,7 +378,7 @@ opParty _ =
 opParticipants
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -397,7 +397,7 @@ opParticipants _ =
 opImage
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -416,7 +416,7 @@ opImage _ =
 opImageSet
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -434,7 +434,7 @@ opImageSet _ =
 opTransform
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -453,7 +453,7 @@ opTransform _ =
 opRelationProj
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> [Maybe x] -> x
@@ -472,7 +472,7 @@ opRelationProj _ =
 opRelationImage
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> [x] -> x
@@ -494,7 +494,7 @@ opRelationImage _ =
 opIndexing
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -514,7 +514,7 @@ opMatrixIndexing
     :: ( Op x :< x
        , Pretty x
        , TypeOf x
-       , MonadFail m
+       , MonadFailDoc m
        , ?typeCheckerMode :: TypeCheckerMode
        )
     => Proxy (m :: * -> *)
@@ -545,7 +545,7 @@ opMatrixIndexing _ =
 opMatrixIndexingSlicing
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        , TypeOf x
        , ?typeCheckerMode :: TypeCheckerMode
        )
@@ -589,7 +589,7 @@ opMatrixIndexingSlicing _ =
 opSlicing
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> Maybe x -> Maybe x -> x
@@ -608,7 +608,7 @@ opSlicing _ =
 opFlatten
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -648,7 +648,7 @@ oneDimensionaliser dims x =
 opConcatenate
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -667,7 +667,7 @@ opConcatenate _ =
 opIn
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -686,7 +686,7 @@ opIn _ =
 opFreq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -705,7 +705,7 @@ opFreq _ =
 opHist
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -724,7 +724,7 @@ opHist _ =
 opIntersect
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -743,7 +743,7 @@ opIntersect _ =
 opUnion
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -762,7 +762,7 @@ opUnion _ =
 opSubsetEq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -781,7 +781,7 @@ opSubsetEq _ =
 opEq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -800,7 +800,7 @@ opEq _ =
 opNeq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -819,7 +819,7 @@ opNeq _ =
 opLt
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -838,7 +838,7 @@ opLt _ =
 opLeq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -857,7 +857,7 @@ opLeq _ =
 opGt
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -876,7 +876,7 @@ opGt _ =
 opGeq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -895,7 +895,7 @@ opGeq _ =
 opDotLt
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -914,7 +914,7 @@ opDotLt _ =
 opDotLeq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -933,7 +933,7 @@ opDotLeq _ =
 opTildeLt
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -952,7 +952,7 @@ opTildeLt _ =
 opTildeLeq
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -971,7 +971,7 @@ opTildeLeq _ =
 opOr
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -990,7 +990,7 @@ opOr _ =
 opAnd
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1009,7 +1009,7 @@ opAnd _ =
 opMax
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1028,7 +1028,7 @@ opMax _ =
 opMin
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1047,7 +1047,7 @@ opMin _ =
 opImply
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -1066,7 +1066,7 @@ opImply _ =
 opNot
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1085,7 +1085,7 @@ opNot _ =
 opProduct
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1104,7 +1104,7 @@ opProduct _ =
 opSum
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1126,7 +1126,7 @@ data ReducerType = RepetitionIsNotSignificant | RepetitionIsSignificant
 opReducer
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
@@ -1156,7 +1156,7 @@ opReducer _ =
 
 opModifier
     :: ( Op x :< x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
@@ -1175,7 +1175,7 @@ opModifier _ =
 
 opModifierNoP
     :: ( Op x :< x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
@@ -1194,7 +1194,7 @@ opModifierNoP _ =
 opAllDiff
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1213,7 +1213,7 @@ opAllDiff _ =
 opAllDiffExcept
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -1230,7 +1230,7 @@ opAllDiffExcept _ =
 
 
 constantInt
-    :: MonadFail m
+    :: MonadFailDoc m
     => Proxy (m :: * -> *)
     -> ( Integer -> Expression
        , Expression -> m Integer
@@ -1244,7 +1244,7 @@ constantInt _ =
 
 
 matrixLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> Domain () Expression -> [Expression] -> Expression
        , Expression -> m (Type, Domain () Expression, [Expression])
@@ -1298,7 +1298,7 @@ onMatrixLiteral mlvl f = case mlvl of
 
 
 setLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1322,7 +1322,7 @@ setLiteral _ =
 
 
 msetLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1346,7 +1346,7 @@ msetLiteral _ =
 
 
 functionLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [(Expression,Expression)] -> Expression
        , Expression -> m (Type, [(Expression,Expression)])
@@ -1370,7 +1370,7 @@ functionLiteral _ =
 
 
 sequenceLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1394,7 +1394,7 @@ sequenceLiteral _ =
 
 
 relationLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
@@ -1418,7 +1418,7 @@ relationLiteral _ =
 
 
 partitionLiteral
-    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
@@ -1444,7 +1444,7 @@ partitionLiteral _ =
 opTwoBars
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1463,7 +1463,7 @@ opTwoBars _ =
 opPreImage
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x -> x
@@ -1482,7 +1482,7 @@ opPreImage _ =
 opActive
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> Name -> x
@@ -1501,7 +1501,7 @@ opActive _ =
 opFactorial
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( x -> x
@@ -1520,7 +1520,7 @@ opFactorial _ =
 opLex
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x -> x, (x,x)) -> x
@@ -1538,7 +1538,7 @@ opLex _ =
 opOrdering
     :: ( Op x :< x
        , Pretty x
-       , MonadFail m
+       , MonadFailDoc m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x -> x, (x,x)) -> x
@@ -1577,32 +1577,32 @@ fixRelationProj= transformBi f
                 _ -> p
 
 
-maxOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-maxOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.maxOfDomain []"
+maxOfDomain :: (MonadFailDoc m, Pretty r) => Domain r Expression -> m Expression
+maxOfDomain (DomainInt _ [] ) = failDoc "rule_DomainMinMax.maxOfDomain []"
 maxOfDomain (DomainInt _ [r]) = maxOfRange r
 maxOfDomain (DomainInt _ rs ) = do
     xs <- mapM maxOfRange rs
     return (make opMax (fromList xs))
 maxOfDomain (DomainReference _ (Just d)) = maxOfDomain d
-maxOfDomain d = fail ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
+maxOfDomain d = failDoc ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
 
-maxOfRange :: MonadFail m => Range Expression -> m Expression
+maxOfRange :: MonadFailDoc m => Range Expression -> m Expression
 maxOfRange (RangeSingle x) = return x
 maxOfRange (RangeBounded _ x) = return x
 maxOfRange (RangeUpperBounded x) = return x
-maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty (show r))
+maxOfRange r = failDoc ("rule_DomainMinMax.maxOfRange" <+> pretty (show r))
 
-minOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-minOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.minOfDomain []"
+minOfDomain :: (MonadFailDoc m, Pretty r) => Domain r Expression -> m Expression
+minOfDomain (DomainInt _ [] ) = failDoc "rule_DomainMinMax.minOfDomain []"
 minOfDomain (DomainInt _ [r]) = minOfRange r
 minOfDomain (DomainInt _ rs ) = do
     xs <- mapM minOfRange rs
     return (make opMin (fromList xs))
 minOfDomain (DomainReference _ (Just d)) = minOfDomain d
-minOfDomain d = fail ("rule_DomainMinMax.minOfDomain" <+> pretty d)
+minOfDomain d = failDoc ("rule_DomainMinMax.minOfDomain" <+> pretty d)
 
-minOfRange :: MonadFail m => Range Expression -> m Expression
+minOfRange :: MonadFailDoc m => Range Expression -> m Expression
 minOfRange (RangeSingle x) = return x
 minOfRange (RangeBounded x _) = return x
 minOfRange (RangeLowerBounded x) = return x
-minOfRange r = fail ("rule_DomainMinMax.minOfRange" <+> pretty (show r))
+minOfRange r = failDoc ("rule_DomainMinMax.minOfRange" <+> pretty (show r))

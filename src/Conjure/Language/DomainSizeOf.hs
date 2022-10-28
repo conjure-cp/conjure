@@ -13,7 +13,7 @@ import Conjure.Language.Pretty
 
 class DomainSizeOf x res where
     domainSizeOf ::
-        ( MonadFail m
+        ( MonadFailDoc m
         , Pretty r
         , Default r
         ) => Domain r x -> m res

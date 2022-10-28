@@ -146,7 +146,7 @@ instance DomainSizeOf Constant Integer where
     domainSizeOf DomainBool{} = return 2
     domainSizeOf (DomainIntE x) = bug ("not implemented, domainSizeOf DomainIntE" <+> pretty (show x))
     domainSizeOf (DomainInt _ rs) = domainSizeOfRanges rs
-    domainSizeOf DomainEnum{} = fail "domainSizeOf: Unknown for given enum."
+    domainSizeOf DomainEnum{} = failDoc  "domainSizeOf: Unknown for given enum."
     domainSizeOf (DomainTuple ds) = product <$> mapM domainSizeOf ds
     domainSizeOf (DomainMatrix index inner) = intPow <$> domainSizeOf inner <*> domainSizeOf index
     domainSizeOf d@(DomainSet _ (SetAttr attrs) inner) =
@@ -167,7 +167,7 @@ instance DomainSizeOf Constant Integer where
             SizeAttr_MinMaxSize (ConstantInt _ minSize) (ConstantInt _ maxSize) -> do
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
-            _ -> fail ("domainSizeOf{Constant}" <+> pretty d)
+            _ -> failDoc  ("domainSizeOf{Constant}" <+> pretty d)
     domainSizeOf DomainMSet      {} = bug "not implemented: domainSizeOf DomainMSet"
     domainSizeOf DomainFunction  {} = bug "not implemented: domainSizeOf DomainFunction"
     domainSizeOf DomainRelation  {} = bug "not implemented: domainSizeOf DomainRelation"
@@ -188,7 +188,7 @@ emptyCollection ConstantFromJSON{} = False
 intPow :: Integer -> Integer -> Integer
 intPow = (^)
 
-domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
+domainSizeOfRanges :: MonadFailDoc m => [Range Constant] -> m Integer
 domainSizeOfRanges = fmap genericLength . valuesInIntDomain
 
 instance DomainSizeOf Constant Constant where
@@ -231,18 +231,18 @@ instance ExpressionLike Constant where
     fromInt = ConstantInt TagInt
     fromIntWithTag i t = ConstantInt t i
     intOut _ (ConstantInt _ x) = return x
-    intOut doc c = fail $ vcat [ "Expecting an integer, but found:" <+> pretty c
+    intOut doc c = failDoc  $ vcat [ "Expecting an integer, but found:" <+> pretty c
                                , "Called from:" <+> doc
                                ]
 
     fromBool = ConstantBool
     boolOut (ConstantBool x) = return x
     boolOut ConstantUndefined{} = return False
-    boolOut c = fail ("Expecting a boolean, but found:" <+> pretty c)
+    boolOut c = failDoc  ("Expecting a boolean, but found:" <+> pretty c)
 
     fromList xs = ConstantAbstract $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (ConstantAbstract (AbsLitMatrix _ xs)) = return xs
-    listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
+    listOut c = failDoc  ("Expecting a matrix literal, but found:" <+> pretty c)
 
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} fromName --" <+> pretty name)
@@ -252,7 +252,7 @@ instance ReferenceContainer Constant where
 instance DomainContainer Constant (Domain ()) where
     fromDomain = DomainInConstant
     domainOut (DomainInConstant dom) = return dom
-    domainOut _ = fail "domainOut{Constant}"
+    domainOut _ = fail  "domainOut{Constant}"
 
 mkUndef :: Type -> Doc -> Constant
 mkUndef TypeBool _ = ConstantBool False
@@ -287,11 +287,11 @@ instance Num Constant where
     fromInteger = ConstantInt TagInt . fromInteger
 
 
-valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
+valuesInIntDomain :: MonadFailDoc m => [Range Constant] -> m [Integer]
 valuesInIntDomain ranges =
     if isFinite
         then return allValues
-        else fail $ "Expected finite integer ranges, but got:" <++> prettyList id "," ranges
+        else failDoc  $ "Expected finite integer ranges, but got:" <++> prettyList id "," ranges
 
     where
 
@@ -312,55 +312,55 @@ valuesInIntDomain ranges =
         allValues = sortNub $ concat $ catMaybes allRanges
 
 
-viewConstantBool :: MonadFail m => Constant -> m Bool
+viewConstantBool :: MonadFailDoc m => Constant -> m Bool
 viewConstantBool (ConstantBool i) = return i
 viewConstantBool (ConstantInt _ 0) = return False
 viewConstantBool (ConstantInt _ 1) = return True
-viewConstantBool constant = fail ("Expecting a boolean, but got:" <++> pretty constant)
+viewConstantBool constant = failDoc  ("Expecting a boolean, but got:" <++> pretty constant)
 
-viewConstantInt :: MonadFail m => Constant -> m Integer
+viewConstantInt :: MonadFailDoc m => Constant -> m Integer
 viewConstantInt (ConstantInt _ i) = return i
-viewConstantInt constant = fail ("Expecting an integer, but got:" <++> pretty constant)
+viewConstantInt constant = failDoc  ("Expecting an integer, but got:" <++> pretty constant)
 
-viewConstantIntWithTag :: MonadFail m => Constant -> m (IntTag, Integer)
+viewConstantIntWithTag :: MonadFailDoc m => Constant -> m (IntTag, Integer)
 viewConstantIntWithTag (ConstantInt t i) = return (t, i)
-viewConstantIntWithTag constant = fail ("Expecting an integer, but got:" <++> pretty constant)
+viewConstantIntWithTag constant = failDoc  ("Expecting an integer, but got:" <++> pretty constant)
 
-viewConstantTuple :: MonadFail m => Constant -> m [Constant]
+viewConstantTuple :: MonadFailDoc m => Constant -> m [Constant]
 viewConstantTuple (ConstantAbstract (AbsLitTuple xs)) = return xs
 viewConstantTuple (TypedConstant c _) = viewConstantTuple c
 viewConstantTuple (ConstantFromJSON xs) = return xs
-viewConstantTuple constant = fail ("Expecting a tuple, but got:" <++> pretty constant)
+viewConstantTuple constant = failDoc  ("Expecting a tuple, but got:" <++> pretty constant)
 
-viewConstantRecord :: MonadFail m => Constant -> m [(Name, Constant)]
+viewConstantRecord :: MonadFailDoc m => Constant -> m [(Name, Constant)]
 viewConstantRecord (ConstantAbstract (AbsLitRecord xs)) = return (sortOn fst xs)
 viewConstantRecord (TypedConstant c _) = viewConstantRecord c
-viewConstantRecord constant = fail ("Expecting a record, but got:" <++> pretty constant)
+viewConstantRecord constant = failDoc  ("Expecting a record, but got:" <++> pretty constant)
 
-viewConstantVariant :: MonadFail m => Constant -> m (Maybe [(Name, Domain () Constant)], Name, Constant)
+viewConstantVariant :: MonadFailDoc m => Constant -> m (Maybe [(Name, Domain () Constant)], Name, Constant)
 viewConstantVariant (ConstantAbstract (AbsLitVariant lu nm x)) = return (lu, nm, x)
 viewConstantVariant (TypedConstant c _) = viewConstantVariant c
-viewConstantVariant constant = fail ("Expecting a variant, but got:" <++> pretty constant)
+viewConstantVariant constant = failDoc  ("Expecting a variant, but got:" <++> pretty constant)
 
-viewConstantMatrix :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
+viewConstantMatrix :: MonadFailDoc m => Constant -> m (Domain () Constant, [Constant])
 viewConstantMatrix (ConstantAbstract (AbsLitMatrix ind xs)) = return (expandDomainReference ind, xs)
 viewConstantMatrix (TypedConstant c _) = viewConstantMatrix c
 viewConstantMatrix (ConstantFromJSON xs) = return (DomainInt TagInt [RangeBounded 1 (genericLength xs)] ,xs)
-viewConstantMatrix constant = fail ("Expecting a matrix, but got:" <++> pretty constant)
+viewConstantMatrix constant = failDoc  ("Expecting a matrix, but got:" <++> pretty constant)
 
-viewConstantSet :: MonadFail m => Constant -> m [Constant]
+viewConstantSet :: MonadFailDoc m => Constant -> m [Constant]
 viewConstantSet (ConstantAbstract (AbsLitSet xs)) = return xs
 viewConstantSet (TypedConstant c _) = viewConstantSet c
 viewConstantSet (ConstantFromJSON xs) = return xs
-viewConstantSet constant = fail ("Expecting a set, but got:" <++> pretty constant)
+viewConstantSet constant = failDoc  ("Expecting a set, but got:" <++> pretty constant)
 
-viewConstantMSet :: MonadFail m => Constant -> m [Constant]
+viewConstantMSet :: MonadFailDoc m => Constant -> m [Constant]
 viewConstantMSet (ConstantAbstract (AbsLitMSet xs)) = return xs
 viewConstantMSet (TypedConstant c _) = viewConstantMSet c
 viewConstantMSet (ConstantFromJSON xs) = return xs
-viewConstantMSet constant = fail ("Expecting an mset, but got:" <++> pretty constant)
+viewConstantMSet constant = failDoc ("Expecting an mset, but got:" <++> pretty constant)
 
-viewConstantFunction :: MonadFail m => Constant -> m [(Constant, Constant)]
+viewConstantFunction :: MonadFailDoc m => Constant -> m [(Constant, Constant)]
 viewConstantFunction (ConstantAbstract (AbsLitFunction xs)) = return xs
 viewConstantFunction (TypedConstant c _) = viewConstantFunction c
 viewConstantFunction constant = do
@@ -371,26 +371,26 @@ viewConstantFunction constant = do
                 return $ Just $ pretty $ AbsLitFunction (zip (map (ConstantInt TagInt) froms) vals)
             _ -> return Nothing
     suggestion >>= \case
-        Nothing  -> fail ("Expecting a function, but got:" <++> pretty constant)
-        Just sug -> fail (vcat [ "Expecting a function, but got:" <++> pretty constant
+        Nothing  -> failDoc ("Expecting a function, but got:" <++> pretty constant)
+        Just sug -> failDoc (vcat [ "Expecting a function, but got:" <++> pretty constant
                                , "Maybe you meant:" <++> sug
                                ])
 
-viewConstantSequence :: MonadFail m => Constant -> m [Constant]
+viewConstantSequence :: MonadFailDoc m => Constant -> m [Constant]
 viewConstantSequence (ConstantAbstract (AbsLitSequence xs)) = return xs
 viewConstantSequence (TypedConstant c _) = viewConstantSequence c
 viewConstantSequence (ConstantFromJSON xs) = return xs
-viewConstantSequence constant = fail ("Expecting a sequence, but got:" <++> pretty constant)
+viewConstantSequence constant = failDoc ("Expecting a sequence, but got:" <++> pretty constant)
 
-viewConstantRelation :: MonadFail m => Constant -> m [[Constant]]
+viewConstantRelation :: MonadFailDoc m => Constant -> m [[Constant]]
 viewConstantRelation (ConstantAbstract (AbsLitRelation xs)) = return xs
 viewConstantRelation (TypedConstant c _) = viewConstantRelation c
 viewConstantRelation (ConstantFromJSON xs) = mapM viewConstantTuple xs
-viewConstantRelation constant = fail ("Expecting a relation, but got:" <++> pretty constant)
+viewConstantRelation constant = failDoc ("Expecting a relation, but got:" <++> pretty constant)
 
-viewConstantPartition :: MonadFail m => Constant -> m [[Constant]]
+viewConstantPartition :: MonadFailDoc m => Constant -> m [[Constant]]
 viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
 viewConstantPartition (TypedConstant c _) = viewConstantPartition c
 viewConstantPartition (ConstantFromJSON xs) = mapM viewConstantSet xs
-viewConstantPartition constant = fail ("Expecting a partition, but got:" <++> pretty constant)
+viewConstantPartition constant = failDoc ("Expecting a partition, but got:" <++> pretty constant)
 

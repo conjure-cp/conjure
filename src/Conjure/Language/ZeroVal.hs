@@ -9,7 +9,7 @@ import Conjure.Language.Pretty
 import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
 
 
-zeroVal :: (MonadFail m, EnumerateDomain m, Pretty r) => Domain r Constant -> m Constant
+zeroVal :: (MonadFailDoc m, EnumerateDomain m, Pretty r) => Domain r Constant -> m Constant
 zeroVal DomainBool = return $ ConstantBool False
 zeroVal (DomainInt t []) = return $ ConstantInt t 0
 zeroVal (DomainInt _ (r:_)) = zeroValR r

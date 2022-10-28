@@ -28,7 +28,7 @@ import qualified Data.HashMap.Strict as M
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
 removeEnumsFromModel ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     MonadUserError m =>
     Model -> m Model
@@ -85,7 +85,7 @@ removeEnumsFromModel =
                     = return (fromIntWithTag i (TagEnum ename))
                 onX p = return p
 
-                onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
+                onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
                 onD (DomainEnum nm@(Name nmText) (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
                     = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
@@ -148,7 +148,7 @@ removeEnumsFromModel =
 
 
 removeEnumsFromParam
-    :: (MonadFail m, MonadUserError m)
+    :: (MonadFailDoc m, MonadUserError m)
     => Model -> Model -> m (Model, Model)
 removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
@@ -185,7 +185,7 @@ removeEnumsFromParam model param = do
             = return (fromIntWithTag i (TagEnum ename))
         onX p = return p
 
-        onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
+        onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm@(Name nmText) (Just ranges) _)
             | Just _ <- M.lookup nm enumDomainNames
             = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
@@ -289,9 +289,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                                                              ])
 
 -- first Name is the value, the second Name is the name of the enum domain
-nameToX :: MonadFail m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
+nameToX :: MonadFailDoc m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
 nameToX nameToIntMapping (Reference nm _) = case M.lookup nm nameToIntMapping of
-    Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
+    Nothing -> failDoc (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
     Just (Name ename, i)  -> return (fromIntWithTag i (TagEnum ename))
     Just (ename, i) -> bug $ "nameToX, nm:" <+> vcat [pretty (show ename), pretty i]
 nameToX _ x = return x

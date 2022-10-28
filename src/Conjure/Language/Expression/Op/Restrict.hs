@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 
 module Conjure.Language.Expression.Op.Restrict where
 
@@ -23,7 +24,7 @@ instance FromJSON  x => FromJSON  (OpRestrict x) where parseJSON = genericParseJ
 instance (TypeOf x, Pretty x, Domain () x :< x) => TypeOf (OpRestrict x) where
     typeOf p@(OpRestrict f domX) = do
         dom :: Domain () x   <- project domX
-        TypeFunction from to <- typeOf f
+        (from ,to )<- getFunctionTypes f
         from'                <- typeOfDomain dom
         if typesUnify [from, from']
             then return (TypeFunction (mostDefined [from', from]) to)
@@ -43,3 +44,6 @@ instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRestrict x)
             , varSymBreakingDescription b
             ])
         ]
+
+
+    

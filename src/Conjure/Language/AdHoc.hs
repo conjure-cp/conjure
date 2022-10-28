@@ -19,17 +19,17 @@ import Data.Scientific ( floatingOrInteger )
 class ExpressionLike a where
     fromInt :: Integer -> a
     fromIntWithTag :: Integer -> IntTag -> a
-    intOut :: MonadFail m => Doc -> a -> m Integer
+    intOut :: MonadFailDoc m => Doc -> a -> m Integer
 
     fromBool :: Bool -> a
-    boolOut :: MonadFail m => a -> m Bool
+    boolOut :: MonadFailDoc m => a -> m Bool
 
     fromList :: [a] -> a
-    listOut :: MonadFail m => a -> m [a]
+    listOut :: MonadFailDoc m => a -> m [a]
 
 class ReferenceContainer a where
     fromName :: Name -> a
-    nameOut :: MonadFail m => a -> m Name
+    nameOut :: MonadFailDoc m => a -> m Name
 
 class DomainContainer a dom where
     fromDomain :: dom a -> a
@@ -43,7 +43,7 @@ class VarSymBreakingDescription a where
 
 class (:<) a b where
     inject :: a -> b
-    project :: MonadFail m => b -> m a
+    project :: MonadFailDoc m => b -> m a
 
 data MiniZincData = MZNBool Bool
                   | MZNInt Integer

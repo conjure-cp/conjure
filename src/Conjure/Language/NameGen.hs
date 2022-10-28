@@ -97,14 +97,14 @@ instance (Functor m, Monad m) => NameGen (NameGenM m) where
     importNameGenState st = modify $ \ (_, avoid) -> (M.fromList st, avoid)
 
 instance NameGen (Either Doc) where
-    nextName _ = fail "nextName{Either Doc}"
-    exportNameGenState = fail "exportNameGenState{Either Doc}"
-    importNameGenState _ = fail "importNameGenState{Either Doc}"
+    nextName _ = failDoc "nextName{Either Doc}"
+    exportNameGenState = failDoc "exportNameGenState{Either Doc}"
+    importNameGenState _ = failDoc "importNameGenState{Either Doc}"
 
 instance NameGen Identity where
-    nextName _ = fail "nextName{Identity}"
-    exportNameGenState = fail "exportNameGenState{Identity}"
-    importNameGenState _ = fail "importNameGenState{Identity}"
+    nextName _ = failDoc "nextName{Identity}"
+    exportNameGenState = failDoc "exportNameGenState{Identity}"
+    importNameGenState _ = failDoc "importNameGenState{Identity}"
 
 runNameGen :: (Monad m, Data x) => x -> NameGenM m a -> m a
 runNameGen avoid (NameGenM comp) =

@@ -53,7 +53,7 @@ resolveNames_ model = failToUserError $ do
 -- this is for when a name will shadow an already existing name that is outside of this expression
 -- we rename the new names to avoid name shadowing
 shadowing ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, ReferenceTo)] m =>
     NameGen m =>
     Expression -> m Expression
@@ -75,7 +75,7 @@ shadowing p = return p
 
 
 resolveNamesX ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -94,13 +94,13 @@ toTaggedInt = transformBi f
         f ty = ty
 
 
-check :: MonadFail m => Expression -> m ()
-check (Reference nm Nothing) = fail ("Undefined:" <+> pretty nm)
+check :: MonadFailDoc m => Expression -> m ()
+check (Reference nm Nothing) = failDoc ("Undefined:" <+> pretty nm)
 check _ = return ()
 
 
 resolveStatement ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     NameGen m =>
@@ -143,7 +143,7 @@ resolveStatement st =
 
 
 resolveSearchOrder ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     NameGen m =>
@@ -163,7 +163,7 @@ resolveSearchOrder (Cut x) =
 
 
 resolveX ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     NameGen m =>
@@ -180,7 +180,7 @@ resolveX (Reference nm Nothing) = do
 resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolving
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> return p                             -- hence, do not fail if not in the context
+        Nothing -> return p                             -- hence, do not failDoc if not in the context
         Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
             | DeclHasRepr{} <- refto                    -- but the old one did, do not update
             -> return p
@@ -250,7 +250,7 @@ resolveX x = descendM resolveX x
 
 
 resolveD ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     NameGen m =>
@@ -308,7 +308,7 @@ resolveAbsPat context (AbsPatSet ps) x = do
 
 
 resolveAbsLit ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     NameGen m =>

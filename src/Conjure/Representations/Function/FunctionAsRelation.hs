@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 
 
 functionAsRelation
-    :: forall m . (MonadFail m, NameGen m)
+    :: forall m . (MonadFailDoc m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m
@@ -154,17 +154,17 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
             case lookup (outName domain name) ctxt of
                 Just (viewConstantRelation -> Just  pairs) -> do
                     let pairOut [a,b] = return (a,b)
-                        pairOut c = fail $ "Expecting a 2-tuple, but got:" <++> prettyList prParens "," c
+                        pairOut c = failDoc $ "Expecting a 2-tuple, but got:" <++> prettyList prParens "," c
                     vals <- mapM pairOut pairs
                     return (name, ConstantAbstract (AbsLitFunction vals))
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in FunctionAsRelation up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                Just constant -> fail $ vcat $
+                Just constant -> failDoc $ vcat $
                     [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
@@ -178,7 +178,11 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            [rel] <- downX1 inp
-            Just [(_, relDomain)] <- downD ("SO", domain)
-            innerSO downX1 rel relDomain
+            i <- downX1 inp
+            d <- downD ("SO", domain)
+            case (i,d) of 
+                ([rel],Just [(_,relDomain)]) -> innerSO downX1 rel relDomain
+                _ -> na "Pattern match error{symetryOrderingFuncAsRel}"
+        -- symOrdNMF = 
+
 

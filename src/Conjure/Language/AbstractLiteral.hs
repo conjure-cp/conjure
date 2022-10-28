@@ -156,7 +156,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitRecord       xs) = TypeRecord   <$> sequence [ do t <- typeOf x ; return (n,t)
                                                                  | (n,x) <- xs ]
 
-    typeOf   (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the type of variant literal."
+    typeOf   (AbsLitVariant Nothing  _ _) = failDoc "Cannot calculate the type of variant literal."
     typeOf   (AbsLitVariant (Just t) _ _) = fmap TypeVariant $ forM t $ \ (n,d) -> do
         dt <- typeOfDomain d
         return (n, dt)

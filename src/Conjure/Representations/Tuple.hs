@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 import Data.Text ( pack )
 
 
-tuple :: forall m . (MonadFail m, NameGen m) => Representation m
+tuple :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 tuple = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -66,7 +66,7 @@ tuple = Representation chck downD structuralCons downC up symmetryOrdering
             let names = map (mkName name) [1 .. length ds]
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
-                    Nothing -> fail $ vcat $
+                    Nothing -> failDoc $ vcat $
                         [ "(in Tuple up)"
                         , "No value for:" <+> pretty n
                         , "When working on:" <+> pretty name

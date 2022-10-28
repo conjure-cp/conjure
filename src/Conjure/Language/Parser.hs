@@ -50,12 +50,12 @@ parseModel = inCompleteFile $ do
             -- ESSENCE' is accepted, just for convenience
             unless (l `elem` ["Essence", "ESSENCE", "ESSENCE'"]) $ do
                 setPosition pos1
-                fail $ "language name has to be Essence, but given:" <+> pretty l
+                failDoc $ "language name has to be Essence, but given:" <+> pretty l
             pos2 <- getPosition
             is <- sepBy1 integer dot
             unless (is >= [1]) $ do
                 setPosition pos2
-                fail $ "language version expected to be at least 1.0, but given:" <+>
+                failDoc $ "language version expected to be at least 1.0, but given:" <+>
                             pretty (intercalate "." (map show is))
             return (LanguageVersion (Name l) (map fromInteger is))
     l  <- optional pLanguage
@@ -67,10 +67,10 @@ parseModel = inCompleteFile $ do
         }
 
 
-parseIO :: MonadFail m => Parser a -> String -> m a
+parseIO :: MonadFailDoc m => Parser a -> String -> m a
 parseIO p s =
     case runLexerAndParser (inCompleteFile p) "" (T.pack s) of
-        Left err -> fail err
+        Left err -> failDoc err
         Right x  -> return x
 
 
@@ -250,7 +250,7 @@ parseDomainWithRepr = pDomainAtom
         --     case textToRepresentation nm inners of
         --         Nothing -> do
         --             setPosition pos
-        --             fail ("Not a valid representation:" <+> pretty nm)
+        --             failDoc ("Not a valid representation:" <+> pretty nm)
         --         Just r  -> return r
 
         pBool = do
@@ -364,7 +364,7 @@ parseDomainWithRepr = pDomainAtom
             let RelationAttr _ (BinaryRelationAttrs binAttrs) = x
             when (length ys /= 2 && not (S.null binAttrs)) $ do
                 setPosition pos
-                fail $ "Only binary relations can have these attributes:" <+>
+                failDoc $ "Only binary relations can have these attributes:" <+>
                             prettyList id "," (S.toList binAttrs)
             return $ DomainRelation r x ys
 
@@ -400,7 +400,7 @@ parseSetAttr = do
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
 
 parseMSetAttr :: Parser (MSetAttr Expression)
 parseMSetAttr = do
@@ -418,7 +418,7 @@ parseMSetAttr = do
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     occur <- case filterAttrName ["minOccur", "maxOccur"] attrs of
         [] -> return OccurAttr_None
         [DANameValue "minOccur" a] -> return (OccurAttr_MinOccur a)
@@ -426,7 +426,7 @@ parseMSetAttr = do
         [DANameValue "maxOccur" b, DANameValue "minOccur" a] -> return (OccurAttr_MinMaxOccur a b)
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     return (MSetAttr size occur)
 
 parseFunctionAttr :: Parser (FunctionAttr Expression)
@@ -446,7 +446,7 @@ parseFunctionAttr = do
         [] -> return SizeAttr_None
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     let partiality = if DAName "total" `elem` attrs
                         then PartialityAttr_Total
                         else PartialityAttr_Partial
@@ -458,7 +458,7 @@ parseFunctionAttr = do
         [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     return (FunctionAttr size partiality jectivity)
 
 parseSequenceAttr :: Parser (SequenceAttr Expression)
@@ -477,7 +477,7 @@ parseSequenceAttr = do
         [] -> return SizeAttr_None
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     jectivity  <- case filterJectivity attrs of
         [] -> return JectivityAttr_None
         [DAName "bijective" ] -> return JectivityAttr_Bijective
@@ -486,7 +486,7 @@ parseSequenceAttr = do
         [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     return (SequenceAttr size jectivity)
 
 parseRelationAttr :: Parser (RelationAttr Expression)
@@ -502,12 +502,12 @@ parseRelationAttr = do
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
-    let
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
+    let 
         readBinRel' (DAName (Name a)) = readBinRel (fromString (textToString a))
         readBinRel' a = do
             setPosition pos
-            fail $ "Not a binary relation attribute:" <+> pretty a
+            failDoc $ "Not a binary relation attribute:" <+> pretty a
     binRels <- mapM readBinRel' (filterBinRel attrs)
     return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
 
@@ -523,12 +523,12 @@ parsePartitionAttr = do
         ]
     unless (null $ filterAttrName ["complete"] attrs) $ do
         setPosition pos
-        fail $ vcat [ "Partitions do not support the 'complete' attribute."
+        failDoc $ vcat [ "Partitions do not support the 'complete' attribute."
                     , "They are complete by default."
                     ]
     unless (null $ filterSizey attrs) $ do
         setPosition pos
-        fail $ vcat [ "Partitions do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
+        failDoc $ vcat [ "Partitions do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
                     , "This is because partitions are complete by default."
                     ]
     partsNum         <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
@@ -539,7 +539,7 @@ parsePartitionAttr = do
         [DANameValue "maxNumParts" b, DANameValue "minNumParts" a] -> return (SizeAttr_MinMaxSize a b)
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     partsSize        <- case filterAttrName ["partSize", "minPartSize", "maxPartSize"] attrs of
         [] -> return SizeAttr_None
         [DANameValue "partSize"    a] -> return (SizeAttr_Size a)
@@ -548,7 +548,7 @@ parsePartitionAttr = do
         [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> do
             setPosition pos
-            fail ("incompatible attributes:" <+> stringToDoc (show as))
+            failDoc ("incompatible attributes:" <+> stringToDoc (show as))
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
 
@@ -558,7 +558,7 @@ checkExtraAttributes pos ty attrs supported = do
     let extras = mapMaybe f attrs
     unless (null extras) $ do
         setPosition pos
-        fail $ vcat [ "Unsupported attributes for" <+> ty <> ":" <+> prettyList id "," extras
+        failDoc $ vcat [ "Unsupported attributes for" <+> ty <> ":" <+> prettyList id "," extras
                     , "Only these are supported:" <+> prettyList id "," supported
                     ]
     where
@@ -737,7 +737,7 @@ parseAAC = do
                                         (fromString (textToString attr)) Nothing
         (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
                                         (fromString (textToString attr)) (Just v)
-        _ -> fail "parseAAC"
+        _ -> failDoc "parseAAC"
 
 parseOthers :: [Parser Expression]
 parseOthers = [ parseFunctional l
@@ -947,7 +947,7 @@ parseLiteral = label "value" $ msum
             xsFiltered <- forM xs $ \case
                 -- Constant (ConstantAbstract (AbsLitTuple is)) -> ...
                 AbsLitTuple is -> return is
-                x -> fail ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
+                x -> failDoc ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
             return (AbsLitRelation xsFiltered)
 
         pPartition = do
@@ -962,13 +962,13 @@ parseLiteral = label "value" $ msum
 data ParserState = ParserState { enumDomains :: [Name] }
 type Parser a = StateT ParserState (ParsecT [LexemePos] Identity) a
 
-runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
+runLexerAndParser :: MonadFailDoc m => Parser a -> String -> T.Text -> m a
 runLexerAndParser p file inp = do
     ls <- runLexer inp
     case runParser p file ls of
         Left (msg, line, col) ->
             let theLine = T.lines inp |> drop (line-1) |> take 1
-            in  fail $ vcat
+            in  failDoc $ vcat
                     [ msg
                     , vcat (map pretty theLine)
                     , pretty $ replicate (col-1) ' ' ++ "^"

@@ -20,8 +20,8 @@ instance FromJSON  x => FromJSON  (OpInverse x) where parseJSON = genericParseJS
 
 instance (TypeOf x, Pretty x) => TypeOf (OpInverse x) where
     typeOf p@(OpInverse f g) = do
-        TypeFunction fFrom fTo <- typeOf f
-        TypeFunction gFrom gTo <- typeOf g
+        (fFrom, fTo) <- getFunctionTypes f
+        (gFrom, gTo) <- getFunctionTypes g
         if typesUnify [fFrom, gTo] && typesUnify [fTo, gFrom]
             then return TypeBool
             else raiseTypeError p
