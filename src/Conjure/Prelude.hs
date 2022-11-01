@@ -373,12 +373,14 @@ jsonOptions = JSON.defaultOptions
     }
 
 
-class (Functor m, Applicative m, Monad m) => MonadFailDoc m where
+class (Functor m, Applicative m, Monad m,MonadFail m) => MonadFailDoc m where
     failDoc :: Doc -> m a
 
 na :: MonadFailDoc m => Doc -> m a
 na message = failDoc ("N/A:" <+> message)
 
+instance MonadFail Identity where
+    fail = error
 instance MonadFailDoc Identity where
     failDoc = Control.Monad.fail . show
 
@@ -397,10 +399,10 @@ instance MonadFailDoc m => MonadFailDoc (IdentityT m) where
 instance (Functor m, Monad m) => MonadFailDoc (MaybeT m) where
     failDoc = const $ MaybeT $ return Nothing
 
-instance (Functor m, Monad m) => MonadFailDoc (ExceptT m) where
+instance (MonadFailDoc m) => MonadFailDoc (ExceptT m) where
     failDoc = ExceptT . return . Left
 
-instance (Functor m, Monad m, MonadFailDoc m) => MonadFailDoc (StateT st m) where
+instance (MonadFailDoc m) => MonadFailDoc (StateT st m) where
     failDoc = lift . failDoc
 
 instance (MonadFailDoc m, Monoid w) => MonadFailDoc (WriterT w m) where
@@ -409,6 +411,8 @@ instance (MonadFailDoc m, Monoid w) => MonadFailDoc (WriterT w m) where
 instance MonadFailDoc m => MonadFailDoc (ReaderT r m) where
     failDoc = lift . failDoc
 
+instance MonadFail Gen where
+    fail = error
 instance MonadFailDoc Gen where
     failDoc = Control.Monad.fail . show
 

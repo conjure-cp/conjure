@@ -16,7 +16,6 @@ import Conjure.Representations.Function.FunctionND ( viewAsDomainTupleS, mkLensA
 
 
 functionNDPartialDummy :: forall m .
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -235,10 +234,10 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
             case lookup (outName domain name) ctxt of
                 Just valuesMatrix -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc m =>  Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain

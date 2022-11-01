@@ -20,7 +20,6 @@ class DomainOf a where
 
     -- | calculate the domain of `a`
     domainOf ::
-        MonadFail m =>
         MonadFailDoc m =>
         NameGen m =>
         (?typeCheckerMode :: TypeCheckerMode) =>
@@ -32,7 +31,6 @@ class DomainOf a where
     --   has a default implementation in terms of domainOf, so doesn't need to be implemented specifically.
     --   but sometimes it is better to implement this directly.
     indexDomainsOf ::
-        MonadFail m =>
         MonadFailDoc m =>
         NameGen m =>
         Pretty a =>
@@ -44,7 +42,6 @@ class DomainOf a where
 domainOfR ::
     DomainOf a =>
     RepresentationOf a =>
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -56,7 +53,6 @@ domainOfR inp = do
 
 
 defIndexDomainsOf ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     DomainOf a =>

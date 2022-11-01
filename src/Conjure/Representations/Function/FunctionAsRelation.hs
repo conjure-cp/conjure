@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 
 
 functionAsRelation
-    :: forall m . (MonadFail m,MonadFailDoc m, NameGen m)
+    :: forall m . (MonadFailDoc m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m

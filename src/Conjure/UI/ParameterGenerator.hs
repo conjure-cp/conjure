@@ -27,7 +27,6 @@ import Data.Text ( pack )
 parameterGenerator ::
     MonadLog m =>
     MonadFailDoc m =>
-    MonadFail m =>
     MonadUserError m =>
     EnumerateDomain m =>
     NameGen m =>

@@ -18,7 +18,6 @@ import Data.Set as S ( size, size, toList )
 
 validateConstantForDomain ::
     forall m r .
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -54,7 +53,7 @@ validateConstantForDomain name
     c@(viewConstantIntWithTag -> Just (cTag, _))
     d@(DomainEnum _ (Just ranges) (Just mp)) = nested c d $ do
         let
-            -- lu :: MonadFail m => Name -> m Constant
+            -- lu :: MonadFailDoc m =>  Name -> m Constant
             lu (ConstantEnum _ _ nm) =
                 case lookup nm mp of
                     Nothing -> failDoc $ "No value for:" <+> pretty nm
@@ -62,7 +61,7 @@ validateConstantForDomain name
             lu (ConstantInt t v) = return (ConstantInt t v)
             lu x = failDoc $ "validateConstantForDomain.lu" <+> pretty x
 
-            -- lu2 :: MonadFail m => Range Name -> m (Range Constant)
+            -- lu2 :: MonadFailDoc m =>  Range Name -> m (Range Constant)
             lu2 = mapM lu
 
         rs <- mapM lu2 ranges

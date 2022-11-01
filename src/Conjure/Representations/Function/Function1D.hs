@@ -22,7 +22,7 @@ import Conjure.Representations.Common
 import qualified Data.HashMap.Strict as M
 
 
-function1D :: forall m . (MonadFailDoc m,MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+function1D :: forall m . (MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

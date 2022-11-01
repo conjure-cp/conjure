@@ -23,7 +23,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 --      (indicating the total number of parts)
 --   only use part numbers from 1.._NumParts, never use the others
 --      part(i) is used -> part(i-1) is used, forAll i:int(3..maxNumParts)
-partitionOccurrence :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
+partitionOccurrence :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 partitionOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

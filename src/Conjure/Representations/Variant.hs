@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Language.ZeroVal ( EnumerateDomain, zeroVal )
 
 
-variant :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
+variant :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 variant = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

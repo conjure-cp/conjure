@@ -14,7 +14,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 import qualified Data.HashMap.Strict as M
 
 
-function1DPartial :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
+function1DPartial :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 function1DPartial = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

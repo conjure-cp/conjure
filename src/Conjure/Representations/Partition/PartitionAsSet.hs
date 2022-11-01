@@ -17,7 +17,7 @@ import Conjure.Representations.Internal
 
 
 partitionAsSet
-    :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
+    :: forall m . (MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool

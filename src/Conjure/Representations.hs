@@ -22,7 +22,6 @@ import Conjure.Representations.Combined
 
 -- | Refine (down) an expression (X), one level (1).
 downX1 ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -54,7 +53,6 @@ downX x = do
 
 
 onConstant ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -77,7 +75,6 @@ onConstant (TypedConstant c _) = onConstant c
 onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 
 onAbstractLiteral ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -98,7 +95,6 @@ onAbstractLiteral (AbsLitMatrix index xs) = do
 onAbstractLiteral x = bug ("downX1.onAbstractLiteral:" <++> pretty (show x))
 
 onReference ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -114,7 +110,6 @@ onReference nm refTo =
         VariantField{}            -> failDoc ("downX1.onReference.VariantField:"    <++> pretty (show nm))
 
 onOp ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -142,7 +137,6 @@ onOp op = failDoc ("downX1.onOp:" <++> pretty op)
 
 
 symmetryOrdering ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>

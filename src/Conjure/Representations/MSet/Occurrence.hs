@@ -9,7 +9,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetOccurrence :: forall m . (MonadFail m,MonadFailDoc m, NameGen m) => Representation m
+msetOccurrence :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 msetOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

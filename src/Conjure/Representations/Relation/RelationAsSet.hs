@@ -12,7 +12,7 @@ import Conjure.Representations.Common
 
 
 relationAsSet
-    :: forall m . (MonadFail m,MonadFailDoc  m, NameGen m)
+    :: forall m . (MonadFailDoc  m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool

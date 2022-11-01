@@ -15,7 +15,6 @@ import Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain )
 
 
 validateSolution ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>

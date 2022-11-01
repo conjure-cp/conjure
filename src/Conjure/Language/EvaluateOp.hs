@@ -16,7 +16,6 @@ import {-# SOURCE #-} Conjure.Process.ValidateConstantForDomain ( validateConsta
 class EvaluateOp op where
     evaluateOp :: 
         MonadFailDoc m =>
-        MonadFail m =>
         NameGen m =>
         EnumerateDomain m =>
         (?typeCheckerMode :: TypeCheckerMode) =>

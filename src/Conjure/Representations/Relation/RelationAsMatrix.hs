@@ -11,7 +11,7 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-relationAsMatrix :: forall m . (MonadFail m,MonadFailDoc m, NameGen m) => Representation m
+relationAsMatrix :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -133,10 +133,10 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: ( Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc m => Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain

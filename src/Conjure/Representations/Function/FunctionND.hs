@@ -17,7 +17,7 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-functionND :: forall m . (MonadFail m,MonadFailDoc  m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+functionND :: forall m . (MonadFailDoc  m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -222,10 +222,10 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             case lookup (nameValues domain name) ctxt of
                 Just valuesMatrix -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: ( Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index ::  Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain

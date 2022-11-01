@@ -21,7 +21,7 @@ import qualified Pipes
 userErr1 :: MonadUserError m => Doc -> m a
 userErr1 = userErr . return
 
-class Monad m => MonadUserError m where
+class MonadFailDoc m => MonadUserError m where
     userErr :: [Doc] -> m a
 
 instance MonadUserError (Either Doc) where
@@ -77,11 +77,11 @@ runUserError ma = runIdentity (runUserErrorT ma)
 instance (Functor m) => Functor (UserErrorT m) where
     fmap f = UserErrorT . fmap (fmap f) . runUserErrorT
 
-instance (Functor m, MonadFail m) => Applicative (UserErrorT m) where
+instance (MonadFailDoc m) => Applicative (UserErrorT m) where
     pure = return
     (<*>) = ap
 
-instance (MonadFail m) => Monad (UserErrorT m) where
+instance (MonadFailDoc m) => Monad (UserErrorT m) where
     return a = UserErrorT $ return (Right a)
     m >>= k = UserErrorT $ do
         a <- runUserErrorT m
@@ -91,7 +91,7 @@ instance (MonadFail m) => Monad (UserErrorT m) where
 
 -- instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
 --     failDoc = lift . failDoc
-instance (MonadIO m, MonadFail m) => MonadIO (UserErrorT m) where
+instance (MonadIO m, MonadFailDoc m) => MonadIO (UserErrorT m) where
     liftIO comp = UserErrorT $ do
         res <- liftIO comp
         return (Right res)
@@ -101,13 +101,13 @@ instance MonadTrans UserErrorT where
         res <- comp
         return (Right res)
 
-instance (MonadFailDoc m, MonadFail m) => MonadFailDoc (UserErrorT m) where
+instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
     failDoc = lift . failDoc
 
-instance MonadFail m => MonadFail (UserErrorT m) where
+instance MonadFailDoc m => MonadFail (UserErrorT m) where
     fail = lift . fail
 
-instance MonadFail m => MonadUserError (UserErrorT m) where
+instance MonadFailDoc m => MonadUserError (UserErrorT m) where
     userErr msgs = UserErrorT $ return $ Left msgs
 
 

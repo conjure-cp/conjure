@@ -11,7 +11,6 @@ import Conjure.Representations.Common
 
 
 sequenceExplicitBounded :: forall m .
-    MonadFail m =>
     MonadFailDoc m=>
     NameGen m =>
     EnumerateDomain m =>

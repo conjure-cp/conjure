@@ -8,7 +8,7 @@ import Conjure.Language
 import Conjure.Representations.Internal
 
 
-setExplicit :: forall m . (MonadFail m,MonadFailDoc m, NameGen m) => Representation m
+setExplicit :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

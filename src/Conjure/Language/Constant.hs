@@ -252,7 +252,7 @@ instance ReferenceContainer Constant where
 instance DomainContainer Constant (Domain ()) where
     fromDomain = DomainInConstant
     domainOut (DomainInConstant dom) = return dom
-    domainOut _ = fail  "domainOut{Constant}"
+    domainOut _ = failDoc  "domainOut{Constant}"
 
 mkUndef :: Type -> Doc -> Constant
 mkUndef TypeBool _ = ConstantBool False

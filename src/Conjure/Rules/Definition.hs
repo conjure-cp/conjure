@@ -157,10 +157,10 @@ data Rule = Rule
     { rName  :: Doc
     , rApply
         :: forall n m a .
-            ( MonadFail n,MonadFailDoc n, MonadUserError n, MonadLog n
+            ( MonadFailDoc n, MonadUserError n, MonadLog n
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
                 -- a fail in {n} means that the rule isn't applicable
-            , MonadFail m,MonadFailDoc m, MonadUserError m, MonadLog m
+            , MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
                 -- a fail in {m} means a bug
             , ?typeCheckerMode :: TypeCheckerMode
@@ -173,9 +173,9 @@ data Rule = Rule
 namedRule
     :: Doc
     -> (forall n m a .
-            ( MonadFail n,MonadFailDoc n, MonadUserError n, MonadLog n
+            ( MonadFailDoc n, MonadUserError n, MonadLog n
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
-            , MonadFail m, MonadFailDoc m, MonadUserError m, MonadLog m
+            ,  MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
             , ?typeCheckerMode :: TypeCheckerMode
             ) => Expression -> n (Doc, m Expression))
@@ -190,9 +190,9 @@ namedRule nm f = Rule
 namedRuleZ
     :: Doc
     -> (forall n m a .
-            ( MonadFail n,MonadFailDoc  n, MonadUserError n, MonadLog n
+            ( MonadFailDoc  n, MonadUserError n, MonadLog n
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
-            , MonadFail m,MonadFailDoc m, MonadUserError m, MonadLog m
+            , MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
             , ?typeCheckerMode :: TypeCheckerMode
             ) => Zipper a Expression -> Expression -> n (Doc, m Expression))

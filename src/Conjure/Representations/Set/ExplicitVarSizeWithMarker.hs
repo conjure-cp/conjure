@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithMarker :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
+setExplicitVarSizeWithMarker :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

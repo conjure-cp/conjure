@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitWithFlags :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
+msetExplicitWithFlags :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 msetExplicitWithFlags = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

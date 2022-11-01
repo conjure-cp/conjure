@@ -11,7 +11,7 @@ import Conjure.Language
 import Conjure.Representations.Internal
 
 
-record :: forall m . (MonadFail m,MonadFailDoc m, NameGen m) => Representation m
+record :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 record = Representation chck downD structuralCons downC up symmetryOrdering
 
     where

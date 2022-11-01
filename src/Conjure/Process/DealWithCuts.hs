@@ -11,7 +11,7 @@ import Conjure.Language.ModelStats ( finds )
 
 
 dealWithCuts
-    :: (MonadFail m, NameGen m, MonadUserError m)
+    :: ( NameGen m, MonadUserError m)
     => Model
     -> m Model
 dealWithCuts m = do

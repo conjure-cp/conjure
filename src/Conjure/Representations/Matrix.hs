@@ -16,7 +16,7 @@ import Conjure.Representations.Internal
 -- | The matrix "representation rule".
 --   This rule handles the plumbing for matrices.
 matrix
-    :: forall m . (MonadFail m,MonadFailDoc m, NameGen m, MonadUserError m, EnumerateDomain m, ?typeCheckerMode :: TypeCheckerMode)
+    :: forall m . (MonadFailDoc m, NameGen m, MonadUserError m, EnumerateDomain m, ?typeCheckerMode :: TypeCheckerMode)
     => ((Name, DomainX Expression) -> m (Maybe [(Name, DomainX Expression)]))
     -> ((Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)]))
     -> ((Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant))

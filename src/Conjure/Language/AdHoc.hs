@@ -33,7 +33,7 @@ class ReferenceContainer a where
 
 class DomainContainer a dom where
     fromDomain :: dom a -> a
-    domainOut :: MonadFail m => a -> m (dom a)
+    domainOut :: MonadFailDoc m => a -> m (dom a)
 
 class CanBeAnAlias a where
     isAlias :: a -> Maybe a

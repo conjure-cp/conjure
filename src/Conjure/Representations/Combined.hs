@@ -45,7 +45,6 @@ import Conjure.Representations.Partition.PartitionAsSet
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
 downToX1 ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -56,7 +55,6 @@ downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
 downD1 ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -67,7 +65,6 @@ downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 -- | Refine (down) a domain, together with a constant (C), one level (1).
 --   The domain has to be fully instantiated.
 downC1 ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -80,7 +77,6 @@ downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, consta
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up1 ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -92,7 +88,6 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
 downD ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -107,7 +102,6 @@ downD inp@(_, domain) = do
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
 downC ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -125,7 +119,6 @@ downC inp0 = do
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -155,7 +148,6 @@ up ctxt (name, highDomain) = do
 
 -- | ...
 symmetryOrderingDispatch ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -174,7 +166,6 @@ symmetryOrderingDispatch downX1 inp domain =
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
 dispatch ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -235,7 +226,6 @@ type AllRepresentations m = [[Representation m]]
 
 -- | No levels!
 reprsStandardOrderNoLevels ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -248,7 +238,6 @@ reprsStandardOrderNoLevels = [concat reprsStandardOrder]
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.
 reprsStandardOrder ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -273,7 +262,6 @@ reprsStandardOrder =
 
 -- | Sparser representations are to be preferred for parameters.
 reprsSparseOrder ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -328,7 +316,6 @@ reprOptions reprs (expandDomainReference -> domain) = go reprs
 --   Makes recursive calls to generate the complete structural constraints.
 --   Takes in a function to refine inner guys.
 getStructurals ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>

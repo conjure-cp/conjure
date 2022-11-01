@@ -21,7 +21,6 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
 finiteGivens ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     MonadLog m =>
@@ -46,7 +45,6 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam ::
-    MonadFail  m =>
     MonadFailDoc  m =>
     NameGen m =>
     MonadLog m =>
@@ -105,7 +103,6 @@ finiteGivensParam eprimeModel essenceParam additionalLettings = flip evalStateT 
 --   for example, this means adding a size attribute at the outer-most level
 --   and adding a maxSize attribute at the inner levels.
 mkFinite ::
-    MonadFail m =>
     MonadFailDoc m =>
     MonadState Int m =>
     NameGen m =>
@@ -132,7 +129,6 @@ mkFinite d = return (d, [], const (return []))
 
 
 mkFiniteOutermost ::
-    MonadFail m =>
     MonadFailDoc m =>
     MonadState Int m =>
     NameGen m =>
@@ -364,7 +360,6 @@ mkFiniteOutermost d = return (d, [], const (return []))
 
 
 mkFiniteInner ::
-    MonadFail m =>
     MonadFailDoc m =>
     MonadState Int m =>
     NameGen m =>

@@ -183,7 +183,7 @@ typeCheckModel model1 = do
     -- now that everything knows its type, we can recover
     -- DomainInt [RangeSingle x] from DomainIntE x, if x has type int
     let
-        domainIntERecover :: forall m . Monad m => Domain () Expression -> m (Domain () Expression)
+        domainIntERecover :: forall m . MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         domainIntERecover d@(DomainIntE x) = do
             ty <- runExceptT $ typeOf x
             return $ case ty of

@@ -111,7 +111,6 @@ rule_Abstract = "dontCare-abstract" `namedRule` theRule where
 
 
 handleDontCares ::
-    MonadFail m =>
     MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>

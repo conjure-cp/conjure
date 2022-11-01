@@ -21,7 +21,6 @@ import qualified Data.HashMap.Strict as M
 
 
 translateSolution ::
-    MonadFail m =>
     MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
