@@ -27,6 +27,7 @@ import Data.Aeson.Diff
 import Data.ByteString.Builder (toLazyByteString)
 import qualified Data.Text
 import Data.Text.Encoding (encodeUtf8Builder)
+import qualified Data.Aeson.Types as JSON
 
 tests ::
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -128,6 +129,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
             Nothing -> assertFailure $ "JSON parser error in" ++ stdoutE
             Just [] -> return ()
             Just ops -> assertFailure $ renderNormal $ vcat ["Difference in json:" <++> vcat (map (stringToDoc . show) ops)]
+        
     do
         step "Checking stdout"
         stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stdout")
@@ -152,4 +154,5 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
                         ]
 
 stringToJson :: String -> Maybe JSON.Value
+stringToJson "" = Just JSON.emptyObject
 stringToJson s = decode' $ toLazyByteString $ encodeUtf8Builder $ Data.Text.pack s
