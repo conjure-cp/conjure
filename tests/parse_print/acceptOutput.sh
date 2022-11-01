@@ -23,7 +23,6 @@ if [ -d "${TESTCASE}" ]; then
             "${TESTCASE}"/model.expected.json \
             "${TESTCASE}"/stderr.expected \
             "${TESTCASE}"/typecheck.expected \
-
             -size 0 \
             -exec rm {} \;
     fi

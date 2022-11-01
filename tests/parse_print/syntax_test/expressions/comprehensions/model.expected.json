@@ -1,0 +1,154 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"Letting":
+                [{"Name": "s"},
+                 {"Domain":
+                      {"DomainSet":
+                           [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}},
+                            {"DomainInt": [{"TagInt": []}, []]}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "c1"},
+                 {"Comprehension":
+                      [{"Reference": [{"Name": "x"}, null]},
+                       [{"Generator":
+                             {"GenDomainNoRepr":
+                                  [{"Single": {"Name": "x"}}, {"DomainReference": [{"Name": "s"}, null]}]}}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "c2"},
+                 {"Comprehension":
+                      [{"Op":
+                            {"MkOpSum":
+                                 {"AbstractLiteral":
+                                      {"AbsLitMatrix":
+                                           [{"DomainInt":
+                                                 [{"TagInt": []},
+                                                  [{"RangeBounded":
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                            [{"Reference": [{"Name": "x"}, null]},
+                                             {"Reference": [{"Name": "y"}, null]}]]}}}},
+                       [{"Generator":
+                             {"GenDomainNoRepr":
+                                  [{"Single": {"Name": "x"}}, {"DomainReference": [{"Name": "s"}, null]}]}},
+                        {"Generator":
+                             {"GenDomainNoRepr":
+                                  [{"Single": {"Name": "y"}}, {"DomainReference": [{"Name": "s"}, null]}]}}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "c3"},
+                 {"Comprehension":
+                      [{"Reference": [{"Name": "x"}, null]},
+                       [{"Generator":
+                             {"GenInExpr":
+                                  [{"Single": {"Name": "x"}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                   {"ConstantInt": [{"TagInt": []}, 2]},
+                                                   {"ConstantInt": [{"TagInt": []}, 3]},
+                                                   {"ConstantInt": [{"TagInt": []}, 4]}]}}}]}}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "c4"},
+                 {"Comprehension":
+                      [{"Reference": [{"Name": "x"}, null]},
+                       [{"Generator":
+                             {"GenInExpr":
+                                  [{"Single": {"Name": "x"}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                   {"ConstantInt": [{"TagInt": []}, 2]},
+                                                   {"ConstantInt": [{"TagInt": []}, 3]},
+                                                   {"ConstantInt": [{"TagInt": []}, 4]}]}}}]}},
+                        {"Condition":
+                             {"Op":
+                                  {"MkOpLt":
+                                       [{"Reference": [{"Name": "x"}, null]},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}}}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "c5"},
+                 {"Comprehension":
+                      [{"Op":
+                            {"MkOpSum":
+                                 {"AbstractLiteral":
+                                      {"AbsLitMatrix":
+                                           [{"DomainInt":
+                                                 [{"TagInt": []},
+                                                  [{"RangeBounded":
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                            [{"Reference": [{"Name": "x"}, null]},
+                                             {"Reference": [{"Name": "y"}, null]}]]}}}},
+                       [{"Condition":
+                             {"Op":
+                                  {"MkOpLt":
+                                       [{"Reference": [{"Name": "x"}, null]},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}}},
+                        {"Generator":
+                             {"GenInExpr":
+                                  [{"Single": {"Name": "x"}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                   {"ConstantInt": [{"TagInt": []}, 2]},
+                                                   {"ConstantInt": [{"TagInt": []}, 3]},
+                                                   {"ConstantInt": [{"TagInt": []}, 4]}]}}}]}}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "c5"},
+                 {"Comprehension":
+                      [{"Op":
+                            {"MkOpSum":
+                                 {"AbstractLiteral":
+                                      {"AbsLitMatrix":
+                                           [{"DomainInt":
+                                                 [{"TagInt": []},
+                                                  [{"RangeBounded":
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                            [{"Reference": [{"Name": "y"}, null]},
+                                             {"Reference": [{"Name": "z"}, null]}]]}}}},
+                       [{"Generator":
+                             {"GenInExpr":
+                                  [{"Single": {"Name": "x"}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                   {"ConstantInt": [{"TagInt": []}, 2]},
+                                                   {"ConstantInt": [{"TagInt": []}, 3]},
+                                                   {"ConstantInt": [{"TagInt": []}, 4]}]}}}]}},
+                        {"ComprehensionLetting":
+                             [{"Single": {"Name": "y"}},
+                              {"Op":
+                                   {"MkOpSum":
+                                        {"AbstractLiteral":
+                                             {"AbsLitMatrix":
+                                                  [{"DomainInt":
+                                                        [{"TagInt": []},
+                                                         [{"RangeBounded":
+                                                               [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                                {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                                    {"Reference": [{"Name": "x"}, null]}]]}}}}]},
+                        {"Generator":
+                             {"GenInExpr":
+                                  [{"Single": {"Name": "z"}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantInt": [{"TagInt": []}, 7]},
+                                                   {"ConstantInt": [{"TagInt": []}, 8]}]}}}]}}]]}]}}]}

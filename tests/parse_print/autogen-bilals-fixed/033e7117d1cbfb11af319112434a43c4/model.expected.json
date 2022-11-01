@@ -1,0 +1,21 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpSupset":
+                      [{"AbstractLiteral":
+                            {"AbsLitMSet":
+                                 [{"Reference": [{"Name": "var1"}, null]}, {"Reference": [{"Name": "var1"}, null]}]}},
+                       {"Constant": {"ConstantAbstract": {"AbsLitMSet": [{"ConstantInt": [{"TagInt": []}, 3]}]}}}]}}]}]}

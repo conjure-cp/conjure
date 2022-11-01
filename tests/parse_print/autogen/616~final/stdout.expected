@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find unused: bool
+such that
+    image(function((partition() : `partition from bool`) --> false -> true),
+          (partition() : `partition from bool`) - partition({false}))

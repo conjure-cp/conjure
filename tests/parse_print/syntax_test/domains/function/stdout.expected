@@ -1,0 +1,13 @@
+language Essence 1.3
+
+letting simple be domain function bool --> bool
+letting sized be domain function (size 1) bool --> bool
+letting sized2 be domain function (minSize 1) bool --> bool
+letting sized3 be domain function (maxSize 2) bool --> bool
+letting sized4 be domain function (minSize 1, maxSize 2) bool --> bool
+letting ject1 be domain function (surjective) bool --> bool
+letting ject2 be domain function (injective) bool --> bool
+letting ject3 be domain function (bijective) bool --> bool
+letting ject4 be domain function (bijective) bool --> bool
+letting tot be domain function (total) bool --> bool
+letting all be domain function (minSize 3, maxSize 4, total, bijective) int --> int

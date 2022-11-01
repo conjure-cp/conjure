@@ -1,0 +1,37 @@
+language ESSENCE' 1.0
+
+find var1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(4, 2), int(1..0)] of int(0)
+find var1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(4, 2), int(1..0)] of bool
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..16)
+find var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix: matrix indexed by [int(1..16), bool, bool] of bool
+find var3: bool
+such that
+    var3,
+    and([q8 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         flatten(var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q8, .., ..]) <lex
+         flatten(var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q8 + 1, .., ..])
+             | q8 : int(1..15)]),
+    and([q9 > var2_ExplicitVarSizeWithMarker_Marker ->
+         and([and([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q9, q16, q17] = false | q17 : bool])
+                  | q16 : bool])
+             | q9 : int(1..16)]),
+    0 <= var2_ExplicitVarSizeWithMarker_Marker,
+    and([q10 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         sum([sum([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q14, q15] | q15 : bool]) | q14 : bool])
+         <= 2
+             | q10 : int(1..16)]),
+    and([q10 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         and([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q11, q11] | q11 : bool])
+             | q10 : int(1..16)]),
+    and([q10 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         and([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q11, q12] /\
+              var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q12, q11]
+              -> q11 = q12
+                  | q11 : bool, q12 : bool])
+             | q10 : int(1..16)]),
+    and([q10 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         and([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q11, q12] /\
+              var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q12, q13]
+              -> var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q11, q13]
+                  | q11 : bool, q12 : bool, q13 : bool])
+             | q10 : int(1..16)])

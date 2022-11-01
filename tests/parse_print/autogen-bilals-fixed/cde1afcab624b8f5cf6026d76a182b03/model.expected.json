@@ -1,0 +1,44 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                        {"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}},
+      {"Objective":
+           ["Maximising",
+            {"Op":
+                 {"MkOpIndexing":
+                      [{"AbstractLiteral":
+                            {"AbsLitMatrix":
+                                 [{"DomainInt":
+                                       [{"TagInt": []},
+                                        [{"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+                                  [{"Reference": [{"Name": "var2"}, null]}, {"Reference": [{"Name": "var2"}, null]}]]}},
+                       {"Op":
+                            {"MkOpPow":
+                                 [{"Reference": [{"Name": "var2"}, null]},
+                                  {"Reference": [{"Name": "var2"}, null]}]}}]}}]},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"Reference": [{"Name": "var1"}, null]},
+                       {"Op":
+                            {"MkOpEq":
+                                 [{"Reference": [{"Name": "var1"}, null]},
+                                  {"Reference": [{"Name": "var1"}, null]}]}}]}},
+            {"Reference": [{"Name": "var1"}, null]}, {"Constant": {"ConstantBool": false}}]}]}

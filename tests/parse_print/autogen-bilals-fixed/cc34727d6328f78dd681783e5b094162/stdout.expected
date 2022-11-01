@@ -1,0 +1,114 @@
+language ESSENCE' 1.0
+
+find var2_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find var2_Function1DPartial_Values_Function1DPartial_Flags: matrix indexed by [bool, bool] of bool
+find var2_Function1DPartial_Values_Function1DPartial_Values: matrix indexed by [bool, bool] of bool
+find aux1_ExplicitVarSizeWithMarker_Marker: matrix indexed by [matrix indexed by [bool] of bool, bool] of int(0..2)
+find aux1_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [matrix indexed by [bool] of bool, bool, int(1..2)] of bool
+find aux2_ExplicitVarSizeWithMarker_Marker: matrix indexed by [matrix indexed by [bool] of bool, bool] of int(0..2)
+find aux2_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [matrix indexed by [bool] of bool, bool, int(1..2)] of bool
+such that
+    and([and([2 <= aux1_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+              aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, 1] <
+              aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, 2]
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([and([q28 > aux1_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                   aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q28] = false
+                       | q28 : int(1..2)])
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([and([var2_Function1DPartial_Values_Function1DPartial_Flags[q2, q31] ->
+                   or([q35 <= aux1_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] /\
+                       aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q35] = q31
+                           | q35 : int(1..2)])
+                       | q31 : bool])
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([and([q32 <= aux1_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                   or([var2_Function1DPartial_Values_Function1DPartial_Flags[q2, q33] /\
+                       q33 = aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q32]
+                           | q33 : bool])
+                       | q32 : int(1..2)])
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([2 <= aux2_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+              aux2_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, 1] <
+              aux2_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, 2]
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([and([q41 > aux2_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                   aux2_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q41] = false
+                       | q41 : int(1..2)])
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([and([or([q48 <= aux2_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] /\
+                       aux2_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q48] = q44
+                           | q48 : int(1..2)])
+                       | q44 : bool, q1_Function1DPartial_Flags[q44]])
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([and([and([q45 <= aux2_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                   or([q46 = aux2_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q45]
+                           | q46 : bool, q1_Function1DPartial_Flags[q46]])
+                       | q45 : int(1..2)])
+                  | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool]),
+    and([or([var2_Function1DPartial_Flags[q2] /\
+             (and([var2_Function1DPartial_Values_Function1DPartial_Flags[q2, q21] ->
+                   q1_Function1DPartial_Values[q21] = var2_Function1DPartial_Values_Function1DPartial_Values[q2, q21] /\
+                   q1_Function1DPartial_Flags[q21]
+                       | q21 : bool])
+              /\
+              and([var2_Function1DPartial_Values_Function1DPartial_Values[q2, q22] = q1_Function1DPartial_Values[q22] /\
+                   var2_Function1DPartial_Values_Function1DPartial_Flags[q2, q22]
+                       | q22 : bool, q1_Function1DPartial_Flags[q22]])
+              /\
+              (and([q30 <= aux1_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                    q1_Function1DPartial_Flags
+                        [aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q30]]
+                        | q30 : int(1..2)])
+               /\
+               and([q43 <= aux2_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                    var2_Function1DPartial_Values_Function1DPartial_Flags
+                        [q2, aux2_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q43]]
+                        | q43 : int(1..2)])))
+                 | q2 : bool])
+             | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool,
+               q1_Function1DPartial_Values : matrix indexed by [bool] of bool,
+               and([q1_Function1DPartial_Values[q13] != q1_Function1DPartial_Values[q14]
+                        | q13 : bool, q14 : bool, q13 != q14, q1_Function1DPartial_Flags[q13],
+                          q1_Function1DPartial_Flags[q14]]),
+               and([or([q1_Function1DPartial_Flags[q16] /\ q1_Function1DPartial_Values[q16] = q15 | q16 : bool])
+                        | q15 : bool]),
+               and([q1_Function1DPartial_Flags[q17] = false -> q1_Function1DPartial_Values[q17] = false | q17 : bool]),
+               5 = sum([q1_Function1DPartial_Flags[q18] | q18 : bool])]),
+    and([var2_Function1DPartial_Flags[q3] = false ->
+         and([var2_Function1DPartial_Values_Function1DPartial_Flags[q3, q49] = false | q49 : bool]) /\
+         and([var2_Function1DPartial_Values_Function1DPartial_Values[q3, q50] = false | q50 : bool])
+             | q3 : bool]),
+    0 <= sum([var2_Function1DPartial_Flags[q4] | q4 : bool]),
+    and([var2_Function1DPartial_Flags[q5] ->
+         and([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q6] /\
+              var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q7]
+              ->
+              var2_Function1DPartial_Values_Function1DPartial_Values[q5, q6] !=
+              var2_Function1DPartial_Values_Function1DPartial_Values[q5, q7]
+                  | q6 : bool, q7 : bool, q6 != q7])
+             | q5 : bool]),
+    and([var2_Function1DPartial_Flags[q5] ->
+         and([or([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q9] /\
+                  var2_Function1DPartial_Values_Function1DPartial_Values[q5, q9] = q8
+                      | q9 : bool])
+                  | q8 : bool])
+             | q5 : bool]),
+    and([var2_Function1DPartial_Flags[q5] ->
+         and([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q10] = false ->
+              var2_Function1DPartial_Values_Function1DPartial_Values[q5, q10] = false
+                  | q10 : bool])
+             | q5 : bool]),
+    and([var2_Function1DPartial_Flags[q5] ->
+         5 = sum([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q11] | q11 : bool])
+             | q5 : bool])

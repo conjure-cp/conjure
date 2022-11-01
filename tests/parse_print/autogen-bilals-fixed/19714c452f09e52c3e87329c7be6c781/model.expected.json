@@ -1,0 +1,221 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var2"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpLeq":
+                      [{"Op":
+                            {"MkOpSum":
+                                 {"AbstractLiteral":
+                                      {"AbsLitMatrix":
+                                           [{"DomainInt":
+                                                 [{"TagInt": []},
+                                                  [{"RangeBounded":
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                            [{"Op":
+                                                  {"MkOpToInt":
+                                                       {"Op":
+                                                            {"MkOpEq":
+                                                                 [{"Reference": [{"Name": "var1"}, null]},
+                                                                  {"Reference": [{"Name": "var1"}, null]}]}}}},
+                                             {"Op":
+                                                  {"MkOpToInt":
+                                                       {"Op":
+                                                            {"MkOpEq":
+                                                                 [{"Reference": [{"Name": "var1"}, null]},
+                                                                  {"Reference": [{"Name": "var1"}, null]}]}}}}]]}}}},
+                       {"Op":
+                            {"MkOpSum":
+                                 {"AbstractLiteral":
+                                      {"AbsLitMatrix":
+                                           [{"DomainInt":
+                                                 [{"TagInt": []},
+                                                  [{"RangeBounded":
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}]]},
+                                            [{"Op":
+                                                  {"MkOpToInt":
+                                                       {"Op":
+                                                            {"MkOpEq":
+                                                                 [{"Reference": [{"Name": "var1"}, null]},
+                                                                  {"Reference": [{"Name": "var1"}, null]}]}}}},
+                                             {"Op":
+                                                  {"MkOpToInt":
+                                                       {"Op":
+                                                            {"MkOpEq":
+                                                                 [{"Reference": [{"Name": "var1"}, null]},
+                                                                  {"Reference": [{"Name": "var1"}, null]}]}}}},
+                                             {"Op":
+                                                  {"MkOpToInt":
+                                                       {"Op":
+                                                            {"MkOpEq":
+                                                                 [{"Reference": [{"Name": "var1"}, null]},
+                                                                  {"Reference": [{"Name": "var1"}, null]}]}}}}]]}}}}]}},
+            {"Op":
+                 {"MkOpOr":
+                      {"AbstractLiteral":
+                           {"AbsLitMatrix":
+                                [{"DomainInt":
+                                      [{"TagInt": []},
+                                       [{"RangeBounded":
+                                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                 [{"Op":
+                                       {"MkOpLt":
+                                            [{"Op":
+                                                  {"MkOpSum":
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitMatrix":
+                                                                 [{"DomainInt":
+                                                                       [{"TagInt": []},
+                                                                        [{"RangeBounded":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 1]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 2]}}]}]]},
+                                                                  [{"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}}]]}}}},
+                                             {"Op":
+                                                  {"MkOpSum":
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitMatrix":
+                                                                 [{"DomainInt":
+                                                                       [{"TagInt": []},
+                                                                        [{"RangeBounded":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 1]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 3]}}]}]]},
+                                                                  [{"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}}]]}}}}]}},
+                                  {"Op":
+                                       {"MkOpLt":
+                                            [{"Op":
+                                                  {"MkOpSum":
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitMatrix":
+                                                                 [{"DomainInt":
+                                                                       [{"TagInt": []},
+                                                                        [{"RangeBounded":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 1]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 2]}}]}]]},
+                                                                  [{"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}}]]}}}},
+                                             {"Op":
+                                                  {"MkOpSum":
+                                                       {"AbstractLiteral":
+                                                            {"AbsLitMatrix":
+                                                                 [{"DomainInt":
+                                                                       [{"TagInt": []},
+                                                                        [{"RangeBounded":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 1]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 3]}}]}]]},
+                                                                  [{"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpToInt":
+                                                                             {"Op":
+                                                                                  {"MkOpEq":
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "var1"}, null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "var1"},
+                                                                                              null]}]}}}}]]}}}}]}}]]}}}}]}]}
