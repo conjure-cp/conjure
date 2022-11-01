@@ -192,12 +192,12 @@ writeModel  lnWidth ASTJSON Nothing   spec
 writeModel  lnWidth ASTJSON (Just fp) spec
     | lnWidth == 0                         = liftIO $    writeFile fp (show           (toJSON spec))
     | otherwise                            = liftIO $    writeFile fp (render lnWidth (toJSON spec))
-writeModel lnWidth JSON Nothing spec = do
+writeModel lnWidth fmt Nothing spec | fmt `elem` [JSON, JSONStream] = do
     spec' <- toSimpleJSON spec
     if lnWidth == 0
         then liftIO $ putStrLn (show spec')
         else liftIO $ putStrLn (render lnWidth spec')
-writeModel lnWidth JSON (Just fp) spec = do
+writeModel lnWidth fmt (Just fp) spec | fmt `elem` [JSON, JSONStream] = do
     spec' <- toSimpleJSON spec
     if lnWidth == 0
         then liftIO $ writeFile fp (show spec')

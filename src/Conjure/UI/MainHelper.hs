@@ -989,10 +989,12 @@ srStdoutHandler
                             let filenameEssenceSol = mkFilename ".solution"
                             writeModel lineWidth Plain (Just filenameEprimeSol) eprimeSol
                             writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
-                            when (outputFormat == JSON) $
-                                writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
+                            case outputFormat of
+                                JSON -> writeModel lineWidth outputFormat (Just (filenameEssenceSol ++ ".json")) essenceSol
+                                JSONStream -> writeModel 0 outputFormat (Just (filenameEssenceSol ++ ".json")) essenceSol
+                                _ -> return ()
                             when (outputFormat == MiniZinc) $
-                                writeModel lineWidth MiniZinc (Just (filenameEssenceSol ++ ".minizinc")) essenceSol
+                                writeModel lineWidth outputFormat (Just (filenameEssenceSol ++ ".minizinc")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
                         True -> do
@@ -1006,15 +1008,18 @@ srStdoutHandler
                                 removeFileIfExists filenameEprimeSol
                                 removeFileIfExists filenameEssenceSol
                                 removeFileIfExists filenameEssenceSolJSON
-                                writeFile filenameEssenceSolJSON "[\n"
+                                case outputFormat of
+                                    JSON -> writeFile filenameEssenceSolJSON "[\n"
+                                    _ -> return ()
                             appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                             appendFile filenameEprimeSol  (render lineWidth eprimeSol  ++ "\n\n")
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                             appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
-                            when (outputFormat == JSON) $ do
+                            when (outputFormat `elem` [JSON, JSONStream]) $ do
                                 essenceSol' <- toSimpleJSON essenceSol
                                 appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
-                                appendFile filenameEssenceSolJSON  (",\n")
+                                unless (outputFormat==JSONStream) $ appendFile filenameEssenceSolJSON ","
+                                appendFile filenameEssenceSolJSON  ("\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
@@ -1024,13 +1029,14 @@ srCleanUp :: FilePath -> UI -> Text -> sols -> Sh (Either [Doc] sols)
 srCleanUp outBase Solve{..} stdoutSR solutions = do
 
     -- closing the array in the all solutions json file
-    case solutionsInOneFile of
-        False -> return ()
-        True -> do
-            let mkFilename ext = outputDirectory </> outBase
-                                        ++ ext
-            let filenameEssenceSolJSON = mkFilename ".solutions.json"
-            liftIO $ appendFile filenameEssenceSolJSON "]\n"
+    case outputFormat of
+        JSON -> case solutionsInOneFile of
+            False -> return ()
+            True -> do
+                let mkFilename ext = outputDirectory </> outBase ++ ext
+                let filenameEssenceSolJSON = mkFilename ".solutions.json"
+                liftIO $ appendFile filenameEssenceSolJSON "]\n"
+        _ -> return ()
 
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode

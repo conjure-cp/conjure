@@ -219,7 +219,7 @@ instance ToJSON    UI where toJSON = genericToJSON jsonOptions
 instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
-data OutputFormat = Plain | Binary | ASTJSON | JSON | MiniZinc
+data OutputFormat = Plain | Binary | ASTJSON | JSON | JSONStream | MiniZinc
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize OutputFormat
@@ -469,6 +469,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -525,6 +526,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -589,6 +591,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -641,6 +644,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -965,6 +969,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1056,6 +1061,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1099,6 +1105,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1166,6 +1173,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1213,6 +1221,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1265,6 +1274,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1319,6 +1329,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1365,6 +1376,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
