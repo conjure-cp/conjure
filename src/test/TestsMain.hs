@@ -9,7 +9,6 @@ import qualified Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) )
 import qualified Conjure.TypeCheckAll ( tests )
 import qualified Conjure.ParsePrint ( tests )
 import qualified Conjure.Custom ( tests )
-import qualified Conjure.JSONReprs (tests)
 
 -- tasty
 import Test.Tasty ( defaultMainWithIngredients, defaultIngredients, includingOptions, askOption, testGroup )
