@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-find var1_Occurrence: matrix indexed by [int(5, 1..5)] of bool
-find var2_ExplicitVarSizeWithFlags_Flags:
-        matrix indexed by [int(1..0)] of int(0..0)
-find var2_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..0)] of int(3, 1)
-such that 0 = sum([var1_Occurrence[q1] | q1 : int(5, 1..5)])
-

@@ -1,7 +1,0 @@
-language ESSENCE' 1.0
-
-find var2: int(1..4, 5..5)
-such that
-    2 = var2 \/ 3 = var2,
-    !(2 = var2 \/ 3 = var2) \/ (!(var2 = 2) \/ !(var2 = 3))
-

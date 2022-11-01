@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-find var1: int(1..2, 1..2)
-find var2: bool
-maximising var1
-such that
-    var2,
-    [false, true, false, true; int(3..3, 7..7, 10..10, 12..12)][var1]
-

@@ -1,8 +1,0 @@
-language Essence 1.3
-
-find var1: int(1..4, 1)
-such that
-    2 in mset(5, 2, 3),
-    true,
-    allDiff([false, true; int(2, 4..4)]),
-    apart({false, false, true}, partition({true, true, true, true}, {false, true, true, false}))

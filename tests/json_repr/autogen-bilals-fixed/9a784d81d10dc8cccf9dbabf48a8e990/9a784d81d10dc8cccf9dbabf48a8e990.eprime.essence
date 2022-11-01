@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-find var1_Occurrence: matrix indexed by [int(-5..4, -4)] of bool
-such that
-    or([and([var1_Occurrence[q3] -> q_2_Occurrence[q3] | q3 : int(-5..4, -4)]) /\
-        (or([var1_Occurrence[q4] /\ !q_2_Occurrence[q4] | q4 : int(-5..4, -4)]) \/
-         or([!var1_Occurrence[q4] | q4 : int(-5..4, -4), q_2_Occurrence[q4]]))
-            | q_2_Occurrence : matrix indexed by [int(-5..4, -4)] of bool])
-

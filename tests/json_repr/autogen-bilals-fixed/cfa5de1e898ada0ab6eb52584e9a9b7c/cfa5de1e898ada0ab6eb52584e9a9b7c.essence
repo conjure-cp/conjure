@@ -1,9 +1,0 @@
-language Essence 1.3
-
-find unused: bool
-such that
-    apart({(2, false)},
-          image(function({0} --> partition({(5, false), (2, true), (3, true), (3, false)},
-                                           {(1, false), (4, true), (5, false), (4, true), (5, true)},
-                                           {(4, true), (0, false)})),
-                ({} : `set of int`)))

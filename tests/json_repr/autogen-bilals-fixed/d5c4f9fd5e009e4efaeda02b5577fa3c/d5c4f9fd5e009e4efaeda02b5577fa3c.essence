@@ -1,7 +1,0 @@
-language Essence 1.3
-
-given given1:
-        relation (maxSize 4 - 3) of
-            (partition (partSize 5, regular) from bool * mset (minSize 5, maxSize 5, maxOccur 1) of bool * set of bool *
-             mset (minOccur 5, maxOccur 5) of bool)
-find unused: bool

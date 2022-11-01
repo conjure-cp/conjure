@@ -1,6 +1,0 @@
-language Essence 1.3
-
-find unused: bool
-such that
-    inverse(function(function(true --> true, true --> false, true --> true, true --> false) --> [true; int(1..1)]),
-            function([true; int(2..2)] --> function(true --> false, false --> true, false --> false, true --> false)))
