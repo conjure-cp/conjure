@@ -26,7 +26,6 @@ main = do
     typeCheckAllTests     <- Conjure.TypeCheckAll.tests
     parsePrintTests       <- Conjure.ParsePrint.tests
     customTests           <- Conjure.Custom.tests
-    jsonReprTests         <- Conjure.JSONReprs.tests
     let ingredients = antXMLRunner
                     : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.TestTimeLimit)]
                     : defaultIngredients
@@ -34,9 +33,8 @@ main = do
         testGroup "conjure"
             [ Conjure.Language.DomainSizeTest.tests
             , Conjure.RepresentationsTest.tests
-            , jsonReprTests
+            , parsePrintTests
             , modelAllSolveAllTests testTimeLimit
             , typeCheckAllTests
-            , parsePrintTests
             , customTests testTimeLimit
             ]
