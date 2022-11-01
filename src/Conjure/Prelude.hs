@@ -30,7 +30,7 @@ module Conjure.Prelude
     , allNats
     , jsonOptions
     , Proxy(..)
-    , MonadFailDoc(..), failCheaply, na
+    , MonadFailDoc(..), na
     , MonadFail (..)
     , allContexts, ascendants
     , dropExtension, dropDirs
@@ -462,15 +462,6 @@ instance MonadState s m => MonadState s (ExceptT m) where
     get = lift get
     put = lift . put
 
-
--- | "failCheaply: premature optimisation at its finest." - Oz
---   If you have a (MonadFailDoc m => m a) action at hand which doesn't require anything else from the monad m,
---   it can be run in any monad that implements MonadFailDoc.
---   Running it in a monad like IO will be a little bit more expensive though.
---   Why not run it in Either and raise the error in the outer monad instead?
---   Notice: this function cannot be eta-reduced.
-failCheaply :: MonadFailDoc m2 => (forall m . MonadFailDoc m => m a) -> m2 a
-failCheaply m = either failDoc return m
 
 
 allContexts :: Data b => Zipper a b -> [Zipper a b]
