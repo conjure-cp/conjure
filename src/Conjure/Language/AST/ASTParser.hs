@@ -79,13 +79,13 @@ parseSuchThat :: Parser StatementNode
 parseSuchThat = do
     lSuch <- need L_such
     lThat <- want L_that
-    exprs <- commaList parseExpression
+    exprs <- commaList1 parseExpression
     return $ SuchThatStatement $ SuchThatStatementNode lSuch lThat exprs
 
 parseWhere :: Parser StatementNode
 parseWhere = do
     lWhere <- need L_where
-    exprs <- commaList parseExpression
+    exprs <- commaList1 parseExpression
     return $ WhereStatement $ WhereStatementNode lWhere exprs
 
 parseObjective :: Parser StatementNode
@@ -104,12 +104,12 @@ parseDeclaration =
         declaration :: (Null a) => (LToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
         declaration c t p = do
                             l <- need t
-                            seq <- commaList p
+                            seq <- commaList1 p
                             return $ c l seq
 
 parseLetting :: Parser LettingStatementNode
 parseLetting = do
-    names <- commaList parseIdentifier
+    names <- commaList1 parseIdentifier
     lBe <- want L_be
     let start = LettingStatementNode names lBe
     start <$> choice
@@ -139,7 +139,7 @@ parseLetting = do
 
 parseGiven :: Parser GivenStatementNode
 parseGiven = do
-    names <- commaList parseIdentifier
+    names <- commaList1 parseIdentifier
     choice
         [ finishEnum (GivenEnumNode names)
         , finishDomain (GivenStatementNode names)
@@ -158,7 +158,7 @@ parseGiven = do
 
 parseFind :: Parser FindStatementNode
 parseFind = do
-    names <- commaList parseIdentifier
+    names <- commaList1 parseIdentifier
     lColon <- want L_Colon
     domain <- parseDomain
     return $ FindStatementNode names lColon domain
@@ -653,10 +653,13 @@ parseMatrix = do
     lMatrix <- need L_matrix
     lIndexed <- want L_indexed
     lBy <- want L_by
+    let indexByNode = case (lIndexed,lBy) of 
+            (MissingToken _,MissingToken _) -> Nothing
+            _ -> Just (IndexedByNode lIndexed lBy)
     members <- squareBracketList $ commaList parseDomain
     lOf <- want L_of
     domain <- parseDomain
-    return $ MatrixDomainNode lMatrix lIndexed lBy members lOf domain
+    return $ MatrixDomainNode lMatrix indexByNode members lOf domain
 
 parseSet :: Parser DomainNode
 parseSet = do
