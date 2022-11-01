@@ -16,8 +16,6 @@ module Conjure.Language.Expression.Op.Internal.Common
     , boolToBoolToBool
     , sameToSameToBool
     , sameToSameToSame
-    , getFunctionTypes
-    , getIntTag
     ) where
 
 -- conjure
@@ -297,20 +295,6 @@ functionals =
     , L_powerSet
 
     ]
-
-getFunctionTypes :: (MonadFailDoc m,TypeOf a,?typeCheckerMode :: TypeCheckerMode) => a -> m (Type , Type)
-getFunctionTypes f = do
-    f' <- typeOf f
-    case f' of
-        TypeFunction a b -> return (a,b)
-        _ -> raiseTypeError f'
-
-getIntTag ::(MonadFailDoc m,TypeOf a,?typeCheckerMode :: TypeCheckerMode) => a -> m IntTag 
-getIntTag i = do
-    i' <- typeOf i
-    case i' of 
-        TypeInt t -> return t
-        _ -> raiseTypeError i'
 
 raiseTypeError :: MonadFailDoc m => Pretty a => a -> m b
 raiseTypeError p = failDoc ("Type error in" <+> pretty p)

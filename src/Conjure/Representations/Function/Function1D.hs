@@ -181,7 +181,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                                 ]
         up _ _ = na "{up} Function1D"
 
-        symmetryOrdering ::TypeOf_SymmetryOrdering m
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)

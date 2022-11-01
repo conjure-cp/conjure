@@ -133,7 +133,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant -> do
                     let
-                        allIndices :: ( Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (MonadFailDoc m, Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
                         index :: MonadFailDoc m => Constant -> [Constant] -> m Constant

@@ -14,5 +14,3 @@ class TypeOf a where
     -- RelaxedIntegerTags is for internal use only and it ignores the integer tags during type checking.
 
     typeOf :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode) => a -> m Type
-
-

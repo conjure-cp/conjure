@@ -43,9 +43,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf 
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeTuple inns   -> do
-                t <- typeOf i
+                TypeInt t <- typeOf i
                 case t of
-                    TypeInt TagInt -> return ()
+                    TagInt -> return ()
                     _ -> failDoc $ "Tuples cannot be indexed by enums/unnameds:" <++> pretty p
                 case intOut "OpIndexing" i of
                     Nothing -> failDoc $ "Tuples can only be indexed by constants:" <++> pretty p

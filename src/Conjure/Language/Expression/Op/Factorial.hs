@@ -20,7 +20,7 @@ instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = genericParse
 
 instance (TypeOf x, Pretty x) => TypeOf (OpFactorial x) where
     typeOf p@(OpFactorial a) = do
-        t <- getIntTag a
+        TypeInt t <- typeOf a
         case t of
             TagInt -> return ()
             _ -> raiseTypeError p

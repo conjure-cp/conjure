@@ -20,7 +20,7 @@ instance FromJSON  x => FromJSON  (OpNegate x) where parseJSON = genericParseJSO
 
 instance (TypeOf x, Pretty x) => TypeOf (OpNegate x) where
     typeOf p@(OpNegate a) = do
-        t <- getIntTag a
+        TypeInt t <- typeOf a
         case t of
             TagInt -> return ()
             _ -> raiseTypeError p

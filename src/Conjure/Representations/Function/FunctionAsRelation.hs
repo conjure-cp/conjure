@@ -180,8 +180,5 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         symmetryOrdering innerSO downX1 inp domain = do
 
             [rel] <- downX1 inp
-            Just [(_,relDomain)]<- downD ("SO", domain)
+            Just [(_, relDomain)] <- downD ("SO", domain)
             innerSO downX1 rel relDomain
-
-
-

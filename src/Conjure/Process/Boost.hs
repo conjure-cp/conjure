@@ -427,7 +427,7 @@ totalInjectiveIsBijective _ ((_, dom), _)
          _ -> return mempty
 
 -- | If a function is defined for all values in its domain, then it is total.
-definedForAllIsTotal :: ( MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
+definedForAllIsTotal :: (MonadFailDoc m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
                      => Model
                      -> (FindVar, [ExpressionZ])
                      -> m ([AttrPair], ToAddToRem)
@@ -458,7 +458,7 @@ definedForAllIsTotal _ ((n, dom), cs)
 -- | If all distinct inputs to a function have distinct results, then it is injective.
 --   It will also be total if there are no conditions other than the disequality between
 --   the two inputs.
-diffArgResultIsInjective :: ( MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
+diffArgResultIsInjective :: (MonadFailDoc m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
                          => Model
                          -> (FindVar, [ExpressionZ])
                          -> m ([AttrPair], ToAddToRem)
@@ -480,7 +480,7 @@ diffArgResultIsInjective _ ((n, DomainFunction _ (FunctionAttr _ _ ject) from _)
 diffArgResultIsInjective _ _ = return mempty
 
 -- | Set a size attribute on a variable.
-varSize :: ( MonadLog m)
+varSize :: (MonadFailDoc m, MonadLog m)
         => Model
         -> (FindVar, [ExpressionZ])
         -> m ([AttrPair], ToAddToRem)
@@ -501,7 +501,7 @@ cardinalityOf _ = Nothing
 
 
 -- | Set the minimum size of a set based on it being a superset of another.
-setSize :: ( MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
+setSize :: (MonadFailDoc m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
         => Model
         -> (FindVar, [ExpressionZ])
         -> m ([AttrPair], ToAddToRem)
@@ -584,7 +584,7 @@ setSize _ ((n, DomainSet{}), cs)
 setSize _ _ = return mempty
 
 -- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
-mSetSizeOccur :: ( MonadLog m)
+mSetSizeOccur :: (MonadFailDoc m, MonadLog m)
               => Model
               -> (FindVar, [ExpressionZ])
               -> m ([AttrPair], ToAddToRem)
@@ -610,7 +610,7 @@ mSetSizeOccur _ ((_, d), _)
          _ -> return mempty
 
 -- | Infer multiset occurrence attributes from constraints.
-mSetOccur :: ( MonadLog m)
+mSetOccur :: (MonadFailDoc m, MonadLog m)
           => Model
           -> (FindVar, [ExpressionZ])
           -> m ([AttrPair], ToAddToRem)
@@ -654,7 +654,7 @@ mSetOccur _ ((n, DomainMSet _ _ d), cs)
 mSetOccur _ _ = return mempty
 
 -- | Mark a partition regular if there is a constraint on its parts constraining them to be of equal size.
-partRegular :: ( MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
+partRegular :: (MonadFailDoc m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
             => Model
             -> (FindVar, [ExpressionZ])
             -> m ([AttrPair], ToAddToRem)
@@ -676,7 +676,7 @@ partRegular _ _ = return mempty
 
 
 -- | Convert constraints acting on the number of parts in a partition to an attribute.
-numPartsToAttr :: ( MonadLog m)
+numPartsToAttr :: (MonadFailDoc m, MonadLog m)
                => Model
                -> (FindVar, [ExpressionZ])
                -> m ([AttrPair], ToAddToRem)
@@ -697,7 +697,7 @@ numPartsToAttr _ ((n, DomainPartition{}), cs) = do
 numPartsToAttr _ _ = return mempty
 
 -- | Convert constraints acting on the sizes of parts in a partition to an attribute.
-partSizeToAttr :: ( MonadLog m)
+partSizeToAttr :: (MonadFailDoc m, MonadLog m)
                => Model
                -> (FindVar, [ExpressionZ])
                -> m ([AttrPair], ToAddToRem)
@@ -734,7 +734,7 @@ partSizeToAttr _ _ = return mempty
 
 -- | Equate the range of a function to a set of the former is a subset of the latter
 --   and all values in the set are results of the function.
-funcRangeEqSet :: ( MonadLog m)
+funcRangeEqSet :: (MonadFailDoc m, MonadLog m)
                => Model
                -> (FindVar, [ExpressionZ])
                -> m ([AttrPair], ToAddToRem)
@@ -770,7 +770,7 @@ funcRangeEqSet _ _ = return mempty
 
 -- | An (in)equality in a forAll implies that the (in)equality also applies to
 --   the sums of both terms.
-forAllIneqToIneqSum :: ( MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
+forAllIneqToIneqSum :: (MonadFailDoc m, MonadLog m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
                     => Model
                     -> (FindVar, [ExpressionZ])
                     -> m ([AttrPair], ToAddToRem)
@@ -814,7 +814,7 @@ forAllIneqToIneqSum _ (_, cs) = do
     mkConstraint _ = Nothing
 
 -- | Iterate slightly faster over a domain if generating two distinct variables.
-fasterIteration :: ( MonadFailDoc m,MonadIO m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
+fasterIteration :: (MonadFailDoc m, MonadFailDoc m,MonadIO m, MonadLog m, ?typeCheckerMode :: TypeCheckerMode)
                 => Model
                 -> (FindVar, [ExpressionZ])
                 -> m ([AttrPair], ToAddToRem)
@@ -899,7 +899,7 @@ ferret path = sh (run "symmetry_detect" [ "--json", path ]) `catch`
               (\(_ :: SomeException) -> return "{}")
 
 -- | Change the type of a multiset with `maxOccur 1` to set.
-mSetToSet :: ( MonadLog m)
+mSetToSet :: (MonadFailDoc m, MonadLog m)
           => Model
           -> (FindVar, [ExpressionZ])
           -> m (Domain () Expression, ToAddToRem)

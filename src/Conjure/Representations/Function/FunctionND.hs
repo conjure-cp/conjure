@@ -222,10 +222,10 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             case lookup (nameValues domain name) ctxt of
                 Just valuesMatrix -> do
                     let
-                        allIndices :: ( Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (MonadFailDoc  m, Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index ::  Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc  m => Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain

@@ -278,35 +278,27 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            -- [flags, values] <- downX1 inp
-            fv <- downX1 inp
-            -- Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
-            dom <- downD ("SO", domain)
-
+            [flags, values] <- downX1 inp
+            Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
+
+            -- setting up the quantification
+            let kRange = case innerDomainFr of
+                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                    DomainRecord rs -> map (fromName . fst) rs
+                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                    , "indexDomain:" <+> pretty innerDomainFr
+                                    ]
+                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
+                flagsIndexed = make opMatrixIndexing flags toIndex
+                valuesIndexed = make opMatrixIndexing values toIndex
+
+            soValues <- innerSO downX1 valuesIndexed innerDomainTo
             
-            case (fv,dom) of
-                ([flags, values],Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)]) -> do
-                            
-                    -- setting up the quantification
-                    let kRange = case innerDomainFr of
-                            DomainTuple ts  -> map fromInt [1 .. genericLength ts]
-                            DomainRecord rs -> map (fromName . fst) rs
-                            _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
-                                            , "indexDomain:" <+> pretty innerDomainFr
-                                            ]
-                        toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
-                        flagsIndexed = make opMatrixIndexing flags toIndex
-                        valuesIndexed = make opMatrixIndexing values toIndex
-
-                    soValues <- innerSO downX1 valuesIndexed innerDomainTo
-
-                    return $ 
-                        Comprehension
-                            [essence| ( -&flagsIndexed
-                                    , &soValues
-                                    )
-                                    |]
-                            [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
-                _ -> na "Pattern match error in Function ND partial"
-
+            return $ 
+                Comprehension
+                    [essence| ( -&flagsIndexed
+                              , &soValues
+                              )
+                            |]
+                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
