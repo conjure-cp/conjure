@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -o errexit
-set -o nounset
 
 if ${COVERAGE} && [ -z $DOWNLOADSECUREFILE_SECUREFILEPATH ]; then
     # this is from https://cloudblogs.microsoft.com/opensource/2019/04/05/publishing-github-pages-from-azure-pipelines
