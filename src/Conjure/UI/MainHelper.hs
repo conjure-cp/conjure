@@ -333,55 +333,79 @@ mainWithArgs config@Solve{..} = do
         Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
             when validateSolutionsOpt $ liftIO $ validating solutions
+
+            let params = nub [ dropExtension p | (_,p,_) <- solutions ]
+
             when copySolutions $ do
                 -- clean-up: move the solutions next to the essence file.
                 -- our intention is that a user intending to just solve something
                 -- should never have to look into outputDirectory.
+
                 let
                     copySolution :: MonadIO m => FilePath -> FilePath -> m ()
                     copySolution old new = do
                         pp logLevel ("Copying solution to:" <+> pretty new)
                         liftIO (copyFile old new)
+
                 let (essenceDir0, essenceFilename) = splitFileName essence
                 let essenceDir = if essenceDir0 == "./" then "" else essenceDir0
                 let essenceBasename = takeBaseName essenceFilename
-                when (length eprimes == 1) $
-                    if null essenceParams
-                        then do
-                            let solutions' = [ solution
-                                             | (_, _, Just solution) <- solutions ]
-                            case solutions' of
-                                [solution] ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                ]
-                                                            <.> ".solution")
-                                _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                , padLeft 6 '0' (show i)
-                                                                                ]
-                                                            <.> ".solution")
-                        else forM_ essenceParams $ \ essenceParam -> do
-                            let (_paramDir, paramFilename) = splitFileName essenceParam
-                            let paramBasename = takeBaseName paramFilename
-                            let solutions' = [ solution
-                                             | (_, essenceParam', Just solution) <- solutions
-                                             , essenceParam == essenceParam' ]
-                            case solutions' of
-                                [solution] ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                , paramBasename
-                                                                                ]
-                                                            <.> ".solution")
-                                _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                , paramBasename
-                                                                                , padLeft 6 '0' (show i)
-                                                                                ]
-                                                            <.> ".solution")
+
+                let extensions = [ ".solution", ".solution.json", ".solution.minizinc"
+                                 , ".solutions", ".solutions.json"
+                                 ]
+
+                files <- liftIO $ getAllFiles outputDirectory
+
+                unless (length eprimes == 1) $
+                    pp logLevel $ "Multiple eprime models found in the output directory, not copying solutions."
+
+                when (length eprimes == 1) $ do
+                    forM_ (sort files) $ \ file ->
+                        forM_ extensions $ \ ext ->
+                            case stripPostfix ext (snd (splitFileName file)) of
+                                Nothing -> return ()
+                                Just base -> do
+                                    let parts = splitOn "-" base
+                                    case (solutionsInOneFile, null essenceParams, nbSolutions == "1", parts) of
+                                        -- not parameterised, but no solution numbers. must be using solutionsInOneFile.
+                                        (True, True, _singleSolution, [_model]) ->
+                                            copySolution file $ essenceDir
+                                                                </> essenceBasename
+                                                                <.> ext
+                                        -- not parameterised, with solution numbers
+                                        (False, True, singleSolution, [_model, solnum]) | "solution" `isPrefixOf` solnum ->
+                                            if singleSolution
+                                                then when (solnum == "solution000001") $ -- only copy the first solution
+                                                     copySolution file $ essenceDir
+                                                                </> essenceBasename
+                                                                <.> ext
+                                                else copySolution file $ essenceDir
+                                                                </> intercalate "-" [essenceBasename, solnum]
+                                                                <.> ext
+                                        -- parameterised, but no solution numbers. must be using solutionsInOneFile.
+                                        (True, False, _singleSolution, [_model, param]) | param `elem` params ->
+                                            copySolution file $ essenceDir
+                                                                </> intercalate "-" [ essenceBasename
+                                                                                    , param
+                                                                                    ]
+                                                                <.> ext
+                                        -- parameterised, with solution numbers
+                                        (False, False, singleSolution, [_model, param, solnum]) | param `elem` params && "solution" `isPrefixOf` solnum->
+                                            if singleSolution
+                                                then when (solnum == "solution000001") $ -- only copy the first solution
+                                                     copySolution file $ essenceDir
+                                                                </> intercalate "-" [ essenceBasename
+                                                                                    , param
+                                                                                    ]
+                                                                <.> ext
+                                                else copySolution file $ essenceDir
+                                                                </> intercalate "-" [ essenceBasename
+                                                                                    , param
+                                                                                    , solnum
+                                                                                    ]
+                                                                <.> ext
+                                        _ -> return () -- ignore, we don't know how to handle this file
 
     liftIO stopGlobalPool
 

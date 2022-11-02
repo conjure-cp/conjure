@@ -47,6 +47,7 @@ module Conjure.Prelude
     , isTopMostZ
     , getDirectoryContents
     , RunStateAsWriter, runStateAsWriterT, sawTell
+    , stripPostfix
     ) where
 
 import GHC.Err as X ( error )
@@ -633,3 +634,11 @@ instance RunStateAsWriter ([a],[b]) where
 
 sawTell :: (MonadState s m, Monoid s) => s -> m ()
 sawTell xs = modify (xs `mappend`)
+
+
+stripPostfix :: Eq a => [a] -> [a] -> Maybe [a]
+stripPostfix postfix list =
+    case stripPrefix (reverse postfix) (reverse list) of
+        Nothing -> Nothing
+        Just rest -> Just (reverse rest)
+
