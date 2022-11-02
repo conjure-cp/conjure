@@ -11,6 +11,7 @@ module Conjure.UI.IO
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI
 import Conjure.Language
@@ -212,6 +213,7 @@ writeModel lnWidth MiniZinc (Just fp) spec = do
     if lnWidth == 0
         then liftIO $ writeFile fp (show spec')
         else liftIO $ writeFile fp (render lnWidth spec')
+writeModel _ _ _ _ = bug "writeModels"
 
 
 writeModels ::
