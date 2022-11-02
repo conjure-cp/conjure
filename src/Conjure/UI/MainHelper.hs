@@ -374,9 +374,9 @@ mainWithArgs config@Solve{..} = do
                                                                 </> essenceBasename
                                                                 <.> ext
                                         -- not parameterised, with solution numbers
-                                        (False, True, singleSolution, [_model, solnum]) | "solution" `isPrefixOf` solnum ->
+                                        (False, True, singleSolution, [_model, (stripPrefix "solution" -> Just solnum)]) ->
                                             if singleSolution
-                                                then when (solnum == "solution000001") $ -- only copy the first solution
+                                                then when (solnum == "000001") $ -- only copy the first solution
                                                      copySolution file $ essenceDir
                                                                 </> essenceBasename
                                                                 <.> ext
@@ -391,9 +391,9 @@ mainWithArgs config@Solve{..} = do
                                                                                     ]
                                                                 <.> ext
                                         -- parameterised, with solution numbers
-                                        (False, False, singleSolution, [_model, param, solnum]) | param `elem` params && "solution" `isPrefixOf` solnum->
+                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)]) | param `elem` params ->
                                             if singleSolution
-                                                then when (solnum == "solution000001") $ -- only copy the first solution
+                                                then when (solnum == "000001") $ -- only copy the first solution
                                                      copySolution file $ essenceDir
                                                                 </> intercalate "-" [ essenceBasename
                                                                                     , param
