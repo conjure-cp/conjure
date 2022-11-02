@@ -6,7 +6,7 @@ module Conjure.Language.Domain
     ( Domain(..)
     , HasRepresentation(..)
     , Range(..), rangesInts
-    , SetAttr(..), SizeAttr(..), getMaxFrom_SizeAttr
+    , SetAttr(..), SizeAttr(..), getMaxFrom_SizeAttr, intersectSizeAttr
     , MSetAttr(..), OccurAttr(..), getMaxFrom_OccurAttr
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , SequenceAttr(..)
@@ -334,11 +334,17 @@ data AttrName
     | AttrName_antiSymmetric
     | AttrName_aSymmetric
     | AttrName_transitive
+    | AttrName_leftTotal
+    | AttrName_rightTotal
     | AttrName_connex
     | AttrName_Euclidean
     | AttrName_serial
     | AttrName_equivalence
     | AttrName_partialOrder
+    | AttrName_linearOrder
+    | AttrName_weakOrder
+    | AttrName_preOrder
+    | AttrName_strictPartialOrder
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize AttrName
@@ -370,11 +376,17 @@ instance Pretty AttrName where
     pretty AttrName_antiSymmetric = "antiSymmetric"
     pretty AttrName_aSymmetric = "aSymmetric"
     pretty AttrName_transitive = "transitive"
+    pretty AttrName_leftTotal = "leftTotal"
+    pretty AttrName_rightTotal = "rightTotal"
     pretty AttrName_connex = "connex"
     pretty AttrName_Euclidean = "Euclidean"
     pretty AttrName_serial = "serial"
     pretty AttrName_equivalence = "equivalence"
     pretty AttrName_partialOrder = "partialOrder"
+    pretty AttrName_linearOrder = "linearOrder"
+    pretty AttrName_weakOrder = "weakOrder"
+    pretty AttrName_preOrder = "preOrder"
+    pretty AttrName_strictPartialOrder = "strictPartialOrder"
 
 instance IsString AttrName where
     fromString "size" = AttrName_size
@@ -401,10 +413,16 @@ instance IsString AttrName where
     fromString "aSymmetric" = AttrName_aSymmetric
     fromString "transitive" = AttrName_transitive
     fromString "connex" = AttrName_connex
+    fromString "leftTotal" = AttrName_leftTotal
+    fromString "rightTotal" = AttrName_rightTotal
     fromString "Euclidean" = AttrName_Euclidean
     fromString "serial" = AttrName_serial
     fromString "equivalence" = AttrName_equivalence
     fromString "partialOrder" = AttrName_partialOrder
+    fromString "linearOrder" = AttrName_linearOrder
+    fromString "weakOrder" = AttrName_weakOrder
+    fromString "preOrder" = AttrName_preOrder
+    
     fromString s = bug $ "fromString{AttrName}:" <+> pretty s
 
 
@@ -450,6 +468,11 @@ getMaxFrom_SizeAttr (SizeAttr_MaxSize n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MinMaxSize _ n) = return n
 getMaxFrom_SizeAttr _ = fail "getMaxFrom_SizeAttr"
 
+intersectSizeAttr :: SizeAttr a -> SizeAttr a -> SizeAttr a
+intersectSizeAttr SizeAttr_None s = s
+intersectSizeAttr s@SizeAttr_Size{} _ = s
+intersectSizeAttr _ s@SizeAttr_Size{} = s
+intersectSizeAttr s _ = s
 
 data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -596,78 +619,88 @@ data BinaryRelationAttr
     | BinRelAttr_ASymmetric
     | BinRelAttr_Transitive
     | BinRelAttr_Total
+    | BinRelAttr_LeftTotal
+    | BinRelAttr_RightTotal
     | BinRelAttr_Connex
     | BinRelAttr_Euclidean
     | BinRelAttr_Serial
     | BinRelAttr_Equivalence
     | BinRelAttr_PartialOrder
+    | BinRelAttr_LinearOrder
+    | BinRelAttr_WeakOrder
+    | BinRelAttr_PreOrder
+    | BinRelAttr_StrictPartialOrder
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize BinaryRelationAttr
 instance Hashable  BinaryRelationAttr
 instance ToJSON    BinaryRelationAttr where toJSON = genericToJSON jsonOptions
 instance FromJSON  BinaryRelationAttr where parseJSON = genericParseJSON jsonOptions
 instance Pretty BinaryRelationAttr where
-    pretty BinRelAttr_Reflexive     = "reflexive"
-    pretty BinRelAttr_Irreflexive   = "irreflexive"
-    pretty BinRelAttr_Coreflexive   = "coreflexive"
-    pretty BinRelAttr_Symmetric     = "symmetric"
-    pretty BinRelAttr_AntiSymmetric = "antiSymmetric"
-    pretty BinRelAttr_ASymmetric    = "aSymmetric"
-    pretty BinRelAttr_Transitive    = "transitive"
-    pretty BinRelAttr_Total         = "total"
-    pretty BinRelAttr_Connex        = "connex"
-    pretty BinRelAttr_Euclidean     = "Euclidean"
-    pretty BinRelAttr_Serial        = "serial"
-    pretty BinRelAttr_Equivalence   = "equivalence"
-    pretty BinRelAttr_PartialOrder  = "partialOrder"
+    pretty BinRelAttr_Reflexive          = "reflexive"
+    pretty BinRelAttr_Irreflexive        = "irreflexive"
+    pretty BinRelAttr_Coreflexive        = "coreflexive"
+    pretty BinRelAttr_Symmetric          = "symmetric"
+    pretty BinRelAttr_AntiSymmetric      = "antiSymmetric"
+    pretty BinRelAttr_ASymmetric         = "aSymmetric"
+    pretty BinRelAttr_Transitive         = "transitive"
+    pretty BinRelAttr_Total              = "total"
+    pretty BinRelAttr_LeftTotal          = "leftTotal"
+    pretty BinRelAttr_RightTotal         = "rightTotal"
+    pretty BinRelAttr_Connex             = "connex"
+    pretty BinRelAttr_Euclidean          = "Euclidean"
+    pretty BinRelAttr_Serial             = "serial"
+    pretty BinRelAttr_Equivalence        = "equivalence"
+    pretty BinRelAttr_PartialOrder       = "partialOrder"
+    pretty BinRelAttr_LinearOrder        = "linearOrder"
+    pretty BinRelAttr_WeakOrder          = "weakOrder"
+    pretty BinRelAttr_PreOrder           = "preOrder"
+    pretty BinRelAttr_StrictPartialOrder = "strictPartialOrder"
+
 
 readBinRel :: MonadFail m => AttrName -> m BinaryRelationAttr
-readBinRel AttrName_reflexive     = return BinRelAttr_Reflexive
-readBinRel AttrName_irreflexive   = return BinRelAttr_Irreflexive
-readBinRel AttrName_coreflexive   = return BinRelAttr_Coreflexive
-readBinRel AttrName_symmetric     = return BinRelAttr_Symmetric
-readBinRel AttrName_antiSymmetric = return BinRelAttr_AntiSymmetric
-readBinRel AttrName_aSymmetric    = return BinRelAttr_ASymmetric
-readBinRel AttrName_transitive    = return BinRelAttr_Transitive
-readBinRel AttrName_total         = return BinRelAttr_Total
-readBinRel AttrName_connex        = return BinRelAttr_Connex
-readBinRel AttrName_Euclidean     = return BinRelAttr_Euclidean
-readBinRel AttrName_serial        = return BinRelAttr_Serial
-readBinRel AttrName_equivalence   = return BinRelAttr_Equivalence
-readBinRel AttrName_partialOrder  = return BinRelAttr_PartialOrder
+readBinRel AttrName_reflexive          = return BinRelAttr_Reflexive
+readBinRel AttrName_irreflexive        = return BinRelAttr_Irreflexive
+readBinRel AttrName_coreflexive        = return BinRelAttr_Coreflexive
+readBinRel AttrName_symmetric          = return BinRelAttr_Symmetric
+readBinRel AttrName_antiSymmetric      = return BinRelAttr_AntiSymmetric
+readBinRel AttrName_aSymmetric         = return BinRelAttr_ASymmetric
+readBinRel AttrName_transitive         = return BinRelAttr_Transitive
+readBinRel AttrName_total              = return BinRelAttr_Total
+readBinRel AttrName_leftTotal          = return BinRelAttr_LeftTotal
+readBinRel AttrName_rightTotal         = return BinRelAttr_RightTotal
+readBinRel AttrName_connex             = return BinRelAttr_Connex
+readBinRel AttrName_Euclidean          = return BinRelAttr_Euclidean
+readBinRel AttrName_serial             = return BinRelAttr_Serial
+readBinRel AttrName_equivalence        = return BinRelAttr_Equivalence
+readBinRel AttrName_partialOrder       = return BinRelAttr_PartialOrder
+readBinRel AttrName_strictPartialOrder = return BinRelAttr_StrictPartialOrder
+readBinRel AttrName_linearOrder        = return BinRelAttr_LinearOrder
+readBinRel AttrName_weakOrder          = return BinRelAttr_WeakOrder
+readBinRel AttrName_preOrder           = return BinRelAttr_PreOrder
 readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
 
 binRelToAttrName :: BinaryRelationAttr -> AttrName
-binRelToAttrName BinRelAttr_Reflexive       = AttrName_reflexive    
-binRelToAttrName BinRelAttr_Irreflexive     = AttrName_irreflexive  
-binRelToAttrName BinRelAttr_Coreflexive     = AttrName_coreflexive  
-binRelToAttrName BinRelAttr_Symmetric       = AttrName_symmetric    
-binRelToAttrName BinRelAttr_AntiSymmetric   = AttrName_antiSymmetric
-binRelToAttrName BinRelAttr_ASymmetric      = AttrName_aSymmetric   
-binRelToAttrName BinRelAttr_Transitive      = AttrName_transitive   
-binRelToAttrName BinRelAttr_Total           = AttrName_total        
-binRelToAttrName BinRelAttr_Connex          = AttrName_connex       
-binRelToAttrName BinRelAttr_Euclidean       = AttrName_Euclidean    
-binRelToAttrName BinRelAttr_Serial          = AttrName_serial       
-binRelToAttrName BinRelAttr_Equivalence     = AttrName_equivalence  
-binRelToAttrName BinRelAttr_PartialOrder    = AttrName_partialOrder 
+binRelToAttrName BinRelAttr_Reflexive          = AttrName_reflexive
+binRelToAttrName BinRelAttr_Irreflexive        = AttrName_irreflexive
+binRelToAttrName BinRelAttr_Coreflexive        = AttrName_coreflexive
+binRelToAttrName BinRelAttr_Symmetric          = AttrName_symmetric
+binRelToAttrName BinRelAttr_AntiSymmetric      = AttrName_antiSymmetric
+binRelToAttrName BinRelAttr_ASymmetric         = AttrName_aSymmetric
+binRelToAttrName BinRelAttr_Transitive         = AttrName_transitive
+binRelToAttrName BinRelAttr_Total              = AttrName_total
+binRelToAttrName BinRelAttr_LeftTotal          = AttrName_leftTotal
+binRelToAttrName BinRelAttr_RightTotal         = AttrName_rightTotal
+binRelToAttrName BinRelAttr_Connex             = AttrName_connex
+binRelToAttrName BinRelAttr_Euclidean          = AttrName_Euclidean
+binRelToAttrName BinRelAttr_Serial             = AttrName_serial
+binRelToAttrName BinRelAttr_Equivalence        = AttrName_equivalence
+binRelToAttrName BinRelAttr_PartialOrder       = AttrName_partialOrder
+binRelToAttrName BinRelAttr_LinearOrder        = AttrName_linearOrder
+binRelToAttrName BinRelAttr_WeakOrder          = AttrName_weakOrder
+binRelToAttrName BinRelAttr_PreOrder           = AttrName_preOrder
+binRelToAttrName BinRelAttr_StrictPartialOrder = AttrName_strictPartialOrder
 
--- reflexive        forAll x : T . rel(x,x)
--- irreflexive      forAll x : T . !rel(x,x)
--- coreflexive      forAll x,y : T . rel(x,y) -> x = y
---
--- symmetric        forAll x,y : T . rel(x,y) -> rel(y,x)
--- antisymmetric    forAll x,y : T . rel(x,y) /\ rel(y,x) -> x = y
--- asymmetric       forAll x,y : T . rel(x,y) -> !rel(y,x)
---
--- transitive       forAll x,y,z : T . rel(x,y) /\ rel(y,z) -> rel(x,z)
---
--- total            forAll x,y : T . rel(x,y) \/ rel(y,x)
--- connex           forAll x,y : T . rel(x,y) \/ rel(y,x) \/ x = y
--- Euclidean        forAll x,y,z : T . rel(x,y) /\ rel(x,z) -> rel(y,z)
--- serial           forAll x : T . exists y : T . rel(x,y)
--- equivalence      reflexive + symmetric + transitive
--- partialOrder     reflexive + antisymmetric + transitive
+
 
 
 data PartitionAttr a = PartitionAttr
@@ -833,7 +866,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainInt _ []) = "int"
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
-        
+
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _             _) = pretty name
 

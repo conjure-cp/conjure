@@ -497,8 +497,8 @@ parseRelationAttr = do
         [ "size", "minSize", "maxSize"
         , "reflexive", "irreflexive", "coreflexive"
         , "symmetric", "antiSymmetric", "aSymmetric"
-        , "transitive", "total", "connex", "Euclidean"
-        , "serial", "equivalence", "partialOrder"
+        , "transitive", "total", "leftTotal", "rightTotal", "connex", "Euclidean"
+        , "serial", "equivalence", "weakOrder", "preOrder", "partialOrder", "strictPartialOrder", "linearOrder"
         ]
     size <- case filterSizey attrs of
         [] -> return SizeAttr_None
