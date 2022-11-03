@@ -32,7 +32,7 @@ jobs:
             ~\AppData\Roaming\stack
             ~\AppData\Local\Programs\stack    
           key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-            restore-keys: ${{ runner.os }}-stack-global-
+          restore-keys: ${{ runner.os }}-stack-global-
 
       - uses: actions/cache@v3
         name: Cache local stack (Linux & Mac)
@@ -47,8 +47,8 @@ jobs:
         if: runner.os == 'Windows'
         with:
           path: .stack-work
-            key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
-            restore-keys: ${{ runner.os }}-stack-work-
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          restore-keys: ${{ runner.os }}-stack-work-
 
       - name: Install Conjure
         shell: bash
