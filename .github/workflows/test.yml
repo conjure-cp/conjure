@@ -21,7 +21,7 @@ jobs:
       
       - name: Stack version
         shell: bash
-        run: cp etc/hs-deps/stack-${{ GHC_VERSION }}.yaml stack.yaml
+        run: cp etc/hs-deps/stack-${{ matrix.GHC_VERSION }}.yaml stack.yaml
 
       - uses: actions/cache@v3
         name: Cache global stack (Linux & Mac)
@@ -59,7 +59,7 @@ jobs:
 
       - name: Install Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
       - name: Install Minion
         shell: bash
