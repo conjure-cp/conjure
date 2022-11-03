@@ -1,0 +1,80 @@
+name: Testing
+
+on: [push, pull_request]
+
+
+jobs:
+
+  lettuce:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+
+      - uses: actions/checkout@v3
+        name: Checkout repository
+      
+      - uses: actions/cache@v3
+        name: Cache global stack (Linux & Mac)
+        if: runner.os != 'Windows'
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          restore-keys: ${{ runner.os }}-stack-global-
+
+      - uses: actions/cache@v3
+        name: Cache global stack (Windows)
+        if: runner.os == 'Windows'
+        with:
+          path: |
+            ~\AppData\Roaming\stack
+            ~\AppData\Local\Programs\stack    
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+            restore-keys: ${{ runner.os }}-stack-global-
+
+      - uses: actions/cache@v3
+        name: Cache local stack (Linux & Mac)
+        if: runner.os != 'Windows'
+        with:
+          path: .stack-work
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          restore-keys: ${{ runner.os }}-stack-work-
+
+      - uses: actions/cache@v3
+        name: Cache local stack (Windows)
+        if: runner.os == 'Windows'
+        with:
+          path: .stack-work
+            key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+            restore-keys: ${{ runner.os }}-stack-work-
+
+      - name: Install Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
+
+      - name: Install Minion
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
+
+      - name: Install Glucose
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
+
+      - name: Install Cadical
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-cadical.sh
+
+      - name: Install Kissat
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-kissat.sh
+
+      - name: Install GNU Parallel
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-gnu-parallel.sh
+
+      - name: Run tests
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=5 make test
+  
