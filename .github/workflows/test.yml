@@ -57,6 +57,10 @@ jobs:
           key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: ${{ runner.os }}-stack-work-
 
+      - name: List files
+        shell: bash
+        run: pwd ; ls -lA
+
       - name: Install Conjure
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
