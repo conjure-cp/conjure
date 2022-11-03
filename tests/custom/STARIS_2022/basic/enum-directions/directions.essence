@@ -1,0 +1,7 @@
+$ this test uses enumerated types and functions
+letting directions be new type enum {north, south, east, west}
+find f : function directions --> int(1..4)
+such that
+    f(north) > f(south),
+    f(east) < f(west),
+    f(south) > f(west)

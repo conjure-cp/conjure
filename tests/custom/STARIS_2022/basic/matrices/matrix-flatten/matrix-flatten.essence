@@ -1,0 +1,10 @@
+$ testing basic use of flatten
+letting d be domain matrix indexed by [int(1..2),int(1..5)] of int(1..5)
+find m : d such that m[1] = [1, 2, 3, 5, 4], m[2] = [4, 4, 3, 3, 1]
+find s : matrix indexed by [int(1..10)] of int(1..5)
+
+$ this line is the successful flatten line
+such that s = flatten(1, [[1, 2, 3, 5, 4],[4, 4, 3, 3, 1]])
+
+$ the following line causes the bug because the inputs to the flatten function are out of order
+$ such that s = flatten([[1, 2, 3, 5, 4],[4, 4, 3, 3, 1]], 1)

@@ -1,0 +1,33 @@
+{"model":
+     {"children":
+          [{"children":
+                {"name": {"Name": "P"}, "type": "Letting",
+                 "value":
+                     {"Constant":
+                          {"ConstantAbstract":
+                               {"AbsLitPartition":
+                                    [[{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantInt": [{"TagInt": []}, 2]}],
+                                     [{"ConstantInt": [{"TagInt": []}, 3]}],
+                                     [{"ConstantInt": [{"TagInt": []}, 4]}, {"ConstantInt": [{"TagInt": []}, 5]},
+                                      {"ConstantInt": [{"TagInt": []}, 6]}]]}}}},
+            "type": "Declaration"},
+           {"children":
+                {"domain":
+                     {"DomainSet":
+                          [[], {"SizeAttr_None": []},
+                           {"DomainInt":
+                                [{"TagInt": []},
+                                 [{"RangeBounded":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}]]}]},
+                 "forg": "Find", "name": {"Name": "c"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "c"}},
+                       {"children": [{"ConstantInt": [{"TagInt": []}, 4]}, {"Reference": {"Name": "P"}}],
+                        "type": "OpParty"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["P", "c"]}

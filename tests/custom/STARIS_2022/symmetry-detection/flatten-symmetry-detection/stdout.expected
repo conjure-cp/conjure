@@ -1,0 +1,35 @@
+{"model":
+     {"children":
+          [{"children": {"domain": {"DomainBool": []}, "forg": "Find", "name": {"Name": "b"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "b"}},
+                       {"children":
+                            [{"children":
+                                  [null,
+                                   {"ConstantAbstract":
+                                        {"AbsLitMatrix":
+                                             [{"DomainInt":
+                                                   [{"TagInt": []},
+                                                    [{"RangeBounded":
+                                                          [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                           {"ConstantInt": [{"TagInt": []}, 3]}]}]]},
+                                              [{"ConstantInt": [{"TagInt": []}, 1]},
+                                               {"ConstantInt": [{"TagInt": []}, 2]},
+                                               {"ConstantInt": [{"TagInt": []}, 3]}]]}}],
+                              "type": "OpFlatten"},
+                             {"ConstantAbstract":
+                                  {"AbsLitMatrix":
+                                       [{"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                     {"ConstantInt": [{"TagInt": []}, 3]}]}]]},
+                                        [{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantInt": [{"TagInt": []}, 2]},
+                                         {"ConstantInt": [{"TagInt": []}, 3]}]]}}],
+                        "symmetricChildren": true, "type": "OpEq"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["b"]}
