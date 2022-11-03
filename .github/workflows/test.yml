@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/checkout@v3
         name: Checkout repository
-      
+
       - name: Stack version
         shell: bash
         run: cp etc/hs-deps/stack-${{ matrix.GHC_VERSION }}.yaml stack.yaml
@@ -57,10 +57,6 @@ jobs:
           key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: ${{ runner.os }}-stack-work-
 
-      - name: List files
-        shell: bash
-        run: pwd ; ls -lA
-
       - name: Install Conjure
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
@@ -87,5 +83,5 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=10 make test
-  
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=0 make test
+
