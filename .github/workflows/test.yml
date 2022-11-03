@@ -9,6 +9,7 @@ jobs:
 
     strategy:
       matrix:
+        GHC_VERSION: [8.4, 8.6]
         os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
@@ -18,12 +19,16 @@ jobs:
       - uses: actions/checkout@v3
         name: Checkout repository
       
+      - name: Stack version
+        shell: bash
+        run: cp etc/hs-deps/stack-${{ GHC_VERSION }}.yaml stack.yaml
+
       - uses: actions/cache@v3
         name: Cache global stack (Linux & Mac)
         if: runner.os != 'Windows'
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}
           restore-keys: ${{ runner.os }}-stack-global-
 
       - uses: actions/cache@v3
@@ -33,7 +38,7 @@ jobs:
           path: |
             ~\AppData\Roaming\stack
             ~\AppData\Local\Programs\stack    
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}
           restore-keys: ${{ runner.os }}-stack-global-
 
       - uses: actions/cache@v3
@@ -41,7 +46,7 @@ jobs:
         if: runner.os != 'Windows'
         with:
           path: .stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: ${{ runner.os }}-stack-work-
 
       - uses: actions/cache@v3
@@ -49,7 +54,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           path: .stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: ${{ runner.os }}-stack-work-
 
       - name: Install Conjure
