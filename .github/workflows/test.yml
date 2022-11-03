@@ -83,5 +83,5 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=5 make test
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=10 make test
   
