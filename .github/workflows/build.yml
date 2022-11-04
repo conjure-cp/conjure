@@ -69,14 +69,17 @@ jobs:
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
 
-      - name: Simple test
+      - name: Simple test - run
         shell: bash
         run: |
+          echo $PATH
+          export PATH=${HOME}/.local/bin:${PATH}
+          echo $PATH
           echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
           conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
           cat test.solutions.json
 
-      - name: Simple test
+      - name: Simple test - check output
         uses: sergeysova/jq-action@v2
         with:
           cmd: diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]' | jq -c .) <(jq -c . test.solutions.json)
