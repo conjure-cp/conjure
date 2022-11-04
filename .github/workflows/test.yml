@@ -32,7 +32,7 @@ jobs:
 
       - name: Setting PATH
         shell: bash
-        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
+        run: export PATH=${HOME}/.local/bin:${PATH}
 
       - name: Install Conjure
         shell: bash
