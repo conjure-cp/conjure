@@ -57,13 +57,17 @@ jobs:
           key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: ${{ runner.os }}-stack-work-
 
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
       - name: Install Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
       - name: Install Minion
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
 
       - name: Simple test
         uses: sergeysova/jq-action@v2

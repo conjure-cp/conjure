@@ -30,31 +30,35 @@ jobs:
           key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: ${{ runner.os }}-stack-work-
 
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
       - name: Install Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true make
 
       - name: Install Minion
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
 
       - name: Install Glucose
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-glucose.sh
 
       - name: Install Cadical
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-cadical.sh
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-cadical.sh
 
       - name: Install Kissat
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-kissat.sh
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-kissat.sh
 
       - name: Install GNU Parallel
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-gnu-parallel.sh
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-gnu-parallel.sh
 
       - name: Run tests
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=0 make test
+        run: BIN_DIR=${HOME}/.local/bin LIMIT_TIME=0 make test
 
