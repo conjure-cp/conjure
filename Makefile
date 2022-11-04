@@ -56,6 +56,7 @@ test:
 
 .PHONY: preinstall
 preinstall:
+	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs

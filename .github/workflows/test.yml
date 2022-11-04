@@ -4,19 +4,17 @@ on: [push, pull_request]
 
 jobs:
 
-  CheckOut:
+  TestAll:
+
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
         name: Checkout repository
 
-  BuildConjure:
-    runs-on: ubuntu-latest
-    needs: CheckOut
-    steps:
-      - name: Stack version
+      - name: Pre-install
         shell: bash
-        run: cp etc/hs-deps/stack-${{ matrix.GHC_VERSION }}.yaml stack.yaml
+        run: make preinstall
 
       - uses: actions/cache@v3
         name: Cache global stack
@@ -34,52 +32,28 @@ jobs:
 
       - name: Install Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} BUILD_TESTS=true make
 
-  BuildMinion:
-    runs-on: ubuntu-latest
-    needs: CheckOut
-    steps:
       - name: Install Minion
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-minion.sh
 
-  BuildGlucose:
-    runs-on: ubuntu-latest
-    needs: CheckOut
-    steps:
       - name: Install Glucose
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-glucose.sh
 
-  BuildCadical:
-    runs-on: ubuntu-latest
-    needs: CheckOut
-    steps:
       - name: Install Cadical
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-cadical.sh
 
-  BuildKissat:
-    runs-on: ubuntu-latest
-    needs: CheckOut
-    steps:
       - name: Install Kissat
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-kissat.sh
 
-  BuildParallel:
-    runs-on: ubuntu-latest
-    needs: CheckOut
-    steps:
       - name: Install GNU Parallel
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} etc/build/install-gnu-parallel.sh
 
-  RunTests:
-    runs-on: ubuntu-latest
-    needs: [BuildConjure, BuildMinion, BuildGlucose, BuildCadical, BuildKissat, BuildParallel]
-    steps:
       - name: Run tests
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PATH=${HOME}/.local/bin:${PATH} LIMIT_TIME=0 make test
