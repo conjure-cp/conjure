@@ -1028,13 +1028,18 @@ srStdoutHandler
                             let filenameEssenceSol = mkFilename ".solutions"
                             let filenameEssenceSolJSON = mkFilename ".solutions.json"
                             -- remove the solutions files before writing the first solution
-                            when (solutionNumber == 1) $ do
-                                removeFileIfExists filenameEprimeSol
-                                removeFileIfExists filenameEssenceSol
-                                removeFileIfExists filenameEssenceSolJSON
-                                case outputFormat of
-                                    JSON -> writeFile filenameEssenceSolJSON "[\n"
-                                    _ -> return ()
+                            if solutionNumber == 1
+                                then do
+                                    removeFileIfExists filenameEprimeSol
+                                    removeFileIfExists filenameEssenceSol
+                                    removeFileIfExists filenameEssenceSolJSON
+                                    case outputFormat of
+                                        JSON -> writeFile filenameEssenceSolJSON "[\n"
+                                        _ -> return ()
+                                else
+                                    case outputFormat of
+                                        JSON -> appendFile filenameEssenceSolJSON ",\n"
+                                        _ -> return ()
                             appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
                             appendFile filenameEprimeSol  (render lineWidth eprimeSol  ++ "\n\n")
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
@@ -1042,7 +1047,6 @@ srStdoutHandler
                             when (outputFormat `elem` [JSON, JSONStream]) $ do
                                 essenceSol' <- toSimpleJSON essenceSol
                                 appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
-                                unless (outputFormat==JSONStream) $ appendFile filenameEssenceSolJSON ","
                                 appendFile filenameEssenceSolJSON  ("\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
