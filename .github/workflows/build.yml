@@ -24,34 +24,14 @@ jobs:
         run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
 
       - uses: actions/cache@v3
-        name: Cache global stack (Linux & Mac)
-        if: runner.os != 'Windows'
+        name: Cache global stack
         with:
           path: ~/.stack
           key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}
           restore-keys: ${{ runner.os }}-stack-global-
 
       - uses: actions/cache@v3
-        name: Cache global stack (Windows)
-        if: runner.os == 'Windows'
-        with:
-          path: |
-            ~\AppData\Roaming\stack
-            ~\AppData\Local\Programs\stack    
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}
-          restore-keys: ${{ runner.os }}-stack-global-
-
-      - uses: actions/cache@v3
-        name: Cache local stack (Linux & Mac)
-        if: runner.os != 'Windows'
-        with:
-          path: .stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
-          restore-keys: ${{ runner.os }}-stack-work-
-
-      - uses: actions/cache@v3
-        name: Cache local stack (Windows)
-        if: runner.os == 'Windows'
+        name: Cache local stack
         with:
           path: .stack-work
           key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
@@ -72,9 +52,6 @@ jobs:
       - name: Simple test
         shell: bash
         run: |
-          echo $PATH
-          export PATH=${HOME}/.local/bin:${PATH}
-          echo $PATH
           echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
           conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
           cat test.solutions.json
