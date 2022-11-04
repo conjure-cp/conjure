@@ -59,7 +59,7 @@ jobs:
 
       - name: Setting PATH
         shell: bash
-        run: export PATH=${HOME}/.local/bin:${PATH}
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
 
       - name: Install Conjure
         shell: bash
