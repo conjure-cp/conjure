@@ -67,9 +67,9 @@ jobs:
 
       - name: Simple test
         uses: sergeysova/jq-action@v2
-        shell: bash
-        run: |
-          echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
-          conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
-          cat test.solutions.json
-          diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]' | jq -c .) <(jq -c . test.solutions.json)
+        with:
+          cmd: |
+            echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
+            conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
+            cat test.solutions.json
+            diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]' | jq -c .) <(jq -c . test.solutions.json)
