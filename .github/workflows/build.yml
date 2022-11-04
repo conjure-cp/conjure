@@ -77,4 +77,5 @@ jobs:
           echo $PATH
           echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
           conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
-          diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]') <(cat test.solutions.json | tr -d '[:space:]')
+          cat test.solutions.json
+          diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]' | tr -d '[:space:]') <(cat test.solutions.json | tr -d '[:space:]')
