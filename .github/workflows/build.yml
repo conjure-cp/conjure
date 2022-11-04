@@ -21,7 +21,7 @@ jobs:
 
       - name: Stack version
         shell: bash
-        run: cp etc/hs-deps/stack-${{ matrix.GHC_VERSION }}.yaml stack.yaml
+        run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
 
       - uses: actions/cache@v3
         name: Cache global stack (Linux & Mac)
