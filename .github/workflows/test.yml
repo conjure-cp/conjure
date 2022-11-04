@@ -12,9 +12,9 @@ jobs:
       - uses: actions/checkout@v3
         name: Checkout repository
 
-      - name: Pre-install
+      - name: Stack version
         shell: bash
-        run: make preinstall
+        run: make stack.yaml
 
       - uses: actions/cache@v3
         name: Cache global stack

@@ -27,7 +27,7 @@ install:
 	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
-	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
+	@make stack.yaml
 	@if  [ ${GHC_VERSION} == "head" ] ; then\
 		stack --local-bin-path ${BIN_DIR} setup --resolver nightly;\
 	else\
@@ -54,9 +54,12 @@ test:
 		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
 	fi
 
+stack.yaml:
+	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
+
 .PHONY: preinstall
 preinstall:
-	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
+	@make stack.yaml
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
