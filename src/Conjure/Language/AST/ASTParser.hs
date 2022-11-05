@@ -729,10 +729,13 @@ parseEnumDomain = do
 -- Util
 parseNameDomain :: Parser NamedDomainNode
 parseNameDomain = do
-    name <- parseIdentifierStrict
+    name <- parseIdentifier
     lColon <- want L_Colon
     domain <- parseDomain
-    return $ NameDomainNode name lColon domain
+    let definedDomain = case (lColon,domain) of 
+            (a,b) | isMissing a && isMissing b -> Nothing
+            (a,b) -> Just (a,b)
+    return $ NameDomainNode name definedDomain
 
 parseRange :: Parser RangeNode
 parseRange = ranged <|> singleR

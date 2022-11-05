@@ -195,11 +195,12 @@ instance Null AttributeNode where
     isMissing (NamedAttributeNode n m_e) = isMissing n && isMissing m_e 
     -- isMissing (NamedExpressionAttribute n e) = isMissing n && isMissing e
 
-data NamedDomainNode = NameDomainNode NameNode LToken DomainNode
+data NamedDomainNode = NameDomainNode NameNode (Maybe (LToken, DomainNode))
     deriving (Show)
 
 instance Null NamedDomainNode where
-    isMissing (NameDomainNode (NameNode a) b c) = isMissing a && isMissing b && isMissing c
+    isMissing (NameDomainNode (NameNode a) Nothing) = isMissing a
+    isMissing (NameDomainNode (NameNode a) (Just (b,c))) = isMissing a && isMissing b && isMissing c
 -- Common Statements
 
 newtype NameNode = NameNode LToken

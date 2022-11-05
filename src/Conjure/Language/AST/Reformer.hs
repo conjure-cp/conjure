@@ -236,7 +236,8 @@ instance Flattenable ETok RangeNode where
 --     flatten (DoubleDotNode a b) =  flatten a ++ flatten b
 
 instance Flattenable ETok NamedDomainNode where
-    flatten (NameDomainNode a b c) = concat [flatten a, flatten b, flatten c]
+    flatten (NameDomainNode a Nothing) = flatten a
+    flatten (NameDomainNode a (Just (b,c))) = concat [flatten a,flatten b,flatten c]
 
 instance Flattenable ETok NameNode where
     flatten (NameNode n) =  flatten n

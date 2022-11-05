@@ -367,10 +367,10 @@ validateDomain dm = case dm of
     validateTupleDomain :: ListNode DomainNode -> DomainValidator
     validateTupleDomain doms = pure . DomainTuple <$> validateList validateDomain doms
     validateRecordDomain :: ListNode NamedDomainNode -> DomainValidator
-    validateRecordDomain namedDoms = pure . DomainRecord <$> validateList validateNamedDomain namedDoms
+    validateRecordDomain namedDoms = pure . DomainRecord <$> validateList validateNamedDomainInRecord namedDoms
     validateVariantDomain :: ListNode NamedDomainNode -> DomainValidator
     validateVariantDomain namedDoms = do
-                lst <- validateList validateNamedDomain namedDoms
+                lst <- validateList validateNamedDomainInVariant namedDoms
                 return . pure $ DomainVariant lst
     validateMatrixDomain :: ListNode DomainNode -> DomainNode -> DomainValidator
     validateMatrixDomain indexes dom = do
@@ -569,11 +569,20 @@ validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
       Just True -> return $(\x -> (name,Just x)) <$> expr
 
 
-validateNamedDomain :: NamedDomainNode -> Validator (Name, Domain () Expression)
-validateNamedDomain (NameDomainNode name l1 domain) = do
-    checkSymbols [l1]
+validateNamedDomainInVariant :: NamedDomainNode -> Validator (Name, Domain () Expression)
+validateNamedDomainInVariant (NameDomainNode name m_dom) = do
     name' <-  validateName name
-    domain' <- validateDomain domain
+    domain' <-case m_dom of
+      Nothing -> return . pure $ DomainInt TagInt [RangeSingle 0]
+      Just (l,d) -> checkSymbols [l] >> validateDomain d  
+    return $  (,) <$> name' <*> domain'
+
+validateNamedDomainInRecord :: NamedDomainNode -> Validator (Name, Domain () Expression)
+validateNamedDomainInRecord (NameDomainNode name m_dom) = do
+    name' <-  validateName name
+    domain' <-case m_dom of
+      Nothing -> invalid $ StateError "Dataless not allowed in record"
+      Just (l,d) -> checkSymbols [l] >> validateDomain d 
     return $  (,) <$> name' <*> domain'
 
 validateRange :: RangeNode -> Validator (Range Expression)
