@@ -100,6 +100,12 @@ data Lexeme
     | L_serial
     | L_equivalence
     | L_partialOrder
+    | L_linearOrder
+    | L_weakOrder
+    | L_preOrder
+    | L_strictPartialOrder
+    | L_leftTotal
+    | L_rightTotal
     -- type: partition
     | L_partition
     | L_regular
@@ -349,6 +355,12 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_serial, "serial")
     , ( L_equivalence, "equivalence")
     , ( L_partialOrder, "partialOrder")
+    , ( L_linearOrder , "linearOrder")
+    , ( L_weakOrder , "weakOrder")
+    , ( L_preOrder , "preOrder")
+    , ( L_strictPartialOrder , "strictPartialOrder")
+    , ( L_leftTotal , "leftTotal")
+    , ( L_rightTotal , "rightTotal")
     , ( L_partition, "partition" )
     , ( L_regular, "regular" )
     , ( L_partSize, "partSize" )

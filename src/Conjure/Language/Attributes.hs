@@ -78,6 +78,12 @@ binRelAttrs =
     , (L_serial, False)
     , (L_equivalence, False)
     , (L_partialOrder, False)
+    , (L_linearOrder, False)
+    , (L_weakOrder, False)
+    , (L_preOrder, False)
+    , (L_strictPartialOrder, False)
+    , (L_leftTotal, False)
+    , (L_rightTotal, False)
     ]
 
 lexemeToBinRel :: Lexeme -> Maybe BinaryRelationAttr
@@ -94,6 +100,12 @@ lexemeToBinRel L_Euclidean = Just BinRelAttr_Euclidean
 lexemeToBinRel L_serial = Just BinRelAttr_Serial
 lexemeToBinRel L_equivalence = Just BinRelAttr_Equivalence
 lexemeToBinRel L_partialOrder = Just BinRelAttr_PartialOrder
+lexemeToBinRel L_linearOrder = Just BinRelAttr_LinearOrder
+lexemeToBinRel L_weakOrder = Just BinRelAttr_WeakOrder
+lexemeToBinRel L_preOrder = Just BinRelAttr_PreOrder
+lexemeToBinRel L_strictPartialOrder = Just BinRelAttr_StrictPartialOrder
+lexemeToBinRel L_leftTotal = Just BinRelAttr_LeftTotal
+lexemeToBinRel L_rightTotal = Just BinRelAttr_RightTotal
 lexemeToBinRel _ = Nothing
 
 totalityAttrs :: [Attr]
