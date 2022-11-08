@@ -21,6 +21,7 @@ import Control.Monad.Combinators.Expr
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 import Language.Haskell.TH.PprLib (rparen)
 import Conjure.Language.Attributes (allAttributLexemes)
+import Data.Sequence (Seq)
 
 data ParserError = ParserError
     deriving (Show)
@@ -793,7 +794,7 @@ attributesAsLexemes xs = do
 example :: String -> IO ()
 example s = do
     let str = s
-    let other = [ETok (0, 0, 0, SourcePos "" (mkPos 0) (mkPos  0)) [] L_EOF ""]
+    let other = [ETok ( Offsets 0 0 0 (initialPos "") ) [] L_EOF ""]
     let txt  = pack str
     let lexed = parseMaybe eLex  txt
     putStrLn "Lexmes"
@@ -818,7 +819,7 @@ parsePrint text = do
             putStrLn "Lexer wasn't reversible"
             showDiff a b
       Right ets -> putStrLn "Lexer success" >> do
-            tree <- parseAndRevalidate (ETokenStream (pack text) ets) parseProgram (\v -> reformList (flatten v :: [ETok]) ) text
+            tree <- parseAndRevalidate (ETokenStream (pack text) ets) parseProgram (\v -> reformList (flatten v :: Seq ETok) ) text
             case tree of
               Left (a,b) -> do
                         putStrLn "Parser wasn't reversible:"

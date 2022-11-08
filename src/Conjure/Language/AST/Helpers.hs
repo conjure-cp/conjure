@@ -48,7 +48,7 @@ makeMissing :: Lexeme -> Parser LToken
 makeMissing l = do
     spos <- getSourcePos
     s <- getOffset
-    return (MissingToken (ETok (s, s, 0, spos) [] l ""))
+    return (MissingToken (ETok ( Offsets s s 0 spos) [] l ""))
 
 makeUnexpected :: Parser LToken
 makeUnexpected = SkippedToken <$> anySingle
@@ -56,15 +56,15 @@ makeUnexpected = SkippedToken <$> anySingle
 -- try to get a token from the stream but allow failiure
 want :: Lexeme -> Parser LToken
 want (LIdentifier _) = do
-    (ETok (s, ts, _, spos) t lex _ ) <- lookAhead anySingle
+    (ETok o t lex _ ) <- lookAhead anySingle
     case lex of
         (LIdentifier _) -> RealToken <$> anySingle
-        _ -> return $ MissingToken $ ETok (s, ts, 0, spos) t LMissingIdentifier ""
+        _ -> return $ MissingToken $ ETok o{oTLength=0} t LMissingIdentifier ""
 want a = do
-    (ETok (s, ts, _, spos) t lex _) <- lookAhead anySingle
+    (ETok o t lex _) <- lookAhead anySingle
     if lex == a
         then RealToken <$> anySingle
-        else return $ MissingToken $ ETok (s, ts, 0, spos) t a ""
+        else return $ MissingToken $ ETok o{oTLength=0} t a ""
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser LToken

@@ -19,6 +19,7 @@ import Text.Megaparsec.Char
 import Data.List (splitAt)
 import qualified Data.List.NonEmpty as NE
 import qualified Text.Megaparsec.Char.Lexer as L
+import Data.Sequence (Seq)
 
 sourcePos0 :: SourcePos
 sourcePos0 = SourcePos "" (mkPos  0) (mkPos 0)
@@ -35,7 +36,7 @@ instance Reformable ETok where
               LineComment txt -> T.unpack txt
               BlockComment txt -> T.unpack txt
 
-reformList :: Reformable a => [a] -> String
+reformList :: Reformable a => Seq a -> String
 reformList = concatMap reform
 
 emojis :: [Char]
@@ -53,7 +54,8 @@ isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem
 isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
-type Offsets = (Int, Int, Int, SourcePos)
+data Offsets =Offsets {oStart::Int,oTrueStart :: Int,oTLength::Int,oSourcePos::SourcePos}
+    deriving (Show, Eq, Ord)
 type Lexer = Parsec Void T.Text
 
 -- type Lexer = Parsec Void T.Text ETokenStream
@@ -71,15 +73,18 @@ data ETok = ETok
 
 
 totalLength :: ETok -> Int
-totalLength (ETok{offsets = (_, _, l, _)}) = l
+totalLength = oTLength . offsets
+
+trueLength :: ETok -> Int
+trueLength (ETok{offsets = (Offsets o d l _)}) = max 0 (l + (o-d))
 
 tokenStart :: ETok -> Int
-tokenStart (ETok{offsets = (_, s, _, _)}) = s
+tokenStart (ETok{offsets = (Offsets _  s _ _)}) = s
 
 tokenSourcePos :: ETok -> SourcePos
-tokenSourcePos ETok{offsets=(_,_,_,s)} = s
+tokenSourcePos = oSourcePos . offsets
 sourcePosAfter :: ETok -> SourcePos
-sourcePosAfter ETok {offsets=(_,_,l,SourcePos a b (unPos->c))} = SourcePos a b (mkPos (c + l))
+sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
 
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
@@ -108,7 +113,7 @@ aToken = do
     spos <- getSourcePos
     (tok,cap) <- aLexeme
     tokenEnd <- getOffset
-    return $ makeToken (start, wse, tokenEnd - start, spos) whiteSpace tok cap
+    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whiteSpace tok cap
 
 pEOF :: Lexer ETok
 pEOF = do
@@ -118,7 +123,7 @@ pEOF = do
     spos <- getSourcePos
     eof
     tokenEnd <- getOffset
-    return $ makeToken (start, wse, tokenEnd - start, spos) whiteSpace L_EOF ""
+    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whiteSpace L_EOF ""
 
 
 aLexeme :: Lexer (Lexeme,Text)
@@ -242,9 +247,7 @@ buildStream xs = case NE.nonEmpty xs of
 
 instance VisualStream ETokenStream where
     showTokens p =  concatMap reform
-    tokensLength p ls = sum $ len <$> ls
-      where
-        len ETok{offsets = (_, _, x, _)} = x
+    tokensLength p ls = sum $ oTLength . offsets <$> ls
 
 -- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
 instance TraversableStream ETokenStream where

@@ -8,7 +8,7 @@ import Conjure.Language.AST.Syntax as S
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Lexemes
-import Conjure.Language.NewLexer (ETok (ETok, lexeme), ETokenStream (ETokenStream), eLex, sourcePos0, tokenSourcePos, totalLength, tokenStart)
+import Conjure.Language.NewLexer (ETok (ETok, lexeme), ETokenStream (ETokenStream), eLex, sourcePos0, tokenSourcePos, totalLength, tokenStart, trueLength)
 
 import Conjure.Language.Attributes
 import Conjure.Prelude
@@ -23,7 +23,7 @@ import qualified Data.Set as S
 
 import Data.Text (pack, unpack, toLower, append)
 import Text.Megaparsec
-    ( SourcePos )
+    ( SourcePos, mkPos )
 
 import Conjure.Language.Expression.Op
     ( OpSlicing(..),
@@ -38,6 +38,9 @@ import Conjure.Language.Expression.Op
       )
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 import Conjure.Language.AST.Reformer (Flattenable (flatten))
+import Text.Megaparsec.Pos (SourcePos(..))
+import Text.Megaparsec (unPos)
+import Data.Sequence (Seq (..), viewr, ViewR (..))
 
 
 data ErrorType
@@ -152,7 +155,8 @@ isValidLanguageName t = Data.Text.toLower t `elem` ["essence","essence'"]
 
 validateLanguageVersion :: Maybe LangVersionNode -> Validator LanguageVersion
 validateLanguageVersion Nothing = return $ pure $ LanguageVersion "Essence" [1,3]
-validateLanguageVersion (Just (LangVersionNode l1 n v)) = do
+validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
+    setContextFrom lv
     let NameNode nt = n
     checkSymbols [l1]
     name <- validateIdentifier n
@@ -315,7 +319,7 @@ validateSymbol :: LToken -> Validator Lexeme
 validateSymbol s =
     case s of
         RealToken et -> return . pure  $ lexeme et
-        _ -> invalid $ ValidatorDiagnostic (getTokenRegion s) $ Error $ TokenError s
+        _ -> invalid $ ValidatorDiagnostic (getRegion s) $ Error $ TokenError s
 
 -- [MissingTokenError ]
 
@@ -1031,37 +1035,43 @@ validateExprList :: ListNode ExpressionNode -> ValidatorS [Expression]
 validateExprList = validateList validateExpression
 
 
-
+offsetPositionBy :: Int -> SourcePos -> SourcePos
+offsetPositionBy amt sp@(SourcePos _ _ (unPos->r)) = sp {sourceColumn=mkPos (amt+r) }
 
 data DiagnosticRegion = DiagnosticRegion {
     drSourcePos::SourcePos,
+    drEndPos :: SourcePos,
     drOffset :: Int,
     drLength :: Int
 } | GlobalRegion
     deriving Show
-getTokenRegion :: LToken -> DiagnosticRegion
-getTokenRegion a =  do
-        let h =case a of
-              RealToken et -> et
-              MissingToken et -> et
-              SkippedToken et -> et
-        let start = tokenSourcePos h
-        let offset = tokenStart h
-        let tLength =case a of
-              RealToken _ -> totalLength h
-              MissingToken _ -> 1
-              SkippedToken _ -> totalLength h
-        DiagnosticRegion start offset tLength
+-- getTokenRegion :: LToken -> DiagnosticRegion
+-- getTokenRegion a =  do
+--         let h =case a of
+--               RealToken et -> et
+--               MissingToken et -> et
+--               SkippedToken et -> et
+--         let start = tokenSourcePos h
+--         let offset = tokenStart h
+--         let tLength =case a of
+--               RealToken _ -> trueLength h
+--               MissingToken _ -> 1
+--               SkippedToken _ -> trueLength h
+--         DiagnosticRegion start (offsetPositionBy tLength start) offset tLength
 
 getRegion :: Flattenable ETok a => a -> DiagnosticRegion
 getRegion a = case range of
-  [] -> GlobalRegion
-  (h:_)  -> do
+  (h :<| rst)  -> do
+        let end =case viewr rst of
+              EmptyR -> h
+              _ :> et -> et
         let start = tokenSourcePos h
         let offset = tokenStart h
-        let tLength = sum (map totalLength range)
-        DiagnosticRegion start offset tLength
-  where range :: [ETok] = flatten a
+        let tLength = let some :|> last = range in sum (totalLength <$> some) + trueLength last --TODO Tidy up
+        let en = tokenSourcePos end
+        DiagnosticRegion start (offsetPositionBy (trueLength end) en) offset tLength
+  _ -> GlobalRegion
+  where range :: Seq ETok = flatten a
 
 
 
@@ -1072,7 +1082,7 @@ t <!> e = ValidatorDiagnostic (getRegion t) $ Error e
 t </!\> e = ValidatorDiagnostic (getRegion t) $ Warning e
 
 (<?>) :: Flattenable ETok a => a -> InfoType -> ValidatorDiagnostic
-t <?> e = ValidatorDiagnostic (getRegion t) $ Info e 
+t <?> e = ValidatorDiagnostic (getRegion t) $ Info e
 
 (<?!>) :: Flattenable ETok a => Maybe a -> ErrorType -> ValidatorDiagnostic
 Nothing <?!> e =  ValidatorDiagnostic GlobalRegion $ Error e
