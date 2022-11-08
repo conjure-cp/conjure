@@ -64,8 +64,8 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin LIMIT_TIME=0 COVERAGE=yes make test
+        run: BIN_DIR=${HOME}/.local/bin LIMIT_TIME=0 COVERAGE=true make test
 
       - name: Upload code coverage report to GitHub
         shell: bash
-        run: COVERAGE=yes etc/build/record-coverage.sh
+        run: COVERAGE=true etc/build/record-coverage.sh
