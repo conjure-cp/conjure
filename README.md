@@ -3,7 +3,9 @@
 
 [![License BSD3](https://img.shields.io/badge/license-BSD3-brightgreen.svg)](http://opensource.org/licenses/BSD-3-Clause)
 [![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
-[![Azure Pipelines Build Status](https://dev.azure.com/conjure-testing/conjure/_apis/build/status/conjure-cp.conjure?branchName=master)](https://dev.azure.com/conjure-testing/conjure/_build/latest?definitionId=1&branchName=master)
+![Building on all platforms](https://github.com/github/docs/actions/workflows/build.yml/badge.svg)
+![Running all tests](https://github.com/github/docs/actions/workflows/test.yml/badge.svg)
+![Publishing Docker image to ghcr.io](https://github.com/github/docs/actions/workflows/docker-publish.yml/badge.svg)
 
 Conjure is an automated modelling tool for Constraint Programming.
 
