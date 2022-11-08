@@ -1,0 +1,71 @@
+name: Running all tests (code coverage)
+
+on:
+  push:
+    branches: [master, gh-actions]
+  pull_request:
+    branches: [master]
+
+jobs:
+
+  TestAll:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache global stack
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}
+          restore-keys: ${{ runner.os }}-stack-global-
+
+      - uses: actions/cache@v3
+        name: Cache local stack
+        with:
+          path: .stack-work
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
+          restore-keys: ${{ runner.os }}-stack-work-
+
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Install Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true make
+
+      - name: Install Minion
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
+
+      - name: Install Glucose
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-glucose.sh
+
+      - name: Install Cadical
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-cadical.sh
+
+      - name: Install Kissat
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-kissat.sh
+
+      - name: Install GNU Parallel
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-gnu-parallel.sh
+
+      - name: Run tests
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin LIMIT_TIME=0 COVERAGE=yes make test
+
+      - name: Upload code coverage report to GitHub
+        shell: bash
+        run: COVERAGE=yes etc/build/record-coverage.sh

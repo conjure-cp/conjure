@@ -2,11 +2,14 @@
 
 set -o errexit
 
-if ${COVERAGE} && [ -z $DOWNLOADSECUREFILE_SECUREFILEPATH ]; then
+export SOURCE_VERSION=$(git log -1 --format=format:"%H")
+echo "Recording code coverage for SOURCE_VERSION: ${SOURCE_VERSION}"
+
+if ${COVERAGE} ; then
     # this is from https://cloudblogs.microsoft.com/opensource/2019/04/05/publishing-github-pages-from-azure-pipelines
-    mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
-    chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
-    ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+    # mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
+    # chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
+    # ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     git clone git@github.com:conjure-cp/conjure-code-coverage.git
 
     # save this file for later
