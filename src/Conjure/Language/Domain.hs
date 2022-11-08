@@ -10,7 +10,7 @@ module Conjure.Language.Domain
     , MSetAttr(..), OccurAttr(..), getMaxFrom_OccurAttr
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , SequenceAttr(..)
-    , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
+    , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..), binRelNames
     , PartitionAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
@@ -422,8 +422,14 @@ instance IsString AttrName where
     fromString "linearOrder" = AttrName_linearOrder
     fromString "weakOrder" = AttrName_weakOrder
     fromString "preOrder" = AttrName_preOrder
-    
     fromString s = bug $ "fromString{AttrName}:" <+> pretty s
+
+binRelNames :: [String]
+binRelNames = [ "reflexive", "irreflexive", "coreflexive"
+              , "symmetric", "antiSymmetric", "aSymmetric"
+              , "transitive", "total", "leftTotal", "rightTotal", "connex", "Euclidean"
+              , "serial", "equivalence", "weakOrder", "preOrder", "partialOrder", "strictPartialOrder", "linearOrder"
+              ]
 
 
 --------------------------------------------------------------------------------

@@ -360,13 +360,7 @@ parseRelationAttr :: Parser (RelationAttr Expression)
 parseRelationAttr = do
     pos <- getPosition
     DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "relation" attrs
-        [ "size", "minSize", "maxSize"
-        , "reflexive", "irreflexive", "coreflexive"
-        , "symmetric", "antiSymmetric", "aSymmetric"
-        , "transitive", "total", "connex", "Euclidean"
-        , "serial", "equivalence", "partialOrder"
-        ]
+    checkExtraAttributes pos "relation" attrs (map (Name . stringToText) (["size", "minSize", "maxSize"] ++ binRelNames))
     size <- case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
@@ -452,21 +446,7 @@ filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
 filterJectivity = filterAttrName ["injective", "surjective", "bijective"]
 
 filterBinRel :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterBinRel = filterAttrName
-    [ "reflexive"
-    , "irreflexive"
-    , "coreflexive"
-    , "symmetric"
-    , "antiSymmetric"
-    , "aSymmetric"
-    , "transitive"
-    , "total"
-    , "connex"
-    , "Euclidean"
-    , "serial"
-    , "equivalence"
-    , "partialOrder"
-    ]
+filterBinRel = filterAttrName (map (Name . stringToText) binRelNames)
 
 parseMetaVariable :: Parser String
 parseMetaVariable = do

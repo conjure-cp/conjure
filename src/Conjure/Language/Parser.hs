@@ -493,13 +493,7 @@ parseRelationAttr :: Parser (RelationAttr Expression)
 parseRelationAttr = do
     pos <- getPosition
     DomainAttributes attrs <- parseAttributes
-    checkExtraAttributes pos "relation" attrs
-        [ "size", "minSize", "maxSize"
-        , "reflexive", "irreflexive", "coreflexive"
-        , "symmetric", "antiSymmetric", "aSymmetric"
-        , "transitive", "total", "leftTotal", "rightTotal", "connex", "Euclidean"
-        , "serial", "equivalence", "weakOrder", "preOrder", "partialOrder", "strictPartialOrder", "linearOrder"
-        ]
+    checkExtraAttributes pos "relation" attrs (map (Name . stringToText) (["size", "minSize", "maxSize"] ++ binRelNames))
     size <- case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
@@ -509,7 +503,8 @@ parseRelationAttr = do
         as -> do
             setPosition pos
             fail ("incompatible attributes:" <+> stringToDoc (show as))
-    let readBinRel' (DAName (Name a)) = readBinRel (fromString (textToString a))
+    let
+        readBinRel' (DAName (Name a)) = readBinRel (fromString (textToString a))
         readBinRel' a = do
             setPosition pos
             fail $ "Not a binary relation attribute:" <+> pretty a
@@ -585,21 +580,7 @@ filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
 filterJectivity = filterAttrName ["injective", "surjective", "bijective"]
 
 filterBinRel :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterBinRel = filterAttrName
-    [ "reflexive"
-    , "irreflexive"
-    , "coreflexive"
-    , "symmetric"
-    , "antiSymmetric"
-    , "aSymmetric"
-    , "transitive"
-    , "total"
-    , "connex"
-    , "Euclidean"
-    , "serial"
-    , "equivalence"
-    , "partialOrder"
-    ]
+filterBinRel = filterAttrName (map (Name . stringToText) binRelNames)
 
 parseMetaVariable :: Parser String
 parseMetaVariable = do
