@@ -65,7 +65,7 @@ instance Flattenable ETok ObjectiveStatementNode where
 instance Flattenable ETok LToken where
     flatten x =  case x of
         RealToken et ->  flatten et
-        MissingToken _ ->  []
+        MissingToken et ->  flatten et
         SkippedToken et ->  flatten et
 
 instance Flattenable ETok ETok where

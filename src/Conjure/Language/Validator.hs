@@ -8,7 +8,7 @@ import Conjure.Language.AST.Syntax as S
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Lexemes
-import Conjure.Language.NewLexer (ETok (ETok, capture, lexeme), ETokenStream (ETokenStream), eLex, sourcePos0)
+import Conjure.Language.NewLexer (ETok (ETok, lexeme), ETokenStream (ETokenStream), eLex, sourcePos0, tokenSourcePos, totalLength, tokenStart)
 
 import Conjure.Language.Attributes
 import Conjure.Prelude
@@ -21,8 +21,9 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
-import Data.Text (pack, unpack, toLower)
-import Text.Megaparsec (parseMaybe, runParser)
+import Data.Text (pack, unpack, toLower, append)
+import Text.Megaparsec
+    ( SourcePos )
 
 import Conjure.Language.Expression.Op
     ( OpSlicing(..),
@@ -36,21 +37,54 @@ import Conjure.Language.Expression.Op
       OpIndexing(OpIndexing), OpType (..), OpAttributeAsConstraint (OpAttributeAsConstraint),
       )
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
-import Control.Applicative (empty, Alternative)
-import Conjure.Language.Attributes (lexemeToBinRel)
+import Conjure.Language.AST.Reformer (Flattenable (flatten))
 
 
-data ValidatorError
-    = TypeError String
-    | StateError String
-    | SyntaxError String
-    | RegionError String -- Add region
-    | TokenError LToken
-    | TaggedTokenError String LToken
-    | IllegalToken LToken -- Should not occur in practice and indicates a logical error somewhere
-    | NotImplemented String
-    deriving (Show)
+data ErrorType
+    = TokenError LToken
+    | SyntaxError Text
+    | SemanticError Text
+    | CustomError Text
+    | InternalError --Used to explicitly tag invalid pattern matches
+    | InternalErrorS Text -- Used for giving detail to bug messages
+    deriving  (Show,Eq,Ord)
+data WarningType = UnclassifiedWarning Text deriving (Show,Eq,Ord)
+data InfoType = UnclassifiedInfo Text deriving (Show,Eq,Ord)
 
+
+data Diagnostic = Error ErrorType | Warning WarningType | Info InfoType
+    deriving (Show,Eq,Ord)
+
+
+data ValidatorDiagnostic = ValidatorDiagnostic DiagnosticRegion Diagnostic
+    deriving Show
+
+isError :: ValidatorDiagnostic -> Bool
+isError (ValidatorDiagnostic _ (Error _)) = True
+isError _ = False
+
+-- data ValidatorDiagnostic
+--     = TypeError String
+--     | StateError String
+--     | SyntaxError String
+--     | RegionError String -- Add region
+--     | TokenError LToken
+--     | TaggedTokenError String LToken
+--     | IllegalToken LToken -- Should not occur in practice and indicates a logical error somewhere
+--     | NotImplemented String
+--     deriving (Show)
+
+
+data ValidatorState = ValidatorState {
+    symbolTable :: SymbolTable,
+    currentContext :: DiagnosticRegion
+}
+    deriving Show
+instance Default ValidatorState where
+    def = ValidatorState {
+        symbolTable=SymbolTable[],
+        currentContext=GlobalRegion
+        }
 data SymbolTable = SymbolTable [(Text,String)]
     deriving (Show)
 
@@ -59,17 +93,32 @@ newtype ValidatorT r w a = ValidatorT (MaybeT (StateT r (Writer [w])) a)
 
 
 --synonym wrapped in maybe to allow errors to propagate
-type Validator a = ValidatorT SymbolTable ValidatorError (Maybe a)
+type Validator a = ValidatorT ValidatorState ValidatorDiagnostic (Maybe a)
 
 --Non maybe version used in outward facing applications/ lists 
-type ValidatorS a = ValidatorT SymbolTable ValidatorError a
+type ValidatorS a = ValidatorT ValidatorState ValidatorDiagnostic a
 
 addEnumDefns ::  [Text] -> SymbolTable -> SymbolTable
 addEnumDefns names (SymbolTable enums) = SymbolTable $ enums ++  map (\m -> (m,"Enum")) names
 
+modifySymbolTable :: (SymbolTable -> SymbolTable) -> ValidatorS ()
+modifySymbolTable f = modify (\x -> x{symbolTable=f.symbolTable $ x})
+
+getSymbolTable :: ValidatorS SymbolTable
+getSymbolTable = symbolTable <$> get
+
+getContext :: ValidatorS DiagnosticRegion
+getContext = currentContext <$> get
+
+setContext :: DiagnosticRegion -> ValidatorS ()
+setContext r = modify (\p -> p{currentContext = r})
+
+setContextFrom :: Flattenable ETok a => a -> ValidatorS ()
+setContextFrom = setContext.getRegion
+
 lookupSymbol :: Text -> ValidatorS (Maybe String)
 lookupSymbol name = do
-    SymbolTable a <- get
+    SymbolTable a <- getSymbolTable
     return $ lookup name a
 
 strict :: Validator a -> ValidatorS a
@@ -80,42 +129,6 @@ deState ((a,_),n) = (a,n)
 
 runValidator :: (ValidatorT r w a) -> r -> ((Maybe a),[w])
 runValidator (ValidatorT r) d = deState $ runWriter (runStateT (runMaybeT r) d)
--- data Validator a = Validator
---     { value :: Maybe a
---     , errors :: [ValidatorError]
---     }
---     deriving (Show)
-
-data Foo = Foo Int Int Int
-    deriving (Show)
-
--- instance Functor Validator where
---     fmap :: (a -> b) -> Validator a -> Validator b
---     fmap fab (Validator m_a ves) =
---         Validator
---             { value = case m_a of
---                 Nothing -> Nothing
---                 (Just a) -> Just $ fab a
---             , errors = ves
---             }
-
--- instance Applicative Validator where
---     pure :: a -> Validator a
---     pure x = Validator (Just x) []
---     (<*>) :: Validator (a -> b) -> Validator a -> Validator b
---     (Validator Nothing es) <*> (Validator _ e2s) = Validator Nothing (es ++ e2s)
---     (Validator (Just f) es) <*> (Validator a e2s) = Validator val (es ++ e2s)
---       where
---         val = case a of
---             Just a' -> Just $ f a'
---             Nothing -> Nothing
-
--- instance Monad Validator where
---     (>>=) :: Validator a -> (a -> Validator b) -> Validator b
---     (Validator Nothing ves) >>= _ =
---         Validator{value = Nothing, errors = ves}
---     (Validator (Just n) ves) >>= f =
---         let r = f n in r{errors = ves ++ errors r}
 
 
 validateModelS :: ProgramTree -> ValidatorS Model
@@ -143,7 +156,7 @@ validateLanguageVersion (Just (LangVersionNode l1 n v)) = do
     let NameNode nt = n
     checkSymbols [l1]
     name <- validateIdentifier n
-    unless (maybe False isValidLanguageName name) (raiseError $ IllegalToken nt)
+    unless (maybe False isValidLanguageName name) (raiseError $ n <!> SyntaxError "Not a valid language name")
     nums <- validateSequence getNum v
     return . pure $
         LanguageVersion
@@ -155,7 +168,7 @@ validateLanguageVersion (Just (LangVersionNode l1 n v)) = do
             c' <- validateSymbol c
             case c' of
                 Just (LIntLiteral x) -> return . pure $ fromInteger x
-                _ -> invalid $ TokenError c
+                _ -> invalid $ c <!> InternalError
 
 
 validateStatement :: StatementNode -> Validator [Statement]
@@ -165,7 +178,7 @@ validateStatement (SuchThatStatement stsn) = validateSuchThatStatement stsn
 validateStatement (WhereStatement wsn) = validateWhereStatement wsn
 validateStatement (ObjectiveStatement osn) = validateObjectiveStatement osn
 validateStatement (HeuristicStatement lt exp) = validateHeuristicStatement lt exp
-validateStatement (UnexpectedToken lt) = invalid $ TokenError lt
+validateStatement (UnexpectedToken lt) = invalid $ lt <!> CustomError "Unexpected" --TODO address as part of skip token refactor
 
 validateHeuristicStatement :: LToken -> ExpressionNode -> Validator [Statement]
 validateHeuristicStatement lt exp = do
@@ -175,7 +188,7 @@ validateHeuristicStatement lt exp = do
       IdentifierNode nn -> do
                     x <- validateName nn
                     return  $ sequence [SearchHeuristic <$> x]
-      _ -> invalid $ StateError "Only identifiers are allowed as heuristics"
+      _ -> invalid $ exp <!> SemanticError "Only identifiers are allowed as heuristics"
 
 validateWhereStatement :: WhereStatementNode -> Validator [Statement]
 validateWhereStatement (WhereStatementNode l1 exprs) = do
@@ -236,7 +249,7 @@ validateGiven (GivenEnumNode se l1 l2 l3) =
     do
         checkSymbols [l1, l2, l3]
         names <-  validateNameList se
-        modify $ addEnumDefns [ n | Name n <-names]
+        modifySymbolTable $ addEnumDefns [ n | Name n <-names]
         return . pure $  [GivenDomainDefnEnum n | n <- names]
 
 validateLetting :: LettingStatementNode -> Validator [Declaration]
@@ -257,7 +270,7 @@ validateLettingAssignment names (LettingDomain lt dn) = do
 validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
     checkSymbols [l1, l2, l3]
     members <- validateList validateName enames
-    modify $ addEnumDefns [ n | Name n <-names]
+    modifySymbolTable $ addEnumDefns [ n | Name n <-names]
     return . pure $ [LettingDomainDefnEnum n members| n <- names]
 validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
     checkSymbols [l1, l2, l3, l4]
@@ -286,7 +299,7 @@ validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
 -- verify (Just a) = Validator{value = Just a, errors = []}
 -- verify Nothing = Validator{value = Nothing, errors = []}
 
-invalid :: ValidatorError -> Validator a
+invalid :: ValidatorDiagnostic -> Validator a
 invalid err = do
     raiseError err
     return Nothing
@@ -296,13 +309,13 @@ invalid err = do
 -- rg = case g of
 --     (Validator x es) -> show (x, es)
 
--- type Checker a = State [ValidatorError] (Maybe a)
+-- type Checker a = State [ValidatorDiagnostic] (Maybe a)
 
 validateSymbol :: LToken -> Validator Lexeme
 validateSymbol s =
     case s of
         RealToken et -> return . pure  $ lexeme et
-        _ -> invalid $ TokenError s
+        _ -> invalid $ ValidatorDiagnostic (getTokenRegion s) $ Error $ TokenError s
 
 -- [MissingTokenError ]
 
@@ -341,7 +354,7 @@ validateDomain dm = case dm of
     SequenceDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validateSequenceDomain attrs dom
     RelationDomainNode l1 attrs l2 doms -> checkSymbols [l1, l2] >> validateRelationDomain attrs doms
     PartitionDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validatePartitionDomain attrs dom
-    MissingDomainNode lt -> invalid $ TokenError lt
+    MissingDomainNode lt -> invalid $ lt <!> TokenError lt
   where
     validateRangedInt :: Maybe (ListNode RangeNode) -> DomainValidator
     validateRangedInt (Just ranges) = do
@@ -357,11 +370,11 @@ validateDomain dm = case dm of
         a <- lookupSymbol name'
         case a of
             Just "Enum" ->return . pure $ DomainEnum (Name name') ranges' Nothing
-            Just t -> invalid $ StateError $ "Unknown type :" ++ t
+            Just t -> invalid $ name <!> InternalError -- $ "Unknown type :" ++ t
             Nothing -> case ranges' of
               Nothing -> return . pure $  DomainReference (Name name') Nothing
               Just _ -> do
-                raiseError (StateError "range not supported on non enum ranges")
+                raiseError ( name <!> SemanticError "range not supported on non enum ranges")
                 return . pure $  DomainReference (Name name') Nothing
 
     validateTupleDomain :: ListNode DomainNode -> DomainValidator
@@ -434,8 +447,8 @@ validateIndexedByNode :: Maybe IndexedByNode -> ValidatorS ()
 validateIndexedByNode Nothing = return ()
 validateIndexedByNode (Just (IndexedByNode a b)) = checkSymbols [a,b]
 
-todo :: String -> Validator a
-todo s = invalid $ NotImplemented s
+todo :: Text -> Validator a
+todo s = invalid $ ValidatorDiagnostic GlobalRegion $ Error $ InternalErrorS (append "Not Implemented: " s)
 
 validateSizeAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Expression)
 validateSizeAttributes attrs = do
@@ -447,7 +460,7 @@ validateSizeAttributes attrs = do
       [(L_minSize, Just a)] -> return $ Just (SizeAttr_MinSize a)
       [(L_maxSize, Just a)] -> return $ Just (SizeAttr_MaxSize a)
       [(L_minSize, Just a),(L_maxSize, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
-      as -> do invalid $ RegionError $ "Incompatible attributes size:" ++ show as
+      as -> contextError $ SemanticError $ pack $ "Incompatible attributes size:" ++ show as
 
 validatePartSizeAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Expression)
 validatePartSizeAttributes attrs = do
@@ -459,7 +472,7 @@ validatePartSizeAttributes attrs = do
       [(L_minPartSize, Just a)] -> return $ Just (SizeAttr_MinSize a)
       [(L_maxPartSize, Just a)] -> return $ Just (SizeAttr_MaxSize a)
       [(L_minPartSize, Just a),(L_maxPartSize, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
-      as -> do invalid $ RegionError $ "Incompatible attributes partitionSize :" ++ show as
+      as -> contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
 
 validateNumPartAttributes :: [(Lexeme,Maybe Expression)] -> Validator (SizeAttr Expression)
 validateNumPartAttributes attrs = do
@@ -471,7 +484,7 @@ validateNumPartAttributes attrs = do
       [(L_minNumParts, Just a)] -> return $ Just (SizeAttr_MinSize a)
       [(L_maxNumParts, Just a)] -> return $ Just (SizeAttr_MaxSize a)
       [(L_minNumParts, Just a),(L_maxNumParts, Just b)] -> return $ Just (SizeAttr_MinMaxSize a b)
-      as -> do invalid $ RegionError $ "Incompatible attributes partitionSize :" ++ show as
+      as -> contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
 
 
 validateJectivityAttributes :: [(Lexeme,Maybe Expression)] -> Validator JectivityAttr
@@ -484,13 +497,14 @@ validateJectivityAttributes attrs = do
       [(L_surjective, _)] -> return $ Just JectivityAttr_Surjective
       [(L_bijective, _)] -> return $ Just JectivityAttr_Bijective
       [(L_injective, _),(L_surjective, _)] -> do
-        info "Inj and Sur can be combined to bijective"
+        contextInfo $ UnclassifiedInfo "Inj and Sur can be combined to bijective"
         return $ Just JectivityAttr_Bijective
-      as -> do invalid $ RegionError $ "Incompatible attributes jectivity" ++ show as
+      as -> contextError $ SemanticError $ pack $ "Incompatible attributes jectivity" ++ show as
 
 
 validateSetAttributes :: ListNode AttributeNode -> Validator (SetAttr Expression)
 validateSetAttributes atts = do
+    setContextFrom atts
     attrs <- validateList (validateAttributeNode setValidAttrs) atts
     size <- validateSizeAttributes attrs
     return $ SetAttr <$> size
@@ -498,6 +512,7 @@ validateSetAttributes atts = do
 
 validateMSetAttributes :: ListNode AttributeNode -> Validator (MSetAttr Expression)
 validateMSetAttributes atts = do
+    setContextFrom atts
     attrs <- validateList (validateAttributeNode msetValidAttrs) atts
     size <- validateSizeAttributes attrs
     occurs <- validateOccursAttrs attrs
@@ -511,7 +526,7 @@ validateMSetAttributes atts = do
                     [(L_minOccur,Just a)] -> return $ Just (OccurAttr_MinOccur a)
                     [(L_maxOccur, Just a)] -> return $ Just (OccurAttr_MaxOccur a)
                     [(L_minOccur, Just a),(L_maxOccur, Just b)] -> return $ Just (OccurAttr_MinMaxOccur a b)
-                    as -> invalid $ StateError $ "Bad args to occurs" ++ show as
+                    as -> contextError $ SemanticError $ pack $ "Bad args to occurs" ++ show as
 
 
 validateFuncAttributes :: ListNode AttributeNode -> Validator (FunctionAttr Expression)
@@ -532,6 +547,7 @@ validateSeqAttributes atts = do
 
 validateRelationAttributes :: ListNode AttributeNode -> Validator (RelationAttr Expression)
 validateRelationAttributes atts = do
+    setContextFrom atts
     attrs <- validateList (validateAttributeNode relAttrs) atts
     size <- validateSizeAttributes attrs
     others <- validateArray validateBinaryRel (filter (\x -> fst x `elem` map fst binRelAttrs) attrs)
@@ -541,7 +557,7 @@ validateRelationAttributes atts = do
             validateBinaryRel (l,_) = do
                 case lexemeToBinRel l of
                     Just b -> return . pure $ b
-                    Nothing -> invalid $ StateError  $ "Not found (bin rel) " ++ show l
+                    Nothing ->contextError $ InternalErrorS $ pack $ "Not found (bin rel) " ++ show l
 
 validatePartitionAttributes :: ListNode AttributeNode -> Validator (PartitionAttr Expression)
 validatePartitionAttributes atts = do
@@ -556,16 +572,16 @@ validateAttributeNode :: Map Lexeme Bool -> AttributeNode -> Validator (Lexeme,M
 validateAttributeNode vs (NamedAttributeNode t Nothing) = do
     Just name <- validateSymbol t
     case M.lookup name vs of
-      Nothing -> invalid $ TokenError t
-      Just  True -> invalid $ RegionError  "Argument required"
+      Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
+      Just  True -> invalid $ t <!> CustomError "Argument required"
       Just False ->  return . pure $ (name , Nothing)
 
 validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
     expr <- validateExpression e
     Just name <- validateSymbol t
     case M.lookup name vs of
-      Nothing -> invalid $ TaggedTokenError "Not a valid attr " t
-      Just False -> invalid $ RegionError "name: does not take an argument"
+      Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
+      Just False -> invalid $ t <!> SemanticError "attribute %name% does not take an argument"
       Just True -> return $(\x -> (name,Just x)) <$> expr
 
 
@@ -574,15 +590,15 @@ validateNamedDomainInVariant (NameDomainNode name m_dom) = do
     name' <-  validateName name
     domain' <-case m_dom of
       Nothing -> return . pure $ DomainInt TagInt [RangeSingle 0]
-      Just (l,d) -> checkSymbols [l] >> validateDomain d  
+      Just (l,d) -> checkSymbols [l] >> validateDomain d
     return $  (,) <$> name' <*> domain'
 
 validateNamedDomainInRecord :: NamedDomainNode -> Validator (Name, Domain () Expression)
 validateNamedDomainInRecord (NameDomainNode name m_dom) = do
     name' <-  validateName name
     domain' <-case m_dom of
-      Nothing -> invalid $ StateError "Dataless not allowed in record"
-      Just (l,d) -> checkSymbols [l] >> validateDomain d 
+      Nothing -> invalid $ name <!> SemanticError "Dataless not allowed in record"
+      Just (l,d) -> checkSymbols [l] >> validateDomain d
     return $  (,) <$> name' <*> domain'
 
 validateRange :: RangeNode -> Validator (Range Expression)
@@ -620,7 +636,7 @@ validateExpression expr = case expr of
     FunctionalApplicationNode lt ln -> validateFunctionApplication  lt ln
     AttributeAsConstriant lt exprs -> validateAttributeAsConstraint lt exprs
     SpecialCase  scn ->  validateSpecialCase scn
-    MissingExpressionNode lt -> invalid $ TokenError lt
+    MissingExpressionNode lt -> invalid $  lt <!> TokenError lt
 
 validateAttributeAsConstraint :: LToken -> ListNode ExpressionNode -> Validator Expression
 validateAttributeAsConstraint l1 exprs = do
@@ -631,10 +647,10 @@ validateAttributeAsConstraint l1 exprs = do
         let n = lookup (Name (lexemeText lx)) allSupportedAttributes
         case (n,es) of
           (Just 1 , [e,v]) -> return . pure  $ aacBuilder e lx (Just v)
-          (Just 1 , _) -> invalid $ StateError $ "Expected 2 args to " ++ (show lx)  ++ "got" ++ (show $ length es)
+          (Just 1 , _) -> invalid $  l1 <!> (SemanticError $ pack $ "Expected 2 args to " ++ (show lx)  ++ "got" ++ (show $ length es))
           (Just 0 , [e]) -> return . pure $ aacBuilder e lx Nothing
-          (Just 0 , _) -> invalid $ StateError $ "Expected 1 arg to " ++ (show lx)  ++ "got" ++ (show $ length es)
-          (_,_) -> invalid (IllegalToken l1)
+          (Just 0 , _) -> invalid $ l1 <!> (SemanticError $ pack $ "Expected 1 arg to " ++ (show lx)  ++ "got" ++ (show $ length es))
+          (_,_) -> invalid $ l1 <!> InternalErrorS "Bad AAC"
     where
         aacBuilder e lx y= Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e (fromString (lexemeFace lx)) y
 
@@ -710,7 +726,7 @@ validateMetaVar tok = do
     Just lx <- validateSymbol tok
     case lx of
         LMetaVar s -> return .pure  $ unpack s
-        _ -> invalid $ IllegalToken tok
+        _ -> invalid $ tok <!> InternalError
 
 validateDomainExpression :: DomainExpressionNode -> Validator Expression
 validateDomainExpression (DomainExpressionNode  l1 dom l2) = do
@@ -781,7 +797,7 @@ validatePostfixOp (ExplicitDomain l1 l2 dom l3) = do
     Just dom' <- validateDomain dom
     let t =  getType dom'
     case t of
-      Nothing -> invalid $ StateError $ "Some type bug with:" ++ show dom'
+      Nothing -> invalid $ dom <!> InternalErrorS (pack ("Some type bug with:" ++ show dom'))
       Just ty -> return . pure $ (\ex -> Typed ex ty)
     where
         getType :: Domain () Expression -> Maybe Type
@@ -839,9 +855,9 @@ validateVariantLiteral :: ListNode RecordMemberNode -> Validator Expression
 validateVariantLiteral ln = do
     members <- validateList validateRecordMember ln
     case members of
-      [] -> invalid $ SyntaxError "Variants must contain exactly one member"
+      [] -> invalid $ ln <!> SemanticError "Variants must contain exactly one member"
       [(n,x)]-> return . pure $ mkAbstractLiteral $ AbsLitVariant Nothing n x
-      _:_ -> invalid $ SyntaxError "Variants must contain exactly one member" --tag subsequent members as unexpected 
+      _:_ -> invalid $ ln <!> SyntaxError "Variants must contain exactly one member" --tag subsequent members as unexpected 
 
 
 
@@ -936,7 +952,7 @@ enforceConstraint :: Maybe Bool -> String -> ValidatorS ()
 enforceConstraint p msg = do
     case p of
         Just True-> return ()
-        _ -> invalid (StateError msg) >> fail ""
+        _ -> void (contextError (CustomError $ pack msg))
 
 
 
@@ -944,13 +960,8 @@ checkSymbols :: [LToken] -> ValidatorS ()
 checkSymbols = mapM_ validateSymbol
 
 --Raise a non structural error (i.e type error)
-raiseError :: ValidatorError -> ValidatorS ()
+raiseError :: ValidatorDiagnostic -> ValidatorS ()
 raiseError e = tell [e]
-
-type ValidatorInfo = String
---todo warn and info
-info :: ValidatorInfo -> ValidatorS ()
-info v = tell [RegionError $ "info : " ++ v]
 
 
 
@@ -965,7 +976,7 @@ validateIntLiteral t = do
     l <- validateSymbol t
     case l of
         Just (LIntLiteral x) -> return . pure $ ConstantInt TagInt x
-        _ -> invalid $ IllegalToken t
+        _ -> invalid $ t <!> InternalError
 
 validateBoolLiteral :: LToken -> Validator Constant
 validateBoolLiteral t = do
@@ -973,8 +984,7 @@ validateBoolLiteral t = do
     case l of
         L_true -> return . pure $ ConstantBool True
         L_false -> return . pure $ ConstantBool False
-        _ -> invalid $ IllegalToken t
-
+        _ -> invalid $  t <!> InternalError
 validateNameList :: Sequence NameNode -> ValidatorS [Name]
 validateNameList = validateSequence validateName
 
@@ -986,8 +996,8 @@ validateIdentifier (NameNode iden) = do
         _ -> return Nothing
     where
         checkName :: Text -> Validator Text
-        checkName "" = invalid $ StateError "Empty names not allowed"
-        checkName "\"\"" = invalid $ StateError "Empty names not allowed"
+        checkName "" = invalid $ iden <!> SemanticError "Empty names not allowed"
+        checkName "\"\"" = invalid $ iden <!> SemanticError  "Empty names not allowed"
         checkName x = return . pure $ x
 
 validateName :: NameNode -> Validator Name
@@ -1015,33 +1025,66 @@ validateSequence f (Seq vals) = validateArray (validateSequenceElem f) vals
 validateSequenceElem :: (a -> Validator b) -> SeqElem a -> Validator b
 validateSequenceElem f (SeqElem i (Just x)) = validateSymbol x >> f i
 validateSequenceElem f (SeqElem i Nothing) = f i
-validateSequenceElem f (MissingSeqElem plc sep) = checkSymbols [sep] >> invalid (TokenError plc)
+validateSequenceElem f (MissingSeqElem plc sep) = checkSymbols [sep] >> invalid ( plc <!> TokenError plc)
 
 validateExprList :: ListNode ExpressionNode -> ValidatorS [Expression]
 validateExprList = validateList validateExpression
 
 
-val :: String -> IO ()
-val s = do
-    let str = s
-    let other = [ETok (0, 0, 0, sourcePos0) [] L_EOF ""]
-    let txt = pack str
-    let lexed = parseMaybe eLex txt
-    let stream = ETokenStream txt $ fromMaybe other lexed
-    -- parseTest parseProgram stream
-    let progStruct = runParser parseProgram "TEST" stream
-
-    case progStruct of
-        Left _ -> putStrLn "error"
-        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (SymbolTable []) in
-            putStrLn $ show qpr
 
 
-valFile :: String -> IO ()
-valFile p = do
-    path <- readFileIfExists p
-    case path of
-      Nothing -> putStrLn "NO such file"
-      Just s -> val s
+data DiagnosticRegion = DiagnosticRegion {
+    drSourcePos::SourcePos,
+    drOffset :: Int,
+    drLength :: Int
+} | GlobalRegion
+    deriving Show
+getTokenRegion :: LToken -> DiagnosticRegion
+getTokenRegion a =  do
+        let h =case a of
+              RealToken et -> et
+              MissingToken et -> et
+              SkippedToken et -> et
+        let start = tokenSourcePos h
+        let offset = tokenStart h
+        let tLength =case a of
+              RealToken _ -> totalLength h
+              MissingToken _ -> 1
+              SkippedToken _ -> totalLength h
+        DiagnosticRegion start offset tLength
+
+getRegion :: Flattenable ETok a => a -> DiagnosticRegion
+getRegion a = case range of
+  [] -> GlobalRegion
+  (h:_)  -> do
+        let start = tokenSourcePos h
+        let offset = tokenStart h
+        let tLength = sum (map totalLength range)
+        DiagnosticRegion start offset tLength
+  where range :: [ETok] = flatten a
+
+
+
+(<!>) :: Flattenable ETok a => a -> ErrorType -> ValidatorDiagnostic
+t <!> e = ValidatorDiagnostic (getRegion t) $ Error e
+
+(</!\>) :: Flattenable ETok a => a -> WarningType -> ValidatorDiagnostic
+t </!\> e = ValidatorDiagnostic (getRegion t) $ Warning e
+
+(<?>) :: Flattenable ETok a => a -> InfoType -> ValidatorDiagnostic
+t <?> e = ValidatorDiagnostic (getRegion t) $ Info e 
+
+(<?!>) :: Flattenable ETok a => Maybe a -> ErrorType -> ValidatorDiagnostic
+Nothing <?!> e =  ValidatorDiagnostic GlobalRegion $ Error e
+Just t <?!> e =  t <!> e
+
+contextError :: ErrorType -> Validator a
+contextError e = do
+    q <- getContext
+    invalid $ ValidatorDiagnostic q $ Error e
+
+contextInfo :: InfoType -> ValidatorS ()
+contextInfo e = do
+    q <- getContext
+    tell $ [ValidatorDiagnostic q $ Info e]
     return ()
--- putStrLn validateFind

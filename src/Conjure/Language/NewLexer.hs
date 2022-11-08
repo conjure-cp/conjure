@@ -78,6 +78,9 @@ tokenStart (ETok{offsets = (_, s, _, _)}) = s
 
 tokenSourcePos :: ETok -> SourcePos
 tokenSourcePos ETok{offsets=(_,_,_,s)} = s
+sourcePosAfter :: ETok -> SourcePos
+sourcePosAfter ETok {offsets=(_,_,l,SourcePos a b (unPos->c))} = SourcePos a b (mkPos (c + l))
+
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 

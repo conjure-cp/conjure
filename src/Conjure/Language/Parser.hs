@@ -53,18 +53,17 @@ import Text.PrettyPrint (text)
 type Pipeline a b = (Parsec Void ETokenStream a,a -> V.ValidatorS b)
 
 
-data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError [V.ValidatorError]
+data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError [V.ValidatorDiagnostic]
     deriving (Show)
 
 runPipeline :: Pipeline a b -> Text -> Either PipelineError b
 runPipeline (parse,val) txt = do
             lexResult <- either (Left . LexErr) Right $ L.runLexer txt
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
-            let x = V.runValidator (val parseResult) (V.SymbolTable [])
+            let x = V.runValidator (val parseResult) def
             case x of 
-                (Just m, []) -> Right m
+                (Just m, ds) | not $ any V.isError ds -> Right m
                 (_, ves) -> Left $ ValidatorError ves
-
                 -- Validator (Just res) [] -> Right res
                 -- Validator _ xs -> Left $ ValidatorError xs          
 
