@@ -24,6 +24,7 @@ data DiagnosticForPrint = DiagnosticForPrint {
 } deriving (Show,Eq,Ord)
 
 instance ShowErrorComponent DiagnosticForPrint where
+
   errorComponentLen (DiagnosticForPrint {dLength=l}) = l
 
   showErrorComponent DiagnosticForPrint {dMessage=message}= case message of
