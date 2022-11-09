@@ -48,12 +48,13 @@ import Conjure.Language.AST.ASTParser (ParserError, runASTParser, parseProgram)
 import Data.Void (Void)
 import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
 import Text.PrettyPrint (text)
+import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 
 
 type Pipeline a b = (Parsec Void ETokenStream a,a -> V.ValidatorS b)
 
 
-data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError [V.ValidatorDiagnostic]
+data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError Doc
     deriving (Show)
 
 runPipeline :: Pipeline a b -> Text -> Either PipelineError b
@@ -63,7 +64,7 @@ runPipeline (parse,val) txt = do
             let x = V.runValidator (val parseResult) def
             case x of 
                 (Just m, ds) | not $ any V.isError ds -> Right m
-                (_, ves) -> Left $ ValidatorError ves
+                (_, ves) -> Left $ ValidatorError $ text (showDiagnosticsForConsole ves txt)
                 -- Validator (Just res) [] -> Right res
                 -- Validator _ xs -> Left $ ValidatorError xs          
 

@@ -22,14 +22,15 @@ import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 import Language.Haskell.TH.PprLib (rparen)
 import Conjure.Language.Attributes (allAttributLexemes)
 import Data.Sequence (Seq)
+import Text.PrettyPrint.HughesPJ (text)
 
-data ParserError = ParserError
+data ParserError = ParserError Doc
     deriving (Show)
 
 
 runASTParser :: Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str = case runParser p "Parser" str of
-  Left peb -> Left ParserError
+  Left peb -> Left $ ParserError . text $ errorBundlePretty peb
   Right res -> Right res
 
 parseProgram :: Parser ProgramTree
