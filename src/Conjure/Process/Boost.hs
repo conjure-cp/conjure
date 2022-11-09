@@ -214,7 +214,7 @@ refersTo (Reference n _) a = n `elem` namesFromAbstractPattern a
 refersTo _ _               = False
 
 -- | Get a single name from an abstract pattern.
-nameFromAbstractPattern :: (MonadFail m) => AbstractPattern -> m Name
+nameFromAbstractPattern :: (MonadFailDoc m) => AbstractPattern -> m Name
 nameFromAbstractPattern a = case namesFromAbstractPattern a of
                                  [n] -> pure n
                                  []  -> failDoc "[nameFromAbstractPattern] no names in abstract pattern"

@@ -100,7 +100,7 @@ parseModel = (parseProgram,V.strict . V.validateModel)
 parseIO :: MonadFailDoc m => Pipeline i a -> String -> m a
 parseIO p s = do
             case runPipeline p $ T.pack s of
-                Left err -> failDoc $ show errorBundlePretty err
+                Left err -> failDoc $ text $show err
                 Right x  -> return x
 
 
@@ -999,7 +999,7 @@ parseExpr = (P.parseExpression,V.strict . V.validateExpression)
 
 runLexerAndParser :: Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p inp of
-  Left pe -> Left $ "Parser error in file:" <+> text file <+> text  ("Error is:\n" ++ errorBundlePretty pe)
+  Left pe -> Left $ "Parser error in file:" <+> text file <+> text  ("Error is:\n" ++ show pe)
   Right a -> Right a
 --     ls <- runLexer inp
 --     case runParser p file ls of

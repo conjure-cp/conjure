@@ -468,7 +468,7 @@ instance Pretty a => Pretty (SizeAttr a) where
     pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <> ", maxSize" <+> pretty y
 
 
-getMaxFrom_SizeAttr :: MonadFail m => SizeAttr a -> m a
+getMaxFrom_SizeAttr :: MonadFailDoc m => SizeAttr a -> m a
 getMaxFrom_SizeAttr (SizeAttr_Size n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MaxSize n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MinMaxSize _ n) = return n
@@ -515,7 +515,7 @@ instance Pretty a => Pretty (OccurAttr a) where
     pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <> ", maxOccur" <+> pretty y
 
 
-getMaxFrom_OccurAttr :: MonadFail m => OccurAttr a -> m a
+getMaxFrom_OccurAttr :: MonadFailDoc m => OccurAttr a -> m a
 getMaxFrom_OccurAttr (OccurAttr_MaxOccur n) = return n
 getMaxFrom_OccurAttr (OccurAttr_MinMaxOccur _ n) = return n
 getMaxFrom_OccurAttr _ = failDoc "getMaxFrom_OccurAttr"

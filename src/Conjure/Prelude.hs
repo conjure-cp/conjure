@@ -423,8 +423,6 @@ instance MonadFail Gen where
 instance MonadFailDoc Gen where
     failDoc = Control.Monad.fail . show
 
-instance MonadFailDoc (ParsecT l m) where
-    failDoc = Control.Monad.fail . show
 
 instance MonadFailDoc m => MonadFailDoc (Pipes.Proxy a b c d m) where
     failDoc = lift . failDoc
