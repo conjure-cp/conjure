@@ -318,7 +318,9 @@ invalid err = do
 validateSymbol :: LToken -> Validator Lexeme
 validateSymbol s =
     case s of
-        RealToken et -> return . pure  $ lexeme et
+        RealToken ss et -> do 
+            checkSymbols (map SkippedToken ss)
+            return . pure  $ lexeme et
         _ -> invalid $ ValidatorDiagnostic (getRegion s) $ Error $ TokenError s
 
 -- [MissingTokenError ]
@@ -346,7 +348,6 @@ validateDomain dm = case dm of
     BoolDomainNode lt -> pure <$> (validateSymbol lt >> return DomainBool)
     RangedIntDomainNode l1 rs -> checkSymbols [l1] >> validateRangedInt rs
     RangedEnumNode nn ranges -> validateEnumRange nn ranges
-    -- EnumDomainNode nn -> validateNamedEnumDomain nn
     ShortTupleDomainNode lst -> validateTupleDomain lst
     TupleDomainNode l1 doms -> checkSymbols [l1] >> validateTupleDomain doms
     RecordDomainNode l1 ndom -> checkSymbols [l1] >> validateRecordDomain ndom

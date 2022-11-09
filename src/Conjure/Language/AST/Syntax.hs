@@ -9,7 +9,7 @@ import Conjure.Prelude
 
 
 data LToken
-    = RealToken ETok
+    = RealToken [ETok] ETok
     | MissingToken ETok
     | SkippedToken ETok
     deriving (Eq, Ord)
@@ -19,7 +19,8 @@ instance Null LToken where
     isMissing _ = False
 
 instance Show LToken where
-    show (RealToken x) = show x
+    show (RealToken [] x) = show x
+    show (RealToken ss x) =  "SKIPPED" ++ show ss ++ show x
     show (MissingToken x) = "MISSING[" ++ show x ++ "]"
     show (SkippedToken x) = "SKIPPED[" ++ show x ++ "]"
 

@@ -43,7 +43,7 @@ parseLangVersion :: Parser LangVersionNode
 parseLangVersion = do
     lLang <- need L_language
     lLName <- parseIdentifier
-    nums <- parseSequence L_Dot (RealToken <$> intLiteral)
+    nums <- parseSequence L_Dot (RealToken [] <$> intLiteral)
     return $ LangVersionNode lLang lLName nums
 
 
@@ -169,8 +169,8 @@ parseObjectiveStatement = do
     s <- eSymbol L_minimising <|> eSymbol L_maximising
     e <- parseExpression
     return $ case s of
-        (ETok {lexeme=L_minimising}) -> ObjectiveMin (RealToken s) e
-        _ -> ObjectiveMax (RealToken s) e
+        (ETok {lexeme=L_minimising}) -> ObjectiveMin (RealToken [] s) e
+        _ -> ObjectiveMax (RealToken [] s) e
     <?> "Objective Statement"
 
 
@@ -178,7 +178,7 @@ pEnding :: Parser LToken
 pEnding =  do
     t <- lookAhead anySingle
     case t of
-        ETok {lexeme=L_EOF} -> return $ RealToken t
+        ETok {lexeme=L_EOF} -> return $ RealToken [] t
         _ -> empty
 
 
@@ -293,7 +293,7 @@ parseShortTupleLiteral = try $ do
     return $ TupleLiteralNodeShort $ ShortTuple (ListNode lOpen exprs lClose)
 
 parseIntLiteral :: Parser LiteralNode
-parseIntLiteral = IntLiteral . RealToken <$> intLiteral
+parseIntLiteral = IntLiteral . RealToken [] <$> intLiteral
 
 parseBoolLiteral :: Parser LiteralNode
 parseBoolLiteral = BoolLiteral <$> (need L_true <|> need L_false)
@@ -476,9 +476,9 @@ parseFunction = try $ do
     guard $ argsHasNoLeadingTrivia args
     return $ FunctionalApplicationNode name args
     where
-        isOverloaded (RealToken ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
+        isOverloaded (RealToken _ ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
         isOverloaded _ = False
-        argsHasNoLeadingTrivia (ListNode (RealToken ETok{trivia=[]}) y z) =  True
+        argsHasNoLeadingTrivia (ListNode (RealToken [] ETok{trivia=[]}) y z) =  True
         argsHasNoLeadingTrivia _ = False
 parseAttributeAsConstraint :: Parser ExpressionNode
 parseAttributeAsConstraint = do
@@ -764,12 +764,12 @@ parseAttributes = try $ do
            (SeqElem (NamedAttributeNode x _) _) <- members,isNonIdentifier x
            ]
         isNonIdentifier :: LToken -> Bool
-        isNonIdentifier (RealToken ETok{lexeme=(LIdentifier _)}) = False
+        isNonIdentifier (RealToken _ ETok{lexeme=(LIdentifier _)}) = False
         isNonIdentifier _ = True
 
 parseAttribute :: Parser AttributeNode
 parseAttribute = do
-    name <- (choice (map need allAttributLexemes))  <|> RealToken <$> identifier
+    name <- (choice (map need allAttributLexemes))  <|> RealToken [] <$> identifier
     expr <- optional parseExpressionStrict
     return $ NamedAttributeNode name expr
 

@@ -58,17 +58,17 @@ want :: Lexeme -> Parser LToken
 want (LIdentifier _) = do
     (ETok o t lex _ ) <- lookAhead anySingle
     case lex of
-        (LIdentifier _) -> RealToken <$> anySingle
+        (LIdentifier _) -> RealToken [] <$> anySingle
         _ -> return $ MissingToken $ ETok o{oTLength=0} t LMissingIdentifier ""
 want a = do
     (ETok o t lex _) <- lookAhead anySingle
     if lex == a
-        then RealToken <$> anySingle
+        then RealToken [] <$> anySingle
         else return $ MissingToken $ ETok o{oTLength=0} t a ""
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser LToken
-need a = RealToken <$> eSymbol a <?> "\"" ++ lexemeFace a ++ "\""
+need a = RealToken [] <$> eSymbol a <?> "\"" ++ lexemeFace a ++ "\""
 
 adjacent :: Parser a -> Parser a
 adjacent p = do 
@@ -82,11 +82,11 @@ parseIdentifier = do
     return $ NameNode x
 
 parseMetaVar :: Parser LToken
-parseMetaVar = RealToken <$> metaVar
+parseMetaVar = RealToken [] <$> metaVar
 
 parseIdentifierStrict :: Parser NameNode
 parseIdentifierStrict = do
-    NameNode . RealToken <$> identifier
+    NameNode . RealToken [] <$> identifier
 
 -- List helpers
 
@@ -157,7 +157,7 @@ parseSequence divider pElem = do
         _ -> do 
             Seq rest <- parseSequence divider pElem
             makeElem rest elem sep missingPlaceholder
-
+    
     where
     makeElem rest el sep plc = do
             let newElem = case (el, isMissing sep) of 
