@@ -10,6 +10,7 @@ import Conjure.Language.NewLexer
 import Conjure.Language.Lexemes
 import qualified Data.Text
 import qualified Data.Text as T
+import Data.Map.Strict (mapWithKey, assocs)
 
 
 
@@ -45,6 +46,12 @@ showDiagnosticsForConsole errs text
             Right _ -> "No printable errors from :" ++ (show . length $ errs)
 
 
+printSymbolTable :: SymbolTable -> IO ()
+printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs tab)
+    where 
+        printEntry :: (Text ,SymbolTableValue) -> IO ()
+        printEntry (a,b) = putStrLn $ show a ++ ":" ++ show b
+
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
 captureErrors = mapM_ captureError
 
@@ -73,9 +80,10 @@ val s = do
         Left _ -> putStrLn "error"
         Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) def in
             case qpr of
-                (model, vds) -> do
+                (model, vds,st) -> do
                     print (maybe "" show model)
                     putStrLn $ show vds
+                    printSymbolTable $ symbolTable st
                     putStrLn $ showDiagnosticsForConsole vds txt
 
 

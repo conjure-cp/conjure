@@ -37,6 +37,7 @@ essenceStmts = QuasiQuoter
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
+    where ?typeChecking = False
 
 essence :: QuasiQuoter
 essence = QuasiQuoter
@@ -52,6 +53,7 @@ essence = QuasiQuoter
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
+    where ?typeChecking = False
 
 essenceDomain :: QuasiQuoter
 essenceDomain = QuasiQuoter
@@ -67,7 +69,7 @@ essenceDomain = QuasiQuoter
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
-
+    where ?typeChecking = False
 -- locationTH :: Q SourcePos
 -- locationTH = do
 --     loc <- location

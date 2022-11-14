@@ -132,7 +132,6 @@ readModel ::
     (FilePath, Text) ->
     m Model
 readModel modelParser preprocess (fp, con) = do
-
     model <- case preprocess of
         Nothing -> return def
         Just prep ->
