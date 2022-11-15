@@ -37,7 +37,7 @@ import qualified Data.ByteString.Char8 as BS ( putStrLn )
 
 readModelFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readModelFromFile fp = do
@@ -51,7 +51,7 @@ readModelFromFile fp = do
 
 readModelFromStdin ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     m Model
 readModelFromStdin = do
@@ -76,7 +76,7 @@ readParamJSON fp = do
 
 readParamOrSolutionFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readParamOrSolutionFromFile fp = do
@@ -93,7 +93,7 @@ readParamOrSolutionFromFile fp = do
 
 readModelPreambleFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readModelPreambleFromFile fp = do
@@ -106,7 +106,7 @@ readModelPreambleFromFile fp = do
 
 readModelInfoFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readModelInfoFromFile fp = do
@@ -119,7 +119,7 @@ readModelInfoFromFile fp = do
 
 
 readModel ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     Parser Model ->
     Maybe (Text -> Text) ->

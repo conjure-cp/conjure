@@ -2,9 +2,9 @@
 
 set -o errexit
 
-if ${COVERAGE} && [ -z $DOWNLOADSECUREFILE_SECUREFILEPATH ]; then
+if ${COVERAGE} && [ -n "$DOWNLOADSECUREFILE_SECUREFILEPATH" ]; then
     # this is from https://cloudblogs.microsoft.com/opensource/2019/04/05/publishing-github-pages-from-azure-pipelines
-    mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
+    mkdir ~/.ssh && mv "$DOWNLOADSECUREFILE_SECUREFILEPATH" ~/.ssh/id_rsa
     chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     git clone git@github.com:conjure-cp/conjure-code-coverage.git
@@ -19,7 +19,7 @@ if ${COVERAGE} && [ -z $DOWNLOADSECUREFILE_SECUREFILEPATH ]; then
 
     # rename the cryptic directory name for better diffs over time
     conjureDirName=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp)
-    mv conjure-code-coverage/latest/${conjureDirName} conjure-code-coverage/latest/conjure-cp
+    mv conjure-code-coverage/latest/"${conjureDirName}" conjure-code-coverage/latest/conjure-cp
 
     # search & replace to fix links
     find conjure-code-coverage/latest -type f -exec sed -i "s/${conjureDirName}/conjure-cp/g" {} \;

@@ -50,7 +50,7 @@ allSupportedAttributes =
 
 
 addAttributesToDomain
-    :: ( MonadFail m
+    :: ( MonadFailDoc m
        , Pretty r
        )
     => Domain r Expression
@@ -63,7 +63,7 @@ addAttributesToDomain domain ((attr, val) : rest) = do
 
 
 addAttributeToDomain
-    :: ( MonadFail m
+    :: ( MonadFailDoc m
        , Pretty r
        )
     => Domain r Expression                          -- the input domain
@@ -90,10 +90,10 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
         AttrName_size ->
             case sizeAttr of
                 SizeAttr_Size s | val == s -> return domain
-                SizeAttr_Size{}            -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{}            -> failDoc $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _                          -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
         AttrName_minSize -> do
-            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -104,7 +104,7 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
                 SizeAttr_MinMaxSize minS maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS)) inner
                 SizeAttr_None{}               -> return $ DomainSet r (SetAttr (SizeAttr_MinSize val)) inner
         AttrName_maxSize -> do
-            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -115,11 +115,11 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
                 SizeAttr_MinMaxSize minS maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val))) inner
                 SizeAttr_None{}               -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize val)) inner
         _ ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
     updater attr Nothing =
-            fail $ vcat [ "Missing attribute value for" <+> pretty attr
+            failDoc $ vcat [ "Missing attribute value for" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
@@ -128,10 +128,10 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
         AttrName_size ->
             case sizeAttr of
                 SizeAttr_Size s | val == s -> return domain
-                SizeAttr_Size{}            -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{}            -> failDoc $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _                          -> return $ DomainMSet r (MSetAttr (SizeAttr_Size val) occurAttr) inner
         AttrName_minSize -> do
-            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -154,7 +154,7 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                                                  (MSetAttr (SizeAttr_MinSize val)                      occurAttr)
                                                  inner
         AttrName_maxSize -> do
-            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -205,11 +205,11 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                                                    (MSetAttr sizeAttr (OccurAttr_MaxOccur val))
                                                    inner
         _ ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
     updater attr Nothing =
-            fail $ vcat [ "Missing attribute value for" <+> pretty attr
+            failDoc $ vcat [ "Missing attribute value for" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
@@ -219,12 +219,12 @@ addAttributeToDomain domain@(DomainFunction r
     updater attr (Just val) = case attr of
         AttrName_size ->
             case sizeAttr of
-                SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{} -> failDoc $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainFunction r
                                             (FunctionAttr (SizeAttr_Size val) partialityAttr jectivityAttr)
                                             inF inT
         AttrName_minSize -> do
-            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
                 SizeAttr_MinSize{}    -> fails
@@ -236,7 +236,7 @@ addAttributeToDomain domain@(DomainFunction r
                                             (FunctionAttr (SizeAttr_MinMaxSize val maxS) partialityAttr jectivityAttr)
                                             inF inT
         AttrName_maxSize -> do
-            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
                 SizeAttr_MaxSize{}    -> fails
@@ -248,7 +248,7 @@ addAttributeToDomain domain@(DomainFunction r
                                             (FunctionAttr (SizeAttr_MinMaxSize minS val) partialityAttr jectivityAttr)
                                             inF inT
         _ ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
     updater "total" Nothing = return $ DomainFunction r
@@ -286,7 +286,7 @@ addAttributeToDomain domain@(DomainFunction r
                                             (FunctionAttr sizeAttr partialityAttr JectivityAttr_Bijective)
                                             inF inT
     updater attr _ =
-        fail $ vcat [ "Unsupported attribute" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -296,12 +296,12 @@ addAttributeToDomain domain@(DomainSequence r
     updater attr (Just val) = case attr of
         AttrName_size ->
             case sizeAttr of
-                SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{} -> failDoc $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainSequence r
                                             (SequenceAttr (SizeAttr_Size val) jectivityAttr)
                                             inner
         AttrName_minSize -> do
-            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
                 SizeAttr_MinSize{}    -> fails
@@ -313,7 +313,7 @@ addAttributeToDomain domain@(DomainSequence r
                                             (SequenceAttr (SizeAttr_MinMaxSize val maxS) jectivityAttr)
                                             inner
         AttrName_maxSize -> do
-            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
                 SizeAttr_MaxSize{}    -> fails
@@ -325,7 +325,7 @@ addAttributeToDomain domain@(DomainSequence r
                                             (SequenceAttr (SizeAttr_MinMaxSize minS val) jectivityAttr)
                                             inner
         _ ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
     updater "injective" Nothing = return $
@@ -360,7 +360,7 @@ addAttributeToDomain domain@(DomainSequence r
                                             (SequenceAttr sizeAttr JectivityAttr_Bijective)
                                             inner
     updater attr _ =
-        fail $ vcat [ "Unsupported attribute" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -377,10 +377,10 @@ addAttributeToDomain domain@(DomainRelation r
     updater attr (Just val) = case attr of
         AttrName_size ->
             case sizeAttr of
-                SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{} -> failDoc $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainRelation r (RelationAttr (SizeAttr_Size val) binRelAttr) inners
         AttrName_minSize -> do
-            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
                 SizeAttr_MinSize{}    -> fails
@@ -392,7 +392,7 @@ addAttributeToDomain domain@(DomainRelation r
                                             (RelationAttr (SizeAttr_MinMaxSize val maxS) binRelAttr)
                                             inners
         AttrName_maxSize -> do
-            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
                 SizeAttr_MaxSize{}    -> fails
@@ -404,19 +404,19 @@ addAttributeToDomain domain@(DomainRelation r
                                             (RelationAttr (SizeAttr_MinMaxSize minS val) binRelAttr)
                                             inners
         _ ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
     updater attr Nothing | attr `elem` supportedBinRel = case readBinRel attr of
         Nothing ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
         Just a  -> return $ DomainRelation r
                                 (RelationAttr sizeAttr (binRelAttr `mappend` BinaryRelationAttrs (S.singleton a)))
                                 inners
     updater attr _ =
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
@@ -426,10 +426,10 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
         AttrName_numParts ->
             case partsNum partitionAttr of
                 SizeAttr_Size s | val == s -> return domain
-                SizeAttr_Size{}            -> fail $ "Cannot add a numParts attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{}            -> failDoc $ "Cannot add a numParts attribute to this domain:" <++> pretty domain
                 _                          -> return $ DomainPartition r (partitionAttr { partsNum = SizeAttr_Size val }) inner
         AttrName_minNumParts -> do
-            let fails = fail $ "Cannot add a minNumParts attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minNumParts attribute to this domain:" <++> pretty domain
             case partsNum partitionAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -452,7 +452,7 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                                                  partitionAttr { partsNum = SizeAttr_MinSize val }
                                                  inner
         AttrName_maxNumParts -> do
-            let fails = fail $ "Cannot add a maxNumParts attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxNumParts attribute to this domain:" <++> pretty domain
             case partsNum partitionAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -478,10 +478,10 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
         AttrName_partSize ->
             case partsSize partitionAttr of
                 SizeAttr_Size s | val == s -> return domain
-                SizeAttr_Size{} -> fail $ "Cannot add a partSize attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{} -> failDoc $ "Cannot add a partSize attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainPartition r (partitionAttr { partsSize = SizeAttr_Size val }) inner
         AttrName_minPartSize -> do
-            let fails = fail $ "Cannot add a minPartSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a minPartSize attribute to this domain:" <++> pretty domain
             case partsSize partitionAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -504,7 +504,7 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                                                  (partitionAttr { partsSize = SizeAttr_MinSize val })
                                                  inner
         AttrName_maxPartSize -> do
-            let fails = fail $ "Cannot add a maxPartSize attribute to this domain:" <++> pretty domain
+            let fails = failDoc $ "Cannot add a maxPartSize attribute to this domain:" <++> pretty domain
             case partsSize partitionAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
@@ -528,13 +528,13 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                                                  inner
 
         _ ->
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+            failDoc $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
     updater AttrName_regular Nothing =
             return $ DomainPartition r (partitionAttr { isRegular  = True }) inner
     updater attr Nothing =
-            fail $ vcat [ "Missing attribute value for" <+> pretty attr
+            failDoc $ vcat [ "Missing attribute value for" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 

@@ -9,7 +9,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
+msetOccurrence :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 msetOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -32,7 +32,7 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
             MSetAttr (SizeAttr_Size x) _ -> return x
             MSetAttr (SizeAttr_MaxSize x) _ -> return x
             MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
-            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
+            _ -> failDoc ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainMSet MSet_Occurrence attrs innerDomain@DomainInt{})) = do
@@ -96,13 +96,13 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
                                                 Nothing -> []
                                             | (v,x) <- zip innerDomainVals vals
                                             ] )
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constantMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in MSet Occurrence up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name

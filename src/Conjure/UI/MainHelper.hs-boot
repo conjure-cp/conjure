@@ -9,7 +9,7 @@ import {-# SOURCE #-} Conjure.Process.Enumerate ( EnumerateDomain )
 mainWithArgs ::
     MonadIO m =>
     MonadLog m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()

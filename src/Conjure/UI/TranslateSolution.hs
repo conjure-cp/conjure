@@ -21,7 +21,7 @@ import qualified Data.HashMap.Strict as M
 
 
 translateSolution ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -101,7 +101,7 @@ translateSolution (undoUnderscores -> eprimeModel) (undoUnderscores -> essencePa
                           | i <- [1 .. size]
                           ]
                 in  Declaration (LettingDomainDefnEnum n nms)
-            _ -> fail $ vcat [ "Expecting an integer value for" <+> pretty n
+            _ -> failDoc $ vcat [ "Expecting an integer value for" <+> pretty n
                              , "But got:" <+> pretty s
                              ]
 

@@ -389,7 +389,7 @@ rule_Transform_Variant_Literal = "transform-variant-literal" `namedRule` theRule
      _ -> na "rule_Transform_Variant_Literal"
 
 
-atLeastOneTransform :: MonadFail m => (Expression, Expression) -> m ()
+atLeastOneTransform :: MonadFailDoc m => (Expression, Expression) -> m ()
 atLeastOneTransform (l,r) = do
   case (match opTransform l, match opTransform r) of
     (Nothing, Nothing) -> na "no transforms on either side"

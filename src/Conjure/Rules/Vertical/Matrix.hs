@@ -421,8 +421,8 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
                                 _ -> na "rule_Matrix_Lt_Primitive"
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
-        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
-        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ failDoc ("not a primitive type:" <+> pretty tx)
+        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ failDoc ("not a primitive type:" <+> pretty ty)
         let x' = flattenIfNeeded (matrixNumDims tx) x
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
@@ -440,8 +440,8 @@ rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
                                 _ -> na "rule_Matrix_Leq_Primitive"
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
-        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
-        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ failDoc ("not a primitive type:" <+> pretty tx)
+        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ failDoc ("not a primitive type:" <+> pretty ty)
         let x' = flattenIfNeeded (matrixNumDims tx) x
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
@@ -456,8 +456,8 @@ rule_Matrix_Lt_Decompose = "matrix-Lt-tuple" `namedRule` theRule where
         (x,y)           <- match opLt p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        when (isPrimitiveType tx) $ failDoc ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ failDoc ("this is a primitive type:" <+> pretty ty)
         xs              <- downX1 x
         ys              <- downX1 y
         return
@@ -472,8 +472,8 @@ rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
         (x,y)           <- match opLeq p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        when (isPrimitiveType tx) $ failDoc ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ failDoc ("this is a primitive type:" <+> pretty ty)
         xs              <- downX1 x
         ys              <- downX1 y
         return

@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithMarker :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+setExplicitVarSizeWithMarker :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -100,7 +100,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             maxSizeInt <-
                 case maxSize of
                     ConstantInt _ x -> return x
-                    _ -> fail $ vcat
+                    _ -> failDoc $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
@@ -131,26 +131,26 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                     return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))
                                 (_, ConstantUndefined msg ty) ->         -- undefined propagates
                                     return (name, ConstantUndefined ("Set-ExplicitVarSizeWithMarker " `mappend` msg) ty)
-                                _ -> fail $ vcat
+                                _ -> failDoc $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting an integer literal for:" <+> pretty (nameMarker domain name)
                                 , "But got:" <+> pretty marker
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in Set ExplicitVarSizeWithMarker up 1)"
                     , "No value for:" <+> pretty (nameMarker domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in Set ExplicitVarSizeWithMarker up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name

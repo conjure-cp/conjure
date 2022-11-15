@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitWithRepetition :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+msetExplicitWithRepetition :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 msetExplicitWithRepetition = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -31,7 +31,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
             MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
             MSetAttr _ (OccurAttr_MaxOccur x) -> do y <- domainSizeOf innerDomain ; return (x * y)
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> do y <- domainSizeOf innerDomain ; return (x * y)
-            _ -> fail ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+            _ -> failDoc ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
 
         getMinOccur attrs = case attrs of
             MSetAttr _ (OccurAttr_MinOccur x) -> Just x
@@ -41,7 +41,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
         getMaxOccur attrs = case attrs of
             MSetAttr _ (OccurAttr_MaxOccur x) -> return x
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
+            _ -> failDoc ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainMSet _ attrs innerDomain)) = do
@@ -157,7 +157,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                         maxSizeInt <-
                             case maxSize of
                                 ConstantInt _ x -> return x
-                                _ -> fail $ vcat
+                                _ -> failDoc $ vcat
                                         [ "Expecting an integer for the maxSize attribute."
                                         , "But got:" <+> pretty maxSize
                                         , "When working on:" <+> pretty name
@@ -193,26 +193,26 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract $ AbsLitMSet
                                                     (genericTake flagInt vals) )
-                                _ -> fail $ vcat
+                                _ -> failDoc $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting an integer literal for:" <+> pretty (nameFlag domain name)
                                 , "But got:" <+> pretty flag
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in MSet ExplicitVarSizeWithRepetition up 1)"
                     , "No value for:" <+> pretty (nameFlag domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in MSet ExplicitVarSizeWithRepetition up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name

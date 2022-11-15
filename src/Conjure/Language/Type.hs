@@ -213,18 +213,18 @@ matrixNumDims (TypeList     t) = 1 + matrixNumDims t
 matrixNumDims _ = 0
 
 homoType ::
-    MonadFail m =>
+    MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Doc -> [Type] -> m Type
-homoType msg [] = fail $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
+homoType msg [] = failDoc $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
 homoType msg xs =
     if typesUnify xs
         then return (mostDefined xs)
-        else fail $ vcat [ "Not uniformly typed:" <+> msg
+        else failDoc $ vcat [ "Not uniformly typed:" <+> msg
                          , "Involved types are:" <+> vcat (map pretty xs)
                          ]
 
-innerTypeOf :: MonadFail m => Type -> m Type
+innerTypeOf :: MonadFailDoc m => Type -> m Type
 innerTypeOf (TypeList t) = return t
 innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
@@ -233,7 +233,7 @@ innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
 innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt TagInt,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
-innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
+innerTypeOf t = failDoc ("innerTypeOf:" <+> pretty (show t))
 
 isPrimitiveType :: Type -> Bool
 isPrimitiveType TypeBool{} = True
@@ -287,9 +287,8 @@ unifiesOrContains container containee =
 
 -- as in "this homomorphism is morphing"
 morphing :: (?typeCheckerMode :: TypeCheckerMode)
-         => (MonadFail m)
+         => (MonadFailDoc m)
          => Type -> m Type
 morphing (TypeFunction a _) = return a
 morphing (TypeSequence a)   = return a 
-morphing t = fail ("morphing:" <+> pretty (show t))
-
+morphing t = failDoc ("morphing:" <+> pretty (show t))

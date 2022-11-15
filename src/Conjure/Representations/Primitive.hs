@@ -10,7 +10,7 @@ import Conjure.Language
 import Conjure.Representations.Internal
 
 
-primitive :: forall m . MonadFail m => Representation m
+primitive :: forall m . MonadFailDoc m => Representation m
 primitive = Representation
     { rCheck = \ _ domain -> return $
         case domain of
@@ -23,7 +23,7 @@ primitive = Representation
     , rDownC      = const $ return Nothing
     , rUp         = \ ctxt (name, _) ->
         case lookup name ctxt of
-            Nothing -> fail $ vcat
+            Nothing -> failDoc $ vcat
                 $ ("No value for:" <+> pretty name)
                 : "Bindings in context:"
                 : prettyContext ctxt

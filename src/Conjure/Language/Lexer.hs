@@ -488,7 +488,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_transform, "transform")
     ]
 
-runLexer :: MonadFail m => T.Text -> m [LexemePos]
+runLexer :: MonadFailDoc m => T.Text -> m [LexemePos]
 runLexer text = do
     ls <- go text
     let lsPaired = calcPos (initialPos "") ls
@@ -505,7 +505,7 @@ runLexer text = do
             if T.null t
                 then return []
                 else case results of
-                        [] -> fail ("Lexing error:" Pr.<+> Pr.text (T.unpack t))
+                        [] -> failDoc ("Lexing error:" Pr.<+> Pr.text (T.unpack t))
                         ((rest,lexeme):_) -> (lexeme:) <$> go rest
 
         -- attach source positions to lexemes
