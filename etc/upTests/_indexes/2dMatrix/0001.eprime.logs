@@ -1,6 +1,0 @@
-[useChannelling] True
-[applied] allDiff(m)
-          {rules/refns/horizontal/matrix/allDiff.rule}
-              (forAll v__1 : int(3, 7, 8)
-                   . (forAll v__2 : int(3, 7, 8) , v__1 < v__2
-                          . !(forAll v__3 : int(10..12, 19) . m[v__1, v__3] = m[v__2, v__3])))

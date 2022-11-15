@@ -1,8 +1,0 @@
-[useChannelling] True
-[removedDecl] find pain:
-                      tuple (tuple (matrix indexed by [int(1..2)] of int(6, 8)))
-[removedDecl] find pain_tuple1:
-                      tuple (matrix indexed by [int(1..2)] of int(6, 8))
-[simplified] pain[1, 1] = [6, 8]
-             ~~>
-             (forAll v__2 : int(1..2) . pain[1, 1, v__2] = [6, 8][v__2])

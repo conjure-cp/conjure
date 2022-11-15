@@ -1,9 +1,0 @@
-language Essence 1.3
-
-find m: matrix indexed by [int(3,7,8),int(10..12,19)] of int(4..9)
-
-such that 
-
-allDiff(m),
-forAll i : int(3,7,8) .
-    allDiff(m[i]),

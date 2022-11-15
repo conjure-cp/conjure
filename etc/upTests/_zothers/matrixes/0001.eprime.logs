@@ -1,9 +1,0 @@
-[useChannelling] True
-[simplified] a = [[[3, 4], [3, 4]], [[3, 4], [3, 4]]]
-             ~~>
-             (forAll v__4 : int(1, 2)
-                  . (forAll v__5 : int(1, 2)
-                         . (forAll v__6 : int(1, 2)
-                                . a[v__4, v__5, v__6]
-                                  =
-                                  [[[3, 4], [3, 4]], [[3, 4], [3, 4]]][v__4, v__5, v__6])))

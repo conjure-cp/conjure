@@ -1,8 +1,0 @@
-language ESSENCE' 1.0
-
-find f_Function1DPartial_tuple1: matrix indexed by [int(1..9)] of bool
-find f_Function1DPartial_tuple2: matrix indexed by [int(1..9)] of int(1..9)
-such that
-    (sum v__0 : int(1..9) . f_Function1DPartial_tuple1[v__0] * 1) = 2,
-    forAll v__0 : int(1..9)
-        . !f_Function1DPartial_tuple1[v__0] -> f_Function1DPartial_tuple2[v__0] = 1
