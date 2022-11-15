@@ -1,0 +1,1000 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainRelation":
+                      [[], [{"SizeAttr_None": []}, []],
+                       [{"DomainSet": [[], {"SizeAttr_None": []}, {"DomainBool": []}]},
+                        {"DomainFunction":
+                             [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_None"],
+                              {"DomainBool": []}, {"DomainBool": []}]},
+                        {"DomainBool": []},
+                        {"DomainPartition":
+                             [[],
+                              {"isRegular": false, "partsNum": {"SizeAttr_None": []},
+                               "partsSize": {"SizeAttr_None": []}},
+                              {"DomainBool": []}]}]]}]}},
+      {"SuchThat":
+           [{"Constant": {"ConstantBool": true}},
+            {"Op":
+                 {"MkOpIff":
+                      [{"Op":
+                            {"MkOpNeq":
+                                 [{"AbstractLiteral":
+                                       {"AbsLitRelation":
+                                            [[{"Typed":
+                                                   [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                    {"TypeMSet": {"TypeInt": {"TagInt": []}}}]},
+                                              {"AbstractLiteral":
+                                                   {"AbsLitSet":
+                                                        [{"Op":
+                                                              {"MkOpNegate":
+                                                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}},
+                                                         {"Op":
+                                                              {"MkOpTwoBars":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitMSet":
+                                                                                  [{"ConstantBool": false}]}}}}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 9]}},
+                                                         {"Op":
+                                                              {"MkOpMod":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": false}}}},
+                                                                    {"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": true}}}}]}},
+                                                         {"Op":
+                                                              {"MkOpProduct":
+                                                                   {"AbstractLiteral":
+                                                                        {"AbsLitMatrix":
+                                                                             [{"DomainInt":
+                                                                                   [{"TagInt": []},
+                                                                                    [{"RangeBounded":
+                                                                                          [{"Constant":
+                                                                                                {"ConstantInt":
+                                                                                                     [{"TagInt": []},
+                                                                                                      1]}},
+                                                                                           {"Constant":
+                                                                                                {"ConstantInt":
+                                                                                                     [{"TagInt": []},
+                                                                                                      2]}}]}]]},
+                                                                              [{"Op":
+                                                                                    {"MkOpToInt":
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool": true}}}},
+                                                                               {"Op":
+                                                                                    {"MkOpToInt":
+                                                                                         {"Constant":
+                                                                                              {"ConstantBool":
+                                                                                                   false}}}}]]}}}},
+                                                         {"Op":
+                                                              {"MkOpNegate":
+                                                                   {"Constant":
+                                                                        {"ConstantInt": [{"TagInt": []}, 4]}}}}]}},
+                                              {"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Op":
+                                                              {"MkOpIff":
+                                                                   [{"Op":
+                                                                         {"MkOpImply":
+                                                                              [{"Constant": {"ConstantBool": false}},
+                                                                               {"Constant": {"ConstantBool": false}}]}},
+                                                                    {"Constant": {"ConstantBool": false}}]}}]}},
+                                              {"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Op":
+                                                              {"MkOpFreq":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantBool": false}]}}},
+                                                                    {"Op":
+                                                                         {"MkOpEq":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 5]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 5]}}]}}]}},
+                                                         {"Op":
+                                                              {"MkOpNegate":
+                                                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}},
+                                                         {"Op":
+                                                              {"MkOpMod":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": false}}}},
+                                                                    {"Op":
+                                                                         {"MkOpNegate":
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 8]}}}}]}},
+                                                         {"Op":
+                                                              {"MkOpTwoBars":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitPartition":
+                                                                                  [[{"ConstantBool": false}]]}}}}},
+                                                         {"Op":
+                                                              {"MkOpTwoBars":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitSet":
+                                                                                  [{"ConstantInt": [{"TagInt": []}, 3]},
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 6]}]}}}}}]}}],
+                                             [{"Constant":
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet": [{"ConstantInt": [{"TagInt": []}, 0]}]}}},
+                                              {"Op":
+                                                   {"MkOpToSet":
+                                                        [false,
+                                                         {"Op":
+                                                              {"MkOpToMSet":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitSet":
+                                                                                  [{"ConstantInt":
+                                                                                        [{"TagInt": []}, -10]},
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, -1]}]}}}}}]}},
+                                              {"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Op":
+                                                              {"MkOpEq":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantBool": true},
+                                                                                    {"ConstantBool": false}]}}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantBool": false},
+                                                                                    {"ConstantBool": true}]}}}]}},
+                                                         {"Op":
+                                                              {"MkOpEq":
+                                                                   [{"Reference": [{"Name": "var1"}, null]},
+                                                                    {"Reference": [{"Name": "var1"}, null]}]}},
+                                                         {"Constant": {"ConstantBool": false}}]}},
+                                              {"Op":
+                                                   {"MkOpToMSet":
+                                                        {"AbstractLiteral":
+                                                             {"AbsLitSet":
+                                                                  [{"Op":
+                                                                        {"MkOpNegate":
+                                                                             {"Constant":
+                                                                                  {"ConstantInt":
+                                                                                       [{"TagInt": []}, 5]}}}},
+                                                                   {"Op":
+                                                                        {"MkOpProduct":
+                                                                             {"AbstractLiteral":
+                                                                                  {"AbsLitMatrix":
+                                                                                       [{"DomainInt":
+                                                                                             [{"TagInt": []},
+                                                                                              [{"RangeBounded":
+                                                                                                    [{"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                1]}},
+                                                                                                     {"Constant":
+                                                                                                          {"ConstantInt":
+                                                                                                               [{"TagInt":
+                                                                                                                     []},
+                                                                                                                2]}}]}]]},
+                                                                                        [{"Op":
+                                                                                              {"MkOpNegate":
+                                                                                                   {"Constant":
+                                                                                                        {"ConstantInt":
+                                                                                                             [{"TagInt":
+                                                                                                                   []},
+                                                                                                              10]}}}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    0]}}]]}}}}]}}}}],
+                                             [{"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                                         {"Op":
+                                                              {"MkOpProduct":
+                                                                   {"AbstractLiteral":
+                                                                        {"AbsLitMatrix":
+                                                                             [{"DomainInt":
+                                                                                   [{"TagInt": []},
+                                                                                    [{"RangeBounded":
+                                                                                          [{"Constant":
+                                                                                                {"ConstantInt":
+                                                                                                     [{"TagInt": []},
+                                                                                                      1]}},
+                                                                                           {"Constant":
+                                                                                                {"ConstantInt":
+                                                                                                     [{"TagInt": []},
+                                                                                                      2]}}]}]]},
+                                                                              [{"Op":
+                                                                                    {"MkOpDiv":
+                                                                                         [{"Op":
+                                                                                               {"MkOpNegate":
+                                                                                                    {"Constant":
+                                                                                                         {"ConstantInt":
+                                                                                                              [{"TagInt":
+                                                                                                                    []},
+                                                                                                               7]}}}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     2]}}]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 10]}}]]}}}},
+                                                         {"Op":
+                                                              {"MkOpTwoBars":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitPartition":
+                                                                                  [[{"ConstantBool": false}],
+                                                                                   [{"ConstantBool": false}]]}}}}}]}},
+                                              {"Op":
+                                                   {"MkOpUnion":
+                                                        [{"AbstractLiteral":
+                                                              {"AbsLitSet":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": false}}}},
+                                                                    {"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": true}}}},
+                                                                    {"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": true}}}},
+                                                                    {"Constant":
+                                                                         {"ConstantInt": [{"TagInt": []}, 10]}}]}},
+                                                         {"Op":
+                                                              {"MkOpParticipants":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitPartition":
+                                                                                  [[{"ConstantInt":
+                                                                                         [{"TagInt": []}, 3]}]]}}}}}]}},
+                                              {"Typed":
+                                                   [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                    {"TypeMSet": {"TypeBool": []}}]},
+                                              {"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Op":
+                                                              {"MkOpTwoBars":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitSet":
+                                                                                  [{"ConstantBool": true},
+                                                                                   {"ConstantBool": true}]}}}}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                                         {"Op":
+                                                              {"MkOpNegate":
+                                                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                                         {"Op":
+                                                              {"MkOpNegate":
+                                                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}},
+                                                         {"Op":
+                                                              {"MkOpTwoBars":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitFunction":
+                                                                                  [[{"ConstantBool": false},
+                                                                                    {"ConstantBool":
+                                                                                         true}]]}}}}}]}}]]}},
+                                  {"Op":
+                                       {"MkOpUnion":
+                                            [{"AbstractLiteral":
+                                                  {"AbsLitRelation":
+                                                       [[{"AbstractLiteral":
+                                                              {"AbsLitMSet":
+                                                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 10]}},
+                                                                    {"Op":
+                                                                         {"MkOpProduct":
+                                                                              {"AbstractLiteral":
+                                                                                   {"AbsLitMatrix":
+                                                                                        [{"DomainInt":
+                                                                                              [{"TagInt": []},
+                                                                                               [{"RangeBounded":
+                                                                                                     [{"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 1]}},
+                                                                                                      {"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 2]}}]}]]},
+                                                                                         [{"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     6]}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     4]}}]]}}}}]}},
+                                                         {"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                               {"TypeSet": {"TypeInt": {"TagInt": []}}}]},
+                                                         {"Op":
+                                                              {"MkOpToMSet":
+                                                                   {"Typed":
+                                                                        [{"Constant":
+                                                                              {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                                         {"TypeSet": {"TypeBool": []}}]}}},
+                                                         {"Op":
+                                                              {"MkOpUnion":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, -9]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, -1]}]}}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, -1]}]}}}]}}],
+                                                        [{"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                               {"TypeMSet": {"TypeInt": {"TagInt": []}}}]},
+                                                         {"AbstractLiteral":
+                                                              {"AbsLitSet":
+                                                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                                                    {"Op":
+                                                                         {"MkOpDiv":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 7]}},
+                                                                               {"Op":
+                                                                                    {"MkOpNegate":
+                                                                                         {"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    7]}}}}]}},
+                                                                    {"Op":
+                                                                         {"MkOpNegate":
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 6]}}}}]}},
+                                                         {"Constant":
+                                                              {"ConstantAbstract":
+                                                                   {"AbsLitMSet":
+                                                                        [{"ConstantBool": true},
+                                                                         {"ConstantBool": true}]}}},
+                                                         {"Op":
+                                                              {"MkOpToMSet":
+                                                                   {"Typed":
+                                                                        [{"Constant":
+                                                                              {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                                         {"TypeSet": {"TypeInt": {"TagInt": []}}}]}}}],
+                                                        [{"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                               {"TypeMSet": {"TypeInt": {"TagInt": []}}}]},
+                                                         {"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                               {"TypeSet": {"TypeInt": {"TagInt": []}}}]},
+                                                         {"AbstractLiteral":
+                                                              {"AbsLitMSet":
+                                                                   [{"Op":
+                                                                         {"MkOpEq":
+                                                                              [{"Constant": {"ConstantBool": false}},
+                                                                               {"Constant": {"ConstantBool": false}}]}},
+                                                                    {"Constant": {"ConstantBool": true}},
+                                                                    {"Op":
+                                                                         {"MkOpAnd":
+                                                                              {"AbstractLiteral":
+                                                                                   {"AbsLitMatrix":
+                                                                                        [{"DomainInt":
+                                                                                              [{"TagInt": []},
+                                                                                               [{"RangeBounded":
+                                                                                                     [{"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 1]}},
+                                                                                                      {"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 2]}}]}]]},
+                                                                                         [{"Constant":
+                                                                                               {"ConstantBool": false}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantBool":
+                                                                                                    true}}]]}}}}]}},
+                                                         {"Op":
+                                                              {"MkOpMinus":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, -7]}]}}},
+                                                                    {"Typed":
+                                                                         [{"Constant":
+                                                                               {"ConstantAbstract":
+                                                                                    {"AbsLitMSet": []}}},
+                                                                          {"TypeMSet":
+                                                                               {"TypeInt": {"TagInt": []}}}]}]}}]]}},
+                                             {"AbstractLiteral":
+                                                  {"AbsLitRelation":
+                                                       [[{"AbstractLiteral":
+                                                              {"AbsLitMSet":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": false}}}},
+                                                                    {"Op":
+                                                                         {"MkOpSum":
+                                                                              {"AbstractLiteral":
+                                                                                   {"AbsLitMatrix":
+                                                                                        [{"DomainInt":
+                                                                                              [{"TagInt": []},
+                                                                                               [{"RangeBounded":
+                                                                                                     [{"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 1]}},
+                                                                                                      {"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 2]}}]}]]},
+                                                                                         [{"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     4]}},
+                                                                                          {"Op":
+                                                                                               {"MkOpNegate":
+                                                                                                    {"Constant":
+                                                                                                         {"ConstantInt":
+                                                                                                              [{"TagInt":
+                                                                                                                    []},
+                                                                                                               4]}}}}]]}}}},
+                                                                    {"Op":
+                                                                         {"MkOpNegate":
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 2]}}}}]}},
+                                                         {"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                               {"TypeSet": {"TypeInt": {"TagInt": []}}}]},
+                                                         {"Op":
+                                                              {"MkOpToMSet":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitSet":
+                                                                                  [{"ConstantBool": true}]}}}}},
+                                                         {"AbstractLiteral":
+                                                              {"AbsLitMSet":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": true}}}},
+                                                                    {"Op":
+                                                                         {"MkOpDiv":
+                                                                              [{"Op":
+                                                                                    {"MkOpNegate":
+                                                                                         {"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    8]}}}},
+                                                                               {"Op":
+                                                                                    {"MkOpNegate":
+                                                                                         {"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    2]}}}}]}},
+                                                                    {"Op":
+                                                                         {"MkOpNegate":
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 4]}}}}]}}],
+                                                        [{"Op":
+                                                              {"MkOpToMSet":
+                                                                   {"Typed":
+                                                                        [{"Constant":
+                                                                              {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                                         {"TypeSet": {"TypeInt": {"TagInt": []}}}]}}},
+                                                         {"Op":
+                                                              {"MkOpIntersect":
+                                                                   [{"Typed":
+                                                                         [{"Constant":
+                                                                               {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                                          {"TypeSet": {"TypeInt": {"TagInt": []}}}]},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, 3]}]}}}]}},
+                                                         {"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                               {"TypeMSet": {"TypeBool": []}}]},
+                                                         {"AbstractLiteral":
+                                                              {"AbsLitMSet":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": false}}}},
+                                                                    {"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant":
+                                                                                   {"ConstantBool": true}}}}]}}],
+                                                        [{"AbstractLiteral":
+                                                              {"AbsLitMSet":
+                                                                   [{"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": true}}}},
+                                                                    {"Op":
+                                                                         {"MkOpToInt":
+                                                                              {"Constant": {"ConstantBool": true}}}}]}},
+                                                         {"Op":
+                                                              {"MkOpMinus":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, 5]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, -7]}]}}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, 0]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 3]}]}}}]}},
+                                                         {"Op":
+                                                              {"MkOpIntersect":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantBool": false},
+                                                                                    {"ConstantBool": false}]}}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantBool": false}]}}}]}},
+                                                         {"Op":
+                                                              {"MkOpIntersect":
+                                                                   [{"Typed":
+                                                                         [{"Constant":
+                                                                               {"ConstantAbstract":
+                                                                                    {"AbsLitMSet": []}}},
+                                                                          {"TypeMSet": {"TypeInt": {"TagInt": []}}}]},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []},
+                                                                                          -2]}]}}}]}}]]}}]}}]}},
+                       {"Constant": {"ConstantBool": true}}]}},
+            {"Op":
+                 {"MkOpEq":
+                      [{"AbstractLiteral":
+                            {"AbsLitMSet":
+                                 [{"AbstractLiteral":
+                                       {"AbsLitSet":
+                                            [{"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 8]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 5]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 9]}]}}]}}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 7]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 1]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -7]}]}}]}}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 8]}]}}]}}},
+                                             {"Typed":
+                                                  [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                   {"TypeSet": {"TypeTuple": [{"TypeInt": {"TagInt": []}}]}}]}]}},
+                                  {"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitSet":
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -1]}]}}]}}]}}},
+                                  {"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitSet":
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 8]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -2]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 2]}]}}]}},
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 4]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt":
+                                                                             [{"TagInt": []}, 7]}]}}]}}]}}}]}},
+                       {"AbstractLiteral":
+                            {"AbsLitMSet":
+                                 [{"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitSet":
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -4]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -2]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -5]}]}}]}}]}}},
+                                  {"Op":
+                                       {"MkOpParts":
+                                            {"Constant":
+                                                 {"ConstantAbstract":
+                                                      {"AbsLitPartition":
+                                                           [[{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -8]}]}}],
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 4]}]}}],
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 2]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -5]}]}}]]}}}}},
+                                  {"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitSet":
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -5]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -4]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -2]}]}}]}}]}}},
+                                  {"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitSet":
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 3]}]}}]}},
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -10]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -10]}]}}]}},
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -2]}]}}]}},
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -10]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 3]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 5]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt":
+                                                                             [{"TagInt": []}, -10]}]}}]}}]}}},
+                                  {"AbstractLiteral":
+                                       {"AbsLitSet":
+                                            [{"Typed":
+                                                  [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                   {"TypeSet": {"TypeTuple": [{"TypeInt": {"TagInt": []}}]}}]},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 0]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 2]}]}}]}}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitSet":
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -6]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -5]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, -7]}]}},
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 2]}]}}]}}}]}},
+                                  {"Op":
+                                       {"MkOpParts":
+                                            {"Constant":
+                                                 {"ConstantAbstract":
+                                                      {"AbsLitPartition":
+                                                           [[{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 1]}]}}],
+                                                            [{"ConstantAbstract":
+                                                                  {"AbsLitTuple":
+                                                                       [{"ConstantInt":
+                                                                             [{"TagInt": []}, 4]}]}}]]}}}}}]}}]}},
+            {"Op":
+                 {"MkOpEq":
+                      [{"Op":
+                            {"MkOpParts":
+                                 {"Constant":
+                                      {"ConstantAbstract":
+                                           {"AbsLitPartition":
+                                                [[{"ConstantAbstract":
+                                                       {"AbsLitPartition":
+                                                            [[{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, -10]},
+                                                                          {"ConstantBool": false}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, -10]},
+                                                                          {"ConstantBool": false}]]}}]]}}],
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitPartition":
+                                                            [[{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 4]},
+                                                                          {"ConstantBool": false}]]}},
+                                                              {"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, -3]},
+                                                                          {"ConstantBool": false}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, -4]},
+                                                                          {"ConstantBool": true}]]}}]]}}],
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitPartition":
+                                                            [[{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 10]},
+                                                                          {"ConstantBool": true}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, -8]},
+                                                                          {"ConstantBool": true}]]}}],
+                                                             [{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 2]},
+                                                                          {"ConstantBool": true}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, 6]},
+                                                                          {"ConstantBool": true}]]}}],
+                                                             [{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 1]},
+                                                                          {"ConstantBool": true}]]}}]]}}],
+                                                 [{"ConstantAbstract":
+                                                       {"AbsLitPartition":
+                                                            [[{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 9]},
+                                                                          {"ConstantBool": true}]]}},
+                                                              {"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 1]},
+                                                                          {"ConstantBool": true}]]}}],
+                                                             [{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, -9]},
+                                                                          {"ConstantBool": true}]]}},
+                                                              {"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 3]},
+                                                                          {"ConstantBool": false}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                                          {"ConstantBool": false}]]}}]]}}]]}}}}},
+                       {"Op":
+                            {"MkOpParts":
+                                 {"Constant":
+                                      {"ConstantAbstract":
+                                           {"AbsLitPartition":
+                                                [[{"ConstantAbstract":
+                                                       {"AbsLitPartition":
+                                                            [[{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, 7]},
+                                                                          {"ConstantBool": false}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, 1]},
+                                                                          {"ConstantBool": true}]]}}],
+                                                             [{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, -4]},
+                                                                          {"ConstantBool": false}],
+                                                                         [{"ConstantInt": [{"TagInt": []}, -3]},
+                                                                          {"ConstantBool": true}]]}}],
+                                                             [{"ConstantAbstract":
+                                                                   {"AbsLitFunction":
+                                                                        [[{"ConstantInt": [{"TagInt": []}, -9]},
+                                                                          {"ConstantBool": false}]]}}]]}}]]}}}}}]}},
+            {"Op":
+                 {"MkOpNeq":
+                      [{"AbstractLiteral":
+                            {"AbsLitMSet":
+                                 [{"Op":
+                                       {"MkOpToSet":
+                                            [false,
+                                             {"Op":
+                                                  {"MkOpToMSet":
+                                                       {"Constant":
+                                                            {"ConstantAbstract":
+                                                                 {"AbsLitSet":
+                                                                      [{"ConstantInt":
+                                                                            [{"TagInt": []}, -7]}]}}}}}]}}]}},
+                       {"AbstractLiteral":
+                            {"AbsLitMSet":
+                                 [{"Op":
+                                       {"MkOpToSet":
+                                            [false,
+                                             {"AbstractLiteral":
+                                                  {"AbsLitMSet":
+                                                       [{"Op": {"MkOpToInt": {"Constant": {"ConstantBool": false}}}},
+                                                        {"Op":
+                                                             {"MkOpNegate":
+                                                                  {"Constant":
+                                                                       {"ConstantInt": [{"TagInt": []}, 5]}}}}]}}]}},
+                                  {"Op":
+                                       {"MkOpToSet":
+                                            [false,
+                                             {"Op":
+                                                  {"MkOpToMSet":
+                                                       {"Constant":
+                                                            {"ConstantAbstract":
+                                                                 {"AbsLitSet":
+                                                                      [{"ConstantInt": [{"TagInt": []}, 10]}]}}}}}]}},
+                                  {"AbstractLiteral":
+                                       {"AbsLitSet":
+                                            [{"Op": {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}},
+                                             {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                             {"Op":
+                                                  {"MkOpTwoBars":
+                                                       {"Typed":
+                                                            [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                             {"TypeSet": {"TypeInt": {"TagInt": []}}}]}}},
+                                             {"Op":
+                                                  {"MkOpDiv":
+                                                       [{"Op": {"MkOpToInt": {"Constant": {"ConstantBool": true}}}},
+                                                        {"Op":
+                                                             {"MkOpNegate":
+                                                                  {"Constant":
+                                                                       {"ConstantInt": [{"TagInt": []}, 9]}}}}]}},
+                                             {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
+                                  {"Op":
+                                       {"MkOpUnion":
+                                            [{"Op":
+                                                  {"MkOpIntersect":
+                                                       [{"AbstractLiteral":
+                                                             {"AbsLitSet":
+                                                                  [{"Op":
+                                                                        {"MkOpMod":
+                                                                             [{"Op":
+                                                                                   {"MkOpNegate":
+                                                                                        {"Constant":
+                                                                                             {"ConstantInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   6]}}}},
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 0]}}]}}]}},
+                                                        {"Constant":
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitSet":
+                                                                       [{"ConstantInt": [{"TagInt": []}, 6]},
+                                                                        {"ConstantInt": [{"TagInt": []}, -3]}]}}}]}},
+                                             {"Op":
+                                                  {"MkOpParty":
+                                                       [{"Op":
+                                                             {"MkOpNegate":
+                                                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 9]}}}},
+                                                        {"Constant":
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitPartition":
+                                                                       [[{"ConstantInt":
+                                                                              [{"TagInt": []}, -7]}]]}}}]}}]}},
+                                  {"Op":
+                                       {"MkOpMinus":
+                                            [{"Op":
+                                                  {"MkOpParticipants":
+                                                       {"Constant":
+                                                            {"ConstantAbstract":
+                                                                 {"AbsLitPartition":
+                                                                      [[{"ConstantInt": [{"TagInt": []}, -4]}]]}}}}},
+                                             {"Op":
+                                                  {"MkOpParticipants":
+                                                       {"Constant":
+                                                            {"ConstantAbstract":
+                                                                 {"AbsLitPartition":
+                                                                      [[{"ConstantInt": [{"TagInt": []}, 2]}]]}}}}}]}},
+                                  {"Constant":
+                                       {"ConstantAbstract": {"AbsLitSet": [{"ConstantInt": [{"TagInt": []}, 1]}]}}},
+                                  {"AbstractLiteral":
+                                       {"AbsLitSet":
+                                            [{"Op":
+                                                  {"MkOpMod":
+                                                       [{"Op":
+                                                             {"MkOpNegate":
+                                                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 7]}}}},
+                                                        {"Op":
+                                                             {"MkOpProduct":
+                                                                  {"AbstractLiteral":
+                                                                       {"AbsLitMatrix":
+                                                                            [{"DomainInt":
+                                                                                  [{"TagInt": []},
+                                                                                   [{"RangeBounded":
+                                                                                         [{"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     1]}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     2]}}]}]]},
+                                                                             [{"Op":
+                                                                                   {"MkOpNegate":
+                                                                                        {"Constant":
+                                                                                             {"ConstantInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   1]}}}},
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []},
+                                                                                         6]}}]]}}}}]}}]}}]}}]}},
+            {"Constant": {"ConstantBool": false}}]}]}

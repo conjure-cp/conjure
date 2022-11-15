@@ -1,0 +1,67 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Reference": [{"Name": "var1"}, null]},
+            {"Op":
+                 {"MkOpIndexing":
+                      [{"AbstractLiteral":
+                            {"AbsLitTuple":
+                                 [{"Op":
+                                       {"MkOpGt":
+                                            [{"Reference": [{"Name": "var1"}, null]},
+                                             {"Constant": {"ConstantBool": false}}]}}]}},
+                       {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
+            {"Op":
+                 {"MkOpIn":
+                      [{"Reference": [{"Name": "var1"}, null]},
+                       {"Op":
+                            {"MkOpMinus":
+                                 [{"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitMSet":
+                                                 [{"ConstantBool": false}, {"ConstantBool": false},
+                                                  {"ConstantBool": true}]}}},
+                                  {"Constant": {"ConstantAbstract": {"AbsLitMSet": [{"ConstantBool": false}]}}}]}}]}},
+            {"Op":
+                 {"MkOpLt":
+                      [{"Op":
+                            {"MkOpSubset":
+                                 [{"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitMSet": [{"ConstantBool": true}, {"ConstantBool": true}]}}},
+                                  {"AbstractLiteral": {"AbsLitMSet": [{"Reference": [{"Name": "var1"}, null]}]}}]}},
+                       {"Op": {"MkOpNot": {"Op": {"MkOpNot": {"Reference": [{"Name": "var1"}, null]}}}}}]}},
+            {"Op":
+                 {"MkOpLt":
+                      [{"Op":
+                            {"MkOpApart":
+                                 [{"AbstractLiteral":
+                                       {"AbsLitSet":
+                                            [{"Reference": [{"Name": "var1"}, null]},
+                                             {"Reference": [{"Name": "var1"}, null]}]}},
+                                  {"Constant":
+                                       {"ConstantAbstract":
+                                            {"AbsLitPartition":
+                                                 [[{"ConstantBool": true}, {"ConstantBool": false},
+                                                   {"ConstantBool": true}, {"ConstantBool": true},
+                                                   {"ConstantBool": false}],
+                                                  [{"ConstantBool": false}, {"ConstantBool": true}],
+                                                  [{"ConstantBool": true}, {"ConstantBool": false},
+                                                   {"ConstantBool": false}],
+                                                  [{"ConstantBool": true}, {"ConstantBool": true},
+                                                   {"ConstantBool": false}],
+                                                  [{"ConstantBool": true}]]}}}]}},
+                       {"Op":
+                            {"MkOpIndexing":
+                                 [{"AbstractLiteral":
+                                       {"AbsLitTuple":
+                                            [{"Reference": [{"Name": "var1"}, null]},
+                                             {"Reference": [{"Name": "var1"}, null]},
+                                             {"Reference": [{"Name": "var1"}, null]}]}},
+                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}}]}}]}]}

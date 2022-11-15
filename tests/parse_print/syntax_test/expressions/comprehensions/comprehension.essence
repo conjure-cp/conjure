@@ -1,0 +1,9 @@
+letting s be domain set (size 5) of int
+
+letting c1 be [x | x : s]
+letting c2 be [x + y | x , y : s]
+letting c3 be [x  | x <- {1,2,3,4}]
+letting c4 be [x  | x <- {1,2,3,4},x<2]
+letting c5 be [x + y | x<2, x <- {1,2,3,4}]
+letting c5 be [y + z |  x <- {1,2,3,4},letting y be 2 + x, z <- {7,8}]
+

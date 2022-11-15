@@ -1,0 +1,43 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var2"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"Op":
+                            {"MkOpEq":
+                                 [{"Reference": [{"Name": "var2"}, null]},
+                                  {"Op":
+                                       {"MkOpIndexing":
+                                            [{"Comprehension":
+                                                  [{"Reference": [{"Name": "l_1"}, null]},
+                                                   [{"Generator":
+                                                         {"GenDomainNoRepr":
+                                                              [{"Single": {"Name": "l_1"}}, {"DomainBool": []}]}},
+                                                    {"Condition": {"Reference": [{"Name": "l_1"}, null]}}]]},
+                                             {"Op":
+                                                  {"MkOpIndexing":
+                                                       [{"Constant":
+                                                             {"ConstantAbstract":
+                                                                  {"AbsLitMatrix":
+                                                                       [{"DomainInt":
+                                                                             [{"TagInt": []},
+                                                                              [{"RangeBounded":
+                                                                                    [{"ConstantInt":
+                                                                                          [{"TagInt": []}, 4]},
+                                                                                     {"ConstantInt":
+                                                                                          [{"TagInt": []}, 5]}]}]]},
+                                                                        [{"ConstantInt": [{"TagInt": []}, 2]},
+                                                                         {"ConstantInt": [{"TagInt": []}, 0]}]]}}},
+                                                        {"Op":
+                                                             {"MkOpPow":
+                                                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                                                   {"Constant":
+                                                                        {"ConstantInt":
+                                                                             [{"TagInt": []}, 2]}}]}}]}}]}}]}},
+                       {"Reference": [{"Name": "var2"}, null]}]}}]}]}

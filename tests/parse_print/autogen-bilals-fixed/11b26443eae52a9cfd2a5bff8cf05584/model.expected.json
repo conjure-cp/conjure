@@ -1,0 +1,44 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"AbstractLiteral":
+                            {"AbsLitMatrix":
+                                 [{"DomainInt":
+                                       [{"TagInt": []},
+                                        [{"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                  [{"AbstractLiteral":
+                                        {"AbsLitSet":
+                                             [{"Typed":
+                                                   [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                    {"TypeMSet": {"TypeBool": []}}]}]}},
+                                   {"AbstractLiteral":
+                                        {"AbsLitSet":
+                                             [{"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Reference": [{"Name": "var1"}, null]},
+                                                         {"Reference": [{"Name": "var1"}, null]},
+                                                         {"Reference": [{"Name": "var1"}, null]}]}}]}}]]}},
+                       {"AbstractLiteral":
+                            {"AbsLitMatrix":
+                                 [{"DomainInt":
+                                       [{"TagInt": []},
+                                        [{"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+                                  [{"AbstractLiteral":
+                                        {"AbsLitSet":
+                                             [{"Constant":
+                                                   {"ConstantAbstract": {"AbsLitMSet": [{"ConstantBool": false}]}}},
+                                              {"Typed":
+                                                   [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                    {"TypeMSet": {"TypeBool": []}}]}]}}]]}}]}}]}]}

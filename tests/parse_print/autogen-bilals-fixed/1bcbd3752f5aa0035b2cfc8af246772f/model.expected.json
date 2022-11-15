@@ -1,0 +1,47 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given1"},
+                 {"DomainPartition":
+                      [[],
+                       {"isRegular": false, "partsNum": {"SizeAttr_None": []},
+                        "partsSize": {"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}}},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainPartition":
+                      [[],
+                       {"isRegular": true, "partsNum": {"SizeAttr_None": []},
+                        "partsSize": {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given2"},
+                 {"DomainTuple":
+                      [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}},
+                              {"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]}]}]}},
+      {"SuchThat":
+           [{"Constant": {"ConstantBool": false}}, {"Constant": {"ConstantBool": false}},
+            {"Constant": {"ConstantBool": false}}]}]}

@@ -1,0 +1,31 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainPartition":
+                      [[], {"isRegular": false, "partsNum": {"SizeAttr_None": []}, "partsSize": {"SizeAttr_None": []}},
+                       {"DomainBool": []}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"Typed":
+                            [{"Constant": {"ConstantAbstract": {"AbsLitFunction": []}}},
+                             {"TypeFunction":
+                                  [{"TypeMSet": {"TypeInt": {"TagInt": []}}}, {"TypePartition": {"TypeBool": []}}]}]},
+                       {"AbstractLiteral":
+                            {"AbsLitFunction":
+                                 [[{"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitMSet":
+                                                  [{"ConstantInt": [{"TagInt": []}, -4]},
+                                                   {"ConstantInt": [{"TagInt": []}, -4]}]}}},
+                                   {"Constant": {"ConstantAbstract": {"AbsLitPartition": [[{"ConstantBool": true}]]}}}],
+                                  [{"Constant":
+                                        {"ConstantAbstract": {"AbsLitMSet": [{"ConstantInt": [{"TagInt": []}, 3]}]}}},
+                                   {"Reference": [{"Name": "var1"}, null]}]]}}]}}]}]}

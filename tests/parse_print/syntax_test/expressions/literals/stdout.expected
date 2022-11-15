@@ -1,0 +1,22 @@
+language Essence 1.3
+
+letting anEnum be new type enum {a, b, c, d}
+letting _ref_enum be anEnum
+letting _ref_name be _ref_enum
+letting _bool be true
+letting _int be 1
+letting _matrix be [1, 2, 3; int(1..3)]
+letting _matrix_explicit_dom be [1, 2, 3; int(1..3)]
+letting _short_tuple be (1, 2, 3)
+letting _long_tuple be tuple (1)
+letting _record be record {a = 1, b = 3}
+letting _variant be variant {q = 3}
+letting _set be {1, 2, 3, 4}
+letting _mset be mset(1, 1, 2, 2)
+letting _func be function(1 --> 2, 2 --> 1)
+letting _seq be sequence(1, 2, 3, 4, 5)
+letting _partition be partition({1, 2, 3}, {4, 5})
+$ Visualisation for _partition
+$ 1 2 3
+$ 4 5
+

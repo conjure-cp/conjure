@@ -32,8 +32,8 @@ main = do
         testGroup "conjure"
             [ Conjure.Language.DomainSizeTest.tests
             , Conjure.RepresentationsTest.tests
+            , parsePrintTests
             , modelAllSolveAllTests testTimeLimit
             , typeCheckAllTests
-            , parsePrintTests
             , customTests testTimeLimit
             ]
