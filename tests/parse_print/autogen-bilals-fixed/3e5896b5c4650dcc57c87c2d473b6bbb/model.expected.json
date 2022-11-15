@@ -1,0 +1,199 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2_ExplicitVarSizeWithMarker_Marker"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2_ExplicitVarSizeWithMarker_Values"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]},
+                       {"DomainMatrix":
+                            [{"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3_RelationAsSet_ExplicitVarSizeWithMarker_Marker"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3_RelationAsSet_ExplicitVarSizeWithMarker_Values_1"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}]]},
+                       {"DomainBool": []}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}]]},
+                       {"DomainMatrix":
+                            [{"DomainBool": []},
+                             {"DomainMatrix":
+                                  [{"DomainBool": []},
+                                   {"DomainMatrix": [{"DomainBool": []}, {"DomainBool": []}]}]}]}]}]}},
+      {"SuchThat":
+           [{"Reference": [{"Name": "var1"}, null]},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpImply":
+                                      [{"Op":
+                                            {"MkOpLeq":
+                                                 [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                                  {"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Reference":
+                                                                  [{"Name": "var2_ExplicitVarSizeWithMarker_Marker"},
+                                                                   null]},
+                                                             {"Reference": [{"Name": "q1"}, null]}]}}]}},
+                                       {"Op":
+                                            {"MkOpLt":
+                                                 [{"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Op":
+                                                                  {"MkOpIndexing":
+                                                                       [{"Reference":
+                                                                             [{"Name":
+                                                                                   "var2_ExplicitVarSizeWithMarker_Values"},
+                                                                              null]},
+                                                                        {"Reference": [{"Name": "q1"}, null]}]}},
+                                                             {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
+                                                  {"Op":
+                                                       {"MkOpIndexing":
+                                                            [{"Op":
+                                                                  {"MkOpIndexing":
+                                                                       [{"Reference":
+                                                                             [{"Name":
+                                                                                   "var2_ExplicitVarSizeWithMarker_Values"},
+                                                                              null]},
+                                                                        {"Reference": [{"Name": "q1"}, null]}]}},
+                                                             {"Constant":
+                                                                  {"ConstantInt": [{"TagInt": []}, 2]}}]}}]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q1"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                                               {"RangeSingle":
+                                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpAnd":
+                                      {"Comprehension":
+                                           [{"Op":
+                                                 {"MkOpImply":
+                                                      [{"Op":
+                                                            {"MkOpGt":
+                                                                 [{"Reference": [{"Name": "q3"}, null]},
+                                                                  {"Op":
+                                                                       {"MkOpIndexing":
+                                                                            [{"Reference":
+                                                                                  [{"Name":
+                                                                                        "var2_ExplicitVarSizeWithMarker_Marker"},
+                                                                                   null]},
+                                                                             {"Reference":
+                                                                                  [{"Name": "q1"}, null]}]}}]}},
+                                                       {"Op":
+                                                            {"MkOpEq":
+                                                                 [{"Op":
+                                                                       {"MkOpIndexing":
+                                                                            [{"Op":
+                                                                                  {"MkOpIndexing":
+                                                                                       [{"Reference":
+                                                                                             [{"Name":
+                                                                                                   "var2_ExplicitVarSizeWithMarker_Values"},
+                                                                                              null]},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "q1"}, null]}]}},
+                                                                             {"Reference": [{"Name": "q3"}, null]}]}},
+                                                                  {"Constant": {"ConstantBool": false}}]}}]}},
+                                            [{"Generator":
+                                                  {"GenDomainNoRepr":
+                                                       [{"Single": {"Name": "q3"}},
+                                                        {"DomainInt":
+                                                             [{"TagInt": []},
+                                                              [{"RangeBounded":
+                                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                                     {"Constant":
+                                                                          {"ConstantInt":
+                                                                               [{"TagInt": []}, 2]}}]}]]}]}}]]}}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q1"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                                               {"RangeSingle":
+                                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpLeq":
+                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                       {"Op":
+                                            {"MkOpIndexing":
+                                                 [{"Reference":
+                                                       [{"Name": "var2_ExplicitVarSizeWithMarker_Marker"}, null]},
+                                                  {"Reference": [{"Name": "q1"}, null]}]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q1"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                                               {"RangeSingle":
+                                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpLeq":
+                      [{"Reference": [{"Name": "var3_RelationAsSet_ExplicitVarSizeWithMarker_Marker"}, null]},
+                       {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}}]}]}

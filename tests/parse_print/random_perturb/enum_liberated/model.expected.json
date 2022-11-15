@@ -1,0 +1,38 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"GivenDomainDefnEnum": {"Name": "E1"}}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "x"}, {"DomainEnum": [{"Name": "E1"}, null, null]}]}},
+      {"Declaration":
+           {"LettingDomainDefnEnum":
+                [{"Name": "E2"},
+                 [{"Name": "a"}, {"Name": "b"}, {"Name": "c"}, {"Name": "d"}, {"Name": "\"hoh hoh hooo\""}]]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "y"}, {"DomainEnum": [{"Name": "E2"}, null, null]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "z"},
+                 {"DomainEnum":
+                      [{"Name": "E2"},
+                       [{"RangeBounded": [{"Reference": [{"Name": "a"}, null]}, {"Reference": [{"Name": "c"}, null]}]}],
+                       null]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "t"},
+                 {"DomainEnum":
+                      [{"Name": "E2"},
+                       [{"RangeSingle": {"Reference": [{"Name": "b"}, null]}},
+                        {"RangeSingle": {"Reference": [{"Name": "d"}, null]}}],
+                       null]}]}},
+      {"SuchThat":
+           [{"Op": {"MkOpEq": [{"Reference": [{"Name": "y"}, null]}, {"Reference": [{"Name": "z"}, null]}]}},
+            {"Op": {"MkOpEq": [{"Reference": [{"Name": "z"}, null]}, {"Reference": [{"Name": "t"}, null]}]}}]},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "k"}, {"DomainEnum": [{"Name": "E2"}, null, null]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"Reference": [{"Name": "k"}, null]},
+                       {"Op": {"MkOpMax": {"Domain": {"DomainEnum": [{"Name": "E2"}, null, null]}}}}]}}]}]}

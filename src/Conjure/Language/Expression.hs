@@ -451,8 +451,8 @@ instance VarSymBreakingDescription Expression where
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
-    typeOf (Domain x) = fail ("Expected an expression, but got a domain:" <++> pretty x)
-    typeOf (Reference nm Nothing) = fail ("Type error, identifier not bound:" <+> pretty nm)
+    typeOf (Domain x) = failDoc ("Expected an expression, but got a domain:" <++> pretty x)
+    typeOf (Reference nm Nothing) = failDoc ("Type error, identifier not bound:" <+> pretty nm)
     typeOf (Reference nm (Just refTo)) =
         case refTo of
             Alias x -> typeOf x
@@ -473,7 +473,7 @@ instance TypeOf Expression where
                         GenDomainHasRepr pat domain -> typeOfDomain domain >>= lu (Single pat)
                         GenInExpr        pat expr   ->
                             case project expr of
-                                Just (d :: Domain () Expression) -> fail $ vcat
+                                Just (d :: Domain () Expression) -> failDoc $ vcat
                                     [ "Expected an expression, but got a domain:" <++> pretty d
                                     , "In the generator of a comprehension or a quantified expression"
                                     , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
@@ -482,7 +482,7 @@ instance TypeOf Expression where
                                     tyExpr <- typeOf expr
                                     case innerTypeOf tyExpr of
                                         Just tyExprInner -> lu pat tyExprInner
-                                        Nothing -> fail $ vcat
+                                        Nothing -> failDoc $ vcat
                                             [ "Type error in the generator of a comprehension or a quantified expression"
                                             , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
                                             ]
@@ -493,7 +493,7 @@ instance TypeOf Expression where
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
-            unless (typeUnify TypeBool ty) $ fail $ vcat
+            unless (typeUnify TypeBool ty) $ failDoc $ vcat
                     [ "Local constraint is not boolean."
                     , "Condition:" <+> pretty c
                     , "In:" <+> pretty p
@@ -507,11 +507,11 @@ instance TypeOf Expression where
                     ty <- typeOf x
                     case ty of
                         TypeBool{} -> return ()
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                             [ "Inside a bubble, in a 'such that' statement:" <++> pretty x
                             , "Expected type `bool`, but got:" <++> pretty ty
                             ]
-                _ -> fail $ vcat
+                _ -> failDoc $ vcat
                     [ "Unexpected statement inside a bubble."
                     , "Expected type `find` or `such that`, but got:" <++> pretty stmt
                     , "The complete expression:" <+> pretty p
@@ -522,7 +522,7 @@ instance TypeOf Expression where
             Generator{} -> return ()                    -- TODO: do this properly
             Condition c -> do
                 ty <- typeOf c
-                unless (typeUnify TypeBool ty) $ fail $ vcat
+                unless (typeUnify TypeBool ty) $ failDoc $ vcat
                     [ "Condition is not boolean."
                     , "Condition:" <+> pretty c
                     , "In:" <+> pretty p
@@ -540,27 +540,27 @@ instance RepresentationOf Expression where
         case iType of
             TypeBool{} -> return ()
             TypeInt{} -> return ()
-            _ -> fail "representationOf, OpIndexing, not a bool or int index"
+            _ -> failDoc "representationOf, OpIndexing, not a bool or int index"
         mTree <- representationTreeOf m
         case mTree of
             Tree _ [r] -> return r
-            _ -> fail "domainOf, OpIndexing, not a matrix"
-    representationTreeOf _ = fail "doesn't seem to have a representation"
+            _ -> failDoc "domainOf, OpIndexing, not a matrix"
+    representationTreeOf _ = failDoc "doesn't seem to have a representation"
 
 instance Domain () Expression :< Expression where
     inject = Domain
     project (Domain x) = return x
     project (Reference _ (Just (Alias x))) = project x
-    project x = fail ("projecting Domain out of Expression:" <+> pretty x)
+    project x = failDoc ("projecting Domain out of Expression:" <+> pretty x)
 
 instance Op Expression :< Expression where
     inject = Op
     project (Op x) = return x
-    project x = fail ("projecting Op out of Expression:" <+> pretty x)
+    project x = failDoc ("projecting Op out of Expression:" <+> pretty x)
 
 instance Op Constant :< Constant where
     inject x = bug ("injecting Op into a Constant:" <+> pretty x)
-    project x = fail ("projecting Op out of a Constant:" <+> pretty x)
+    project x = failDoc ("projecting Op out of a Constant:" <+> pretty x)
 
 instance CanBeAnAlias Expression where
     isAlias (Reference _ (Just (Alias x))) = Just x
@@ -570,25 +570,25 @@ instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
     nameOut (Reference nm _) = return nm
     nameOut (Constant (ConstantField nm _)) = return nm
-    nameOut p = fail ("This expression isn't a 'name':" <+> pretty p)
+    nameOut p = failDoc ("This expression isn't a 'name':" <+> pretty p)
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
     fromIntWithTag i t = Constant $ fromIntWithTag i t
     intOut doc (Constant c) = intOut ("intOut{Expression}" <+> doc) c
-    intOut doc x = fail $ vcat [ "Expecting a constant, but got:" <++> pretty x
+    intOut doc x = failDoc $ vcat [ "Expecting a constant, but got:" <++> pretty x
                                , "Called from:" <+> doc
                                ]
 
     fromBool = Constant . fromBool
     boolOut (Constant c) = boolOut c
-    boolOut x = fail ("Expecting a constant, but got:" <++> pretty x)
+    boolOut x = failDoc ("Expecting a constant, but got:" <++> pretty x)
 
     -- fromList [x] = x -- TODO: what would break if I do this?
     fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (AbstractLiteral (AbsLitMatrix _ xs)) = return xs
     listOut (Constant (ConstantAbstract (AbsLitMatrix _ xs))) = return (map Constant xs)
-    listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
+    listOut c = failDoc ("Expecting a matrix literal, but found:" <+> pretty c)
 
 instance Num Expression where
     x + y = Op $ MkOpSum     $ OpSum     $ fromList [x,y]
@@ -642,11 +642,11 @@ instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
 --   is refusing to believe that it is one.
 --   Remind it where it comes from!
 --   (Srsly: Can be useful after parsing a solution file, for example.)
-e2c :: MonadFail m => Expression -> m Constant
+e2c :: MonadFailDoc m => Expression -> m Constant
 e2c (Constant c) = return c
 e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
 e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt t x))))) = return $ ConstantInt t $ negate x
-e2c x = fail ("e2c, not a constant:" <+> pretty x)
+e2c x = failDoc ("e2c, not a constant:" <+> pretty x)
 
 -- | generate a fresh name for a quantified variable.
 --   fst: the pattern to be used inside a generator
@@ -928,6 +928,6 @@ emptyCollectionX (Typed x _) = emptyCollectionX x
 emptyCollectionX _ = False
 
 
-isDomainExpr :: MonadFail m => Expression -> m ()
+isDomainExpr :: MonadFailDoc m => Expression -> m ()
 isDomainExpr Domain{} = return ()
 isDomainExpr x = na ("Not a domain expression: " <+> pretty x)

@@ -1,0 +1,28 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpIndexing":
+                      [{"AbstractLiteral":
+                            {"AbsLitMatrix":
+                                 [{"DomainInt":
+                                       [{"TagInt": []},
+                                        [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                                         {"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}]]},
+                                  [{"Reference": [{"Name": "var1"}, null]}, {"Reference": [{"Name": "var1"}, null]}]]}},
+                       {"Op":
+                            {"MkOpFactorial":
+                                 {"Op":
+                                      {"MkOpToInt":
+                                           {"Op":
+                                                {"MkOpNeq":
+                                                     [{"Reference": [{"Name": "var1"}, null]},
+                                                      {"Reference": [{"Name": "var1"}, null]}]}}}}}}]}}]}]}

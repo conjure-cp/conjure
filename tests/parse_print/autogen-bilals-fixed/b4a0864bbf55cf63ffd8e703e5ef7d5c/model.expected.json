@@ -1,0 +1,29 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "unused"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpLeq":
+                      [{"Op":
+                            {"MkOpImage":
+                                 [{"AbstractLiteral":
+                                       {"AbsLitFunction":
+                                            [[{"AbstractLiteral":
+                                                   {"AbsLitSet":
+                                                        [{"Constant":
+                                                              {"ConstantAbstract":
+                                                                   {"AbsLitSet": [{"ConstantBool": false}]}}},
+                                                         {"Typed":
+                                                              [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                                               {"TypeSet": {"TypeBool": []}}]}]}},
+                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]]}},
+                                  {"Op":
+                                       {"MkOpPowerSet":
+                                            {"Constant":
+                                                 {"ConstantAbstract": {"AbsLitSet": [{"ConstantBool": true}]}}}}}]}},
+                       {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}}]}]}

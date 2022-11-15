@@ -326,7 +326,6 @@ Library
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        NoMonadFailDesugaring
         ViewPatterns
     ghc-options:
         -O2
@@ -406,6 +405,8 @@ Test-Suite conjure-testing
                      , containers
                      , Diff
                      , shelly
+                     , aeson 
+                     , aeson-diff
                      , system-filepath
                      -- see https://github.com/feuerbach/tasty/issues/220
                      -- see https://github.com/feuerbach/tasty/issues/221

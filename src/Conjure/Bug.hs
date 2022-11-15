@@ -43,5 +43,5 @@ bugFailT loc comp = do
         Left err -> bug (vcat ["BUGFAIL at" <+> loc, err])
         Right x  -> return x
 
-instance MonadFail IO where
-    fail msg = bug (vcat ["IO Error", msg])
+instance MonadFailDoc IO where
+    failDoc msg = bug (vcat ["IO Error", msg])

@@ -12,14 +12,14 @@ import Conjure.Language.NameResolution ( resolveX, resolveD )
 
 
 inferAttributes ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m Model
 inferAttributes = flip evalStateT [] . go where
     go ::
-        MonadFail m =>
+        MonadFailDoc m =>
         MonadUserError m =>
         NameGen m =>
         MonadState [(Name, ReferenceTo)] m =>
@@ -48,7 +48,7 @@ inferAttributes = flip evalStateT [] . go where
         transformBiM inferAttributesD m
 
 inferAttributesD ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     NameGen m =>
     MonadState [(Name, ReferenceTo)] m =>

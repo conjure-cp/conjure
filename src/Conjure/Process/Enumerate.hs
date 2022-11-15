@@ -61,16 +61,18 @@ instance Monad EnumerateDomainNoIO where
     TriedIO    >>= _ = TriedIO
     Done x     >>= f = f x
 
+instance MonadFailDoc EnumerateDomainNoIO where
+    failDoc = Failed
 instance MonadFail EnumerateDomainNoIO where
-    fail = Failed
+    fail = Failed . stringToDoc 
 
 instance MonadUserError EnumerateDomainNoIO where
     userErr docs = Failed (vcat $ "User error:" : docs)
 
 instance NameGen EnumerateDomainNoIO where
-    nextName _ = fail "nextName{EnumerateDomainNoIO}"
-    exportNameGenState = fail "exportNameGenState{EnumerateDomainNoIO}"
-    importNameGenState _ = fail "importNameGenState{EnumerateDomainNoIO}"
+    nextName _ = failDoc "nextName{EnumerateDomainNoIO}"
+    exportNameGenState = failDoc "exportNameGenState{EnumerateDomainNoIO}"
+    importNameGenState _ = failDoc "importNameGenState{EnumerateDomainNoIO}"
 
 instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 
@@ -83,7 +85,7 @@ minionTimelimit = 60
 savilerowTimelimit :: Int
 savilerowTimelimit = 60 * 1000
 
-enumerateDomain :: (MonadFail m, EnumerateDomain m) => Domain () Constant -> m [Constant]
+enumerateDomain :: (MonadFailDoc m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 
 enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
     bug $ vcat [ "called enumerateDomain with a domain that has undefinedness values in it."
@@ -91,7 +93,7 @@ enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
                ]
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
-enumerateDomain (DomainInt _ []) = fail "enumerateDomain: infinite domain"
+enumerateDomain (DomainInt _ []) = failDoc "enumerateDomain: infinite domain"
 enumerateDomain (DomainInt _ rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainUnnamed _ (ConstantInt t n)) = return (map (ConstantInt t) [1..n])
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
@@ -188,7 +190,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                 | decl <- decls ]
         if null errs
             then return enumeration
-            else fail $ vcat $ "enumerateDomain, not Constants!"
+            else failDoc $ vcat $ "enumerateDomain, not Constants!"
                              : ("When working on domain:" <++> pretty d)
                              :  map pretty errs
                              ++ map (pretty . show) errs
@@ -197,15 +199,15 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     return enumeration
 
 
-enumerateRange :: MonadFail m => Range Constant -> m [Constant]
+enumerateRange :: MonadFailDoc m => Range Constant -> m [Constant]
 enumerateRange (RangeSingle x) = return [x]
 enumerateRange (RangeBounded (ConstantInt t x) (ConstantInt _ y)) = return $ ConstantInt t <$> [x..y]
-enumerateRange RangeBounded{} = fail "enumerateRange RangeBounded"
-enumerateRange RangeOpen{} = fail "enumerateRange RangeOpen"
-enumerateRange RangeLowerBounded{} = fail "enumerateRange RangeLowerBounded"
-enumerateRange RangeUpperBounded{} = fail "enumerateRange RangeUpperBounded"
+enumerateRange RangeBounded{} = failDoc "enumerateRange RangeBounded"
+enumerateRange RangeOpen{} = failDoc "enumerateRange RangeOpen"
+enumerateRange RangeLowerBounded{} = failDoc "enumerateRange RangeLowerBounded"
+enumerateRange RangeUpperBounded{} = failDoc "enumerateRange RangeUpperBounded"
 
-enumerateInConstant :: MonadFail m => Constant -> m [Constant]
+enumerateInConstant :: MonadFailDoc m => Constant -> m [Constant]
 enumerateInConstant constant = case constant of
     ConstantAbstract (AbsLitMatrix _  xs) -> return xs
     ConstantAbstract (AbsLitSet       xs) -> return xs
@@ -218,6 +220,6 @@ enumerateInConstant constant = case constant of
     ConstantAbstract (AbsLitRelation  xs) -> return $ map (ConstantAbstract . AbsLitTuple) xs
     ConstantAbstract (AbsLitPartition xs) -> return $ map (ConstantAbstract . AbsLitSet) xs
     TypedConstant c _                     -> enumerateInConstant c
-    _ -> fail $ vcat [ "enumerateInConstant"
+    _ -> failDoc $ vcat [ "enumerateInConstant"
                      , "constant:" <+> pretty constant
                      ]

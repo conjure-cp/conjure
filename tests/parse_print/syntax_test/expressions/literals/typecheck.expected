@@ -1,0 +1,9 @@
+Error 1:
+    In a letting statement: letting _ref_enum be anEnum
+    Error: Expected an expression, but got a domain: int(1..4)
+Error 2:
+    In a letting statement: letting _ref_name be _ref_enum
+    Error: Expected an expression, but got a domain: int(1..4)
+Error 3:
+    In a letting statement: letting _variant be variant {q = 3}
+    Error: Cannot calculate the type of variant literal.

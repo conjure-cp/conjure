@@ -1,0 +1,85 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 2, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "nnodes"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 20]}}]}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "nrings"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 20]}}]}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "capacity"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 20]}}]}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "Nodes"},
+                 {"Domain":
+                      {"DomainInt":
+                           [{"TagInt": []},
+                            [{"RangeBounded":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                   {"Reference": [{"Name": "nnodes"}, null]}]}]]}}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "demand"},
+                 {"DomainSet":
+                      [[], {"SizeAttr_None": []},
+                       {"DomainSet":
+                            [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}},
+                             {"DomainReference": [{"Name": "Nodes"}, null]}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "network"},
+                 {"DomainMSet":
+                      [[], [{"SizeAttr_Size": {"Reference": [{"Name": "nrings"}, null]}}, {"OccurAttr_None": []}],
+                       {"DomainSet":
+                            [[], {"SizeAttr_MaxSize": {"Reference": [{"Name": "capacity"}, null]}},
+                             {"DomainReference": [{"Name": "Nodes"}, null]}]}]}]}},
+      {"Objective":
+           ["Minimising",
+            {"Op":
+                 {"MkOpSum":
+                      {"Comprehension":
+                           [{"Op": {"MkOpTwoBars": {"Reference": [{"Name": "ring"}, null]}}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "ring"}},
+                                        {"Reference": [{"Name": "network"}, null]}]}}]]}}}]},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpOr":
+                                      {"Comprehension":
+                                           [{"Op":
+                                                 {"MkOpSubsetEq":
+                                                      [{"Reference": [{"Name": "pair"}, null]},
+                                                       {"Reference": [{"Name": "ring"}, null]}]}},
+                                            [{"Generator":
+                                                  {"GenInExpr":
+                                                       [{"Single": {"Name": "ring"}},
+                                                        {"Reference": [{"Name": "network"}, null]}]}}]]}}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "pair"}},
+                                        {"Reference": [{"Name": "demand"}, null]}]}}]]}}}]}]}

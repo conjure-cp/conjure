@@ -7,7 +7,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 
 validateConstantForDomain ::
     forall m r .
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

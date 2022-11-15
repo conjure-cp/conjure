@@ -37,7 +37,7 @@ mkBinRelCons (BinaryRelationAttrs binRelAttrs) dom rel = do
         one BinRelAttr_AntiSymmetric = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) /\ &rel(&y,&x) -> &x=&y |]
         one BinRelAttr_ASymmetric    = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> !&rel(&y,&x) |]
         one BinRelAttr_Transitive    = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z) |]
-        one BinRelAttr_Total         = return [essence| forAll &xP, &yP      : &dom . &rel(&x, &y) \/ &rel(&y, &x) |]
+        one BinRelAttr_Total         = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
         one BinRelAttr_Connex        = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y) |]
         one BinRelAttr_Euclidean     = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z) |]
         one BinRelAttr_LeftTotal     = return [essence| forAll &xP : &dom . exists &yP : &dom . &rel(&x,&y) |]

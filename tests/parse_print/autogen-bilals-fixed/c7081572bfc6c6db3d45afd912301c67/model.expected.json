@@ -1,0 +1,207 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainPartition":
+                      [[],
+                       {"isRegular": true,
+                        "partsNum": {"SizeAttr_Size": {"Op": {"MkOpToInt": {"Constant": {"ConstantBool": true}}}}},
+                        "partsSize":
+                            {"SizeAttr_MaxSize":
+                                 {"Op": {"MkOpFactorial": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}}}},
+                       {"DomainMatrix":
+                            [{"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                                    {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainSet":
+                      [[],
+                       {"SizeAttr_MaxSize":
+                            {"Op": {"MkOpFactorial": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}}},
+                       {"DomainFunction":
+                            [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_Injective"],
+                             {"DomainBool": []}, {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainSet":
+                      [[],
+                       {"SizeAttr_MaxSize":
+                            {"Op":
+                                 {"MkOpDiv":
+                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}}},
+                       {"DomainFunction":
+                            [[],
+                             [{"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}},
+                              "PartialityAttr_Total", "JectivityAttr_Bijective"],
+                             {"DomainBool": []}, {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var4"},
+                 {"DomainTuple":
+                      [{"DomainPartition":
+                            [[],
+                             {"isRegular": false,
+                              "partsNum":
+                                  {"SizeAttr_MinMaxSize":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                              "partsSize": {"SizeAttr_MaxSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var5"},
+                 {"DomainMSet":
+                      [[],
+                       [{"SizeAttr_None": []},
+                        {"OccurAttr_MinMaxOccur":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}],
+                       {"DomainBool": []}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpSupset":
+                      [{"AbstractLiteral":
+                            {"AbsLitFunction":
+                                 [[{"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": false}, {"ConstantBool": false},
+                                                   {"ConstantBool": true}]}}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitFunction":
+                                                  [[{"ConstantBool": false}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": false}]]}}}],
+                                  [{"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": false}, {"ConstantBool": true},
+                                                   {"ConstantBool": true}]}}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitFunction":
+                                                  [[{"ConstantBool": false}, {"ConstantBool": false}]]}}}],
+                                  [{"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": true}, {"ConstantBool": false},
+                                                   {"ConstantBool": true}]}}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitFunction": [[{"ConstantBool": true}, {"ConstantBool": true}]]}}}],
+                                  [{"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": true}, {"ConstantBool": true},
+                                                   {"ConstantBool": false}]}}},
+                                   {"Typed":
+                                        [{"Constant": {"ConstantAbstract": {"AbsLitFunction": []}}},
+                                         {"TypeFunction": [{"TypeBool": []}, {"TypeBool": []}]}]}]]}},
+                       {"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitFunction":
+                                      [[{"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": true}, {"ConstantBool": true},
+                                                   {"ConstantBool": true}]}},
+                                        {"ConstantAbstract":
+                                             {"AbsLitFunction":
+                                                  [[{"ConstantBool": true}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": true}]]}}],
+                                       [{"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": true}, {"ConstantBool": true},
+                                                   {"ConstantBool": false}]}},
+                                        {"ConstantAbstract":
+                                             {"AbsLitFunction":
+                                                  [[{"ConstantBool": true}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": false}]]}}],
+                                       [{"ConstantAbstract":
+                                             {"AbsLitTuple":
+                                                  [{"ConstantBool": true}, {"ConstantBool": true},
+                                                   {"ConstantBool": false}]}},
+                                        {"ConstantAbstract":
+                                             {"AbsLitFunction":
+                                                  [[{"ConstantBool": false}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": false}]]}}]]}}}]}},
+            {"Op":
+                 {"MkOpSubsetEq":
+                      [{"AbstractLiteral":
+                            {"AbsLitFunction":
+                                 [[{"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitMSet":
+                                                  [{"ConstantBool": false}, {"ConstantBool": false},
+                                                   {"ConstantBool": true}]}}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitRelation":
+                                                  [[{"ConstantBool": true}, {"ConstantBool": true},
+                                                    {"ConstantBool": true}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": false},
+                                                    {"ConstantBool": true}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": true},
+                                                    {"ConstantBool": true}, {"ConstantBool": true}]]}}}],
+                                  [{"Typed":
+                                        [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                         {"TypeMSet": {"TypeBool": []}}]},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitRelation":
+                                                  [[{"ConstantBool": true}, {"ConstantBool": false},
+                                                    {"ConstantBool": true}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": true},
+                                                    {"ConstantBool": false}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": false},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": true},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": true},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}]]}}}],
+                                  [{"Constant": {"ConstantAbstract": {"AbsLitMSet": [{"ConstantBool": true}]}}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitRelation":
+                                                  [[{"ConstantBool": true}, {"ConstantBool": false},
+                                                    {"ConstantBool": true}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": false},
+                                                    {"ConstantBool": true}, {"ConstantBool": true}]]}}}],
+                                  [{"Constant": {"ConstantAbstract": {"AbsLitMSet": [{"ConstantBool": true}]}}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitRelation":
+                                                  [[{"ConstantBool": false}, {"ConstantBool": true},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": true},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}],
+                                                   [{"ConstantBool": true}, {"ConstantBool": false},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}]]}}}]]}},
+                       {"AbstractLiteral":
+                            {"AbsLitFunction":
+                                 [[{"Typed":
+                                        [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                         {"TypeMSet": {"TypeBool": []}}]},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitRelation":
+                                                  [[{"ConstantBool": false}, {"ConstantBool": false},
+                                                    {"ConstantBool": true}, {"ConstantBool": true}],
+                                                   [{"ConstantBool": false}, {"ConstantBool": false},
+                                                    {"ConstantBool": false}, {"ConstantBool": false}]]}}}]]}}]}}]}]}

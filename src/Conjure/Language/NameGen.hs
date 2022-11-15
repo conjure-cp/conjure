@@ -1,20 +1,21 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Conjure.Language.NameGen
-    ( NameGen
-    , NameGenM
-    , NameGenState
-    , nextName
-    , exportNameGenState
-    , importNameGenState
-    , runNameGen
-    ) where
+module Conjure.Language.NameGen (
+    NameGen,
+    NameGenM,
+    NameGenState,
+    nextName,
+    exportNameGenState,
+    importNameGenState,
+    runNameGen,
+) where
 
 -- conjure
+
+import Conjure.Language.Name
 import Conjure.Prelude
 import Conjure.UserError
-import Conjure.Language.Name
 
 -- containers
 import Data.Map.Strict as M
@@ -39,6 +40,8 @@ newtype NameGenM m a = NameGenM (StateT NameGenState m a)
              , MonadIO
              )
 
+instance (Functor m, Applicative m, MonadFail m) => MonadFailDoc (NameGenM m) where
+    failDoc = lift . fail . show
 class (Functor m, Applicative m, Monad m) => NameGen m where
     nextName :: NameKind -> m Name
     exportNameGenState :: m [(NameKind, Int)]
@@ -83,30 +86,30 @@ instance (Functor m, Monad m) => NameGen (NameGenM m) where
     nextName k = do
         mi <- gets (M.lookup k . fst)
         out <- case mi of
-                Nothing -> do
-                    modify $ \ (st, avoid) -> (M.insert k 2 st, avoid)
-                    return $ MachineName k 1 []
-                Just !i -> do
-                    modify $ \ (st, avoid) -> (M.insert k (i+1) st, avoid)
-                    return $ MachineName k i []
+            Nothing -> do
+                modify $ \(st, avoid) -> (M.insert k 2 st, avoid)
+                return $ MachineName k 1 []
+            Just !i -> do
+                modify $ \(st, avoid) -> (M.insert k (i + 1) st, avoid)
+                return $ MachineName k i []
         avoid <- gets snd
         if out `S.member` avoid
             then nextName k
             else return out
     exportNameGenState = gets (M.toList . fst)
-    importNameGenState st = modify $ \ (_, avoid) -> (M.fromList st, avoid)
+    importNameGenState st = modify $ \(_, avoid) -> (M.fromList st, avoid)
 
 instance NameGen (Either Doc) where
-    nextName _ = fail "nextName{Either Doc}"
-    exportNameGenState = fail "exportNameGenState{Either Doc}"
-    importNameGenState _ = fail "importNameGenState{Either Doc}"
+    nextName _ = failDoc "nextName{Either Doc}"
+    exportNameGenState = failDoc "exportNameGenState{Either Doc}"
+    importNameGenState _ = failDoc "importNameGenState{Either Doc}"
 
 instance NameGen Identity where
-    nextName _ = fail "nextName{Identity}"
-    exportNameGenState = fail "exportNameGenState{Identity}"
-    importNameGenState _ = fail "importNameGenState{Identity}"
+    nextName _ = failDoc "nextName{Identity}"
+    exportNameGenState = failDoc "exportNameGenState{Identity}"
+    importNameGenState _ = failDoc "importNameGenState{Identity}"
 
-runNameGen :: (Monad m, Data x) => x -> NameGenM m a -> m a
+runNameGen :: (MonadFailDoc m, Data x) => x -> NameGenM m a -> m a
 runNameGen avoid (NameGenM comp) =
     let initState = (M.empty, S.fromList (universeBi avoid))
-    in  evalStateT comp initState
+     in evalStateT comp initState

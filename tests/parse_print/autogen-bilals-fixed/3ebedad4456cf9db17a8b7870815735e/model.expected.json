@@ -1,0 +1,51 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]},
+                        {"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}]]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpSubset":
+                      [{"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitFunction":
+                                      [[{"ConstantBool": true}, {"ConstantBool": true}],
+                                       [{"ConstantBool": true}, {"ConstantBool": true}],
+                                       [{"ConstantBool": false}, {"ConstantBool": true}]]}}},
+                       {"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitFunction":
+                                      [[{"ConstantBool": true}, {"ConstantBool": false}],
+                                       [{"ConstantBool": false}, {"ConstantBool": true}]]}}}]}}]},
+      {"Objective":
+           ["Maximising",
+            {"Op":
+                 {"MkOpFreq":
+                      [{"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitMSet":
+                                      [{"ConstantBool": false}, {"ConstantBool": false}, {"ConstantBool": false}]}}},
+                       {"Op":
+                            {"MkOpGt":
+                                 [{"Reference": [{"Name": "var1"}, null]},
+                                  {"Reference": [{"Name": "var1"}, null]}]}}]}}]}]}

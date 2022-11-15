@@ -69,7 +69,7 @@ import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPoo
 mainWithArgs :: forall m .
     MonadIO m =>
     MonadLog m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
@@ -460,7 +460,7 @@ mainWithArgs config@Solve{..} = do
 mainWithArgs_Modelling :: forall m .
     MonadIO m =>
     MonadLog m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     String ->                   -- modelNamePrefix

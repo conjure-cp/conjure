@@ -1,0 +1,8 @@
+Error:
+    Undefined reference: x
+    Bindings in context:
+        c4: Alias ([x | x <- {1, 2, 3, 4}, x < 2])
+        c3: Alias ([x | x <- {1, 2, 3, 4}])
+        c2: Alias ([x + y | x : s, y : s])
+        c1: Alias ([x | x : s])
+        s: Alias (`set (size 5) of int`)

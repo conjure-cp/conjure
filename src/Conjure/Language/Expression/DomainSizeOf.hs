@@ -24,7 +24,7 @@ import Conjure.Language.Pretty
 instance DomainSizeOf Expression Expression where
     domainSizeOf (DomainReference _ (Just d)) = domainSizeOf d
     domainSizeOf DomainBool = return 2
-    domainSizeOf (DomainInt _ [] ) = fail "domainSizeOf infinite integer domain"
+    domainSizeOf (DomainInt _ [] ) = failDoc "domainSizeOf infinite integer domain"
     domainSizeOf (DomainInt _ [r]) = domainSizeOfRange r
     domainSizeOf (DomainInt _ rs ) = make opSum . fromList <$> mapM domainSizeOfRange rs
     domainSizeOf (DomainIntE x) = do
@@ -59,22 +59,22 @@ instance DomainSizeOf Expression Expression where
                 MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
                 MSetAttr _ (OccurAttr_MaxOccur x) -> return (x * innerSize)
                 MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return (x * innerSize)
-                _ -> fail ("domainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+                _ -> failDoc ("domainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
             getMaxOccur = case attrs of
                 MSetAttr _ (OccurAttr_MaxOccur x) -> return x
                 MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
                 MSetAttr (SizeAttr_Size x) _ -> return (make opMin $ fromList [x, innerSize])
                 MSetAttr (SizeAttr_MaxSize x) _ -> return (make opMin $ fromList [x, innerSize])
                 MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return (make opMin $ fromList [x, innerSize])
-                _ -> fail ("domainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+                _ -> failDoc ("domainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
         maxSize  <- getMaxSize
         maxOccur <- getMaxOccur
         return (make opPow maxOccur maxSize)
     domainSizeOf d@(DomainSequence _ (SequenceAttr sizeAttr jectivityAttr) innerTo) = do
         size <- case sizeAttr of
-            SizeAttr_None           -> fail ("Infinite domain:" <+> pretty d)
+            SizeAttr_None           -> failDoc ("Infinite domain:" <+> pretty d)
             SizeAttr_Size s         -> return s
-            SizeAttr_MinSize _      -> fail ("Infinite domain:" <+> pretty d)
+            SizeAttr_MinSize _      -> failDoc ("Infinite domain:" <+> pretty d)
             SizeAttr_MaxSize s      -> return s
             SizeAttr_MinMaxSize _ s -> return s
         domainSizeOf $ DomainFunction def (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
@@ -89,11 +89,11 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf d = bug ("not implemented: domainSizeOf:" <+> vcat [pretty d, pretty (show d)])
 
 
-domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFail m, Num a, Eq a) => Range a -> m a
+domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFailDoc m, Num a, Eq a) => Range a -> m a
 domainSizeOfRange RangeSingle{} = return 1
 domainSizeOfRange (RangeBounded 1 u) = return u
 domainSizeOfRange (RangeBounded l u) = return $ make opSum $ fromList [1, make opMinus u l]
-domainSizeOfRange r = fail ("domainSizeOf infinite range:" <+> pretty r)
+domainSizeOfRange r = failDoc ("domainSizeOf infinite range:" <+> pretty r)
 
 
 getMaxNumberOfElementsInContainer :: Domain () Expression -> Expression

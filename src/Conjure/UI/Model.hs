@@ -2,6 +2,8 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.UI.Model
     ( outputModels
@@ -129,7 +131,7 @@ import qualified Data.Text as T ( stripPrefix )
 outputModels ::
     forall m .
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -261,7 +263,7 @@ outputModels portfolioSize modelHashesBefore modelNamePrefix config model = do
 
 toCompletion :: forall m .
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -297,7 +299,7 @@ toCompletion config m = do
 
 
 modelRepresentationsJSON ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     MonadLog m =>
@@ -326,7 +328,7 @@ modelRepresentationsJSON model = do
 
 
 modelRepresentations ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     MonadLog m =>
@@ -345,7 +347,7 @@ modelRepresentations model0 = do
 --   and new rules will be tried using P as the top of the zipper-tree.
 --   The whole model (containing P too) will be tried later for completeness.
 remainingWIP ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -370,7 +372,7 @@ remainingWIP config wip@(TryThisFirst modelZipper info) = do
 
 
 remaining ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -453,7 +455,7 @@ remaining config modelZipper minfo = do
 --   strategyQ == PickFirst is special-cased for performance.
 getQuestions ::
     MonadLog m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -469,7 +471,7 @@ getQuestions config modelZipper | strategyQ config == PickFirst = maybeToList <$
                                    Nothing -> loopLevels as
                                    Just {} -> return bs
 
-        processLevel :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
+        processLevel :: (MonadFailDoc m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
                      -> m (Maybe (ModelZipper, [(Doc, RuleResult m)]))
         processLevel rulesAtLevel =
@@ -493,7 +495,7 @@ getQuestions config modelZipper =
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
+        processLevel :: (MonadFailDoc m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
                      -> m [(ModelZipper, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
@@ -861,7 +863,7 @@ inlineDecVarLettings model =
 
 
 dropTagForSR ::
-    MonadFail m =>
+    MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m Model
 dropTagForSR m = do
@@ -897,7 +899,7 @@ dropTagForSR m = do
 
 updateDeclarations ::
     MonadUserError m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -970,7 +972,7 @@ updateDeclarations model = do
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
-checkIfAllRefined :: MonadFail m => Model -> m Model
+checkIfAllRefined :: MonadFailDoc m => Model -> m Model
 checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
@@ -1035,7 +1037,7 @@ checkIfAllRefined m = return m
 
 
 -- | checking whether any undefined values creeped into the final model
-checkIfHasUndefined :: MonadFail m => Model -> m Model
+checkIfHasUndefined :: MonadFailDoc m => Model -> m Model
 checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
     let returnMsg x = return
             $ ""
@@ -1054,7 +1056,7 @@ checkIfHasUndefined m = return m
 
 
 topLevelBubbles ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -1220,7 +1222,7 @@ logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
 logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
 
 prologue ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -1255,7 +1257,7 @@ prologue model = do
 
 
 epilogue ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
@@ -1282,6 +1284,7 @@ epilogue model = return model
 
 applicableRules :: forall m n .
     MonadUserError n =>
+    MonadFailDoc n =>
     MonadLog n =>
     NameGen n =>
     EnumerateDomain n =>
@@ -1289,7 +1292,7 @@ applicableRules :: forall m n .
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Config ->
     [Rule] ->
@@ -1734,6 +1737,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
     mkHook
         :: ( MonadLog m
            , MonadFail m
+           , MonadFailDoc m
            , NameGen m
            , EnumerateDomain m
            )
@@ -1758,7 +1762,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mkStructurals :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
+            mkStructurals :: (MonadLog m, MonadFailDoc m, NameGen m, EnumerateDomain m)
                           => m [Expression]
             mkStructurals = do
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
@@ -1769,7 +1773,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
                 return resolved
 
-            addStructurals :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
+            addStructurals :: (MonadLog m, MonadFailDoc m, NameGen m, EnumerateDomain m)
                            => Model -> m Model
             addStructurals
                 | forg == Given = return
@@ -2330,7 +2334,7 @@ rule_DomainMinMax = "domain-MinMax" `namedRule` theRule where
             )
     theRule _ = na "rule_DomainMinMax"
 
-    getDomain :: MonadFail m => Expression -> m (Domain () Expression)
+    getDomain :: MonadFailDoc m => Expression -> m (Domain () Expression)
     getDomain (Domain d) = return d
     getDomain (Reference _ (Just (Alias (Domain d)))) = getDomain (Domain d)
     getDomain _ = na "rule_DomainMinMax.getDomain"
@@ -2547,7 +2551,7 @@ timedF name comp = \ a -> timeItNamed name (comp a)
 
 
 evaluateModel ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

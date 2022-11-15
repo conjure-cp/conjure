@@ -1,0 +1,33 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}},
+                        {"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}]]}]}},
+      {"Objective":
+           ["Minimising",
+            {"Op":
+                 {"MkOpIndexing":
+                      [{"AbstractLiteral":
+                            {"AbsLitMatrix":
+                                 [{"DomainInt":
+                                       [{"TagInt": []},
+                                        [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}},
+                                         {"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]},
+                                  [{"Reference": [{"Name": "var3"}, null]}, {"Reference": [{"Name": "var3"}, null]}]]}},
+                       {"Op":
+                            {"MkOpPow":
+                                 [{"Reference": [{"Name": "var3"}, null]},
+                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}}]}}]}]}

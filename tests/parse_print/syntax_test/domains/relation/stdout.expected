@@ -1,0 +1,12 @@
+language Essence 1.3
+
+letting simple be domain relation of (bool * int)
+letting sized be domain relation (size 1) of (bool * int)
+letting sized2 be domain relation (minSize 1) of (bool * int)
+letting sized3 be domain relation (maxSize 2) of (bool * int)
+letting sized4 be domain relation (minSize 1, maxSize 2) of (bool * int)
+letting all be domain
+        relation (minSize 3, maxSize 4,
+                  reflexive, irreflexive, coreflexive, symmetric, antiSymmetric, aSymmetric, transitive, total, connex,
+                  Euclidean, serial, equivalence, partialOrder) of
+            (int * int)

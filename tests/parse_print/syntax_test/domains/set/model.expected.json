@@ -1,0 +1,41 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
+      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"Letting":
+                [{"Name": "simple"}, {"Domain": {"DomainSet": [[], {"SizeAttr_None": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized"},
+                 {"Domain":
+                      {"DomainSet":
+                           [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                            {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized2"},
+                 {"Domain":
+                      {"DomainSet":
+                           [[], {"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                            {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized3"},
+                 {"Domain":
+                      {"DomainSet":
+                           [[], {"SizeAttr_MaxSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}},
+                            {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized4"},
+                 {"Domain":
+                      {"DomainSet":
+                           [[],
+                            {"SizeAttr_MinMaxSize":
+                                 [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]},
+                            {"DomainBool": []}]}}]}}]}

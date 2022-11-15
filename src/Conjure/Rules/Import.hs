@@ -29,7 +29,7 @@ import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, up, hole )
 -- when found, return whether this quantifier requires us to remove duplicates or not
 -- if none exists, do not apply the rule.
 -- (or maybe we should call bug right ahead, it can't be anything else.)
-doDuplicatesMatter :: MonadFail m => Zipper.Zipper a Expression -> m Bool
+doDuplicatesMatter :: MonadFailDoc m => Zipper.Zipper a Expression -> m Bool
 doDuplicatesMatter z0 =
     case Zipper.up z0 of
         Nothing -> na "doDuplicatesMatter 1"
