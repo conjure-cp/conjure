@@ -1,5 +1,0 @@
-[removedDecl] find pain:
-                      matrix indexed by [int(1..2), int(2..3), int(3..4)] of (bool, bool, bool)
-[simplified] pain[1, 2, 1] = (true, false, true)
-             ~~>
-             pain[1, 2, 1, 1] = true /\ (pain[1, 2, 1, 2] = false /\ pain[1, 2, 1, 3] = true)
