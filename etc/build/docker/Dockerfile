@@ -8,7 +8,7 @@
 
 FROM debian:stable-slim
 
-ARG BRANCH=v2.3.0
+ARG BRANCH=v2.4.0
 
 ENV LANG        C.UTF-8
 ENV WORK        /conjure
