@@ -9,15 +9,15 @@ import qualified Data.Sequence as S
 
 
 
-class Flattenable v a where
-    flatten :: Flattenable v a => a -> S.Seq v
+class Flattenable a where
+    flatten :: Flattenable a => a -> S.Seq ETok
 
-instance Flattenable ETok ProgramTree where
+instance Flattenable ProgramTree where
     flatten (ProgramTree lv sts end) = mconcat [flatten lv , mconcat $ map flatten sts , flatten end]
 
-instance Flattenable ETok LangVersionNode where
+instance Flattenable LangVersionNode where
     flatten (LangVersionNode l1 l2 l3) = flatten l1 >< flatten l2 >< flatten l3
-instance Flattenable ETok StatementNode where
+instance Flattenable StatementNode where
     flatten x = case x of
         DeclarationStatement dsn -> flatten dsn
         BranchingStatement bsn -> flatten bsn
@@ -27,56 +27,56 @@ instance Flattenable ETok StatementNode where
         HeuristicStatement l1 ex -> flatten l1 >< flatten ex
         UnexpectedToken tok -> flatten tok
 
-instance Flattenable ETok DeclarationStatementNode where
+instance Flattenable DeclarationStatementNode where
     flatten x = case x of
         FindStatement f fsn -> flatten f >< flatten fsn
         GivenStatement g gsn -> flatten g >< flatten gsn
         LettingStatement t lsn -> flatten t >< flatten lsn
 
 
-instance Flattenable ETok LettingStatementNode where 
+instance Flattenable LettingStatementNode where 
     flatten (LettingStatementNode a b c) = mconcat[ flatten a, flatten b, flatten c]
 
-instance Flattenable ETok LettingAssignmentNode where
+instance Flattenable LettingAssignmentNode where
     flatten x = case x of
         LettingExpr d ->  flatten d
         LettingDomain d e -> flatten d >< flatten e
         LettingEnum d e f g -> mconcat [flatten d, flatten e, flatten f, flatten g]
         LettingAnon d e f g h -> mconcat [flatten d, flatten e, flatten f, flatten g, flatten h]
 
-instance Flattenable ETok FindStatementNode where
+instance Flattenable FindStatementNode where
     flatten (FindStatementNode a b c) = mconcat  [flatten a, flatten b, flatten c]
 
-instance Flattenable ETok GivenStatementNode where
+instance Flattenable GivenStatementNode where
     flatten x = case x of
         GivenStatementNode a b c -> mconcat [flatten a, flatten b, flatten c]
         GivenEnumNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
 
 
 
-instance Flattenable ETok BranchingStatementNode where
+instance Flattenable BranchingStatementNode where
     flatten (BranchingStatementNode lt lt' ln) = mconcat [flatten lt, flatten lt', flatten ln]
 
 
-instance Flattenable ETok SuchThatStatementNode where
+instance Flattenable SuchThatStatementNode where
     flatten (SuchThatStatementNode l1 l2 l3) =  flatten l1 >< flatten l2 >< flatten l3
-instance Flattenable ETok WhereStatementNode where
+instance Flattenable WhereStatementNode where
     flatten (WhereStatementNode l1 l2) =  flatten l1 >< flatten l2
-instance Flattenable ETok ObjectiveStatementNode where
+instance Flattenable ObjectiveStatementNode where
     flatten x =  case x of
         ObjectiveMin lt en -> flatten lt >< flatten en
         ObjectiveMax lt en -> flatten lt >< flatten en
 
-instance Flattenable ETok LToken where
+instance Flattenable LToken where
     flatten x =  case x of
         RealToken xs et -> flatten xs ><  flatten et
         MissingToken et ->  flatten et
         SkippedToken et ->  flatten et
 
-instance Flattenable ETok ETok where
+instance Flattenable ETok where
     flatten = pure
 
-instance Flattenable ETok ExpressionNode where
+instance Flattenable ExpressionNode where
     flatten x =  case x of
         Literal ln -> flatten ln
         IdentifierNode nn -> flatten nn
@@ -91,38 +91,38 @@ instance Flattenable ETok ExpressionNode where
         AttributeAsConstriant l1 exprs -> flatten l1 >< flatten exprs
         MissingExpressionNode e ->  flatten e
 
-instance Flattenable ETok SpecialCaseNode where 
+instance Flattenable SpecialCaseNode where 
     flatten x = case x of 
         ExprWithDecls l1 en l2 sns l3 -> mconcat [flatten l1,flatten en,flatten l2, flatten l2, flatten sns , flatten l3]
 
-instance Flattenable ETok DomainExpressionNode where
+instance Flattenable DomainExpressionNode where
     flatten (DomainExpressionNode a b c) = flatten a >< flatten b >< flatten c
-instance Flattenable ETok QuantificationExpressionNode where
+instance Flattenable QuantificationExpressionNode where
     flatten (QuantificationExpressionNode a b c d e f) = mconcat [
         flatten a, flatten b, flatten c, flatten d, flatten e, flatten f]
-instance Flattenable ETok QuantificationOverNode where
+instance Flattenable QuantificationOverNode where
     flatten x = case x of
       QuantifiedSubsetOfNode a b -> flatten a >< flatten b
       QuantifiedMemberOfNode a b -> flatten a >< flatten b
       QuantifiedDomainNode a -> flatten a
 
-instance Flattenable ETok OverDomainNode where
+instance Flattenable OverDomainNode where
     flatten (OverDomainNode a b) = flatten a >< flatten b
 
-instance Flattenable ETok QuanticationGuard where
+instance Flattenable QuanticationGuard where
     flatten (QuanticationGuard a b ) = flatten a >< flatten b
 
-instance Flattenable ETok AbstractPatternNode where
+instance Flattenable AbstractPatternNode where
     flatten x = case x of
       AbstractIdentifier nn -> flatten nn
       AbstractMetaVar lt -> flatten lt
       AbstractPatternTuple a b -> flatten a >< flatten b
       AbstractPatternMatrix ln -> flatten ln
       AbstractPatternSet ln -> flatten ln
-instance Flattenable ETok QuantificationPattern where
+instance Flattenable QuantificationPattern where
     flatten (QuantificationPattern en) = flatten en
 
-instance Flattenable ETok LiteralNode where
+instance Flattenable LiteralNode where
     flatten x = case x of
         IntLiteral lt -> flatten lt
         BoolLiteral lt -> flatten lt
@@ -138,26 +138,26 @@ instance Flattenable ETok LiteralNode where
         RelationLiteral lt ln -> flatten lt >< flatten ln
         PartitionLiteral lt ln -> flatten lt >< flatten ln
 
-instance Flattenable ETok PartitionElemNode where
+instance Flattenable PartitionElemNode where
     flatten (PartitionElemNode ln) = flatten ln
 
-instance Flattenable ETok RelationElemNode where
+instance Flattenable RelationElemNode where
     flatten x = case x of
         RelationElemNodeLabeled lt -> flatten lt
         RelationElemNodeShort st -> flatten st
 
-instance Flattenable ETok ArrowPairNode where
+instance Flattenable ArrowPairNode where
     flatten (ArrowPairNode a b c) = mconcat [flatten a, flatten b, flatten c]
 
-instance Flattenable ETok RecordMemberNode where
+instance Flattenable RecordMemberNode where
     flatten (RecordMemberNode nn lt en) =  mconcat [flatten nn, flatten lt, flatten en]
-instance Flattenable ETok LongTuple where
+instance Flattenable LongTuple where
     flatten (LongTuple a b) =  flatten a >< flatten b
 
-instance Flattenable ETok ShortTuple where
+instance Flattenable ShortTuple where
     flatten (ShortTuple a) = flatten a
 
-instance Flattenable ETok MatrixLiteralNode where
+instance Flattenable MatrixLiteralNode where
     flatten ( MatrixLiteralNode a b c d e) = mconcat
             [ flatten a
             , flatten b
@@ -166,9 +166,9 @@ instance Flattenable ETok MatrixLiteralNode where
             , flatten e
             ]
 
-instance Flattenable ETok ComprehensionNode where
+instance Flattenable ComprehensionNode where
     flatten (ComprehensionNode a b) = flatten a >< flatten b
-instance Flattenable ETok ComprehensionExpressionNode where
+instance Flattenable ComprehensionExpressionNode where
     flatten (ComprehensionExpressionNode a b c d e) =
         mconcat
             [ flatten a
@@ -178,27 +178,27 @@ instance Flattenable ETok ComprehensionExpressionNode where
             , flatten e
             ]
 
-instance Flattenable ETok ComprehensionBodyNode where
+instance Flattenable ComprehensionBodyNode where
     flatten x =  case x of
         CompBodyCondition en -> flatten en
         CompBodyDomain a b c -> flatten a >< flatten b >< flatten c
         CompBodyGenExpr a b c -> flatten a >< flatten b >< flatten c
         CompBodyLettingNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
 
-instance Flattenable ETok OperatorExpressionNode where
+instance Flattenable OperatorExpressionNode where
     flatten x =  case x of
         PostfixOpNode en pon -> flatten en >< flatten pon
         PrefixOpNode lt en -> flatten lt >< flatten en
         BinaryOpNode en lt en' -> mconcat [flatten en, flatten lt, flatten en']
 
-instance Flattenable ETok PostfixOpNode where
+instance Flattenable PostfixOpNode where
     flatten x =  case x of
         IndexedNode l -> flatten l
         OpFactorial lt -> flatten lt
         ApplicationNode ln -> flatten ln
         ExplicitDomain l1 l2 dom l3 -> mconcat  [flatten l1,flatten l2,flatten dom,flatten l3]
 
-instance Flattenable ETok DomainNode where
+instance Flattenable DomainNode where
     flatten x =  case x of
         BoolDomainNode lt -> flatten lt
         RangedIntDomainNode lt ln -> flatten lt >< flatten ln
@@ -218,18 +218,18 @@ instance Flattenable ETok DomainNode where
         PartitionDomainNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
         MissingDomainNode m -> flatten m
 
-instance Flattenable ETok IndexedByNode where
+instance Flattenable IndexedByNode where
     flatten (IndexedByNode a b ) = flatten a >< flatten b
 
-instance (Flattenable ETok a) => Flattenable ETok (Maybe a) where
+instance (Flattenable a) => Flattenable (Maybe a) where
     flatten (Just x) = flatten x
     flatten Nothing = S.empty
-instance Flattenable ETok AttributeNode where
+instance Flattenable AttributeNode where
     flatten x =  case x of
         NamedAttributeNode nn m_e -> flatten nn >< flatten m_e
         -- NamedExpressionAttribute nn en -> flatten nn >< flatten en
 
-instance Flattenable ETok RangeNode where
+instance Flattenable RangeNode where
     flatten x =  case x of
         SingleRangeNode en -> flatten en
         OpenRangeNode ddn -> flatten ddn
@@ -237,29 +237,29 @@ instance Flattenable ETok RangeNode where
         LeftUnboundedRangeNode ddn en -> flatten ddn >< flatten en
         BoundedRangeNode en ddn en' -> mconcat [flatten en, flatten ddn, flatten en']
 
--- instance Flattenable ETok DoubleDotNode where
+-- instance Flattenable DoubleDotNode where
 --     flatten (DoubleDotNode a b) =  flatten a >< flatten b
 
-instance Flattenable ETok NamedDomainNode where
+instance Flattenable NamedDomainNode where
     flatten (NameDomainNode a Nothing) = flatten a
     flatten (NameDomainNode a (Just (b,c))) = mconcat [flatten a,flatten b,flatten c]
 
-instance Flattenable ETok NameNode where
+instance Flattenable NameNode where
     flatten (NameNode n) =  flatten n
 
-instance Flattenable ETok ParenExpressionNode where
+instance Flattenable ParenExpressionNode where
     flatten (ParenExpressionNode a b c) =  flatten a >< flatten b >< flatten c
 
-instance Flattenable ETok b => Flattenable ETok (ListNode b) where
+instance Flattenable b => Flattenable (ListNode b) where
     flatten (ListNode l1 seq l2) =  mconcat [flatten l1, flatten seq, flatten l2]
 
-instance Flattenable ETok b => Flattenable ETok (Sequence b) where
+instance Flattenable b => Flattenable (Sequence b) where
     flatten (Seq es) = mconcat $ map flatten es
 
-instance Flattenable ETok b => Flattenable ETok (SeqElem b) where
+instance Flattenable b => Flattenable (SeqElem b) where
     flatten (SeqElem v s) =  flatten v >< flatten s
     flatten (MissingSeqElem v s) =  flatten v >< flatten s
-instance Flattenable ETok b => Flattenable ETok [b] where
+instance Flattenable b => Flattenable [b] where
     flatten = mconcat . map flatten 
 
 
