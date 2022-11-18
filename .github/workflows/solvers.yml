@@ -20,6 +20,10 @@ jobs:
         shell: bash
         run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
 
+      - name: Installing yices dependency (gperf)
+        shell: bash
+        run: sudo apt-get install -y gperf
+
       - name: Building solvers
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
