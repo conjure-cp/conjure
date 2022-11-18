@@ -37,7 +37,7 @@ displayError x = case x of
   SyntaxError txt -> "Syntax Error: " ++ T.unpack txt
   SemanticError txt -> "Semantic error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
-  TypeError expected got -> "Type error: Expected :" ++ show (pretty expected) ++ " Got:" ++ show (pretty got)
+  TypeError expected got -> "Type error: Expected: " ++ show (pretty expected) ++ " Got: " ++ show (pretty got)
   InternalError -> "Pattern match failiure"
   InternalErrorS txt -> "Something went wrong:" ++ T.unpack txt
 
@@ -52,7 +52,7 @@ printSymbolTable :: SymbolTable -> IO ()
 printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs tab)
     where
         printEntry :: (Text ,SymbolTableValue) -> IO ()
-        printEntry (a,b) = putStrLn $ show a ++ ":" ++ show b
+        printEntry (a,(r,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
 
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
 captureErrors = mapM_ captureError
@@ -86,9 +86,8 @@ val s = do
                     print (maybe "" show model)
                     putStrLn $ show vds
                     printSymbolTable $ symbolTable st
-                    putStrLn $ show $ regionInfo st
+                    -- putStrLn $ show $ (regionInfo st)
                     putStrLn $ showDiagnosticsForConsole vds txt
-
 
             -- putStrLn $ show qpr
 
