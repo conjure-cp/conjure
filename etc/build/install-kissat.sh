@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# version as of 18 November 2022
+VERSION=3.0.0
+
 set -o errexit
 set -o nounset
 
@@ -10,8 +13,7 @@ mkdir tmp-install-kissat
 pushd tmp-install-kissat
 git clone https://github.com/arminbiere/kissat.git
 cd kissat
-# latest on Github as of 19 July 2022
-git checkout rel-3.0.0
+git checkout rel-$VERSION
 ./configure
 make kissat
 cp build/kissat ${BIN_DIR}/kissat
