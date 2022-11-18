@@ -46,10 +46,6 @@ jobs:
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
 
-      - name: Install Glucose
-        shell: bash
-        run: BIN_DIR=${HOME}/.local/bin etc/build/install-glucose.sh
-
       - name: Install Cadical
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin etc/build/install-cadical.sh
