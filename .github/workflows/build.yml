@@ -1,6 +1,10 @@
 name: Building on all platforms
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]      # run for the master branch
+    pull_request:           # and for PRs
+                            # other branches that want testing must create a PR
 
 jobs:
 

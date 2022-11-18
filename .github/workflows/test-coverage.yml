@@ -2,9 +2,9 @@ name: Running all tests (code coverage)
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches: [master]      # run for the master branch
+    pull_request:           # and for PRs
+                            # other branches that want testing must create a PR
 
 jobs:
 
