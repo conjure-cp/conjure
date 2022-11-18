@@ -11,7 +11,11 @@ jobs:
 
   Job:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
@@ -21,9 +25,15 @@ jobs:
         shell: bash
         run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
 
-      - name: Installing yices dependency (gperf)
+      - name: Installing dependencies (gperf, cmake, gmp) on Linux
         shell: bash
-        run: sudo apt-get install -y gperf
+        run: sudo apt-get install -y gperf cmake gmp
+        if: runner.os == "Linux"
+
+      - name: Installing dependencies (gperf, cmake, gmp) on macOS
+        shell: bash
+        run: sudo apt-get install -y gperf cmake gmp
+        if: runner.os == "macOS"
 
       - name: Building solvers
         shell: bash
