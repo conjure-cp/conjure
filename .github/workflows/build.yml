@@ -31,14 +31,14 @@ jobs:
         name: Cache global stack
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}
+          key: ${{ runner.os }}-stack-global-ghc${{ matrix.GHC_VERSION }}
           restore-keys: ${{ runner.os }}-stack-global-
 
       - uses: actions/cache@v3
         name: Cache local stack
         with:
           path: .stack-work
-          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('**/*.hs') }}
+          key: ${{ runner.os }}-stack-local-ghc${{ matrix.GHC_VERSION }}
           restore-keys: ${{ runner.os }}-stack-work-
 
       - name: Setting PATH
