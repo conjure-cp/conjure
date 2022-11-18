@@ -23,6 +23,15 @@ else
     echo "        Failed (took ${ELAPSED} seconds)"
     echo "        Exit code: ${EXITCODE}"
     echo "        Outputs saved to: ${PID}.stdout and ${PID}.stderr"
+    echo ""
+    echo "Last 10 lines of the stdout was:"
+    tail -n10 ${PID}.stdout
+    echo ""
+    echo "Last 10 lines of the stderr was:"
+    tail -n10 ${PID}.stderr
+    echo ""
+    echo ""
+    echo ""
 fi
 
 # exit ${EXITCODE}
