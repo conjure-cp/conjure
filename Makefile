@@ -128,6 +128,8 @@ solvers:
 	@echo "Set the environment variable BIN_DIR to change this location."
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
+	@echo "Set the environment variable PROCESSES to specify the number of cores to use. Default is 1."
+	@echo ""
 	@echo "Dependencies: cmake and gmp."
 	@if [ `uname` == "Darwin" ]; then echo "You can run: 'brew install cmake gmp' to install them."; fi
 	@echo ""

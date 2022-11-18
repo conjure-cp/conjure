@@ -1,0 +1,22 @@
+name: Building all solvers
+
+on: [push, pull_request]
+
+jobs:
+
+  TestAll:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Building solvers
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
+
