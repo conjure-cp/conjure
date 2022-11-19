@@ -11,6 +11,11 @@ jobs:
 
   Job:
 
+    strategy:
+      matrix:
+        GHC_VERSION: [8.6]
+        os: [ubuntu-latest]
+
     runs-on: ubuntu-latest
 
     steps:
