@@ -6,7 +6,7 @@ export SOURCE_VERSION=$(git log -1 --format=format:"%H")
 echo "Recording code coverage for SOURCE_VERSION: ${SOURCE_VERSION}"
 
 if ${COVERAGE} ; then
-    mkdir ~/.ssh && mv ${COVERAGE_DEPLOY_KEY} ~/.ssh/id_rsa
+    mkdir ~/.ssh && mv ${{ secrets.COVERAGE_DEPLOY_KEY }} ~/.ssh/id_rsa
     chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     git clone git@github.com:conjure-cp/conjure-code-coverage.git
