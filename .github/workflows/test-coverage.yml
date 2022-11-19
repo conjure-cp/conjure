@@ -66,7 +66,9 @@ jobs:
       - name: Upload code coverage report to GitHub
         shell: bash
         run: |
-          mkdir ~/.ssh && mv ${{ secrets.COVERAGE_DEPLOY_KEY }} ~/.ssh/id_rsa
-          chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
+          mkdir ~/.ssh
+          echo ${{ secrets.COVERAGE_DEPLOY_KEY }} > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
           COVERAGE=true etc/build/record-coverage.sh
