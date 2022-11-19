@@ -25,15 +25,15 @@ jobs:
         name: Cache global stack
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-stack-global-ghc${{ matrix.GHC_VERSION }}
-          restore-keys: ${{ runner.os }}-stack-global-
+          key: stack-global-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+          restore-keys: stack-global-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - uses: actions/cache@v3
         name: Cache local stack
         with:
           path: .stack-work
-          key: ${{ runner.os }}-stack-local-ghc${{ matrix.GHC_VERSION }}
-          restore-keys: ${{ runner.os }}-stack-work-
+          key: stack-local-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+          restore-keys: stack-local-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - name: Setting PATH
         shell: bash
