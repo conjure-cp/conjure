@@ -9,6 +9,7 @@ import Conjure.LSP.Handlers.File (fileHandlers, fileOpenedHandler)
 import Conjure.LSP.Handlers.Initialize (handleInitialized)
 import Conjure.Prelude
 import Conjure.LSP.Handlers.Hover (hoverHandler)
+import Conjure.LSP.Handlers.DocumentSymbol (docSymbolHandler)
 
 data LSPConfig = LSPConfig {}
 
@@ -36,6 +37,7 @@ handlers =
         [ fileHandlers
         , handleInitialized
         , hoverHandler
+        , docSymbolHandler
         ]
 
 

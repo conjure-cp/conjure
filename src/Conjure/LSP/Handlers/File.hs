@@ -10,7 +10,7 @@ import Data.Text (pack)
 import Control.Lens
 import Language.LSP.VFS
 import Language.LSP.Types.Lens (HasTextDocument(textDocument), HasParams (..), HasUri (uri))
-import Conjure.LSP.Util (getErrorsForURI, getErrorsFromText, sendInfoMessage, sendErrorMessage)
+import Conjure.LSP.Util (getErrorsForURI, getErrorsFromText, sendInfoMessage, sendErrorMessage, getDiagnostics)
 import Language.LSP.Diagnostics (partitionBySource)
 
 fileHandlers :: Handlers (LspM ())
@@ -20,6 +20,8 @@ fileOpenedHandler :: Handlers (LspM ())
 fileOpenedHandler = notificationHandler STextDocumentDidOpen $ \ req -> do
     let NotificationMessage _ _ (DidOpenTextDocumentParams doc) = req
     sendNotification SWindowShowMessage (ShowMessageParams MtInfo $ pack ("Opened file "++ show doc++ "\n"))
+    let td = req^.params.textDocument
+    doDiagForDocument td
     pure ()
 
 
@@ -50,5 +52,5 @@ doDiagForDocument d = do
             errs <- getErrorsFromText $ virtualFileText vf
             case errs of
                 Left msg -> sendErrorMessage msg
-                Right diags -> publishDiagnostics 10000 doc (Just $ fromIntegral version) $ partitionBySource $ diags
+                Right file -> publishDiagnostics 10000 doc (Just $ fromIntegral version) $ partitionBySource $ getDiagnostics file
           _ -> sendErrorMessage $ pack. show $ "No virtual file found for: " <> stringToDoc (show d)

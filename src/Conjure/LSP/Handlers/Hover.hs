@@ -4,11 +4,16 @@ import Language.LSP.Types
 import Control.Lens
 import Conjure.Prelude
 import Data.Text (pack)
+import Conjure.LSP.Util (getProcessedDoc, getRelevantRegions, withProcessedDoc, ProcessedFile (ProcessedFile))
+
 hoverHandler :: Handlers (LspM ())
 hoverHandler = requestHandler STextDocumentHover $ \ req res -> do
+
     let RequestMessage _ _ _ (HoverParams _doc pos _workDone) = req
-        Position _l _c' = pos
-        rsp = Hover ms (Just range)
-        ms = HoverContents $ markedUpContent "lsp-demo-simple-server" "Hello world"
-        range = Range pos pos
-    res (Right $ Just rsp)
+    let Position _l _c' = pos
+    withProcessedDoc _doc $ \(ProcessedFile _ _ st) -> do
+        let ranges = getRelevantRegions st pos
+        let ms = HoverContents $ MarkupContent MkPlainText $ pack $ (show (Conjure.Prelude.length ranges)) ++": " ++ (show ranges)
+        let range = Range pos pos
+        let rsp = Hover ms (Just range)
+        res (Right $ Just rsp)
