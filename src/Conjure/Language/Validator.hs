@@ -76,9 +76,9 @@ untype (Typed _ a) = a
 typeOf_ :: Typed a -> Type
 typeOf_ (Typed t _) = t
 
-untypeAs ::(Fallback a) => Type -> Typed a -> ValidatorS a
+untypeAs :: Type -> Typed a -> ValidatorS a
 untypeAs r ((Typed t a)) = if let ?typeCheckerMode=RelaxedIntegerTags in typeUnify r t
-                            then return $  a
+                            then return a
                             else contextError (TypeError r t) >> return a
 
 typeAs :: Type -> Maybe a -> Maybe (Typed a)
@@ -258,18 +258,18 @@ validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
     checkSymbols [l1]
     name <- validateIdentifier n
     unless (maybe False isValidLanguageName name) (raiseError $symbolRegion  n <!> SyntaxError "Not a valid language name")
-    nums <- validateSequence_ getNum v
+    nums <- catMaybes <$> validateSequence_ getNum v
     return . pure $
         LanguageVersion
             (Name $ fromMaybe "Essence" name)
             (if null nums then [1,3] else nums)
     where
-        getNum :: LToken -> ValidatorS Int
+        getNum :: LToken -> Validator Int
         getNum c = do
             c' <- validateSymbol c
             case c' of
-                Just (LIntLiteral x) -> return $ fromInteger x
-                _ -> 0 <* invalid $ c <!> InternalError
+                Just (LIntLiteral x) -> return . pure $ fromInteger x
+                _ -> invalid $ c <!> InternalError
 
 
 validateStatement :: StatementNode -> ValidatorS [Statement]
@@ -313,14 +313,14 @@ validateSuchThatStatement :: SuchThatStatementNode -> ValidatorS [Statement]
 validateSuchThatStatement (SuchThatStatementNode l1 l2 exprs) = do
     checkSymbols [l1, l2]
     exprs' <- validateSequence (validateExpression) exprs
-    bools <- mapM (\(a,b)->do setContextFrom a; untypeAs TypeBool b) exprs'
+    bools <- mapM (\(a,b)->do setContext a; untypeAs TypeBool b) exprs'
     let bool_exprs = bools
     return [SuchThat  bool_exprs]
 
 validateBranchingStatement :: BranchingStatementNode -> ValidatorS [Statement]
 validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
     checkSymbols [l1, l2]
-    branchings <- validateList_ validateBranchingParts sts
+    branchings <-catMaybes <$> validateList_ (f2n validateBranchingParts) sts
     return $ [SearchOrder branchings]
     where
         validateBranchingParts :: ExpressionNode -> ValidatorS SearchOrder
@@ -474,7 +474,7 @@ validateDomainWithRepr dom = do
 validateDomain :: DomainNode -> ValidatorS TypedDomain
 validateDomain dm = case dm of
     MetaVarDomain lt ->  do mv <- validateMetaVar lt ; return . Typed TypeAny $ DomainMetaVar mv
-    BoolDomainNode lt -> pure <$> (validateSymbol lt >> return DomainBool)
+    BoolDomainNode lt -> (validateSymbol lt >> (return . Typed TypeBool) DomainBool)
     RangedIntDomainNode l1 rs -> checkSymbols [l1] >> validateRangedInt rs
     RangedEnumNode nn ranges -> validateEnumRange nn ranges
     ShortTupleDomainNode lst -> validateTupleDomain lst
@@ -492,13 +492,13 @@ validateDomain dm = case dm of
   where
     validateRangedInt :: Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
     validateRangedInt (Just ranges) = do
-        ranges' <-  validateList_ validateRange ranges
+        ranges' <-  catMaybes <$> validateList_ (f2n validateRange) ranges
         return . Typed tInt $ DomainInt TagInt ranges'
     validateRangedInt Nothing = return . Typed tInt $ DomainInt TagInt []
     validateEnumRange :: NameNode -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
     validateEnumRange name ranges = do
         ranges' <- case ranges of
-            Just r -> pure <$> validateList_ validateRange r
+            Just r -> pure <$> catMaybes <$> validateList_ (f2n validateRange) r
             Nothing -> return Nothing
         Just name' <- validateIdentifier name
         a <- getSymbol name'
@@ -508,7 +508,7 @@ validateDomain dm = case dm of
               Nothing -> return . Typed t $  DomainReference (Name name') Nothing
               Just _ -> do
                 raiseError (symbolRegion  name <!> SemanticError "range not supported on non enum ranges")
-                return . pure $  DomainReference (Name name') Nothing
+                return . Typed t $ DomainReference (Name name') Nothing
             Nothing -> return $ fallback "unknown symbol"
 
     validateTupleDomain :: ListNode DomainNode -> ValidatorS TypedDomain
@@ -517,12 +517,12 @@ validateDomain dm = case dm of
         return $ Typed (TypeTuple ts)  (DomainTuple  ds)
     validateRecordDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateRecordDomain namedDoms = do
-                lst <- validateList_ validateNamedDomainInVariant namedDoms
+                lst <- catMaybes <$> validateList_  (f2n validateNamedDomainInVariant) namedDoms
                 let (ts,ds) = unzip $ map (\(x,typeSplit->(t,d))->((x,t),(x,d))) lst
                 return $ Typed (TypeVariant ts)  (DomainVariant ds)
     validateVariantDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateVariantDomain namedDoms = do
-                lst <- validateList_ validateNamedDomainInVariant namedDoms
+                lst <- catMaybes <$> validateList_ (f2n validateNamedDomainInVariant) namedDoms
                 let (ts,ds) = unzip $ map (\(x,typeSplit->(t,d))->((x,t),(x,d))) lst
                 return $ Typed (TypeVariant ts)  (DomainVariant ds)
     validateMatrixDomain :: ListNode DomainNode -> DomainNode -> ValidatorS TypedDomain
@@ -608,7 +608,7 @@ validateSizeAttributes attrs = do
       [(L_minSize, Just a)] -> return $  (SizeAttr_MinSize a)
       [(L_maxSize, Just a)] -> return $  (SizeAttr_MaxSize a)
       [(L_minSize, Just a),(L_maxSize, Just b)] -> return $ (SizeAttr_MinMaxSize a b)
-      as -> def <* contextError $ SemanticError $ pack $ "Incompatible attributes size:" ++ show as
+      as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes size:" ++ show as
 
 validatePartSizeAttributes :: [(Lexeme,Maybe Expression)] -> ValidatorS (SizeAttr Expression)
 validatePartSizeAttributes attrs = do
@@ -620,7 +620,7 @@ validatePartSizeAttributes attrs = do
       [(L_minPartSize, Just a)] -> return $  (SizeAttr_MinSize a)
       [(L_maxPartSize, Just a)] -> return $  (SizeAttr_MaxSize a)
       [(L_minPartSize, Just a),(L_maxPartSize, Just b)] -> return $  (SizeAttr_MinMaxSize a b)
-      as -> def <* contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
+      as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
 
 validateNumPartAttributes :: [(Lexeme,Maybe Expression)] -> ValidatorS (SizeAttr Expression)
 validateNumPartAttributes attrs = do
@@ -632,7 +632,7 @@ validateNumPartAttributes attrs = do
       [(L_minNumParts, Just a)] -> return $  (SizeAttr_MinSize a)
       [(L_maxNumParts, Just a)] -> return $  (SizeAttr_MaxSize a)
       [(L_minNumParts, Just a),(L_maxNumParts, Just b)] -> return $  (SizeAttr_MinMaxSize a b)
-      as -> def <* contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
+      as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
 
 
 validateJectivityAttributes :: [(Lexeme,Maybe Expression)] -> ValidatorS JectivityAttr
@@ -647,7 +647,9 @@ validateJectivityAttributes attrs = do
       [(L_injective, _),(L_surjective, _)] -> do
         contextInfo $ UnclassifiedInfo "Inj and Sur can be combined to bijective"
         return $  JectivityAttr_Bijective
-      as ->def <* contextError $ SemanticError $ pack $ "Incompatible attributes jectivity" ++ show as
+      as ->do 
+        void . contextError $ SemanticError $ pack $ "Incompatible attributes jectivity" ++ show as
+        return def
 
 
 validateSetAttributes :: ListNode AttributeNode -> ValidatorS (SetAttr Expression)
@@ -674,7 +676,7 @@ validateMSetAttributes atts = do
                     [(L_minOccur,Just a)] -> return $  (OccurAttr_MinOccur a)
                     [(L_maxOccur, Just a)] -> return $  (OccurAttr_MaxOccur a)
                     [(L_minOccur, Just a),(L_maxOccur, Just b)] -> return $ (OccurAttr_MinMaxOccur a b)
-                    as -> def <* contextError $ SemanticError $ pack $ "Bad args to occurs" ++ show as
+                    as ->do void . contextError $ SemanticError $ pack $ "Bad args to occurs" ++ show as;return def
 
 
 validateFuncAttributes :: ListNode AttributeNode -> ValidatorS (FunctionAttr Expression)
@@ -738,16 +740,18 @@ validateNamedDomainInVariant :: NamedDomainNode -> ValidatorS (Name, TypedDomain
 validateNamedDomainInVariant (NameDomainNode name m_dom) = do
     name' <-  validateName name
     domain' <-case m_dom of
-      Nothing -> return . pure $ DomainInt TagInt [RangeSingle 0]
-      Just (l,d) -> checkSymbols [l] >> validateDomain d
-    return $  (name' ,  domain')
+      Nothing ->  do return . Typed tInt $ DomainInt TagInt [RangeSingle 0]
+      Just (l,d) -> do checkSymbols [l]; validateDomain d
+    return $ (name' ,  domain')
 
 validateNamedDomainInRecord :: NamedDomainNode -> ValidatorS (Name, TypedDomain)
 validateNamedDomainInRecord (NameDomainNode name m_dom) = do
     name' <-  validateName name
     domain' <-case m_dom of
       Just (l,d) -> checkSymbols [l] >> validateDomain d
-      Nothing -> fallback "Dataless RecordMemeber" <* raiseError $ symbolRegion name <!> SemanticError "Dataless not allowed in record"
+      Nothing -> do 
+        raiseError $ symbolRegion name <!> SemanticError "Dataless not allowed in record"
+        (return (fallback "Dataless RecordMemeber"))
     return $  (name', domain')
 
 validateRange :: RangeNode -> ValidatorS (Range Expression)
@@ -764,12 +768,12 @@ validateRange range = case range of
         e2' <-  validateExpression e2 ?=> tInt
         return $  RangeBounded e1' e2'
 
-validateArrowPair :: ArrowPairNode -> ValidatorS (RegionTagged (Typed Expression), RegionTagged (Typed Expression))
+validateArrowPair :: ArrowPairNode -> Validator (RegionTagged (Typed Expression), RegionTagged (Typed Expression))
 validateArrowPair (ArrowPairNode e1 s e2) = do
     checkSymbols [s]
     e1' <-  validateExpression e1
     e2' <-  validateExpression e2
-    return $ (\a b->((symbolRegion e1,a),(symbolRegion e2,b))) e1' e2'
+    return .pure $ (\a b->((symbolRegion e1,a),(symbolRegion e2,b))) e1' e2'
 
 validateExpression :: ExpressionNode -> ValidatorS (Typed Expression)
 validateExpression expr = case expr of
@@ -948,7 +952,7 @@ validatePostfixOp (ApplicationNode args) = do
         let ys = [if underscore == v then Nothing else Just v | x@(Typed _ v) <- args']
         return  $ \ (Typed t x) -> Typed TypeAny $ Op $ MkOpRelationProj $ OpRelationProj x ys
 validatePostfixOp (IndexedNode ln) = do
-        ranges <-validateList_ validateRange ln
+        ranges <-catMaybes <$> validateList_ (f2n validateRange) ln
         let indices = map interpretRange ranges
         return  $ \x -> (foldl (\m f -> f m)) x indices
         where
@@ -1033,14 +1037,14 @@ validatePartitionLiteral ln = do
 
 validateRecordLiteral :: ListNode RecordMemberNode -> ValidatorS (Typed Expression)
 validateRecordLiteral ln = do
-    members <- validateList_ validateRecordMember ln
+    members <- catMaybes <$> validateList_ validateRecordMember ln
     let members' = map (\(x,y) -> (x,untype y)) members
     -- let eType = TypeRecord TypeAny
     return . Typed TypeAny $ mkAbstractLiteral $ AbsLitRecord members'
 
 validateVariantLiteral :: ListNode RecordMemberNode -> ValidatorS (Typed Expression)
 validateVariantLiteral ln = do
-    members <- validateList_ validateRecordMember ln
+    members <- catMaybes <$> validateList_ validateRecordMember ln
     res <- case members of
       [] -> invalid $ symbolRegion ln <!> SemanticError "Variants must contain exactly one member"
       [(n,x)]-> return . todoTypeAny . pure $ mkAbstractLiteral $ AbsLitVariant Nothing n (untype x)
@@ -1048,16 +1052,16 @@ validateVariantLiteral ln = do
     return $ fromMaybe (fallback "bad variant") res
 
 
-validateRecordMember :: RecordMemberNode -> ValidatorS (Name,Typed Expression)
+validateRecordMember :: RecordMemberNode -> Validator (Name,Typed Expression)
 validateRecordMember (RecordMemberNode name lEq expr) = do
     checkSymbols [lEq]
     name' <-  validateName name
     expr' <-  validateExpression expr
-    return $ ( name' , expr')
+    return . pure $ ( name' , expr')
 
 validateFunctionLiteral :: ListNode ArrowPairNode -> ValidatorS (Typed Expression)
 validateFunctionLiteral ln = do
-    pairs <- validateList_ validateArrowPair ln
+    pairs <- catMaybes <$> validateList_ validateArrowPair ln
     let (pl,pr) = unzip pairs
     (lhType,ls) <- typeSplit <$> sameType pl
     (rhType,rs) <- typeSplit <$> sameType pr
@@ -1484,6 +1488,10 @@ data DomainType
     | DomainTypeInt DomainSize
     | DomainTypeTuple [DomainType]
 
+f2n :: (a -> ValidatorS b) -> a ->Validator b
+f2n f a = do 
+    q <- f a 
+    return $ Just q
 
 class Fallback a where
     fallback :: Text -> a
@@ -1502,4 +1510,10 @@ instance Fallback (Maybe a) where
 instance Fallback Name where
     fallback = Name
 
-    
+
+instance Fallback [a] where
+    fallback :: Text -> [a]
+    fallback = const []
+
+instance Fallback AbstractPattern where
+    fallback = Single . fallback

@@ -8,7 +8,7 @@ module Conjure.Language.Parser
     , parseExpr
     , parseDomain
     , parseDomainWithRepr
-    , Pipeline 
+    , Pipeline
     ) where
 
 -- conjure
@@ -63,7 +63,7 @@ runPipeline (parse,val) txt = do
             lexResult <- either (Left . LexErr) Right $ L.runLexer txt
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
             let x = V.runValidator (val parseResult) def{V.typeChecking= ?typeChecking}
-            case x of 
+            case x of
                 (Just m, ds,_) | not $ any V.isError ds -> Right m
                 (_, ves,_) -> Left $ ValidatorError $ text (showDiagnosticsForConsole ves txt)
                 -- Validator (Just res) [] -> Right res
@@ -234,11 +234,11 @@ parseTopLevels = (P.parseTopLevels,V.strict . V.validateProgramTree)
 --             return (RangeSingle x)
 
 parseDomain :: Pipeline DomainNode (Domain () Expression)
-parseDomain = (P.parseDomain,V.strict . V.validateDomain)
+parseDomain = (P.parseDomain,fmap V.untype . V.validateDomain)
 
 
 parseDomainWithRepr :: Pipeline DomainNode (Domain HasRepresentation Expression)
-parseDomainWithRepr = (P.parseDomain,V.strict . V.validateDomainWithRepr)
+parseDomainWithRepr = (P.parseDomain, fmap V.untype . V.validateDomainWithRepr)
 --     -- TODO: uncomment the following to parse (union, intersect and minus) for domains
 --     -- let
 --     --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
@@ -630,7 +630,7 @@ parseDomainWithRepr = (P.parseDomain,V.strict . V.validateDomainWithRepr)
 -- metaVarInE = ExpressionMetaVar
 
 parseExpr :: Pipeline S.ExpressionNode Expression
-parseExpr = (P.parseExpression,V.strict .  (\x -> V.validateExpression x ?=> TypeAny))
+parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> TypeAny)
 --     let
 --         mergeOp op = mkBinOp (lexemeText op)
 
