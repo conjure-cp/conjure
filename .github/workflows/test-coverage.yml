@@ -69,7 +69,7 @@ jobs:
           COVERAGE_DEPLOY_KEY: ${{ secrets.COVERAGE_DEPLOY_KEY }}
         run: |
           mkdir ~/.ssh
-          echo $COVERAGE_DEPLOY_KEY > ~/.ssh/id_rsa
+          printf %s "$COVERAGE_DEPLOY_KEY" > ~/.ssh/id_rsa
           chmod 700 ~/.ssh
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
