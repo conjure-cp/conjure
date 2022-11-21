@@ -57,6 +57,23 @@ printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs t
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
 captureErrors = mapM_ captureError
 
+collapseSkipped :: [ValidatorDiagnostic] -> [ValidatorDiagnostic]
+collapseSkipped [] = []
+collapseSkipped [x] = [x]
+collapseSkipped ((ValidatorDiagnostic regx ex) :(ValidatorDiagnostic regy ey):rs) 
+    | isSkipped ex && isSkipped ey && sameLine (drSourcePos regx) (drSourcePos regy) 
+    = ValidatorDiagnostic (catDr regx regy) (Error $ CustomError "Unexpected characters") : rs
+    where 
+        isSkipped (Error (TokenError (SkippedToken  _))) = True
+        isSkipped _ = False
+        sameLine :: SourcePos -> SourcePos -> Bool
+        sameLine (SourcePos _ l1 _) (SourcePos _ l2 _) = l1 == l2
+        catDr :: DiagnosticRegion -> DiagnosticRegion -> DiagnosticRegion
+        catDr (DiagnosticRegion sp _ o l1) (DiagnosticRegion _ en _ l2) = DiagnosticRegion sp en o (l1+l2)
+        catDr GlobalRegion _ = GlobalRegion
+collapseSkipped (x:xs) = x : collapseSkipped xs
+            
+
 captureError :: ValidatorDiagnostic -> Parser ()
 captureError (ValidatorDiagnostic GlobalRegion message) = do
     let printError = DiagnosticForPrint 0 0 message
@@ -80,7 +97,7 @@ val s = do
 
     case progStruct of
         Left _ -> putStrLn "error"
-        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) def in
+        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) def{typeChecking=True} in
             case qpr of
                 (model, vds,st) -> do
                     print (maybe "" show model)
