@@ -10,11 +10,9 @@ For release versions please see the [releases](https://github.com/conjure-cp/con
 
 [![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
 
-![Building on all platforms](https://github.com/conjure-cp/conjure/actions/workflows/build.yml/badge.svg?branch=master)
+[![Building on all platforms](https://github.com/conjure-cp/conjure/actions/workflows/build.yml/badge.svg)](https://github.com/conjure-cp/conjure/actions/workflows/build.yml)
 
-![Running all tests](https://github.com/conjure-cp/conjure/actions/workflows/test.yml/badge.svg?branch=master)
-
-![Publishing Docker image to ghcr.io](https://github.com/conjure-cp/conjure/actions/workflows/docker-publish.yml/badge.svg?branch=master)
+[![Running all tests](https://github.com/conjure-cp/conjure/actions/workflows/test.yml/badge.svg)](https://github.com/conjure-cp/conjure/actions/workflows/test.yml)
 
 ## Documentation
 
