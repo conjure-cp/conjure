@@ -1,0 +1,57 @@
+name: Building on all platforms
+
+on:
+  push:
+    branches:
+      - master              # run for the master branch
+  pull_request:             # and for PRs
+                            # other branches that want testing must create a PR
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        GHC_VERSION: [8.6]
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Install Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+
+      - name: Install Minion
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
+
+      - name: Simple test
+        shell: bash
+        run: |
+          echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
+          conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
+          cat test.solutions.json
+          diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]' | tr -d '[:space:]') <(cat test.solutions.json | tr -d '[:space:]')

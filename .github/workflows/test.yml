@@ -1,0 +1,65 @@
+name: Running all tests
+
+on:
+  push:
+    branches:
+      - master              # run for the master branch
+  pull_request:             # and for PRs
+                            # other branches that want testing must create a PR
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        GHC_VERSION: [8.6]
+        os: [ubuntu-latest]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Install Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true make
+
+      - name: Install Minion
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
+
+      - name: Install Cadical
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-cadical.sh
+
+      - name: Install Kissat
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-kissat.sh
+
+      - name: Install GNU Parallel
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-gnu-parallel.sh
+
+      - name: Run tests
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin LIMIT_TIME=0 make test
+

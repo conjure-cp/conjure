@@ -27,7 +27,7 @@ install:
 	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
-	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
+	@make stack.yaml
 	@if  [ ${GHC_VERSION} == "head" ] ; then\
 		stack --local-bin-path ${BIN_DIR} setup --resolver nightly;\
 	else\
@@ -54,8 +54,12 @@ test:
 		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
 	fi
 
+stack.yaml:
+	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
+
 .PHONY: preinstall
 preinstall:
+	@make stack.yaml
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
@@ -124,6 +128,8 @@ solvers:
 	@echo "Set the environment variable BIN_DIR to change this location."
 	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
 	@echo ""
+	@echo "Set the environment variable PROCESSES to specify the number of cores to use. Default is 1."
+	@echo ""
 	@echo "Dependencies: cmake and gmp."
 	@if [ `uname` == "Darwin" ]; then echo "You can run: 'brew install cmake gmp' to install them."; fi
 	@echo ""
@@ -141,3 +147,4 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
 	@etc/build/silent-wrapper.sh etc/build/install-yices.sh
 	@etc/build/silent-wrapper.sh etc/build/install-z3.sh
+	@if ls *.stderr *.stdout > /dev/null 2> /dev/null; then echo "At least one solver didn't build successfully."; exit 1; fi

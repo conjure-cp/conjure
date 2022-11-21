@@ -1,0 +1,49 @@
+name: Building all solvers
+
+on:
+  push:
+    branches:
+      - master              # run for the master branch
+  pull_request:             # and for PRs
+                            # other branches that want testing must create a PR
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}
+
+      - name: Setting PATH
+        shell: bash
+        run: |
+          echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+          echo "/usr/lib/ccache" >> ${GITHUB_PATH}
+          echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
+
+      - name: Installing dependencies (gperf) on Linux
+        shell: bash
+        run: sudo apt-get install -y gperf
+        if: runner.os == 'Linux'
+
+      - name: Installing dependencies (gperf) on macOS
+        shell: bash
+        run: brew install gperf
+        if: runner.os == 'macOS'
+
+      - name: Building solvers
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
+

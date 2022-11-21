@@ -1,14 +1,20 @@
 
 # Conjure
 
-[![License BSD3](https://img.shields.io/badge/license-BSD3-brightgreen.svg)](http://opensource.org/licenses/BSD-3-Clause)
-[![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
-[![Azure Pipelines Build Status](https://dev.azure.com/conjure-testing/conjure/_apis/build/status/conjure-cp.conjure?branchName=master)](https://dev.azure.com/conjure-testing/conjure/_build/latest?definitionId=1&branchName=master)
-
 Conjure is an automated modelling tool for Constraint Programming.
 
 This repository contains the development version of the tool.
 For release versions please see the [releases](https://github.com/conjure-cp/conjure/releases) section.
+
+[![License BSD3](https://img.shields.io/badge/license-BSD3-brightgreen.svg)](http://opensource.org/licenses/BSD-3-Clause)
+
+[![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
+
+![Building on all platforms](https://github.com/conjure-cp/conjure/actions/workflows/build.yml/badge.svg?branch=master)
+
+![Running all tests](https://github.com/conjure-cp/conjure/actions/workflows/test.yml/badge.svg?branch=master)
+
+![Publishing Docker image to ghcr.io](https://github.com/conjure-cp/conjure/actions/workflows/docker-publish.yml/badge.svg?branch=master)
 
 ## Documentation
 
