@@ -140,7 +140,7 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-kissat.sh
 	@etc/build/silent-wrapper.sh etc/build/install-chuffed.sh
 	@etc/build/silent-wrapper.sh etc/build/install-gecode.sh
-	# @etc/build/silent-wrapper.sh etc/build/install-glucose.sh
+	@etc/build/silent-wrapper.sh etc/build/install-glucose.sh
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minion.sh
 	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
