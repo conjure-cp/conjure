@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - master              # run for the master branch
+    paths:
+      - etc/build/install*.sh
+      - Makefile
   pull_request:             # and for PRs
+    paths:
+      - etc/build/install*.sh
+      - Makefile
                             # other branches that want testing must create a PR
 
 jobs:

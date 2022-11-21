@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - master              # run for the master branch only
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - tests/**
+      - etc/build/**
 
 jobs:
 

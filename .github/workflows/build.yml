@@ -4,7 +4,17 @@ on:
   push:
     branches:
       - master              # run for the master branch
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - etc/build/**
   pull_request:             # and for PRs
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - etc/build/**
                             # other branches that want testing must create a PR
 
 jobs:
