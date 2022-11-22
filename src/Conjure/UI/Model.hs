@@ -1776,13 +1776,12 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
             addStructurals :: (MonadLog m, MonadFailDoc m, NameGen m, EnumerateDomain m)
                            => Model -> m Model
             addStructurals
-                | forg == Given = return
                 | usedBefore = return
                 | otherwise = \ m -> do
                     structurals <- mkStructurals
                     return $ if null structurals
                         then m
-                        else m { mStatements = mStatements m ++ [SuchThat structurals] }
+                        else m { mStatements = mStatements m ++ [SuchThat structurals | forg == Find] ++ [Where structurals | forg == Given] }
 
             channels =
                 [ make opEq this that
