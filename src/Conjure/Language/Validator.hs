@@ -36,7 +36,7 @@ import Conjure.Language.Expression.Op
       mkBinOp,
       Op(MkOpRelationProj, MkOpSlicing, MkOpIndexing),
       OpRelationProj(OpRelationProj),
-      OpIndexing(OpIndexing), OpType (..), OpAttributeAsConstraint (OpAttributeAsConstraint),
+      OpIndexing(OpIndexing), OpType (..), OpAttributeAsConstraint (OpAttributeAsConstraint), OpAnd (OpAnd),
       )
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 import Conjure.Language.AST.Reformer (Flattenable (flatten))
@@ -48,6 +48,8 @@ import Control.Monad.Except (runExcept)
 import Conjure.Language.TypeOf (TypeOf(typeOf))
 import Control.Applicative
 import Conjure.Language.Expression.OpTypes (binOpType)
+import Control.Exception (evaluate)
+
 
 
 class WithRegion a where
@@ -83,7 +85,7 @@ typeOf_ (Typed t _) = t
 untypeAs :: Type -> Typed a -> ValidatorS a
 untypeAs r ((Typed t a)) = if let ?typeCheckerMode=StronglyTyped in typeUnify r t
                             then return a
-                            else contextError (TypeError r t) >> return a
+                            else contextTypeError (TypeError r t) >> return a
 
 typeAs :: Type -> Maybe a -> Maybe (Typed a)
 typeAs t (Just a) = Just $ Typed t a
@@ -109,7 +111,11 @@ data ErrorType
     | SyntaxError Text
     | SemanticError Text
     | CustomError Text
+    | SkippedTokens
+    | MissingArgsError Int Int
+    | UnexpectedArg
     | TypeError Type Type -- Expected, got
+    | ComplexTypeError Text Type -- Expected, got
     | InternalError --Used to explicitly tag invalid pattern matches
     | InternalErrorS Text -- Used for giving detail to bug messages
     deriving  (Show,Eq,Ord)
@@ -283,7 +289,7 @@ validateStatement (SuchThatStatement stsn) = validateSuchThatStatement stsn
 validateStatement (WhereStatement wsn) = validateWhereStatement wsn
 validateStatement (ObjectiveStatement osn) = validateObjectiveStatement osn
 validateStatement (HeuristicStatement lt exp) = validateHeuristicStatement lt exp
-validateStatement (UnexpectedToken lt) = return [] <* (invalid $ lt <!> CustomError "Unexpected") --TODO address as part of skip token refactor
+validateStatement (UnexpectedToken lt) = return [] <* (invalid $ lt <!> TokenError  lt) --TODO address as part of skip token refactor
 
 validateHeuristicStatement :: LToken -> ExpressionNode -> ValidatorS [Statement]
 validateHeuristicStatement lt exp = do
@@ -873,7 +879,7 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             exp <- validateExpression en
             let (t,e) = typeSplit exp
             apats <- unifyPatterns t ps
-            return [Generator $ GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet (untype exp)) | pat <- apats]
+            return [Generator $ GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet (e)) | pat <- apats]
         validateQuantificationOver pats ( QuantifiedMemberOfNode lt en ) = do
             checkSymbols [lt]
             ps <- sequenceElems pats
@@ -906,14 +912,15 @@ validateDomainExpression (DomainExpressionNode  l1 dom l2) = do
 --TODO fix function types inc lookups etc
 validateFunctionApplication :: LToken -> ListNode ExpressionNode -> ValidatorS (Typed Expression)
 validateFunctionApplication name args = do
-    args' <- map (untype.snd) <$> validateList validateExpression args
+    args' <-  validateList validateExpression args
     Just name' <-  validateSymbol name
-    return . Typed TypeAny $ do
-        let n = name'
-        let a = args'
-        case (n,a) of
-            (L_image,[y,z]) -> Op $  MkOpImage $ OpImage y z
-            _ ->  mkOp (FunctionOp n) a
+    validateFuncOp name' args'
+    -- return . Typed TypeAny $ do
+    --     let n = name'
+    --     let a = args'
+    --     case (n,a) of
+    --         (L_image,[y,z]) -> Op $  MkOpImage $ OpImage y z
+    --         _ ->  mkOp (FunctionOp n) a
 
 
 validateIdentifierExpr :: NameNode -> ValidatorS (Typed Expression)
@@ -1033,7 +1040,7 @@ getIndexingType (TypeList _) = return tInt
 getIndexingType (TypeTuple _) = return tInt
 getIndexingType t@(TypeRecord _) = return t
 getIndexingType t@(TypeVariant _) = return t
-getIndexingType t = do 
+getIndexingType t = do
     contextTypeError (CustomError . pack $ "Type " ++ (show $ pretty t) ++ " does not support indexing")
     return TypeAny
 
@@ -1042,10 +1049,10 @@ getIndexedType (TypeMatrix _ ms) _  = return ms
 getIndexedType (TypeSequence t) _   = return t
 getIndexedType (TypeTuple ts) ex      = do
     case intOut "Index" (untype ex) of
-        Left _ -> do 
+        Left _ -> do
             (void . contextTypeError $ CustomError $ "Non constant value indexing tuple")
-            return TypeAny  
-        Right v | v <= 0 || v > toInteger ( length ts) -> do 
+            return TypeAny
+        Right v | v <= 0 || v > toInteger ( length ts) -> do
             (contextTypeError $ CustomError . pack $ "Tuple index "++ show v ++ "out of bounds" )
             return TypeAny
         Right v -> return $ ts `at` (fromInteger v -1)
@@ -1252,7 +1259,7 @@ raiseError :: ValidatorDiagnostic -> ValidatorS ()
 raiseError e = tell [e]
 
 raiseTypeError :: ValidatorDiagnostic -> ValidatorS ()
-raiseTypeError e = do 
+raiseTypeError e = do
     tc <- gets typeChecking
     unless (not tc) $ raiseError e
 makeTupleLiteral :: [Typed Expression] -> ValidatorS (Typed Expression)
@@ -1479,12 +1486,26 @@ sameType xs@(x:_) = do
     xs' <- mapM (unifyTypes t') xs
     return $ Typed t' xs'
 
+typesUnifyS :: [Type] -> Bool
+typesUnifyS = let ?typeCheckerMode=StronglyTyped in typesUnify
+
+mostDefinedS :: [Type] -> Type
+mostDefinedS =  let ?typeCheckerMode=StronglyTyped in mostDefined
+
 unifyTypes :: Type -> RegionTagged (Typed a) -> ValidatorS a
 unifyTypes _ (r,Typed TypeAny a) = do raiseError (r /!\ UnclassifiedWarning "TypeAny used") >> return a
 unifyTypes t (r,Typed t' a) = do
     let ?typeCheckerMode = StronglyTyped
-    if typesUnify [t', t] then pure () else raiseError $ r <!> TypeError t t'
+    if typesUnify [t', t] then pure () else raiseTypeError $ r <!> TypeError t t'
     return a
+
+unifyTypesFailing :: Type -> RegionTagged (Typed a) -> Validator a
+unifyTypesFailing _ (r,Typed TypeAny a) = do raiseError (r /!\ UnclassifiedWarning "TypeAny used") >> (return $ Just a)
+unifyTypesFailing t (r,Typed t' a) = do
+    tc <- gets typeChecking
+    let ?typeCheckerMode = StronglyTyped
+    if not tc || typesUnify [t', t]  then return $ Just a else invalid (r <!> TypeError t t')
+
 
 scoped :: ValidatorS a -> ValidatorS a
 scoped m = do
@@ -1598,3 +1619,453 @@ instance Fallback [a] where
 
 instance Fallback AbstractPattern where
     fallback = Single . fallback
+
+type FuncOpDec = (Int)
+
+
+funcOpBuilder :: Lexeme -> [Arg] -> ValidatorS (Typed Expression)
+funcOpBuilder l = (functionOps l) (mkOp $ FunctionOp l)
+-- functionOps l@L_fAnd = (validateArgList [isLogicalContainer],const TypeBool)
+functionOps :: Lexeme -> ([Expression] -> Expression) -> [Arg] -> ValidatorS (Typed Expression)
+functionOps l = case l of
+    L_fAnd -> unFunc isLogicalContainer (pure . const TypeBool)
+    L_fOr ->   unFunc isLogicalContainer (pure . const TypeBool)
+    L_fXor ->  unFunc isLogicalContainer (pure . const TypeBool)
+    L_Sum ->   unFunc sumArgs (pure . const tInt)
+    L_Product ->   unFunc sumArgs (pure . const tInt)
+    L_true -> unFunc anyType (pure . const TypeBool)
+    L_toInt -> unFunc (only TypeBool) (pure . const tInt)
+    L_makeTable -> unFunc (only TypeBool) (pure . const TypeBool)
+    L_table -> biFunc tableArgs (const2 TypeBool)
+    L_gcc -> triFunc (each3 listInt) (const3 TypeBool)
+    L_atleast -> triFunc (each3 listInt) (const3 TypeBool)
+    L_atmost -> triFunc (each3 listInt) (const3 TypeBool)
+    L_defined -> unFunc funcSeq funcDomain
+    L_range -> unFunc funcSeq funcRange
+    L_restrict -> biFunc (const.const todo) (const2 TypeAny) --TODO
+    L_allDiff -> unFunc listOrMatrix (const $ pure TypeBool)
+    L_alldifferent_except -> biFunc (indep (enumerable) listOrMatrix) (const2 TypeBool)
+    L_catchUndef ->  biFunc unifies (\a b -> pure $ mostDefinedS $ map typeOf_ $ catMaybes [a,b])
+    L_dontCare -> unFunc anyType (const $ pure TypeBool)
+    L_toSet -> unFunc toSetArgs typeToSet
+    L_toMSet -> unFunc toMSetArgs typeToMSet
+    L_toRelation -> unFunc func typeToRelation
+    L_max -> unFunc minMaxArgs (fmap typeOf_) --TODO
+    L_min -> unFunc minMaxArgs (fmap typeOf_) --TODO
+    L_image -> biFunc imageArgs (\a -> const $ TypeSet <$> funcRange a)
+    L_transform -> biFunc transformArgs (const (typeOf_ <$>))
+    L_imageSet -> biFunc imSetArgs (\a -> const $ TypeSet <$> funcDomain a)
+    L_preImage -> biFunc preImageArgs (\a -> const $ TypeSet <$> funcDomain a)
+    L_inverse -> biFunc inverseArgs (const2 TypeBool)
+    L_freq -> biFunc freqArgs (const2 tInt)
+    L_hist -> unFunc histArgs histType
+    L_parts -> unFunc part partsType
+    L_together -> biFunc setPartArgs (const2 TypeBool)
+    L_apart -> biFunc setPartArgs (const2 TypeBool)
+    L_party -> biFunc partyArgs partyType
+    L_participants -> unFunc part partInner
+    L_active -> biFunc activeArgs (const2 TypeBool)
+    L_pred -> unFunc enumerable enumerableType
+    L_succ -> unFunc enumerable enumerableType
+    L_factorial -> unFunc (only tInt) (const $ pure tInt)
+    L_powerSet -> unFunc set powerSetType
+    L_concatenate -> unFunc concatArgs concatType
+    L_flatten -> \ b a -> case a of
+                            [] -> (unFunc (unaryFlattenArgs) (flattenType Nothing)) b a
+                            [_] -> (unFunc (unaryFlattenArgs) (flattenType Nothing)) b a
+                            xs -> (biFunc (binaryFlattenArgs) (\(getNum->a) -> flattenType a)) (b) a
+    _ -> error "Unknown"
+    where
+        todo = return $ pure ()
+        valid = return $ pure ()
+        const2 = const.const . pure
+        const3 = const.const.const . pure
+        getNum :: Maybe (Typed Expression) -> Maybe Int
+        getNum (Just(Typed _ x)) = case intOut "" x of
+                                    Nothing -> Nothing
+                                    Just n -> pure $ fromInteger n
+        getNum _ = Nothing
+        each3 f a b c= f a >> f b >> f c
+        anyType = const . return $ Just  ()
+        indep :: (Arg -> Validator ()) -> (Arg -> Validator ()) -> (Arg -> Arg -> Validator ())
+        indep f1 f2 a b = do
+            v1 <- f1 a
+            v2 <- f2 b
+            if null $ catMaybes $ [v1,v2] then return $ pure () else return Nothing
+        binaryFlattenArgs :: Arg -> Arg -> Validator ()
+        binaryFlattenArgs (r1,d) b = do
+            off <- case intOut "" (untype d) of
+                        Just (fromInteger->a) | a > 0 -> return $ Just a
+                        _ -> invalid $ r1 <!> CustomError "1st arg must be a constant positive int"
+            let ref = map (const TypeList) [1..fromMaybe 1 (off)]
+            let ref' = foldr id TypeAny ref
+            r <- unifyTypesFailing ref' b
+            return $ if null off || null r then  Nothing else Just ()
+        unaryFlattenArgs :: Arg -> Validator ()
+        unaryFlattenArgs (r,typeOf_->(TypeMatrix _ _)) = valid  
+        unaryFlattenArgs (r,typeOf_->(TypeList _)) = valid
+        unaryFlattenArgs (r,typeOf_->TypeAny) = valid
+        unaryFlattenArgs (r,typeOf_->t) = invalid $ r <!> ComplexTypeError "List or Matrix " t 
+
+        concatType :: Maybe (Typed Expression) -> Maybe Type
+        concatType (fmap typeOf_->Just(TypeMatrix _ (TypeList t))) = Just $ TypeList t
+        concatType (fmap typeOf_->Just(TypeMatrix _ (TypeMatrix _ t))) = Just $ TypeList t
+        concatType (fmap typeOf_->Just(TypeList (TypeList t))) = Just $ TypeList t
+        concatType (fmap typeOf_->Just(TypeList (TypeMatrix _ t))) = Just $ TypeList t
+        concatType _ = Just $ TypeList TypeAny
+        concatArgs :: Arg -> Validator ()
+        concatArgs = const todo
+        tableArgs :: Arg -> Arg -> Validator ()
+        tableArgs = const . const todo
+        toMSetArgs :: Arg -> Validator ()
+        toMSetArgs (r,typeOf_-> a) = case a of
+          TypeAny -> return $ pure ()
+          TypeList _ -> return $ pure ()
+          TypeMatrix {} -> return $ pure ()
+          TypeMSet {} -> return $ pure ()
+          TypeSet {} -> return $ pure ()
+          TypeFunction {} -> return $ pure ()
+          TypeRelation {} -> return $ pure ()
+          _ -> invalid $ r <!> ComplexTypeError "Matrix ,list,function,relation,mset,set " a
+        toSetArgs :: Arg -> Validator ()
+        toSetArgs (r,typeOf_-> a) = case a of
+          TypeAny -> return $ pure ()
+          TypeList _ -> return $ pure ()
+          TypeMatrix {} -> return $ pure ()
+          TypeMSet {} -> return $ pure ()
+          TypeFunction {} -> return $ pure ()
+          TypeRelation {} -> return $ pure ()
+          _ -> invalid $ r <!> ComplexTypeError "Matrix ,list,function,relation,mset " a
+        listOrMatrix :: Arg -> Validator ()
+        listOrMatrix (r,typeOf_-> a) = case a of
+          TypeAny -> return $ pure ()
+          TypeList _ -> return $ pure ()
+          TypeMatrix {} -> return $ pure ()
+          _ -> invalid $ r <!> ComplexTypeError "Matrix or list" a
+        freqArgs :: Arg -> Arg -> Validator ()
+        freqArgs (r1,a) (r2,b) = do
+            let tb = typeOf_ b
+            let (rt,ti) = case typeOf_ a of
+                    TypeMatrix idx ms -> (TypeMatrix idx md,md) where md = mostDefinedS [tb,ms]
+                    TypeMSet ms -> (TypeMSet md,md) where md = mostDefinedS [tb,ms]
+                    _ -> (TypeMatrix tInt tb,tb)
+            a' <- unifyTypesFailing rt (r1,a)
+            b' <- unifyTypesFailing ti (r2,b)
+            return $ if null a' || null b' then  Nothing else Just ()
+
+        unifies :: Arg -> Arg -> Validator ()
+        unifies a b = do
+            let md = mostDefinedS $ map (typeOf_.unregion) [a,b]
+            a' <- unifyTypesFailing md a
+            b' <- unifyTypesFailing md b
+            return $ if null a' || null b' then Nothing else Just ()
+        func :: Arg -> Validator Type
+        func (_,Typed (TypeSet t) _) = return $ pure t
+        func (_,Typed TypeAny _) = return $ pure TypeAny
+        func (r,Typed t _) = invalid $ r <!> TypeError (TypeFunction TypeAny TypeAny) t
+        set :: Arg -> Validator Type
+        set (_,Typed (TypeSet t) _) = return $ pure t
+        set (_,Typed TypeAny _) = return $ pure TypeAny
+        set (r,Typed t _) = invalid $ r <!> TypeError (TypeSet TypeAny) t
+
+        powerSetType (Just (Typed (TypeSet i) _)) = Just $ TypeSet (TypeSet i)
+        powerSetType _ = Nothing
+
+        only t (r,typeOf_->t')= if t'==TypeAny || t == t' then return $ Just t else invalid $ r <!> TypeError t t'
+
+        listInt (r,typeOf_->t') = case t' of
+          TypeAny -> return $ Just t'
+          TypeList TypeInt{} -> return $ Just t'
+          TypeMatrix ty TypeInt{} -> return $ Just t'
+          _ -> invalid $ r <!> ComplexTypeError "Matrix or list of int or enum" t'
+        partInner :: Maybe (Typed Expression) -> Maybe Type
+        partInner (fmap typeOf_->Just (TypePartition a)) = Just $ TypeSet a
+        partInner _ = Just $ TypeSet TypeAny
+
+        imSetArgs :: Arg -> Arg -> Validator ()
+        imSetArgs (r1,a) (r2,b) = do
+            let t = case (typeOf_ a,typeOf_ b) of
+                    (TypeFunction i _,tb) -> mostDefinedS [i,tb]
+                    (TypeSequence _,_) -> tInt
+                    (_,tb ) -> tb
+            a' <- unifyTypesFailing (TypeFunction t TypeAny) (r1,a)
+            b' <- unifyTypesFailing t (r2,b)
+            return $ if null a' || null b' then  Nothing else Just ()
+        preImageArgs :: Arg -> Arg -> Validator ()
+        preImageArgs (r1,a) (r2,b) = do
+            let t = case (typeOf_ a,typeOf_ b) of
+                    (TypeFunction _ i,tb) -> mostDefinedS [i,tb]
+                    (TypeSequence i,_) -> i
+                    (_,tb ) -> tb
+            a' <- unifyTypesFailing (TypeFunction TypeAny t) (r1,a)
+            b' <- unifyTypesFailing t (r2,b)
+            return $ if null a' || null b' then  Nothing else Just ()
+
+        partyArgs :: Arg -> Arg -> Validator ()
+        partyArgs (r1,a) (r2,b) = do
+            let t = case (typeOf_ a,typeOf_ b) of
+                    (TypePartition ta,tb) -> mostDefinedS [ta,tb]
+                    (_,tb ) -> tb
+            a' <- unifyTypesFailing (TypePartition t) (r1,a)
+            b' <- unifyTypesFailing (t) (r2,b)
+            return $ if null a' || null b' then  Nothing else Just ()
+
+        inverseArgs :: Arg -> Arg -> Validator ()
+        inverseArgs (r1,a) (r2,b) = do
+            let (fi,fo) = case (typeOf_ a,typeOf_ b) of
+                    (TypeFunction fi fo,TypeFunction gi go) -> (mostDefinedS [fi,go],mostDefinedS [fo,gi])
+                    (TypeFunction fi fo,_ ) -> (fi,fo)
+                    (_,TypeFunction gi go) -> (gi,go)
+                    _ -> (TypeAny,TypeAny)
+            a' <- unifyTypesFailing (TypeFunction fi fo) (r1,a)
+            b' <- unifyTypesFailing (TypeFunction fo fi) (r2,b)
+            return $ if null a' || null b' then  Nothing else Just ()
+        setPartArgs :: Arg -> Arg -> Validator ()
+        setPartArgs (r1,a) (r2,b) = do
+            let t  = case (typeOf_ a,typeOf_ b) of
+                    (TypeSet st,TypePartition pt) -> mostDefinedS [st,pt]
+                    (TypeSet st,_) -> st
+                    (_,TypePartition ts) -> ts
+                    _ -> TypeAny
+            a' <- unifyTypesFailing (TypeSet t) (r1,a)
+            b' <- unifyTypesFailing (TypePartition t) (r2,b)
+            return $ if null a' || null b' then  Nothing else Just ()
+
+        partyType ::  Maybe (Typed Expression) ->Maybe (Typed Expression) -> Maybe Type
+        partyType a b = do
+            let at = case typeOf_ <$> a of
+                        Just (TypePartition t) -> t
+                        _ -> TypeAny
+            let bt = maybe TypeAny typeOf_ b
+            return $ TypeSet $ mostDefinedS [at,bt]
+        partsType ::  Maybe (Typed Expression) -> Maybe Type
+        partsType (fmap typeOf_->Just (TypePartition a)) = Just $ TypeSet $ TypeSet a
+        partsType (fmap typeOf_->Just TypeAny) = Just $ TypeSet $ TypeSet TypeAny
+        partsType _ = Nothing
+        minMaxArgs :: Arg -> Validator ()
+        minMaxArgs a = return $ pure ()
+
+        transformArgs :: Arg -> Arg -> Validator ()
+        transformArgs a b = do
+            return $ pure ()
+        activeArgs :: Arg -> Arg -> Validator ()
+        activeArgs (r,(typeOf_->t)) b = do
+            return $ pure ()
+            --TODO fill in properly
+            -- first is Variant
+            -- second is name in variant
+        typeToSet :: Maybe (Typed Expression) -> Maybe Type
+        typeToSet (Just (typeOf_->t)) = TypeSet <$> tMembers t
+        typeToSet _ = Nothing
+        typeToMSet :: Maybe (Typed Expression) -> Maybe Type
+        typeToMSet (Just (typeOf_->t)) = TypeMSet <$> tMembers t
+        typeToMSet _ = Nothing
+        typeToRelation :: Maybe (Typed Expression) -> Maybe Type
+        typeToRelation (Just(typeOf_->(TypeFunction i j))) = Just $ TypeRelation [i,j]
+        typeToRelation (Just(typeOf_->TypeAny)) = Just $ TypeRelation [TypeAny,TypeAny]
+        typeToRelation _ = Nothing
+        tMembers t = case t of
+                        TypeAny ->  Just TypeAny
+                        TypeList ty -> Just ty
+                        TypeMatrix _ i -> Just i
+                        TypeSet ty -> Just ty
+                        TypeMSet ty -> Just ty
+                        TypeFunction i j -> Just $ TypeTuple [i,j]
+                        TypeRelation tys -> Just $ TypeTuple tys
+                        _ -> Nothing
+
+        imageArgs :: Arg -> Arg -> Validator ()
+        imageArgs (r1,typeOf_->t1) r2 = do
+            Just from <- case t1 of
+                TypeAny -> return $ Just TypeAny
+                TypeFunction a _ -> return $Just a
+                TypeSequence _ -> return $Just tInt
+                _ -> (return Nothing) <* (raiseTypeError $ (r1 <!> ComplexTypeError "Function or Sequence" t1))
+            _ <- unifyTypes from r2
+            return $ pure ()
+
+        sumArgs :: Arg -> Validator ()
+        sumArgs (r,typeOf_->t') = do
+            t <- case t' of
+                TypeAny -> return TypeAny
+                TypeList t -> return t
+                TypeMatrix _ t -> return t
+                TypeSet t -> return t
+                TypeMSet t -> return t
+                _ -> do
+                    (raiseTypeError $ r <!> ComplexTypeError "Matrix or Set" t')
+                    fail ""
+            case t of
+              TypeAny -> return $ pure ()
+              TypeInt TagInt -> return $ pure ()
+              _ -> return Nothing <* raiseTypeError (r <!> ComplexTypeError "Integer elements" t)
+        funcSeq :: Arg -> Validator ()
+        funcSeq (r,typeOf_->t') = case t' of
+            TypeAny -> return $ pure ()
+            TypeSequence _ -> return $ pure ()
+            TypeFunction _ _ -> return $ pure ()
+            _ -> invalid $ r <!> ComplexTypeError "Function or Sequence" t'
+        funcDomain :: Maybe (Typed a) -> Maybe Type
+        funcDomain (Just (typeOf_->(TypeFunction a _))) = Just a
+        funcDomain (Just (typeOf_->(TypeSequence _))) = Just tInt
+        funcDomain _ = Nothing
+        funcRange :: Maybe (Typed a) -> Maybe Type
+        funcRange (Just (typeOf_->(TypeFunction _ b))) = Just b
+        funcRange (Just (typeOf_->((TypeSequence b)))) = Just b
+        funcRange _ = Nothing
+        part :: Arg -> Validator ()
+        part (r,typeOf_->t) = case t of
+            TypeAny -> valid
+            TypePartition _ -> return $ pure ()
+            _ -> invalid $ r <!> TypeError (TypePartition TypeAny) t
+
+        histArgs :: Arg -> Validator ()
+        histArgs (r,typeOf_->a) = case a of
+                            TypeMSet _ -> return $ pure ()
+                            TypeList _ -> return $ pure ()
+                            TypeMatrix _ _ -> return $ pure ()
+                            TypeAny -> return $ pure ()
+                            _ -> invalid $ r <!> ComplexTypeError "Matrix, List or MSet" a
+        histType ::  Maybe (Typed Expression) -> Maybe Type
+        histType (Just (Typed (TypeMSet a) _ )) = Just $ TypeMatrix tInt $ TypeTuple [a,tInt]
+        histType (Just (Typed (TypeMatrix _ a) _ )) = Just $ TypeMatrix tInt $ TypeTuple [a,tInt]
+        histType (Just (Typed (TypeList a) _ )) = Just $ TypeMatrix tInt $ TypeTuple [a,tInt]
+        histType _ = Just $ TypeMatrix tInt $ TypeTuple [TypeAny,tInt]
+        enumerable :: Arg -> Validator ()
+        enumerable (r,typeOf_->t) = case t of
+            TypeAny -> return $ pure ()
+            TypeInt TagUnnamed{} -> invalid $ r <!> CustomError "Anonymous enums are not explictly enumerable"
+            TypeInt _ -> return $ pure ()
+            TypeEnum{} -> return $ pure ()
+            TypeBool -> return $ pure ()
+            _ -> invalid $ r <!> ComplexTypeError "int enum or bool" t
+        enumerableType :: Maybe (Typed Expression) -> Maybe Type
+        enumerableType (Just (Typed t@(TypeInt TagInt) _)) = Just t
+        enumerableType (Just (Typed t@(TypeInt (TagEnum _)) _)) = Just t
+        enumerableType (Just (Typed t@(TypeEnum{}) _)) = Just t
+        enumerableType _ = Nothing
+
+
+flattenType :: Maybe Int -> Maybe (Typed Expression) -> Maybe Type
+flattenType (Just n) (Just (Typed a _ )) | n < 0 = Just a
+flattenType (Just n) (Just (Typed (TypeList m) e )) = flattenType (Just (n-1)) (Just (Typed m e))
+flattenType (Just n) (Just (Typed (TypeMatrix _  m) e )) = flattenType (Just (n-1)) (Just (Typed m e))
+
+flattenType Nothing (Just (Typed (TypeMatrix _  m) e )) = flattenType Nothing (Just (Typed m e))
+flattenType Nothing (Just (Typed (TypeList  m) e )) = flattenType Nothing (Just (Typed m e))
+flattenType Nothing (Just (Typed TypeAny _)) = Just $ TypeList TypeAny
+flattenType _ _ = Just $ TypeList TypeAny
+
+validateFuncOp :: Lexeme -> [RegionTagged (Typed Expression)] -> ValidatorS (Typed Expression)
+validateFuncOp l args = do
+    let b = funcOpBuilder l
+    b args
+    -- case argCheck of
+    --   Nothing -> return $ Typed  (r []) $ fallback "arg fail"
+    --   Just tys -> return $ Typed (r tys)(b $ map untype tys)
+
+isOfType :: Type -> RegionTagged (Typed Expression) -> ValidatorS Bool
+isOfType t (r,v) = setContext r >> return v ?=> t  >> (return $ typesUnifyS [t,typeOf_ v])
+
+isLogicalContainer :: RegionTagged (Typed Expression) -> Validator ()
+isLogicalContainer (r,Typed t e) = do
+    case t of
+      TypeAny -> return $ pure ()
+      TypeList TypeAny -> return $ pure ()
+      TypeList TypeBool -> return $ pure ()
+      TypeMatrix _ TypeAny -> return $ pure ()
+      TypeMatrix _ TypeBool -> return $ pure ()
+      TypeSet TypeAny -> return $ pure ()
+      TypeMSet TypeBool -> return $ pure ()
+      _ -> invalid $ r <!> ComplexTypeError "Collection of boolean" t
+
+
+-- validateArgList :: [RegionTagged (Typed Expression) -> ValidatorS Bool] -> [RegionTagged (Typed Expression)] -> Validator [Typed Expression]
+-- validateArgList ps args | length args < length ps = do invalid $ args <!> MissingArgsError (length ps)
+-- validateArgList ps args = do
+--     let ps' = ps ++ repeat argOverflow
+--     xs <- zipWithM id ps' args
+--     return (if and xs then  Just $ map unregion  args else Nothing)
+
+-- argOverflow :: RegionTagged a -> ValidatorS Bool
+-- argOverflow (region,_) = do
+--     setContext region
+--     void . contextError $ CustomError "Extra Args"
+--     return False
+
+type Arg = RegionTagged (Typed Expression)
+unFunc ::  (Arg -> Validator a) --Arg validator
+        -> (Maybe (Typed Expression) -> Maybe Type) --typeEvaluator
+        -> ([Expression]->Expression)  --mkOp or similar
+        -> [Arg] -> ValidatorS (Typed Expression)
+unFunc argVal t f args = do
+    (v,ts) <- case args of
+        [] -> do tooFewArgs 1 0 >> return (Nothing,Nothing)
+        [x] -> do
+            r<- argVal x
+            tc <- gets typeChecking
+            let result = case r of
+                    Nothing | tc -> Nothing
+                    _ -> Just $ map (untype . unregion) [x]
+            return (result,(Just $ unregion x))
+        (x:rs) -> do
+            tooManyArgs rs
+            r <- argVal x
+            let result =case r of
+                  Nothing -> Nothing
+                  Just _ -> Just $ map (untype . unregion) [x]
+            return (result,(Just $ unregion x))
+    let res = maybe (fallback "argFail")  f v
+    return $ Typed (fromMaybe TypeAny $ t ts) res
+biFunc :: (Arg -> Arg -> Validator a) -> (Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe Type) -> ([Expression]->Expression)  -> [Arg]-> ValidatorS (Typed Expression)
+biFunc argVal t f args = do
+    (v,ts) <- case args of
+        [] -> do tooFewArgs 2 0 >> return (Nothing,(Nothing,Nothing))
+        [x] -> do tooFewArgs 2 1 >> return (Nothing,(Just $ unregion x,Nothing))
+        [x,y] -> do
+            r <- argVal x y
+            tc <- gets typeChecking
+            let result = case r of
+                    Nothing | tc -> Nothing
+                    _ -> Just $ map (untype . unregion) [x,y]
+            return (result,(Just (unregion x) , Just (unregion y)))
+        (x:y:rs) -> do
+            tooManyArgs rs
+            r <- argVal x y
+            let result =case r of
+                  Nothing -> Nothing
+                  Just _ -> Just $ map (untype . unregion) [x,y]
+            return (result,(Just (unregion x) , Just (unregion y)))
+    let res = maybe (fallback "argFail")  f v
+    return $ Typed (fromMaybe TypeAny $ uncurry t ts) res
+
+triFunc :: (Arg  -> Arg -> Arg -> Validator a) -> (Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe Type) -> ([Expression]->Expression)  -> [Arg]-> ValidatorS (Typed Expression)
+triFunc argVal t f args = do
+    (v,ts) <- case args of
+        [] -> do tooFewArgs 3 0 >> return (Nothing,(Nothing,Nothing,Nothing))
+        [x] -> do tooFewArgs 3 1 >> return (Nothing,(Just $ unregion x,Nothing,Nothing))
+        [x,y] -> do tooFewArgs 3 2 >> return (Nothing,(Just $ unregion x,Just $ unregion y,Nothing))
+        [x,y,z] -> do
+            r <- argVal x y z
+            tc <- gets typeChecking
+            let result = case r of
+                    Nothing | tc -> Nothing
+                    _ -> Just $ map (untype . unregion) [x,y,z]
+            return (result,(Just (unregion x) , Just (unregion y), Just (unregion z)))
+        (x:y:z:rs) -> do
+            tooManyArgs rs
+            r <- argVal x y z
+            let result =case r of
+                    Nothing -> Nothing
+                    Just _ -> Just $ map (untype . unregion) [x,y,z]
+            return (result,(Just (unregion x) , Just (unregion y), Just (unregion z)))
+    let res = maybe (fallback "argFail") f v
+    return $ Typed (fromMaybe TypeAny $ uncurry3 t ts) res
+    where uncurry3 f (a,b,c) = f a b c --TODO export from prelude
+tooFewArgs :: Int -> Int -> ValidatorS ()
+tooFewArgs n i = do
+    void . contextError $ MissingArgsError n i
+
+tooManyArgs :: [RegionTagged a] -> ValidatorS ()
+tooManyArgs = mapM_ (\x ->do raiseError $ x <!> UnexpectedArg)
+

@@ -38,6 +38,10 @@ displayError x = case x of
   SemanticError txt -> "Semantic error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
   TypeError expected got -> "Type error: Expected: " ++ show (pretty expected) ++ " Got: " ++ show (pretty got)
+  ComplexTypeError msg ty -> "Type error: Expected:" ++ show msg ++ " got " ++ (show $ pretty ty)
+  SkippedTokens -> "Skipped tokens"
+  UnexpectedArg -> "Unexpected argument"
+  MissingArgsError expected got -> "Insufficient args, expected " ++ (show expected) ++ " got " ++ (show got)
   InternalError -> "Pattern match failiure"
   InternalErrorS txt -> "Something went wrong:" ++ T.unpack txt
 
@@ -55,14 +59,14 @@ printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs t
         printEntry (a,(r,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
 
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
-captureErrors = mapM_ captureError
+captureErrors = (mapM_ captureError) . collapseSkipped
 
 collapseSkipped :: [ValidatorDiagnostic] -> [ValidatorDiagnostic]
 collapseSkipped [] = []
 collapseSkipped [x] = [x]
 collapseSkipped ((ValidatorDiagnostic regx ex) :(ValidatorDiagnostic regy ey):rs) 
     | isSkipped ex && isSkipped ey && sameLine (drSourcePos regx) (drSourcePos regy) 
-    = ValidatorDiagnostic (catDr regx regy) (Error $ CustomError "Unexpected characters") : rs
+    = collapseSkipped $ ValidatorDiagnostic (catDr regx regy) (Error $ SkippedTokens ) : rs
     where 
         isSkipped (Error (TokenError (SkippedToken  _))) = True
         isSkipped _ = False
@@ -70,7 +74,7 @@ collapseSkipped ((ValidatorDiagnostic regx ex) :(ValidatorDiagnostic regy ey):rs
         sameLine (SourcePos _ l1 _) (SourcePos _ l2 _) = l1 == l2
         catDr :: DiagnosticRegion -> DiagnosticRegion -> DiagnosticRegion
         catDr (DiagnosticRegion sp _ o l1) (DiagnosticRegion _ en _ l2) = DiagnosticRegion sp en o (l1+l2)
-        catDr GlobalRegion _ = GlobalRegion
+        catDr _ _ = GlobalRegion
 collapseSkipped (x:xs) = x : collapseSkipped xs
             
 
