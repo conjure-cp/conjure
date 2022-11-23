@@ -330,8 +330,10 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
-        Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
+
+            when (null solutions) (pp logLevel "No solutions found.")
+
             when validateSolutionsOpt $ liftIO $ validating solutions
 
             let params = nub [ dropExtension p | (_,p,_) <- solutions ]
@@ -1053,7 +1055,7 @@ srStdoutHandler
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
-srCleanUp :: FilePath -> UI -> Text -> sols -> Sh (Either [Doc] sols)
+srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
 srCleanUp outBase Solve{..} stdoutSR solutions = do
 
     -- closing the array in the all solutions json file
@@ -1063,7 +1065,9 @@ srCleanUp outBase Solve{..} stdoutSR solutions = do
             True -> do
                 let mkFilename ext = outputDirectory </> outBase ++ ext
                 let filenameEssenceSolJSON = mkFilename ".solutions.json"
-                liftIO $ appendFile filenameEssenceSolJSON "]\n"
+                case solutions of
+                    [] -> liftIO $ writeFile  filenameEssenceSolJSON "[]\n"
+                    _  -> liftIO $ appendFile filenameEssenceSolJSON "]\n"
         _ -> return ()
 
     stderrSR   <- lastStderr
