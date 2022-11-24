@@ -506,6 +506,20 @@ validateDomain dm = case dm of
     MissingDomainNode lt -> do raiseError $ lt <!> TokenError lt; return $ fallback "Missing Domain"
   where
     validateRangedInt :: Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
+    validateRangedInt (Just ln@(ListNode _ (Seq [SeqElem a _]) _)) = do
+            d <- case a of
+              SingleRangeNode en -> do
+                (t,e) <- typeSplit <$> validateExpression en
+                case t of
+                    TypeInt TagInt -> return $ DomainInt TagInt [RangeSingle e]
+                    TypeMatrix _ tInt -> return $ DomainIntE e
+                    TypeList tInt -> return $ DomainIntE e
+                    TypeSet tInt -> return $ DomainIntE e
+                    _ -> return (DomainIntE e) <* raiseTypeError (symbolRegion en <!> ComplexTypeError "Set/List of int or Int" t)
+              _ -> do
+                r <- validateRange tInt a
+                return $ DomainInt TagInt [r]
+            return $ Typed tInt d
     validateRangedInt (Just ranges) = do
         ranges' <-  catMaybes <$> validateList_ (f2n (validateRange tInt)) ranges
         return . Typed tInt $ DomainInt TagInt ranges'
@@ -972,7 +986,7 @@ validatePostfixOp (ApplicationNode args) = do
             let reg = symbolRegion exp
             (t,e) <- typeSplit <$> validateExpression exp
             args' <- validateList validateExpression args
-            case t of 
+            case t of
                 TypeFunction a b -> validateFuncOp L_image ((reg,Typed t e):args')
                 _ -> do
                     let underscore = Reference "_" Nothing
@@ -1248,8 +1262,26 @@ validateComprehensionBody (CompBodyGenExpr apn lt en) = do
     checkSymbols [lt]
     e <- validateExpression en
     let (t,exp) = typeSplit e
-    pats <- validateSequence_ (flip unifyPattern t . Just) (apn)
-    -- pats <-  validateSequence_ validateAbstractPattern apn
+    t' <- case t of
+          TypeAny -> return $ pure $ TypeAny
+          TypeTuple tys -> return $ pure $ t
+          TypeMatrix i ty -> return $ pure $ ty
+          TypeList ty -> return $ pure $ ty
+          TypeSet ty -> return $ pure $ ty
+          TypeMSet ty -> return $ pure $ ty
+          TypeSequence ty -> return $ pure $ ty
+          _ -> invalid $ symbolRegion en <!> SemanticError "Cannot be projected"
+    let pt = fromMaybe TypeAny (t')
+        --   TypeBool -> _ --na
+        --   TypeInt it -> _ --na
+        --   TypeEnum na -> _ --na
+        --   TypeUnnamed na -> _ --na
+        --   TypeRecord x0 -> _ --na
+        --   TypeVariant x0 -> _ -- na
+        --   TypeFunction ty ty' -> _ -- na
+        --   TypeRelation tys -> _ --na
+        --   TypePartition ty -> _ --na
+    pats <- validateSequence_ (flip unifyPattern pt . Just) (apn)
     return  $ [Generator (GenInExpr pat exp)| pat <- pats]
 --letting x be
 validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
@@ -1514,9 +1546,9 @@ typesUnifyS = let ?typeCheckerMode=StronglyTyped in typesUnify
 mostDefinedS :: [Type] -> Type
 mostDefinedS [] = TypeAny
 mostDefinedS [x] =  x
-mostDefinedS (x:xs) = let ?typeCheckerMode=StronglyTyped in case mostDefined (xs++[x]) of 
+mostDefinedS (x:xs) = let ?typeCheckerMode=StronglyTyped in case mostDefined (xs++[x]) of
                                                                 TypeAny -> x
-                                                                t -> t 
+                                                                t -> t
 
 unifyTypes :: Type -> RegionTagged (Typed a) -> ValidatorS a
 unifyTypes _ (r,Typed TypeAny a) = do raiseError (r /!\ UnclassifiedWarning "TypeAny used") >> return a
@@ -1547,7 +1579,7 @@ unifyPattern :: Maybe AbstractPatternNode -> Type -> ValidatorS AbstractPattern
 unifyPattern  (Just (AbstractIdentifier nn)) t = do
     (Name n) <- validateName nn
     -- traceM $ show n ++ ":" ++ show t
-    --dont put symbol if _ ?
+    --REVIEW don't put symbol if _ ?
     void $ putSymbol (Name n,(symbolRegion nn,False,t))
     addRegion (RegionInfo (symbolRegion nn) t Definition)
     return  $ Single $  Name n
