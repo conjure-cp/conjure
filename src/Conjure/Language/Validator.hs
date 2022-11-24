@@ -49,6 +49,11 @@ import Conjure.Language.TypeOf (TypeOf(typeOf))
 import Control.Applicative
 import Conjure.Language.Expression.OpTypes (binOpType)
 import Control.Exception (evaluate)
+import Conjure.Language.AdHoc ((:<)(project))
+import Control.Monad (mapAndUnzipM)
+import Conjure.Bug (bug)
+import Text.PrettyPrint (text)
+
 
 
 
@@ -367,8 +372,8 @@ validateGiven (GivenEnumNode se l1 l2 l3) =
     do
         checkSymbols [l1, l2, l3]
         names <-  validateNameList se
-        let eType = TypeAny --TODO fixme
-        mapM_ (\(r,x) -> putSymbol (x,(r,True,eType) )) names
+        let eType = TypeEnum
+        mapM_ (\(r,x) -> putSymbol (x,(r,True,eType x) )) names
         return  $  [GivenDomainDefnEnum n | (_,n) <- names]
 
 validateFind :: FindStatementNode -> ValidatorS [Declaration]
@@ -393,7 +398,7 @@ validateLettingAssignment names (LettingExpr en)  = do
     let (t,e) = typeSplit expr
     let declarations = map (\(r,_)->mkDeclaration r expr) names
     mapM_ addRegion declarations
-    mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names --TODO need to add type info here
+    mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names
     return  $ [Letting n e | (_,n) <- names]
 validateLettingAssignment names (LettingDomain lt dn) = do
     checkSymbols [lt]
@@ -529,14 +534,22 @@ validateDomain dm = case dm of
         return $ Typed (TypeTuple ts)  (DomainTuple  ds)
     validateRecordDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateRecordDomain namedDoms = do
-                lst <- catMaybes <$> validateList_  (f2n validateNamedDomainInVariant) namedDoms
-                let (ts,ds) = unzip $ map (\(x,typeSplit->(t,d))->((x,t),(x,d))) lst
-                return $ Typed (TypeVariant ts)  (DomainVariant ds)
+                lst <- validateList  (f2n validateNamedDomainInVariant) namedDoms
+                let lst' = mapMaybe (\(r,m)->(\x->(r,x))<$>m) lst
+                let (ts,ds) = unzip $ map (\(r,(x,typeSplit->(t,d)))->((x,t),(r,(x,d)))) lst'
+                --push members
+                let t = TypeRecord ts
+                mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t))) ds
+                return $ Typed t (DomainVariant (unregion <$> ds))
     validateVariantDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateVariantDomain namedDoms = do
-                lst <- catMaybes <$> validateList_ (f2n validateNamedDomainInVariant) namedDoms
-                let (ts,ds) = unzip $ map (\(x,typeSplit->(t,d))->((x,t),(x,d))) lst
-                return $ Typed (TypeVariant ts)  (DomainVariant ds)
+                lst <- validateList (f2n validateNamedDomainInVariant) namedDoms
+                let lst' = mapMaybe (\(r,m)->(\x->(r,x))<$>m) lst
+                let (ts,ds) = unzip $ map (\(r,(x,typeSplit->(t,d)))->((x,t),(r,(x,d)))) lst'
+                --push members
+                let t = TypeVariant ts
+                mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t))) ds
+                return $ Typed t (DomainVariant (unregion <$> ds))
     validateMatrixDomain :: ListNode DomainNode -> DomainNode -> ValidatorS TypedDomain
     validateMatrixDomain indexes dom = do
         idoms <-  validateList_ validateDomain indexes
@@ -553,7 +566,7 @@ validateDomain dm = case dm of
         let repr = ()
         attrs' <- case attrs of
             Just a ->  validateSetAttributes a
-            Nothing -> return $ def
+            Nothing -> return def
         (t,dom') <- typeSplit <$>  validateDomain dom
         return . Typed (TypeSet t) $ DomainSet repr attrs' dom'
 
@@ -840,8 +853,8 @@ validateSpecialCase (ExprWithDecls l1 ex l2 sts l3) = do
     let locals = if null decls
                     then DefinednessConstraints cons
                     else AuxiliaryVars (decls ++ [SuchThat cons])
-    expr <- validateExpression ex ?=> TypeAny --TODO : do this properly
-    return . Typed TypeAny $ (WithLocals  (expr)  locals)
+    (t,expr) <- typeSplit <$> validateExpression ex
+    return . Typed t $ WithLocals  (expr)  locals
 
 translateQnName :: Lexeme -> OpType
 translateQnName qnName = case qnName of
@@ -914,6 +927,7 @@ validateFunctionApplication :: LToken -> ListNode ExpressionNode -> ValidatorS (
 validateFunctionApplication name args = do
     args' <-  validateList validateExpression args
     Just name' <-  validateSymbol name
+    setContextFrom args
     validateFuncOp name' args'
     -- return . Typed TypeAny $ do
     --     let n = name'
@@ -955,19 +969,23 @@ validatePostfixOp (OpFactorial lt) = do
             return $ Typed tInt $ mkOp FactorialOp [v]
 validatePostfixOp (ApplicationNode args) = do
         return $ \exp -> do
+            let reg = symbolRegion exp
             (t,e) <- typeSplit <$> validateExpression exp
             args' <- validateList validateExpression args
-            let underscore = Reference "_" Nothing
-            let ys = [if underscore == v then Nothing else Just x| x@(_,Typed _ v) <- args']
-            iType <- case t of
-                TypeRelation ts -> checkProjectionArgs ts ys
+            case t of 
+                TypeFunction a b -> validateFuncOp L_image ((reg,Typed t e):args')
                 _ -> do
-                        raiseTypeError $ symbolRegion exp <!> TypeError (TypeRelation []) t
-                        let ts = map (maybe TypeAny (typeOf_ . snd)) ys
-                        return  $ TypeRelation $ ts
-            let op = Op $ MkOpRelationProj $ OpRelationProj e (map (untype . snd <$>)  ys)
-            let resType = if any null ys then iType else TypeBool
-            return . Typed resType $ op
+                    let underscore = Reference "_" Nothing
+                    let ys = [if underscore == v then Nothing else Just x| x@(_,Typed _ v) <- args']
+                    iType <- case t of
+                        TypeRelation ts -> checkProjectionArgs ts ys
+                        _ -> do
+                                raiseTypeError $ symbolRegion exp <!> ComplexTypeError "Relation or function" t
+                                let ts = map (maybe TypeAny (typeOf_ . snd)) ys
+                                return  $ TypeRelation $ ts
+                    let op = Op $ MkOpRelationProj $ OpRelationProj e (map (untype . snd <$>)  ys)
+                    let resType = if any null ys then iType else TypeBool
+                    return . Typed resType $ op
             where
                 checkProjectionArgs :: [Type] -> [Maybe (RegionTagged (Typed Expression))] -> ValidatorS Type
                 checkProjectionArgs ref bind= do
@@ -1114,27 +1132,31 @@ validatePartitionLiteral ln = do
 
 validateRecordLiteral :: ListNode RecordMemberNode -> ValidatorS (Typed Expression)
 validateRecordLiteral ln = do
-    members <- catMaybes <$> validateList_ validateRecordMember ln
-    let members' = map (\(x,y) -> (x,untype y)) members
-    -- let eType = TypeRecord TypeAny
-    return . Typed TypeAny $ mkAbstractLiteral $ AbsLitRecord members'
-
+    members <- catMaybes <$> listElems ln
+    case members of
+        [] -> return $ Typed (TypeRecord []) (mk [])--REVIEW: should empty records be allowed?
+        xs -> do
+            (ns,unzip . map typeSplit->(ts,es)) <- mapAndUnzipM validateRecordMember xs
+            let t =TypeRecord $ zip ns ts
+            return $ Typed t $ mk (zip ns es)
+    where
+        mk = mkAbstractLiteral . AbsLitRecord
 validateVariantLiteral :: ListNode RecordMemberNode -> ValidatorS (Typed Expression)
 validateVariantLiteral ln = do
-    members <- catMaybes <$> validateList_ validateRecordMember ln
+    members <- catMaybes <$> validateList_ (f2n validateRecordMember) ln
     res <- case members of
       [] -> invalid $ symbolRegion ln <!> SemanticError "Variants must contain exactly one member"
-      [(n,x)]-> return . todoTypeAny . pure $ mkAbstractLiteral $ AbsLitVariant Nothing n (untype x)
+      [(n,Typed t v)]-> return . pure . Typed (TypeVariant [(n,t)]) $ mkAbstractLiteral $ AbsLitVariant Nothing n v
       _:_ -> invalid $ symbolRegion ln <!> SyntaxError "Variants must contain exactly one member" --tag subsequent members as unexpected 
     return $ fromMaybe (fallback "bad variant") res
 
 
-validateRecordMember :: RecordMemberNode -> Validator (Name,Typed Expression)
+validateRecordMember :: RecordMemberNode -> ValidatorS (Name,Typed Expression)
 validateRecordMember (RecordMemberNode name lEq expr) = do
     checkSymbols [lEq]
     name' <-  validateName name
     expr' <-  validateExpression expr
-    return . pure $ ( name' , expr')
+    return ( name' , expr')
 
 validateFunctionLiteral :: ListNode ArrowPairNode -> ValidatorS (Typed Expression)
 validateFunctionLiteral ln = do
@@ -1490,7 +1512,11 @@ typesUnifyS :: [Type] -> Bool
 typesUnifyS = let ?typeCheckerMode=StronglyTyped in typesUnify
 
 mostDefinedS :: [Type] -> Type
-mostDefinedS =  let ?typeCheckerMode=StronglyTyped in mostDefined
+mostDefinedS [] = TypeAny
+mostDefinedS [x] =  x
+mostDefinedS (x:xs) = let ?typeCheckerMode=StronglyTyped in case mostDefined (xs++[x]) of 
+                                                                TypeAny -> x
+                                                                t -> t 
 
 unifyTypes :: Type -> RegionTagged (Typed a) -> ValidatorS a
 unifyTypes _ (r,Typed TypeAny a) = do raiseError (r /!\ UnclassifiedWarning "TypeAny used") >> return a
@@ -1642,7 +1668,7 @@ functionOps l = case l of
     L_atmost -> triFunc (each3 listInt) (const3 TypeBool)
     L_defined -> unFunc funcSeq funcDomain
     L_range -> unFunc funcSeq funcRange
-    L_restrict -> biFunc (const.const todo) (const2 TypeAny) --TODO
+    L_restrict -> biFunc (restrictArgs) (restrictTypes)
     L_allDiff -> unFunc listOrMatrix (const $ pure TypeBool)
     L_alldifferent_except -> biFunc (indep (enumerable) listOrMatrix) (const2 TypeBool)
     L_catchUndef ->  biFunc unifies (\a b -> pure $ mostDefinedS $ map typeOf_ $ catMaybes [a,b])
@@ -1650,8 +1676,8 @@ functionOps l = case l of
     L_toSet -> unFunc toSetArgs typeToSet
     L_toMSet -> unFunc toMSetArgs typeToMSet
     L_toRelation -> unFunc func typeToRelation
-    L_max -> unFunc minMaxArgs (fmap typeOf_) --TODO
-    L_min -> unFunc minMaxArgs (fmap typeOf_) --TODO
+    L_max -> unFunc minMaxArgs minMaxType
+    L_min -> unFunc minMaxArgs minMaxType
     L_image -> biFunc imageArgs (\a -> const $ TypeSet <$> funcRange a)
     L_transform -> biFunc transformArgs (const (typeOf_ <$>))
     L_imageSet -> biFunc imSetArgs (\a -> const $ TypeSet <$> funcDomain a)
@@ -1673,8 +1699,8 @@ functionOps l = case l of
     L_flatten -> \ b a -> case a of
                             [] -> (unFunc (unaryFlattenArgs) (flattenType Nothing)) b a
                             [_] -> (unFunc (unaryFlattenArgs) (flattenType Nothing)) b a
-                            xs -> (biFunc (binaryFlattenArgs) (\(getNum->a) -> flattenType a)) (b) a
-    _ -> error "Unknown"
+                            _ -> (biFunc (binaryFlattenArgs) (\(getNum->a) -> flattenType a)) (b) a
+    _  -> bug $ text $ "Unkown functional operator " ++ show l
     where
         todo = return $ pure ()
         valid = return $ pure ()
@@ -1687,6 +1713,8 @@ functionOps l = case l of
         getNum _ = Nothing
         each3 f a b c= f a >> f b >> f c
         anyType = const . return $ Just  ()
+
+
         indep :: (Arg -> Validator ()) -> (Arg -> Validator ()) -> (Arg -> Arg -> Validator ())
         indep f1 f2 a b = do
             v1 <- f1 a
@@ -1702,10 +1730,10 @@ functionOps l = case l of
             r <- unifyTypesFailing ref' b
             return $ if null off || null r then  Nothing else Just ()
         unaryFlattenArgs :: Arg -> Validator ()
-        unaryFlattenArgs (r,typeOf_->(TypeMatrix _ _)) = valid  
+        unaryFlattenArgs (r,typeOf_->(TypeMatrix _ _)) = valid
         unaryFlattenArgs (r,typeOf_->(TypeList _)) = valid
         unaryFlattenArgs (r,typeOf_->TypeAny) = valid
-        unaryFlattenArgs (r,typeOf_->t) = invalid $ r <!> ComplexTypeError "List or Matrix " t 
+        unaryFlattenArgs (r,typeOf_->t) = invalid $ r <!> ComplexTypeError "List or Matrix " t
 
         concatType :: Maybe (Typed Expression) -> Maybe Type
         concatType (fmap typeOf_->Just(TypeMatrix _ (TypeList t))) = Just $ TypeList t
@@ -1782,6 +1810,10 @@ functionOps l = case l of
         partInner (fmap typeOf_->Just (TypePartition a)) = Just $ TypeSet a
         partInner _ = Just $ TypeSet TypeAny
 
+        restrictArgs :: Arg -> Arg -> Validator ()
+        restrictArgs (r1,t1) (r2,t2) = valid --TODO
+        restrictTypes :: Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe Type
+        restrictTypes t1 t2 = Nothing --TODO
         imSetArgs :: Arg -> Arg -> Validator ()
         imSetArgs (r1,a) (r2,b) = do
             let t = case (typeOf_ a,typeOf_ b) of
@@ -1843,17 +1875,46 @@ functionOps l = case l of
         partsType (fmap typeOf_->Just TypeAny) = Just $ TypeSet $ TypeSet TypeAny
         partsType _ = Nothing
         minMaxArgs :: Arg -> Validator ()
-        minMaxArgs a = return $ pure ()
+        minMaxArgs (r,(Typed t e)) | Just (dom :: Domain () Expression) <- project e =
+            case t of
+                TypeInt TagInt -> valid
+                TypeInt (TagEnum _) -> valid
+                TypeEnum {} -> valid
+                TypeAny -> valid
+                _ -> invalid $ r <!> ComplexTypeError "Domain of int-like or matrix of int-like" t
+        minMaxArgs (r,Typed t _) = do
+            inner <- case t of
+                TypeList tyInner -> return tyInner
+                TypeMatrix _ tyInner -> return tyInner
+                TypeSet tyInner -> return tyInner
+                TypeMSet tyInner -> return tyInner
+                TypeAny -> return TypeAny
+                _ -> return TypeAny <* invalid (r <!> ComplexTypeError "Domain of int-like or matrix of int-like" t)
+            case inner of
+                TypeInt TagInt -> valid
+                TypeInt (TagEnum _) -> valid
+                TypeEnum {} -> valid
+                TypeAny -> valid
+                _ -> invalid $ r <!> ComplexTypeError "Domain of int-like or matrix of int-like" t
+
+        minMaxType :: Maybe (Typed Expression) -> Maybe Type
+        minMaxType (Just (Typed t@(TypeInt _) _)) = Just t
+        minMaxType (Just (Typed t@(TypeEnum {}) _)) = Just t
+        minMaxType (Just (Typed (TypeMatrix _ a) v)) = minMaxType (Just (Typed a v))
+        minMaxType (Just (Typed (TypeList  a) v)) =  minMaxType (Just (Typed a v))
+        minMaxType (Just (Typed (TypeSet  a) v)) =  minMaxType (Just (Typed a v))
+        minMaxType (Just (Typed (TypeMSet a) v)) =  minMaxType (Just (Typed a v))
+        minMaxType _ = Just TypeAny
 
         transformArgs :: Arg -> Arg -> Validator ()
         transformArgs a b = do
             return $ pure ()
         activeArgs :: Arg -> Arg -> Validator ()
-        activeArgs (r,(typeOf_->t)) b = do
-            return $ pure ()
-            --TODO fill in properly
-            -- first is Variant
-            -- second is name in variant
+        activeArgs (r,(typeOf_->t@(TypeVariant vs))) b = do
+            void <$> unifyTypesFailing t b --todo this could be better
+        activeArgs (r,(typeOf_->TypeAny)) b =valid
+        activeArgs (r,(typeOf_->t)) b = invalid $ r <!> ComplexTypeError "Variant " t
+
         typeToSet :: Maybe (Typed Expression) -> Maybe Type
         typeToSet (Just (typeOf_->t)) = TypeSet <$> tMembers t
         typeToSet _ = Nothing
@@ -2061,7 +2122,7 @@ triFunc argVal t f args = do
             return (result,(Just (unregion x) , Just (unregion y), Just (unregion z)))
     let res = maybe (fallback "argFail") f v
     return $ Typed (fromMaybe TypeAny $ uncurry3 t ts) res
-    where uncurry3 f (a,b,c) = f a b c --TODO export from prelude
+    where uncurry3 f (a,b,c) = f a b c --todo export from prelude
 tooFewArgs :: Int -> Int -> ValidatorS ()
 tooFewArgs n i = do
     void . contextError $ MissingArgsError n i
