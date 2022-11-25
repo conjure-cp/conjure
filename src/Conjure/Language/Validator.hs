@@ -22,7 +22,7 @@ import Conjure.Language.Type
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-
+import qualified Data.Text as T
 import Data.Text (pack, unpack, toLower, append)
 import Text.Megaparsec
     ( SourcePos, mkPos )
@@ -92,12 +92,17 @@ untypeAs r ((Typed t a)) = if let ?typeCheckerMode=StronglyTyped in typeUnify r 
                             then return a
                             else contextTypeError (TypeError r t) >> return a
 
+
+type TypeCheck a = Typed a -> ValidatorS ()
+exactly :: Type -> TypeCheck a
+exactly t r = void $ untypeAs t r
+
 typeAs :: Type -> Maybe a -> Maybe (Typed a)
 typeAs t (Just a) = Just $ Typed t a
 typeAs t Nothing = Nothing
 
-(?=>) :: ValidatorS (Typed a) -> Type -> ValidatorS a
-v ?=> t = v >>= untypeAs t
+(?=>) :: ValidatorS (Typed a) -> TypeCheck a -> ValidatorS a
+v ?=> t = v >>= (\a -> t a >> return (untype a))
 
 castAny :: Validator a -> Validator (Typed a)
 castAny a = typeAs TypeAny <$> a
@@ -114,6 +119,7 @@ getTypeList = map typeSplit
 data ErrorType
     = TokenError LToken
     | SyntaxError Text
+    | WithReplacements ErrorType [Text]
     | SemanticError Text
     | CustomError Text
     | SkippedTokens
@@ -263,7 +269,7 @@ validateProgramTree sts = do
 
 
 isValidLanguageName :: Text -> Bool
-isValidLanguageName t = Data.Text.toLower t `elem` ["essence","essence'"]
+isValidLanguageName t = T.toLower t `elem` ["essence","essence'"]
 
 validateLanguageVersion :: Maybe LangVersionNode -> Validator LanguageVersion
 validateLanguageVersion Nothing = return $ pure $ LanguageVersion "Essence" [1,3]
@@ -298,20 +304,29 @@ validateStatement (UnexpectedToken lt) = return [] <* (invalid $ lt <!> TokenErr
 
 validateHeuristicStatement :: LToken -> ExpressionNode -> ValidatorS [Statement]
 validateHeuristicStatement lt exp = do
-    let validHeuristics = ["static"]
+    let validHeuristics = ["static", "sdf", "conflict", "srf", "ldf", "wdeg", "domoverwdeg"]
     checkSymbols [lt]
-    _ <- validateExpression exp
-    case exp of
-      IdentifierNode nn -> do
-                    x <- validateName nn
-                    return  $ [SearchHeuristic  x]
-      _ -> return [] <* (invalid $ symbolRegion exp <!> SemanticError "Only identifiers are allowed as heuristics")
+    h <- case exp of
+      IdentifierNode nn@(NameNode (RealToken _ (ETok{lexeme=(LIdentifier nm)}))) -> do
+                    if nm `elem` validHeuristics then 
+                        return $ pure [SearchHeuristic  (Name nm)]
+                    else
+                        invalid $ symbolRegion nn <!> (SemanticError $ T.concat ["Invalid heuristic " , nm , " Expected one of: ", (pack $ show validHeuristics )])
+      _ ->  (invalid $ symbolRegion exp <!> SemanticError "Only identifiers are allowed as heuristics")
+    return $ fromMaybe [] h
 
+
+tCondition :: TypeCheck a
+tCondition (Typed TypeAny _) = pure ()
+tCondition (Typed TypeBool _) = pure ()
+tCondition (Typed (TypeMatrix _ TypeBool) _) = pure ()
+tCondition (Typed (TypeList TypeBool) _) = pure ()
+tCondition t = contextTypeError $ ComplexTypeError "Bool or [Bool]" $ typeOf_ t 
 
 validateWhereStatement :: WhereStatementNode -> ValidatorS [Statement]
 validateWhereStatement (WhereStatementNode l1 exprs) = do
     checkSymbols [l1]
-    ws <-  Where <$> validateSequence_ (\x -> validateExpression x ?=> TypeBool) exprs
+    ws <-  Where <$> validateSequence_ (\x -> do setContextFrom x; validateExpression x ?=> tCondition) exprs
     return [ws]
 
 validateObjectiveStatement :: ObjectiveStatementNode -> ValidatorS [Statement]
@@ -327,8 +342,8 @@ validateObjectiveStatement (ObjectiveMax lt en) =do
 validateSuchThatStatement :: SuchThatStatementNode -> ValidatorS [Statement]
 validateSuchThatStatement (SuchThatStatementNode l1 l2 exprs) = do
     checkSymbols [l1, l2]
-    exprs' <- validateSequence (validateExpression) exprs
-    bools <- mapM (\(a,b)->do setContext a; untypeAs TypeBool b) exprs'
+    exprs' <- validateSequence validateExpression exprs
+    bools <- mapM (\(a,b)->do setContext a; return b ?=> tCondition) exprs'
     let bool_exprs = bools
     return [SuchThat  bool_exprs]
 
@@ -343,7 +358,7 @@ validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
             n <- validateName nn
             return $ BranchingOn n
         validateBranchingParts exp = do
-            x <- validateExpression exp ?=> TypeAny
+            x <- validateExpression exp ?=> exactly TypeAny
             return $ Cut x
 
 validateDeclarationStatement :: DeclarationStatementNode -> ValidatorS [Statement]
@@ -426,7 +441,7 @@ validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
     checkSymbols [l1, l2, l3, l4]
     size <- do
                     setContextFrom szExp
-                    validateExpression szExp ?=> tInt
+                    validateExpression szExp ?=> exactly tInt
     let d = TypeUnnamed
     --TODO delcs
     mapM_ (\(r,x) -> putSymbol (x,(r,False,d x))) names
@@ -554,7 +569,7 @@ validateDomain dm = case dm of
                 --push members
                 let t = TypeRecord ts
                 mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t))) ds
-                return $ Typed t (DomainVariant (unregion <$> ds))
+                return $ Typed t (DomainRecord (unregion <$> ds))
     validateVariantDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateVariantDomain namedDoms = do
                 lst <- validateList (f2n validateNamedDomainInVariant) namedDoms
@@ -767,7 +782,7 @@ validateAttributeNode vs (NamedAttributeNode t Nothing) = do
 
 validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
     setContextFrom e
-    expr <- validateExpression e ?=> tInt
+    expr <- validateExpression e ?=> exactly tInt
     Just name <- validateSymbol t
     case M.lookup name vs of
       Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
@@ -795,16 +810,16 @@ validateNamedDomainInRecord (NameDomainNode name m_dom) = do
 
 validateRange ::Type -> RangeNode -> ValidatorS ((Range Expression))
 validateRange t range = case range of
-    SingleRangeNode en -> do setContextFrom en; ex <- validateExpression en ?=> t; return $ RangeSingle ex
+    SingleRangeNode en -> do setContextFrom en; ex <- validateExpression en ?=> exactly t; return $ RangeSingle ex
     OpenRangeNode dots -> do checkSymbols [dots] ; return  RangeOpen
-    RightUnboundedRangeNode e1 dots -> do checkSymbols [dots] ;setContextFrom e1; ex <- validateExpression e1 ?=> t  ; return $ RangeLowerBounded ex
-    LeftUnboundedRangeNode dots e1 -> do checkSymbols [dots] ; setContextFrom e1; ex <- validateExpression e1 ?=> t  ; return $ RangeUpperBounded ex
+    RightUnboundedRangeNode e1 dots -> do checkSymbols [dots] ;setContextFrom e1; ex <- validateExpression e1 ?=> exactly t  ; return $ RangeLowerBounded ex
+    LeftUnboundedRangeNode dots e1 -> do checkSymbols [dots] ; setContextFrom e1; ex <- validateExpression e1 ?=> exactly t  ; return $ RangeUpperBounded ex
     BoundedRangeNode e1 dots e2 -> do
         _ <- checkSymbols [dots]
         setContextFrom e1
-        e1' <- validateExpression e1 ?=> t
+        e1' <- validateExpression e1 ?=> exactly t
         setContextFrom e2
-        e2' <-  validateExpression e2 ?=> t
+        e2' <-  validateExpression e2 ?=> exactly t
         return $  RangeBounded e1' e2'
 
 validateArrowPair :: ArrowPairNode -> Validator (RegionTagged (Typed Expression), RegionTagged (Typed Expression))
@@ -828,7 +843,7 @@ validateExpression expr = case expr of
     AbsExpression (ParenExpressionNode l1 exp l2) -> do
         checkSymbols [l1,l2]
         setContextFrom exp
-        exp' <- validateExpression exp ?=> TypeAny
+        exp' <- validateExpression exp ?=> exactly TypeAny
         return . Typed tInt $ mkOp TwoBarOp  [exp']
     FunctionalApplicationNode lt ln -> validateFunctionApplication  lt ln
     AttributeAsConstriant lt exprs -> validateAttributeAsConstraint lt exprs
@@ -874,6 +889,8 @@ translateQnName :: Lexeme -> OpType
 translateQnName qnName = case qnName of
     L_ForAll -> FunctionOp L_fAnd
     L_Exists -> FunctionOp L_fOr
+    L_Sum -> FunctionOp L_Sum
+    L_Product -> FunctionOp L_Product
     _        -> FunctionOp qnName
 
 validateQuantificationExpression :: QuantificationExpressionNode -> ValidatorS (Typed Expression)
@@ -885,20 +902,25 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             over' <-  validateQuantificationOver pats over
             -- patterns <-  validateSequence_ validateAbstractPattern pats
             g' <- validateQuantificationGuard m_guard
-            let guard' = fromMaybe [] g'
             setContextFrom expr
-            body <-  validateExpression expr ?=> TypeAny
-            let qBody =  Comprehension body  (over'++guard')
-            let result = Typed TypeAny <$> (mkOp <$> (translateQnName <$> name') <*> pure  [qBody])
+            let (iType,rType) = case name' of
+                    Just L_ForAll -> (tCondition,TypeBool)
+                    Just L_Exists ->(tCondition,TypeBool)
+                    Just L_Sum -> (exactly tInt,tInt)
+                    Just L_Product -> (exactly tInt,tInt)
+                    _ -> bug $ text ("Unkown quantifier " ++ show name')
+            body <-  validateExpression expr ?=> iType
+            let qBody =  Comprehension body  (over'++g')
+            let result = Typed rType <$> (mkOp <$> (translateQnName <$> name') <*> pure  [qBody])
             return $ fromMaybe (fallback "Quantification error") result
     where
-        validateQuantificationGuard :: Maybe QuanticationGuard -> Validator [GeneratorOrCondition]
-        validateQuantificationGuard Nothing = return $ pure []
+        validateQuantificationGuard :: Maybe QuanticationGuard -> ValidatorS [GeneratorOrCondition]
+        validateQuantificationGuard Nothing = return []
         validateQuantificationGuard (Just (QuanticationGuard l1 exp) ) = do
             checkSymbols [l1]
             setContextFrom exp
-            expr' <- validateExpression exp ?=> TypeBool
-            return . pure $ [Condition expr']
+            expr' <- validateExpression exp ?=> exactly TypeBool
+            return $ [Condition expr']
         validateQuantificationOver :: Sequence AbstractPatternNode -> QuantificationOverNode -> ValidatorS [GeneratorOrCondition]
         validateQuantificationOver pats ( QuantifiedSubsetOfNode lt en ) = do
             checkSymbols [lt]
@@ -907,13 +929,16 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             let (t,e) = typeSplit exp
             apats <- unifyPatterns t ps
             return [Generator $ GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet (e)) | pat <- apats]
+        -- x in exp
         validateQuantificationOver pats ( QuantifiedMemberOfNode lt en ) = do
             checkSymbols [lt]
             ps <- sequenceElems pats
             exp <- validateExpression en
             let (t,e) = typeSplit exp
-            apats <- unifyPatterns t ps
+            pt <- projectionType (symbolRegion en) t
+            apats <- unifyPatterns pt ps
             return [Generator $ GenInExpr pat e|pat <- apats]
+        -- x : domain
         validateQuantificationOver pats ( QuantifiedDomainNode (OverDomainNode l1 dom) ) = do
             checkSymbols [l1]
             ps <- sequenceElems pats
@@ -960,9 +985,14 @@ validateIdentifierExpr name = do
 --TODO Adress the major hole in the type system current
 validateOperatorExpression :: OperatorExpressionNode -> ValidatorS (Typed Expression)
 validateOperatorExpression (PrefixOpNode lt expr) = do
-    expr <-  validateExpression expr
     Just op <-  validateSymbol lt
-    return . Typed TypeAny $ (\(untype->x) -> mkOp (PrefixOp op) [x]) (expr)
+    setContextFrom expr
+    let (refT) = case op of 
+            L_Minus -> tInt
+            L_ExclamationMark -> TypeBool
+            _ -> bug . text $ "Unknown prefix op " ++ show op
+    expr' <-  validateExpression expr ?=> exactly refT
+    return . Typed refT $ mkOp (PrefixOp op) [expr']
     --lookup symbol
 validateOperatorExpression (BinaryOpNode lexp op rexp) = do
     (lType,lExpr) <- typeSplit <$> validateExpression lexp
@@ -978,8 +1008,9 @@ validateOperatorExpression (PostfixOpNode expr pon) = do
 validatePostfixOp :: PostfixOpNode -> ValidatorS (ExpressionNode -> ValidatorS (Typed Expression))
 validatePostfixOp (OpFactorial lt) = do
         checkSymbols [lt]
+        setContextFrom lt
         return  $ \exp -> do
-            v <- validateExpression exp ?=> tInt
+            v <- validateExpression exp ?=> exactly tInt
             return $ Typed tInt $ mkOp FactorialOp [v]
 validatePostfixOp (ApplicationNode args) = do
         return $ \exp -> do
@@ -987,7 +1018,8 @@ validatePostfixOp (ApplicationNode args) = do
             (t,e) <- typeSplit <$> validateExpression exp
             args' <- validateList validateExpression args
             case t of
-                TypeFunction a b -> validateFuncOp L_image ((reg,Typed t e):args')
+                TypeFunction _ _ -> validateFuncOp L_image ((reg,Typed t e):args')
+                TypeSequence _ -> validateFuncOp L_image ((reg,Typed t e):args')
                 _ -> do
                     let underscore = Reference "_" Nothing
                     let ys = [if underscore == v then Nothing else Just x| x@(_,Typed _ v) <- args']
@@ -1029,7 +1061,7 @@ validatePostfixOp (ExplicitDomain l1 l2 dom l3) = do
         Just t -> return t
         Nothing -> return TypeAny <* (raiseError $ symbolRegion  dom <!> InternalErrorS (pack ("Some type bug with:" ++ show dom')))
     return $ \exp -> do
-        e <- validateExpression exp ?=> t
+        e <- validateExpression exp ?=> exactly t
         return . Typed t $ D.Typed e t
     where
         getDType :: Domain () Expression -> Maybe Type
@@ -1039,11 +1071,17 @@ validatePostfixOp (ExplicitDomain l1 l2 dom l3) = do
 validateIndexingOrSlicing :: Typed Expression -> RangeNode -> ValidatorS (Typed Expression)
 validateIndexingOrSlicing (Typed t exp) (SingleRangeNode r) = do
     setContextFrom r
-    iType <- getIndexingType t
-    i <- validateExpression r ?=> iType
-    setContextFrom r
-    vType <- getIndexedType t (Typed iType i)
-    return . Typed vType $ Op $ MkOpIndexing (OpIndexing exp i)
+    -- i <- validateExpression r ?=> exactly iType
+    (vType,e) <- case t of
+        TypeRecord ts -> validateRecordMemberIndex (ts) r
+        TypeVariant ts-> validateRecordMemberIndex (ts) r
+        t -> do
+            t' <- getIndexingType t
+            e <- (validateExpression r) ?=> (exactly t')
+            setContextFrom r
+            vType <- getIndexedType t (Typed t' e)
+            return (vType,e)
+    return . Typed vType $ Op $ MkOpIndexing (OpIndexing exp e)
 
 validateIndexingOrSlicing exp range = do
     let (mType,m) = typeSplit exp
@@ -1058,7 +1096,40 @@ validateIndexingOrSlicing exp range = do
             RangeSingle ex ->  (Just ex,Just ex) -- This never gets hit in a well formed program
     return $ Typed mType $ Op $ MkOpSlicing (OpSlicing m i j)
 
+validateRecordMemberIndex :: [(Name,Type)] -> ExpressionNode -> ValidatorS (Type,Expression)
+validateRecordMemberIndex ns (IdentifierNode nn) = do 
+    n <- validateName nn
+    let t = lookup n ns
+    ty <- case t of
+      Just ty -> return ty
+      Nothing -> do
+        raiseError $ symbolRegion nn <!> WithReplacements
+            (SemanticError "Expected member of record/variant ")
+            [x | (Name x,_) <- ns]
+        return TypeAny
+    return $ (ty,Reference n Nothing)
+validateRecordMemberIndex ns (MissingExpressionNode nn) = do
+    raiseError $ symbolRegion nn <!> 
+        WithReplacements
+            (SemanticError "Expected member of record/variant ")
+            [x | (Name x,_) <- ns]
+    return (TypeAny,fallback "bad Index")
+validateRecordMemberIndex ns en = do
+    g <- validateExpression en 
+    let msg = T.concat 
+            [
+                "Expected one of ",
+                T.intercalate "," [x | (Name x,_) <- ns],
+                " "
+            ]
+    raiseTypeError $ symbolRegion en <!> ComplexTypeError msg (typeOf_ g)
+    return (TypeAny,untype g)
+
+
+
+
 getSlicingType :: Type -> ValidatorS Type
+getSlicingType TypeAny = return $ TypeAny
 getSlicingType (TypeMatrix i _) = return i
 getSlicingType (TypeSequence _) = return tInt
 getSlicingType t = do
@@ -1066,12 +1137,11 @@ getSlicingType t = do
     return TypeAny
 
 getIndexingType :: Type -> ValidatorS Type
+getIndexingType TypeAny = return $ TypeAny
 getIndexingType (TypeMatrix i _) = return i
 getIndexingType (TypeSequence _) = return tInt
 getIndexingType (TypeList _) = return tInt
 getIndexingType (TypeTuple _) = return tInt
-getIndexingType t@(TypeRecord _) = return t
-getIndexingType t@(TypeVariant _) = return t
 getIndexingType t = do
     contextTypeError (CustomError . pack $ "Type " ++ (show $ pretty t) ++ " does not support indexing")
     return TypeAny
@@ -1085,7 +1155,7 @@ getIndexedType (TypeTuple ts) ex      = do
             (void . contextTypeError $ CustomError $ "Non constant value indexing tuple")
             return TypeAny
         Right v | v <= 0 || v > toInteger ( length ts) -> do
-            (contextTypeError $ CustomError . pack $ "Tuple index "++ show v ++ "out of bounds" )
+            (contextTypeError $ CustomError . pack $ "Tuple index "++ show v ++ " out of bounds" )
             return TypeAny
         Right v -> return $ ts `at` (fromInteger v -1)
 getIndexedType t@(TypeRecord vs) (Typed _ e)   = return TypeAny --TODO implement
@@ -1262,26 +1332,8 @@ validateComprehensionBody (CompBodyGenExpr apn lt en) = do
     checkSymbols [lt]
     e <- validateExpression en
     let (t,exp) = typeSplit e
-    t' <- case t of
-          TypeAny -> return $ pure $ TypeAny
-          TypeTuple tys -> return $ pure $ t
-          TypeMatrix i ty -> return $ pure $ ty
-          TypeList ty -> return $ pure $ ty
-          TypeSet ty -> return $ pure $ ty
-          TypeMSet ty -> return $ pure $ ty
-          TypeSequence ty -> return $ pure $ ty
-          _ -> invalid $ symbolRegion en <!> SemanticError "Cannot be projected"
-    let pt = fromMaybe TypeAny (t')
-        --   TypeBool -> _ --na
-        --   TypeInt it -> _ --na
-        --   TypeEnum na -> _ --na
-        --   TypeUnnamed na -> _ --na
-        --   TypeRecord x0 -> _ --na
-        --   TypeVariant x0 -> _ -- na
-        --   TypeFunction ty ty' -> _ -- na
-        --   TypeRelation tys -> _ --na
-        --   TypePartition ty -> _ --na
-    pats <- validateSequence_ (flip unifyPattern pt . Just) (apn)
+    t' <- projectionType (symbolRegion en) t
+    pats <- validateSequence_ (flip unifyPattern t' . Just) (apn)
     return  $ [Generator (GenInExpr pat exp)| pat <- pats]
 --letting x be
 validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
@@ -1290,6 +1342,19 @@ validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
     pat <- unifyPattern (Just nn) t
     return  [ComprehensionLetting pat expr]
 
+
+projectionType :: DiagnosticRegion -> Type -> ValidatorS Type
+projectionType r t = case t of
+          TypeAny -> return  TypeAny
+          TypeTuple tys -> return t
+          TypeMatrix i ty -> return ty
+          TypeList ty -> return ty
+          TypeSet ty -> return ty
+          TypeMSet ty -> return ty
+          TypeSequence ty -> return ty
+          TypeRelation ts -> return $ TypeTuple ts
+          TypeFunction fr to -> return $ TypeTuple [fr,to]
+          _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Expression of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
 
 mkAbstractLiteral :: AbstractLiteral Expression -> Expression
 mkAbstractLiteral x = case e2c (AbstractLiteral x) of
@@ -1359,7 +1424,6 @@ validateIdentifier (NameNode iden) = do
 validateName :: NameNode -> ValidatorS Name
 validateName name = do
         n <- validateIdentifier name
-
         return $ fromMaybe (fallback "bad Identifier") (Name <$> n)
 
 listToSeq :: ListNode a -> ValidatorS (Sequence a)
@@ -1495,7 +1559,7 @@ contextTypeError :: ErrorType -> ValidatorS ()
 contextTypeError e = do
     q <- getContext
     tc <- gets typeChecking
-    unless (not tc) $ raiseError $ ValidatorDiagnostic q $ Error e
+    when tc $ raiseError $ ValidatorDiagnostic q $ Error e
 
 contextInfo :: InfoType -> ValidatorS ()
 contextInfo e = do
@@ -1525,7 +1589,7 @@ resolveReference :: RegionTagged Name -> ValidatorS Type
 resolveReference (r,Name n) = do
     c <- getSymbol n
     case c of
-      Nothing -> raiseError (r <!> (CustomError . pack $ "Symbol not found "++ show n)) >> return TypeAny
+      Nothing -> raiseTypeError (r <!> (CustomError . pack $ "Symbol not found "++ show n)) >> return TypeAny
       Just (reg,_,t) -> do
         addRegion (RegionInfo {rRegion=r, rType=t, rDeclaration=Ref reg})
         return t
@@ -1573,7 +1637,7 @@ scoped m = do
     return res
 
 unifyPatterns :: Type -> [Maybe AbstractPatternNode] -> ValidatorS [AbstractPattern]
-unifyPatterns t xs =  mapM (flip unifyPattern t) xs
+unifyPatterns t =  mapM (flip unifyPattern t)
 
 unifyPattern :: Maybe AbstractPatternNode -> Type -> ValidatorS AbstractPattern
 unifyPattern  (Just (AbstractIdentifier nn)) t = do
@@ -1700,9 +1764,9 @@ functionOps l = case l of
     L_atmost -> triFunc (each3 listInt) (const3 TypeBool)
     L_defined -> unFunc funcSeq funcDomain
     L_range -> unFunc funcSeq funcRange
-    L_restrict -> biFunc (restrictArgs) (restrictTypes)
+    L_restrict -> biFunc restrictArgs restrictTypes
     L_allDiff -> unFunc listOrMatrix (const $ pure TypeBool)
-    L_alldifferent_except -> biFunc (indep (enumerable) listOrMatrix) (const2 TypeBool)
+    L_alldifferent_except -> biFunc (indep listOrMatrix enumerable) (const2 TypeBool)
     L_catchUndef ->  biFunc unifies (\a b -> pure $ mostDefinedS $ map typeOf_ $ catMaybes [a,b])
     L_dontCare -> unFunc anyType (const $ pure TypeBool)
     L_toSet -> unFunc toSetArgs typeToSet
@@ -1710,9 +1774,9 @@ functionOps l = case l of
     L_toRelation -> unFunc func typeToRelation
     L_max -> unFunc minMaxArgs minMaxType
     L_min -> unFunc minMaxArgs minMaxType
-    L_image -> biFunc imageArgs (\a -> const $ TypeSet <$> funcRange a)
+    L_image -> biFunc imageArgs (const . funcRange)
     L_transform -> biFunc transformArgs (const (typeOf_ <$>))
-    L_imageSet -> biFunc imSetArgs (\a -> const $ TypeSet <$> funcDomain a)
+    L_imageSet -> biFunc imSetArgs (\a -> const $ TypeSet <$> funcRange a)
     L_preImage -> biFunc preImageArgs (\a -> const $ TypeSet <$> funcDomain a)
     L_inverse -> biFunc inverseArgs (const2 TypeBool)
     L_freq -> biFunc freqArgs (const2 tInt)
@@ -1734,7 +1798,6 @@ functionOps l = case l of
                             _ -> (biFunc (binaryFlattenArgs) (\(getNum->a) -> flattenType a)) (b) a
     _  -> bug $ text $ "Unkown functional operator " ++ show l
     where
-        todo = return $ pure ()
         valid = return $ pure ()
         const2 = const.const . pure
         const3 = const.const.const . pure
@@ -1774,9 +1837,28 @@ functionOps l = case l of
         concatType (fmap typeOf_->Just(TypeList (TypeMatrix _ t))) = Just $ TypeList t
         concatType _ = Just $ TypeList TypeAny
         concatArgs :: Arg -> Validator ()
-        concatArgs = const todo
+        concatArgs = binaryFlattenArgs (GlobalRegion,Typed tInt $ Constant $ ConstantInt TagInt 1)
         tableArgs :: Arg -> Arg -> Validator ()
-        tableArgs = const . const todo
+        tableArgs (r1,typeOf_->t1) (r2,typeOf_->t2) = do
+            a <- case t1 of
+                t | isValidInner t -> valid
+                _ -> invalid $ r1 <!> ComplexTypeError "Matrix of Int/Enum" t1
+            b <-  case t2 of
+                TypeAny -> valid
+                TypeList t | isValidInner t-> valid
+                TypeMatrix _ t | isValidInner t-> valid
+                _ -> invalid $ r2 <!> ComplexTypeError "Matrix of Matrix of Int/Enum" t2
+
+            return $ if null a || null b then Nothing else Just ()
+            where
+                isValidInner t = case t of
+                    TypeAny -> True
+                    TypeList TypeInt{} -> True
+                    TypeList  TypeAny-> True
+                    TypeMatrix _ TypeInt{} -> True
+                    TypeMatrix _ TypeAny -> True
+                    _ -> False
+
         toMSetArgs :: Arg -> Validator ()
         toMSetArgs (r,typeOf_-> a) = case a of
           TypeAny -> return $ pure ()
@@ -1819,9 +1901,9 @@ functionOps l = case l of
             a' <- unifyTypesFailing md a
             b' <- unifyTypesFailing md b
             return $ if null a' || null b' then Nothing else Just ()
-        func :: Arg -> Validator Type
-        func (_,Typed (TypeSet t) _) = return $ pure t
-        func (_,Typed TypeAny _) = return $ pure TypeAny
+        func :: Arg -> Validator ()
+        func (_,Typed (TypeFunction _ _) _) = valid
+        func (_,Typed TypeAny _) = valid
         func (r,Typed t _) = invalid $ r <!> TypeError (TypeFunction TypeAny TypeAny) t
         set :: Arg -> Validator Type
         set (_,Typed (TypeSet t) _) = return $ pure t
@@ -1829,9 +1911,9 @@ functionOps l = case l of
         set (r,Typed t _) = invalid $ r <!> TypeError (TypeSet TypeAny) t
 
         powerSetType (Just (Typed (TypeSet i) _)) = Just $ TypeSet (TypeSet i)
-        powerSetType _ = Nothing
+        powerSetType _ = Just $ TypeSet $ TypeSet TypeAny
 
-        only t (r,typeOf_->t')= if t'==TypeAny || t == t' then return $ Just t else invalid $ r <!> TypeError t t'
+        only t (r,typeOf_->t')= do setContext r; if t'==TypeAny || t == t' then return $ Just t else invalid $ r <!> TypeError t t'
 
         listInt (r,typeOf_->t') = case t' of
           TypeAny -> return $ Just t'
@@ -1868,10 +1950,10 @@ functionOps l = case l of
         partyArgs :: Arg -> Arg -> Validator ()
         partyArgs (r1,a) (r2,b) = do
             let t = case (typeOf_ a,typeOf_ b) of
-                    (TypePartition ta,tb) -> mostDefinedS [ta,tb]
-                    (_,tb ) -> tb
-            a' <- unifyTypesFailing (TypePartition t) (r1,a)
-            b' <- unifyTypesFailing (t) (r2,b)
+                    (ta,TypePartition tb) -> mostDefinedS [ta,tb]
+                    (ta,_ ) -> ta
+            a' <- unifyTypesFailing (t) (r1,a)
+            b' <- unifyTypesFailing (TypePartition t) (r2,b)
             return $ if null a' || null b' then  Nothing else Just ()
 
         inverseArgs :: Arg -> Arg -> Validator ()
@@ -2001,11 +2083,11 @@ functionOps l = case l of
         funcDomain :: Maybe (Typed a) -> Maybe Type
         funcDomain (Just (typeOf_->(TypeFunction a _))) = Just a
         funcDomain (Just (typeOf_->(TypeSequence _))) = Just tInt
-        funcDomain _ = Nothing
+        funcDomain _ = Just TypeAny
         funcRange :: Maybe (Typed a) -> Maybe Type
         funcRange (Just (typeOf_->(TypeFunction _ b))) = Just b
         funcRange (Just (typeOf_->((TypeSequence b)))) = Just b
-        funcRange _ = Nothing
+        funcRange _ = Just TypeAny
         part :: Arg -> Validator ()
         part (r,typeOf_->t) = case t of
             TypeAny -> valid
@@ -2058,7 +2140,7 @@ validateFuncOp l args = do
     --   Just tys -> return $ Typed (r tys)(b $ map untype tys)
 
 isOfType :: Type -> RegionTagged (Typed Expression) -> ValidatorS Bool
-isOfType t (r,v) = setContext r >> return v ?=> t  >> (return $ typesUnifyS [t,typeOf_ v])
+isOfType t (r,v) = setContext r >> return v ?=> exactly t  >> (return $ typesUnifyS [t,typeOf_ v])
 
 isLogicalContainer :: RegionTagged (Typed Expression) -> Validator ()
 isLogicalContainer (r,Typed t e) = do
@@ -2108,7 +2190,7 @@ unFunc argVal t f args = do
                   Nothing -> Nothing
                   Just _ -> Just $ map (untype . unregion) [x]
             return (result,(Just $ unregion x))
-    let res = maybe (fallback "argFail")  f v
+    let res = maybe (fallback "Arg Fail Unfunc")  f v
     return $ Typed (fromMaybe TypeAny $ t ts) res
 biFunc :: (Arg -> Arg -> Validator a) -> (Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe Type) -> ([Expression]->Expression)  -> [Arg]-> ValidatorS (Typed Expression)
 biFunc argVal t f args = do
@@ -2129,7 +2211,7 @@ biFunc argVal t f args = do
                   Nothing -> Nothing
                   Just _ -> Just $ map (untype . unregion) [x,y]
             return (result,(Just (unregion x) , Just (unregion y)))
-    let res = maybe (fallback "argFail")  f v
+    let res = maybe (fallback "Arg Fail BiFunct")  f v
     return $ Typed (fromMaybe TypeAny $ uncurry t ts) res
 
 triFunc :: (Arg  -> Arg -> Arg -> Validator a) -> (Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe (Typed Expression) -> Maybe Type) -> ([Expression]->Expression)  -> [Arg]-> ValidatorS (Typed Expression)
@@ -2152,7 +2234,7 @@ triFunc argVal t f args = do
                     Nothing -> Nothing
                     Just _ -> Just $ map (untype . unregion) [x,y,z]
             return (result,(Just (unregion x) , Just (unregion y), Just (unregion z)))
-    let res = maybe (fallback "argFail") f v
+    let res = maybe (fallback "Arg Fail Tri") f v
     return $ Typed (fromMaybe TypeAny $ uncurry3 t ts) res
     where uncurry3 f (a,b,c) = f a b c --todo export from prelude
 tooFewArgs :: Int -> Int -> ValidatorS ()

@@ -244,7 +244,8 @@ operators =
 
 overloadedFunctionals :: [Lexeme]
 overloadedFunctionals = [
-    L_Sum
+    L_Sum,
+    L_fXor
     ]
 
 functionals :: [Lexeme]
@@ -309,6 +310,7 @@ quantifiers :: [Lexeme]
 quantifiers = [
     L_ForAll,
     L_Exists,
+    L_Product,
     L_Sum
     ]
 

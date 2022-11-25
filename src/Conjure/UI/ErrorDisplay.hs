@@ -44,7 +44,7 @@ displayError x = case x of
   MissingArgsError expected got -> "Insufficient args, expected " ++ (show expected) ++ " got " ++ (show got)
   InternalError -> "Pattern match failiure"
   InternalErrorS txt -> "Something went wrong:" ++ T.unpack txt
-
+  WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
 showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Text -> String
 showDiagnosticsForConsole errs text
     =   case runParser (captureErrors errs) "Errors" text of

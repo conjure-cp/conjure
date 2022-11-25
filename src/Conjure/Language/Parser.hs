@@ -52,17 +52,17 @@ import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
 
 
-type Pipeline a b = (Parsec Void ETokenStream a,a -> V.ValidatorS b)
+type Pipeline a b = (Parsec Void ETokenStream a,a -> V.ValidatorS b,Bool)
 
 
 data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError Doc
     deriving (Show)
 
-runPipeline ::(?typeChecking::Bool) => Pipeline a b -> Text -> Either PipelineError b
-runPipeline (parse,val) txt = do
+runPipeline :: Pipeline a b -> Text -> Either PipelineError b
+runPipeline (parse,val,tc) txt = do
             lexResult <- either (Left . LexErr) Right $ L.runLexer txt
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
-            let x = V.runValidator (val parseResult) def{V.typeChecking= ?typeChecking}
+            let x = V.runValidator (val parseResult) def{V.typeChecking= tc}
             case x of
                 (Just m, ds,_) | not $ any V.isError ds -> Right m
                 (_, ves,_) -> Left $ ValidatorError $ text (showDiagnosticsForConsole ves txt)
@@ -71,7 +71,7 @@ runPipeline (parse,val) txt = do
 
 
 parseModel :: Pipeline ProgramTree Model
-parseModel = (parseProgram,V.strict . V.validateModel)
+parseModel = (parseProgram,V.strict . V.validateModel,True)
     -- inCompleteFile $ do
     -- let
     --     pLanguage :: Parser LanguageVersion
@@ -99,7 +99,7 @@ parseModel = (parseProgram,V.strict . V.validateModel)
     --     }
 
 
-parseIO :: (?typeChecking::Bool ,MonadFailDoc m) => Pipeline i a -> String -> m a
+parseIO :: (MonadFailDoc m) => Pipeline i a -> String -> m a
 parseIO p s = do
             case runPipeline p $ T.pack s of
                 Left err -> failDoc $ text $show err
@@ -121,7 +121,7 @@ parseIO p s = do
 -- --------------------------------------------------------------------------------
 
 parseTopLevels :: Pipeline [S.StatementNode] [Statement]
-parseTopLevels = (P.parseTopLevels,V.strict . V.validateProgramTree)
+parseTopLevels = (P.parseTopLevels,V.strict . V.validateProgramTree,False)
 --     let one = satisfyL $ \case
 --                 L_find -> Just $ do
 --                     decls <- flip sepEndBy1 comma $ do
@@ -234,11 +234,11 @@ parseTopLevels = (P.parseTopLevels,V.strict . V.validateProgramTree)
 --             return (RangeSingle x)
 
 parseDomain :: Pipeline DomainNode (Domain () Expression)
-parseDomain = (P.parseDomain,fmap V.untype . V.validateDomain)
+parseDomain = (P.parseDomain,fmap V.untype . V.validateDomain,True)
 
 
 parseDomainWithRepr :: Pipeline DomainNode (Domain HasRepresentation Expression)
-parseDomainWithRepr = (P.parseDomain, fmap V.untype . V.validateDomainWithRepr)
+parseDomainWithRepr = (P.parseDomain, fmap V.untype . V.validateDomainWithRepr,True)
 --     -- TODO: uncomment the following to parse (union, intersect and minus) for domains
 --     -- let
 --     --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
@@ -630,7 +630,7 @@ parseDomainWithRepr = (P.parseDomain, fmap V.untype . V.validateDomainWithRepr)
 -- metaVarInE = ExpressionMetaVar
 
 parseExpr :: Pipeline S.ExpressionNode Expression
-parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> TypeAny)
+parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAny,True)
 --     let
 --         mergeOp op = mkBinOp (lexemeText op)
 
@@ -1003,7 +1003,6 @@ runLexerAndParser :: Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p inp of
   Left pe -> Left $ "Parser error in file:" <+> text file <+> text  ("Error is:\n" ++ show pe)
   Right a -> Right a
-  where ?typeChecking = True
 --     ls <- runLexer inp
 --     case runParser p file ls of
 --         Left (msg, line, col) ->

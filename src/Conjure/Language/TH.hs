@@ -22,54 +22,53 @@ import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 -- syb
 import Data.Generics.Aliases ( extQ )
 
+noTC :: (a, b, c) -> (a, b, Bool)
+noTC (a,b,_) = (a,b,False)
 
 essenceStmts :: QuasiQuoter
 essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         -- l <- locationTH
-        e <- parseIO parseTopLevels str
+        e <- parseIO (noTC parseTopLevels) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         -- l <- locationTH
-        e <- parseIO  parseTopLevels str
+        e <- parseIO  (noTC parseTopLevels) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
-    where ?typeChecking = False
 
 essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
         -- l <- locationTH
-        e <- do parseIO parseExpr str
+        e <- do parseIO (noTC parseExpr) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         -- l <- locationTH
-        e <- do parseIO  parseExpr str
+        e <- do parseIO  (noTC parseExpr) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
-    where ?typeChecking = False
 
 essenceDomain :: QuasiQuoter
 essenceDomain = QuasiQuoter
     { quoteExp = \ str -> do
         -- l <- locationTH
-        e <- parseIO  parseDomain str
+        e <- parseIO  (noTC parseDomain) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         -- l <- locationTH
-        e <- do parseIO parseDomain str
+        e <- do parseIO (noTC parseDomain) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
-    where ?typeChecking = False
 -- locationTH :: Q SourcePos
 -- locationTH = do
 --     loc <- location
