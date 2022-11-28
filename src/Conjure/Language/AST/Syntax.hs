@@ -398,8 +398,8 @@ newtype Sequence itemType = Seq
 
 instance (Null a) => Null (SeqElem a) where
     isMissing (SeqElem i Nothing)= isMissing i
-    isMissing (SeqElem i x) = isMissing x
-    isMissing (MissingSeqElem{}) = True
+    isMissing (SeqElem i x) = isMissing i && isMissing x
+    isMissing (MissingSeqElem _ c) = isMissing c
 
 instance (Null a) => Null (Sequence a) where
     isMissing (Seq []) = True

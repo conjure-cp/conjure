@@ -103,7 +103,7 @@ parseDeclaration =
                     declaration FindStatement L_find parseFind
         ]
     where
-        declaration :: (Null a) => (LToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
+        declaration :: (Null a,Show a) => (LToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
         declaration c t p = do
                             l <- need t
                             seq <- commaList1 p
@@ -472,9 +472,10 @@ parseOperator = try (makeExprParser parseAtomicExpressionAndFixes operatorTable 
 parseFunction :: Parser ExpressionNode
 parseFunction = try $ do
     name <- choice $ map need functionals
-    let parenP = if  isOverloaded name then parenListStrict else parenList
+    let ol = isOverloaded name
+    let parenP = if ol then parenListStrict else parenList
     args <-  parenP $ commaList parseExpression
-    guard $ argsHasNoLeadingTrivia args
+    guard $ not ol || argsHasNoLeadingTrivia args
     return $ FunctionalApplicationNode name args
     where
         isOverloaded (RealToken _ ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
@@ -795,13 +796,23 @@ attributesAsLexemes xs = do
 example :: String -> IO ()
 example s = do
     let str = s
-    let other = [ETok ( Offsets 0 0 0 (initialPos "") ) [] L_EOF ""]
     let txt  = pack str
-    let lexed = parseMaybe eLex  txt
-    putStrLn "Lexmes"
-    putStrLn $ show  lexed
-    let stream = ETokenStream txt $ fromMaybe other lexed
-    parseTest parseProgram stream
+    let lexed = runParser eLex "lexer" txt
+    case lexed of
+      Left peb -> putStrLn "Lexer error:" >> (putStrLn $ errorBundlePretty peb)
+      Right ets -> do
+        putStrLn "Lexmes"
+        putStrLn $ show  ets
+        putStrLn $ "reformed"
+        putStrLn $ concatMap reform ets
+        let stream = ETokenStream txt  ets
+        case runParser parseProgram "" stream of
+          Left peb -> putStrLn "Parser error: " >> (putStrLn $ errorBundlePretty peb)
+          Right pt -> do
+            putStrLn $show pt
+            putStrLn $ "Reforming"
+            putStrLn $ show $ flatten pt
+            putStrLn $ reformList $ flatten pt
 
 exampleFile :: String -> IO ()
 exampleFile p = do

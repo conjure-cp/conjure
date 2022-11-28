@@ -245,7 +245,7 @@ operators =
 overloadedFunctionals :: [Lexeme]
 overloadedFunctionals = [
     L_Sum,
-    L_fXor
+    L_Product
     ]
 
 functionals :: [Lexeme]

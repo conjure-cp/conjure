@@ -93,7 +93,7 @@ instance Flattenable ExpressionNode where
 
 instance Flattenable SpecialCaseNode where 
     flatten x = case x of 
-        ExprWithDecls l1 en l2 sns l3 -> mconcat [flatten l1,flatten en,flatten l2, flatten l2, flatten sns , flatten l3]
+        ExprWithDecls l1 en l2 sns l3 -> mconcat [flatten l1,flatten en,flatten l2, flatten sns , flatten l3]
 
 instance Flattenable DomainExpressionNode where
     flatten (DomainExpressionNode a b c) = flatten a >< flatten b >< flatten c

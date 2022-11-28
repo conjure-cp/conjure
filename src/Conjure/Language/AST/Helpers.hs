@@ -90,10 +90,10 @@ parseIdentifierStrict = do
 
 -- List helpers
 
-commaList ::(Null a) => Parser a -> Parser (Sequence a)
+commaList ::(Null a,Show a) => Parser a -> Parser (Sequence a)
 commaList = parseSequence L_Comma
 
-commaList1 ::(Null a) => Parser a -> Parser (Sequence a)
+commaList1 ::(Null a, Show a) => Parser a -> Parser (Sequence a)
 commaList1 = parseSequence1 L_Comma
 
 squareBracketList :: Parser (Sequence a) -> Parser (ListNode a)
@@ -136,19 +136,19 @@ parseListStrict startB endB seq = do
 --         s <- need divider
 --         SeqElem (Just s) <$> pElem
 
-parseSequence1 :: (Null a) => Lexeme -> Parser a -> Parser (Sequence a)
+parseSequence1 :: (Null a,Show a) => Lexeme -> Parser a -> Parser (Sequence a)
 parseSequence1 divider pElem = do
     s <- parseSequence divider pElem
     case s of 
-        Seq [] -> do
+        Seq [] -> try $ do
                 q <- pElem
                 return $ Seq [SeqElem q Nothing]
         Seq _ -> return s
 
            
 
-parseSequence :: (Null a) => Lexeme -> Parser a -> Parser (Sequence a)
-parseSequence divider pElem = do
+parseSequence :: (Null a,Show a) => Lexeme -> Parser a -> Parser (Sequence a)
+parseSequence divider pElem = try $ do
     missingPlaceholder <- makeMissing $ L_Missing "SequenceElem"
     elem <- optional pElem
     sep <- want divider
@@ -161,10 +161,10 @@ parseSequence divider pElem = do
     where
     makeElem rest el sep plc = do
             let newElem = case (el, isMissing sep) of 
-                    (Just a, True) -> [SeqElem a $ if null rest then Nothing else Just sep ]
+                    (Just a, True) ->[SeqElem a $ if null rest then Nothing else Just sep ]
                     (a,False) | isMissing a -> [MissingSeqElem plc sep]
                     (Just a,_) -> [SeqElem a $ Just sep]
-                    _ -> [] 
+                    _ -> []
             return $ Seq $ newElem++rest 
 
                     
@@ -172,8 +172,8 @@ parseSequence divider pElem = do
 
 
 
-parseNESequence :: (Null a) => Lexeme -> Parser a -> Parser (Sequence a)
-parseNESequence divider pElem = do
+parseNESequence :: (Null a,Show a) => Lexeme -> Parser a -> Parser (Sequence a)
+parseNESequence divider pElem =try $ do
     lst <- try $ parseSequence divider pElem
     case lst of
         Seq {elems=[]} -> empty

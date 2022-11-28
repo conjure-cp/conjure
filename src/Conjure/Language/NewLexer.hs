@@ -20,6 +20,8 @@ import Data.List (splitAt)
 import qualified Data.List.NonEmpty as NE
 import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Sequence (Seq)
+import qualified Text.Megaparsec as L
+import Prelude (read)
 
 sourcePos0 :: SourcePos
 sourcePos0 = SourcePos "" (mkPos  0) (mkPos 0)
@@ -28,6 +30,7 @@ class Reformable a where
     reform :: a -> String
 
 instance Reformable ETok where
+    reform e | oTLength (offsets e) == 0 = ""
     reform (ETok{capture=cap,trivia=triv}) = concatMap showTrivia triv ++ T.unpack cap
         where
             showTrivia :: Trivia -> String
@@ -89,12 +92,12 @@ sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = Sourc
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 
-data LexerError = LexerError
+data LexerError = LexerError String
     deriving (Show)
 
 runLexer :: Text -> Either LexerError ETokenStream
 runLexer txt = case runParser eLex "Lexer" txt of
-  Left peb -> Left LexerError
+  Left peb -> Left $ LexerError $ errorBundlePretty peb
   Right ets -> Right $ ETokenStream txt ets
 
 
@@ -141,8 +144,9 @@ aLexemeStrict =
 
 pNumber :: Lexer (Lexeme,Text)
 pNumber = do
-    v <- L.decimal
-    return (LIntLiteral v,T.pack $ show  v)
+    v <- takeWhile1P Nothing (`elem` ['1','2','3','4','5','6','7','8','9','0']) 
+    let n = read $ T.unpack v
+    return (LIntLiteral n,v)
     <?> "Numeric Literal"
 
 pMetaVar :: Lexer (Lexeme,Text)
@@ -192,8 +196,9 @@ whiteSpace = do
 quoted :: Lexer Text
 quoted = do
     open <- char '\"'
-    (body,end) <- manyTill_ L.charLiteral $ char '\"' 
+    (body,end) <- manyTill_ anySingle $ char '\"' 
     return $ T.pack  $ open:body++[end]
+
 lineEnd :: Lexer [Char]
 lineEnd = T.unpack <$> eol <|> ( eof >> return [])
 
@@ -206,8 +211,10 @@ lineComment = do
 blockComment :: Lexer Trivia
 blockComment = do
     _ <- try (chunk "/*")
-    text <- manyTill L.charLiteral (chunk "*/")
-    return $ BlockComment $ T.pack text
+    text <- manyTill L.anySingle (lookAhead (void(chunk "*/") <|>eof))
+    cl <- optional $ chunk "*/"
+    let cl' = fromMaybe "" cl
+    return $ BlockComment $ T.concat ["/*",T.pack text ,cl' ]
 
 instance Show ETok where
     show (ETok _ _ q _) = show q
