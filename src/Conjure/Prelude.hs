@@ -138,7 +138,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, appendFile, getLine )
-import System.IO.Error ( isDoesNotExistError )
+import System.IO.Error ( isDoesNotExistError, isUserError, ioeGetErrorType )
 import Control.Exception as X ( catch, throwIO, SomeException )
 
 import Data.Proxy as X ( Proxy(..) )
@@ -227,6 +227,7 @@ import System.TimeIt as X ( timeIt, timeItNamed )
 
 import Debug.Trace as X ( trace, traceM )
 import Data.Void (Void)
+import GHC.IO.Exception (IOErrorType(InvalidArgument))
 
 
 tracing :: Show a => String -> a -> a
@@ -602,8 +603,9 @@ readFileIfExists :: FilePath -> IO (Maybe String)
 readFileIfExists f = (Just <$> readFile f) `catch` handleExists
     where
         handleExists e
+            | ioeGetErrorType e == InvalidArgument = return Nothing -- handle non-text files gracefully
             | isDoesNotExistError e = return Nothing
-            | otherwise = throwIO e
+            | otherwise = trace (show e) $ throwIO e
 
 removeDirectoryIfExists :: FilePath -> IO ()
 removeDirectoryIfExists f = removeDirectoryRecursive f `catch` handleExists
