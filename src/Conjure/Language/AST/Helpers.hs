@@ -7,9 +7,16 @@ import Conjure.Prelude hiding (many)
 import qualified Data.Set as Set
 import Data.Void
 import Text.Megaparsec
+import Text.Megaparsec.Debug (MonadParsecDbg(dbg))
 
-type Parser = Parsec Void ETokenStream
-
+type Parser = StateT ParserState (Parsec Void ETokenStream)
+data ParserState = ParserState {
+    lastMissingExpOffset::Int,
+    context :: [String]
+}
+    deriving Show
+instance Default ParserState where
+    def = ParserState 0 []
 eSymbol :: Lexeme -> Parser ETok
 eSymbol lx = token test Set.empty <?> "Symbol " ++ show lx
   where

@@ -97,7 +97,7 @@ val s = do
     let lexed = parseMaybe eLex txt
     let stream = ETokenStream txt $ fromMaybe other lexed
     -- parseTest parseProgram stream
-    let progStruct = runParser parseProgram "TEST" stream
+    let progStruct = (runParser (evalStateT parseProgram def) "TEST" stream)
 
     case progStruct of
         Left _ -> putStrLn "error"

@@ -50,9 +50,10 @@ import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
 import Text.PrettyPrint (text)
 import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
+import Conjure.Language.AST.Helpers (ParserState)
 
 
-type Pipeline a b = (Parsec Void ETokenStream a,a -> V.ValidatorS b,Bool)
+type Pipeline a b = ( (StateT ParserState (Parsec Void ETokenStream)) a ,a -> V.ValidatorS b,Bool)
 
 
 data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError Doc

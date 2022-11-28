@@ -23,15 +23,17 @@ import Language.Haskell.TH.PprLib (rparen)
 import Conjure.Language.Attributes (allAttributLexemes)
 import Data.Sequence (Seq)
 import Text.PrettyPrint.HughesPJ (text)
+import Text.Megaparsec.Debug (dbg)
 
 data ParserError = ParserError Doc
     deriving (Show)
 
 
 runASTParser :: Parser a -> ETokenStream -> Either ParserError a
-runASTParser p str = case runParser p "Parser" str of
-  Left peb -> Left $ ParserError . text $ errorBundlePretty peb
-  Right res -> Right res
+runASTParser p str =
+    case runParser (evalStateT p def) "parser" str of
+        Left peb -> Left $ ParserError . text $ errorBundlePretty peb
+        Right res -> Right res
 
 parseProgram :: Parser ProgramTree
 parseProgram =  do
@@ -52,7 +54,7 @@ parseTopLevels :: Parser [StatementNode]
 parseTopLevels = manyTill parseTopLevel pEnding
 
 parseTopLevel :: Parser StatementNode
-parseTopLevel =
+parseTopLevel = 
     do
             parseDeclaration
         <|> parseBranching
@@ -78,7 +80,7 @@ parseBranching = do
 
 
 parseSuchThat :: Parser StatementNode
-parseSuchThat = do
+parseSuchThat =  do
     lSuch <- need L_such
     lThat <- want L_that
     exprs <- commaList1 parseExpression
@@ -188,10 +190,19 @@ pEnding =  do
 
 ---------------------------------------
 
+guardExpressionOverlap :: Parser ()
+guardExpressionOverlap = do
+    off <- getOffset
+    lastOffset <- gets lastMissingExpOffset
+    -- traceC $ "DME query:" ++ show off ++ "," ++ show lastOffset
+    guard $ off > lastOffset
+    -- traceC $ "DME used:" ++ show off
+    modify (\x->x{lastMissingExpOffset=off})
+
 parseExpression :: Parser ExpressionNode
-parseExpression = 
-    parseOperator
-        <|> parseAtomicExpression
+parseExpression =  do
+    (parseOperator)
+        <|> (parseAtomicExpression) <|> (MissingExpressionNode <$> makeMissing (L_Missing "expression"))
 
 parseExpressionStrict :: Parser ExpressionNode -- can fail
 parseExpressionStrict = do
@@ -204,17 +215,18 @@ parseAtomicExpression :: Parser ExpressionNode
 parseAtomicExpression = do
     try $
         choice
-            [ 
-              parseSpecialCase
-            , Literal <$> parseLiteral
-            , parseFunction
-            , parseAttributeAsConstraint
-            , IdentifierNode <$> parseIdentifierStrict
-            , MetaVarExpr <$> parseMetaVar
-            , ParenExpression <$> parseParenExpression parensPair
-            , AbsExpression <$> parseAbsExpression
-            , QuantificationExpr <$> parseQuantificationStatement
-            , DomainExpression <$> parseDomainExpression
+            [
+               parseSpecialCase
+            ,  Literal <$> parseLiteral
+            ,  parseFunction
+            ,  parseAttributeAsConstraint
+            ,  IdentifierNode <$> parseIdentifierStrict
+            ,  MetaVarExpr <$> parseMetaVar
+            ,  ParenExpression <$> parseParenExpression parensPair
+            ,  AbsExpression <$> parseAbsExpression
+            ,  QuantificationExpr <$> parseQuantificationStatement
+            ,  DomainExpression <$> parseDomainExpression
+            ,  guardExpressionOverlap >> MissingExpressionNode <$> (makeMissing $ L_Missing "Expr")
             ]
 
 
@@ -467,7 +479,7 @@ parseComprehensionCondition = do
 -- Current implementation is hacky
 
 parseOperator :: Parser ExpressionNode
-parseOperator = try (makeExprParser parseAtomicExpressionAndFixes operatorTable <?> "Expression")
+parseOperator =  try (makeExprParser parseAtomicExpressionAndFixes operatorTable <?> "Expression")
 
 parseFunction :: Parser ExpressionNode
 parseFunction = try $ do
@@ -490,7 +502,7 @@ parseAttributeAsConstraint = do
 
 
 parsePostfixOp :: Parser (ExpressionNode -> ExpressionNode)
-parsePostfixOp = do
+parsePostfixOp =  do
     op <-
         try $
             choice
@@ -552,7 +564,7 @@ parseAtomicExpressionAndFixes = try $ do
             return $ foldr1 (.) (reverse fs)
         withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
         withPostfix x = do i <- x; guard $ not $ isMissing i ; mf <- optional postfixes; return $ fromMaybe id mf i
-    withPrefix (withPostfix parseAtomicExpression) <?> "expression"    
+    withPrefix (withPostfix parseAtomicExpression) <?> "expression"
 
 
 parsePrefixes :: Parser (ExpressionNode -> ExpressionNode)
@@ -656,7 +668,7 @@ parseMatrix = do
     lMatrix <- need L_matrix
     lIndexed <- want L_indexed
     lBy <- want L_by
-    let indexByNode = case (lIndexed,lBy) of 
+    let indexByNode = case (lIndexed,lBy) of
             (MissingToken _,MissingToken _) -> Nothing
             _ -> Just (IndexedByNode lIndexed lBy)
     members <- squareBracketList $ commaList parseDomain
@@ -735,7 +747,7 @@ parseNameDomain = do
     name <- parseIdentifier
     lColon <- want L_Colon
     domain <- parseDomain
-    let definedDomain = case (lColon,domain) of 
+    let definedDomain = case (lColon,domain) of
             (a,b) | isMissing a && isMissing b -> Nothing
             (a,b) -> Just (a,b)
     return $ NameDomainNode name definedDomain
@@ -806,7 +818,7 @@ example s = do
         putStrLn $ "reformed"
         putStrLn $ concatMap reform ets
         let stream = ETokenStream txt  ets
-        case runParser parseProgram "" stream of
+        case runParser (evalStateT parseProgram def) "parser" stream  of
           Left peb -> putStrLn "Parser error: " >> (putStrLn $ errorBundlePretty peb)
           Right pt -> do
             putStrLn $show pt
@@ -822,33 +834,44 @@ exampleFile p = do
       Just s -> example s
     return ()
 
+contextRegion :: String -> Parser a -> Parser a
+contextRegion l m = do
+    prev <- gets context
+    modify (\x->x{context=l:prev})
+    r <- m
+    modify (\x->x{context=prev})
+    return r
 
-parsePrint :: String -> IO ()
-parsePrint text = do
-    toks <- parseAndRevalidate (pack text) eLex (concatMap reform) text
-    case toks of
-      Left (a,b)-> do
-            putStrLn "Lexer wasn't reversible"
-            showDiff a b
-      Right ets -> putStrLn "Lexer success" >> do
-            tree <- parseAndRevalidate (ETokenStream (pack text) ets) parseProgram (\v -> reformList (flatten v :: Seq ETok) ) text
-            case tree of
-              Left (a,b) -> do
-                        putStrLn "Parser wasn't reversible:"
-                        showDiff a b
-              Right _ -> putStrLn "Success"
-    where
-        showDiff a b = do
-            putStrLn "got vvvvvvvvv"
-            putStrLn a
-            putStrLn "expected vvvvvvvvv"
-            putStrLn b
+traceC :: String -> Parser ()
+traceC msg = do
+    ctx <- gets context
+    traceM $ intercalate "." (reverse ctx) ++ msg
+-- parsePrint :: String -> IO ()
+-- parsePrint text = do
+--     toks <- parseAndRevalidate (pack text) eLex (concatMap reform) text
+--     case toks of
+--       Left (a,b)-> do
+--             putStrLn "Lexer wasn't reversible"
+--             showDiff a b
+--       Right ets -> putStrLn "Lexer success" >> do
+--             tree <- parseAndRevalidate (ETokenStream (pack text) ets) parseProgram (\v -> reformList (flatten v :: Seq ETok) ) text
+--             case tree of
+--               Left (a,b) -> do
+--                         putStrLn "Parser wasn't reversible:"
+--                         showDiff a b
+--               Right _ -> putStrLn "Success"
+--     where
+--         showDiff a b = do
+--             putStrLn "got vvvvvvvvv"
+--             putStrLn a
+--             putStrLn "expected vvvvvvvvv"
+--             putStrLn b
 
 
-parseAndRevalidate ::(VisualStream a,TraversableStream a,Stream a,Show b) => a -> ParsecT Void a Identity b -> (b -> String) -> String -> IO (Either (String,String) b)
-parseAndRevalidate src p f ref = do
-                            case runParser p "" src of
-                                Left _ -> do
-                                            putStrLn "Parse error"
-                                            parseTest p src >> empty
-                                Right res -> return  (if f res == ref then Right res else Left (f res,ref))
+-- parseAndRevalidate ::(VisualStream a,TraversableStream a,Stream a,Show b) => a -> ParsecT Void a (StateT ParserState Identity) b -> (b -> String) -> String -> IO (Either (String,String) b)
+-- parseAndRevalidate src p f ref = do
+--                             case evalState (runParserT p "" src) def of
+--                                 Left _ -> do
+--                                             putStrLn "Parse error"
+--                                             parseTest p src >> empty
+--                                 Right res -> return  (if f res == ref then Right res else Left (f res,ref))
