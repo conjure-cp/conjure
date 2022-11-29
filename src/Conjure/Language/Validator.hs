@@ -160,14 +160,15 @@ data DeclarationType = Definition | LiteralDecl | Ref DiagnosticRegion
 data RegionInfo = RegionInfo {
     rRegion :: DiagnosticRegion,
     rType :: Type,
+    rText :: Text,
     rDeclaration :: DeclarationType
 } deriving Show
 
-mkDeclaration :: DiagnosticRegion -> Typed a -> RegionInfo
-mkDeclaration r (Typed t _) = RegionInfo r t Definition
+mkDeclaration :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
+mkDeclaration r n (Typed t _) = RegionInfo r t n Definition
 
-mkLiteral :: DiagnosticRegion -> Typed a -> RegionInfo
-mkLiteral r (Typed t _) = RegionInfo r t LiteralDecl
+mkLiteral :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
+mkLiteral r n (Typed t _) = RegionInfo r t n LiteralDecl
 
 
 data ValidatorState = ValidatorState {
@@ -308,7 +309,7 @@ validateHeuristicStatement lt exp = do
     checkSymbols [lt]
     h <- case exp of
       IdentifierNode nn@(NameNode (RealToken _ (ETok{lexeme=(LIdentifier nm)}))) -> do
-                    if nm `elem` validHeuristics then 
+                    if nm `elem` validHeuristics then
                         return $ pure [SearchHeuristic  (Name nm)]
                     else
                         invalid $ symbolRegion nn <!> (SemanticError $ T.concat ["Invalid heuristic " , nm , " Expected one of: ", (pack $ show validHeuristics )])
@@ -321,7 +322,7 @@ tCondition (Typed TypeAny _) = pure ()
 tCondition (Typed TypeBool _) = pure ()
 tCondition (Typed (TypeMatrix _ TypeBool) _) = pure ()
 tCondition (Typed (TypeList TypeBool) _) = pure ()
-tCondition t = contextTypeError $ ComplexTypeError "Bool or [Bool]" $ typeOf_ t 
+tCondition t = contextTypeError $ ComplexTypeError "Bool or [Bool]" $ typeOf_ t
 
 validateWhereStatement :: WhereStatementNode -> ValidatorS [Statement]
 validateWhereStatement (WhereStatementNode l1 exprs) = do
@@ -379,7 +380,7 @@ validateGiven (GivenStatementNode idents l1 domain) =
         checkSymbols [l1]
         names <-  validateNameList idents
         (dType, dom) <- typeSplit <$> validateDomain domain
-        let declarations = map (flip mkDeclaration (Typed TypeAny 1) . fst) names
+        let declarations = [(mkDeclaration r n (Typed dType 1)) | (r, Name n) <- names]
         mapM_ addRegion declarations
         mapM_ (\(r,x) -> putSymbol (x,(r,False,dType)) ) names
         return  $ [ FindOrGiven Given nm dom|(_,nm) <- names ]
@@ -397,6 +398,7 @@ validateFind (FindStatementNode names colon domain) = do
     names' <- validateNameList names
     (dType, dom) <- typeSplit <$> validateDomain domain
     mapM_ (\(r,x) -> putSymbol (x,(r,False,dType) )) names'
+    mapM_ addRegion [(mkDeclaration r n (Typed dType 1)) | (r, Name n) <- names']
     return  $ [ FindOrGiven Find nm dom|(_,nm) <- names']
 
 validateLetting :: LettingStatementNode -> ValidatorS [Declaration]
@@ -411,31 +413,33 @@ validateLettingAssignment names (LettingExpr en)  = do
     expr <- validateExpression en
     setContextFrom en
     let (t,e) = typeSplit expr
-    let declarations = map (\(r,_)->mkDeclaration r expr) names
+    let declarations = [mkDeclaration r n (Typed t 1) |(r, Name n) <- names]
     mapM_ addRegion declarations
     mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names
     return  $ [Letting n e | (_,n) <- names]
 validateLettingAssignment names (LettingDomain lt dn) = do
     checkSymbols [lt]
     (tDomain,domain) <- typeSplit <$> validateDomain dn
-    let declarations = map (\(r,_)->mkDeclaration r (Typed tDomain ())) names
+    let declarations = [ mkDeclaration r n (Typed tDomain ()) |(r, Name n) <- names]
     mapM_ addRegion declarations
     mapM_ (\(r,x) -> putSymbol (x, (r,False,tDomain))) names
     return $ [Letting n  (Domain domain)| (_,n) <- names]
 validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
     checkSymbols [l1, l2, l3]
     members <- validateList_ validateName enames
-    mapM_
-        (\(r,n) -> do
-            let nameMap = zip members ([1..] :: [Int])
-            let Name n' = n --TODO fix me
-            let tVal = TypeInt $ TagEnum n'
-            addRegion $ RegionInfo {rRegion=r, rType=tVal, rDeclaration=Ref r}
-            void $ putSymbol (n,(r,True,tVal))
-            mapM_ (
-                \(x,i) -> putSymbol (x,(r,False,tVal))
-                ) nameMap
-        ) names
+    sequence_
+        [
+            (do
+                let nameMap = zip members ([1..] :: [Int])
+                let tVal = TypeInt $ TagEnum n
+                addRegion $ RegionInfo {rRegion=r, rText=n, rType=tVal, rDeclaration=Ref r}
+                void $ putSymbol (Name n,(r,True,tVal))
+                mapM_ (
+                    \(x,i) -> putSymbol (x,(r,False,tVal))
+                    ) nameMap
+            )
+            |(r, Name n) <- names
+        ]
     return $ [LettingDomainDefnEnum n members| (_,n) <- names]
 validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
     checkSymbols [l1, l2, l3, l4]
@@ -542,6 +546,7 @@ validateDomain dm = case dm of
     validateEnumRange :: NameNode -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
     validateEnumRange name ranges = do
         Just name' <- validateIdentifier name
+        _ <- resolveReference (symbolRegion name,Name name')
         a <- getSymbol name'
         case a of
             Just (_,True,t) -> do
@@ -923,11 +928,12 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             return $ [Condition expr']
         validateQuantificationOver :: Sequence AbstractPatternNode -> QuantificationOverNode -> ValidatorS [GeneratorOrCondition]
         validateQuantificationOver pats ( QuantifiedSubsetOfNode lt en ) = do
-            checkSymbols [lt]
+            checkSymbols [lt] --TODO sets only
             ps <- sequenceElems pats
             exp <- validateExpression en
             let (t,e) = typeSplit exp
-            apats <- unifyPatterns t ps
+            pt <- projectionType (symbolRegion en) t 
+            apats <- unifyPatterns pt ps
             return [Generator $ GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet (e)) | pat <- apats]
         -- x in exp
         validateQuantificationOver pats ( QuantifiedMemberOfNode lt en ) = do
@@ -943,7 +949,8 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             checkSymbols [l1]
             ps <- sequenceElems pats
             (dType,dom') <- typeSplit <$> validateDomain dom
-            apats <- unifyPatterns dType ps
+            pt <- projectionTypeDomain (symbolRegion dom) dType
+            apats <- unifyPatterns pt ps
             return [ Generator $ GenDomainNoRepr pat dom'| pat <- apats]
 
 
@@ -987,7 +994,7 @@ validateOperatorExpression :: OperatorExpressionNode -> ValidatorS (Typed Expres
 validateOperatorExpression (PrefixOpNode lt expr) = do
     Just op <-  validateSymbol lt
     setContextFrom expr
-    let (refT) = case op of 
+    let (refT) = case op of
             L_Minus -> tInt
             L_ExclamationMark -> TypeBool
             _ -> bug . text $ "Unknown prefix op " ++ show op
@@ -1097,7 +1104,7 @@ validateIndexingOrSlicing exp range = do
     return $ Typed mType $ Op $ MkOpSlicing (OpSlicing m i j)
 
 validateRecordMemberIndex :: [(Name,Type)] -> ExpressionNode -> ValidatorS (Type,Expression)
-validateRecordMemberIndex ns (IdentifierNode nn) = do 
+validateRecordMemberIndex ns (IdentifierNode nn) = do
     n <- validateName nn
     let t = lookup n ns
     ty <- case t of
@@ -1109,14 +1116,14 @@ validateRecordMemberIndex ns (IdentifierNode nn) = do
         return TypeAny
     return $ (ty,Reference n Nothing)
 validateRecordMemberIndex ns (MissingExpressionNode nn) = do
-    raiseError $ symbolRegion nn <!> 
+    raiseError $ symbolRegion nn <!>
         WithReplacements
             (SemanticError "Expected member of record/variant ")
             [x | (Name x,_) <- ns]
     return (TypeAny,fallback "bad Index")
 validateRecordMemberIndex ns en = do
-    g <- validateExpression en 
-    let msg = T.concat 
+    g <- validateExpression en
+    let msg = T.concat
             [
                 "Expected one of ",
                 T.intercalate "," [x | (Name x,_) <- ns],
@@ -1324,7 +1331,8 @@ validateComprehensionBody (CompBodyCondition en) = do
 validateComprehensionBody (CompBodyDomain apn l1 dom) = do
     checkSymbols [l1]
     (td,domain) <- typeSplit <$> validateDomain dom
-    pats <- validateSequence_ (flip unifyPattern td . Just) apn
+    td' <- projectionTypeDomain (symbolRegion dom) td
+    pats <- validateSequence_ (flip unifyPattern td' . Just) apn
     return  $ [Generator  (GenDomainNoRepr pat domain) | pat <- pats]
 
 -- x <- expr
@@ -1351,11 +1359,23 @@ projectionType r t = case t of
           TypeList ty -> return ty
           TypeSet ty -> return ty
           TypeMSet ty -> return ty
-          TypeSequence ty -> return ty
+          TypeSequence ty -> return $ TypeTuple [tInt,ty]
           TypeRelation ts -> return $ TypeTuple ts
           TypeFunction fr to -> return $ TypeTuple [fr,to]
           _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Expression of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
-
+projectionTypeDomain :: DiagnosticRegion -> Type -> ValidatorS Type
+projectionTypeDomain r t = case t of --TODO check and do properly
+          TypeAny -> return  TypeAny
+          TypeTuple tys -> return t
+          TypeMatrix i ty -> return ty
+          TypeInt t -> return $ TypeInt t
+          TypeList ty -> return ty
+          TypeSet ty -> return ty
+          TypeMSet ty -> return ty
+          TypeSequence ty -> return $ TypeTuple [tInt,ty]
+          TypeRelation ts -> return $ TypeTuple ts
+          TypeFunction fr to -> return $ TypeTuple [fr,to]
+          _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Expression of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
 mkAbstractLiteral :: AbstractLiteral Expression -> Expression
 mkAbstractLiteral x = case e2c (AbstractLiteral x) of
                         Nothing -> AbstractLiteral x
@@ -1591,7 +1611,7 @@ resolveReference (r,Name n) = do
     case c of
       Nothing -> raiseTypeError (r <!> (CustomError . pack $ "Symbol not found "++ show n)) >> return TypeAny
       Just (reg,_,t) -> do
-        addRegion (RegionInfo {rRegion=r, rType=t, rDeclaration=Ref reg})
+        addRegion (RegionInfo {rRegion=r,rText=n, rType=t, rDeclaration=Ref reg})
         return t
 resolveReference _ = return TypeAny
 
@@ -1645,7 +1665,7 @@ unifyPattern  (Just (AbstractIdentifier nn)) t = do
     -- traceM $ show n ++ ":" ++ show t
     --REVIEW don't put symbol if _ ?
     void $ putSymbol (Name n,(symbolRegion nn,False,t))
-    addRegion (RegionInfo (symbolRegion nn) t Definition)
+    addRegion (RegionInfo (symbolRegion nn) t n Definition)
     return  $ Single $  Name n
 
 unifyPattern (Just(AbstractMetaVar lt)) _ = do
