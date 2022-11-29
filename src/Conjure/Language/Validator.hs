@@ -48,13 +48,33 @@ import Control.Monad.Except (runExcept)
 import Conjure.Language.TypeOf (TypeOf(typeOf))
 import Control.Applicative
 import Conjure.Language.Expression.OpTypes (binOpType)
-import Control.Exception (evaluate)
 import Conjure.Language.AdHoc ((:<)(project))
 import Control.Monad (mapAndUnzipM)
 import Conjure.Bug (bug)
 import Text.PrettyPrint (text)
 
-
+data TaggedToken
+    = TtType        ETok
+    | TtClass       ETok
+    | TtEnum        ETok
+    | TtStruct      ETok
+    | TtParameter   ETok
+    | TtVariable    ETok
+    | TtProperty    ETok
+    | TtEnumMember  ETok
+    | TtEvent       ETok
+    | TtFunction    ETok
+    | TtMethod      ETok
+    | TtMacro       ETok
+    | TtKeyword     ETok
+    | TtModifier    ETok
+    | TtComment     ETok
+    | TtString      ETok
+    | TtNumber      ETok
+    | TtRegexp      ETok
+    | TtOperator    ETok
+    | TtOther Text  ETok
+    deriving Show
 
 
 class WithRegion a where
@@ -170,11 +190,22 @@ mkDeclaration r n (Typed t _) = RegionInfo r t n Definition
 mkLiteral :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
 mkLiteral r n (Typed t _) = RegionInfo r t n LiteralDecl
 
+--Infix symbol validation and tagging
+isA :: LToken -> (ETok -> TaggedToken) -> ValidatorS ()
+isA a b= validateSymbol a >> flagToken a b
+
+are :: [LToken] -> (ETok -> TaggedToken) -> ValidatorS ()
+are a b = mapM_ (`isA` b) a
+
+flagToken :: LToken -> (ETok -> TaggedToken) -> ValidatorS ()
+flagToken (RealToken _ t) c = modify (\x@ValidatorState{symbolCategories=sc}->x{symbolCategories=c t : sc})
+flagToken _ _ = return ()
 
 data ValidatorState = ValidatorState {
     typeChecking :: Bool,
     regionInfo :: [RegionInfo],
     symbolTable :: SymbolTable,
+    symbolCategories ::[TaggedToken],
     currentContext :: DiagnosticRegion
 }
     deriving Show
@@ -182,6 +213,7 @@ instance Default ValidatorState where
     def = ValidatorState {
         typeChecking = True,
         regionInfo=[],
+        symbolCategories=[],
         symbolTable=M.empty,
         currentContext=GlobalRegion
         }
@@ -277,7 +309,7 @@ validateLanguageVersion Nothing = return $ pure $ LanguageVersion "Essence" [1,3
 validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
     setContextFrom lv
     let NameNode nt = n
-    checkSymbols [l1]
+    l1 `isA` TtKeyword
     name <- validateIdentifier n
     unless (maybe False isValidLanguageName name) (raiseError $symbolRegion  n <!> SyntaxError "Not a valid language name")
     nums <- catMaybes <$> validateSequence_ getNum v
@@ -306,7 +338,7 @@ validateStatement (UnexpectedToken lt) = return [] <* (invalid $ lt <!> TokenErr
 validateHeuristicStatement :: LToken -> ExpressionNode -> ValidatorS [Statement]
 validateHeuristicStatement lt exp = do
     let validHeuristics = ["static", "sdf", "conflict", "srf", "ldf", "wdeg", "domoverwdeg"]
-    checkSymbols [lt]
+    lt `isA` TtKeyword
     h <- case exp of
       IdentifierNode nn@(NameNode (RealToken _ (ETok{lexeme=(LIdentifier nm)}))) -> do
                     if nm `elem` validHeuristics then
@@ -326,23 +358,24 @@ tCondition t = contextTypeError $ ComplexTypeError "Bool or [Bool]" $ typeOf_ t
 
 validateWhereStatement :: WhereStatementNode -> ValidatorS [Statement]
 validateWhereStatement (WhereStatementNode l1 exprs) = do
-    checkSymbols [l1]
+    l1 `isA` TtKeyword
     ws <-  Where <$> validateSequence_ (\x -> do setContextFrom x; validateExpression x ?=> tCondition) exprs
     return [ws]
 
 validateObjectiveStatement :: ObjectiveStatementNode -> ValidatorS [Statement]
 validateObjectiveStatement (ObjectiveMin lt en) = do
-    checkSymbols [lt]
+    lt `isA` TtKeyword
     exp <- validateExpression en
     return [Objective Minimising $ untype exp]
 validateObjectiveStatement (ObjectiveMax lt en) =do
-    checkSymbols [lt]
+    lt `isA` TtKeyword
     exp <- validateExpression en
     return  [Objective Maximising $ untype exp]
 
 validateSuchThatStatement :: SuchThatStatementNode -> ValidatorS [Statement]
 validateSuchThatStatement (SuchThatStatementNode l1 l2 exprs) = do
-    checkSymbols [l1, l2]
+    l1`isA` TtKeyword
+    l2`isA` TtKeyword
     exprs' <- validateSequence validateExpression exprs
     bools <- mapM (\(a,b)->do setContext a; return b ?=> tCondition) exprs'
     let bool_exprs = bools
@@ -350,9 +383,10 @@ validateSuchThatStatement (SuchThatStatementNode l1 l2 exprs) = do
 
 validateBranchingStatement :: BranchingStatementNode -> ValidatorS [Statement]
 validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
-    checkSymbols [l1, l2]
+    l1 `isA` TtKeyword
+    l2 `isA` TtKeyword
     branchings <-catMaybes <$> validateList_ (f2n validateBranchingParts) sts
-    return $ [SearchOrder branchings]
+    return [SearchOrder branchings]
     where
         validateBranchingParts :: ExpressionNode -> ValidatorS SearchOrder
         validateBranchingParts (IdentifierNode nn) =  do
@@ -365,9 +399,9 @@ validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
 validateDeclarationStatement :: DeclarationStatementNode -> ValidatorS [Statement]
 validateDeclarationStatement stmt = do
     stmt' <- case stmt of
-        FindStatement l1 fs -> checkSymbols [l1] >> validateStatementSeq validateFind fs
-        GivenStatement l1 gs -> checkSymbols [l1] >> validateStatementSeq validateGiven gs
-        LettingStatement l1 ls -> checkSymbols [l1] >> validateStatementSeq validateLetting ls
+        FindStatement l1 fs ->  l1 `isA` TtKeyword >> validateStatementSeq validateFind fs
+        GivenStatement l1 gs ->  l1 `isA` TtKeyword >> validateStatementSeq validateGiven gs
+        LettingStatement l1 ls ->  l1 `isA` TtKeyword >> validateStatementSeq validateLetting ls
     return  $ Declaration <$> stmt'
     where
         validateStatementSeq v l= do
@@ -377,16 +411,16 @@ validateDeclarationStatement stmt = do
 validateGiven :: GivenStatementNode -> ValidatorS [Declaration]
 validateGiven (GivenStatementNode idents l1 domain) =
     do
-        checkSymbols [l1]
+        checkSymbols [l1] -- Colon
         names <-  validateNameList idents
         (dType, dom) <- typeSplit <$> validateDomain domain
-        let declarations = [(mkDeclaration r n (Typed dType 1)) | (r, Name n) <- names]
+        let declarations = [(mkDeclaration r n (Typed dType ())) | (r, Name n) <- names]
         mapM_ addRegion declarations
         mapM_ (\(r,x) -> putSymbol (x,(r,False,dType)) ) names
         return  $ [ FindOrGiven Given nm dom|(_,nm) <- names ]
 validateGiven (GivenEnumNode se l1 l2 l3) =
     do
-        checkSymbols [l1, l2, l3]
+        [l1, l2, l3] `are` TtKeyword --new Type enum
         names <-  validateNameList se
         let eType = TypeEnum
         mapM_ (\(r,x) -> putSymbol (x,(r,True,eType x) )) names
@@ -394,7 +428,7 @@ validateGiven (GivenEnumNode se l1 l2 l3) =
 
 validateFind :: FindStatementNode -> ValidatorS [Declaration]
 validateFind (FindStatementNode names colon domain) = do
-    checkSymbols [colon]
+    checkSymbols [colon] --colon
     names' <- validateNameList names
     (dType, dom) <- typeSplit <$> validateDomain domain
     mapM_ (\(r,x) -> putSymbol (x,(r,False,dType) )) names'
@@ -404,7 +438,7 @@ validateFind (FindStatementNode names colon domain) = do
 validateLetting :: LettingStatementNode -> ValidatorS [Declaration]
 -- Letting [names] be
 validateLetting (LettingStatementNode names l1 assign) = do
-    checkSymbols [l1]
+    l1 `isA` TtKeyword
     names' <-  validateNameList names
     validateLettingAssignment names' assign
 
@@ -418,15 +452,17 @@ validateLettingAssignment names (LettingExpr en)  = do
     mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names
     return  $ [Letting n e | (_,n) <- names]
 validateLettingAssignment names (LettingDomain lt dn) = do
-    checkSymbols [lt]
+    lt `isA` TtModifier --TODO classify
     (tDomain,domain) <- typeSplit <$> validateDomain dn
     let declarations = [ mkDeclaration r n (Typed tDomain ()) |(r, Name n) <- names]
     mapM_ addRegion declarations
     mapM_ (\(r,x) -> putSymbol (x, (r,False,tDomain))) names
     return $ [Letting n  (Domain domain)| (_,n) <- names]
 validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
-    checkSymbols [l1, l2, l3]
-    members <- validateList_ validateName enames
+    [l1, l2, l3] `are` TtKeyword
+    memberNames <- catMaybes  <$> listElems enames
+    [n | NameNode n <- memberNames] `are` TtEnumMember
+    members <- mapM validateName memberNames
     sequence_
         [
             (do
@@ -442,7 +478,7 @@ validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
         ]
     return $ [LettingDomainDefnEnum n members| (_,n) <- names]
 validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
-    checkSymbols [l1, l2, l3, l4]
+    [l1, l2, l3, l4] `are` TtKeyword --TODO keywords
     size <- do
                     setContextFrom szExp
                     validateExpression szExp ?=> exactly tInt
@@ -509,19 +545,19 @@ validateDomain :: DomainNode -> ValidatorS TypedDomain
 validateDomain dm = case dm of
     MetaVarDomain lt ->  do mv <- validateMetaVar lt ; return . Typed TypeAny $ DomainMetaVar mv
     BoolDomainNode lt -> (validateSymbol lt >> (return . Typed TypeBool) DomainBool)
-    RangedIntDomainNode l1 rs -> checkSymbols [l1] >> validateRangedInt rs
+    RangedIntDomainNode l1 rs -> l1 `isA` TtType >> validateRangedInt rs
     RangedEnumNode nn ranges -> validateEnumRange nn ranges
     ShortTupleDomainNode lst -> validateTupleDomain lst
-    TupleDomainNode l1 doms -> checkSymbols [l1] >> validateTupleDomain doms
-    RecordDomainNode l1 ndom -> checkSymbols [l1] >> validateRecordDomain ndom
-    VariantDomainNode l1 ndom -> checkSymbols [l1] >> validateVariantDomain ndom
-    MatrixDomainNode l1 m_ib idoms l2 dom -> checkSymbols [l1, l2] >> validateIndexedByNode m_ib >> validateMatrixDomain idoms dom
-    SetDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validateSetDomain attrs dom
-    MSetDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validateMSetDomain attrs dom
-    FunctionDomainNode l1 attrs dom1 l2 dom2 -> checkSymbols [l1, l2] >> validateFunctionDomain attrs dom1 dom2
-    SequenceDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validateSequenceDomain attrs dom
-    RelationDomainNode l1 attrs l2 doms -> checkSymbols [l1, l2] >> validateRelationDomain attrs doms
-    PartitionDomainNode l1 attrs l2 dom -> checkSymbols [l1, l2] >> validatePartitionDomain attrs dom
+    TupleDomainNode l1 doms -> l1 `isA` TtType >> validateTupleDomain doms
+    RecordDomainNode l1 ndom -> l1 `isA` TtType >> validateRecordDomain ndom
+    VariantDomainNode l1 ndom -> l1 `isA` TtType >> validateVariantDomain ndom
+    MatrixDomainNode l1 m_ib idoms l2 dom -> l1 `isA` TtType >> l2 `isA` TtKeyword >> validateIndexedByNode m_ib >> validateMatrixDomain idoms dom
+    SetDomainNode l1 attrs l2 dom -> [l1, l2] `are` TtType >> validateSetDomain attrs dom
+    MSetDomainNode l1 attrs l2 dom -> [l1, l2] `are` TtType >> validateMSetDomain attrs dom
+    FunctionDomainNode l1 attrs dom1 l2 dom2 -> l1 `isA` TtType >> l2 `isA` TtOperator >> validateFunctionDomain attrs dom1 dom2
+    SequenceDomainNode l1 attrs l2 dom -> [l1, l2] `are` TtType >> validateSequenceDomain attrs dom
+    RelationDomainNode l1 attrs l2 doms -> [l1, l2] `are` TtType >> validateRelationDomain attrs doms
+    PartitionDomainNode l1 attrs l2 dom -> [l1, l2] `are` TtType >> validatePartitionDomain attrs dom
     MissingDomainNode lt -> do raiseError $ lt <!> TokenError lt; return $ fallback "Missing Domain"
   where
     validateRangedInt :: Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
@@ -652,7 +688,7 @@ validateDomain dm = case dm of
 
 validateIndexedByNode :: Maybe IndexedByNode -> ValidatorS ()
 validateIndexedByNode Nothing = return ()
-validateIndexedByNode (Just (IndexedByNode a b)) = checkSymbols [a,b]
+validateIndexedByNode (Just (IndexedByNode a b)) = [a,b] `are` TtKeyword
 
 todo :: Text -> Validator a
 todo s = invalid $ ValidatorDiagnostic GlobalRegion $ Error $ InternalErrorS (append "Not Implemented: " s)
@@ -797,17 +833,17 @@ validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
 
 validateNamedDomainInVariant :: NamedDomainNode -> ValidatorS (Name, TypedDomain)
 validateNamedDomainInVariant (NameDomainNode name m_dom) = do
-    name' <-  validateName name
+    name' <-  validateNameAs TtProperty name
     domain' <-case m_dom of
       Nothing ->  do return . Typed tInt $ DomainInt TagInt [RangeSingle 0]
-      Just (l,d) -> do checkSymbols [l]; validateDomain d
+      Just (l,d) -> do l `isA` TtOperator; validateDomain d
     return $ (name' ,  domain')
 
 validateNamedDomainInRecord :: NamedDomainNode -> ValidatorS (Name, TypedDomain)
 validateNamedDomainInRecord (NameDomainNode name m_dom) = do
-    name' <-  validateName name
+    name' <-  validateNameAs TtProperty name
     domain' <-case m_dom of
-      Just (l,d) -> checkSymbols [l] >> validateDomain d
+      Just (l,d) ->l `isA` TtOperator >> validateDomain d
       Nothing -> do
         raiseError $ symbolRegion name <!> SemanticError "Dataless not allowed in record"
         (return (fallback "Dataless RecordMemeber"))
@@ -816,11 +852,11 @@ validateNamedDomainInRecord (NameDomainNode name m_dom) = do
 validateRange ::Type -> RangeNode -> ValidatorS ((Range Expression))
 validateRange t range = case range of
     SingleRangeNode en -> do setContextFrom en; ex <- validateExpression en ?=> exactly t; return $ RangeSingle ex
-    OpenRangeNode dots -> do checkSymbols [dots] ; return  RangeOpen
-    RightUnboundedRangeNode e1 dots -> do checkSymbols [dots] ;setContextFrom e1; ex <- validateExpression e1 ?=> exactly t  ; return $ RangeLowerBounded ex
-    LeftUnboundedRangeNode dots e1 -> do checkSymbols [dots] ; setContextFrom e1; ex <- validateExpression e1 ?=> exactly t  ; return $ RangeUpperBounded ex
+    OpenRangeNode dots -> do dots `isA` TtOther "Ellips" ; return  RangeOpen
+    RightUnboundedRangeNode e1 dots -> do dots `isA` TtOther "Ellips" ;setContextFrom e1; ex <- validateExpression e1 ?=> exactly t  ; return $ RangeLowerBounded ex
+    LeftUnboundedRangeNode dots e1 -> do dots `isA` TtOther "Ellips" ; setContextFrom e1; ex <- validateExpression e1 ?=> exactly t  ; return $ RangeUpperBounded ex
     BoundedRangeNode e1 dots e2 -> do
-        _ <- checkSymbols [dots]
+        dots `isA` TtOther "Ellips"
         setContextFrom e1
         e1' <- validateExpression e1 ?=> exactly t
         setContextFrom e2
@@ -829,7 +865,7 @@ validateRange t range = case range of
 
 validateArrowPair :: ArrowPairNode -> Validator (RegionTagged (Typed Expression), RegionTagged (Typed Expression))
 validateArrowPair (ArrowPairNode e1 s e2) = do
-    checkSymbols [s]
+    s `isA` TtOperator
     e1' <-  validateExpression e1
     e2' <-  validateExpression e2
     return .pure $ (\a b->((symbolRegion e1,a),(symbolRegion e2,b))) e1' e2'
@@ -846,7 +882,7 @@ validateExpression expr = case expr of
     DomainExpression dex -> validateDomainExpression dex
     ParenExpression (ParenExpressionNode l1 exp l2) -> checkSymbols [l1,l2] >> validateExpression exp
     AbsExpression (ParenExpressionNode l1 exp l2) -> do
-        checkSymbols [l1,l2]
+        [l1,l2] `are` TtOperator
         setContextFrom exp
         exp' <- validateExpression exp ?=> exactly TypeAny
         return . Typed tInt $ mkOp TwoBarOp  [exp']
@@ -858,15 +894,15 @@ validateExpression expr = case expr of
 
 validateAttributeAsConstraint :: LToken -> ListNode ExpressionNode -> ValidatorS (Typed Expression)
 validateAttributeAsConstraint l1 exprs = do
-    checkSymbols [l1]
     es <- map untype <$> validateList_ validateExpression exprs
     do
+        flagToken l1 TtMethod
         Just lx <- validateSymbol l1
         let n = lookup (Name (lexemeText lx)) allSupportedAttributes
         r <- case (n,es) of
           (Just 1 , [e,v]) -> return . pure . Typed TypeBool  $ aacBuilder e lx (Just v)
           (Just 1 , _) -> invalid $  l1 <!> (SemanticError $ pack $ "Expected 2 args to " ++ (show lx)  ++ "got" ++ (show $ length es))
-          (Just 0 , [e]) -> return .todoTypeAny . pure $ aacBuilder e lx Nothing
+          (Just 0 , [e]) -> return . pure . Typed TypeBool $ aacBuilder e lx Nothing
           (Just 0 , _) -> invalid $ l1 <!> (SemanticError $ pack $ "Expected 1 arg to " ++ (show lx)  ++ "got" ++ (show $ length es))
           (_,_) -> invalid $ l1 <!> InternalErrorS "Bad AAC"
         return $ fromMaybe (fallback "bad AAC") r
@@ -875,7 +911,7 @@ validateAttributeAsConstraint l1 exprs = do
 
 validateSpecialCase :: SpecialCaseNode -> ValidatorS (Typed Expression)
 validateSpecialCase (ExprWithDecls l1 ex l2 sts l3) = do
-    checkSymbols [l1,l2,l3]
+    checkSymbols [l1,l2,l3] --TODO maybe add tokens
     Just conds <- validateProgramTree sts
     let decls =
             [ Declaration (FindOrGiven LocalFind nm dom)
@@ -901,8 +937,9 @@ translateQnName qnName = case qnName of
 validateQuantificationExpression :: QuantificationExpressionNode -> ValidatorS (Typed Expression)
 validateQuantificationExpression (QuantificationExpressionNode name pats over m_guard dot expr) =
     do
-        checkSymbols [dot]
+        dot `isA` TtKeyword
         scoped $ do
+            flagToken name TtMacro
             name' <-  validateSymbol name
             over' <-  validateQuantificationOver pats over
             -- patterns <-  validateSequence_ validateAbstractPattern pats
@@ -928,16 +965,16 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             return $ [Condition expr']
         validateQuantificationOver :: Sequence AbstractPatternNode -> QuantificationOverNode -> ValidatorS [GeneratorOrCondition]
         validateQuantificationOver pats ( QuantifiedSubsetOfNode lt en ) = do
-            checkSymbols [lt] --TODO sets only
+            lt `isA` TtOperator --TODO sets only
             ps <- sequenceElems pats
             exp <- validateExpression en
             let (t,e) = typeSplit exp
-            pt <- projectionType (symbolRegion en) t 
+            pt <- projectionType (symbolRegion en) t
             apats <- unifyPatterns pt ps
             return [Generator $ GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet (e)) | pat <- apats]
         -- x in exp
         validateQuantificationOver pats ( QuantifiedMemberOfNode lt en ) = do
-            checkSymbols [lt]
+            lt `isA` TtKeyword
             ps <- sequenceElems pats
             exp <- validateExpression en
             let (t,e) = typeSplit exp
@@ -946,7 +983,7 @@ validateQuantificationExpression (QuantificationExpressionNode name pats over m_
             return [Generator $ GenInExpr pat e|pat <- apats]
         -- x : domain
         validateQuantificationOver pats ( QuantifiedDomainNode (OverDomainNode l1 dom) ) = do
-            checkSymbols [l1]
+            l1 `isA` TtOther "Colon in comprehension"
             ps <- sequenceElems pats
             (dType,dom') <- typeSplit <$> validateDomain dom
             pt <- projectionTypeDomain (symbolRegion dom) dType
@@ -964,23 +1001,18 @@ validateMetaVar tok = do
 
 validateDomainExpression :: DomainExpressionNode -> ValidatorS (Typed Expression)
 validateDomainExpression (DomainExpressionNode  l1 dom l2) = do
-    checkSymbols [l1,l2]
+    [l1,l2]  `are` TtOther "Backtick"
     (tdom,dom') <- typeSplit <$> validateDomain dom
     return . Typed tdom $ Domain  dom'
 
---TODO fix function types inc lookups etc
 validateFunctionApplication :: LToken -> ListNode ExpressionNode -> ValidatorS (Typed Expression)
 validateFunctionApplication name args = do
     args' <-  validateList validateExpression args
+    flagToken name TtMethod
     Just name' <-  validateSymbol name
     setContextFrom args
     validateFuncOp name' args'
-    -- return . Typed TypeAny $ do
-    --     let n = name'
-    --     let a = args'
-    --     case (n,a) of
-    --         (L_image,[y,z]) -> Op $  MkOpImage $ OpImage y z
-    --         _ ->  mkOp (FunctionOp n) a
+
 
 
 validateIdentifierExpr :: NameNode -> ValidatorS (Typed Expression)
@@ -992,7 +1024,8 @@ validateIdentifierExpr name = do
 --TODO Adress the major hole in the type system current
 validateOperatorExpression :: OperatorExpressionNode -> ValidatorS (Typed Expression)
 validateOperatorExpression (PrefixOpNode lt expr) = do
-    Just op <-  validateSymbol lt
+    flagToken lt TtOperator
+    Just op <-  validateSymbol lt 
     setContextFrom expr
     let (refT) = case op of
             L_Minus -> tInt
@@ -1004,6 +1037,7 @@ validateOperatorExpression (PrefixOpNode lt expr) = do
 validateOperatorExpression (BinaryOpNode lexp op rexp) = do
     (lType,lExpr) <- typeSplit <$> validateExpression lexp
     (rType,rExpr) <- typeSplit <$> validateExpression rexp
+    flagToken op TtOperator
     Just op' <-  validateSymbol op
     let resultValidator = binOpType op'
     let resultType = resultValidator lType rType
@@ -1014,7 +1048,7 @@ validateOperatorExpression (PostfixOpNode expr pon) = do
 
 validatePostfixOp :: PostfixOpNode -> ValidatorS (ExpressionNode -> ValidatorS (Typed Expression))
 validatePostfixOp (OpFactorial lt) = do
-        checkSymbols [lt]
+        lt `isA` TtOperator
         setContextFrom lt
         return  $ \exp -> do
             v <- validateExpression exp ?=> exactly tInt
@@ -1062,7 +1096,8 @@ validatePostfixOp (IndexedNode ln) = do
 
 
 validatePostfixOp (ExplicitDomain l1 l2 dom l3) = do
-    checkSymbols [l1,l2,l3]
+    l1 `isA` TtOther "Colon in expr"
+    [l2,l3] `are` TtOther "BackTick"
     (_,dom') <- typeSplit <$> validateDomain dom
     t <- case getDType dom' of
         Just t -> return t
@@ -1175,19 +1210,19 @@ validateLiteral litNode = case litNode of
     BoolLiteral lt -> validateBoolLiteral lt >>= \x -> return $ Typed TypeBool $ Constant  x
     MatrixLiteral mln -> validateMatrixLiteral mln
     TupleLiteralNode (LongTuple lt xs) ->  do
-        checkSymbols [lt]
+        lt `isA` TtType
         validateLiteral (TupleLiteralNodeShort (ShortTuple xs))
     TupleLiteralNodeShort (ShortTuple xs) -> do
         es <- validateExprList_ xs
         makeTupleLiteral es
-    RecordLiteral lt ln -> checkSymbols [lt] >> validateRecordLiteral ln
-    VariantLiteral lt ln -> checkSymbols [lt] >> validateVariantLiteral ln
+    RecordLiteral lt ln -> lt `isA` TtType >> validateRecordLiteral ln
+    VariantLiteral lt ln -> lt `isA` TtType >> validateVariantLiteral ln
     SetLiteral ls -> validateSetLiteral ls
-    MSetLiteral lt ls -> checkSymbols [lt] >> validateMSetLiteral ls
-    FunctionLiteral lt ln -> checkSymbols [lt] >> validateFunctionLiteral ln
-    SequenceLiteral lt ln -> checkSymbols [lt] >> validateSequenceLiteral ln
-    RelationLiteral lt ln -> checkSymbols [lt] >> validateRelationLiteral ln
-    PartitionLiteral lt ln -> checkSymbols [lt] >> validatePartitionLiteral ln
+    MSetLiteral lt ls -> lt `isA` TtType >> validateMSetLiteral ls
+    FunctionLiteral lt ln -> lt `isA` TtType >> validateFunctionLiteral ln
+    SequenceLiteral lt ln -> lt `isA` TtType >> validateSequenceLiteral ln
+    RelationLiteral lt ln -> lt `isA` TtType >> validateRelationLiteral ln
+    PartitionLiteral lt ln -> lt `isA` TtType >> validatePartitionLiteral ln
 
 validateSequenceLiteral :: ListNode ExpressionNode -> ValidatorS (Typed Expression)
 validateSequenceLiteral x = do
@@ -1204,7 +1239,7 @@ validateRelationLiteral ln = do
     where
         validateRelationMember :: RelationElemNode -> ValidatorS [Typed Expression]
         validateRelationMember x = case x of
-          RelationElemNodeLabeled (LongTuple lt xs) ->  checkSymbols [lt] >> validateExprList_ xs
+          RelationElemNodeLabeled (LongTuple lt xs) ->  lt `isA` TtType >> validateExprList_ xs
           RelationElemNodeShort (ShortTuple xs) -> validateExprList_ xs
 
 
@@ -1244,7 +1279,7 @@ validateVariantLiteral ln = do
 
 validateRecordMember :: RecordMemberNode -> ValidatorS (Name,Typed Expression)
 validateRecordMember (RecordMemberNode name lEq expr) = do
-    checkSymbols [lEq]
+    lEq `isA` TtKeyword
     name' <-  validateName name
     expr' <-  validateExpression expr
     return ( name' , expr')
@@ -1276,7 +1311,7 @@ validateMSetLiteral ls = do
 validateMatrixLiteral :: MatrixLiteralNode -> ValidatorS (Typed Expression)
 --Matrix proper
 validateMatrixLiteral (MatrixLiteralNode l1 se m_dom Nothing l2) = do
-    checkSymbols [l1,l2]
+    [l1,l2] `are` TtOther "SquareBrackets"
     elems <-  validateSequence validateExpression se
     (t,es) <- typeSplit <$> sameType elems
     let defaultDomain :: TypedDomain = Typed tInt (mkDomainIntB 1 (fromInt $ genericLength elems))
@@ -1284,18 +1319,18 @@ validateMatrixLiteral (MatrixLiteralNode l1 se m_dom Nothing l2) = do
     let lit = AbsLitMatrix (untype $ dom) es
     return $ Typed (TypeMatrix tInt t) $ mkAbstractLiteral lit
     where
-        validateOverDomain :: Maybe OverDomainNode -> Validator (TypedDomain)
+        validateOverDomain :: Maybe OverDomainNode -> Validator TypedDomain
         validateOverDomain Nothing = return Nothing
-        validateOverDomain (Just (OverDomainNode l3 dom)) = do checkSymbols [l3]; pure <$> validateDomain dom
+        validateOverDomain (Just (OverDomainNode l3 dom)) = do l3 `isA` TtOther "Semicolon in matrix"; pure <$> validateDomain dom
 
 
 -- Matrix as comprehension
 validateMatrixLiteral (MatrixLiteralNode l1 se m_dom (Just comp) l2) = do
-    checkSymbols [l1,l2]
+    [l1,l2] `are` TtOther "SquareBrackets"
     case m_dom of
         Nothing -> return ()
         Just p@(OverDomainNode l3 dom) -> do
-            checkSymbols [l3]
+            l3 `isA` TtOther "Semicolon in matrix"
             void $ validateDomain dom
             raiseError $ symbolRegion p <!> SemanticError "Index domains are not supported in comprehensions"
     scoped $
@@ -1317,7 +1352,7 @@ validateMatrixLiteral (MatrixLiteralNode l1 se m_dom (Just comp) l2) = do
 
 validateComprehension :: ComprehensionNode -> ValidatorS [GeneratorOrCondition]
 validateComprehension (ComprehensionNode l1 body) = do
-        checkSymbols [l1]
+        l1 `isA` TtKeyword
         concat <$> validateSequence_ validateComprehensionBody body
 
 validateComprehensionBody :: ComprehensionBodyNode -> ValidatorS [GeneratorOrCondition]
@@ -1329,7 +1364,7 @@ validateComprehensionBody (CompBodyCondition en) = do
     return [Condition $ untype e]
 --x in dom
 validateComprehensionBody (CompBodyDomain apn l1 dom) = do
-    checkSymbols [l1]
+    l1 `isA` TtKeyword
     (td,domain) <- typeSplit <$> validateDomain dom
     td' <- projectionTypeDomain (symbolRegion dom) td
     pats <- validateSequence_ (flip unifyPattern td' . Just) apn
@@ -1337,7 +1372,7 @@ validateComprehensionBody (CompBodyDomain apn l1 dom) = do
 
 -- x <- expr
 validateComprehensionBody (CompBodyGenExpr apn lt en) = do
-    checkSymbols [lt]
+    lt `isA` TtKeyword
     e <- validateExpression en
     let (t,exp) = typeSplit e
     t' <- projectionType (symbolRegion en) t
@@ -1345,7 +1380,7 @@ validateComprehensionBody (CompBodyGenExpr apn lt en) = do
     return  $ [Generator (GenInExpr pat exp)| pat <- pats]
 --letting x be
 validateComprehensionBody (CompBodyLettingNode l1 nn l2 en) = do
-    checkSymbols [l1,l2]
+    [l1,l2] `are` TtKeyword
     (t,expr) <- typeSplit <$> validateExpression en
     pat <- unifyPattern (Just nn) t
     return  [ComprehensionLetting pat expr]
@@ -1391,7 +1426,7 @@ enforceConstraint p msg = do
 
 
 checkSymbols :: [LToken] -> ValidatorS ()
-checkSymbols = mapM_ validateSymbol
+checkSymbols = mapM_ (\t -> validateSymbol t)
 
 --Raise a non structural error (i.e type error)
 raiseError :: ValidatorDiagnostic -> ValidatorS ()
@@ -1445,6 +1480,11 @@ validateName :: NameNode -> ValidatorS Name
 validateName name = do
         n <- validateIdentifier name
         return $ fromMaybe (fallback "bad Identifier") (Name <$> n)
+
+validateNameAs :: (ETok -> TaggedToken) -> NameNode -> ValidatorS Name
+validateNameAs f name@(NameNode n) = do
+        flagToken n f
+        validateName name
 
 listToSeq :: ListNode a -> ValidatorS (Sequence a)
 listToSeq (ListNode l1 s l2) = checkSymbols [l1,l2] >> return s
@@ -1677,7 +1717,7 @@ unifyPattern (Just(AbstractPatternTuple m_lt ln)) t = do
     ps <-sequenceElems sps
     case m_lt of
         Nothing -> void $ return ()
-        Just lt -> checkSymbols [lt]
+        Just lt -> lt `isA` TtType
     memberTypes <- getMemberTypes t
     let q = zip ps memberTypes
     aps <- mapM (uncurry unifyPattern) q
