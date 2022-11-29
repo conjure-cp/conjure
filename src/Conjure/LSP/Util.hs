@@ -18,6 +18,8 @@ import Conjure.Language.AST.ASTParser (parseProgram)
 import Language.LSP.Types.Lens (HasUri (uri))
 import Language.LSP.Diagnostics (partitionBySource)
 import Control.Lens ((^.))
+import Text.PrettyPrint (text)
+import qualified Data.Text as T
 
 data ProcessedFile = ProcessedFile {
     model::Maybe Model,
@@ -112,9 +114,16 @@ getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn (drLength . r
 
 sourcePosToPosition :: SourcePos -> Position
 sourcePosToPosition (SourcePos _ r c) = Position
-    (fromInteger $ -1 + (toInteger $ unPos r))
-    (fromInteger $ -1 + (toInteger $ unPos c))
+    (fromInteger $ -1 + toInteger (unPos r))
+    (fromInteger $ -1 + toInteger (unPos c))
 
 regionToRange :: DiagnosticRegion -> L.Range
 regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (sourcePosToPosition ep)
 regionToRange GlobalRegion = error "Global region in symbol info"
+
+snippet :: Text -> Text 
+snippet t = T.concat ["```essence\n",t,"\n```"]
+
+instance Pretty Position where
+    pretty (Position (text.show->r) (text.show->c)) =  r <> ":" <> c
+

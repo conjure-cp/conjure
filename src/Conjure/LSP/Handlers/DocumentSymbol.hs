@@ -3,12 +3,13 @@ import Language.LSP.Server (requestHandler, LspM, Handlers, sendNotification)
 import Language.LSP.Types as T
 import Control.Lens
 import Conjure.Prelude
-import Data.Text (pack)
+import Data.Text (pack,unpack)
 import Conjure.LSP.Util (getProcessedDoc, getRelevantRegions, withProcessedDoc, ProcessedFile (ProcessedFile), regionToRange)
 import Conjure.Language.Validator (RegionInfo (..), ValidatorState (regionInfo), DeclarationType (..))
 import Language.LSP.Types.Lens (HasParams(..), HasTextDocument (textDocument))
 import Conjure.Language (Type(..))
 import Conjure.Language.Type (IntTag(..))
+import Conjure.Language.Pretty (Pretty(..))
 
 docSymbolHandler :: Handlers (LspM ())
 docSymbolHandler = requestHandler STextDocumentDocumentSymbol $ \ req res -> do
@@ -22,13 +23,13 @@ docSymbolHandler = requestHandler STextDocumentDocumentSymbol $ \ req res -> do
 
 
 regionInfoToDocumentSymbols ::Uri -> RegionInfo -> SymbolInformation
-regionInfoToDocumentSymbols uri (RegionInfo {rRegion=reg, rType=t, rDeclaration=dec}) = SymbolInformation
-    (pack $ "Symbol ::" ++ show t)  --Name
+regionInfoToDocumentSymbols uri (RegionInfo {rRegion=reg,rText=n, rType=t, rDeclaration=dec}) = SymbolInformation
+    (pack $  (unpack n) ++":" ++ show  (pretty t))  --Name
     sk--Kind
     (Just (T.List []))
-    (Nothing)
+    Nothing
     (Location uri (regionToRange reg)) 
-    (Nothing)
+    Nothing
     where 
         sk = case dec of          
           Definition -> SkVariable
@@ -41,4 +42,4 @@ regionInfoToDocumentSymbols uri (RegionInfo {rRegion=reg, rType=t, rDeclaration=
             TypeEnum na -> SkEnum
             TypeUnnamed na -> SkEnum
             _ -> SkConstant
-          Ref dr -> SkVariable
+          Ref _ -> SkVariable
