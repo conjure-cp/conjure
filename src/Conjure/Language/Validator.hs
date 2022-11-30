@@ -53,27 +53,30 @@ import Control.Monad (mapAndUnzipM)
 import Conjure.Bug (bug)
 import Text.PrettyPrint (text)
 
+data TagType 
+    =TtType        
+    |TtClass       
+    |TtEnum        
+    |TtStruct      
+    |TtParameter   
+    |TtVariable    
+    |TtProperty    
+    |TtEnumMember  
+    |TtEvent       
+    |TtFunction    
+    |TtMethod      
+    |TtMacro       
+    |TtKeyword     
+    |TtModifier    
+    |TtComment     
+    |TtString      
+    |TtNumber      
+    |TtRegexp      
+    |TtOperator    
+    |TtOther Text   
+    deriving Show
 data TaggedToken
-    = TtType        ETok
-    | TtClass       ETok
-    | TtEnum        ETok
-    | TtStruct      ETok
-    | TtParameter   ETok
-    | TtVariable    ETok
-    | TtProperty    ETok
-    | TtEnumMember  ETok
-    | TtEvent       ETok
-    | TtFunction    ETok
-    | TtMethod      ETok
-    | TtMacro       ETok
-    | TtKeyword     ETok
-    | TtModifier    ETok
-    | TtComment     ETok
-    | TtString      ETok
-    | TtNumber      ETok
-    | TtRegexp      ETok
-    | TtOperator    ETok
-    | TtOther Text  ETok
+    = TaggedToken TagType ETok
     deriving Show
 
 
@@ -191,21 +194,34 @@ mkLiteral :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
 mkLiteral r n (Typed t _) = RegionInfo r t n LiteralDecl
 
 --Infix symbol validation and tagging
-isA :: LToken -> (ETok -> TaggedToken) -> ValidatorS ()
+isA :: LToken -> TagType -> ValidatorS ()
 isA a b= validateSymbol a >> flagToken a b
 
-are :: [LToken] -> (ETok -> TaggedToken) -> ValidatorS ()
+are :: [LToken] -> TagType -> ValidatorS ()
 are a b = mapM_ (`isA` b) a
 
-flagToken :: LToken -> (ETok -> TaggedToken) -> ValidatorS ()
-flagToken (RealToken _ t) c = modify (\x@ValidatorState{symbolCategories=sc}->x{symbolCategories=c t : sc})
+flagToken :: LToken -> TagType -> ValidatorS ()
+flagToken (RealToken _ t) c = modify (\x@ValidatorState{symbolCategories=sc}->x{symbolCategories= M.insert t (TaggedToken c t) sc})
 flagToken _ _ = return ()
 
+
+tagWithType :: NameNode -> Type -> ValidatorS ()
+tagWithType (NameNode lt) ty = flagToken lt $ case ty of
+   TypeEnum _ -> TtEnum
+   TypeInt (TagEnum _) -> TtEnumMember
+   TypeInt (TagUnnamed _) -> TtEnumMember
+   TypeUnnamed _ -> TtEnum
+   TypeVariant _ -> TtProperty
+   TypeRecord _ -> TtProperty
+   TypeFunction _ _ -> TtFunction
+   TypeSequence _ -> TtFunction
+   TypeRelation _ -> TtFunction
+   _ -> TtVariable
 data ValidatorState = ValidatorState {
     typeChecking :: Bool,
     regionInfo :: [RegionInfo],
     symbolTable :: SymbolTable,
-    symbolCategories ::[TaggedToken],
+    symbolCategories ::Map ETok TaggedToken,
     currentContext :: DiagnosticRegion
 }
     deriving Show
@@ -213,7 +229,7 @@ instance Default ValidatorState where
     def = ValidatorState {
         typeChecking = True,
         regionInfo=[],
-        symbolCategories=[],
+        symbolCategories=M.empty,
         symbolTable=M.empty,
         currentContext=GlobalRegion
         }
@@ -390,7 +406,7 @@ validateBranchingStatement (BranchingStatementNode l1 l2 sts) = do
     where
         validateBranchingParts :: ExpressionNode -> ValidatorS SearchOrder
         validateBranchingParts (IdentifierNode nn) =  do
-            n <- validateName nn
+            n <- validateNameAs TtVariable nn
             return $ BranchingOn n
         validateBranchingParts exp = do
             x <- validateExpression exp ?=> exactly TypeAny
@@ -412,7 +428,7 @@ validateGiven :: GivenStatementNode -> ValidatorS [Declaration]
 validateGiven (GivenStatementNode idents l1 domain) =
     do
         checkSymbols [l1] -- Colon
-        names <-  validateNameList idents
+        names <- validateSequence (validateNameAs TtVariable) idents
         (dType, dom) <- typeSplit <$> validateDomain domain
         let declarations = [(mkDeclaration r n (Typed dType ())) | (r, Name n) <- names]
         mapM_ addRegion declarations
@@ -421,7 +437,7 @@ validateGiven (GivenStatementNode idents l1 domain) =
 validateGiven (GivenEnumNode se l1 l2 l3) =
     do
         [l1, l2, l3] `are` TtKeyword --new Type enum
-        names <-  validateNameList se
+        names <- validateSequence (validateNameAs TtEnum) se
         let eType = TypeEnum
         mapM_ (\(r,x) -> putSymbol (x,(r,True,eType x) )) names
         return  $  [GivenDomainDefnEnum n | (_,n) <- names]
@@ -429,7 +445,7 @@ validateGiven (GivenEnumNode se l1 l2 l3) =
 validateFind :: FindStatementNode -> ValidatorS [Declaration]
 validateFind (FindStatementNode names colon domain) = do
     checkSymbols [colon] --colon
-    names' <- validateNameList names
+    names' <- validateSequence (validateNameAs TtVariable) names
     (dType, dom) <- typeSplit <$> validateDomain domain
     mapM_ (\(r,x) -> putSymbol (x,(r,False,dType) )) names'
     mapM_ addRegion [(mkDeclaration r n (Typed dType 1)) | (r, Name n) <- names']
@@ -439,30 +455,32 @@ validateLetting :: LettingStatementNode -> ValidatorS [Declaration]
 -- Letting [names] be
 validateLetting (LettingStatementNode names l1 assign) = do
     l1 `isA` TtKeyword
-    names' <-  validateNameList names
-    validateLettingAssignment names' assign
+    validateLettingAssignment names assign
 
-validateLettingAssignment :: [RegionTagged Name] -> LettingAssignmentNode -> ValidatorS [Declaration]
+validateLettingAssignment :: (Sequence NameNode) -> LettingAssignmentNode -> ValidatorS [Declaration]
 validateLettingAssignment names (LettingExpr en)  = do
     expr <- validateExpression en
     setContextFrom en
+    names' <- validateSequence (validateNameAs TtVariable) names
     let (t,e) = typeSplit expr
-    let declarations = [mkDeclaration r n (Typed t 1) |(r, Name n) <- names]
+    let declarations = [mkDeclaration r n (Typed t 1) |(r, Name n) <- names']
     mapM_ addRegion declarations
-    mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names
-    return  $ [Letting n e | (_,n) <- names]
+    mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names'
+    return  $ [Letting n e | (_,n) <- names']
 validateLettingAssignment names (LettingDomain lt dn) = do
     lt `isA` TtModifier --TODO classify
     (tDomain,domain) <- typeSplit <$> validateDomain dn
-    let declarations = [ mkDeclaration r n (Typed tDomain ()) |(r, Name n) <- names]
+    names' <- validateSequence (validateNameAs TtClass) names
+    let declarations = [ mkDeclaration r n (Typed tDomain ()) |(r, Name n) <- names']
     mapM_ addRegion declarations
-    mapM_ (\(r,x) -> putSymbol (x, (r,False,tDomain))) names
-    return $ [Letting n  (Domain domain)| (_,n) <- names]
+    mapM_ (\(r,x) -> putSymbol (x, (r,False,tDomain))) names'
+    return $ [Letting n  (Domain domain)| (_,n) <- names']
 validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
     [l1, l2, l3] `are` TtKeyword
+    names' <- validateSequence (validateNameAs TtEnum) names
     memberNames <- catMaybes  <$> listElems enames
     [n | NameNode n <- memberNames] `are` TtEnumMember
-    members <- mapM validateName memberNames
+    members <- mapM (validateNameAs TtEnumMember) memberNames
     sequence_
         [
             (do
@@ -474,18 +492,19 @@ validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
                     \(x,i) -> putSymbol (x,(r,False,tVal))
                     ) nameMap
             )
-            |(r, Name n) <- names
+            |(r, Name n) <- names'
         ]
-    return $ [LettingDomainDefnEnum n members| (_,n) <- names]
+    return $ [LettingDomainDefnEnum n members| (_,n) <- names']
 validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
     [l1, l2, l3, l4] `are` TtKeyword --TODO keywords
+    names' <- validateSequence (validateNameAs TtEnum) names
     size <- do
                     setContextFrom szExp
                     validateExpression szExp ?=> exactly tInt
     let d = TypeUnnamed
     --TODO delcs
-    mapM_ (\(r,x) -> putSymbol (x,(r,False,d x))) names
-    return  $ [LettingDomainDefnUnnamed n size| (_,n) <- names]
+    mapM_ (\(r,x) -> putSymbol (x,(r,False,d x))) names'
+    return  $ [LettingDomainDefnUnnamed n size| (_,n) <- names']
 
 
 -- validate :: Validator a -> Validator (Maybe a)
@@ -544,7 +563,7 @@ validateDomainWithRepr dom = do
 validateDomain :: DomainNode -> ValidatorS TypedDomain
 validateDomain dm = case dm of
     MetaVarDomain lt ->  do mv <- validateMetaVar lt ; return . Typed TypeAny $ DomainMetaVar mv
-    BoolDomainNode lt -> (validateSymbol lt >> (return . Typed TypeBool) DomainBool)
+    BoolDomainNode lt -> (lt `isA` TtType >> (return . Typed TypeBool) DomainBool)
     RangedIntDomainNode l1 rs -> l1 `isA` TtType >> validateRangedInt rs
     RangedEnumNode nn ranges -> validateEnumRange nn ranges
     ShortTupleDomainNode lst -> validateTupleDomain lst
@@ -815,6 +834,7 @@ validatePartitionAttributes atts = do
 
 validateAttributeNode :: Map Lexeme Bool -> AttributeNode -> Validator (Lexeme,Maybe Expression)
 validateAttributeNode vs (NamedAttributeNode t Nothing) = do
+    flagToken t TtModifier
     Just name <- validateSymbol t
     case M.lookup name vs of
       Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
@@ -822,6 +842,7 @@ validateAttributeNode vs (NamedAttributeNode t Nothing) = do
       Just False ->  return . pure $ (name , Nothing)
 
 validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
+    flagToken t TtModifier
     setContextFrom e
     expr <- validateExpression e ?=> exactly tInt
     Just name <- validateSymbol t
@@ -1019,6 +1040,7 @@ validateIdentifierExpr :: NameNode -> ValidatorS (Typed Expression)
 validateIdentifierExpr name = do
     Just n <- validateIdentifier name
     t <- resolveReference (symbolRegion name,Name n)
+    tagWithType name t
     return . Typed t $ Reference (Name n) Nothing
 
 --TODO Adress the major hole in the type system current
@@ -1140,7 +1162,7 @@ validateIndexingOrSlicing exp range = do
 
 validateRecordMemberIndex :: [(Name,Type)] -> ExpressionNode -> ValidatorS (Type,Expression)
 validateRecordMemberIndex ns (IdentifierNode nn) = do
-    n <- validateName nn
+    n <- validateNameAs TtProperty nn
     let t = lookup n ns
     ty <- case t of
       Just ty -> return ty
@@ -1445,6 +1467,7 @@ makeTupleLiteral members = do
 
 validateIntLiteral :: LToken -> ValidatorS Constant
 validateIntLiteral t = do
+    flagToken t TtNumber
     l <- validateSymbol t
     case l of
         Just (LIntLiteral x) -> return $ ConstantInt TagInt x
@@ -1452,6 +1475,7 @@ validateIntLiteral t = do
 
 validateBoolLiteral :: LToken -> ValidatorS Constant
 validateBoolLiteral t = do
+    flagToken t $ TtOther "Boolean"
     Just l <- validateSymbol t
     case l of
         L_true -> return $ ConstantBool True
@@ -1481,7 +1505,7 @@ validateName name = do
         n <- validateIdentifier name
         return $ fromMaybe (fallback "bad Identifier") (Name <$> n)
 
-validateNameAs :: (ETok -> TaggedToken) -> NameNode -> ValidatorS Name
+validateNameAs :: TagType -> NameNode -> ValidatorS Name
 validateNameAs f name@(NameNode n) = do
         flagToken n f
         validateName name
@@ -1700,8 +1724,8 @@ unifyPatterns :: Type -> [Maybe AbstractPatternNode] -> ValidatorS [AbstractPatt
 unifyPatterns t =  mapM (flip unifyPattern t)
 
 unifyPattern :: Maybe AbstractPatternNode -> Type -> ValidatorS AbstractPattern
-unifyPattern  (Just (AbstractIdentifier nn)) t = do
-    (Name n) <- validateName nn
+unifyPattern  (Just (AbstractIdentifier nn@(NameNode lt))) t = do
+    (Name n) <- validateNameAs TtParameter nn
     -- traceM $ show n ++ ":" ++ show t
     --REVIEW don't put symbol if _ ?
     void $ putSymbol (Name n,(symbolRegion nn,False,t))
