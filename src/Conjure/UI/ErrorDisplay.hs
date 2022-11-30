@@ -45,6 +45,7 @@ displayError x = case x of
   InternalError -> "Pattern match failiure"
   InternalErrorS txt -> "Something went wrong:" ++ T.unpack txt
   WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
+  KindError a b -> show $ "Tried to use a " <> pretty b <> " where " <> pretty a <> " was expected"
 showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Text -> String
 showDiagnosticsForConsole errs text
     =   case runParser (captureErrors errs) "Errors" text of

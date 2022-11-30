@@ -99,11 +99,28 @@ unregion (_,a) =a
 data Typed a = Typed Type a
     deriving Show
 instance Functor Typed where
-  fmap f (Typed ty' a) = Typed ty' (f a)
+  fmap f (Typed k a) = Typed k (f a)
 
-instance TypeOf (Typed a) where
-    typeOf (Typed t _) = return t
+-- instance TypeOf (Typed a) where
+--     typeOf (Typed () _) = return t
 
+simple :: Type -> Kind
+simple = Kind ValueType
+
+data Kind = Kind Class Type
+    deriving (Show,Eq,Ord)
+
+instance Pretty Kind where
+    pretty (Kind MemberType t) = "Member of " <> pretty t
+    pretty (Kind DomainType t) = "Domain: " <> pretty t
+    pretty (Kind ValueType t) = pretty t
+data Class = DomainType | ValueType | MemberType
+    deriving (Show,Eq,Ord)
+instance Pretty Class where 
+    pretty c = case c of
+      DomainType -> "Domain"
+      ValueType -> "Value"
+      MemberType -> "Record/Variant Member"
 untype :: Typed a -> a
 untype (Typed _ a) = a
 
@@ -112,11 +129,12 @@ typeOf_ (Typed t _) = t
 
 untypeAs :: Type -> Typed a -> ValidatorS a
 untypeAs r ((Typed t a)) = if let ?typeCheckerMode=StronglyTyped in typeUnify r t
-                            then return a
-                            else contextTypeError (TypeError r t) >> return a
+                                then return a
+                                else contextTypeError (TypeError r t) >> return a
 
 
 type TypeCheck a = Typed a -> ValidatorS ()
+
 exactly :: Type -> TypeCheck a
 exactly t r = void $ untypeAs t r
 
@@ -150,6 +168,7 @@ data ErrorType
     | UnexpectedArg
     | TypeError Type Type -- Expected, got
     | ComplexTypeError Text Type -- Expected, got
+    | KindError Class Class 
     | InternalError --Used to explicitly tag invalid pattern matches
     | InternalErrorS Text -- Used for giving detail to bug messages
     deriving  (Show,Eq,Ord)
@@ -182,16 +201,16 @@ data DeclarationType = Definition | LiteralDecl | Ref DiagnosticRegion
     deriving Show
 data RegionInfo = RegionInfo {
     rRegion :: DiagnosticRegion,
-    rType :: Type,
+    rType :: Kind,
     rText :: Text,
     rDeclaration :: DeclarationType
 } deriving Show
 
-mkDeclaration :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
-mkDeclaration r n (Typed t _) = RegionInfo r t n Definition
+mkDeclaration :: DiagnosticRegion -> Text -> Kind -> RegionInfo
+mkDeclaration r n (t) = RegionInfo r t n Definition
 
 mkLiteral :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
-mkLiteral r n (Typed t _) = RegionInfo r t n LiteralDecl
+mkLiteral r n (Typed t _) = RegionInfo r (simple t) n LiteralDecl
 
 --Infix symbol validation and tagging
 isA :: LToken -> TagType -> ValidatorS ()
@@ -205,8 +224,8 @@ flagToken (RealToken _ t) c = modify (\x@ValidatorState{symbolCategories=sc}->x{
 flagToken _ _ = return ()
 
 
-tagWithType :: NameNode -> Type -> ValidatorS ()
-tagWithType (NameNode lt) ty = flagToken lt $ case ty of
+tagWithType :: NameNode -> Kind -> ValidatorS ()
+tagWithType (NameNode lt) (Kind ValueType ty) = flagToken lt $ case ty of
    TypeEnum _ -> TtEnum
    TypeInt (TagEnum _) -> TtEnumMember
    TypeInt (TagUnnamed _) -> TtEnumMember
@@ -217,6 +236,9 @@ tagWithType (NameNode lt) ty = flagToken lt $ case ty of
    TypeSequence _ -> TtFunction
    TypeRelation _ -> TtFunction
    _ -> TtVariable
+tagWithType (NameNode lt) (Kind DomainType _) = flagToken lt $ TtClass
+tagWithType (NameNode lt) (Kind MemberType _) = flagToken lt $ TtProperty
+
 data ValidatorState = ValidatorState {
     typeChecking :: Bool,
     regionInfo :: [RegionInfo],
@@ -234,7 +256,7 @@ instance Default ValidatorState where
         currentContext=GlobalRegion
         }
 type SymbolTable = (Map Text SymbolTableValue)
-type SymbolTableValue = (DiagnosticRegion,Bool,Type)
+type SymbolTableValue = (DiagnosticRegion,Bool,Kind)
 -- instance Show SymbolTableValue where
 --     show (SType t) = show $ pretty t
 --     show (SDomain d) = show $ pretty d 
@@ -430,15 +452,15 @@ validateGiven (GivenStatementNode idents l1 domain) =
         checkSymbols [l1] -- Colon
         names <- validateSequence (validateNameAs TtVariable) idents
         (dType, dom) <- typeSplit <$> validateDomain domain
-        let declarations = [(mkDeclaration r n (Typed dType ())) | (r, Name n) <- names]
+        let declarations = [(mkDeclaration r n (simple dType)) | (r, Name n) <- names]
         mapM_ addRegion declarations
-        mapM_ (\(r,x) -> putSymbol (x,(r,False,dType)) ) names
+        mapM_ (\(r,x) -> putSymbol (x,(r,False,simple dType)) ) names
         return  $ [ FindOrGiven Given nm dom|(_,nm) <- names ]
 validateGiven (GivenEnumNode se l1 l2 l3) =
     do
         [l1, l2, l3] `are` TtKeyword --new Type enum
         names <- validateSequence (validateNameAs TtEnum) se
-        let eType = TypeEnum
+        let eType = simple . TypeEnum
         mapM_ (\(r,x) -> putSymbol (x,(r,True,eType x) )) names
         return  $  [GivenDomainDefnEnum n | (_,n) <- names]
 
@@ -447,8 +469,8 @@ validateFind (FindStatementNode names colon domain) = do
     checkSymbols [colon] --colon
     names' <- validateSequence (validateNameAs TtVariable) names
     (dType, dom) <- typeSplit <$> validateDomain domain
-    mapM_ (\(r,x) -> putSymbol (x,(r,False,dType) )) names'
-    mapM_ addRegion [(mkDeclaration r n (Typed dType 1)) | (r, Name n) <- names']
+    mapM_ (\(r,x) -> putSymbol (x,(r,False,simple dType) )) names'
+    mapM_ addRegion [(mkDeclaration r n (simple dType)) | (r, Name n) <- names']
     return  $ [ FindOrGiven Find nm dom|(_,nm) <- names']
 
 validateLetting :: LettingStatementNode -> ValidatorS [Declaration]
@@ -457,23 +479,23 @@ validateLetting (LettingStatementNode names l1 assign) = do
     l1 `isA` TtKeyword
     validateLettingAssignment names assign
 
-validateLettingAssignment :: (Sequence NameNode) -> LettingAssignmentNode -> ValidatorS [Declaration]
+validateLettingAssignment :: Sequence NameNode -> LettingAssignmentNode -> ValidatorS [Declaration]
 validateLettingAssignment names (LettingExpr en)  = do
     expr <- validateExpression en
     setContextFrom en
     names' <- validateSequence (validateNameAs TtVariable) names
     let (t,e) = typeSplit expr
-    let declarations = [mkDeclaration r n (Typed t 1) |(r, Name n) <- names']
+    let declarations = [mkDeclaration r n (simple t) |(r, Name n) <- names']
     mapM_ addRegion declarations
-    mapM_ (\(r,x) -> putSymbol (x, (r,False,t) )) names'
+    mapM_ (\(r,x) -> putSymbol (x, (r,False,simple t) )) names'
     return  $ [Letting n e | (_,n) <- names']
 validateLettingAssignment names (LettingDomain lt dn) = do
     lt `isA` TtModifier --TODO classify
     (tDomain,domain) <- typeSplit <$> validateDomain dn
     names' <- validateSequence (validateNameAs TtClass) names
-    let declarations = [ mkDeclaration r n (Typed tDomain ()) |(r, Name n) <- names']
+    let declarations = [ mkDeclaration r n (Kind DomainType tDomain) |(r, Name n) <- names']
     mapM_ addRegion declarations
-    mapM_ (\(r,x) -> putSymbol (x, (r,False,tDomain))) names'
+    mapM_ (\(r,x) -> putSymbol (x, (r,False,Kind DomainType tDomain))) names'
     return $ [Letting n  (Domain domain)| (_,n) <- names']
 validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
     [l1, l2, l3] `are` TtKeyword
@@ -486,10 +508,10 @@ validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
             (do
                 let nameMap = zip members ([1..] :: [Int])
                 let tVal = TypeInt $ TagEnum n
-                addRegion $ RegionInfo {rRegion=r, rText=n, rType=tVal, rDeclaration=Ref r}
-                void $ putSymbol (Name n,(r,True,tVal))
+                addRegion $ RegionInfo {rRegion=r, rText=n, rType=simple tVal, rDeclaration=Ref r}
+                void $ putSymbol (Name n,(r,True,(simple tVal)))
                 mapM_ (
-                    \(x,i) -> putSymbol (x,(r,False,tVal))
+                    \(x,i) -> putSymbol (x,(r,False,simple tVal))
                     ) nameMap
             )
             |(r, Name n) <- names'
@@ -501,7 +523,7 @@ validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
     size <- do
                     setContextFrom szExp
                     validateExpression szExp ?=> exactly tInt
-    let d = TypeUnnamed
+    let d = simple . TypeUnnamed
     --TODO delcs
     mapM_ (\(r,x) -> putSymbol (x,(r,False,d x))) names'
     return  $ [LettingDomainDefnUnnamed n size| (_,n) <- names']
@@ -549,7 +571,17 @@ validateSymbol s =
         _ -> invalid $ ValidatorDiagnostic (getRegion s) $ Error $ TokenError s
 
 -- [MissingTokenError ]
+getValueType :: Kind -> ValidatorS Type
+getValueType (Kind ValueType t) = pure t
+getValueType (Kind k _) = do
+    contextTypeError $ KindError ValueType k
+    return TypeAny
 
+getDomainType :: Kind -> ValidatorS Type
+getDomainType (Kind DomainType t) = pure t
+getDomainType (Kind k _) = do
+    contextTypeError $ KindError DomainType k
+    return TypeAny 
 
 type TypedDomain = Typed (Domain () Expression)
 
@@ -600,21 +632,25 @@ validateDomain dm = case dm of
     validateRangedInt Nothing = return . Typed tInt $ DomainInt TagInt []
     validateEnumRange :: NameNode -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
     validateEnumRange name ranges = do
+        setContextFrom name
         Just name' <- validateIdentifier name
         _ <- resolveReference (symbolRegion name,Name name')
         a <- getSymbol name'
         case a of
             Just (_,True,t) -> do
+                t' <- getValueType t
                 rs <-case ranges of
-                    Just rs -> pure . catMaybes <$> validateList_ (f2n $ validateRange t) rs
+                    Just rs -> pure . catMaybes <$> validateList_ (f2n $ validateRange t') rs
                     Nothing -> return Nothing
-                return $ Typed t $ DomainEnum (Name name') rs Nothing
-            Just (_,False,t) -> case ranges of
-              Nothing -> return . Typed t $  DomainReference (Name name') Nothing
-              Just rs -> do
-                void $ validateList_ (f2n (validateRange TypeAny)) rs
-                raiseError (symbolRegion  name <!> SemanticError "range not supported on non enum ranges")
-                return . Typed t $ DomainReference (Name name') Nothing
+                return $ Typed  t' $ DomainEnum (Name name') rs Nothing
+            Just (_,False,t) -> do
+                t' <- getDomainType t
+                case ranges of
+                    Nothing -> return . Typed t' $  DomainReference (Name name') Nothing
+                    Just rs -> do
+                        void $ validateList_ (f2n (validateRange TypeAny)) rs
+                        raiseError (symbolRegion  name <!> SemanticError "range not supported on non enum ranges")
+                        return . Typed t' $ DomainReference (Name name') Nothing
             Nothing -> return $ fallback "unknown symbol"
 
     validateTupleDomain :: ListNode DomainNode -> ValidatorS TypedDomain
@@ -628,7 +664,7 @@ validateDomain dm = case dm of
                 let (ts,ds) = unzip $ map (\(r,(x,typeSplit->(t,d)))->((x,t),(r,(x,d)))) lst'
                 --push members
                 let t = TypeRecord ts
-                mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t))) ds
+                mapM_ (\(r,(a,_))->putSymbol (a,(r,False,Kind MemberType t))) ds
                 return $ Typed t (DomainRecord (unregion <$> ds))
     validateVariantDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateVariantDomain namedDoms = do
@@ -637,7 +673,7 @@ validateDomain dm = case dm of
                 let (ts,ds) = unzip $ map (\(r,(x,typeSplit->(t,d)))->((x,t),(r,(x,d)))) lst'
                 --push members
                 let t = TypeVariant ts
-                mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t))) ds
+                mapM_ (\(r,(a,_))->putSymbol (a,(r,False,Kind MemberType t))) ds
                 return $ Typed t (DomainVariant (unregion <$> ds))
     validateMatrixDomain :: ListNode DomainNode -> DomainNode -> ValidatorS TypedDomain
     validateMatrixDomain indexes dom = do
@@ -1041,7 +1077,8 @@ validateIdentifierExpr name = do
     Just n <- validateIdentifier name
     t <- resolveReference (symbolRegion name,Name n)
     tagWithType name t
-    return . Typed t $ Reference (Name n) Nothing
+    t' <- getValueType t
+    return . Typed t' $ Reference (Name n) Nothing
 
 --TODO Adress the major hole in the type system current
 validateOperatorExpression :: OperatorExpressionNode -> ValidatorS (Typed Expression)
@@ -1669,15 +1706,15 @@ assertType v ref msg = do
     tc <- gets typeChecking
     unless (not tc || t == ref) $ void . contextError $ CustomError msg
 
-resolveReference :: RegionTagged Name -> ValidatorS Type
+resolveReference :: RegionTagged Name -> ValidatorS Kind
 resolveReference (r,Name n) = do
     c <- getSymbol n
     case c of
-      Nothing -> raiseTypeError (r <!> (CustomError . pack $ "Symbol not found "++ show n)) >> return TypeAny
+      Nothing -> raiseTypeError (r <!> (CustomError . pack $ "Symbol not found "++ show n)) >> return (simple TypeAny)
       Just (reg,_,t) -> do
         addRegion (RegionInfo {rRegion=r,rText=n, rType=t, rDeclaration=Ref reg})
         return t
-resolveReference _ = return TypeAny
+resolveReference _ = return $ simple TypeAny
 
 sameType :: [RegionTagged (Typed a)] -> ValidatorS (Typed [a])
 sameType [] = return $ Typed TypeAny []
@@ -1724,12 +1761,12 @@ unifyPatterns :: Type -> [Maybe AbstractPatternNode] -> ValidatorS [AbstractPatt
 unifyPatterns t =  mapM (flip unifyPattern t)
 
 unifyPattern :: Maybe AbstractPatternNode -> Type -> ValidatorS AbstractPattern
-unifyPattern  (Just (AbstractIdentifier nn@(NameNode lt))) t = do
+unifyPattern  (Just (AbstractIdentifier nn)) t = do
     (Name n) <- validateNameAs TtParameter nn
     -- traceM $ show n ++ ":" ++ show t
     --REVIEW don't put symbol if _ ?
-    void $ putSymbol (Name n,(symbolRegion nn,False,t))
-    addRegion (RegionInfo (symbolRegion nn) t n Definition)
+    void $ putSymbol (Name n,(symbolRegion nn,False,simple t))
+    addRegion (RegionInfo (symbolRegion nn) (simple t) n Definition)
     return  $ Single $  Name n
 
 unifyPattern (Just(AbstractMetaVar lt)) _ = do
