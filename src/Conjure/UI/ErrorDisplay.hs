@@ -109,7 +109,7 @@ val s = do
                     print (maybe "" show model)
                     putStrLn $ show vds
                     printSymbolTable $ symbolTable st
-                    -- putStrLn $ show $ (regionInfo st)
+                    putStrLn $ show $ (regionInfo st)
                     putStrLn $ showDiagnosticsForConsole vds txt
 
             -- putStrLn $ show qpr
