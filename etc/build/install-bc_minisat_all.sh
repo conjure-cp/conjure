@@ -21,6 +21,7 @@ download http://www.sd.is.uec.ac.jp/toda/code/bc_minisat_all-$VERSION.tar.gz
 tar zxf bc_minisat_all-$VERSION.tar.gz
 cd bc_minisat_all-$VERSION/
 make -j${PROCESSES} bc_minisat_all_release
+ls -l
 mv bc_minisat_all_release ${BIN_DIR}/bc_minisat_all_release
 echo "bc_minisat_all executable is at ${BIN_DIR}/bc_minisat_all_release"
 ls -l ${BIN_DIR}/bc_minisat_all_release
