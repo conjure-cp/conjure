@@ -36,13 +36,14 @@ doDuplicatesMatter z0 =
         Just z -> do
             let h = Zipper.hole z
             case ( match opAnd h, match opOr h, match opSum h
-                 , match opMin h, match opMax h ) of
-                (Just{}, _, _, _, _) -> return False
-                (_, Just{}, _, _, _) -> return False
-                (_, _, Just{}, _, _) -> return True
-                (_, _, _, Just{}, _) -> return False
-                (_, _, _, _, Just{}) -> return False
-                _                    -> na "doDuplicatesMatter 2"
+                 , match opProduct h, match opMin h, match opMax h ) of
+                (Just{}, _, _, _, _, _) -> return False -- and
+                (_, Just{}, _, _, _, _) -> return False -- or
+                (_, _, Just{}, _, _, _) -> return True  -- sum
+                (_, _, _, Just{}, _, _) -> return True  -- product
+                (_, _, _, _, Just{}, _) -> return False -- min
+                (_, _, _, _, _, Just{}) -> return False -- max
+                _                       -> na "doDuplicatesMatter 2"
                                         -- case Zipper.up z of
                                         --     Nothing -> na "doDuplicatesMatter"
                                         --     Just u  -> doDuplicatesMatter u
