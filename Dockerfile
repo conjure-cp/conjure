@@ -1,14 +1,36 @@
+
+# Setting up
 FROM ubuntu:latest
 WORKDIR /conjure/
 COPY . .
+
+# Dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we can download stack (and other things)
 RUN apt-get install -y --no-install-recommends xz-utils                 # GHC seems to need xz
 RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
 ENV PATH /root/.local/bin:$PATH                                         # All binaries will end up in /root/local/bin
-RUN make install                                                        # Build Conjure + Copy SR into PATH
-RUN PROCESSES=2 make solvers                                            # Build solvers
+
+# Building solvers. We do this first to facilitate better caching.
+RUN etc/build/install-bc_minisat_all.sh
+RUN etc/build/install-boolector.sh
+RUN etc/build/install-cadical.sh
+RUN etc/build/install-kissat.sh
+RUN etc/build/install-chuffed.sh
+RUN etc/build/install-gecode.sh
+RUN etc/build/install-glucose.sh
+RUN etc/build/install-lingeling.sh
+RUN etc/build/install-minion.sh
+RUN etc/build/install-nbc_minisat_all.sh
+RUN etc/build/install-open-wbo.sh
+RUN etc/build/install-yices.sh
+RUN etc/build/install-z3.sh
+
+# Building Conjure and copying Savile Row
+RUN make install
+
+# Test
 CMD conjure --version
 
 
