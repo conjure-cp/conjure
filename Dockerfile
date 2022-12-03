@@ -8,6 +8,7 @@ RUN apt-get install -y --no-install-recommends xz-utils                 # GHC se
 RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
 ENV PATH /root/.local/bin:$PATH                                         # All binaries will end up in /root/local/bin
 RUN make install                                                        # Build Conjure + Copy SR into PATH
+RUN PROCESSES=2 make solvers                                            # Build solvers
 CMD conjure --version
 
 
