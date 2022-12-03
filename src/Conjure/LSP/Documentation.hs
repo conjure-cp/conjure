@@ -20,6 +20,8 @@ getDocsForBuiltin (BuiltIn prefix (T.unpack->name)) = do
           OperatorD -> "op/"
           FunctionD -> "function/"
           KeywordD -> "keyword/"
+          TypeD -> "types/"
+          AttributeD -> "attributes/"
     res <- tryGetDocsByName $ category ++ name
     return . Just $ case res of 
       Nothing -> fallbackMsg category name
