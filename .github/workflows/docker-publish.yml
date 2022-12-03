@@ -6,6 +6,7 @@ name: Publishing Docker image to ghcr.io
 # documentation.
 
 on:
+  workflow_dispatch:        # can be triggered manually
   push:
     branches: [ master ]
     # Publish semver tags as releases.

@@ -1,6 +1,7 @@
 name: Building all solvers
 
 on:
+  workflow_dispatch:        # can be triggered manually
   schedule:
     - cron: '0 11 * * 1'    # run at 11.00 every Monday
                             # we do not modify the install scripts or the Makefile very often,

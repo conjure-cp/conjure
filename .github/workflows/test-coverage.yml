@@ -1,6 +1,7 @@
 name: Running all tests (code coverage)
 
 on:
+  workflow_dispatch:        # can be triggered manually
   push:
     branches:
       - master              # run for the master branch only
