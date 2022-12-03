@@ -44,7 +44,7 @@ jobs:
           path: |
             ~/.stack
             .stack-work
-          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - name: Setting PATH
