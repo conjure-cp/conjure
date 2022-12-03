@@ -2,7 +2,7 @@ FROM ubuntu:latest
 WORKDIR /conjure/
 COPY . .
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends make curl ca-certificates
+RUN apt-get install -y --no-install-recommends make curl ca-certificates xz
 ENV PATH /root/.local/bin:$PATH
 RUN make
 CMD conjure --version
