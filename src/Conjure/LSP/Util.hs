@@ -121,8 +121,9 @@ regionToRange :: DiagnosticRegion -> L.Range
 regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (sourcePosToPosition ep)
 regionToRange GlobalRegion = error "Global region in symbol info"
 
-snippet :: Text -> Text 
-snippet t = T.concat ["```essence\n",t,"\n```"]
+
+snippet :: Text -> MarkupContent
+snippet = markedUpContent "essence"
 
 instance Pretty Position where
     pretty (Position (text.show->r) (text.show->c)) =  r <> ":" <> c
