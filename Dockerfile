@@ -16,21 +16,22 @@ RUN apt-get install -y --no-install-recommends xz-utils                 # GHC se
 RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
 RUN apt-get install -y --no-install-recommends zlib1g-dev               # some solvers (for example bc_minisat_all_release) need this
 RUN apt-get install -y --no-install-recommends cmake                    # some solvers (for example boolector) need this
+RUN apt-get install -y --no-install-recommends git                      # some solvers (for example boolector) need this
 
-# Building solvers. We do this first to facilitate better caching.
-RUN etc/build/install-bc_minisat_all.sh
-RUN etc/build/install-boolector.sh
-RUN etc/build/install-cadical.sh
-RUN etc/build/install-kissat.sh
-RUN etc/build/install-chuffed.sh
-RUN etc/build/install-gecode.sh
-RUN etc/build/install-glucose.sh
-RUN etc/build/install-lingeling.sh
-RUN etc/build/install-minion.sh
-RUN etc/build/install-nbc_minisat_all.sh
-RUN etc/build/install-open-wbo.sh
-RUN etc/build/install-yices.sh
-RUN etc/build/install-z3.sh
+# # Building solvers. We do this first to facilitate better caching.
+# RUN etc/build/install-bc_minisat_all.sh
+# RUN etc/build/install-boolector.sh
+# RUN etc/build/install-cadical.sh
+# RUN etc/build/install-kissat.sh
+# RUN etc/build/install-chuffed.sh
+# RUN etc/build/install-gecode.sh
+# RUN etc/build/install-glucose.sh
+# RUN etc/build/install-lingeling.sh
+# RUN etc/build/install-minion.sh
+# RUN etc/build/install-nbc_minisat_all.sh
+# RUN etc/build/install-open-wbo.sh
+# RUN etc/build/install-yices.sh
+# RUN etc/build/install-z3.sh
 
 # Building Conjure and copying Savile Row
 RUN make install

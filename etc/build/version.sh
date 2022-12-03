@@ -25,4 +25,4 @@ else
     fi
 fi
 
-
+cat src/Conjure/RepositoryVersion.hs
