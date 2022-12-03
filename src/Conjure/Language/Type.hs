@@ -33,7 +33,9 @@ data Type
     | TypeUnnamed Name
     | TypeTuple [Type]
     | TypeRecord [(Name, Type)]
+    | TypeRecordMember Name [(Name, Type)]
     | TypeVariant [(Name, Type)]
+    | TypeVariantMember Name [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -62,8 +64,10 @@ instance Pretty Type where
                          <> prettyList prParens "," xs
     pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeRecordMember n ts) = "member" <+> pretty n <+> "of" <+> pretty (TypeRecord ts)
     pretty (TypeVariant xs) = "variant" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeVariantMember n ts) = "member" <+> pretty n <+> "of" <+> pretty (TypeVariant ts)
     pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices

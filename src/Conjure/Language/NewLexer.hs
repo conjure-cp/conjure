@@ -7,12 +7,13 @@
 module Conjure.Language.NewLexer where
 
 import Conjure.Language.Lexemes
-import Conjure.Prelude hiding (many, some)
+import Conjure.Prelude hiding (many, some,Text)
 import Data.Char (isAlpha, isAlphaNum)
 import Data.Void
 
 import qualified Data.Text as T
-
+import qualified Data.Text.Lazy as L
+import Data.Text (Text)
 import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
 
@@ -27,20 +28,20 @@ sourcePos0 :: SourcePos
 sourcePos0 = SourcePos "" (mkPos  0) (mkPos 0)
 
 class Reformable a where
-    reform :: a -> String
+    reform :: a -> L.Text
 
 instance Reformable ETok where
     reform e | oTLength (offsets e) == 0 = ""
-    reform (ETok{capture=cap,trivia=triv}) = concatMap showTrivia triv ++ T.unpack cap
+    reform (ETok{capture=cap,trivia=triv}) = L.append  (L.concat $ map showTrivia triv) (L.fromStrict cap)
         where
-            showTrivia :: Trivia -> String
+            showTrivia :: Trivia -> L.Text
             showTrivia x = case x of
-              WhiteSpace txt -> T.unpack txt
-              LineComment txt -> T.unpack txt
-              BlockComment txt -> T.unpack txt
+              WhiteSpace txt    -> L.fromStrict txt
+              LineComment txt   -> L.fromStrict txt
+              BlockComment txt  -> L.fromStrict txt
 
-reformList :: Reformable a => Seq a -> String
-reformList = concatMap reform
+reformList :: (Traversable t ,Reformable a) => t a -> L.Text
+reformList =  L.concat  . map reform . toList
 
 emojis :: [Char]
 emojis =
@@ -59,11 +60,11 @@ isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem`
 
 data Offsets =Offsets {oStart::Int,oTrueStart :: Int,oTLength::Int,oSourcePos::SourcePos}
     deriving (Show, Eq, Ord)
-type Lexer = Parsec Void T.Text
+type Lexer = Parsec Void Text
 
--- type Lexer = Parsec Void T.Text ETokenStream
+-- type Lexer = Parsec Void Text ETokenStream
 
-data Trivia = WhiteSpace T.Text | LineComment T.Text | BlockComment T.Text
+data Trivia = WhiteSpace Text | LineComment Text | BlockComment Text
     deriving (Show, Eq, Ord)
 
 data ETok = ETok
@@ -176,7 +177,7 @@ pFallback = do
     somethingValid :: Lexer ()
     somethingValid = void pTrivia <|> void aLexemeStrict <|> eof
 
-pLexeme :: (T.Text, Lexeme) -> Lexer (Lexeme,Text)
+pLexeme :: (Text, Lexeme) -> Lexer (Lexeme,Text)
 pLexeme (s, l) = do
     tok <- string s
     notFollowedBy $ if isIdentifierLetter $ T.last tok then nonIden else empty
@@ -250,11 +251,7 @@ instance Stream ETokenStream where
 buildStream :: [ETok] -> ETokenStream
 buildStream xs = case NE.nonEmpty xs of
     Nothing -> ETokenStream "" xs
-    Just s -> ETokenStream (T.pack $ showTokens pxy s) xs
-
-instance VisualStream ETokenStream where
-    showTokens p =  concatMap reform
-    tokensLength p ls = sum $ oTLength . offsets <$> ls
+    Just s -> ETokenStream (T.pack $ "showTokens pxy s") xs
 
 -- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
 instance TraversableStream ETokenStream where
@@ -279,9 +276,40 @@ instance TraversableStream ETokenStream where
                 [] -> pstateSourcePos
                 (x : _) -> tokenSourcePos x
         (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
-        (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
+        (preStr, postStr) = ("NOT SUPPORTED","NOT SUPPORTED")
         preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
-        restOfLine = takeWhile (/= '\n') postStr
+        restOfLine = ""
+
+instance VisualStream ETokenStream where
+    showTokens p =  L.unpack . reformList
+    tokensLength p ls = sum $ oTLength . offsets <$> ls
+
+-- -- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
+-- instance TraversableStream ETokenStream where
+--     reachOffset o PosState{..} =
+--         ( Just (prefix ++ restOfLine)
+--         , PosState
+--             { pstateInput = buildStream post
+--             , pstateOffset = max pstateOffset o
+--             , pstateSourcePos = newSourcePos
+--             , pstateTabWidth = pstateTabWidth
+--             , pstateLinePrefix = prefix
+--             }
+--         )
+--       where
+--         prefix =
+--             if sameLine
+--                 then pstateLinePrefix ++ preLine
+--                 else preLine
+--         sameLine = sourceLine newSourcePos == sourceLine pstateSourcePos
+--         newSourcePos =
+--             case post of
+--                 [] -> pstateSourcePos
+--                 (x : _) -> tokenSourcePos x
+--         (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
+--         (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
+--         preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
+--         restOfLine = takeWhile (/= '\n') postStr
 
 pxy :: Proxy ETokenStream
 pxy = Proxy

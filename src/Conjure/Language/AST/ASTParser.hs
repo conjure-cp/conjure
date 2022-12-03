@@ -13,7 +13,6 @@ import Conjure.Language.NewLexer
 import Conjure.Language.Lexemes
 import Text.Megaparsec
 
-import Data.Text (pack)
 import Data.Void (Void)
 import Conjure.Language.AST.Reformer (Flattenable(..))
 import Conjure.Language.Expression.Op.Internal.Common
@@ -24,6 +23,8 @@ import Conjure.Language.Attributes (allAttributLexemes)
 import Data.Sequence (Seq)
 import Text.PrettyPrint.HughesPJ (text)
 import Text.Megaparsec.Debug (dbg)
+import qualified Data.Text.Lazy as L
+import qualified Data.Text as T
 
 data ParserError = ParserError Doc
     deriving (Show)
@@ -805,26 +806,31 @@ attributesAsLexemes xs = do
 ---------------------------------------
 ---EXAMPLES AND TESTING            ----
 ---------------------------------------
+putTextLn :: L.Text -> IO ()
+putTextLn = putStrLn . L.unpack
+
 example :: String -> IO ()
 example s = do
     let str = s
-    let txt  = pack str
+    let txt  = T.pack str
     let lexed = runParser eLex "lexer" txt
     case lexed of
       Left peb -> putStrLn "Lexer error:" >> (putStrLn $ errorBundlePretty peb)
       Right ets -> do
-        putStrLn "Lexmes"
-        putStrLn $ show  ets
+        putStrLn $ "Lexed " ++ show ( length ets) ++" symbols"
+        -- putStrLn $ show . take 100 $ ets
         putStrLn $ "reformed"
-        putStrLn $ concatMap reform ets
+        -- putTextLn $ reformList ets
         let stream = ETokenStream txt  ets
         case runParser (evalStateT parseProgram def) "parser" stream  of
-          Left peb -> putStrLn "Parser error: " >> (putStrLn $ errorBundlePretty peb)
+          Left peb -> putStrLn "Parser error: " >> (putStrLn $ "")
           Right pt -> do
-            putStrLn $show pt
+            -- putStrLn $  show pt
             putStrLn $ "Reforming"
-            putStrLn $ show $ flatten pt
-            putStrLn $ reformList $ flatten pt
+            print $ reformList (flatten pt) == L.fromStrict txt
+            -- let flat = flatten pt
+            -- putStrLn $ show $ flat
+            -- putTextLn $ reformList $ flat
 
 exampleFile :: String -> IO ()
 exampleFile p = do

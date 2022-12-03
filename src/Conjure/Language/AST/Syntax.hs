@@ -12,30 +12,26 @@ data LToken
     = RealToken [ETok] ETok
     | MissingToken ETok
     | SkippedToken ETok
-    deriving (Eq, Ord)
+    deriving (Eq, Ord,Show)
 
 instance Null LToken where
     isMissing (MissingToken _) = True
     isMissing _ = False
 
-instance Show LToken where
-    show (RealToken [] x) = show x
-    show (RealToken ss x) =  "SKIPPED" ++ show ss ++ show x
-    show (MissingToken x) = "MISSING[" ++ show x ++ "]"
-    show (SkippedToken x) = "SKIPPED[" ++ show x ++ "]"
+-- instance Show LToken where
+--     show (RealToken [] x) = show x
+--     show (RealToken ss x) =  "SKIPPED" ++ show ss ++ show x
+--     show (MissingToken x) = "MISSING[" ++ show x ++ "]"
+--     show (SkippedToken x) = "SKIPPED[" ++ show x ++ "]"
 
 data ProgramTree = ProgramTree {
     langVersionInfo :: Maybe LangVersionNode,
     statements :: [StatementNode],
     eofToken :: LToken
 } 
-
+    deriving Show
 data LangVersionNode = LangVersionNode LToken NameNode (Sequence LToken)
-
-instance Show ProgramTree where
-    show (ProgramTree lv xs eof) = "ProgramTree \n" ++ 
-                                intercalate "\n\n" (map show xs)
-                                 ++ "\n\n" ++ show eof
+    deriving Show
 
 data StatementNode
     = DeclarationStatement DeclarationStatementNode

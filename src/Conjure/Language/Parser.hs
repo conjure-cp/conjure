@@ -21,13 +21,12 @@ import Conjure.Language.Domain
 -- import Conjure.Language.TypeOf
 -- import Conjure.Language.Expression.Op
 -- import Conjure.Language.Pretty
-import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace, lexemeText, runLexer )
 import qualified Conjure.Language.NewLexer as L
 -- megaparsec
 -- megaparsec
 -- megaparsec
 -- megaparsec
-import Text.Megaparsec ( (<?>), label, token, try, eof, ParsecT,Parsec, runParser, errorBundlePretty)
+import Text.Megaparsec (Parsec)
 -- import Text.Megaparsec.Error ( ParseError(..),ErrorItem, errorOffset )
 -- import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn , Pos)
 -- import Control.Applicative.Combinators ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )

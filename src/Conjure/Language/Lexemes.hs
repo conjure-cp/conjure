@@ -7,6 +7,7 @@ module Conjure.Language.Lexemes where
 import Conjure.Prelude
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as L
 
 data Lexeme
     = LIntLiteral Integer
@@ -502,7 +503,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_SpecialCase, "?#")
     ]
 
-textToLexeme :: T.Text -> Maybe Lexeme
+textToLexeme :: Text -> Maybe Lexeme
 textToLexeme t = M.lookup t mapTextToLexeme
 
 mapTextToLexeme :: M.HashMap T.Text Lexeme

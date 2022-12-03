@@ -70,11 +70,12 @@ collapseSkipped ((ValidatorDiagnostic regx ex) :(ValidatorDiagnostic regy ey):rs
     = collapseSkipped $ ValidatorDiagnostic (catDr regx regy) (Error $ SkippedTokens ) : rs
     where 
         isSkipped (Error (TokenError (SkippedToken  _))) = True
+        isSkipped (Error SkippedTokens) = True
         isSkipped _ = False
         sameLine :: SourcePos -> SourcePos -> Bool
         sameLine (SourcePos _ l1 _) (SourcePos _ l2 _) = l1 == l2
         catDr :: DiagnosticRegion -> DiagnosticRegion -> DiagnosticRegion
-        catDr (DiagnosticRegion sp _ o l1) (DiagnosticRegion _ en _ l2) = DiagnosticRegion sp en o (l1+l2)
+        catDr (DiagnosticRegion sp _ o _) (DiagnosticRegion _ en _ _) = DiagnosticRegion sp en o ((unPos (sourceColumn en) - unPos (sourceColumn sp)))
         catDr _ _ = GlobalRegion
 collapseSkipped (x:xs) = x : collapseSkipped xs
             
