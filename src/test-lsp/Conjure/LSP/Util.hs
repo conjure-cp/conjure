@@ -12,19 +12,19 @@ import Control.Concurrent (killThread)
 import Control.Exception (bracket)
 import UnliftIO.Process (createPipe)
 
--- Adapted rom https://github.com/haskell/lsp/blob/master/lsp-test/test/DummyServer.hs
-withDummyServer :: ((Handle, Handle) -> IO ()) -> IO ()
-withDummyServer f = do
-  (hinRead, hinWrite) <- createPipe
-  (houtRead, houtWrite) <- createPipe
-  bracket
-    (forkIO $ void $ runServerWithHandles mempty mempty hinRead houtWrite conjureLanguageServer)
-    killThread
-    (const $ f (hinWrite, houtRead))
+-- -- Adapted rom https://github.com/haskell/lsp/blob/master/lsp-test/test/DummyServer.hs
+-- withDummyServer :: ((Handle, Handle) -> IO ()) -> IO ()
+-- withDummyServer f = do
+--   (hinRead, hinWrite) <- createPipe
+--   (houtRead, houtWrite) <- createPipe
+--   bracket
+--     (forkIO $ void $ runServerWithHandles mempty mempty hinRead houtWrite conjureLanguageServer)
+--     killThread
+--     (const $ f (hinWrite, houtRead))
 
 
 
 
 
-doWithSession :: Session () ->  (Handle,Handle) -> IO ()
-doWithSession session (hin,hout) = runSessionWithHandles hin hout def fullCaps "." session
+-- doWithSession :: Session () ->  (Handle,Handle) -> IO ()
+-- doWithSession session (hin,hout) = runSessionWithHandles hin hout def fullCaps "." session

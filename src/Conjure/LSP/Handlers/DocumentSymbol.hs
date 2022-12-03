@@ -40,7 +40,6 @@ regionInfoToDocumentSymbols uri (RegionInfo {rRegion=reg,rText=n, rType=t, rDecl
           Definition -> Just $ case t of 
                     Kind ValueType _ -> SkVariable
                     Kind DomainType _ -> SkClass
-                    Kind MemberType _ -> SkEnumMember --DO better
           LiteralDecl -> do
             case t of 
               Kind _ ty -> return $ case ty of 
@@ -56,4 +55,3 @@ regionInfoToDocumentSymbols uri (RegionInfo {rRegion=reg,rText=n, rType=t, rDecl
           Ref _ -> Just $ case t of 
                     Kind ValueType _ -> SkVariable
                     Kind DomainType _ -> SkClass
-                    Kind MemberType _ -> SkEnumMember --DO better

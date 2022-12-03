@@ -47,22 +47,22 @@ createSemanticToken (TaggedToken tt tok) = T.SemanticTokenAbsolute
     symbolType :: TagType -> Maybe T.SemanticTokenTypes
     symbolType s = case s of
       TtType -> Just SttType
-      TtClass -> Just SttClass
-      TtEnum -> Just SttEnum
-      TtStruct -> Just SttStruct
-      TtParameter -> Just SttParameter
-      TtVariable -> Just SttVariable
-      TtProperty -> Just SttProperty
-      TtEnumMember -> Just SttEnumMember
-      TtEvent -> Just SttEvent
-      TtFunction -> Just SttFunction
-      TtMethod -> Just SttMethod
-      TtMacro -> Just SttMacro
-      TtKeyword -> Just SttKeyword
-      TtModifier -> Just SttModifier
-      TtComment -> Just SttComment
-      TtString -> Just SttString
       TtNumber -> Just SttNumber
-      TtRegexp -> Just SttRegexp
+      TtBool -> Just SttRegexp
+      TtDomain -> Just SttClass
+      TtEnum -> Just SttEnum
+      TtEnumMember -> Just SttEnumMember
+      TtRecord -> Just SttStruct
+      TtRecordMember -> Just SttProperty
+      TtUserFunction -> Just SttMethod
+      TtFunction -> Just SttFunction
+      TtAttribute -> Just SttEvent
+      TtAAC -> Just SttInterface
+      TtVariable -> Just SttVariable
+      TtKeyword -> Just SttKeyword
+      TtQuantifier -> Just SttMacro
+      TtSubKeyword -> Just SttModifier
       TtOperator -> Just SttOperator
+      TtLocal -> Just SttParameter
       TtOther _ -> Nothing
+
