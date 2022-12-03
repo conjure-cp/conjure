@@ -4,6 +4,10 @@ FROM ubuntu:latest
 WORKDIR /conjure/
 COPY . .
 
+# All binaries will end up in /root/.local/bin
+RUN mkdir -p /root/.local/bin
+ENV PATH /root/.local/bin:$PATH
+
 # Dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
@@ -11,9 +15,6 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we 
 RUN apt-get install -y --no-install-recommends xz-utils                 # GHC seems to need xz
 RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
 RUN apt-get install -y --no-install-recommends zlib1g-dev               # some solvers (for example bc_minisat_all_release) need this
-
-# All binaries will end up in /root/local/bin
-ENV PATH /root/.local/bin:$PATH
 
 # Building solvers. We do this first to facilitate better caching.
 RUN etc/build/install-bc_minisat_all.sh
