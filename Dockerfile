@@ -15,6 +15,7 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we 
 RUN apt-get install -y --no-install-recommends xz-utils                 # GHC seems to need xz
 RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
 RUN apt-get install -y --no-install-recommends zlib1g-dev               # some solvers (for example bc_minisat_all_release) need this
+RUN apt-get install -y --no-install-recommends cmake                    # some solvers (for example boolector) need this
 
 # Building solvers. We do this first to facilitate better caching.
 RUN etc/build/install-bc_minisat_all.sh
