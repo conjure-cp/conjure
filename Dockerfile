@@ -2,9 +2,12 @@ FROM ubuntu:latest
 WORKDIR /conjure/
 COPY . .
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends build-essential curl ca-certificates xz-utils libgmp-dev
-ENV PATH /root/.local/bin:$PATH
-RUN make
+RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
+RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we can download stack (and other things)
+RUN apt-get install -y --no-install-recommends xz-utils                 # GHC seems to need xz
+RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
+ENV PATH /root/.local/bin:$PATH                                         # All binaries will end up in /root/local/bin
+RUN make install                                                        # Build Conjure + Copy SR into PATH
 CMD conjure --version
 
 
