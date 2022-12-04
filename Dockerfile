@@ -18,20 +18,20 @@ RUN apt-get install -y --no-install-recommends zlib1g-dev               # some s
 RUN apt-get install -y --no-install-recommends cmake                    # some solvers (for example boolector) need this
 RUN apt-get install -y --no-install-recommends git                      # some solvers (for example boolector) need this
 
-# Building solvers. We do this first to facilitate better caching.
-RUN etc/build/install-bc_minisat_all.sh
-RUN etc/build/install-boolector.sh
-RUN etc/build/install-cadical.sh
-RUN etc/build/install-kissat.sh
-RUN etc/build/install-chuffed.sh
-RUN etc/build/install-gecode.sh
-RUN etc/build/install-glucose.sh
-RUN etc/build/install-lingeling.sh
-RUN etc/build/install-minion.sh
-RUN etc/build/install-nbc_minisat_all.sh
-RUN etc/build/install-open-wbo.sh
-RUN etc/build/install-yices.sh
-RUN etc/build/install-z3.sh
+# Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
+RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
+RUN PROCESSES=2 etc/build/install-boolector.sh
+RUN PROCESSES=2 etc/build/install-cadical.sh
+RUN PROCESSES=2 etc/build/install-kissat.sh
+RUN PROCESSES=2 etc/build/install-chuffed.sh
+RUN PROCESSES=2 etc/build/install-gecode.sh
+RUN PROCESSES=2 etc/build/install-glucose.sh
+RUN PROCESSES=2 etc/build/install-lingeling.sh
+RUN PROCESSES=2 etc/build/install-minion.sh
+RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
+RUN PROCESSES=2 etc/build/install-open-wbo.sh
+RUN PROCESSES=2 etc/build/install-yices.sh
+RUN PROCESSES=2 etc/build/install-z3.sh
 
 # Building Conjure and copying Savile Row
 RUN make install
