@@ -20,6 +20,7 @@ RUN apt-get install -y --no-install-recommends git                      # needed
 RUN apt-get install -y --no-install-recommends zip unzip                # needed when building some solvers (for example glucose)
 RUN apt-get install -y --no-install-recommends autoconf                 # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
+RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
 RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
