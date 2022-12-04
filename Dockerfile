@@ -18,6 +18,7 @@ RUN apt-get install -y --no-install-recommends zlib1g-dev               # needed
 RUN apt-get install -y --no-install-recommends cmake                    # needed when building some solvers (for example boolector)
 RUN apt-get install -y --no-install-recommends git                      # needed when building some solvers (for example boolector)
 RUN apt-get install -y --no-install-recommends zip unzip                # needed when building some solvers (for example glucose)
+RUN apt-get install -y --no-install-recommends autoconf                 # needed when building some solvers (for example yices)
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
 RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
