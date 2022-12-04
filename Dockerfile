@@ -26,10 +26,10 @@ RUN apt-get install -y --no-install-recommends python3                  # needed
 RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-boolector.sh
 RUN PROCESSES=2 etc/build/install-cadical.sh
-RUN PROCESSES=2 etc/build/install-kissat.sh
 RUN PROCESSES=2 etc/build/install-chuffed.sh
 RUN PROCESSES=2 etc/build/install-gecode.sh
 RUN PROCESSES=2 etc/build/install-glucose.sh
+RUN PROCESSES=2 etc/build/install-kissat.sh
 RUN PROCESSES=2 etc/build/install-lingeling.sh
 RUN PROCESSES=2 etc/build/install-minion.sh
 RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
