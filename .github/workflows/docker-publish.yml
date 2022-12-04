@@ -7,28 +7,32 @@ name: Publishing Docker image to ghcr.io
 
 on:
   workflow_dispatch:        # can be triggered manually
-  push:
-    branches:
+  workflow_run:             # run only when all tests pass
+    workflows:
+      - Running all tests
+    types:
+      - completed
+    branch:
       - master
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches:
-      - master
-  release:
-    types: [published]
+  pull_request:             # so we can test Docker before merging?
+  release:                  # run for releases
+    types:
+      - published
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
 
 jobs:
-  build:
+
+  Job:
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
