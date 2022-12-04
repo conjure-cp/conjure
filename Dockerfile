@@ -1,6 +1,13 @@
 
+# We use multi-stage builds to end up with a small final image.
+# See https://docs.docker.com/build/building/multi-stage
+# We have 2 stages, one for building and one just to copy the binaries we want to keep.
+
+################################################################################
+# First stage: Building
+
 # Setting up
-FROM ubuntu:latest
+FROM ubuntu:latest AS builder
 WORKDIR /conjure/
 COPY . .
 
@@ -46,3 +53,17 @@ RUN du -sh /root/.local/bin
 RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
+
+
+################################################################################
+# Second stage: Copying the binaries
+
+FROM ubuntu:latest
+WORKDIR /conjure
+ENV PATH /root/.local/bin:$PATH
+RUN mkdir -p /root/.local/bin/lib
+COPY --from=builder /root/.local/bin /root/.local/bin
+
+# Testing
+CMD echo "find x : set of int(1..3)" > model.essence ; conjure solve model.essence --number-of-solutions=all ; cat model.solutions
+
