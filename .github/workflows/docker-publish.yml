@@ -12,12 +12,6 @@ on:
       - Running all tests
     types:
       - completed
-    branch:
-      - master
-  pull_request:             # so we can test Docker before merging?
-  release:                  # run for releases
-    types:
-      - published
 
 env:
   REGISTRY: ghcr.io
@@ -29,7 +23,7 @@ jobs:
 
   Job:
 
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     runs-on: ubuntu-latest
 
@@ -41,10 +35,6 @@ jobs:
       id-token: write
 
     steps:
-      - name: Print github context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
 
       - name: Checkout repository
         uses: actions/checkout@v3
