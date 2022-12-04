@@ -8,11 +8,13 @@ name: Publishing Docker image to ghcr.io
 on:
   workflow_dispatch:        # can be triggered manually
   push:
-    branches: [ master, docker-ghcr ]
+    branches:
+      - master
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
   release:
     types: [published]
 
