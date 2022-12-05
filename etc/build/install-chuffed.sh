@@ -16,7 +16,6 @@ cd chuffed
 # latest on Github as of 18 November 2022
 git checkout $VERSION
 # git submodule update --init     # cp-profiler support
-ls -l chuffed/flatzinc
 mkdir build
 cd build
 cmake ..
