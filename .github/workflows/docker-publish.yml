@@ -9,7 +9,7 @@ on:
   workflow_dispatch:        # can be triggered manually
   workflow_run:             # run only when all tests pass
     workflows:
-      - "Running all tests"
+      - Running all tests
     types:
       - completed
 
