@@ -30,8 +30,8 @@ RUN apk add --no-cache gperf                    # needed when building some solv
 RUN apk add --no-cache python3                  # needed when building some solvers (for example z3)
 
 # Only copying the install*.sh scripts
-RUN mkdir -p etc/build
-COPY etc/build/install*.sh etc/build/
+RUN mkdir -p etc
+COPY etc/build etc/build
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
 RUN bash etc/build/install-bc_minisat_all.sh
