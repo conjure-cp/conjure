@@ -8,6 +8,7 @@
 
 # Setting up
 FROM ubuntu:20.04 AS builder
+ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /conjure/
 
 # All binaries will end up in /root/.local/bin
