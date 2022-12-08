@@ -29,19 +29,19 @@ RUN apk add --no-cache gperf                    # needed when building some solv
 RUN apk add --no-cache python3                  # needed when building some solvers (for example z3)
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
-RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
-RUN PROCESSES=2 etc/build/install-boolector.sh
-RUN PROCESSES=2 etc/build/install-cadical.sh
-RUN PROCESSES=2 etc/build/install-chuffed.sh
-RUN PROCESSES=2 etc/build/install-gecode.sh
-RUN PROCESSES=2 etc/build/install-glucose.sh
-RUN PROCESSES=2 etc/build/install-kissat.sh
-RUN PROCESSES=2 etc/build/install-lingeling.sh
-RUN PROCESSES=2 etc/build/install-minion.sh
-RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
-RUN PROCESSES=2 etc/build/install-open-wbo.sh
-RUN PROCESSES=2 etc/build/install-yices.sh
-RUN PROCESSES=2 etc/build/install-z3.sh
+RUN bash etc/build/install-bc_minisat_all.sh
+RUN bash etc/build/install-boolector.sh
+RUN bash etc/build/install-cadical.sh
+RUN bash etc/build/install-chuffed.sh
+RUN bash etc/build/install-gecode.sh
+RUN bash etc/build/install-glucose.sh
+RUN bash etc/build/install-kissat.sh
+RUN bash etc/build/install-lingeling.sh
+RUN bash etc/build/install-minion.sh
+RUN bash etc/build/install-nbc_minisat_all.sh
+RUN bash etc/build/install-open-wbo.sh
+RUN bash etc/build/install-yices.sh
+RUN bash etc/build/install-z3.sh
 
 # Building Conjure and copying Savile Row
 RUN make install
