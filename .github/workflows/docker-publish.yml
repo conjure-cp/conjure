@@ -31,7 +31,7 @@ jobs:
 
     # if this was triggered through a completed run of "Running all tests", we check if the run completed successfully
     # if it was triggered through a PR, we just run it
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'pull_request }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'pull_request' }}
 
     runs-on: ubuntu-latest
 
