@@ -17,9 +17,9 @@ ENV PATH /root/.local/bin:$PATH
 
 # Dependencies
 RUN apk add --no-cache curl ca-certificates     # so we can download stack (and other things)
-RUN apk add --no-cache xz-utils                 # GHC seems to need xz
-RUN apk add --no-cache libgmp-dev               # GHC definitely needs GMP
-RUN apk add --no-cache zlib1g-dev               # needed when building some solvers (for example bc_minisat_all_release)
+RUN apk add --no-cache xz                       # GHC seems to need xz
+RUN apk add --no-cache gmp-dev                  # GHC definitely needs GMP
+RUN apk add --no-cache zlib                     # needed when building some solvers (for example bc_minisat_all_release)
 RUN apk add --no-cache cmake                    # needed when building some solvers (for example boolector)
 RUN apk add --no-cache git                      # needed when building some solvers (for example boolector)
 RUN apk add --no-cache zip unzip                # needed when building some solvers (for example glucose)
