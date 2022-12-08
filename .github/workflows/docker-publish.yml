@@ -12,6 +12,12 @@ on:
       - Running all tests
     types:
       - completed
+  pull_request:             # and for PRs that edit the docker files
+    paths:
+      - Dockerfile
+      - .github/workflows/docker-publish.yml
+                            # other branches that want testing must create a PR
+
 
 env:
   REGISTRY: ghcr.io
@@ -23,7 +29,9 @@ jobs:
 
   Job:
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # if this was triggered through a completed run of "Running all tests", we check if the run completed successfully
+    # if it was triggered through a PR, we just run it
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'pull_request' }}
 
     runs-on: ubuntu-latest
 
@@ -65,7 +73,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' }} # do not push if this was triggered by a PR
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

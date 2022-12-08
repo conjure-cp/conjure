@@ -7,9 +7,9 @@
 # First stage: Building
 
 # Setting up
-FROM ubuntu:latest AS builder
+FROM ubuntu:20.04 AS builder
+ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /conjure/
-COPY . .
 
 # All binaries will end up in /root/.local/bin
 RUN mkdir -p /root/.local/bin
@@ -29,6 +29,10 @@ RUN apt-get install -y --no-install-recommends autoconf                 # needed
 RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
 
+# Only copying the install*.sh scripts
+RUN mkdir -p etc
+COPY etc/build etc/build
+
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
 RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-boolector.sh
@@ -44,6 +48,9 @@ RUN PROCESSES=2 etc/build/install-open-wbo.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
 RUN PROCESSES=2 etc/build/install-z3.sh
 
+# Copy everything
+COPY . .
+
 # Building Conjure and copying Savile Row
 RUN make install
 
@@ -58,7 +65,7 @@ RUN du -sh /root/.local/bin
 ################################################################################
 # Second stage: Copying the binaries
 
-FROM ubuntu:latest
+FROM alpine:3.17
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 RUN mkdir -p /root/.local/bin/lib
