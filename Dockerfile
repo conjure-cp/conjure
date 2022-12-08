@@ -17,7 +17,7 @@ ENV PATH /root/.local/bin:$PATH
 # Dependencies
 RUN apk add --no-cache build-base               # some basics
 RUN apk add --no-cache bash                     # might as well have bash
-RUN apk add --no-cache libc-dev                 # turns out build-base does not contain libc
+RUN apk add --no-cache gcompact                 # turns out build-base does not contain libc, https://wiki.alpinelinux.org/wiki/Running_glibc_programs
 RUN apk add --no-cache curl ca-certificates     # so we can download stack (and other things)
 RUN apk add --no-cache xz                       # GHC seems to need xz
 RUN apk add --no-cache gmp-dev                  # GHC definitely needs GMP
