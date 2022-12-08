@@ -2,24 +2,22 @@
 module Conjure.LSP.Util where
 
 
-import qualified Conjure.Language.Validator as V (ValidatorDiagnostic (..), DiagnosticRegion (..), Diagnostic (..))
+import qualified Conjure.Language.Validator as V (ValidatorDiagnostic (..), Diagnostic (..))
 import Conjure.Language
 import Conjure.Prelude
 import Language.LSP.Server
 
-import Conjure.Language.Parser (PipelineError(..),runPipeline,parseModel, lexAndParse)
-import Language.LSP.VFS (virtualFileText, VirtualFile (VirtualFile))
+import Conjure.Language.Parser (PipelineError(..), lexAndParse)
+import Language.LSP.VFS (virtualFileText)
 import Text.Megaparsec (SourcePos(..), unPos)
-import Data.Text hiding (filter)
+import Data.Text (pack)
 import Language.LSP.Types as L
-import Conjure.Language.Validator (DiagnosticRegion(..), ValidatorState (ValidatorState, regionInfo), runValidator, validateProgramTree, validateModel, validateModelS, ValidatorDiagnostic, RegionInfo (..))
+import Conjure.Language.Validator (DiagnosticRegion(..), ValidatorState (ValidatorState, regionInfo), runValidator, validateModelS, ValidatorDiagnostic, RegionInfo (..), initialState)
 import Conjure.UI.ErrorDisplay (displayError)
 import Conjure.Language.AST.ASTParser (parseProgram)
 import Language.LSP.Types.Lens (HasUri (uri))
-import Language.LSP.Diagnostics (partitionBySource)
 import Control.Lens ((^.))
 import Text.PrettyPrint (text)
-import qualified Data.Text as T
 
 data ProcessedFile = ProcessedFile {
     model::Maybe Model,
@@ -30,7 +28,7 @@ data ProcessedFile = ProcessedFile {
 processFile :: Text -> Either PipelineError ProcessedFile
 processFile t = do
     parsed <- lexAndParse parseProgram t
-    let (m,d,s) = runValidator (validateModelS parsed) def
+    let (m,d,s) = runValidator (validateModelS parsed) (initialState  parsed)
     return $ ProcessedFile m d s
 
 
@@ -41,8 +39,7 @@ getErrorsForURI uri = do
     getErrorsFromText f
 
 getErrorsFromText :: Text -> LspM () (Either Text ProcessedFile)
-getErrorsFromText t = do
-    return $ either (Left . pack.show) Right $ processFile t
+getErrorsFromText t = return $ either (Left . pack.show) Right $ processFile t
 
 getDiagnostics :: ProcessedFile -> [Diagnostic]
 getDiagnostics (ProcessedFile _ ds _) = mapMaybe valErrToDiagnostic ds
@@ -51,17 +48,16 @@ valErrToDiagnostic :: V.ValidatorDiagnostic -> Maybe Diagnostic
 valErrToDiagnostic (V.ValidatorDiagnostic region message) = do
     let range = getRangeFromRegion region
     let (severity,msg) = getDiagnosticDetails message
-    Just $ Diagnostic range (Just severity) Nothing Nothing (append msg $ pack . show $ region) Nothing Nothing
+    Just $ Diagnostic range (Just severity) Nothing Nothing msg Nothing Nothing
 
 
 
 getRangeFromRegion :: DiagnosticRegion -> L.Range
-getRangeFromRegion GlobalRegion = Range (Position 0 0) (Position 0 0)
 getRangeFromRegion (DiagnosticRegion {drSourcePos=(SourcePos _ r c),drLength=l}) =
     let row = unPos r
         col = unPos c
     in
-        Range (fixPosition row col)  (fixPosition row (col+(max 1 l)))
+        Range (fixPosition row col)  (fixPosition row (col+max 1 l))
 
 getDiagnosticDetails :: V.Diagnostic -> (DiagnosticSeverity,Text)
 getDiagnosticDetails x = case x of
@@ -72,10 +68,10 @@ getDiagnosticDetails x = case x of
 
 
 sendInfoMessage :: Text -> LspM () ()
-sendInfoMessage t = sendNotification SWindowShowMessage (ShowMessageParams MtInfo $ t)
+sendInfoMessage t = sendNotification SWindowShowMessage (ShowMessageParams MtInfo t)
 
 sendErrorMessage :: Text -> LspM () ()
-sendErrorMessage t = sendNotification SWindowShowMessage (ShowMessageParams MtError $ t)
+sendErrorMessage t = sendNotification SWindowShowMessage (ShowMessageParams MtError t)
 
 -- 0 index rows and cols as well as type coercion
 fixPosition :: (Integral a) => a -> a -> Position
@@ -87,11 +83,11 @@ getProcessedDoc d = do
     let doc = toNormalizedUri td
     mdoc <- getVirtualFile doc
     case mdoc of
-          Just vf@(VirtualFile _ version _rope) -> do
+          Just vf -> do
             case processFile $ virtualFileText vf of
                 Left msg -> sendErrorMessage (pack $ show msg) >> return Nothing
                 Right file -> return . pure $ file
-          _ -> return Nothing <* (sendErrorMessage $ pack. show $ "No virtual file found for: " <> stringToDoc (show d))
+          _ -> Nothing <$ sendErrorMessage (pack. show $ "No virtual file found for: " <> stringToDoc (show d))
 
 withProcessedDoc :: ( HasUri a Uri,Show a) => a -> (ProcessedFile -> LspM () n) -> LspM () ()
 withProcessedDoc d f = do
@@ -102,14 +98,16 @@ withProcessedDoc d f = do
 
 
 getRelevantRegions :: ValidatorState -> Position -> [RegionInfo]
-getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn (drLength . rRegion) $ filter p info
+getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn (drLength . rRegion) $ concatMap filteredFlatten info
     where
         p::RegionInfo -> Bool
         p (RegionInfo {rRegion=reg}) = case reg of
-          DiagnosticRegion sp sp' _ _ ->  (sourcePosToPosition sp) <= pos
+          DiagnosticRegion sp sp' _ _ ->  sourcePosToPosition sp <= pos
                                             &&
-                                          (sourcePosToPosition sp') >= pos
-          GlobalRegion -> True
+                                          sourcePosToPosition sp' >= pos
+        filteredFlatten :: RegionInfo -> [RegionInfo]
+        filteredFlatten r@RegionInfo{rChildren=c} | p r = r : concatMap filteredFlatten c
+        filteredFlatten _ = []
 
 
 sourcePosToPosition :: SourcePos -> Position
@@ -119,7 +117,6 @@ sourcePosToPosition (SourcePos _ r c) = Position
 
 regionToRange :: DiagnosticRegion -> L.Range
 regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (sourcePosToPosition ep)
-regionToRange GlobalRegion = error "Global region in symbol info"
 
 
 snippet :: Text -> MarkupContent

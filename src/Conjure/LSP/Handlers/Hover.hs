@@ -5,7 +5,7 @@ import Control.Lens
 import Conjure.Prelude
 import Data.Text as T (pack, concat, unpack)
 import Conjure.LSP.Util (getRelevantRegions, withProcessedDoc, ProcessedFile (ProcessedFile), snippet)
-import Conjure.Language.Validator (RegionInfo (..), DeclarationType (..), DiagnosticRegion (DiagnosticRegion, drSourcePos))
+import Conjure.Language.Validator (RegionInfo (..), DiagnosticRegion (DiagnosticRegion, drSourcePos), RegionType (..))
 import Conjure.Language (Pretty(pretty))
 import Text.PrettyPrint (text)
 import Conjure.LSP.Documentation (tryGetDocsByName, getDocsForBuiltin)
@@ -24,10 +24,10 @@ hoverHandler = requestHandler STextDocumentHover $ \ req res -> do
 
 
 prettySymbol :: RegionInfo -> LspM () (Maybe MarkupContent)
-prettySymbol (RegionInfo dr ty nm dt) = case dt of
-    Definition |Just k <- ty -> return $ Just . snippet . pack.show $ hcat [text.unpack $ nm ," : ",pretty k]
-    LiteralDecl -> return Nothing
-    Ref DiagnosticRegion{drSourcePos=sp}|Just k <- ty -> return . Just .snippet . pack.show $ hcat [text.unpack $ nm," : ",pretty k] --pack.show $ vcat [hcat [text.unpack $ nm ,":",pretty ty]," Declared : "<> pretty (sourcePosToPosition sp)]
-    BuiltIn {} -> liftIO $ getDocsForBuiltin dt
+prettySymbol (RegionInfo dr _ dt _) = case dt of
+    Definition nm ty -> return $ Just . snippet . pack.show $ hcat [text.unpack $ nm ," : ",pretty ty]
+    LiteralDecl{} -> return Nothing
+    Ref nm k DiagnosticRegion{drSourcePos=sp} -> return . Just .snippet . pack.show $ hcat [text.unpack $ nm," : ",pretty k] --pack.show $ vcat [hcat [text.unpack $ nm ,":",pretty ty]," Declared : "<> pretty (sourcePosToPosition sp)]
+    Documentation {} -> liftIO $ getDocsForBuiltin dt
     _ -> return Nothing
 

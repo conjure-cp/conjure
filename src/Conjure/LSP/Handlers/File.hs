@@ -5,7 +5,7 @@
 module Conjure.LSP.Handlers.File where
 import Conjure.Prelude
 import Language.LSP.Server (notificationHandler, Handlers, LspM, sendNotification, publishDiagnostics, getVirtualFile)
-import Language.LSP.Types (SMethod (STextDocumentDidOpen, SWindowShowMessage, STextDocumentDidChange, STextDocumentDidClose), NotificationMessage (NotificationMessage), ShowMessageParams (ShowMessageParams), MessageType (MtInfo, MtError), DidOpenTextDocumentParams (DidOpenTextDocumentParams), DidChangeTextDocumentParams (DidChangeTextDocumentParams), DidCloseTextDocumentParams (DidCloseTextDocumentParams), toNormalizedUri, Uri)
+import Language.LSP.Types (SMethod (STextDocumentDidOpen, STextDocumentDidChange, STextDocumentDidClose), NotificationMessage (NotificationMessage), DidOpenTextDocumentParams (DidOpenTextDocumentParams), DidChangeTextDocumentParams (DidChangeTextDocumentParams), DidCloseTextDocumentParams (DidCloseTextDocumentParams), toNormalizedUri, Uri)
 import Data.Text (pack)
 import Control.Lens
 import Language.LSP.VFS
@@ -19,7 +19,7 @@ fileHandlers = mconcat [fileOpenedHandler,fileChangedHandler,fileClosedHandler]
 fileOpenedHandler :: Handlers (LspM ())
 fileOpenedHandler = notificationHandler STextDocumentDidOpen $ \ req -> do
     let NotificationMessage _ _ (DidOpenTextDocumentParams doc) = req
-    sendNotification SWindowShowMessage (ShowMessageParams MtInfo $ pack ("Opened file "++ show doc++ "\n"))
+    -- sendNotification SWindowShowMessage (ShowMessageParams MtInfo $ pack ("Opened file "++ show doc++ "\n"))
     let td = req^.params.textDocument
     doDiagForDocument td
     pure ()
@@ -29,7 +29,7 @@ fileOpenedHandler = notificationHandler STextDocumentDidOpen $ \ req -> do
 fileChangedHandler :: Handlers (LspM ())
 fileChangedHandler = notificationHandler STextDocumentDidChange $ \ req -> do
     let NotificationMessage _ _ (DidChangeTextDocumentParams id chg) = req
-    sendInfoMessage $ pack ("Changed file "++ show chg ++ "\n")
+    -- sendInfoMessage $ pack ("Changed file "++ show chg ++ "\n")
     let td = req^.params.textDocument
     doDiagForDocument td
     pure ()
@@ -37,7 +37,7 @@ fileChangedHandler = notificationHandler STextDocumentDidChange $ \ req -> do
 fileClosedHandler :: Handlers (LspM ())
 fileClosedHandler = notificationHandler STextDocumentDidClose $ \ req -> do
     let NotificationMessage _ _ (DidCloseTextDocumentParams id) = req
-    sendInfoMessage $ pack ("Closed file "++ show id ++ "\n")
+    -- sendInfoMessage $ pack ("Closed file "++ show id ++ "\n")
     pure ()
 
 
@@ -51,6 +51,6 @@ doDiagForDocument d = do
           Just vf@(VirtualFile _ version _rope) -> do
             errs <- getErrorsFromText $ virtualFileText vf
             case errs of
-                Left msg -> sendErrorMessage msg
+                Left msg -> sendErrorMessage "An error occured:details incoming" >>sendErrorMessage msg
                 Right file -> publishDiagnostics 10000 doc (Just $ fromIntegral version) $ partitionBySource $ getDiagnostics file
           _ -> sendErrorMessage $ pack. show $ "No virtual file found for: " <> stringToDoc (show d)

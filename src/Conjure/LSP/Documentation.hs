@@ -1,11 +1,9 @@
 module Conjure.LSP.Documentation where
 import Paths_conjure_cp (getDataDir, getDataFileName)
-import Language.LSP.Server (LspM)
-import Language.LSP.Types (MarkedString, MarkupKind (MkMarkdown), MarkupContent (MarkupContent), markedUpContent, unmarkedUpContent)
+import Language.LSP.Types (MarkupKind (MkMarkdown), MarkupContent (MarkupContent))
 import Conjure.Prelude
-import Language.LSP.Types.Lens (HasRootPath(rootPath))
 import qualified Data.Text as T
-import Conjure.Language.Validator (DeclarationType (BuiltIn), DocType (..))
+import Conjure.Language.Validator (DocType (..), RegionType (Documentation))
 
 tryGetDocsByName :: String -> IO(Maybe MarkupContent)
 tryGetDocsByName name = do
@@ -14,8 +12,8 @@ tryGetDocsByName name = do
     return $ MarkupContent MkMarkdown . T.pack  <$> fileData
  
 
-getDocsForBuiltin :: DeclarationType -> IO (Maybe MarkupContent)
-getDocsForBuiltin (BuiltIn prefix (T.unpack->name)) = do
+getDocsForBuiltin :: RegionType -> IO (Maybe MarkupContent)
+getDocsForBuiltin (Documentation prefix (T.unpack->name)) = do
     let category = case prefix of
           OperatorD -> "op/"
           FunctionD -> "function/"
