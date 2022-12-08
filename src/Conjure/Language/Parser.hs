@@ -2,6 +2,7 @@
 
 module Conjure.Language.Parser
     ( runLexerAndParser
+    , lexAndParse
     , parseIO
     , parseModel
     , parseTopLevels
@@ -9,6 +10,8 @@ module Conjure.Language.Parser
     , parseDomain
     , parseDomainWithRepr
     , Pipeline
+    , PipelineError(..)
+    , runPipeline
     ) where
 
 -- conjure
@@ -50,19 +53,26 @@ import Text.PrettyPrint (text)
 import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
 import Conjure.Language.AST.Helpers (ParserState)
+import qualified Conjure.Language.AST.Helpers as P
+import Conjure.Language.AST.Reformer (Flattenable)
 
 
-type Pipeline a b = ( (StateT ParserState (Parsec Void ETokenStream)) a ,a -> V.ValidatorS b,Bool)
+type  Pipeline a b = ( (StateT ParserState (Parsec Void ETokenStream)) a ,a -> V.ValidatorS b,Bool)
 
 
 data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError Doc
     deriving (Show)
 
-runPipeline :: Pipeline a b -> Text -> Either PipelineError b
+lexAndParse :: Flattenable a => P.Parser a -> Text -> Either PipelineError a
+lexAndParse parse t = do
+    lr <- either (Left . LexErr) Right $ L.runLexer t
+    either (Left . ParserError ) Right $ runASTParser parse lr
+
+runPipeline :: Flattenable a =>Pipeline a b -> Text -> Either PipelineError b
 runPipeline (parse,val,tc) txt = do
             lexResult <- either (Left . LexErr) Right $ L.runLexer txt
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
-            let x = V.runValidator (val parseResult) def{V.typeChecking= tc}
+            let x = V.runValidator (val parseResult) (V.initialState parseResult){V.typeChecking= tc}
             case x of
                 (Just m, ds,_) | not $ any V.isError ds -> Right m
                 (_, ves,_) -> Left $ ValidatorError $ text (showDiagnosticsForConsole ves txt)
@@ -99,7 +109,7 @@ parseModel = (parseProgram,V.strict . V.validateModel,True)
     --     }
 
 
-parseIO :: (MonadFailDoc m) => Pipeline i a -> String -> m a
+parseIO :: (MonadFailDoc m, Flattenable i) => Pipeline i a -> String -> m a
 parseIO p s = do
             case runPipeline p $ T.pack s of
                 Left err -> failDoc $ text $show err
@@ -999,7 +1009,7 @@ parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAn
 -- data ParserState = ParserState { enumDomains :: [Name] }
 -- type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
 
-runLexerAndParser :: Pipeline n a -> String -> T.Text -> Either Doc a
+runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p inp of
   Left pe -> Left $ "Parser error in file:" <+> text file <+> text  ("Error is:\n" ++ show pe)
   Right a -> Right a

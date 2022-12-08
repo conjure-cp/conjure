@@ -31,9 +31,17 @@ instance ShowErrorComponent DiagnosticForPrint where
     Warning wt -> "Warning:" ++ show wt
     Info it -> "Info: " ++ show it
 
+tokenErrorToDisplay :: LToken -> String
+tokenErrorToDisplay (RealToken _ _) = error "tokenError with valid token"
+tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ show t
+tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
+    L_Missing s -> s
+    LMissingIdentifier -> "<identifier>"
+    _ -> T.unpack $ lexemeText l
+
 displayError :: ErrorType -> String
 displayError x = case x of
-  TokenError lt -> "Error: " ++ show lt
+  TokenError lt -> tokenErrorToDisplay lt
   SyntaxError txt -> "Syntax Error: " ++ T.unpack txt
   SemanticError txt -> "Semantic error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
@@ -76,12 +84,11 @@ collapseSkipped ((ValidatorDiagnostic regx ex) :(ValidatorDiagnostic regy ey):rs
         sameLine (SourcePos _ l1 _) (SourcePos _ l2 _) = l1 == l2
         catDr :: DiagnosticRegion -> DiagnosticRegion -> DiagnosticRegion
         catDr (DiagnosticRegion sp _ o _) (DiagnosticRegion _ en _ _) = DiagnosticRegion sp en o ((unPos (sourceColumn en) - unPos (sourceColumn sp)))
-        catDr _ _ = GlobalRegion
 collapseSkipped (x:xs) = x : collapseSkipped xs
             
 
 captureError :: ValidatorDiagnostic -> Parser ()
-captureError (ValidatorDiagnostic GlobalRegion message) = do
+captureError (ValidatorDiagnostic reg message) |reg == global = do
     let printError = DiagnosticForPrint 0 0 message
     registerFancyFailure (Set.singleton(ErrorCustom printError) )
 captureError (ValidatorDiagnostic area message) = do
@@ -103,7 +110,7 @@ val s = do
 
     case progStruct of
         Left _ -> putStrLn "error"
-        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) def{typeChecking=True} in
+        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (initialState p){typeChecking=True} in
             case qpr of
                 (model, vds,st) -> do
                     print (maybe "" show model)

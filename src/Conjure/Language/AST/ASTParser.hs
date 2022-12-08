@@ -30,7 +30,7 @@ data ParserError = ParserError Doc
     deriving (Show)
 
 
-runASTParser :: Parser a -> ETokenStream -> Either ParserError a
+runASTParser ::Flattenable a => Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str =
     case runParser (evalStateT p def) "parser" str of
         Left peb -> Left $ ParserError . text $ errorBundlePretty peb
@@ -449,7 +449,7 @@ parseAbstractPattern = do
         openB <- need L_OpenCurly
         es <- commaList parseAbstractPattern
         closeB <- want L_CloseCurly
-        return $ AbstractPatternMatrix (ListNode openB es closeB)
+        return $ AbstractPatternSet (ListNode openB es closeB)
 
 parseComprehensionCondition :: Parser ComprehensionBodyNode
 parseComprehensionCondition = do

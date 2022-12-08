@@ -25,7 +25,7 @@ import qualified Text.Megaparsec as L
 import Prelude (read)
 
 sourcePos0 :: SourcePos
-sourcePos0 = SourcePos "" (mkPos  0) (mkPos 0)
+sourcePos0 = SourcePos "" (mkPos  1) (mkPos 1)
 
 class Reformable a where
     reform :: a -> L.Text

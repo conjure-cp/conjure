@@ -13,6 +13,7 @@ module Conjure.Language.Pretty
     , prettyContext
     , logDebugId
     , tracingPretty
+    , prettyT
     ) where
 
 -- conjure
@@ -22,7 +23,8 @@ import Conjure.Prelude
 import Text.Printf ( printf )
 
 -- text
-import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap )
+-- text
+import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap, pack )
 
 -- pretty
 import Text.PrettyPrint
@@ -171,3 +173,6 @@ logDebugId msg a = logDebug (msg <++> pretty a) >> return a
 
 tracingPretty :: Pretty a => Doc -> a -> a
 tracingPretty s a = trace (renderWide $ "tracing" <+> s <> ": " <++> pretty a) a
+
+prettyT :: Pretty a => a -> Text
+prettyT = T.pack.show.pretty
