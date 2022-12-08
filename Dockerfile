@@ -7,7 +7,7 @@
 # First stage: Building
 
 # Setting up
-FROM alpine:3.17 AS builder
+FROM ubuntu:20.04 AS builder
 WORKDIR /conjure/
 
 # All binaries will end up in /root/.local/bin
@@ -15,38 +15,37 @@ RUN mkdir -p /root/.local/bin
 ENV PATH /root/.local/bin:$PATH
 
 # Dependencies
-RUN apk add --no-cache build-base               # some basics
-RUN apk add --no-cache bash                     # might as well have bash
-RUN apk add --no-cache gcompat                  # turns out build-base does not contain libc, https://wiki.alpinelinux.org/wiki/Running_glibc_programs
-RUN apk add --no-cache curl ca-certificates     # so we can download stack (and other things)
-RUN apk add --no-cache xz                       # GHC seems to need xz
-RUN apk add --no-cache gmp-dev                  # GHC definitely needs GMP
-RUN apk add --no-cache zlib-dev                 # needed when building some solvers (for example bc_minisat_all_release)
-RUN apk add --no-cache cmake                    # needed when building some solvers (for example boolector)
-RUN apk add --no-cache git                      # needed when building some solvers (for example boolector)
-RUN apk add --no-cache zip unzip                # needed when building some solvers (for example glucose)
-RUN apk add --no-cache autoconf                 # needed when building some solvers (for example yices)
-RUN apk add --no-cache gperf                    # needed when building some solvers (for example yices)
-RUN apk add --no-cache python3                  # needed when building some solvers (for example z3)
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
+RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we can download stack (and other things)
+RUN apt-get install -y --no-install-recommends xz-utils                 # GHC seems to need xz
+RUN apt-get install -y --no-install-recommends libgmp-dev               # GHC definitely needs GMP
+RUN apt-get install -y --no-install-recommends zlib1g-dev               # needed when building some solvers (for example bc_minisat_all_release)
+RUN apt-get install -y --no-install-recommends cmake                    # needed when building some solvers (for example boolector)
+RUN apt-get install -y --no-install-recommends git                      # needed when building some solvers (for example boolector)
+RUN apt-get install -y --no-install-recommends zip unzip                # needed when building some solvers (for example glucose)
+RUN apt-get install -y --no-install-recommends autoconf                 # needed when building some solvers (for example yices)
+RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
+RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
 
 # Only copying the install*.sh scripts
 RUN mkdir -p etc
 COPY etc/build etc/build
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
-RUN bash etc/build/install-bc_minisat_all.sh
-RUN bash etc/build/install-boolector.sh
-RUN bash etc/build/install-cadical.sh
-RUN bash etc/build/install-chuffed.sh
-RUN bash etc/build/install-gecode.sh
-RUN bash etc/build/install-glucose.sh
-RUN bash etc/build/install-kissat.sh
-RUN bash etc/build/install-lingeling.sh
-RUN bash etc/build/install-minion.sh
-RUN bash etc/build/install-nbc_minisat_all.sh
-RUN bash etc/build/install-open-wbo.sh
-RUN bash etc/build/install-yices.sh
-RUN bash etc/build/install-z3.sh
+RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
+RUN PROCESSES=2 etc/build/install-boolector.sh
+RUN PROCESSES=2 etc/build/install-cadical.sh
+RUN PROCESSES=2 etc/build/install-chuffed.sh
+RUN PROCESSES=2 etc/build/install-gecode.sh
+RUN PROCESSES=2 etc/build/install-glucose.sh
+RUN PROCESSES=2 etc/build/install-kissat.sh
+RUN PROCESSES=2 etc/build/install-lingeling.sh
+RUN PROCESSES=2 etc/build/install-minion.sh
+RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
+RUN PROCESSES=2 etc/build/install-open-wbo.sh
+RUN PROCESSES=2 etc/build/install-yices.sh
+RUN PROCESSES=2 etc/build/install-z3.sh
 
 # Copy everything
 COPY . .
@@ -65,7 +64,7 @@ RUN du -sh /root/.local/bin
 ################################################################################
 # Second stage: Copying the binaries
 
-FROM alpine:latest
+FROM alpine:3.17
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 RUN mkdir -p /root/.local/bin/lib
