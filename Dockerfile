@@ -16,7 +16,6 @@ RUN mkdir -p /root/.local/bin
 ENV PATH /root/.local/bin:$PATH
 
 # Dependencies
-RUN apk add --no-cache build-essential          # so we can compile stuff
 RUN apk add --no-cache curl ca-certificates     # so we can download stack (and other things)
 RUN apk add --no-cache xz-utils                 # GHC seems to need xz
 RUN apk add --no-cache libgmp-dev               # GHC definitely needs GMP
