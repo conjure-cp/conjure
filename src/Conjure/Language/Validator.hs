@@ -2620,7 +2620,7 @@ sameToSameV tc t (rl,kl) (rr,kr) = do
 binOpType :: Lexeme -> OpValidator
 binOpType l = case l of
     L_Plus -> sameToSameV number same
-    L_Minus -> sameToSameV number same
+    L_Minus -> sameToSameV minusArgs same
     L_Times -> sameToSameV number same
     L_Div -> sameToSameV number same
     L_Mod -> sameToSameV number same
@@ -2684,6 +2684,14 @@ binOpType l = case l of
             TypeInt TagEnum{} -> return t
             TypeAny -> return t
             _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number or Enum" t)
+    minusArgs t = do
+        case t of
+            TypeInt TagInt -> return t
+            TypeSet _ -> return t
+            TypeMSet _ -> return t
+            TypeRelation _ -> return t
+            TypeFunction _ _ -> return t
+            _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number / set/ mset / relation / function" t)
     orderable t = do
         case t of
             TypeInt TagInt -> return t
