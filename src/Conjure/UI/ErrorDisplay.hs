@@ -28,7 +28,7 @@ instance ShowErrorComponent DiagnosticForPrint where
 
   showErrorComponent DiagnosticForPrint {dMessage=message}= case message of
     Error et ->  displayError et
-    Warning wt -> "Warning:" ++ show wt
+    Warning wt -> displayWarning wt
     Info it -> "Info: " ++ show it
 
 tokenErrorToDisplay :: LToken -> String
@@ -39,11 +39,15 @@ tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
     LMissingIdentifier -> "<identifier>"
     _ -> T.unpack $ lexemeText l
 
+displayWarning :: WarningType -> String
+displayWarning (UnclassifiedWarning txt) = "Warning" ++ T.unpack txt
+displayWarning AmbiguousTypeWarning = "Ambiguous type occurred"
+
 displayError :: ErrorType -> String
 displayError x = case x of
   TokenError lt -> tokenErrorToDisplay lt
   SyntaxError txt -> "Syntax Error: " ++ T.unpack txt
-  SemanticError txt -> "Semantic error: " ++ T.unpack txt
+  SemanticError txt -> "Error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
   TypeError expected got -> "Type error: Expected: " ++ show (pretty expected) ++ " Got: " ++ show (pretty got)
   ComplexTypeError msg ty -> "Type error: Expected:" ++ show msg ++ " got " ++ (show $ pretty ty)
@@ -54,6 +58,7 @@ displayError x = case x of
   InternalErrorS txt -> "Something went wrong:" ++ T.unpack txt
   WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
   KindError a b -> show $ "Tried to use a " <> pretty b <> " where " <> pretty a <> " was expected"
+
 showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Text -> String
 showDiagnosticsForConsole errs text
     =   case runParser (captureErrors errs) "Errors" text of

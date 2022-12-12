@@ -164,7 +164,8 @@ data ErrorType
     | InternalError --Used to explicitly tag invalid pattern matches
     | InternalErrorS Text -- Used for giving detail to bug messages
     deriving  (Show,Eq,Ord)
-data WarningType = UnclassifiedWarning Text deriving (Show,Eq,Ord)
+data WarningType = UnclassifiedWarning Text 
+                 | AmbiguousTypeWarning deriving (Show,Eq,Ord)
 data InfoType = UnclassifiedInfo Text deriving (Show,Eq,Ord)
 
 
@@ -1860,14 +1861,14 @@ mostDefinedS (x:xs) = let ?typeCheckerMode=StronglyTyped in case mostDefined (xs
                                                                 t -> t
 
 unifyTypes :: Type -> RegionTagged (Typed a) -> ValidatorS a
-unifyTypes _ (r,Typed TypeAny a) = do raiseError (r /!\ UnclassifiedWarning "TypeAny used") >> return a
+unifyTypes _ (r,Typed TypeAny a) = do raiseError (r /!\ AmbiguousTypeWarning) >> return a
 unifyTypes t (r,Typed t' a) = do
     let ?typeCheckerMode = StronglyTyped
     if typesUnify [t', t] then pure () else raiseTypeError $ r <!> TypeError t t'
     return a
 
 unifyTypesFailing :: Type -> RegionTagged (Typed a) -> Validator a
-unifyTypesFailing _ (r,Typed TypeAny a) = do raiseError (r /!\ UnclassifiedWarning "TypeAny used") >> (return $ Just a)
+unifyTypesFailing _ (r,Typed TypeAny a) = do raiseError (r /!\ AmbiguousTypeWarning) >> (return $ Just a)
 unifyTypesFailing t (r,Typed t' a) = do
     tc <- gets typeChecking
     let ?typeCheckerMode = StronglyTyped
