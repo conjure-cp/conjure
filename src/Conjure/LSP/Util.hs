@@ -13,7 +13,7 @@ import Text.Megaparsec (SourcePos(..), unPos)
 import Data.Text (pack)
 import Language.LSP.Types as L
 import Conjure.Language.Validator (DiagnosticRegion(..), ValidatorState (ValidatorState, regionInfo), runValidator, validateModelS, ValidatorDiagnostic, RegionInfo (..), initialState)
-import Conjure.UI.ErrorDisplay (displayError)
+import Conjure.UI.ErrorDisplay (displayError, displayWarning)
 import Conjure.Language.AST.ASTParser (parseProgram)
 import Language.LSP.Types.Lens (HasUri (uri))
 import Control.Lens ((^.))
@@ -62,7 +62,7 @@ getRangeFromRegion (DiagnosticRegion {drSourcePos=(SourcePos _ r c),drLength=l})
 getDiagnosticDetails :: V.Diagnostic -> (DiagnosticSeverity,Text)
 getDiagnosticDetails x = case x of
   V.Error et -> (DsError,pack $displayError et)
-  V.Warning wt -> (DsWarning , pack $ show wt)
+  V.Warning wt -> (DsWarning , pack $ displayWarning wt)
   V.Info it -> (DsHint,pack $ show it)
 
 
