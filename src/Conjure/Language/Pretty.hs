@@ -7,7 +7,8 @@ module Conjure.Language.Pretty
     , prettyList, prettyListDoc
     , parensIf
     , render, renderNormal, renderWide
-    , hang, hcat
+    , hang, hcat , nest
+    , vcat,fsep , cat
     , prEmpty, prParens, prBrackets, prBraces
     , Doc
     , prettyContext
@@ -27,10 +28,10 @@ import Text.Printf ( printf )
 import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap, pack )
 
 -- pretty
-import Text.PrettyPrint
-    ( parens, brackets, braces, empty       -- will be exported with new names
-    , text                                  -- only used in this module
-    , style, renderStyle, lineLength, ribbonsPerLine
+import Prettyprinter
+    ( parens, brackets, vcat ,braces, layoutPretty, PageWidth (AvailablePerLine)
+    , (<+>), (<>)
+           -- will be exported with new names
     )
 
 -- aeson
@@ -39,6 +40,8 @@ import qualified Data.Aeson.KeyMap as KM
 import Data.Scientific ( Scientific, floatingOrInteger )    -- scientific
 import qualified Data.HashMap.Strict as M                   -- unordered-containers
 import qualified Data.Vector as V                           -- vector
+import qualified Prettyprinter.Render.String as Pr
+import qualified Prettyprinter as Pr
 
 
 class Show a => Pretty a where
@@ -49,12 +52,12 @@ class Show a => Pretty a where
     prettyPrec _ = pretty
 
 instance Pretty Doc     where pretty = id
-instance Pretty T.Text  where pretty = pretty . T.unpack
-instance Pretty String  where pretty = text
-instance Pretty ()      where pretty = pretty . show
-instance Pretty Bool    where pretty = pretty . show
-instance Pretty Int     where pretty = pretty . show
-instance Pretty Integer where pretty = pretty . show
+instance Pretty T.Text  where pretty = Pr.pretty
+instance Pretty String  where pretty = Pr.pretty 
+instance Pretty ()      where pretty = Pr.pretty
+instance Pretty Bool    where pretty = Pr.pretty
+instance Pretty Int     where pretty = Pr.pretty
+instance Pretty Integer where pretty = Pr.pretty
 instance Pretty Double  where pretty x = pretty (printf "%.2f" x :: String)
 
 instance (Pretty a, Pretty b) => Pretty (a, b) where
@@ -74,13 +77,13 @@ a <++> b = hang a 4 b
 
 -- | For debugging output, truncates the second argument to 5 lines
 (<+->) :: Doc -> Doc -> Doc
-a <+-> b = a <+> (vcat $ map pretty $ take 5 $ lines $ renderWide $ b)
+a <+-> b = a <+> (Pr.vcat $ map pretty $ take 5 $ lines $ renderWide $ b)
 
 prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
 prettyList wrap punc = prettyListDoc wrap punc . map pretty
 
 prettyListDoc :: (Doc -> Doc) -> Doc -> [Doc] -> Doc
-prettyListDoc wrap punc = wrap . fsep . punctuate punc
+prettyListDoc wrap punc = wrap . Pr.fillSep . Pr.punctuate punc
 
 parensIf :: Bool -> Doc -> Doc
 parensIf = wrapIf parens
@@ -95,10 +98,10 @@ renderWide :: Pretty a => a -> String
 renderWide = render 240
 
 render :: Pretty a => Int -> a -> String
-render w = renderStyle (style { lineLength = w, ribbonsPerLine = 1 }) . pretty
+render w = Pr.renderString . (layoutPretty (Pr.LayoutOptions $ AvailablePerLine w 1.0) . pretty)
 
 prEmpty :: Doc
-prEmpty = empty
+prEmpty = prEmpty
 
 prParens :: Doc -> Doc
 prParens = parens
@@ -110,7 +113,10 @@ prBraces :: Doc -> Doc
 prBraces = braces
 
 prettyContext :: (Pretty a, Pretty b) => [(a,b)] -> [Doc]
-prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
+prettyContext = map (\ (a,b) -> Pr.nest 4 $ pretty a <> ":" <+> pretty b )
+
+
+
 
 
 --------------------------------------------------------------------------------
@@ -136,7 +142,7 @@ instance Pretty JSON.Value where
     pretty Null = "null"
 
 instance Pretty JSON.Object where
-    pretty = prBraces . fsep . punctuate "," . map f . sortBy (comp `on` fst) . KM.toList
+    pretty = prBraces . Pr.fillSep . Pr.punctuate "," . map f . sortBy (comp `on` fst) . KM.toList
         where
             f (key, Array value)
                 | not (any (\ v -> case v of String t -> T.length t < 20 ; _ -> True ) value)
@@ -160,10 +166,10 @@ instance Pretty JSON.Object where
                 in  fromMaybe (compare a b) preferred
 
 instance Pretty JSON.Array where
-    pretty = prBrackets . fsep . punctuate "," . map pretty . V.toList
+    pretty = prBrackets . Pr.fillSep . Pr.punctuate "," . map pretty . V.toList
 
 prettyArrayVCat :: V.Vector Value -> Doc
-prettyArrayVCat = prBrackets . vcat . punctuate "," . map pretty . V.toList
+prettyArrayVCat = prBrackets . Pr.vcat . Pr.punctuate "," . map pretty . V.toList
 
 instance Pretty Scientific where
     pretty = either pretty pretty . (floatingOrInteger :: Scientific -> Either Double Integer)

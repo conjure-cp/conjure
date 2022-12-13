@@ -43,7 +43,6 @@ import Conjure.Language.Pretty (Pretty(pretty), prettyT)
 import Conjure.Language.TypeOf (TypeOf(typeOf))
 import Control.Monad (mapAndUnzipM)
 import Conjure.Bug (bug)
-import Text.PrettyPrint (text)
 import qualified Data.Text.Lazy as L
 import Data.Aeson.Encoding (bool)
 
@@ -1104,7 +1103,7 @@ validateQuantificationExpression q@(QuantificationExpressionNode name pats over 
                     Just L_Exists ->(tCondition,TypeBool)
                     Just L_Sum -> (exactly tInt,tInt)
                     Just L_Product -> (exactly tInt,tInt)
-                    _ -> bug $ text ("Unkown quantifier " ++ show name')
+                    _ -> bug $ pretty ("Unkown quantifier " ++ show name')
             (body,bDecl) <- holdDeclarations 
                             $ wrapRegion expr expr SBody 
                             $ validateExpression expr ?=> iType
@@ -1195,7 +1194,7 @@ validateOperatorExpression (PrefixOpNode lt expr) = do
     let (refT) = case op of
             L_Minus -> tInt
             L_ExclamationMark -> TypeBool
-            _ -> bug . text $ "Unknown prefix op " ++ show op
+            _ -> bug . pretty $ "Unknown prefix op " ++ show op
     putDocs OperatorD (T.pack $"pre_"++show op) lt
     expr' <-  validateExpression expr ?=> exactly refT
     return . Typed refT $ mkOp (PrefixOp op) [expr']
@@ -2104,7 +2103,7 @@ functionOps l = case l of
                             [] -> unFuncV unaryFlattenArgs (flattenType Nothing) b a
                             [_] -> unFuncV unaryFlattenArgs (flattenType Nothing) b a
                             _ -> biFunc (valueOnly2 binaryFlattenArgs) (\v t -> flattenType (getNum v) (typeOnly t)) (b) a
-    _  -> bug $ text $ "Unkown functional operator " ++ show l
+    _  -> bug $ pretty $ "Unkown functional operator " ++ show l
     where
         valueOnly :: (SArg -> Validator a) -> Arg -> Validator a
         valueOnly f (r,(k,e)) = do
@@ -2662,7 +2661,7 @@ binOpType l = case l of
     L_TildeLeq -> sameToSameV pure cBool
     L_TildeGt -> sameToSameV pure cBool
     L_TildeGeq -> sameToSameV pure cBool
-    _ -> bug $ "Unkown operator" <+> text (show l)
+    _ -> bug $ "Unkown operator" <+> pretty (show l)
     where
     cBool = const. const TypeBool
     same a b = mostDefinedS [a,b]

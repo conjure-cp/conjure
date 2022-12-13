@@ -489,7 +489,7 @@ instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = genericParseJSO
 instance Default (MSetAttr a) where def = MSetAttr def def
 instance Pretty a => Pretty (MSetAttr a) where
     pretty (MSetAttr a b) =
-        let inside = filter (/=prEmpty) [ pretty a
+        let inside = filter ((""/=) . show) [ pretty a
                                         , pretty b
                                         ]
         in  if null inside
@@ -531,7 +531,7 @@ instance FromJSON  a => FromJSON  (FunctionAttr a) where parseJSON = genericPars
 instance Default (FunctionAttr a) where def = FunctionAttr def def def
 instance Pretty a => Pretty (FunctionAttr a) where
     pretty (FunctionAttr a b c) =
-        let inside = filter (/=prEmpty) [pretty a, pretty b, pretty c]
+        let inside = filter ((""/=) . show) [pretty a, pretty b, pretty c]
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
@@ -579,7 +579,7 @@ instance FromJSON  a => FromJSON  (SequenceAttr a) where parseJSON = genericPars
 instance Default (SequenceAttr a) where def = SequenceAttr def def
 instance Pretty a => Pretty (SequenceAttr a) where
     pretty (SequenceAttr a b) =
-        let inside = filter (/=prEmpty) [pretty a, pretty b]
+        let inside = filter ((""/=) . show) [pretty a, pretty b]
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
@@ -594,7 +594,7 @@ instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = genericPars
 instance Default (RelationAttr a) where def = RelationAttr def def
 instance Pretty a => Pretty (RelationAttr a) where
     pretty (RelationAttr a b) =
-        let inside = filter (/=prEmpty) [pretty a, pretty b]
+        let inside = filter ((""/=) . show) [pretty a, pretty b]
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
@@ -722,7 +722,7 @@ instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = genericPar
 instance Default (PartitionAttr a) where def = PartitionAttr def def False
 instance Pretty a => Pretty (PartitionAttr a) where
     pretty (PartitionAttr a b c) =
-        let inside = filter (/=prEmpty) [ prettyNum a
+        let inside = filter ((""/=) . show) [ prettyNum a
                                         , prettySize b
                                         , prettyReg c
                                         ]
@@ -924,7 +924,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 prettyAttrs :: (Pretty a, Pretty b) => a -> b -> Doc
 prettyAttrs a bs =
     let prettya = pretty a
-    in  if prettya == "()"
+    in  if show prettya == "()"
             then pretty bs
             else prBraces prettya <+> pretty bs
 

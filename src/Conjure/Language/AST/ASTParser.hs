@@ -21,7 +21,6 @@ import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
 import Language.Haskell.TH.PprLib (rparen)
 import Conjure.Language.Attributes (allAttributLexemes)
 import Data.Sequence (Seq)
-import Text.PrettyPrint.HughesPJ (text)
 import Text.Megaparsec.Debug (dbg)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
@@ -33,7 +32,7 @@ data ParserError = ParserError Doc
 runASTParser ::Flattenable a => Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str =
     case runParser (evalStateT p def) "parser" str of
-        Left peb -> Left $ ParserError . text $ errorBundlePretty peb
+        Left peb -> Left $ ParserError . pretty $ errorBundlePretty peb
         Right res -> Right res
 
 parseProgram :: Parser ProgramTree

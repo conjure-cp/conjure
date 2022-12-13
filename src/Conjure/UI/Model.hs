@@ -983,7 +983,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
-    fails <- fmap (nub . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+    fails <- fmap (nubBy (\a b->show a == show b) . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
@@ -1328,7 +1328,7 @@ applicableRules Config{..} rulesAtLevel x = do
                     rResult <- ruleResult res
                     case (hole x, rResult) of
                         (Reference nm1 _, Reference nm2 _)
-                            | name /= "choose-repr"
+                            | show name /= "choose-repr"
                             , nm1 == nm2 -> bug $ vcat
                             [ "Rule applied inside a Reference."
                             , "Rule              :" <+> pretty name

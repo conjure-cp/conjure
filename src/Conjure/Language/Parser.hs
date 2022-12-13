@@ -49,12 +49,13 @@ import Conjure.Language.AST.ASTParser (ParserError, runASTParser, parseProgram)
 -- import qualified Data.Set as S ( null, fromList, toList )
 import Data.Void (Void)
 import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
-import Text.PrettyPrint (text)
+
 import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
 import Conjure.Language.AST.Helpers (ParserState)
 import qualified Conjure.Language.AST.Helpers as P
 import Conjure.Language.AST.Reformer (Flattenable)
+import Conjure.Language.Pretty
 
 
 type  Pipeline a b = ( (StateT ParserState (Parsec Void ETokenStream)) a ,a -> V.ValidatorS b,Bool)
@@ -75,7 +76,7 @@ runPipeline (parse,val,tc) txt = do
             let x = V.runValidator (val parseResult) (V.initialState parseResult){V.typeChecking= tc}
             case x of
                 (Just m, ds,_) | not $ any V.isError ds -> Right m
-                (_, ves,_) -> Left $ ValidatorError $ text (showDiagnosticsForConsole ves txt)
+                (_, ves,_) -> Left $ ValidatorError $ pretty (showDiagnosticsForConsole ves txt)
                 -- Validator (Just res) [] -> Right res
                 -- Validator _ xs -> Left $ ValidatorError xs          
 
@@ -112,7 +113,7 @@ parseModel = (parseProgram,V.strict . V.validateModel,True)
 parseIO :: (MonadFailDoc m, Flattenable i) => Pipeline i a -> String -> m a
 parseIO p s = do
             case runPipeline p $ T.pack s of
-                Left err -> failDoc $ text $show err
+                Left err -> failDoc $ pretty $ show err
                 Right x  -> return x
 
 
@@ -1011,7 +1012,7 @@ parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAn
 
 runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p inp of
-  Left pe -> Left $ "Parser error in file:" <+> text file <+> text  ("Error is:\n" ++ show pe)
+  Left pe -> Left $ "Parser error in file:" <+> pretty file <+> pretty  ("Error is:\n" ++ show pe)
   Right a -> Right a
 --     ls <- runLexer inp
 --     case runParser p file ls of

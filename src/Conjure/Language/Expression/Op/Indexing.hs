@@ -11,7 +11,7 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
 -- pretty
-import qualified Text.PrettyPrint as Pr ( cat )
+import Conjure.Language.Pretty as Pr ( cat )
 
 
 data OpIndexing x = OpIndexing x x

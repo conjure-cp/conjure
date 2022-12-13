@@ -19,7 +19,7 @@ import Data.Void
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
-import qualified Text.PrettyPrint as Pr
+import Conjure.Language.Pretty
 import qualified Text.Megaparsec.Char.Lexer as L
 import Text.Megaparsec.Char
 
@@ -34,18 +34,18 @@ data LexemePos = LexemePos
     deriving (Show,Eq, Ord)
 
 
-lexemeFace :: Lexeme -> Pr.Doc
+lexemeFace :: Lexeme -> Doc
 lexemeFace L_Newline = "new line"
 lexemeFace L_Carriage = "\\r"
 lexemeFace L_Space   = "space character"
 lexemeFace L_Tab     = "tab character"
-lexemeFace (LIntLiteral i) = Pr.integer i
-lexemeFace (LIdentifier i) = Pr.text (T.unpack i)
+lexemeFace (LIntLiteral i) = pretty i
+lexemeFace (LIdentifier i) = pretty (T.unpack i)
 -- lexemeFace (LComment    i) = Pr.text (T.unpack i)
 lexemeFace l =
     case M.lookup l mapLexemeToText of
-        Nothing -> Pr.text (show l)
-        Just t  -> Pr.text . T.unpack $ t
+        Nothing -> pretty (show l)
+        Just t  -> pretty . T.unpack $ t
 
 isLexemeSpace :: Lexeme -> Bool
 isLexemeSpace L_Newline {} = True

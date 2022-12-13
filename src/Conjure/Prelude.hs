@@ -51,6 +51,7 @@ module Conjure.Prelude
     , getDirectoryContents
     , RunStateAsWriter, runStateAsWriterT, sawTell
     , stripPostfix
+    , Doc , hang , hcat , fsep , cat
     ) where
 
 import GHC.Err as X ( error )
@@ -168,11 +169,11 @@ import Test.QuickCheck ( Gen )
 import Text.Megaparsec ( ParsecT, Parsec )
 
 -- pretty
-import Text.PrettyPrint as X
-    ( Doc
-    , (<>), (<+>), ($$)
-    , hang, nest, punctuate
-    , hcat, vcat, fsep, hsep, sep
+import Prettyprinter as X
+    (
+      (<>), (<+>)
+    , nest, punctuate
+    , vcat, hsep, sep
     )
 
 -- uniplate
@@ -201,7 +202,7 @@ import System.Random ( StdGen, mkStdGen, setStdGen, randomRIO )
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Text.PrettyPrint as Pr
+import qualified Prettyprinter as Pr
 
 -- containers
 import qualified Data.Set as S
@@ -228,6 +229,29 @@ import System.TimeIt as X ( timeIt, timeItNamed )
 import Debug.Trace as X ( trace, traceM )
 import Data.Void (Void)
 import GHC.IO.Exception (IOErrorType(InvalidArgument))
+import Prettyprinter (PageWidth(AvailablePerLine))
+import Data.Text.Prettyprint.Doc.Render.String (renderString)
+import Prettyprinter ((<+>))
+
+data EssenceDocAnnotation = EssenceDocAnnotation
+
+type Doc = Pr.Doc EssenceDocAnnotation
+
+--compats
+hang :: Doc -> Int ->Doc -> Doc
+hang a n b = a <> Pr.hang n b
+
+hcat :: [Doc] -> Doc 
+hcat = Pr.hcat
+
+fsep :: [Doc] -> Doc
+fsep = Pr.fillSep
+
+cat :: [Doc] -> Doc
+cat = Pr.cat
+
+nest :: Int -> Doc -> Doc
+nest = Pr.nest
 
 
 tracing :: Show a => String -> a -> a
@@ -240,7 +264,7 @@ textToString :: T.Text -> String
 textToString = T.unpack
 
 stringToDoc :: String -> Doc
-stringToDoc = Pr.text
+stringToDoc = Pr.pretty
 
 padRight :: Int -> Char -> String -> String
 padRight n ch s = s ++ replicate (n - length s) ch
@@ -550,7 +574,7 @@ runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
     where
         each (Left (lvl, msg)) =
             when (lvl <= l) $ do
-                let txt = Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg
+                let txt = renderString $ (Pr.layoutPretty $ Pr.LayoutOptions (AvailablePerLine 200 1.0)) msg
                 when ("[" `isPrefixOf` txt) $ do
                     liftIO clearScreen
                     liftIO (setCursorPosition 0 0)
