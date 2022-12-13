@@ -23,6 +23,9 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Sequence (Seq)
 import qualified Text.Megaparsec as L
 import Prelude (read)
+import Conjure.Language.Pretty (Pretty (..), vcat,(<>))
+import qualified Prettyprinter as Pr
+
 
 sourcePos0 :: SourcePos
 sourcePos0 = SourcePos "" (mkPos  1) (mkPos 1)
@@ -74,6 +77,12 @@ data ETok = ETok
     , capture :: Text
     }
     deriving (Eq, Ord)
+
+instance Pr.Pretty ETok where
+    pretty = Pr.unAnnotate . uncurry (<>) .  prettySplitComments
+
+prettySplitComments :: ETok -> (Pr.Doc ann, Pr.Doc ann)
+prettySplitComments (ETok _ tr _ capture) = (Pr.hcat [Pr.pretty t <> Pr.hardline | LineComment t <- tr],Pr.pretty capture)
 
 
 totalLength :: ETok -> Int

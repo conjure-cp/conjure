@@ -43,6 +43,7 @@ import Conjure.Language.Pretty (Pretty(pretty), prettyT)
 import Conjure.Language.TypeOf (TypeOf(typeOf))
 import Control.Monad (mapAndUnzipM)
 import Conjure.Bug (bug)
+import Conjure.Language.Pretty
 import qualified Data.Text.Lazy as L
 import Data.Aeson.Encoding (bool)
 

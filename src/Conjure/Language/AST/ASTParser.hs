@@ -24,8 +24,12 @@ import Data.Sequence (Seq)
 import Text.Megaparsec.Debug (dbg)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
+import Prettyprinter (layoutSmart, layoutPretty, defaultLayoutOptions)
+import qualified Prettyprinter as Pr
+import Data.Text.Prettyprint.Doc.Util (putDocW)
+import Prettyprinter.Render.Text
 
-data ParserError = ParserError Doc
+data ParserError = ParserError (Doc)
     deriving (Show)
 
 
@@ -827,6 +831,10 @@ example s = do
             -- putStrLn $  show pt
             putStrLn $ "Reforming"
             print $ reformList (flatten pt) == L.fromStrict txt
+
+            putStrLn "Pretty:"
+            let pp = renderAST 80 pt
+            putStrLn $ T.unpack pp
             -- let flat = flatten pt
             -- putStrLn $ show $ flat
             -- putTextLn $ reformList $ flat
