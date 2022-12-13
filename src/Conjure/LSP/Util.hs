@@ -8,7 +8,7 @@ import Conjure.Prelude
 import Language.LSP.Server
 
 import Conjure.Language.Parser (PipelineError(..), lexAndParse)
-import Language.LSP.VFS (virtualFileText)
+import Language.LSP.VFS (virtualFileText, VirtualFile)
 import Text.Megaparsec (SourcePos(..), unPos)
 import Data.Text (pack)
 import Language.LSP.Types as L
@@ -17,7 +17,7 @@ import Conjure.UI.ErrorDisplay (displayError, displayWarning)
 import Conjure.Language.AST.ASTParser (parseProgram)
 import Language.LSP.Types.Lens (HasUri (uri))
 import Control.Lens ((^.))
-import Text.PrettyPrint (text)
+
 
 data ProcessedFile = ProcessedFile {
     model::Maybe Model,
@@ -77,6 +77,15 @@ sendErrorMessage t = sendNotification SWindowShowMessage (ShowMessageParams MtEr
 fixPosition :: (Integral a) => a -> a -> Position
 fixPosition r c = Position (fromIntegral r-1) (fromIntegral c-1)
 
+withFile :: (HasUri a Uri,Show a) => a -> (VirtualFile -> LspM () n) -> LspM () ()
+withFile fp f = do
+    let td = fp^.uri
+    let doc = toNormalizedUri td
+    mdoc <- getVirtualFile doc
+    case mdoc of
+          Just vf ->void $ f vf
+          _ -> sendErrorMessage (pack. show $ "No virtual file found for: " <> pretty (show fp))
+
 getProcessedDoc ::( HasUri a Uri,Show a) => a -> LspM () (Maybe ProcessedFile)
 getProcessedDoc d = do
     let td = d^.uri
@@ -123,5 +132,5 @@ snippet :: Text -> MarkupContent
 snippet = markedUpContent "essence"
 
 instance Pretty Position where
-    pretty (Position (text.show->r) (text.show->c)) =  r <> ":" <> c
+    pretty (Position (pretty . show->r) (pretty . show->c)) =  r <> ":" <> c
 

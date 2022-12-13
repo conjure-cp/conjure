@@ -14,6 +14,6 @@ import Conjure.Prelude
 handleInitialized :: Handlers (LspM ())
 handleInitialized = notificationHandler SInitialized $ \req -> do
     let NotificationMessage _ _ (a) = req
-    sendNotification SWindowShowMessage (ShowMessageParams MtInfo "LSP Started 0.0.1\n")
+    sendNotification SWindowShowMessage (ShowMessageParams MtInfo "LSP Started 0.0.2\n")
     
 

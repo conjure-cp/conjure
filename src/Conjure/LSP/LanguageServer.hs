@@ -11,6 +11,7 @@ import Conjure.Prelude
 import Conjure.LSP.Handlers.Hover (hoverHandler)
 import Conjure.LSP.Handlers.DocumentSymbol (docSymbolHandler)
 import Conjure.LSP.Handlers.SemanticTokens (semanticTokensHandler)
+import Conjure.LSP.Handlers.Format (formatHandler)
 
 data LSPConfig = LSPConfig {}
 
@@ -40,6 +41,7 @@ handlers =
         , hoverHandler
         , docSymbolHandler
         , semanticTokensHandler
+        , formatHandler
         ]
 
 
