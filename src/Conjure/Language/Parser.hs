@@ -1155,8 +1155,8 @@ partialPretty (S.ProgramTree lv sns lt) = vcat [
     ]
     where
         langVer = case lv of
-          Nothing -> "language Essence 1.3\n" 
+          Nothing -> "language Essence 1.3" 
           Just _ -> if V.isSyntacticallyValid V.validateLanguageVersion lv then Pr.pretty lv else fallback lv
         fallback :: Flattenable a => a -> Doc
         fallback v = Pr.pretty $ L.reformList $ flatten v
-        pTopLevel st = if V.isSyntacticallyValid V.validateStatement st then Pr.pretty st else fallback lv 
+        pTopLevel st = if V.isSyntacticallyValid V.validateStatement st then Pr.pretty st else fallback st

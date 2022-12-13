@@ -56,7 +56,7 @@ data ProgramTree = ProgramTree
 instance Pretty ProgramTree where
     pretty (ProgramTree l s e) =
         vcat
-            [ pretty l
+            [ maybe "language Essence 1.3" pretty l <> line
             , vcat $ map pretty s
             , pretty e
             ]
@@ -624,7 +624,7 @@ newtype Sequence itemType = Seq
     deriving (Show)
 
 instance Pretty a => Pretty (Sequence a) where
-    pretty (Seq xs) = align $ cat $ map pretty xs
+    pretty (Seq xs) = align $ sep $ map pretty xs
 
 prettyElems :: (Pretty a) => Sequence a -> [Doc ann]
 prettyElems (Seq xs) = map pretty xs
@@ -669,8 +669,8 @@ topLevelPretty :: [LToken] -> Doc ann -> Doc ann
 topLevelPretty (t : (map pretty -> xs)) exprs =
     let (cs, ps) = prettyTokenAndComments t
         dec = ps <+> hsep xs
-     in cs <> group (fill 7 dec <+> flatIndent 4 exprs)
-topLevelPretty _ exprs = group (fill 7 emptyDoc <+> flatIndent 4 exprs)
+     in cs <> group (fill 7 dec <+> flatIndent 4 exprs) <> line
+topLevelPretty _ exprs = group (fill 7 emptyDoc <+> flatIndent 4 exprs) <> line
 
 flatIndent :: Int -> Doc ann -> Doc ann
 flatIndent amt d = flatAlt (line <> indent amt d) d

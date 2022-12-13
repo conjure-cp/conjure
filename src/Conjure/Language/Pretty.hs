@@ -29,8 +29,8 @@ import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap, pa
 
 -- pretty
 import Prettyprinter
-    ( parens, brackets, vcat ,braces, layoutPretty, PageWidth (AvailablePerLine)
-    , (<+>), (<>)
+    ( parens, brackets ,braces, layoutPretty, PageWidth (AvailablePerLine)
+    
            -- will be exported with new names
     )
 
@@ -58,7 +58,7 @@ instance Pretty ()      where pretty = Pr.pretty
 instance Pretty Bool    where pretty = Pr.pretty
 instance Pretty Int     where pretty = Pr.pretty
 instance Pretty Integer where pretty = Pr.pretty
-instance Pretty Double  where pretty x = pretty (printf "%.2f" x :: String)
+instance Pretty Double  where pretty x = Pr.pretty (printf "%.2f" x :: String)
 
 instance (Pretty a, Pretty b) => Pretty (a, b) where
     pretty (a, b) = prettyListDoc parens "," [pretty a, pretty b]
@@ -101,7 +101,7 @@ render :: Pretty a => Int -> a -> String
 render w = Pr.renderString . (layoutPretty (Pr.LayoutOptions $ AvailablePerLine w 1.0) . pretty)
 
 prEmpty :: Doc
-prEmpty = prEmpty
+prEmpty = Pr.emptyDoc
 
 prParens :: Doc -> Doc
 prParens = parens
