@@ -34,7 +34,30 @@ import qualified Data.Text.Encoding as T ( encodeUtf8 )
 import qualified Data.ByteString as BS ( readFile, writeFile )
 import qualified Data.ByteString.Char8 as BS ( putStrLn )
 import Conjure.Language.AST.Syntax (ProgramTree)
+import Conjure.Language.AST.ASTParser (parseProgram)
+import Conjure.Language.Validator (runValidator, validateModel, ValidatorState (typeChecking), initialState, isError)
+import Text.Megaparsec (errorBundlePretty)
+import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 
+readASTFromFile :: 
+    MonadIO m =>
+    MonadFailDoc m =>
+    MonadUserError m =>
+    FilePath -> m ProgramTree
+readASTFromFile fp = do
+    (_,contents) <- liftIO $ pairWithContents fp
+    v <-case lexAndParse parseProgram contents of
+      Left pe -> failDoc $ pretty $  show pe
+      Right pt -> return pt
+    case
+        runValidator
+          (validateModel v) (initialState v) {typeChecking = False}
+            of 
+        (_, vds, _) | any isError vds -> pure v
+        (_,vds,_) -> failDoc $ "Cannot pretty print a model with errors" <+> pretty (showDiagnosticsForConsole vds contents)
+
+        
+    
 
 readModelFromFile ::
     MonadIO m =>

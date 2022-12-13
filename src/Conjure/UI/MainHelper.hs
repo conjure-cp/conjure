@@ -63,7 +63,8 @@ import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
 import qualified Data.Text as T ( unlines, isInfixOf )
 
 -- parallel-io
-import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
+import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
+import Conjure.Language.Parser (prettyPrintWithChecks)
 
 
 mainWithArgs :: forall m .
@@ -143,7 +144,7 @@ mainWithArgs IDE{..} = do
             json <- runNameGen () $ modelRepresentationsJSON essence2
             liftIO $ putStrLn $ render lineWidth json
         | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
-mainWithArgs Pretty{..} = do
+mainWithArgs Pretty{..} | outputFormat /= Plain = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
                 then do
@@ -154,6 +155,11 @@ mainWithArgs Pretty{..} = do
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
     writeModel lineWidth outputFormat Nothing model1
+mainWithArgs Pretty{..} = do
+    (_,cts) <- liftIO $ pairWithContents essence
+    res <- prettyPrintWithChecks cts
+    liftIO $ putStrLn $ render lineWidth res
+    
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1

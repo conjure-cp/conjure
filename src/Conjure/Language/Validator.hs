@@ -374,6 +374,10 @@ deState ((a,r),n) = (a,n,r)
 runValidator :: (ValidatorT r w a) -> r -> ((Maybe a),[w],r)
 runValidator (ValidatorT r) d = deState $ runWriter (runStateT (runMaybeT r) d)
 
+isSyntacticallyValid :: Flattenable a=> (a->(ValidatorT ValidatorState ValidatorDiagnostic b)) -> a -> Bool
+isSyntacticallyValid v s = case runValidator (v s) (initialState s){typeChecking=False} of 
+        (_,vds,_) -> not $ any isError vds
+
 todoTypeAny :: Maybe a -> Maybe (Typed a)
 todoTypeAny = typeAs TypeAny
 

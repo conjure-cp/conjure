@@ -9,6 +9,7 @@ module Conjure.Language.Parser
     , parseExpr
     , parseDomain
     , parseDomainWithRepr
+    , prettyPrintWithChecks
     , Pipeline
     , PipelineError(..)
     , runPipeline
@@ -54,8 +55,9 @@ import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
 import Conjure.Language.AST.Helpers (ParserState)
 import qualified Conjure.Language.AST.Helpers as P
-import Conjure.Language.AST.Reformer (Flattenable)
+import Conjure.Language.AST.Reformer (Flattenable (flatten))
 import Conjure.Language.Pretty
+import qualified Prettyprinter as Pr
 
 
 type  Pipeline a b = ( (StateT ParserState (Parsec Void ETokenStream)) a ,a -> V.ValidatorS b,Bool)
@@ -1136,3 +1138,25 @@ runLexerAndParser p file inp = case runPipeline p inp of
 --     result <- parser
 --     eof
 --     return result
+
+
+prettyPrintWithChecks :: MonadFailDoc m => Text -> m Doc
+prettyPrintWithChecks src = do
+    v <-case lexAndParse parseProgram src of
+      Left pe -> failDoc $ pretty $  show pe
+      Right pt -> return pt
+    return $ (if V.isSyntacticallyValid V.validateModel v then Pr.pretty else  partialPretty ) v
+
+partialPretty :: ProgramTree -> Doc
+partialPretty (S.ProgramTree lv sns lt) = vcat [
+        langVer,
+        vcat $ map pTopLevel sns,
+        Pr.pretty lt
+    ]
+    where
+        langVer = case lv of
+          Nothing -> "language Essence 1.3\n" 
+          Just _ -> if V.isSyntacticallyValid V.validateLanguageVersion lv then Pr.pretty lv else fallback lv
+        fallback :: Flattenable a => a -> Doc
+        fallback v = Pr.pretty $ L.reformList $ flatten v
+        pTopLevel st = if V.isSyntacticallyValid V.validateStatement st then Pr.pretty st else fallback lv 
