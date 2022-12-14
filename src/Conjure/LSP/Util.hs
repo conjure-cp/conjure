@@ -107,7 +107,7 @@ withProcessedDoc d f = do
 
 
 getRelevantRegions :: ValidatorState -> Position -> [RegionInfo]
-getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn (drLength . rRegion) $ concatMap filteredFlatten info
+getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn (rRegion) $ concatMap filteredFlatten info
     where
         p::RegionInfo -> Bool
         p (RegionInfo {rRegion=reg}) = case reg of
