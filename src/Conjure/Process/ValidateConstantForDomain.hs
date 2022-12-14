@@ -1,16 +1,50 @@
-{-# OPTIONS_GHC -fmax-pmcheck-iterations=50000000 #-} -- stupid cmdargs
+-- {-# OPTIONS_GHC -fmax-pmcheck-iterations=50000000 #-} -- stupid cmdargs
 
 module Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain ) where
 
 import Conjure.Prelude
-import Conjure.Language
+import Conjure.Language.Constant
+    ( viewConstantBool,
+      viewConstantFunction,
+      viewConstantIntWithTag,
+      viewConstantMSet,
+      viewConstantMatrix,
+      viewConstantPartition,
+      viewConstantRecord,
+      viewConstantRelation,
+      viewConstantSequence,
+      viewConstantSet,
+      viewConstantTuple,
+      viewConstantVariant,
+      Constant(ConstantEnum, TypedConstant, ConstantInt, ConstantBool) )
+import Conjure.Language.Definition
+    ( Name,
+      NameGen )
+import Conjure.Language.Domain
+    ( Domain(DomainBool, DomainUnnamed, DomainEnum, DomainPartition,
+             DomainTuple, DomainRecord, DomainVariant, DomainMatrix, DomainInt,
+             DomainSet, DomainMSet, DomainFunction, DomainSequence,
+             DomainRelation),
+      Range(RangeBounded, RangeOpen, RangeSingle, RangeLowerBounded,
+            RangeUpperBounded),
+      BinaryRelationAttrs(BinaryRelationAttrs),
+      RelationAttr(RelationAttr),
+      OccurAttr(OccurAttr_MinMaxOccur, OccurAttr_None,
+                OccurAttr_MinOccur, OccurAttr_MaxOccur),
+      MSetAttr(MSetAttr),
+      SizeAttr(SizeAttr_MinMaxSize, SizeAttr_None, SizeAttr_Size,
+               SizeAttr_MinSize, SizeAttr_MaxSize),
+      SetAttr(SetAttr),
+      binRelToAttrName )
+import Conjure.Language.Pretty ( prettyList, Pretty(pretty) )
+import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Instantiate ( instantiateExpression )
-import Conjure.Language.NameGen ( NameGen )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 -- containers
 import Data.Set as S ( size, size, toList )
+import Conjure.Language.Expression
 
 
 -- | Assuming both the value and the domain are normalised
@@ -213,7 +247,7 @@ validateConstantForDomain name
                     , "Evaluted to:" <+> pretty evaluatedC
                     ]
         nested c d $ forM_ valss $ \ vals ->
-            zipWithM_ (validateConstantForDomain name) vals dInners
+            zipWithM_ (validateConstantForDomain name) vals dInners
 
 validateConstantForDomain name
     c@(viewConstantPartition -> Just valss)

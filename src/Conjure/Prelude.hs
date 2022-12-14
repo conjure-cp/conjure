@@ -230,16 +230,19 @@ import Debug.Trace as X ( trace, traceM )
 import Data.Void (Void)
 import GHC.IO.Exception (IOErrorType(InvalidArgument))
 import Prettyprinter (PageWidth(AvailablePerLine))
-import Data.Text.Prettyprint.Doc.Render.String (renderString)
-import Prettyprinter ((<+>))
+import Prettyprinter.Render.String (renderString)
+
+
 
 data EssenceDocAnnotation = EssenceDocAnnotation
 
 type Doc = Pr.Doc EssenceDocAnnotation
 
+instance Eq Doc where
+    a == b = show a == show b
 --compats
 hang :: Doc -> Int ->Doc -> Doc
-hang a n b = a <> Pr.hang n b
+hang a n b = a <+> Pr.hang n b
 
 hcat :: [Doc] -> Doc 
 hcat = Pr.hcat

@@ -29,7 +29,7 @@ import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap, pa
 
 -- pretty
 import Prettyprinter
-    ( parens, brackets ,braces, layoutPretty, PageWidth (AvailablePerLine)
+    ( parens, brackets ,braces,  PageWidth (AvailablePerLine)
     
            -- will be exported with new names
     )
@@ -83,7 +83,7 @@ prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
 prettyList wrap punc = prettyListDoc wrap punc . map pretty
 
 prettyListDoc :: (Doc -> Doc) -> Doc -> [Doc] -> Doc
-prettyListDoc wrap punc = wrap . Pr.fillSep . Pr.punctuate punc
+prettyListDoc wrap punc = wrap . Pr.align . Pr.cat . map Pr.group . Pr.punctuate punc
 
 parensIf :: Bool -> Doc -> Doc
 parensIf = wrapIf parens
@@ -98,7 +98,7 @@ renderWide :: Pretty a => a -> String
 renderWide = render 240
 
 render :: Pretty a => Int -> a -> String
-render w = Pr.renderString . (layoutPretty (Pr.LayoutOptions $ AvailablePerLine w 1.0) . pretty)
+render w = Pr.renderString . (Pr.layoutSmart (Pr.LayoutOptions $ AvailablePerLine w 1.0) . pretty)
 
 prEmpty :: Doc
 prEmpty = Pr.emptyDoc

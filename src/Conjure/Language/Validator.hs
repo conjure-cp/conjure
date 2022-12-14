@@ -1359,7 +1359,7 @@ getSlicingType t = do
 
 getIndexingType :: Type -> ValidatorS Type
 getIndexingType TypeAny = return $ TypeAny
-getIndexingType (TypeMatrix i _) = return i
+getIndexingType (TypeMatrix i _) = return $ getDomainMembers i
 getIndexingType (TypeSequence _) = return tInt
 getIndexingType (TypeList _) = return tInt
 getIndexingType (TypeTuple _) = return tInt
