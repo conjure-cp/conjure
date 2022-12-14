@@ -1095,7 +1095,8 @@ validateQuantificationExpression q@(QuantificationExpressionNode name pats over 
         scoped $ do
             flagToken name TtQuantifier
             name' <-  validateSymbol name
-            (over',genDec) <-  holdDeclarations $ wrapRegion pats pats SGen $ validateQuantificationOver pats over
+            let genRegion = catRegions [ (symbolRegion pats,()),(symbolRegion over,())]
+            (over',genDec) <-  holdDeclarations $ wrapRegion' genRegion (symbolRegion pats) SGen $ validateQuantificationOver pats over
             (g',gDec) <-case m_guard of
               Nothing -> return ([],[])
               Just qg ->  holdDeclarations $ 
@@ -1116,7 +1117,7 @@ validateQuantificationExpression q@(QuantificationExpressionNode name pats over 
             case name' of 
                 Just l -> putKeywordDocs (T.pack $ show l) name
                 Nothing -> pure ()
-            wrapRegion q q (SQuantification (maybe "Quantification " lexemeText  name') (simple rType)) (mapM_ addRegion (gDec++genDec++bDecl))
+            wrapRegion q q (SQuantification (maybe "Quantification " lexemeText  name') (simple rType)) (mapM_ addRegion (genDec++gDec++bDecl))
             return $ fromMaybe (fallback "Quantification error") result
     where
         validateQuantificationGuard :: Maybe QuanticationGuard -> ValidatorS [GeneratorOrCondition]
@@ -1753,7 +1754,12 @@ data DiagnosticRegion = DiagnosticRegion {
     drOffset :: Int,
     drLength :: Int
 }
-    deriving (Show,Eq,Ord)
+    deriving (Show,Eq)
+instance Ord DiagnosticRegion where 
+    compare a b = case compare (drSourcePos a) (drSourcePos b) of
+      LT -> LT
+      GT -> GT
+      EQ -> comparing drLength a b
 global :: DiagnosticRegion
 global =DiagnosticRegion sourcePos0 sourcePos0 0 0
 -- getTokenRegion :: LToken -> DiagnosticRegion
