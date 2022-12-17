@@ -1,11 +1,11 @@
 module Conjure.LSP.Handlers.Format (formatHandler) where
 import Language.LSP.Server (requestHandler, LspM, Handlers)
-import Language.LSP.Types hiding (length)
+import Language.LSP.Types 
 import Control.Lens
 import Conjure.Prelude
 import Conjure.LSP.Util (withFile, sendInfoMessage, sendErrorMessage)
 import Conjure.Language.Parser (prettyPrintWithChecks)
-import qualified Language.LSP.Types as Ty hiding (length)
+import qualified Language.LSP.Types as Ty 
 import qualified Prettyprinter as Pr
 import Prettyprinter.Render.Text (renderStrict)
 import Language.LSP.Types.Lens (params, textDocument)
