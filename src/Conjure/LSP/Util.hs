@@ -12,7 +12,7 @@ import Language.LSP.VFS (virtualFileText, VirtualFile)
 import Text.Megaparsec (SourcePos(..), unPos)
 import Data.Text (pack)
 import Language.LSP.Types as L
-import Conjure.Language.Validator (DiagnosticRegion(..), ValidatorState (ValidatorState, regionInfo), runValidator, validateModelS, ValidatorDiagnostic, RegionInfo (..), initialState)
+import Conjure.Language.Validator (DiagnosticRegion(..), ValidatorState (ValidatorState, regionInfo), runValidator,  ValidatorDiagnostic, RegionInfo (..), initialState, validateModel)
 import Conjure.UI.ErrorDisplay (displayError, displayWarning)
 import Conjure.Language.AST.ASTParser (parseProgram)
 import Language.LSP.Types.Lens (HasUri (uri))
@@ -20,7 +20,7 @@ import Control.Lens ((^.))
 
 
 data ProcessedFile = ProcessedFile {
-    model::Maybe Model,
+    model:: Model,
     diagnostics::[ValidatorDiagnostic],
     state:: ValidatorState
 }
@@ -28,7 +28,7 @@ data ProcessedFile = ProcessedFile {
 processFile :: Text -> Either PipelineError ProcessedFile
 processFile t = do
     parsed <- lexAndParse parseProgram t
-    let (m,d,s) = runValidator (validateModelS parsed) (initialState  parsed)
+    let (m,d,s) = runValidator (validateModel parsed) (initialState  parsed)
     return $ ProcessedFile m d s
 
 

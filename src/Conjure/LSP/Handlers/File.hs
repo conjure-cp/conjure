@@ -12,7 +12,7 @@ import Language.LSP.VFS
 import Language.LSP.Types.Lens (HasTextDocument(textDocument), HasParams (..), HasUri (uri))
 import Conjure.LSP.Util (getErrorsForURI, getErrorsFromText, sendInfoMessage, sendErrorMessage, getDiagnostics)
 import Language.LSP.Diagnostics (partitionBySource)
-
+import Prettyprinter
 fileHandlers :: Handlers (LspM ())
 fileHandlers = mconcat [fileOpenedHandler,fileChangedHandler,fileClosedHandler]
 
