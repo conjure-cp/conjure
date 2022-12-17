@@ -241,9 +241,10 @@ operators =
     , ( UnaryPrefix L_Minus           , 2000 )
     , ( UnaryPrefix L_ExclamationMark , 2000 )
     ]
-
+--Functional operators that clash with other constructs so require no spaces
 overloadedFunctionals :: [Lexeme]
 overloadedFunctionals = [
+    L_true,
     L_Sum,
     L_Product
     ]

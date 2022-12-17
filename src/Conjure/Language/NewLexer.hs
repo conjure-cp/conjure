@@ -4,7 +4,21 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Conjure.Language.NewLexer where
+module Conjure.Language.NewLexer (
+    ETok(..),
+    Offsets(..),
+    prettySplitComments,
+    eLex,
+    reformList,
+    tokenSourcePos,
+    totalLength,
+    trueLength,
+    tokenStart,
+    sourcePos0,
+    LexerError(..),
+    runLexer,
+    ETokenStream(..)
+    ) where
 
 import Conjure.Language.Lexemes
 import Conjure.Prelude hiding (many, some,Text)
@@ -19,12 +33,9 @@ import Text.Megaparsec.Char
 
 import Data.List (splitAt)
 import qualified Data.List.NonEmpty as NE
-import qualified Text.Megaparsec.Char.Lexer as L
-import Data.Sequence (Seq)
 import qualified Text.Megaparsec as L
 import Prelude (read)
-import Conjure.Language.Pretty (Pretty (..), vcat,(<>))
-import qualified Prettyprinter as Pr
+import  Prettyprinter as Pr
 
 
 sourcePos0 :: SourcePos
@@ -260,7 +271,11 @@ instance Stream ETokenStream where
 buildStream :: [ETok] -> ETokenStream
 buildStream xs = case NE.nonEmpty xs of
     Nothing -> ETokenStream "" xs
-    Just s -> ETokenStream (T.pack $ "showTokens pxy s") xs
+    Just _ -> ETokenStream (T.pack "showTokens pxy s") xs
+
+instance VisualStream ETokenStream where
+    showTokens _ =  L.unpack . reformList
+    tokensLength _ = sum . fmap ( oTLength . offsets )
 
 -- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
 instance TraversableStream ETokenStream where
@@ -285,40 +300,9 @@ instance TraversableStream ETokenStream where
                 [] -> pstateSourcePos
                 (x : _) -> tokenSourcePos x
         (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
-        (preStr, postStr) = ("NOT SUPPORTED","NOT SUPPORTED")
+        (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
         preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
-        restOfLine = ""
-
-instance VisualStream ETokenStream where
-    showTokens p =  L.unpack . reformList
-    tokensLength p ls = sum $ oTLength . offsets <$> ls
-
--- -- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
--- instance TraversableStream ETokenStream where
---     reachOffset o PosState{..} =
---         ( Just (prefix ++ restOfLine)
---         , PosState
---             { pstateInput = buildStream post
---             , pstateOffset = max pstateOffset o
---             , pstateSourcePos = newSourcePos
---             , pstateTabWidth = pstateTabWidth
---             , pstateLinePrefix = prefix
---             }
---         )
---       where
---         prefix =
---             if sameLine
---                 then pstateLinePrefix ++ preLine
---                 else preLine
---         sameLine = sourceLine newSourcePos == sourceLine pstateSourcePos
---         newSourcePos =
---             case post of
---                 [] -> pstateSourcePos
---                 (x : _) -> tokenSourcePos x
---         (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
---         (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
---         preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
---         restOfLine = takeWhile (/= '\n') postStr
+        restOfLine = takeWhile (/= '\n') postStr
 
 pxy :: Proxy ETokenStream
 pxy = Proxy

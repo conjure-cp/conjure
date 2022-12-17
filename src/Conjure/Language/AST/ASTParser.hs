@@ -1,7 +1,17 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use <$>" #-}
-module Conjure.Language.AST.ASTParser where
+module Conjure.Language.AST.ASTParser (
+    parseProgram,
+    ParserError,
+    runASTParser,
+    parseExpression,
+    parseDomain,
+    parseTopLevels,
+    example,
+    exampleFile --For debugging
+    ) where
+
 
 import Conjure.Prelude hiding (many,some)
 
@@ -13,29 +23,19 @@ import Conjure.Language.NewLexer
 import Conjure.Language.Lexemes
 import Text.Megaparsec
 
-import Data.Void (Void)
 import Conjure.Language.AST.Reformer (Flattenable(..))
 import Conjure.Language.Expression.Op.Internal.Common
 import Control.Monad.Combinators.Expr
-import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
-import Language.Haskell.TH.PprLib (rparen)
-import Conjure.Language.Attributes (allAttributLexemes)
-import Data.Sequence (Seq)
-import Text.Megaparsec.Debug (dbg)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
-import Prettyprinter (layoutSmart, layoutPretty, defaultLayoutOptions)
-import qualified Prettyprinter as Pr
-import Data.Text.Prettyprint.Doc.Util (putDocW)
-import Prettyprinter.Render.Text
 
-data ParserError = ParserError (Doc)
+newtype ParserError = ParserError (Doc)
     deriving (Show)
 
 
 runASTParser ::Flattenable a => Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str =
-    case runParser (evalStateT p def) "parser" str of
+    case runParser p "parser" str of
         Left peb -> Left $ ParserError . pretty $ errorBundlePretty peb
         Right res -> Right res
 
@@ -50,7 +50,7 @@ parseLangVersion :: Parser LangVersionNode
 parseLangVersion = do
     lLang <- need L_language
     lLName <- parseIdentifier
-    nums <- parseSequence L_Dot (RealToken [] <$> intLiteral)
+    nums <- parseSequence L_Dot (StrictToken [] <$> intLiteral)
     return $ LangVersionNode lLang lLName nums
 
 
@@ -79,8 +79,8 @@ parseBranching :: Parser StatementNode
 parseBranching = do
     lBranching <- need L_branching
     lOn <- want L_on
-    statements <- squareBracketList (commaList parseExpression)
-    return $ BranchingStatement $ BranchingStatementNode lBranching lOn statements
+    branchSts <- squareBracketList (commaList parseExpression)
+    return $ BranchingStatement $ BranchingStatementNode lBranching lOn branchSts
 
 
 parseSuchThat :: Parser StatementNode
@@ -109,7 +109,7 @@ parseDeclaration =
                     declaration FindStatement L_find parseFind
         ]
     where
-        declaration :: (Null a,Show a) => (LToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
+        declaration :: (Null a,Show a) => (SToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
         declaration c t p = do
                             l <- need t
                             seq <- commaList1 p
@@ -119,11 +119,12 @@ parseLetting :: Parser LettingStatementNode
 parseLetting = do
     names <- commaList1 parseIdentifier
     lBe <- want L_be
+    guard $ not (isMissing names && isMissing lBe)
     let start = LettingStatementNode names lBe
     start <$> choice
         [ finishDomain
-        , try finishEnum
         , try finishAnon
+        , try finishEnum
         , LettingExpr <$> parseExpression
         ]
   where
@@ -131,19 +132,21 @@ parseLetting = do
         lDomain <- need L_domain
         domain <- parseDomain
         return $ LettingDomain lDomain domain
-    finishEnum = do
-        lNew <- need L_new
-        lType <- need L_type
-        lEnum <- need L_enum
-        members <- curlyBracketList $ commaList parseIdentifier
-        return $ LettingEnum lNew lType lEnum members
-    finishAnon = do
-        lNew <- need L_new
+    finishAnon = try $ do
+        lNew <- want L_new
         lType <- want L_type
         lOf <- want L_of
         lSize <- want L_size
+        guard (not $ all isMissing [lOf,lSize])
         expr <- parseExpression
         return $ LettingAnon lNew lType lOf lSize expr
+    finishEnum = do
+        lNew <- want L_new
+        lType <- want L_type
+        lEnum <- want L_enum
+        guard (not $ all isMissing [lNew,lType,lEnum])
+        members <- curlyBracketList $ commaList parseIdentifier
+        return $ LettingEnum lNew lType lEnum members
 
 parseGiven :: Parser GivenStatementNode
 parseGiven = do
@@ -154,9 +157,10 @@ parseGiven = do
         ]
   where
     finishEnum start =  do
-        lNew <-  need L_new
+        lNew <-  want L_new
         lType <- want L_type
         lEnum <- want L_enum
+        guard (not $ all  isMissing [lNew,lType,lEnum])
         return $ start lNew lType lEnum
     finishDomain start =  do
         lColon <- want L_Colon -- want here so that parse cannot fail
@@ -176,16 +180,16 @@ parseObjectiveStatement = do
     s <- eSymbol L_minimising <|> eSymbol L_maximising
     e <- parseExpression
     return $ case s of
-        (ETok {lexeme=L_minimising}) -> ObjectiveMin (RealToken [] s) e
-        _ -> ObjectiveMax (RealToken [] s) e
+        (ETok {lexeme=L_minimising}) -> ObjectiveMin (StrictToken [] s) e
+        _ -> ObjectiveMax (StrictToken [] s) e
     <?> "Objective Statement"
 
 
-pEnding :: Parser LToken
+pEnding :: Parser SToken
 pEnding =  do
     t <- lookAhead anySingle
     case t of
-        ETok {lexeme=L_EOF} -> return $ RealToken [] t
+        ETok {lexeme=L_EOF} -> return $ StrictToken [] t
         _ -> empty
 
 
@@ -194,23 +198,17 @@ pEnding =  do
 
 ---------------------------------------
 
-guardExpressionOverlap :: Parser ()
-guardExpressionOverlap = do
-    off <- getOffset
-    lastOffset <- gets lastMissingExpOffset
-    -- traceC $ "DME query:" ++ show off ++ "," ++ show lastOffset
-    guard $ off > lastOffset
-    -- traceC $ "DME used:" ++ show off
-    modify (\x->x{lastMissingExpOffset=off})
+
 
 parseExpression :: Parser ExpressionNode
-parseExpression =  do
-    (parseOperator)
-        <|> (parseAtomicExpression) <|> (MissingExpressionNode <$> makeMissing (L_Missing "expression"))
+parseExpression = try $ do
+    parseOperator
+        <|> parseAtomicExpression 
+        <|> (MissingExpressionNode <$> makeMissing (L_Missing "expression"))
 
 parseExpressionStrict :: Parser ExpressionNode -- can fail
-parseExpressionStrict = do
-    expr <- try parseExpression
+parseExpressionStrict = try $ do
+    expr <- parseExpression
     case expr of
         MissingExpressionNode _ -> empty
         _ -> return expr
@@ -221,8 +219,8 @@ parseAtomicExpression = do
         choice
             [
                parseSpecialCase
+            ,  parseFunction --has to be first because true is overloaded
             ,  Literal <$> parseLiteral
-            ,  parseFunction
             ,  parseAttributeAsConstraint
             ,  IdentifierNode <$> parseIdentifierStrict
             ,  MetaVarExpr <$> parseMetaVar
@@ -230,14 +228,14 @@ parseAtomicExpression = do
             ,  AbsExpression <$> parseAbsExpression
             ,  QuantificationExpr <$> parseQuantificationStatement
             ,  DomainExpression <$> parseDomainExpression
-            ,  guardExpressionOverlap >> MissingExpressionNode <$> (makeMissing $ L_Missing "Expr")
+            ,  MissingExpressionNode <$> makeMissing (L_Missing "Expr")
             ]
 
 
 
 parseDomainExpression :: Parser DomainExpressionNode
 parseDomainExpression = try $ do
-    lTick <- need L_BackTick
+    lTick <- needWeak L_BackTick
     domain <- parseDomain
     case domain of
         MissingDomainNode _ -> empty
@@ -252,7 +250,7 @@ parseDomainExpression = try $ do
 
 parseMatrixBasedExpression :: Parser LiteralNode
 parseMatrixBasedExpression = do
-    openB <- need L_OpenBracket
+    openB <- needWeak L_OpenBracket
     exprs <- commaList parseExpression
     range <- optional pOverDomain
     comprehension <- optional pComp
@@ -260,7 +258,7 @@ parseMatrixBasedExpression = do
     let es = exprs
     return $ MatrixLiteral $ MatrixLiteralNode openB es range comprehension closeB
   where
-    pOverDomain = OverDomainNode <$> need L_SemiColon <*> parseDomain
+    pOverDomain = OverDomainNode <$> needWeak L_SemiColon <*> parseDomain
     pComp = do
         bar <- need L_Bar
         body <- commaList parseComprehensionCondition
@@ -269,14 +267,14 @@ parseMatrixBasedExpression = do
 --TODO look into adding enviorment to the parser to configure forgiveness
 parseAbsExpression :: Parser ParenExpressionNode
 parseAbsExpression = try $ do
-    lParen <- need   L_Bar
+    lParen <- needWeak   L_Bar
     expr <- parseExpression
-    rParen <- need  L_Bar
+    rParen <- needWeak  L_Bar
     return $ ParenExpressionNode lParen expr rParen
 
 parseParenExpression :: (Lexeme, Lexeme) -> Parser ParenExpressionNode
 parseParenExpression (open, close) = try $ do
-    lParen <- need open
+    lParen <- needWeak open
     body <- parseExpression
     notFollowedBy $ need L_Comma
     rParen <- want close
@@ -302,7 +300,7 @@ parseLiteral =
 
 parseShortTupleLiteral :: Parser LiteralNode
 parseShortTupleLiteral = try $ do
-    lOpen <- need L_OpenParen
+    lOpen <- needWeak L_OpenParen
     exprs <- commaList parseExpression
     let Seq xs = exprs
     guard (length xs > 1)
@@ -310,7 +308,7 @@ parseShortTupleLiteral = try $ do
     return $ TupleLiteralNodeShort $ ShortTuple (ListNode lOpen exprs lClose)
 
 parseIntLiteral :: Parser LiteralNode
-parseIntLiteral = IntLiteral . RealToken [] <$> intLiteral
+parseIntLiteral = IntLiteral . StrictToken [] <$> intLiteral
 
 parseBoolLiteral :: Parser LiteralNode
 parseBoolLiteral = BoolLiteral <$> (need L_true <|> need L_false)
@@ -343,7 +341,7 @@ parseRecordMember = do
 parseSetLiteral :: Parser LiteralNode
 parseSetLiteral = do
     -- cant just recycle list as it does not require first char
-    lOpen <- need L_OpenCurly
+    lOpen <- needWeak L_OpenCurly
     members <- commaList parseExpression
     lClose <- want L_CloseCurly
     return $ SetLiteral (ListNode lOpen members lClose)
@@ -436,20 +434,20 @@ parseAbstractPattern = do
     parseAbstractMetaVar = AbstractMetaVar <$> parseMetaVar
     parseAbstractPatternTuple :: Parser AbstractPatternNode
     parseAbstractPatternTuple = do
-        lTuple <- optional $ need L_tuple
-        openB <- (if null lTuple then need else want) L_OpenParen
+        lTuple <- optional $ needWeak L_tuple
+        openB <- (if null lTuple then needWeak else want) L_OpenParen
         es <- commaList parseAbstractPattern
         closeB <- want L_CloseParen
         return $ AbstractPatternTuple lTuple (ListNode openB es closeB)
     parseAbstractPatternMatrix :: Parser AbstractPatternNode
     parseAbstractPatternMatrix = do
-        openB <- need L_OpenBracket
+        openB <- needWeak L_OpenBracket
         es <- commaList parseAbstractPattern
         closeB <- want L_CloseBracket
         return $ AbstractPatternMatrix (ListNode openB es closeB)
     parseAbstractPatternSet :: Parser AbstractPatternNode
     parseAbstractPatternSet = do
-        openB <- need L_OpenCurly
+        openB <- needWeak L_OpenCurly
         es <- commaList parseAbstractPattern
         closeB <- want L_CloseCurly
         return $ AbstractPatternSet (ListNode openB es closeB)
@@ -479,9 +477,6 @@ parseComprehensionCondition = do
 
     condition = CompBodyCondition <$> parseExpressionStrict
 
--- TODO look over this, asignment of domains should happen in next stage
--- Current implementation is hacky
-
 parseOperator :: Parser ExpressionNode
 parseOperator =  try (makeExprParser parseAtomicExpressionAndFixes operatorTable <?> "Expression")
 
@@ -494,13 +489,12 @@ parseFunction = try $ do
     guard $ not ol || argsHasNoLeadingTrivia args
     return $ FunctionalApplicationNode name args
     where
-        isOverloaded (RealToken _ ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
-        isOverloaded _ = False
-        argsHasNoLeadingTrivia (ListNode (RealToken [] ETok{trivia=[]}) y z) =  True
+        isOverloaded (StrictToken  _ ETok{lexeme=lex}) = lex `elem` overloadedFunctionals
+        argsHasNoLeadingTrivia (ListNode (RealToken  (StrictToken [] ETok{trivia=[]})) _ _) =  True
         argsHasNoLeadingTrivia _ = False
 parseAttributeAsConstraint :: Parser ExpressionNode
 parseAttributeAsConstraint = do
-    name <- choice $ map need (attributesAsLexemes allSupportedAttributes)
+    name <- parseAttributeLexeme
     args <- parenList $ commaList parseExpression
     return $ AttributeAsConstriant name args
 
@@ -521,13 +515,13 @@ parsePostfixOp =  do
         lBracket <- need L_OpenBracket
         indexer <- commaList parseRange
         rBracket <- want L_CloseBracket
-        return $ IndexedNode $ ListNode lBracket indexer rBracket
+        return $ IndexedNode $ ListNode (RealToken lBracket) indexer rBracket
     factorial = OpFactorial <$> need L_ExclamationMark
     application = do
         lBracket <- need L_OpenParen
         args <- commaList parseExpression
         rBracket <- want L_CloseParen
-        return $ ApplicationNode $ ListNode lBracket args rBracket
+        return $ ApplicationNode $ ListNode (RealToken lBracket) args rBracket
     explicitDomain = try $ do
         lColon <- need L_Colon
         lTickl <- need L_BackTick
@@ -546,15 +540,15 @@ operatorTable =
                 |> reverse
      in postfixOps
             : [ [ case descr of
-                    BinaryOp op FLeft -> InfixL $ prefixBinary <$> need op
-                    BinaryOp op FNone -> InfixN $ prefixBinary <$> need op
-                    BinaryOp op FRight -> InfixR $ prefixBinary <$> need op
+                    BinaryOp op FLeft -> InfixL $ exprBinary <$> need op
+                    BinaryOp op FNone -> InfixN $ exprBinary <$> need op
+                    BinaryOp op FRight -> InfixR $ exprBinary <$> need op
                     UnaryPrefix op -> prefixOps op
                 | -- UnaryPrefix L_ExclamationMark -> Prefix $ prefixBinary--foldr1 (.) <$> some parseUnaryNot
                 -- UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
                 (descr, _) <- operatorsInGroup
                 ]
-              | operatorsInGroup <- operatorsGrouped
+              | operatorsInGroup <- operatorsGrouped 
               ]
 
 parseAtomicExpressionAndFixes :: Parser ExpressionNode
@@ -566,8 +560,12 @@ parseAtomicExpressionAndFixes = try $ do
         postfixes = do
             fs <- some parsePostfixOp
             return $ foldr1 (.) (reverse fs)
-        withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
-        withPostfix x = do i <- x; guard $ not $ isMissing i ; mf <- optional postfixes; return $ fromMaybe id mf i
+        withPrefix  x = do f <- option id prefixes; i <- x; return $ f i
+        withPostfix x = do 
+            i <- x; 
+            -- guard $ not $ isMissing i ;
+            mf <- optional postfixes;
+            return $ fromMaybe id mf i
     withPrefix (withPostfix parseAtomicExpression) <?> "expression"
 
 
@@ -578,14 +576,13 @@ parsePrefixes = choice [parseUnary L_Minus,parseUnary L_ExclamationMark]
 
 
 
-prefixBinary :: LToken -> ExpressionNode -> ExpressionNode -> ExpressionNode
-prefixBinary t l = OperatorExpressionNode . BinaryOpNode l t
+exprBinary :: SToken -> ExpressionNode -> ExpressionNode -> ExpressionNode
+exprBinary t l = OperatorExpressionNode . BinaryOpNode l t
 
-prefixUnary :: LToken -> ExpressionNode -> ExpressionNode
-prefixUnary l = OperatorExpressionNode . PrefixOpNode l
+
 
 prefixOps ::Lexeme -> Operator Parser ExpressionNode
-prefixOps l = Prefix $ foldr1 (. ) <$> some (try opBuilder)
+prefixOps l = Prefix $ foldr1 (.) <$> some (try opBuilder)
     where
         opBuilder :: Parser (ExpressionNode -> ExpressionNode)
         opBuilder = do
@@ -653,7 +650,7 @@ parseShortTuple = do
     openB <- need L_OpenParen
     lst <- commaList parseDomain
     closeB <- want L_CloseParen
-    return $ ShortTupleDomainNode $ ListNode openB lst closeB
+    return $ ShortTupleDomainNode $ ListNode (RealToken openB) lst closeB
 
 parseRecord :: Parser DomainNode
 parseRecord = do
@@ -781,13 +778,13 @@ parseAttributes = try $ do
         validInterior members = not $ null  [x |
            (SeqElem (NamedAttributeNode x _) _) <- members,isNonIdentifier x
            ]
-        isNonIdentifier :: LToken -> Bool
-        isNonIdentifier (RealToken _ ETok{lexeme=(LIdentifier _)}) = False
+        isNonIdentifier :: SToken -> Bool
+        isNonIdentifier (StrictToken _ ETok{lexeme=(LIdentifier _)}) = False
         isNonIdentifier _ = True
 
 parseAttribute :: Parser AttributeNode
 parseAttribute = do
-    name <- (choice (map need allAttributLexemes))  <|> RealToken [] <$> identifier
+    name <- parseAttributeLexeme  <|> StrictToken [] <$> identifier
     expr <- optional parseExpressionStrict
     return $ NamedAttributeNode name expr
 
@@ -799,37 +796,28 @@ parseMissingDomain =
         <?> "Anything"
 
 
-attributesAsLexemes :: [(Name,Int)] -> [Lexeme]
-attributesAsLexemes xs = do
-        let xs' = map fst xs
-        let ys = [t | Name t <- xs']
-        let lexes = map textToLexeme ys
-        catMaybes lexes
 
 ---------------------------------------
 ---EXAMPLES AND TESTING            ----
 ---------------------------------------
-putTextLn :: L.Text -> IO ()
-putTextLn = putStrLn . L.unpack
-
 example :: String -> IO ()
 example s = do
     let str = s
     let txt  = T.pack str
     let lexed = runParser eLex "lexer" txt
     case lexed of
-      Left peb -> putStrLn "Lexer error:" >> (putStrLn $ errorBundlePretty peb)
+      Left peb -> putStrLn "Lexer error:" >> putStrLn (errorBundlePretty peb)
       Right ets -> do
         putStrLn $ "Lexed " ++ show ( length ets) ++" symbols"
-        -- putStrLn $ show . take 100 $ ets
-        putStrLn $ "reformed"
+        print $ take 100 ets
+        putStrLn "reformed"
         -- putTextLn $ reformList ets
         let stream = ETokenStream txt  ets
-        case runParser (evalStateT parseProgram def) "parser" stream  of
-          Left peb -> putStrLn "Parser error: " >> (putStrLn $ "")
+        case runParser parseProgram "parser" stream  of
+          Left peb -> putStrLn "Parser error: " >> putStrLn ( errorBundlePretty peb)
           Right pt -> do
-            -- putStrLn $  show pt
-            putStrLn $ "Reforming"
+            print $  show pt
+            putStrLn "Reforming"
             print $ reformList (flatten pt) == L.fromStrict txt
 
             putStrLn "Pretty:"
@@ -847,44 +835,3 @@ exampleFile p = do
       Just s -> example s
     return ()
 
-contextRegion :: String -> Parser a -> Parser a
-contextRegion l m = do
-    prev <- gets context
-    modify (\x->x{context=l:prev})
-    r <- m
-    modify (\x->x{context=prev})
-    return r
-
-traceC :: String -> Parser ()
-traceC msg = do
-    ctx <- gets context
-    traceM $ intercalate "." (reverse ctx) ++ msg
--- parsePrint :: String -> IO ()
--- parsePrint text = do
---     toks <- parseAndRevalidate (pack text) eLex (concatMap reform) text
---     case toks of
---       Left (a,b)-> do
---             putStrLn "Lexer wasn't reversible"
---             showDiff a b
---       Right ets -> putStrLn "Lexer success" >> do
---             tree <- parseAndRevalidate (ETokenStream (pack text) ets) parseProgram (\v -> reformList (flatten v :: Seq ETok) ) text
---             case tree of
---               Left (a,b) -> do
---                         putStrLn "Parser wasn't reversible:"
---                         showDiff a b
---               Right _ -> putStrLn "Success"
---     where
---         showDiff a b = do
---             putStrLn "got vvvvvvvvv"
---             putStrLn a
---             putStrLn "expected vvvvvvvvv"
---             putStrLn b
-
-
--- parseAndRevalidate ::(VisualStream a,TraversableStream a,Stream a,Show b) => a -> ParsecT Void a (StateT ParserState Identity) b -> (b -> String) -> String -> IO (Either (String,String) b)
--- parseAndRevalidate src p f ref = do
---                             case evalState (runParserT p "" src) def of
---                                 Left _ -> do
---                                             putStrLn "Parse error"
---                                             parseTest p src >> empty
---                                 Right res -> return  (if f res == ref then Right res else Left (f res,ref))

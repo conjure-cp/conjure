@@ -1,4 +1,4 @@
-module Conjure.Language.AST.Reformer where
+module Conjure.Language.AST.Reformer (Flattenable(..)) where
 
 import Conjure.Language.AST.Syntax
 import Conjure.Language.NewLexer (ETok (..))
@@ -12,6 +12,8 @@ import qualified Data.Sequence as S
 class Flattenable a where
     flatten :: Flattenable a => a -> S.Seq ETok
 
+instance Flattenable (S.Seq ETok) where
+    flatten = id
 instance Flattenable ProgramTree where
     flatten (ProgramTree lv sts end) = mconcat [flatten lv , mconcat $ map flatten sts , flatten end]
 
@@ -69,10 +71,12 @@ instance Flattenable ObjectiveStatementNode where
 
 instance Flattenable LToken where
     flatten x =  case x of
-        RealToken xs et -> flatten xs ><  flatten et
+        RealToken st -> flatten st
         MissingToken et ->  flatten et
         SkippedToken et ->  flatten et
 
+instance Flattenable SToken where
+    flatten (StrictToken xs e) = flatten xs >< flatten e
 instance Flattenable ETok where
     flatten = pure
 
@@ -246,6 +250,9 @@ instance Flattenable NamedDomainNode where
 
 instance Flattenable NameNode where
     flatten (NameNode n) =  flatten n
+    flatten (MissingNameNode n) =  flatten n
+instance Flattenable NameNodeS where
+    flatten (NameNodeS n) =  flatten n
 
 instance Flattenable ParenExpressionNode where
     flatten (ParenExpressionNode a b c) =  flatten a >< flatten b >< flatten c

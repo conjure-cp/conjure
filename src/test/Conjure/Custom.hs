@@ -4,7 +4,7 @@ module Conjure.Custom ( tests ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
+import Conjure.Language.Pretty 
 import Conjure.ModelAllSolveAll ( TestTimeLimit(..) )
 
 -- tasty

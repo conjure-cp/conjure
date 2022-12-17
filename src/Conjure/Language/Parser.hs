@@ -16,7 +16,7 @@ module Conjure.Language.Parser
     ) where
 
 -- conjure
-import Conjure.Prelude
+import Conjure.Prelude 
 -- import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
@@ -53,14 +53,14 @@ import Conjure.Language.AST.Syntax (ProgramTree, DomainNode)
 
 import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
-import Conjure.Language.AST.Helpers (ParserState)
+-- import Conjure.Language.AST.Helpers (ParserState)
 import qualified Conjure.Language.AST.Helpers as P
 import Conjure.Language.AST.Reformer (Flattenable (flatten))
-import Conjure.Language.Pretty
+import Conjure.Language.Pretty 
 import qualified Prettyprinter as Pr
 
 
-type  Pipeline a b = ( (StateT ParserState (Parsec Void ETokenStream)) a ,a -> V.ValidatorS b,Bool)
+type  Pipeline a b = ( (Parsec Void ETokenStream) a ,a -> V.ValidatorS b,Bool)
 
 
 data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError Doc
@@ -77,14 +77,14 @@ runPipeline (parse,val,tc) txt = do
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
             let x = V.runValidator (val parseResult) (V.initialState parseResult){V.typeChecking= tc}
             case x of
-                (Just m, ds,_) | not $ any V.isError ds -> Right m
+                (m, ds,_) | not $ any V.isError ds -> Right m
                 (_, ves,_) -> Left $ ValidatorError $ pretty (showDiagnosticsForConsole ves txt)
                 -- Validator (Just res) [] -> Right res
                 -- Validator _ xs -> Left $ ValidatorError xs          
 
 
 parseModel :: Pipeline ProgramTree Model
-parseModel = (parseProgram,V.strict . V.validateModel,True)
+parseModel = (parseProgram, V.validateModel,True)
     -- inCompleteFile $ do
     -- let
     --     pLanguage :: Parser LanguageVersion
@@ -134,7 +134,7 @@ parseIO p s = do
 -- --------------------------------------------------------------------------------
 
 parseTopLevels :: Pipeline [S.StatementNode] [Statement]
-parseTopLevels = (P.parseTopLevels,V.strict . V.validateProgramTree,False)
+parseTopLevels = (P.parseTopLevels, V.validateProgramTree,False)
 --     let one = satisfyL $ \case
 --                 L_find -> Just $ do
 --                     decls <- flip sepEndBy1 comma $ do
@@ -1012,7 +1012,7 @@ parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAn
 -- data ParserState = ParserState { enumDomains :: [Name] }
 -- type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
 
-runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either Doc a
+runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either (Doc) a
 runLexerAndParser p file inp = case runPipeline p inp of
   Left pe -> Left $ "Parser error in file:" <+> pretty file <+> pretty  ("Error is:\n" ++ show pe)
   Right a -> Right a
@@ -1140,23 +1140,23 @@ runLexerAndParser p file inp = case runPipeline p inp of
 --     return result
 
 
-prettyPrintWithChecks :: MonadFailDoc m => Text -> m Doc
+prettyPrintWithChecks :: MonadFailDoc m => Text -> m (Pr.Doc ann)
 prettyPrintWithChecks src = do
     v <-case lexAndParse parseProgram src of
       Left pe -> failDoc $ pretty $  show pe
       Right pt -> return pt
     return $ (if V.isSyntacticallyValid V.validateModel v then Pr.pretty else  partialPretty ) v
 
-partialPretty :: ProgramTree -> Doc
-partialPretty (S.ProgramTree lv sns lt) = vcat [
+partialPretty :: ProgramTree -> Pr.Doc ann
+partialPretty (S.ProgramTree lv sns lt) = Pr.vcat [
         langVer,
-        vcat $ map pTopLevel sns,
+        Pr.vcat $ map pTopLevel sns,
         Pr.pretty lt
     ]
     where
         langVer = case lv of
           Nothing -> "language Essence 1.3" 
           Just _ -> if V.isSyntacticallyValid V.validateLanguageVersion lv then Pr.pretty lv else fallback lv
-        fallback :: Flattenable a => a -> Doc
+        fallback :: Flattenable a => a -> Pr.Doc ann
         fallback v = Pr.pretty $ L.reformList $ flatten v
         pTopLevel st = if V.isSyntacticallyValid V.validateStatement st then Pr.pretty st else fallback st

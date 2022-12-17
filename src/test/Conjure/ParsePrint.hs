@@ -6,7 +6,7 @@ module Conjure.ParsePrint (tests) where
 
 import Conjure.Language.Definition (Model)
 import Conjure.Language.NameGen (runNameGen)
-import Conjure.Language.Pretty (pretty, renderNormal, (<++>))
+import Conjure.Language.Pretty 
 import Conjure.Language.Type (TypeCheckerMode (..))
 import Conjure.Prelude
 import Conjure.UI (OutputFormat (..))

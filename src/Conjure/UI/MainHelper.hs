@@ -26,7 +26,7 @@ import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), De
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGen, NameGenM, runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render, prParens )
+import Conjure.Language.Pretty 
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
@@ -144,7 +144,11 @@ mainWithArgs IDE{..} = do
             json <- runNameGen () $ modelRepresentationsJSON essence2
             liftIO $ putStrLn $ render lineWidth json
         | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
-mainWithArgs Pretty{..} | outputFormat /= Plain = do
+-- mainWithArgs Pretty{..} | outputFormat == Plain= do
+--     (_,cts) <- liftIO $ pairWithContents essence
+--     res <- prettyPrintWithChecks cts
+--     liftIO $ putStrLn $ render lineWidth res
+mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
                 then do
@@ -155,10 +159,6 @@ mainWithArgs Pretty{..} | outputFormat /= Plain = do
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
     writeModel lineWidth outputFormat Nothing model1
-mainWithArgs Pretty{..} = do
-    (_,cts) <- liftIO $ pairWithContents essence
-    res <- prettyPrintWithChecks cts
-    liftIO $ putStrLn $ render lineWidth res
     
 mainWithArgs Diff{..} =
     join $ modelDiffIO

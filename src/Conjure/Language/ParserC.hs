@@ -17,4 +17,4 @@ import Conjure.Language.AST.ASTParser (parseProgram)
 
 
 parseModel :: Pipeline ProgramTree Model
-parseModel = (parseProgram,V.strict . V.validateModel,False)
+parseModel = (parseProgram,V.validateModel,False)

@@ -42,7 +42,6 @@ Library
                      , Conjure.Language.Attributes
                      , Conjure.Language.Validator
                      , Conjure.Language.AST.ASTParser
-                     , Conjure.Language.AST.Expression
                      , Conjure.Language.AST.Helpers
                      , Conjure.Language.AST.Reformer
                      , Conjure.Language.AST.Syntax
@@ -277,6 +276,7 @@ Library
                      , mtl
                      , parallel-io
                      , pipes
+                     , pretty >=1.1.3.6
                      , prettyprinter
                      -- >= 2.9 because of the TH fix: https://github.com/nick8325/quickcheck/issues/101
                      , QuickCheck >= 2.14

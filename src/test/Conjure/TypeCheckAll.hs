@@ -3,7 +3,7 @@ module Conjure.TypeCheckAll ( tests ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.NameGen ( runNameGen )
-import Conjure.Language.Pretty ( renderNormal )
+import Conjure.Language.Pretty
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UI.IO
 import Conjure.UI.TypeCheck

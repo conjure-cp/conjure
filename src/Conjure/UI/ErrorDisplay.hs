@@ -11,7 +11,7 @@ import Conjure.Language.Lexemes
 import qualified Data.Text
 import qualified Data.Text as T
 import Data.Map.Strict (mapWithKey, assocs)
-import Conjure.Language.Expression.Op.Internal.Common (Pretty(..))
+import Conjure.Language.Pretty
 
 
 
@@ -32,7 +32,7 @@ instance ShowErrorComponent DiagnosticForPrint where
     Info it -> "Info: " ++ show it
 
 tokenErrorToDisplay :: LToken -> String
-tokenErrorToDisplay (RealToken _ _) = error "tokenError with valid token"
+tokenErrorToDisplay (RealToken _ ) = error "tokenError with valid token"
 tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ show t
 tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
     L_Missing s -> s
@@ -111,14 +111,14 @@ val s = do
     let lexed = parseMaybe eLex txt
     let stream = ETokenStream txt $ fromMaybe other lexed
     -- parseTest parseProgram stream
-    let progStruct = (runParser (evalStateT parseProgram def) "TEST" stream)
+    let progStruct = runParser parseProgram "TEST" stream
 
     case progStruct of
         Left _ -> putStrLn "error"
         Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (initialState p){typeChecking=True} in
             case qpr of
                 (model, vds,st) -> do
-                    print (maybe "" show model)
+                    print (show model)
                     putStrLn $ show vds
                     printSymbolTable $ symbolTable st
                     putStrLn $ show $ (regionInfo st)

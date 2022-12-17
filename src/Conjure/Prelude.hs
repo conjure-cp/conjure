@@ -51,7 +51,7 @@ module Conjure.Prelude
     , getDirectoryContents
     , RunStateAsWriter, runStateAsWriterT, sawTell
     , stripPostfix
-    , Doc , hang , hcat , fsep , cat
+    , Doc , 
     ) where
 
 import GHC.Err as X ( error )
@@ -169,12 +169,7 @@ import Test.QuickCheck ( Gen )
 import Text.Megaparsec ( ParsecT, Parsec )
 
 -- pretty
-import Prettyprinter as X
-    (
-      (<>), (<+>)
-    , nest, punctuate
-    , vcat, hsep, sep
-    )
+
 
 -- uniplate
 import Data.Generics.Uniplate.Data as X
@@ -202,7 +197,7 @@ import System.Random ( StdGen, mkStdGen, setStdGen, randomRIO )
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Prettyprinter as Pr
+import qualified Text.PrettyPrint.Annotated.HughesPJ as Pr
 
 -- containers
 import qualified Data.Set as S
@@ -229,8 +224,9 @@ import System.TimeIt as X ( timeIt, timeItNamed )
 import Debug.Trace as X ( trace, traceM )
 import Data.Void (Void)
 import GHC.IO.Exception (IOErrorType(InvalidArgument))
-import Prettyprinter (PageWidth(AvailablePerLine))
-import Prettyprinter.Render.String (renderString)
+import Text.PrettyPrint.Annotated.HughesPJ ((<+>))
+-- import Prettyprinter (PageWidth(AvailablePerLine))
+-- import Prettyprinter.Render.String (renderString)
 
 
 
@@ -238,23 +234,23 @@ data EssenceDocAnnotation = EssenceDocAnnotation
 
 type Doc = Pr.Doc EssenceDocAnnotation
 
-instance Eq Doc where
-    a == b = show a == show b
+-- instance Eq Doc where
+--     a == b = show a == show b
 --compats
-hang :: Doc -> Int ->Doc -> Doc
-hang a n b = a <+> Pr.hang n b
+-- hang :: Doc -> Int ->Doc -> Doc
+-- hang a n b = a <+> Pr.hang n b
 
-hcat :: [Doc] -> Doc 
-hcat = Pr.hcat
+-- hcat :: [Doc] -> Doc 
+-- hcat = Pr.hcat
 
-fsep :: [Doc] -> Doc
-fsep = Pr.fillSep
+-- fsep :: [Doc] -> Doc
+-- fsep = Pr.fillSep
 
-cat :: [Doc] -> Doc
-cat = Pr.cat
+-- cat :: [Doc] -> Doc
+-- cat = Pr.cat
 
-nest :: Int -> Doc -> Doc
-nest = Pr.nest
+-- nest :: Int -> Doc -> Doc
+-- nest = Pr.nest
 
 
 tracing :: Show a => String -> a -> a
@@ -267,7 +263,7 @@ textToString :: T.Text -> String
 textToString = T.unpack
 
 stringToDoc :: String -> Doc
-stringToDoc = Pr.pretty
+stringToDoc = Pr.text
 
 padRight :: Int -> Char -> String -> String
 padRight n ch s = s ++ replicate (n - length s) ch
@@ -577,7 +573,8 @@ runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
     where
         each (Left (lvl, msg)) =
             when (lvl <= l) $ do
-                let txt = renderString $ (Pr.layoutPretty $ Pr.LayoutOptions (AvailablePerLine 200 1.0)) msg
+                let txt = Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg
+                -- let txt = renderString $ (Pr.layoutPretty $ Pr.LayoutOptions (AvailablePerLine 200 1.0)) msg
                 when ("[" `isPrefixOf` txt) $ do
                     liftIO clearScreen
                     liftIO (setCursorPosition 0 0)

@@ -111,19 +111,19 @@ import qualified Data.Aeson.TypeScript.Recursive as TS
 -- deriveTypeScript defaultOptions ''OpUnion
 -- deriveTypeScript defaultOptions ''OpXor
 -- deriveTypeScript defaultOptions ''Op
-
-
-
-
-
+-- -- 
+-- -- 
+-- -- 
+-- -- 
+-- -- 
 -- deriveTypeScript defaultOptions ''AbstractPattern
-
+-- -- 
 -- deriveTypeScript defaultOptions ''BinaryRelationAttr
 -- deriveTypeScript defaultOptions ''BinaryRelationAttrs
 -- deriveTypeScript defaultOptions ''IntTag
 -- deriveTypeScript defaultOptions ''AbstractLiteral
 -- deriveTypeScript defaultOptions ''Type
-
+-- -- 
 -- deriveTypeScript defaultOptions ''Constant
 -- deriveTypeScript defaultOptions ''Decision
 -- deriveTypeScript defaultOptions ''FindOrGiven
@@ -163,251 +163,251 @@ import qualified Data.Aeson.TypeScript.Recursive as TS
 --   getTypeScriptType :: TypeScript a => Proxy (Tree a) -> String
 --   getTypeScriptType _ = TS.getTypeScriptType (Proxy :: Proxy (Tree a)) 
 
--- -- $( mconcat 
--- --     <$> traverse
--- --         (deriveTypeScript defaultOptions)
--- --         [''AbstractLiteral
--- --         ,''AbstractPattern
--- --         ,''AttrName
--- --         ,''BinaryRelationAttr
--- --         ,''BinaryRelationAttrs
--- --         ,''Constant
--- --         ,''Decision
--- --         ,''Declaration
--- --         ,''Domain
--- --         ,''Expression
--- --         ,''FindOrGiven
--- --         ,''FunctionAttr
--- --         ,''Generator
--- --         ,''GeneratorOrCondition
--- --         ,''HasRepresentation
--- --         ,''InBubble
--- --         ,''IntTag
--- --         ,''JectivityAttr
--- --         ,''LanguageVersion
--- --         ,''Model
--- --         ,''ModelInfo
--- --         ,''MSetAttr
--- --         ,''Name
--- --         ,''Objective
--- --         ,''OccurAttr
--- --         ,''Op
--- --         ,''OpActive
--- --         ,''OpAllDiff
--- --         ,''OpAllDiffExcept
--- --         ,''OpAnd
--- --         ,''OpApart
--- --         ,''OpAtLeast
--- --         ,''OpAtMost
--- --         ,''OpAttributeAsConstraint
--- --         ,''OpCatchUndef
--- --         ,''OpDefined
--- --         ,''OpDiv
--- --         ,''OpDontCare
--- --         ,''OpDotLeq
--- --         ,''OpDotLt
--- --         ,''OpEq
--- --         ,''OpFactorial
--- --         ,''OpFlatten
--- --         ,''OpFreq
--- --         ,''OpGCC
--- --         ,''OpGeq
--- --         ,''OpGt
--- --         ,''OpHist
--- --         ,''OpIff
--- --         ,''OpImage
--- --         ,''OpImageSet
--- --         ,''OpImply
--- --         ,''OpIn
--- --         ,''OpIndexing
--- --         ,''OpIntersect
--- --         ,''OpInverse
--- --         ,''OpLeq
--- --         ,''OpLexLeq
--- --         ,''OpLexLt
--- --         ,''OpLt
--- --         ,''OpMakeTable
--- --         ,''OpMax
--- --         ,''OpMin
--- --         ,''OpMinus
--- --         ,''OpMod
--- --         ,''OpNegate
--- --         ,''OpNeq
--- --         ,''OpNot
--- --         ,''OpOr
--- --         ,''OpParticipants
--- --         ,''OpParts
--- --         ,''OpParty
--- --         ,''OpPow
--- --         ,''OpPowerSet
--- --         ,''OpPred
--- --         ,''OpPreImage
--- --         ,''OpProduct
--- --         ,''OpRange
--- --         ,''OpRelationProj
--- --         ,''OpRestrict
--- --         ,''OpSlicing
--- --         ,''OpSubsequence
--- --         ,''OpSubset
--- --         ,''OpSubsetEq
--- --         ,''OpSubstring
--- --         ,''OpSucc
--- --         ,''OpSum
--- --         ,''OpSupset
--- --         ,''OpSupsetEq
--- --         ,''OpTable
--- --         ,''OpTildeLeq
--- --         ,''OpTildeLt
--- --         ,''OpTogether
--- --         ,''OpToInt
--- --         ,''OpToMSet
--- --         ,''OpToRelation
--- --         ,''OpToSet
--- --         ,''OpTransform
--- --         ,''OpTrue
--- --         ,''OpTwoBars
--- --         ,''OpUnion
--- --         ,''OpXor
--- --         ,''PartialityAttr
--- --         ,''PartitionAttr
--- --         ,''Range
--- --         ,''ReferenceTo
--- --         ,''Region
--- --         ,''RelationAttr
--- --         ,''SearchOrder
--- --         ,''SequenceAttr
--- --         ,''SetAttr
--- --         ,''SizeAttr
--- --         ,''Statement
--- --         ,''Strategy
--- --         ,''TrailRewrites
--- --         ,''Tree 
--- --         ,''Type
--- --         ]
--- --     )
+$( mconcat 
+    <$> traverse
+        (deriveTypeScript defaultOptions)
+        [''AbstractLiteral
+        ,''AbstractPattern
+        ,''AttrName
+        ,''BinaryRelationAttr
+        ,''BinaryRelationAttrs
+        ,''Constant
+        ,''Decision
+        ,''Declaration
+        ,''Domain
+        ,''Expression
+        ,''FindOrGiven
+        ,''FunctionAttr
+        ,''Generator
+        ,''GeneratorOrCondition
+        ,''HasRepresentation
+        ,''InBubble
+        ,''IntTag
+        ,''JectivityAttr
+        ,''LanguageVersion
+        ,''Model
+        ,''ModelInfo
+        ,''MSetAttr
+        ,''Name
+        ,''Objective
+        ,''OccurAttr
+        ,''Op
+        ,''OpActive
+        ,''OpAllDiff
+        ,''OpAllDiffExcept
+        ,''OpAnd
+        ,''OpApart
+        ,''OpAtLeast
+        ,''OpAtMost
+        ,''OpAttributeAsConstraint
+        ,''OpCatchUndef
+        ,''OpDefined
+        ,''OpDiv
+        ,''OpDontCare
+        ,''OpDotLeq
+        ,''OpDotLt
+        ,''OpEq
+        ,''OpFactorial
+        ,''OpFlatten
+        ,''OpFreq
+        ,''OpGCC
+        ,''OpGeq
+        ,''OpGt
+        ,''OpHist
+        ,''OpIff
+        ,''OpImage
+        ,''OpImageSet
+        ,''OpImply
+        ,''OpIn
+        ,''OpIndexing
+        ,''OpIntersect
+        ,''OpInverse
+        ,''OpLeq
+        ,''OpLexLeq
+        ,''OpLexLt
+        ,''OpLt
+        ,''OpMakeTable
+        ,''OpMax
+        ,''OpMin
+        ,''OpMinus
+        ,''OpMod
+        ,''OpNegate
+        ,''OpNeq
+        ,''OpNot
+        ,''OpOr
+        ,''OpParticipants
+        ,''OpParts
+        ,''OpParty
+        ,''OpPow
+        ,''OpPowerSet
+        ,''OpPred
+        ,''OpPreImage
+        ,''OpProduct
+        ,''OpRange
+        ,''OpRelationProj
+        ,''OpRestrict
+        ,''OpSlicing
+        ,''OpSubsequence
+        ,''OpSubset
+        ,''OpSubsetEq
+        ,''OpSubstring
+        ,''OpSucc
+        ,''OpSum
+        ,''OpSupset
+        ,''OpSupsetEq
+        ,''OpTable
+        ,''OpTildeLeq
+        ,''OpTildeLt
+        ,''OpTogether
+        ,''OpToInt
+        ,''OpToMSet
+        ,''OpToRelation
+        ,''OpToSet
+        ,''OpTransform
+        ,''OpTrue
+        ,''OpTwoBars
+        ,''OpUnion
+        ,''OpXor
+        ,''PartialityAttr
+        ,''PartitionAttr
+        ,''Range
+        ,''ReferenceTo
+        ,''Region
+        ,''RelationAttr
+        ,''SearchOrder
+        ,''SequenceAttr
+        ,''SetAttr
+        ,''SizeAttr
+        ,''Statement
+        ,''Strategy
+        ,''TrailRewrites
+        ,''Tree 
+        ,''Type
+        ]
+    )
 
 -- qq :: [TSDeclaration]
 -- qq = getTypeScriptDeclarations (Proxy :: Proxy (AbstractLiteral Expression))
 
--- tsDef :: IO ()
--- tsDef = putStrLn $ formatTSDeclarations $ mconcat
---     [ getTypeScriptDeclarations (Proxy :: Proxy (AbstractLiteral Expression))
---     , getTypeScriptDeclarations (Proxy :: Proxy AbstractPattern)
---     , getTypeScriptDeclarations (Proxy :: Proxy AttrName)
---     , getTypeScriptDeclarations (Proxy :: Proxy BinaryRelationAttr)
---     , getTypeScriptDeclarations (Proxy :: Proxy BinaryRelationAttrs)
---     , getTypeScriptDeclarations (Proxy :: Proxy Constant)
---     , getTypeScriptDeclarations (Proxy :: Proxy Decision)
---     , getTypeScriptDeclarations (Proxy :: Proxy Declaration)
---     , getTypeScriptDeclarations (Proxy :: Proxy (Domain () Expression))
---     , getTypeScriptDeclarations (Proxy :: Proxy Expression)
---     , getTypeScriptDeclarations (Proxy :: Proxy FindOrGiven)
---     , getTypeScriptDeclarations (Proxy :: Proxy (FunctionAttr Expression))
---     , getTypeScriptDeclarations (Proxy :: Proxy Generator)
---     , getTypeScriptDeclarations (Proxy :: Proxy GeneratorOrCondition)
---     , getTypeScriptDeclarations (Proxy :: Proxy HasRepresentation)
---     , getTypeScriptDeclarations (Proxy :: Proxy InBubble)
---     , getTypeScriptDeclarations (Proxy :: Proxy IntTag)
---     , getTypeScriptDeclarations (Proxy :: Proxy JectivityAttr)
---     , getTypeScriptDeclarations (Proxy :: Proxy LanguageVersion)
---     , getTypeScriptDeclarations (Proxy :: Proxy Model)
---     , getTypeScriptDeclarations (Proxy :: Proxy ModelInfo)
---     , getTypeScriptDeclarations (Proxy :: Proxy (MSetAttr Expression))
---     , getTypeScriptDeclarations (Proxy :: Proxy Name)
---     , getTypeScriptDeclarations (Proxy :: Proxy Objective)
---     , getTypeScriptDeclarations (Proxy :: Proxy (OccurAttr Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (Op Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpActive Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpAllDiff Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpAllDiffExcept Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpAnd Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpApart Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpAtLeast Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpAtMost Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpAttributeAsConstraint Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpCatchUndef Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpDefined Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpDiv Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpDontCare Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpDotLeq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpDotLt Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpEq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpFactorial Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpFlatten Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpFreq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpGCC Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpGeq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpGt Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpHist Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpIff Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpImage Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpImageSet Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpImply Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpIn Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpIndexing Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpIntersect Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpInverse Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpLeq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpLexLeq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpLexLt Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpLt Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpMax Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpMin Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpMinus Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpMod Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpNegate Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpNeq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpNot Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpOr Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpParticipants Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpParts Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpParty Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpPow Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpPowerSet Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpPred Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpPreImage Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpProduct Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpRange Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpRelationProj Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpRestrict Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSlicing Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSubsequence Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSubset Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSubsetEq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSubstring Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSucc Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSum Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSupset Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpSupsetEq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTable Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTildeLeq Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTildeLt Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTogether Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpToInt Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpToMSet Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpToRelation Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpToSet Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTransform Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTrue Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpTwoBars Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpUnion Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy (OpXor Expression ))
---     , getTypeScriptDeclarations (Proxy :: Proxy PartialityAttr)
---     , getTypeScriptDeclarations (Proxy :: Proxy (PartitionAttr Type))
---     , getTypeScriptDeclarations (Proxy :: Proxy (Range Type))
---     , getTypeScriptDeclarations (Proxy :: Proxy ReferenceTo)
---     , getTypeScriptDeclarations (Proxy :: Proxy Region)
---     , getTypeScriptDeclarations (Proxy :: Proxy (RelationAttr Type))
---     , getTypeScriptDeclarations (Proxy :: Proxy SearchOrder)
---     , getTypeScriptDeclarations (Proxy :: Proxy (SequenceAttr Type))
---     , getTypeScriptDeclarations (Proxy :: Proxy (SetAttr Type))
---     , getTypeScriptDeclarations (Proxy :: Proxy (SizeAttr Type))
---     , getTypeScriptDeclarations (Proxy :: Proxy Statement)
---     , getTypeScriptDeclarations (Proxy :: Proxy Strategy)
---     , getTypeScriptDeclarations (Proxy :: Proxy TrailRewrites)
---     , getTypeScriptDeclarations (Proxy :: Proxy Tree)
---     , getTypeScriptDeclarations (Proxy :: Proxy Type)
---     ]
-
 tsDef :: IO ()
-tsDef = putStrLn "<<TS-DEFS-BROKEN>>"
+tsDef = putStrLn $ formatTSDeclarations $ mconcat
+    [ getTypeScriptDeclarations (Proxy :: Proxy (AbstractLiteral Expression))
+    , getTypeScriptDeclarations (Proxy :: Proxy AbstractPattern)
+    , getTypeScriptDeclarations (Proxy :: Proxy AttrName)
+    , getTypeScriptDeclarations (Proxy :: Proxy BinaryRelationAttr)
+    , getTypeScriptDeclarations (Proxy :: Proxy BinaryRelationAttrs)
+    , getTypeScriptDeclarations (Proxy :: Proxy Constant)
+    , getTypeScriptDeclarations (Proxy :: Proxy Decision)
+    , getTypeScriptDeclarations (Proxy :: Proxy Declaration)
+    , getTypeScriptDeclarations (Proxy :: Proxy (Domain () Expression))
+    , getTypeScriptDeclarations (Proxy :: Proxy Expression)
+    , getTypeScriptDeclarations (Proxy :: Proxy FindOrGiven)
+    , getTypeScriptDeclarations (Proxy :: Proxy (FunctionAttr Expression))
+    , getTypeScriptDeclarations (Proxy :: Proxy Generator)
+    , getTypeScriptDeclarations (Proxy :: Proxy GeneratorOrCondition)
+    , getTypeScriptDeclarations (Proxy :: Proxy HasRepresentation)
+    , getTypeScriptDeclarations (Proxy :: Proxy InBubble)
+    , getTypeScriptDeclarations (Proxy :: Proxy IntTag)
+    , getTypeScriptDeclarations (Proxy :: Proxy JectivityAttr)
+    , getTypeScriptDeclarations (Proxy :: Proxy LanguageVersion)
+    , getTypeScriptDeclarations (Proxy :: Proxy Model)
+    , getTypeScriptDeclarations (Proxy :: Proxy ModelInfo)
+    , getTypeScriptDeclarations (Proxy :: Proxy (MSetAttr Expression))
+    , getTypeScriptDeclarations (Proxy :: Proxy Name)
+    , getTypeScriptDeclarations (Proxy :: Proxy Objective)
+    , getTypeScriptDeclarations (Proxy :: Proxy (OccurAttr Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (Op Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpActive Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpAllDiff Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpAllDiffExcept Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpAnd Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpApart Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpAtLeast Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpAtMost Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpAttributeAsConstraint Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpCatchUndef Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpDefined Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpDiv Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpDontCare Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpDotLeq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpDotLt Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpEq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpFactorial Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpFlatten Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpFreq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpGCC Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpGeq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpGt Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpHist Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpIff Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpImage Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpImageSet Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpImply Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpIn Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpIndexing Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpIntersect Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpInverse Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpLeq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpLexLeq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpLexLt Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpLt Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpMax Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpMin Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpMinus Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpMod Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpNegate Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpNeq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpNot Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpOr Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpParticipants Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpParts Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpParty Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpPow Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpPowerSet Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpPred Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpPreImage Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpProduct Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpRange Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpRelationProj Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpRestrict Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSlicing Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSubsequence Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSubset Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSubsetEq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSubstring Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSucc Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSum Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSupset Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpSupsetEq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTable Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTildeLeq Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTildeLt Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTogether Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpToInt Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpToMSet Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpToRelation Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpToSet Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTransform Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTrue Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpTwoBars Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpUnion Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy (OpXor Expression ))
+    , getTypeScriptDeclarations (Proxy :: Proxy PartialityAttr)
+    , getTypeScriptDeclarations (Proxy :: Proxy (PartitionAttr Type))
+    , getTypeScriptDeclarations (Proxy :: Proxy (Range Type))
+    , getTypeScriptDeclarations (Proxy :: Proxy ReferenceTo)
+    , getTypeScriptDeclarations (Proxy :: Proxy Region)
+    , getTypeScriptDeclarations (Proxy :: Proxy (RelationAttr Type))
+    , getTypeScriptDeclarations (Proxy :: Proxy SearchOrder)
+    , getTypeScriptDeclarations (Proxy :: Proxy (SequenceAttr Type))
+    , getTypeScriptDeclarations (Proxy :: Proxy (SetAttr Type))
+    , getTypeScriptDeclarations (Proxy :: Proxy (SizeAttr Type))
+    , getTypeScriptDeclarations (Proxy :: Proxy Statement)
+    , getTypeScriptDeclarations (Proxy :: Proxy Strategy)
+    , getTypeScriptDeclarations (Proxy :: Proxy TrailRewrites)
+    -- , getTypeScriptDeclarations (Proxy :: Proxy Tree)
+    , getTypeScriptDeclarations (Proxy :: Proxy Type)
+    ]
+
+-- tsDef :: IO ()
+-- tsDef = putStrLn "<<TS-DEFS-BROKEN>>"

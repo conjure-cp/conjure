@@ -36,7 +36,7 @@ import Conjure.Language.Domain
                SizeAttr_MinSize, SizeAttr_MaxSize),
       SetAttr(SetAttr),
       binRelToAttrName )
-import Conjure.Language.Pretty ( prettyList, Pretty(pretty) )
+import Conjure.Language.Pretty 
 import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
