@@ -2,7 +2,7 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE DataKinds #-}
 module Conjure.LSP.Handlers.Initialize where
-import Language.LSP.Types (SMethod(SInitialized, SWindowShowMessage, SInitialize), NotificationMessage (NotificationMessage), ShowMessageParams (ShowMessageParams), MessageType (MtInfo), InitializedParams (InitializedParams), RequestMessage (..), InitializeParams (InitializeParams), Method (Initialize))
+import Language.LSP.Types (SMethod(SInitialized, SWindowShowMessage), ShowMessageParams (ShowMessageParams), MessageType (MtInfo))
 import Language.LSP.Server
 import Conjure.Prelude
 
@@ -12,8 +12,7 @@ import Conjure.Prelude
 
 
 handleInitialized :: Handlers (LspM ())
-handleInitialized = notificationHandler SInitialized $ \req -> do
-    let NotificationMessage _ _ (a) = req
+handleInitialized = notificationHandler SInitialized $ \_ -> do
     sendNotification SWindowShowMessage (ShowMessageParams MtInfo "LSP Started 0.0.2\n")
     
 
