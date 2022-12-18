@@ -1,6 +1,32 @@
 Error:
-    431.essence:2:14:
-unexpected {
-expecting ( or of
-    find s : set {x,y}
-                 ^
+    Parser error in file: 431.essence Error is:
+ValidatorError 431.essence:2:13:
+  |
+2 | find s : set {x,y}
+  |             ^
+Missing Domain
+
+431.essence:2:14:
+  |
+2 | find s : set {x,y}
+  |              ^^^^^
+Skipped tokens
+
+431.essence:2:14:
+  |
+2 | find s : set {x,y}
+  |              ^
+Missing of
+
+431.essence:3:11:
+  |
+3 | such that x<y
+  |           ^
+Tried to use a Domain where Value was expected
+
+431.essence:3:13:
+  |
+3 | such that x<y
+  |             ^
+Tried to use a Domain where Value was expected
+

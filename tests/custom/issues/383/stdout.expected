@@ -54,11 +54,12 @@ such that
 
  ========== 3 ==========
 Error:
-    In a 'such that' statement: c = |toSet([image(f, u) | u : vertices])|
-    Error:
-        When type checking: c = |toSet([image(f, u) | u : vertices])|
-        Cannot unify the types of the following.
-        lhs        : c
-        type of lhs: colours
-        rhs        : |toSet([image(f, u) | u : vertices])|
-        type of rhs: int
+    Parser error in file: 383-3.essence Error is:
+ValidatorError 383-3.essence:10:32:
+   |
+10 | find c : colours such that c = |toSet([ f(u) | u : vertices ])|
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: colours
+	Got: int
+
