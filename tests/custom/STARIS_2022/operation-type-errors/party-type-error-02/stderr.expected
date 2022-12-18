@@ -1,3 +1,10 @@
 Error:
-    In a 'such that' statement: b = party(5, 6)
-    Error: Type error in party(5, 6)
+    Parser error in file: party-type-error.essence Error is:
+ValidatorError party-type-error.essence:2:24:
+  |
+2 | such that b = party(5, 6) 
+  |                        ^
+Type error:
+	Expected: partition from int
+	Got: int
+

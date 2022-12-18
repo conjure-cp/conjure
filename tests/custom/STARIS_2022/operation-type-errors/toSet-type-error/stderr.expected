@@ -1,5 +1,10 @@
 Error:
-    In a 'such that' statement: b = (toSet(false) = {2, 3, 2})
-    Error:
-        Type error in toSet(false)
-                      The argument has type: bool
+    Parser error in file: toSet-type-error.essence Error is:
+ValidatorError toSet-type-error.essence:2:22:
+  |
+2 | such that b = (toSet(false) = {2, 3, 2})
+  |                      ^^^^^
+Type error:
+	Expected:"Matrix ,list,function,relation,mset "
+	Got: bool
+
