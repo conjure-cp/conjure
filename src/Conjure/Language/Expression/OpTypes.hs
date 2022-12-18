@@ -1,4 +1,4 @@
-module Conjure.Language.Expression.OpTypes where
+module Conjure.Language.Expression.OpTypes () where
 import Conjure.Language.Lexemes (Lexeme)
 import Conjure.Language.Expression.Op.Internal.Common (Type (..))
 import Conjure.Prelude

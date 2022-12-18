@@ -394,8 +394,8 @@ todoTypeAny = typeAs TypeAny
 
 validateModel :: ProgramTree -> ValidatorS Model
 validateModel model = do
-        sts <- validateProgramTree (statements  model)
         langVersion <- validateLanguageVersion $ langVersionInfo model
+        sts <- validateProgramTree (statements  model)
         return $ Model (fromMaybe def langVersion) sts  def
 
 
@@ -405,8 +405,6 @@ validateProgramTree sts = do
     return $ concat q
 
 
-isValidLanguageName :: Text -> Bool
-isValidLanguageName t = T.toLower t `elem` ["essence","essence'"]
 
 validateLanguageVersion :: Maybe LangVersionNode -> Validator LanguageVersion
 validateLanguageVersion Nothing = return $ pure $ LanguageVersion "Essence" [1,3]
@@ -414,7 +412,7 @@ validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
     setContextFrom lv
     l1 `isA` TtKeyword
     name <- validateIdentifier n
-    unless (isValidLanguageName name) (raiseError $symbolRegion  n <!> SyntaxError "Not a valid language name")
+    checkLanguageName name
     nums <- catMaybes <$> validateSequence_ getNum v
     return . pure $
         LanguageVersion
@@ -427,6 +425,11 @@ validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
             case c' of
                 (LIntLiteral x) -> return . pure $ fromInteger x
                 _ -> invalid $ c <!> InternalError
+        checkLanguageName (nm) | T.toLower nm == "essence"  = pure ()
+                               | T.toLower nm == "essence'" = do
+                                                    raiseError (symbolRegion lv /!\ UnclassifiedWarning "Essence prime file detected, type checking is off")
+                                                    modify (\s->s{typeChecking=False})
+                               | otherwise = (raiseError $ symbolRegion  n <!> SyntaxError "Not a valid language name")
 
 
 validateStatement :: StatementNode -> ValidatorS [Statement]
@@ -1642,7 +1645,7 @@ raiseError e = tell [e]
 raiseTypeError :: ValidatorDiagnostic -> ValidatorS ()
 raiseTypeError e = do
     tc <- gets typeChecking
-    unless (not tc) $ raiseError e
+    when tc $ raiseError e
 makeTupleLiteral :: [Typed Expression] -> ValidatorS (Typed Expression)
 makeTupleLiteral members = do
     let memberTypes = unzip $ map typeSplit members
@@ -2353,7 +2356,7 @@ functionOps l = case l of
                     (_,TypeFunction gi go) -> (gi,go)
                     _ -> (TypeAny,TypeAny)
             a' <- unifyTypesFailing (TypeFunction fIn fOut) (r1,a)
-            b' <- unifyTypesFailing (TypeFunction fIn fOut) (r2,b)
+            b' <- unifyTypesFailing (TypeFunction fOut fIn) (r2,b)
             return $ if null a' || null b' then  Nothing else Just ()
         setPartArgs :: SArg -> SArg -> Validator ()
         setPartArgs (r1,a) (r2,b) = do
@@ -2445,9 +2448,9 @@ functionOps l = case l of
                 TypeAny -> return $ Just TypeAny
                 TypeFunction a _ -> return $Just a
                 TypeSequence _ -> return $Just tInt
-                _ -> (return Nothing) <* (raiseTypeError $ (r1 <!> ComplexTypeError "Function or Sequence" t1))
+                _ -> Nothing <$ (raiseTypeError $ (r1 <!> ComplexTypeError "Function or Sequence" t1))
             case from of 
-                Just f -> unifyTypes f r2 >> (return $ pure ())
+                Just f -> unifyTypes f r2 >> return (pure ())
                 Nothing -> return Nothing
 
         sumArgs :: SArg -> Validator ()
@@ -2463,7 +2466,7 @@ functionOps l = case l of
             case t of
               TypeAny -> return $ pure ()
               TypeInt TagInt -> return $ pure ()
-              _ -> return Nothing <* raiseTypeError (r <!> ComplexTypeError "Integer elements" t)
+              _ -> Nothing <$ raiseTypeError (r <!> ComplexTypeError "Integer elements" t)
         funcSeq :: SArg -> Validator ()
         funcSeq (r,typeOf_->t') = case t' of
             TypeAny -> return $ pure ()

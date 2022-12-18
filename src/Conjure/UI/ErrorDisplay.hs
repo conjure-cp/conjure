@@ -40,7 +40,7 @@ tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
     _ -> T.unpack $ lexemeText l
 
 displayWarning :: WarningType -> String
-displayWarning (UnclassifiedWarning txt) = "Warning" ++ T.unpack txt
+displayWarning (UnclassifiedWarning txt) = "Warning: " ++ T.unpack txt
 displayWarning AmbiguousTypeWarning = "Ambiguous type occurred"
 
 displayError :: ErrorType -> String
@@ -49,8 +49,8 @@ displayError x = case x of
   SyntaxError txt -> "Syntax Error: " ++ T.unpack txt
   SemanticError txt -> "Error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
-  TypeError expected got -> "Type error: Expected: " ++ show (pretty expected) ++ " Got: " ++ show (pretty got)
-  ComplexTypeError msg ty -> "Type error: Expected:" ++ show msg ++ " got " ++ (show $ pretty ty)
+  TypeError expected got -> "Type error:\n\tExpected: " ++ show (pretty expected) ++ "\n\tGot: " ++ show (pretty got)
+  ComplexTypeError msg ty -> "Type error:\n\tExpected:" ++ show msg ++ "\n\tGot " ++ (show $ pretty ty)
   SkippedTokens -> "Skipped tokens"
   UnexpectedArg -> "Unexpected argument"
   MissingArgsError expected got -> "Insufficient args, expected " ++ (show expected) ++ " got " ++ (show got)
