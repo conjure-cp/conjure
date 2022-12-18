@@ -50,7 +50,7 @@ displayError x = case x of
   SemanticError txt -> "Error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
   TypeError expected got -> "Type error:\n\tExpected: " ++ show (pretty expected) ++ "\n\tGot: " ++ show (pretty got)
-  ComplexTypeError msg ty -> "Type error:\n\tExpected:" ++ show msg ++ "\n\tGot " ++ (show $ pretty ty)
+  ComplexTypeError msg ty -> "Type error:\n\tExpected:" ++ show msg ++ "\n\tGot: " ++ (show $ pretty ty)
   SkippedTokens -> "Skipped tokens"
   UnexpectedArg -> "Unexpected argument"
   MissingArgsError expected got -> "Insufficient args, expected " ++ (show expected) ++ " got " ++ (show got)
