@@ -606,7 +606,7 @@ validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
                     validateExpression szExp ?=> exactly tInt
     let d = Kind DomainType . TypeUnnamed
     mapM_ addRegion [mkDeclaration r n (d $ Name n)|(r,Name n)<- names' ]
-    mapM_ (\(r,x) -> putSymbol (x,(r,True,d x))) names'
+    mapM_ (\(r,x) -> putSymbol (x,(r,False,d x))) names'
     return  $ [LettingDomainDefnUnnamed n size| (_,n) <- names']
 
 
@@ -1483,7 +1483,7 @@ validateVariantLiteral ln = do
     members <- catMaybes <$> validateList_ (f2n validateRecordMember) ln
     res <- case members of
       [] -> invalid $ symbolRegion ln <!> SemanticError "Variants must contain exactly one member"
-      [(n,Typed t v)]-> return . pure . Typed (TypeVariant [(n,t)]) $ mkAbstractLiteral $ AbsLitVariant Nothing n v
+      [(n,Typed t v)]-> return . pure . Typed (TypeVariant [(n,t)]) $ AbstractLiteral $ AbsLitVariant Nothing n v
       _:_ -> invalid $ symbolRegion ln <!> SyntaxError "Variants must contain exactly one member" --tag subsequent members as unexpected 
     return $ fromMaybe (fallback "bad variant") res
 
