@@ -1,6 +1,8 @@
 Error:
-    enum-spaces.essence:2:43:
-unexpected o
-expecting comma or }
-    letting numbers be new type enum {one, tw o, three}
-                                              ^
+    Parser error in file: enum-spaces.essence Error is:
+ValidatorError enum-spaces.essence:2:43:
+  |
+2 | letting numbers be new type enum {one, tw o, three}
+  |                                           ^
+Missing ,
+

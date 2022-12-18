@@ -1,7 +1,18 @@
 Error:
-    In a 'such that' statement: b = (4 subsequence false)
-    Error:
-        Type error in 4 subsequence false
-                      Unexpected types for operands:
-                       - int
-                       - bool
+    Parser error in file: subsequence-type-error.essence Error is:
+ValidatorError subsequence-type-error.essence:2:16:
+  |
+2 | such that b = (4 subsequence false)
+  |                ^
+Type error:
+	Expected: sequence of ?
+	Got: int
+
+subsequence-type-error.essence:2:30:
+  |
+2 | such that b = (4 subsequence false)
+  |                              ^^^^^
+Type error:
+	Expected: sequence of ?
+	Got: bool
+

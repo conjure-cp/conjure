@@ -514,6 +514,7 @@ validateDeclarationStatement stmt = do
     where
         validateStatementSeq s v l = wrapRegion stmt stmt (s) $ do
             decls <- validateSequence_ v l
+            when (null decls) $ raiseError (symbolRegion stmt <!> SemanticError "Declaration without any members")
             return $ concat decls
 
 validateGiven :: GivenStatementNode -> ValidatorS [Declaration]
@@ -2193,7 +2194,7 @@ functionOps l = case l of
             off <- case intOut "" (untype d) of
                         Just (fromInteger->a :: Integer) | a > 0 -> return $ Just a
                         _ -> invalid $ r1 <!> CustomError "1st arg must be a constant positive int"
-            let ref = map (const TypeList) [1..fromMaybe 1 off]
+            let ref = map (const TypeList) [0..fromMaybe 1 off]
             let ref' = foldr id TypeAny ref
             r <- unifyTypesFailing ref' b
             return $ if null off || null r then  Nothing else Just ()
@@ -2371,10 +2372,10 @@ functionOps l = case l of
 
         partyType ::  Maybe Type ->Maybe Type -> Maybe Type
         partyType a b = do
-            let at' = case a of
+            let at' = fromMaybe TypeAny a
+            let bt = case b of
                         Just (TypePartition t) -> t
                         _ -> TypeAny
-            let bt = fromMaybe TypeAny b
             return $ TypeSet $ mostDefinedS [at',bt]
         partsType ::  Maybe (Type) -> Maybe Type
         partsType (Just (TypePartition a)) = Just $ TypeSet $ TypeSet a
@@ -2423,11 +2424,11 @@ functionOps l = case l of
         activeArgs (r,(typeOf_->t)) _ = invalid $ r <!> ComplexTypeError "Variant " t
 
         typeToSet :: Maybe Type -> Maybe Type
-        typeToSet (Just t) = TypeSet <$> tMembers t
-        typeToSet _ = Nothing
+        typeToSet (Just t) = Just . TypeSet $ fromMaybe TypeAny (tMembers t)
+        typeToSet _ = Just $ TypeSet TypeAny
         typeToMSet :: Maybe Type -> Maybe Type
-        typeToMSet (Just t) = TypeMSet <$> tMembers t
-        typeToMSet _ = Nothing
+        typeToMSet (Just t) = Just . TypeMSet $ fromMaybe TypeAny (tMembers t)
+        typeToMSet _ = Just $ TypeMSet TypeAny
         typeToRelation :: Maybe Type -> Maybe Type
         typeToRelation (Just(TypeFunction i j)) = Just $ TypeRelation [i,j]
         typeToRelation (Just(TypeAny)) = Just $ TypeRelation [TypeAny,TypeAny]
@@ -2515,13 +2516,13 @@ functionOps l = case l of
 
 
 flattenType :: Maybe Int -> Maybe Type -> Maybe Type
-flattenType (Just n) (Just a  ) | n < 0 = Just a
+flattenType (Just n) (Just a  ) | n < 0 = Just $ TypeList a
 flattenType (Just n) (Just (TypeList m)  )= flattenType (Just (n-1)) (Just (m))
 flattenType (Just n) (Just (TypeMatrix _  m)  )= flattenType (Just (n-1)) (Just (m))
 
 flattenType Nothing (Just  (TypeMatrix _  m)) = flattenType Nothing (Just (m))
 flattenType Nothing (Just  (TypeList  m)) = flattenType Nothing (Just (m))
-flattenType Nothing (Just  (TypeAny)) = Just $ TypeList TypeAny
+flattenType Nothing (Just  (t)) = Just $ TypeList t
 flattenType _ _ = Just $ TypeList TypeAny
 
 validateFuncOp :: Lexeme -> [RegionTagged (Kind,Expression)] -> ValidatorS (Typed Expression)

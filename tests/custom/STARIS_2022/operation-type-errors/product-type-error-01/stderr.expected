@@ -1,5 +1,10 @@
 Error:
-    In a 'such that' statement: i = product(5)
-    Error:
-        Type error in product(5)
-                      The argument has type: int
+    Parser error in file: product-type-error.essence Error is:
+ValidatorError product-type-error.essence:2:23:
+  |
+2 | such that i = product(5)
+  |                       ^
+Type error:
+	Expected:"Matrix or Set"
+	Got: int
+

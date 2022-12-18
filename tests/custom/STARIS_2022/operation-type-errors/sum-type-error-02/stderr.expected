@@ -1,5 +1,10 @@
 Error:
-    In a 'such that' statement: i = sum([false, true, false; int(1..3)])
-    Error:
-        Type error in sum([false, true, false; int(1..3)])
-                      The argument has type: matrix indexed by [int] of bool
+    Parser error in file: sum-type-error.essence Error is:
+ValidatorError sum-type-error.essence:2:19:
+  |
+2 | such that i = sum([false, true, false])
+  |                   ^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected:"Integer elements"
+	Got: bool
+

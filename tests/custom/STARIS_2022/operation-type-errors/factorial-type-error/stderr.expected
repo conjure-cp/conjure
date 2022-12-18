@@ -1,3 +1,18 @@
 Error:
-    In a 'such that' statement: b = (factorial(false) = factorial(false))
-    Error: Pattern match failure in do expression at src/Conjure/Language/Expression/Op/Factorial.hs:23:9-17
+    Parser error in file: factorial-type-error.essence Error is:
+ValidatorError factorial-type-error.essence:2:16:
+  |
+2 | such that b = (false! = false!)
+  |                ^^^^^
+Type error:
+	Expected: int
+	Got: bool
+
+factorial-type-error.essence:2:25:
+  |
+2 | such that b = (false! = false!)
+  |                         ^^^^^
+Type error:
+	Expected: int
+	Got: bool
+

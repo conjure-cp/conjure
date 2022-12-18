@@ -112,11 +112,11 @@ parseDeclaration =
         declaration :: (Null a,Show a) => (SToken -> Sequence a -> b) -> Lexeme -> Parser a -> Parser b
         declaration c t p = do
                             l <- need t
-                            seq <- commaList1 p
+                            seq <- option (Seq []) (commaList1 p)
                             return $ c l seq
 
 parseLetting :: Parser LettingStatementNode
-parseLetting = do
+parseLetting = try $ do
     names <- commaList1 parseIdentifier
     lBe <- want L_be
     guard $ not (isMissing names && isMissing lBe)

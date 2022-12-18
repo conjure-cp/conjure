@@ -1,3 +1,18 @@
 Error:
-    In a 'such that' statement: s = powerSet(2)
-    Error: Type error in powerSet(2)
+    Parser error in file: powerSet-type-error.essence Error is:
+ValidatorError powerSet-type-error.essence:2:15:
+  |
+2 | such that s = powerSet(2)
+  |               ^^^^^^^^^^^
+Type error:
+	Expected: set of int
+	Got: set of set of ?
+
+powerSet-type-error.essence:2:24:
+  |
+2 | such that s = powerSet(2)
+  |                        ^
+Type error:
+	Expected: set of ?
+	Got: int
+

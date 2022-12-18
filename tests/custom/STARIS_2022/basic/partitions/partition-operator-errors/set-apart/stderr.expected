@@ -1,3 +1,10 @@
 Error:
-    In a 'such that' statement: a = apart({2, 4, 6, 8, 9}, s)
-    Error: Type error in apart({2, 4, 6, 8, 9}, s)
+    Parser error in file: set-apart.essence Error is:
+ValidatorError set-apart.essence:4:38:
+  |
+4 | such that a = apart({2, 4, 6, 8, 9}, s)
+  |                                      ^
+Type error:
+	Expected: partition from int
+	Got: set of int
+

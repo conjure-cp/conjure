@@ -1,3 +1,10 @@
 Error:
-    In a 'such that' statement: b = false in 5
-    Error: Type error in false in 5
+    Parser error in file: in-type-error.essence Error is:
+ValidatorError in-type-error.essence:2:25:
+  |
+2 | such that b = (false in 5)
+  |                         ^
+Type error:
+	Expected:"Container of  bool"
+	Got: int
+

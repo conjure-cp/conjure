@@ -1,3 +1,10 @@
 Error:
-    In a 'such that' statement: g = restrict(f, d)
-    Error: Type error in restrict(f, d)
+    Parser error in file: restrict-type-error.essence Error is:
+ValidatorError restrict-type-error.essence:4:24:
+  |
+4 | such that g = restrict(f, d)
+  |                        ^
+Type error:
+	Expected: function bool --> ?
+	Got: function int --> int
+

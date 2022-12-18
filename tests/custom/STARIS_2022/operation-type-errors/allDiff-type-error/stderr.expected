@@ -1,3 +1,10 @@
 Error:
-    In a 'such that' statement: b = allDiff(5)
-    Error: Type error in allDiff(5)
+    Parser error in file: allDiff-type-error.essence Error is:
+ValidatorError allDiff-type-error.essence:2:23:
+  |
+2 | such that b = allDiff(5)
+  |                       ^
+Type error:
+	Expected:"Matrix or list"
+	Got: int
+

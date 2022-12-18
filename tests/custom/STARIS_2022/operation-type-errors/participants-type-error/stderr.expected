@@ -1,3 +1,10 @@
 Error:
-    In a 'such that' statement: b = participants(5)
-    Error: Type error in participants(5)
+    Parser error in file: participants-type-error.essence Error is:
+ValidatorError participants-type-error.essence:2:28:
+  |
+2 | such that b = participants(5) 
+  |                            ^
+Type error:
+	Expected: partition from ?
+	Got: int
+

@@ -1,5 +1,10 @@
 Error:
-    In a 'such that' statement: b = (max(4) = 4)
-    Error:
-        Type error in max(4)
-                      Unexpected type inside max: int
+    Parser error in file: max-type-error.essence Error is:
+ValidatorError max-type-error.essence:2:20:
+  |
+2 | such that b = (max(4) = 4)
+  |                    ^
+Type error:
+	Expected:"Domain of int-like or matrix of int-like"
+	Got: int
+

@@ -1,6 +1,10 @@
 Error:
-    In a 'such that' statement: b = false in {1, 2, 3}
-    Error:
-        Type error in false in {1, 2, 3}
-                      false has type bool
-                      {1, 2, 3} has type set of int
+    Parser error in file: in-type-error.essence Error is:
+ValidatorError in-type-error.essence:2:16:
+  |
+2 | such that b = (false in {1, 2, 3})
+  |                ^^^^^
+Type error:
+	Expected: int
+	Got: bool
+

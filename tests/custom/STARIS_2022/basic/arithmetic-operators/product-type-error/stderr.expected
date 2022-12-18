@@ -1,5 +1,16 @@
 Error:
-    In a 'such that' statement: x = product(false)
-    Error:
-        Type error in product(false)
-                      The argument has type: bool
+    Parser error in file: product.essence Error is:
+ValidatorError product.essence:2:23:
+  |
+2 | such that x = product(false, true)
+  |                       ^^^^^
+Type error:
+	Expected:"Matrix or Set"
+	Got: bool
+
+product.essence:2:30:
+  |
+2 | such that x = product(false, true)
+  |                              ^^^^
+Unexpected argument
+

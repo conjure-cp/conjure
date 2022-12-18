@@ -1,11 +1,26 @@
-Error 1:
-    In a 'such that' statement: b = ({{2, 4}, {6, 8, 9}} = parts(s))
-    Error:
-        Type error in parts(s)
-                      The argument has type: set of set of int
-Error 2:
-    In a 'such that' statement: c = together({2, 6}, s)
-    Error: Type error in together({2, 6}, s)
-Error 3:
-    In a 'such that' statement: d = together({2, 4}, s)
-    Error: Type error in together({2, 4}, s)
+Error:
+    Parser error in file: set-parts-together.essence Error is:
+ValidatorError set-parts-together.essence:4:42:
+  |
+4 | such that b = ({{2,4},{6, 8, 9}} = parts(s))
+  |                                          ^
+Type error:
+	Expected: partition from ?
+	Got: set of set of int
+
+set-parts-together.essence:6:30:
+  |
+6 | such that c = together({2,6},s)
+  |                              ^
+Type error:
+	Expected: partition from int
+	Got: set of set of int
+
+set-parts-together.essence:8:30:
+  |
+8 | such that d = together({2,4},s)
+  |                              ^
+Type error:
+	Expected: partition from int
+	Got: set of set of int
+

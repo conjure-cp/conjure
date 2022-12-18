@@ -1,9 +1,10 @@
 Error:
-    In a 'such that' statement: b = toInt(a)
-    Error:
-        When type checking: b = toInt(a)
-        Cannot unify the types of the following.
-        lhs        : b
-        type of lhs: bool
-        rhs        : toInt(a)
-        type of rhs: int
+    Parser error in file: toInt-error.essence Error is:
+ValidatorError toInt-error.essence:3:15:
+  |
+3 | such that b = toInt(a)
+  |               ^^^^^^^^
+Type error:
+	Expected: bool
+	Got: int
+

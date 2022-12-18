@@ -1,6 +1,10 @@
 Error:
-    In a 'such that' statement: b = !5
-    Error:
-        Type error in !5
-                      Expected type: bool
-                      But got: int
+    Parser error in file: not-type-error.essence Error is:
+ValidatorError not-type-error.essence:2:17:
+  |
+2 | such that b = (!5)
+  |                 ^
+Type error:
+	Expected: bool
+	Got: int
+

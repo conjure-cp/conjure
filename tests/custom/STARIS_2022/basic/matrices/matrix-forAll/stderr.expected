@@ -1,5 +1,18 @@
 Error:
-    In a 'such that' statement: b = and([i = i * i | i <- a])
-    Error:
-        Type error in i * i
-                      The argument has type: matrix indexed by [int, int] of int
+    Parser error in file: matrix-forAll.essence Error is:
+ValidatorError matrix-forAll.essence:6:33:
+  |
+6 | such that b = forAll i in a . i=i*i
+  |                                 ^
+Type error:
+	Expected:"Number or Enum"
+	Got: matrix indexed by [int] of int
+
+matrix-forAll.essence:6:35:
+  |
+6 | such that b = forAll i in a . i=i*i
+  |                                   ^
+Type error:
+	Expected:"Number or Enum"
+	Got: matrix indexed by [int] of int
+
