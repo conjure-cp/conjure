@@ -264,7 +264,7 @@ Library
                      -- changes in newline handling
                      , cmdargs >= 0.10.14
                      -- a bunch of improvements in 0.5.8.1
-                     , containers >= 0.5.8.1
+                     , containers
                      , data-default
                      , directory
                      , filepath
@@ -307,28 +307,10 @@ Library
                      , ansi-terminal >= 0.8.2
                      , timeit >= 2.0
                      , primes >= 0.2.1.0
-                    --  , statistics >= 0.15.2.0
                      , parser-combinators
-
-    if impl(ghc == 7.8.*)
-        build-depends: template-haskell == 2.9.*
-    if impl(ghc == 7.10.*)
-        build-depends: template-haskell == 2.10.*
-    if impl(ghc == 8.0.*)
-        build-depends: template-haskell == 2.11.*
-        ghc-options: -Wno-redundant-constraints
-    if impl(ghc == 8.2.*)
-        build-depends: template-haskell == 2.12.*
-    if impl(ghc == 8.4.*)
-        build-depends: template-haskell == 2.13.*
-    if impl(ghc == 8.6.*)
-        build-depends: template-haskell == 2.14.*
-    if impl(ghc == 8.8.*)
-        build-depends: template-haskell == 2.15.*
-    if impl(ghc == 8.10.*)
-        build-depends: template-haskell == 2.16.*
-    if impl(ghc == 9.0.*)
-        build-depends: template-haskell == 2.17.*
+                     , lsp
+                     , lens
+                     , template-haskell
 
     default-extensions:
         FlexibleContexts
@@ -378,7 +360,6 @@ Executable conjure
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        NoMonadFailDesugaring
         ViewPatterns
     ghc-options:
         -O2
@@ -441,7 +422,6 @@ Test-Suite conjure-testing
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        NoMonadFailDesugaring
         ViewPatterns
     ghc-options:
         -fwarn-incomplete-patterns
