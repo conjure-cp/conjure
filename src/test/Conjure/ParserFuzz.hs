@@ -21,7 +21,6 @@ import Data.ByteString.Char8(hPutStrLn, pack)
 import Conjure.Language.AST.Reformer (Flattenable(flatten))
 import Data.Algorithm.Diff (getDiff, getGroupedDiff)
 import Data.Algorithm.DiffOutput (ppDiff)
-import Data.ByteString (hPutStrLn)
 import GHC.IO.Handle.FD (stderr)
 
 

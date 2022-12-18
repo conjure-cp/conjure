@@ -54,7 +54,7 @@ readASTFromFile fp = do
           (validateModel v) (initialState v) {typeChecking = False}
             of 
         (_, vds, _) | any isError vds -> pure v
-        (_,vds,_) -> failDoc $ "Cannot pretty print a model with errors" <+> pretty (showDiagnosticsForConsole vds contents)
+        (_,vds,_) -> failDoc $ "Cannot pretty print a model with errors" <+> pretty (showDiagnosticsForConsole vds (Just fp) contents)
 
         
     

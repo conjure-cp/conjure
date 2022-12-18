@@ -7,6 +7,7 @@
 module Conjure.Language.NewLexer (
     ETok(..),
     Offsets(..),
+    Reformable(..),
     prettySplitComments,
     eLex,
     reformList,

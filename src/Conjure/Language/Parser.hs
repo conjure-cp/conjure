@@ -71,14 +71,14 @@ lexAndParse parse t = do
     lr <- either (Left . LexErr) Right $ L.runLexer t
     either (Left . ParserError ) Right $ runASTParser parse lr
 
-runPipeline :: Flattenable a =>Pipeline a b -> Text -> Either PipelineError b
-runPipeline (parse,val,tc) txt = do
+runPipeline :: Flattenable a =>Pipeline a b -> (Maybe FilePath,Text) -> Either PipelineError b
+runPipeline (parse,val,tc) (fp,txt) = do
             lexResult <- either (Left . LexErr) Right $ L.runLexer txt
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
             let x = V.runValidator (val parseResult) (V.initialState parseResult){V.typeChecking= tc}
             case x of
                 (m, ds,_) | not $ any V.isError ds -> Right m
-                (_, ves,_) -> Left $ ValidatorError $ pretty (showDiagnosticsForConsole ves txt)
+                (_, ves,_) -> Left $ ValidatorError $ pretty (showDiagnosticsForConsole ves fp txt)
                 -- Validator (Just res) [] -> Right res
                 -- Validator _ xs -> Left $ ValidatorError xs          
 
@@ -114,7 +114,7 @@ parseModel = (parseProgram, V.validateModel,True)
 
 parseIO :: (MonadFailDoc m, Flattenable i) => Pipeline i a -> String -> m a
 parseIO p s = do
-            case runPipeline p $ T.pack s of
+            case runPipeline p $ (Just "IO",T.pack s) of
                 Left err -> failDoc $ pretty $ show err
                 Right x  -> return x
 
@@ -1012,8 +1012,8 @@ parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAn
 -- data ParserState = ParserState { enumDomains :: [Name] }
 -- type Parser a = StateT ParserState (ParsecT [LexemePos] T.Text Identity) a
 
-runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either (Doc) a
-runLexerAndParser p file inp = case runPipeline p inp of
+runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either Doc a
+runLexerAndParser p file inp = case runPipeline p (Just file,inp) of
   Left pe -> Left $ "Parser error in file:" <+> pretty file <+> pretty  ("Error is:\n" ++ show pe)
   Right a -> Right a
 --     ls <- runLexer inp

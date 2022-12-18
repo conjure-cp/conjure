@@ -59,9 +59,9 @@ displayError x = case x of
   WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
   KindError a b -> show $ "Tried to use a " <> pretty b <> " where " <> pretty a <> " was expected"
 
-showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Text -> String
-showDiagnosticsForConsole errs text
-    =   case runParser (captureErrors errs) "Errors" text of
+showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Maybe String -> Text -> String
+showDiagnosticsForConsole errs fileName text
+    =   case runParser (captureErrors errs) (fromMaybe "Errors" fileName) text of
             Left peb -> errorBundlePretty peb
             Right _ -> "No printable errors from :" ++ (show . length $ errs)
 
@@ -73,7 +73,17 @@ printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs t
         printEntry (a,(r,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
 
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
-captureErrors = (mapM_ captureError) . collapseSkipped
+captureErrors = (mapM_ captureError) . collapseSkipped . removeAmbiguousTypeWarning
+
+--Remove these warnings from a console print of errors as they are just clutter
+removeAmbiguousTypeWarning :: [ValidatorDiagnostic] -> [ValidatorDiagnostic]
+removeAmbiguousTypeWarning = filter (
+    \(ValidatorDiagnostic _ x)->
+        case x of
+            Warning AmbiguousTypeWarning->False;
+            _->True
+    )
+
 
 collapseSkipped :: [ValidatorDiagnostic] -> [ValidatorDiagnostic]
 collapseSkipped [] = []
@@ -122,7 +132,7 @@ val s = do
                     putStrLn $ show vds
                     printSymbolTable $ symbolTable st
                     putStrLn $ show $ (regionInfo st)
-                    putStrLn $ showDiagnosticsForConsole vds txt
+                    putStrLn $ showDiagnosticsForConsole vds Nothing txt
 
             -- putStrLn $ show qpr
 
