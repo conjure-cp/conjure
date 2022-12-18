@@ -131,7 +131,7 @@ type Decision = IDecision;
 
 interface IDecision {
   dDescription: string[];
-  dNumOptions?: number;
+  dNumOptions: number | null;
   dDecision: number;
 }
 
@@ -1420,14 +1420,7 @@ interface ITrailRewrites {
   trAfter: string[];
 }
 
-type Tree<T> = ITree<T>;
-
-interface ITree<T> {
-  rootLabel: T;
-  subForest: Tree<T>[];
-}
-
-type Type = ITypeAny | ITypeBool | ITypeInt | ITypeEnum | ITypeUnnamed | ITypeTuple | ITypeRecord | ITypeVariant | ITypeList | ITypeMatrix | ITypeSet | ITypeMSet | ITypeFunction | ITypeSequence | ITypeRelation | ITypePartition;
+type Type = ITypeAny | ITypeBool | ITypeInt | ITypeEnum | ITypeUnnamed | ITypeTuple | ITypeRecord | ITypeRecordMember | ITypeVariant | ITypeVariantMember | ITypeList | ITypeMatrix | ITypeSet | ITypeMSet | ITypeFunction | ITypeSequence | ITypeRelation | ITypePartition;
 
 interface ITypeAny {
   tag: "TypeAny";
@@ -1462,9 +1455,19 @@ interface ITypeRecord {
   contents: [Name, Type][];
 }
 
+interface ITypeRecordMember {
+  tag: "TypeRecordMember";
+  contents: [Name, [Name, Type][]];
+}
+
 interface ITypeVariant {
   tag: "TypeVariant";
   contents: [Name, Type][];
+}
+
+interface ITypeVariantMember {
+  tag: "TypeVariantMember";
+  contents: [Name, [Name, Type][]];
 }
 
 interface ITypeList {
