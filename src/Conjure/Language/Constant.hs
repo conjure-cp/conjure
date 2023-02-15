@@ -100,6 +100,7 @@ instance SimpleJSON Constant where
             ConstantAbstract lit -> toSimpleJSON lit
             TypedConstant c' _ -> toSimpleJSON c'
             _ -> noToSimpleJSON c
+    fromSimpleJSON (JSON.Bool b) = return (ConstantBool b)
     fromSimpleJSON x@JSON.Number{} = ConstantInt TagInt <$> fromSimpleJSON x
     fromSimpleJSON (JSON.Array xs) = do
         ys <- mapM fromSimpleJSON (V.toList xs)
