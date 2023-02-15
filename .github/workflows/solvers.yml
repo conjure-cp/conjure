@@ -12,10 +12,12 @@ on:
     paths:
       - etc/build/install*.sh
       - Makefile
+      - .github/workflows/solvers.yml
   pull_request:             # and for PRs
     paths:
       - etc/build/install*.sh
       - Makefile
+      - .github/workflows/solvers.yml
                             # other branches that want testing must create a PR
 
 jobs:

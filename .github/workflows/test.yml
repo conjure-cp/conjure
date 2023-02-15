@@ -11,6 +11,7 @@ on:
       - src/**
       - tests/**
       - etc/build/**
+      - .github/workflows/test.yml
   pull_request:             # and for PRs
     paths:
       - conjure-cp.cabal
@@ -18,6 +19,7 @@ on:
       - src/**
       - tests/**
       - etc/build/**
+      - .github/workflows/test.yml
                             # other branches that want testing must create a PR
 
 jobs:

@@ -10,12 +10,14 @@ on:
       - Makefile
       - src/**
       - etc/build/**
+      - .github/workflows/build.yml
   pull_request:             # and for PRs
     paths:
       - conjure-cp.cabal
       - Makefile
       - src/**
       - etc/build/**
+      - .github/workflows/build.yml
                             # other branches that want testing must create a PR
 
 jobs:
