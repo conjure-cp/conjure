@@ -1574,7 +1574,13 @@ fixRelationProj= transformBi f
                         Just TypeFunction{} -> make opImage func arg
                         Just TypeSequence{} -> make opImage func arg
                         _                   -> p
+                Just (func, args) | arg <- catMaybes args, length arg == length args ->
+                    case typeOf func of
+                        Just TypeFunction{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypeSequence{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        _                   -> p
                 _ -> p
+
 
 
 maxOfDomain :: (MonadFailDoc m, Pretty r) => Domain r Expression -> m Expression
