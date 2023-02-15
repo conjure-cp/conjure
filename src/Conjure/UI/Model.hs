@@ -2735,20 +2735,20 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                 let argOut = Comprehension [essence| toInt(&body) |] goc
                 return
                     ( "xor to sum"
-                    , return [essence| 1 = sum(&argOut) |]
+                    , return [essence| 1 = sum(&argOut) % 2 |]
                     )
             AbstractLiteral (AbsLitMatrix dom elems) -> do
                 let argOut = AbstractLiteral $ AbsLitMatrix dom
                                 [ [essence| toInt(&el) |] | el <- elems ]
                 return
                     ( "xor to sum"
-                    , return [essence| 1 = sum(&argOut) |]
+                    , return [essence| 1 = sum(&argOut) % 2 |]
                     )
             _ -> do
                 (iPat, i) <- quantifiedVar
                 return
                     ( "xor to sum"
-                    , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
+                    , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) % 2 |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
 

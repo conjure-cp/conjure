@@ -44,7 +44,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                                     else raiseTypeError $ "(relation projection)" <+> pretty p
                             loop _ _ = raiseTypeError $ "(relation projection)" <+> pretty p
                         TypeRelation <$> loop xs ts'
-            _ -> raiseTypeError $ "(relation projection)" <+> pretty p
+            _ -> raiseTypeError $ "(relation projection)" <+> vcat [pretty p, pretty tyR]
 
 instance SimplifyOp OpRelationProj x where
     simplifyOp _ = na "simplifyOp{OpRelationProj}"
