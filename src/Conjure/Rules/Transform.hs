@@ -286,7 +286,7 @@ rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule where
 
 rule_Lift_Transformed_Indexing :: Rule
 rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule where
-  matchIndexing :: (?typeCheckerMode::TypeCheckerMode)
+  matchIndexing :: (?typeCheckerMode :: TypeCheckerMode)
                       => Expression
                       -> Maybe (Expression, Expression, Expression, Expression) 
   matchIndexing exp = do

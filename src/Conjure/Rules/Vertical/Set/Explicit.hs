@@ -141,7 +141,7 @@ rule_In = "set-in-table{Explicit}" `namedRule` theRule where
 
     tableCheck ::
         MonadFailDoc m =>
-        (?typeCheckerMode::TypeCheckerMode) =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
         Expression -> Expression -> m ()
     tableCheck x set | categoryOf set < CatDecision = do
         tyX <- typeOf x
