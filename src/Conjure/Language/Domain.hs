@@ -883,38 +883,36 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
         <+> prettyList prParens "," inners
 
     pretty (DomainRecord xs) = "record" <+> prettyList prBraces ","
-        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
+        [ pretty nm <+> ":" <++> pretty d | (nm, d) <- xs ]
 
     pretty (DomainVariant xs) = "variant" <+> prettyList prBraces ","
-        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
+        [ pretty nm <+> ":" <++> pretty d | (nm, d) <- xs ]
 
     pretty (DomainMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices
-                              <+> "of" <+> pretty inner
+                              <+> "of" <++> pretty inner
         where
             (indices,inner) = first (index:) $ collect innerNested
             collect (DomainMatrix i j) = first (i:) $ collect j
             collect x = ([],x)
 
     pretty (DomainSet r attrs inner) =
-        hang ("set" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+        "set" <+> prettyAttrs r attrs <+> "of" <++> pretty inner
 
     pretty (DomainMSet r attrs inner) =
-        hang ("mset" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+        "mset" <+> prettyAttrs r attrs <+> "of" <++> pretty inner
 
     pretty (DomainFunction r attrs innerFrom innerTo) =
-        hang ("function" <+> prettyAttrs r attrs) 4 $
-            hang (pretty innerFrom) 4 $
-                "-->" <+> pretty innerTo
+        "function" <+> prettyAttrs r attrs <++> pretty innerFrom <++> "-->" <++> pretty innerTo
 
     pretty (DomainSequence r attrs inner) =
-        hang ("sequence" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+        "sequence" <+> prettyAttrs r attrs <+> "of" <++> pretty inner
 
     pretty (DomainRelation r attrs inners)
-        = hang ("relation" <+> prettyAttrs r attrs <+> "of") 4 (prettyList prParens " *" inners)
+        = "relation" <+> prettyAttrs r attrs <+> "of" <++> prettyList prParens " *" inners
 
     pretty (DomainPartition r attrs inner)
-        = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
+        = "partition" <+> prettyAttrs r attrs <+> "from" <++> pretty inner
 
     pretty d@DomainOp{} = pretty (show d)
 
