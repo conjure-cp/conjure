@@ -1,3 +1,3 @@
 conjure solve *.essence
 cat tuple.solution
-rm -r conjure-output
+rm -rf conjure-output

@@ -1,2 +1,2 @@
 conjure model *.essence
-rm -r conjure-output
+rm -rf conjure-output

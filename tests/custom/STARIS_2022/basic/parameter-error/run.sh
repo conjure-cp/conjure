@@ -1,2 +1,2 @@
 conjure solve *.essence *.param
-rm -r conjure-output
+rm -rf conjure-output
