@@ -188,16 +188,16 @@ instance SimpleJSON Constant where
     fromSimpleJSON (TypeSequence t) (JSON.Array xs) =
         ConstantAbstract . AbsLitSequence <$> mapM (fromSimpleJSON t) (V.toList xs)
 
-    fromSimpleJSON ty@(TypeRelation ts) x@(JSON.Array xs) = do
+    fromSimpleJSON ty@(TypeRelation ts) value@(JSON.Array xs) = do
         minners <- forM (V.toList xs) $ \ x -> do
             mtuple <- fromSimpleJSON (TypeTuple ts) x
             case mtuple of
-                ConstantAbstract (AbsLitTuple ts) -> return (Just ts)
+                ConstantAbstract (AbsLitTuple tuple) -> return (Just tuple)
                 _ -> return Nothing
         let inners = catMaybes minners
         if length inners == length minners
             then return $ ConstantAbstract $ AbsLitRelation inners
-            else noFromSimpleJSON "Constant" ty x
+            else noFromSimpleJSON "Constant" ty value
         
 
     -- fromSimpleJSON _ (JSON.String s) = return $ ConstantEnum (Name "<unknown>") [] (Name s)
