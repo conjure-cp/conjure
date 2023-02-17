@@ -9,7 +9,7 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON, prologue )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -32,7 +32,7 @@ import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.Boost ( boost )
-import Conjure.Language.NameResolution ( resolveNamesMulti, resolveNames )
+import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
 
@@ -263,7 +263,8 @@ mainWithArgs config@Solve{..} = do
                        ])
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
-    essenceM <- readModelFromFile essence >>= resolveNames
+    essenceM_beforeNR <- readModelFromFile essence
+    essenceM <- prologue essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
         when (nbSolutions == "all" || nbSolutions /= "1") $
             userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
@@ -295,7 +296,7 @@ mainWithArgs config@Solve{..} = do
                     then return useExistingModels
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else doIfNotCached          -- start the show!
-                    ( sort (mStatements essenceM)
+                    ( sort (mStatements essenceM_beforeNR)
                     , portfolio
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(

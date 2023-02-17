@@ -12,6 +12,7 @@ module Conjure.UI.Model
     , modelRepresentationsJSON
     , timedF
     , evaluateModel -- unused, exporting to suppress warning
+    , prologue
     ) where
 
 import Conjure.Prelude
