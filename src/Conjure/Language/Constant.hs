@@ -101,8 +101,11 @@ instance SimpleJSON Constant where
 
     fromSimpleJSON _ (JSON.Bool b) = return (ConstantBool b)
 
-    fromSimpleJSON t x@JSON.Number{} = ConstantInt TagInt <$> fromSimpleJSON t x
-    fromSimpleJSON t x@JSON.String{} = ConstantInt TagInt <$> fromSimpleJSON t x
+    fromSimpleJSON t@TypeInt{} x@JSON.Number{} = ConstantInt TagInt <$> fromSimpleJSON t x
+    fromSimpleJSON t@TypeInt{} x@JSON.String{} = ConstantInt TagInt <$> fromSimpleJSON t x
+
+    fromSimpleJSON (TypeEnum enum_type_name) (JSON.String value) =
+        return (ConstantEnum enum_type_name [] (Name value))
 
     fromSimpleJSON (TypeTuple ts) (JSON.Array xs) =
         ConstantAbstract . AbsLitTuple <$> zipWithM fromSimpleJSON ts (V.toList xs)
