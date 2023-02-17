@@ -62,7 +62,7 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitSequence xs -> toSimpleJSON xs
             AbsLitRelation xs -> toSimpleJSON xs
             AbsLitPartition xs -> toSimpleJSON xs
-    fromSimpleJSON x = noFromSimpleJSON "AbstractLiteral" x
+    fromSimpleJSON = noFromSimpleJSON "AbstractLiteral"
 
 instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (AbstractLiteral x) where
     toMiniZinc lit =
@@ -88,7 +88,7 @@ instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (Abstr
 
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
-    pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <+> pretty x
+    pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <++> pretty x
                                                                     | (n,x) <- xs ]
     pretty (AbsLitVariant _ n x) = "variant" <+> prBraces (pretty n <+> "=" <+> pretty x)
     pretty (AbsLitMatrix _     []) = "[]"

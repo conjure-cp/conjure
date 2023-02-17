@@ -522,7 +522,7 @@ modelAll tBaseDir dir essenceFile = do
     additionalArgs <- catch (words . textToString <$> T.readFile (tBaseDir ++ "/additional-arguments.txt"))
                             (\ (_ :: SomeException) -> return [] )
     args <- withArgs (defaultArgs ++ additionalArgs) (cmdArgs ui)
-    ignoreLogs $ mainWithArgs args
+    ignoreLogs $ runNameGen () $ mainWithArgs args
     where
         defaultArgs = [ "modelling"
                       , essenceFile

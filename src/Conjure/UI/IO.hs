@@ -61,27 +61,31 @@ readModelFromStdin = do
 
 
 readParamJSON ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
     MonadUserError m =>
-    FilePath -> m Model
-readParamJSON fp = do
+    MonadLog m =>
+    Model -> FilePath -> m Model
+readParamJSON model fp = do
     (_, contents) <- liftIO $ pairWithContents fp
     let paramJSON = contents
                     |> T.encodeUtf8                     -- convert Text to ByteString
                     |> Data.Aeson.eitherDecodeStrict
     case paramJSON of
         Left err -> userErr1 (pretty err)
-        Right j -> fromSimpleJSON j
+        Right j -> fromSimpleJSONModel model j
 
 
 readParamOrSolutionFromFile ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
     MonadFailDoc m =>
     MonadUserError m =>
-    FilePath -> m Model
-readParamOrSolutionFromFile fp = do
+    MonadLog m =>
+    Model -> FilePath -> m Model
+readParamOrSolutionFromFile model fp = do
     if ".json" `isSuffixOf` fp
-        then readParamJSON fp
+        then readParamJSON model fp
         else do
             con <- liftIO $ BS.readFile fp
             case Data.Serialize.decode con of

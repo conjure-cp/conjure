@@ -37,11 +37,14 @@ module Conjure.Language.Definition
 
     , module Conjure.Language.NameGen
 
+    , fromSimpleJSONModel
+
     ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
 
@@ -50,6 +53,7 @@ import Conjure.Language.NameGen ( NameGen(..), NameGenState, runNameGen )
 import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.Expression
 
 
@@ -86,14 +90,38 @@ instance SimpleJSON Model where
                                     |> (\ (xs, ys) -> (M.unions (concat xs), concat ys))
         unless (null rest) $ bug $ "Expected json objects only, but got:" <+> vcat (map pretty rest)
         return (JSON.Object innersAsMaps)
-    fromSimpleJSON json =
-        case json of
-            JSON.Object inners -> do
-                stmts <- forM (M.toList inners) $ \ (name, valueJSON) -> do
-                    value <- fromSimpleJSON valueJSON
-                    return $ Declaration (Letting (Name name) value)
-                return def { mStatements = stmts }
-            _ -> noFromSimpleJSON "Model" json
+    fromSimpleJSON = noFromSimpleJSON "Model"
+
+fromSimpleJSONModel ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    MonadUserError m =>
+    MonadLog m =>
+    Model ->
+    JSON.Value ->
+    m Model
+fromSimpleJSONModel essence json =
+    case json of
+        JSON.Object inners -> do
+            stmts <- forM (M.toList inners) $ \ (name, valueJSON) -> do
+                -- traceM $ show $ "name    " <+> pretty name
+                let mdomain = [ dom
+                              | Declaration (FindOrGiven Given (Name nm) dom) <- mStatements essence
+                              , nm == name
+                              ]
+                -- traceM $ show $ "mdomain " <+> vcat (map pretty mdomain)
+                case mdomain of
+                    [domain] -> do
+                        -- traceM $ show $ "domain  " <+> pretty domain
+                        typ <- typeOfDomain domain
+                        -- traceM $ show $ "typ     " <+> pretty typ
+                        value <- fromSimpleJSON typ valueJSON
+                        -- traceM $ show $ "value   " <+> pretty value
+                        return $ Just $ Declaration (Letting (Name name) value)
+                    _ -> do
+                        logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
+                        return Nothing
+            return def { mStatements = catMaybes stmts }
+        _ -> noFromSimpleJSON "Model" TypeAny json
 
 instance ToFromMiniZinc Model where
     toMiniZinc m = do

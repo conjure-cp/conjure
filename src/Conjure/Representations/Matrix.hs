@@ -59,7 +59,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
         matrixDownC :: TypeOf_DownC m
         matrixDownC ( name                                                  -- special-case for empty matrix literals
                     , domain@(DomainMatrix indexDomain _)
-                    , ConstantAbstract (AbsLitMatrix _indexDomain2 [])
+                    , viewConstantMatrix -> Just (_indexDomain2, [])
                     ) = do
             mids1
                 :: Maybe [(Name, DomainX Expression)]
@@ -72,7 +72,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
             mapM (mapM addEmptyLiteral) mids1
         matrixDownC ( name
                     , domain@(DomainMatrix indexDomain innerDomain)
-                    , constant@(ConstantAbstract (AbsLitMatrix indexDomain2 constants))
+                    , constant@(viewConstantMatrix -> Just (indexDomain2, constants))
                     ) = do
             -- TODO: this may be too strict
             unless (indexDomain == indexDomain2) $
@@ -88,7 +88,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
                 then return Nothing
-                else
+                else do
                     if length mids2 == length mids1             -- if all were `Just`s
                         then do
                             let
@@ -112,7 +112,14 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                 ]
-        matrixDownC _ = na "{matrixDownC}"
+        matrixDownC (name, domain, constant) = na $ "{matrixDownC}" <+> vcat [ pretty name
+                                                                             , ""
+                                                                             , pretty domain
+                                                                             , pretty (show domain)
+                                                                             , ""
+                                                                             , pretty constant
+                                                                             , pretty (show constant)
+                                                                             ]
 
         matrixUp :: TypeOf_Up m
         matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do

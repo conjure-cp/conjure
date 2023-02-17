@@ -98,17 +98,21 @@ noToMiniZinc a = userErr1 $ vcat
 
 class SimpleJSON a where
     toSimpleJSON :: MonadUserError m => a -> m JSON.Value
-    fromSimpleJSON :: MonadUserError m => JSON.Value -> m a
+    fromSimpleJSON :: MonadUserError m => Type -> JSON.Value -> m a
 
 instance SimpleJSON Integer where
     toSimpleJSON = return . toJSON
-    fromSimpleJSON x =
+    fromSimpleJSON t x =
         case x of
             JSON.Number y ->
                 case floatingOrInteger y of
                     Right z -> return z
-                    Left (d :: Double) -> noFromSimpleJSON "Integer" d
-            _ -> noFromSimpleJSON "Integer" x
+                    Left (d :: Double) -> noFromSimpleJSON "Integer" t d
+            JSON.String text ->
+                case readMay (textToString text) of
+                    Just z -> return z
+                    Nothing -> noFromSimpleJSON "Integer" t text
+            _ -> noFromSimpleJSON "Integer" t x
 
 data AsDictionary a b = AsDictionary [(a,b)]
 
@@ -129,20 +133,20 @@ instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y)
             -- all were suitable as keys, great
             then return $ JSON.Object $ M.fromList zs
             else return $ JSON.Array $ V.fromList asList
-    fromSimpleJSON x = noFromSimpleJSON "AsDictionary" x
+    fromSimpleJSON = noFromSimpleJSON "AsDictionary"
 
 instance SimpleJSON x => SimpleJSON [x] where
     toSimpleJSON xs = do
         ys <- mapM toSimpleJSON xs
         return $ JSON.Array $ V.fromList ys
-    fromSimpleJSON x = noFromSimpleJSON "list" x
+    fromSimpleJSON = noFromSimpleJSON "list"
 
 instance (SimpleJSON x, SimpleJSON y) => SimpleJSON (x,y) where
     toSimpleJSON (x,y) = do
         x' <- toSimpleJSON x
         y' <- toSimpleJSON y
         return $ JSON.Array $ V.fromList [x', y']
-    fromSimpleJSON  x = noFromSimpleJSON "pair" x
+    fromSimpleJSON = noFromSimpleJSON "pair"
 
 
 noToSimpleJSON :: (MonadUserError m, Pretty a) =>  a -> m b
@@ -156,12 +160,15 @@ noToSimpleJSON a = userErr1 $ vcat
     ]
 
 
-noFromSimpleJSON :: (MonadUserError m, Pretty a, Show a) => String -> a -> m b
-noFromSimpleJSON src a = userErr1 $ vcat
+noFromSimpleJSON :: (MonadUserError m, Pretty a, Show a, Pretty b, Show b) => String -> a -> b -> m c
+noFromSimpleJSON src ty x = userErr1 $ vcat
     [ "Cannot convert this JSON to Essence yet."
     , ""
-    , pretty a
-    , pretty (show a)
+    , pretty ty
+    , pretty (show ty)
+    , ""
+    , pretty x
+    , pretty (show x)
     , ""
     , "Source:" <+> pretty src
     , ""

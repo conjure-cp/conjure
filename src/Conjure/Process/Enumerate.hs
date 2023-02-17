@@ -119,7 +119,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     writeModel 120 Plain (Just essenceFile) model
     let
         solve :: IO ()
-        solve = let ?typeCheckerMode = StronglyTyped in ignoreLogs $ mainWithArgs Solve
+        solve = let ?typeCheckerMode = StronglyTyped in ignoreLogs $ runNameGen () $ mainWithArgs Solve
             { UI.essence                    = essenceFile
             , validateSolutionsOpt          = False
             , outputDirectory               = outDir
