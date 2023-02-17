@@ -85,7 +85,7 @@ type BinaryRelationAttrs = IBinaryRelationAttrs;
 
 type IBinaryRelationAttrs = BinaryRelationAttr[];
 
-type Constant = IConstantBool | IConstantInt | IConstantEnum | IConstantField | IConstantFromJSON | IConstantAbstract | IDomainInConstant | ITypedConstant | IConstantUndefined;
+type Constant = IConstantBool | IConstantInt | IConstantEnum | IConstantField | IConstantAbstract | IDomainInConstant | ITypedConstant | IConstantUndefined;
 
 interface IConstantBool {
   tag: "ConstantBool";
@@ -105,11 +105,6 @@ interface IConstantEnum {
 interface IConstantField {
   tag: "ConstantField";
   contents: [Name, Type];
-}
-
-interface IConstantFromJSON {
-  tag: "ConstantFromJSON";
-  contents: Constant[];
 }
 
 interface IConstantAbstract {
