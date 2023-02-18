@@ -267,7 +267,6 @@ instance DomainOf Constant where
     domainOf (DomainInConstant dom)     = return (fmap Constant dom)
     domainOf (TypedConstant x ty)       = domainOf (Typed (Constant x) ty)
     domainOf ConstantUndefined{}        = failDoc "DomainOf-ConstantUndefined"
-    domainOf ConstantFromJSON{}         = failDoc "DomainOf-ConstantFromJSON"
 
     indexDomainsOf ConstantBool{}       = return []
     indexDomainsOf ConstantInt{}        = return []
@@ -277,7 +276,6 @@ instance DomainOf Constant where
     indexDomainsOf DomainInConstant{}   = return []
     indexDomainsOf (TypedConstant x ty) = indexDomainsOf (Typed (Constant x) ty)
     indexDomainsOf ConstantUndefined{}  = return []
-    indexDomainsOf ConstantFromJSON{}   = return []
 
 instance DomainOf (AbstractLiteral Expression) where
 

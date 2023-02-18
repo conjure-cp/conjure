@@ -364,7 +364,7 @@ instance SimpleJSON Expression where
                     (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
                     _ -> noToSimpleJSON x
             _ -> noToSimpleJSON x
-    fromSimpleJSON x = Constant <$> fromSimpleJSON x
+    fromSimpleJSON t x = Constant <$> fromSimpleJSON t x
 
 instance ToFromMiniZinc Expression where
     toMiniZinc x =

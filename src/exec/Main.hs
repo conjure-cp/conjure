@@ -7,6 +7,7 @@ import Conjure.Language.Pretty ( pretty )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UserError ( userErr1 )
 import Conjure.Language.Pretty ( renderWide )
+import Conjure.Language.NameGen ( runNameGen )
 
 -- base
 import System.CPUTime ( getCPUTime )
@@ -68,7 +69,7 @@ main = do
                      >>= return . verbosity
                      >>= helpAutoWidth
     input <- withArgs args (cmdArgs ui)
-    let workload = runLoggerPipeIO (logLevel input) $ do
+    let workload = runLoggerPipeIO (logLevel input) $ runNameGen () $ do
             logDebug ("Command line options:" <+> pretty (show input))
             let ?typeCheckerMode = StronglyTyped
             mainWithArgs input

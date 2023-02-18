@@ -1,3 +1,3 @@
 conjure solve *.essence
 cat xor.solution
-rm -r conjure-output
+rm -rf conjure-output

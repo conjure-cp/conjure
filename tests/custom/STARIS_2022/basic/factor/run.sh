@@ -1,3 +1,3 @@
 conjure solve *.essence
 cat factor.solution
-rm -r conjure-output
+rm -rf conjure-output
