@@ -74,6 +74,26 @@ shadowing p@(Comprehension _ is) = do
 shadowing p = return p
 
 
+addName ::
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    Name -> ReferenceTo -> m ()
+addName n thing = do
+    ctxt <- gets id
+    let
+        allowed (DeclNoRepr _ _ _ _) (Alias _) = True -- needed when instantiating stuff
+        allowed (DeclHasRepr _ _ _) (Alias _) = True -- needed when instantiating stuff
+        allowed old new = old == new
+    let mdefined = [ thing' | (n', thing') <- ctxt, n == n' && not (allowed thing' thing) ]
+    case mdefined of
+        [] -> return ()
+        (thing':_) -> userErr1 $ vcat [ "Redefinition of name:" <+> pretty n
+                                      , "When trying to define it as" <+> pretty thing
+                                      , "It was already defined as" <+> pretty thing'
+                                      ]
+    modify ((n, thing) :)
+
+
 resolveNamesX ::
     MonadFailDoc m =>
     MonadUserError m =>
@@ -112,20 +132,20 @@ resolveStatement st =
             case decl of
                 FindOrGiven forg nm dom       -> do
                     dom' <- resolveD dom
-                    modify ((nm, DeclNoRepr forg nm dom' NoRegion) :)
+                    addName nm $ DeclNoRepr forg nm dom' NoRegion
                     return (Declaration (FindOrGiven forg nm dom'))
                 Letting nm x                  -> do
                     x' <- resolveX x
-                    modify ((nm, Alias x') :)
+                    addName nm $ Alias x'
                     return (Declaration (Letting nm x'))
                 LettingDomainDefnUnnamed nm x -> do
                     x' <- resolveX x
-                    modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
+                    addName nm $ Alias (Domain (DomainUnnamed nm x'))
                     return (Declaration (LettingDomainDefnUnnamed nm x'))
                 LettingDomainDefnEnum (Name ename) nms -> do
-                    modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
-                             | (nm, i) <- zip nms [1..]
-                             ] ++)
+                    sequence_ [ addName nm $ Alias (Constant (ConstantInt (TagEnum ename) i))
+                              | (nm, i) <- zip nms [1..]
+                              ]
                     return st
                 LettingDomainDefnEnum{} -> bug "resolveStatement, Name"
                 GivenDomainDefnEnum{}       -> return st             -- ignoring
@@ -225,7 +245,7 @@ resolveX p@Comprehension{} = scope $ do
                             let gen'' = GenInExpr pat expr'
                             return ( gen'' , InComprehension gen'' )
                     forM_ (universeBi (generatorPat gen)) $ \ nm ->
-                        modify ((nm, refto) :)
+                        addName nm refto
                     return (Generator gen')
                 Condition y -> Condition <$> resolveX y
                 ComprehensionLetting pat expr -> do
@@ -269,12 +289,12 @@ resolveD (DomainReference nm Nothing) = do
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOfDomain d'
-    modify ((n, RecordField n t) :)
+    addName n $ RecordField n t
     return (n, d')
 resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOfDomain d'
-    modify ((n, VariantField n t) :)
+    addName n $ VariantField n t
     return (n, d')
 resolveD d = do
     d' <- descendM resolveD d
@@ -286,7 +306,7 @@ resolveAbsPat ::
     MonadUserError m =>
     Expression -> AbstractPattern -> Expression -> m ()
 resolveAbsPat _ AbstractPatternMetaVar{} _ = bug "resolveAbsPat AbstractPatternMetaVar"
-resolveAbsPat _ (Single nm) x = modify ((nm, Alias x) :)
+resolveAbsPat _ (Single nm) x = addName nm $ Alias x
 resolveAbsPat context (AbsPatTuple ps) x =
     sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
               | (p, i_) <- zip ps allNats
