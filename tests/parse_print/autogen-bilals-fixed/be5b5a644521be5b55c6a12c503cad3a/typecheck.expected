@@ -1,55 +1,66 @@
 Error:
     Undefined reference: q28
     Bindings in context:
-        q45: DeclNoRepr (quantified q45: int(3, 2))
-        q33: DeclNoRepr (quantified q33: int(1..16))
-        q4_Function1DPartial_Flags: DeclNoRepr (quantified q4_Function1DPartial_Flags: matrix indexed by [int(3, 2)] of
-                                                                                           bool)
-        aux2_ExplicitVarSizeWithMarker_Values: DeclNoRepr (find aux2_ExplicitVarSizeWithMarker_Values: matrix indexed by [matrix indexed by [int(3,
-                                                                                                                                                 2)] of
-                                                                                                                              bool,
-                                                                                                                          int(1..16),
-                                                                                                                          int(1..2)] of
-                                                                                                           int(3, 2))
-        aux2_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find aux2_ExplicitVarSizeWithMarker_Marker: matrix indexed by [matrix indexed by [int(3,
-                                                                                                                                                 2)] of
-                                                                                                                              bool,
-                                                                                                                          int(1..16)] of
-                                                                                                           int(0..2))
-        aux1_ExplicitVarSizeWithMarker_Values: DeclNoRepr (find aux1_ExplicitVarSizeWithMarker_Values: matrix indexed by [matrix indexed by [int(3,
-                                                                                                                                                 2)] of
-                                                                                                                              bool,
-                                                                                                                          int(1..16),
-                                                                                                                          int(1..2)] of
-                                                                                                           int(3, 2))
-        aux1_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find aux1_ExplicitVarSizeWithMarker_Marker: matrix indexed by [matrix indexed by [int(3,
-                                                                                                                                                 2)] of
-                                                                                                                              bool,
-                                                                                                                          int(1..16)] of
-                                                                                                           int(0..2))
-        var6_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence: DeclNoRepr (find var6_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence: matrix indexed by [int(1..2),
-                                                                                                                                                                              int(2)] of
-                                                                                                                                                               bool)
-        var6_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find var6_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..2))
-        var5: DeclNoRepr (find var5: bool)
-        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: DeclNoRepr (find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: matrix indexed by [int(1..65536),
-                                                                                                                                                                                                                                                                            int(1..16),
-                                                                                                                                                                                                                                                                            int(3,
-                                                                                                                                                                                                                                                                                2)] of
-                                                                                                                                                                                                                                                             bool)
-        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: DeclNoRepr (find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: matrix indexed by [int(1..65536),
-                                                                                                                                                                                                                                                                          int(1..16),
-                                                                                                                                                                                                                                                                          int(3,
-                                                                                                                                                                                                                                                                              2)] of
-                                                                                                                                                                                                                                                           bool)
-        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..65536)] of
-                                                                                                                                                                                                           int(0..16))
-        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..65536))
-        var3: DeclNoRepr (find var3: bool)
-        var2_1_Function1DPartial_Values: DeclNoRepr (find var2_1_Function1DPartial_Values: matrix indexed by [int(1..4,
-                                                                                                                  -5..3)] of
-                                                                                               int(-1, 5))
-        var2_1_Function1DPartial_Flags: DeclNoRepr (find var2_1_Function1DPartial_Flags: matrix indexed by [int(1..4,
-                                                                                                                -5..3)] of
-                                                                                             bool)
-        var1: DeclNoRepr (find var1: bool)
+        q45: declaration of quantified q45: int(3, 2)
+        q33: declaration of quantified q33: int(1..16)
+        q4_Function1DPartial_Flags: declaration of
+                                        quantified q4_Function1DPartial_Flags: matrix indexed by [int(3, 2)] of bool
+        aux2_ExplicitVarSizeWithMarker_Values: declaration of
+                                                   find aux2_ExplicitVarSizeWithMarker_Values: matrix indexed by [matrix indexed by [int(3,
+                                                                                                                                         2)] of
+                                                                                                                      bool,
+                                                                                                                  int(1..16),
+                                                                                                                  int(1..2)] of
+                                                                                                   int(3, 2)
+        aux2_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                   find aux2_ExplicitVarSizeWithMarker_Marker: matrix indexed by [matrix indexed by [int(3,
+                                                                                                                                         2)] of
+                                                                                                                      bool,
+                                                                                                                  int(1..16)] of
+                                                                                                   int(0..2)
+        aux1_ExplicitVarSizeWithMarker_Values: declaration of
+                                                   find aux1_ExplicitVarSizeWithMarker_Values: matrix indexed by [matrix indexed by [int(3,
+                                                                                                                                         2)] of
+                                                                                                                      bool,
+                                                                                                                  int(1..16),
+                                                                                                                  int(1..2)] of
+                                                                                                   int(3, 2)
+        aux1_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                   find aux1_ExplicitVarSizeWithMarker_Marker: matrix indexed by [matrix indexed by [int(3,
+                                                                                                                                         2)] of
+                                                                                                                      bool,
+                                                                                                                  int(1..16)] of
+                                                                                                   int(0..2)
+        var6_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence: declaration of
+                                                                             find var6_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence: matrix indexed by [int(1..2),
+                                                                                                                                                                      int(2)] of
+                                                                                                                                                       bool
+        var6_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                                  find var6_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..2)
+        var5: declaration of find var5: bool
+        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: declaration of
+                                                                                                                            find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: matrix indexed by [int(1..65536),
+                                                                                                                                                                                                                                                                    int(1..16),
+                                                                                                                                                                                                                                                                    int(3,
+                                                                                                                                                                                                                                                                        2)] of
+                                                                                                                                                                                                                                                     bool
+        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: declaration of
+                                                                                                                           find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: matrix indexed by [int(1..65536),
+                                                                                                                                                                                                                                                                  int(1..16),
+                                                                                                                                                                                                                                                                  int(3,
+                                                                                                                                                                                                                                                                      2)] of
+                                                                                                                                                                                                                                                   bool
+        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                                                                   find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..65536)] of
+                                                                                                                                                                                                   int(0..16)
+        var4_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                                  find var4_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..65536)
+        var3: declaration of find var3: bool
+        var2_1_Function1DPartial_Values: declaration of
+                                             find var2_1_Function1DPartial_Values: matrix indexed by [int(1..4,
+                                                                                                          -5..3)] of
+                                                                                       int(-1, 5)
+        var2_1_Function1DPartial_Flags: declaration of
+                                            find var2_1_Function1DPartial_Flags: matrix indexed by [int(1..4, -5..3)] of
+                                                                                     bool
+        var1: declaration of find var1: bool
