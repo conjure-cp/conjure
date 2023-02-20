@@ -755,12 +755,12 @@ instance ToJSON    ReferenceTo where toJSON = genericToJSON jsonOptions
 instance FromJSON  ReferenceTo where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty ReferenceTo where
-    pretty (Alias x) = "Alias" <+> prParens (pretty x)
-    pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
-    pretty (DeclNoRepr  forg nm dom _) = "DeclNoRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (DeclHasRepr forg nm dom  ) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (RecordField  nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
-    pretty (VariantField nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (Alias x) = "an alias for" <++> pretty x
+    pretty (InComprehension gen) = "a comprehension generator" <++> pretty gen
+    pretty (DeclNoRepr  forg nm dom _) = "declaration of" <++> pretty forg <+> pretty nm <> ":" <+> pretty dom
+    pretty (DeclHasRepr forg nm dom  ) = "declaration of" <++> pretty forg <+> pretty nm <> ":" <+> pretty dom
+    pretty (RecordField  nm ty) = "record field"  <++> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (VariantField nm ty) = "variant field" <++> prParens (pretty nm <+> ":" <+> pretty ty)
 
 data Region
     = NoRegion

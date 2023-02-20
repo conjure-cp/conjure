@@ -88,7 +88,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
             writeModel 120 Plain (Just (tBaseDir </> "stdout")) model
             case tyCheck model of
                 Left err -> writeFile (tBaseDir </> "typecheck") (renderNormal err)
-                Right () -> pure ()
+                Right () -> writeFile (tBaseDir </> "typecheck") ""
             removeFileIfExists (tBaseDir </> "stderr")
 
     let fixWindowsPaths :: String -> String
