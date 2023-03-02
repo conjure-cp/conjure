@@ -8,10 +8,10 @@ find var5: relation of (partition from bool)
 find var6: partition from bool
 find var7: function int(4, -4..-2) --> partition from int(2, -1..3)
 such that
-    or([function({true, true} --> q_8, {true, true} --> var7(var3), {false} --> partition({-5}),
+    or([function({true, true} --> q_8, {true, true} --> image(var7, var3), {false} --> partition({-5}),
                  {true, false} --> partition({3}))
         !=
-        function({true, true} --> var7(var3), ({} : `set of bool`) --> partition({-1}, {6}),
+        function({true, true} --> image(var7, var3), ({} : `set of bool`) --> partition({-1}, {6}),
                  {true} --> partition({3}, {2}))
             | q_8 <- var4, q_8 = partition({|(mset() : `mset of bool`)|, var3}, {-9})]),
     -4 != |({} : `set of int`)| / -9,

@@ -43,12 +43,12 @@ such that
              | q_31 : set of int(-2..3, 3), |q_31| <= toInt(var7) ** toInt(var8)]),
     [relation((toInt(true), {-8}, function(false --> false), toInt(false), true),
               (toInt(false), {-6, -9}, function(false --> true), var5, true <-> true),
-              (5, var6(var2), function(true --> true), toInt(true), false));
+              (5, image(var6, var2), function(true --> true), toInt(true), false));
          int(5)]
     =
     [relation((toInt(true), var1, function(false --> true, false --> true), -1 / -6, var7),
               (1 / -10, var1, function(true --> true, true --> true), var2, var8),
-              (-2 / -9, var6(-8), function(false --> true, true --> true), toInt(false), -4 = 10)),
+              (-2 / -9, image(var6, -8), function(false --> true, true --> true), toInt(false), -4 = 10)),
      relation((toInt(false), {3, -10}, function(true --> false, false --> false), toInt(false), false != true),
               (-3 * 7, var1, function(true --> true, false --> true), -10, -8 = 8),
               (3 + -10, var1, function(false --> false, false --> true), -8 + 7, false));
