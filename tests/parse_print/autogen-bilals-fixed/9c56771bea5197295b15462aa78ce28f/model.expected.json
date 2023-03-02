@@ -1,8 +1,8 @@
 {"mInfo":
      {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
       "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
-      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
-      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
  "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
  "mStatements":
      [{"Declaration":
@@ -715,16 +715,16 @@
                                                                                       {"ConstantInt":
                                                                                            [{"TagInt": []}, -3]}]]}}},
                                                                      {"Op":
-                                                                          {"MkOpRelationProj":
+                                                                          {"MkOpImage":
                                                                                [{"Reference": [{"Name": "var2"}, null]},
-                                                                                [{"Op":
-                                                                                      {"MkOpIff":
-                                                                                           [{"Constant":
-                                                                                                 {"ConstantBool":
-                                                                                                      false}},
-                                                                                            {"Constant":
-                                                                                                 {"ConstantBool":
-                                                                                                      true}}]}}]]}}]}},
+                                                                                {"Op":
+                                                                                     {"MkOpIff":
+                                                                                          [{"Constant":
+                                                                                                {"ConstantBool":
+                                                                                                     false}},
+                                                                                           {"Constant":
+                                                                                                {"ConstantBool":
+                                                                                                     true}}]}}]}}]}},
                                                           {"Op":
                                                                {"MkOpLeq":
                                                                     [{"Reference": [{"Name": "var1"}, null]},
@@ -809,10 +809,10 @@
                                                           {"Op":
                                                                {"MkOpNeq":
                                                                     [{"Op":
-                                                                          {"MkOpRelationProj":
+                                                                          {"MkOpImage":
                                                                                [{"Reference": [{"Name": "var2"}, null]},
-                                                                                [{"Reference":
-                                                                                      [{"Name": "var3"}, null]}]]}},
+                                                                                {"Reference":
+                                                                                     [{"Name": "var3"}, null]}]}},
                                                                      {"Constant":
                                                                           {"ConstantAbstract":
                                                                                {"AbsLitFunction":
@@ -979,21 +979,20 @@
                                                           {"Op":
                                                                {"MkOpEq":
                                                                     [{"Op":
-                                                                          {"MkOpRelationProj":
+                                                                          {"MkOpImage":
                                                                                [{"Reference": [{"Name": "var2"}, null]},
-                                                                                [{"Op":
-                                                                                      {"MkOpIff":
-                                                                                           [{"Constant":
-                                                                                                 {"ConstantBool":
-                                                                                                      true}},
-                                                                                            {"Constant":
-                                                                                                 {"ConstantBool":
-                                                                                                      true}}]}}]]}},
+                                                                                {"Op":
+                                                                                     {"MkOpIff":
+                                                                                          [{"Constant":
+                                                                                                {"ConstantBool": true}},
+                                                                                           {"Constant":
+                                                                                                {"ConstantBool":
+                                                                                                     true}}]}}]}},
                                                                      {"Op":
-                                                                          {"MkOpRelationProj":
+                                                                          {"MkOpImage":
                                                                                [{"Reference": [{"Name": "var2"}, null]},
-                                                                                [{"Reference":
-                                                                                      [{"Name": "var3"}, null]}]]}}]}},
+                                                                                {"Reference":
+                                                                                     [{"Name": "var3"}, null]}]}}]}},
                                                           {"Reference": [{"Name": "var1"}, null]}]]}},
                                               {"Op":
                                                    {"MkOpMinus":
@@ -1612,21 +1611,21 @@
                                                                                     {"ConstantInt":
                                                                                          [{"TagInt": []}, 6]}]}}},
                                                                     {"Op":
-                                                                         {"MkOpRelationProj":
+                                                                         {"MkOpImage":
                                                                               [{"Reference": [{"Name": "var2"}, null]},
-                                                                               [{"Op":
-                                                                                     {"MkOpNeq":
-                                                                                          [{"Op":
-                                                                                                {"MkOpNegate":
-                                                                                                     {"Constant":
-                                                                                                          {"ConstantInt":
-                                                                                                               [{"TagInt":
-                                                                                                                     []},
-                                                                                                                9]}}}},
-                                                                                           {"Constant":
-                                                                                                {"ConstantInt":
-                                                                                                     [{"TagInt": []},
-                                                                                                      6]}}]}}]]}},
+                                                                               {"Op":
+                                                                                    {"MkOpNeq":
+                                                                                         [{"Op":
+                                                                                               {"MkOpNegate":
+                                                                                                    {"Constant":
+                                                                                                         {"ConstantInt":
+                                                                                                              [{"TagInt":
+                                                                                                                    []},
+                                                                                                               9]}}}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     6]}}]}}]}},
                                                                     {"Constant":
                                                                          {"ConstantAbstract":
                                                                               {"AbsLitFunction":
@@ -1662,15 +1661,14 @@
                                                                                {"ConstantAbstract": {"AbsLitSet": []}}},
                                                                           {"TypeSet": {"TypeInt": {"TagInt": []}}}]},
                                                                     {"Op":
-                                                                         {"MkOpRelationProj":
+                                                                         {"MkOpImage":
                                                                               [{"Reference": [{"Name": "var2"}, null]},
-                                                                               [{"Constant":
-                                                                                     {"ConstantBool": false}}]]}},
+                                                                               {"Constant": {"ConstantBool": false}}]}},
                                                                     {"Op":
-                                                                         {"MkOpRelationProj":
+                                                                         {"MkOpImage":
                                                                               [{"Reference": [{"Name": "var2"}, null]},
-                                                                               [{"Reference":
-                                                                                     [{"Name": "var3"}, null]}]]}},
+                                                                               {"Reference":
+                                                                                    [{"Name": "var3"}, null]}]}},
                                                                     {"Constant":
                                                                          {"ConstantAbstract":
                                                                               {"AbsLitTuple":
