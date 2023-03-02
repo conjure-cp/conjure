@@ -6,12 +6,12 @@ given n_periods: int(1..100)
 letting Boat be domain int(1..n_boats)
 given capacity: function (total) Boat --> int(1..n_upper)
 given crew: function (total) Boat --> int(1..n_upper)
-where and([crew(i) <= capacity(i) | i : Boat])
+where and([image(crew, i) <= image(capacity, i) | i : Boat])
 find hosts: set of Boat
 find sched: set (size n_periods) of function (total) Boat --> Boat
 minimising |hosts|
 such that
     and([range(p) subsetEq hosts | p <- sched]),
-    and([and([p(h) = h | h <- hosts]) | p <- sched]),
-    and([and([sum([crew(b) | b <- preImage(p, h)]) <= capacity(h) | h <- hosts]) | p <- sched]),
-    and([sum([toInt(p(b1) = p(b2)) | p <- sched]) <= 1 | b1 : Boat, b2 : Boat, b1 != b2])
+    and([and([image(p, h) = h | h <- hosts]) | p <- sched]),
+    and([and([sum([image(crew, b) | b <- preImage(p, h)]) <= image(capacity, h) | h <- hosts]) | p <- sched]),
+    and([sum([toInt(image(p, b1) = image(p, b2)) | p <- sched]) <= 1 | b1 : Boat, b2 : Boat, b1 != b2])
