@@ -1,6 +1,13 @@
 Error:
-    tests/parse_print/random_perturb/enum_liberated/delete-02/delete-02.essence:3:1:
-unexpected givn
-expecting dot, end of input, or statement
-    givn E1 new type enum
-    ^
+    Parser error in file: tests/parse_print/random_perturb/enum_liberated/delete-02/delete-02.essence Error is:
+ValidatorError tests/parse_print/random_perturb/enum_liberated/delete-02/delete-02.essence:3:1:
+  |
+3 | givn E1 new type enum
+  | ^^^^^^^^^^^^^^^^^^^^^
+Skipped tokens
+
+tests/parse_print/random_perturb/enum_liberated/delete-02/delete-02.essence:4:10:
+  |
+4 | find x : E1
+  |          ^^
+Error: Symbol not found "E1"

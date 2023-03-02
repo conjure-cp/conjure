@@ -1,6 +1,13 @@
 Error:
-    tests/parse_print/random_perturb/enum_liberated/delete-06/delete-06.essence:13:10:
-unexpected 2
-expecting domain
-    find k : 2
-             ^
+    Parser error in file: tests/parse_print/random_perturb/enum_liberated/delete-06/delete-06.essence Error is:
+ValidatorError tests/parse_print/random_perturb/enum_liberated/delete-06/delete-06.essence:13:9:
+   |
+13 | find k : 2
+   |         ^
+Missing Domain
+
+tests/parse_print/random_perturb/enum_liberated/delete-06/delete-06.essence:13:10:
+   |
+13 | find k : 2
+   |          ^
+Unexpected LIntLiteral 2

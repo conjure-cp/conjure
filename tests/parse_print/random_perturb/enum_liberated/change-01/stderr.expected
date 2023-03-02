@@ -1,6 +1,13 @@
 Error:
-    tests/parse_print/random_perturb/enum_liberated/change-01/change-01.essence:13:11:
-unexpected )
-expecting end of input, rest of statement, or statement
-    find k : E)
-              ^
+    Parser error in file: tests/parse_print/random_perturb/enum_liberated/change-01/change-01.essence Error is:
+ValidatorError tests/parse_print/random_perturb/enum_liberated/change-01/change-01.essence:13:10:
+   |
+13 | find k : E)
+   |          ^
+Error: Symbol not found "E"
+
+tests/parse_print/random_perturb/enum_liberated/change-01/change-01.essence:13:11:
+   |
+13 | find k : E)
+   |           ^
+Unexpected L_CloseParen

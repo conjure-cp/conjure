@@ -1,6 +1,13 @@
 Error:
-    tests/parse_print/issues/425/1/425.essence:1:15:
-unexpected :
-expecting expression
-    letting s be {:}
-                  ^
+    Parser error in file: tests/parse_print/issues/425/1/425.essence Error is:
+ValidatorError tests/parse_print/issues/425/1/425.essence:1:15:
+  |
+1 | letting s be {:}
+  |               ^^
+Skipped tokens
+
+tests/parse_print/issues/425/1/425.essence:1:15:
+  |
+1 | letting s be {:}
+  |               ^
+Missing }

@@ -1,6 +1,7 @@
 Error:
-    tests/parse_print/random_perturb/set01/change-08/change-08.essence:3:29:
-unexpected (
-expecting end of input, rest of statement, or statement
-    find x : set (size 2) of inN(1..3)
-                                ^
+    Parser error in file: tests/parse_print/random_perturb/set01/change-08/change-08.essence Error is:
+ValidatorError tests/parse_print/random_perturb/set01/change-08/change-08.essence:3:26:
+  |
+3 | find x : set (size 2) of inN(1..3)
+  |                          ^^^
+Error: Symbol not found "inN"

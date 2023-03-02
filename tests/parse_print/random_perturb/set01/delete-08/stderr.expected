@@ -1,6 +1,31 @@
 Error:
-    tests/parse_print/random_perturb/set01/delete-08/delete-08.essence:3:23:
-unexpected o
-expecting of
-    find x : set (size 2) o int(1..3)
-                          ^
+    Parser error in file: tests/parse_print/random_perturb/set01/delete-08/delete-08.essence Error is:
+ValidatorError tests/parse_print/random_perturb/set01/delete-08/delete-08.essence:3:23:
+  |
+3 | find x : set (size 2) o int(1..3)
+  |                       ^
+Error: Symbol not found "o"
+
+tests/parse_print/random_perturb/set01/delete-08/delete-08.essence:3:23:
+  |
+3 | find x : set (size 2) o int(1..3)
+  |                       ^
+Missing of
+
+tests/parse_print/random_perturb/set01/delete-08/delete-08.essence:3:25:
+  |
+3 | find x : set (size 2) o int(1..3)
+  |                         ^
+Missing <identifier>
+
+tests/parse_print/random_perturb/set01/delete-08/delete-08.essence:3:25:
+  |
+3 | find x : set (size 2) o int(1..3)
+  |                         ^
+Missing :
+
+tests/parse_print/random_perturb/set01/delete-08/delete-08.essence:3:25:
+  |
+3 | find x : set (size 2) o int(1..3)
+  |                         ^
+Missing ,

@@ -1,5 +1,7 @@
 Error:
-    tests/parse_print/random_perturb/set01/delete-06/delete-06.essence:1:10:
-language name has to be Essence, but given: Essece
-    language Essece 1.3
-             ^
+    Parser error in file: tests/parse_print/random_perturb/set01/delete-06/delete-06.essence Error is:
+ValidatorError tests/parse_print/random_perturb/set01/delete-06/delete-06.essence:1:10:
+  |
+1 | language Essece 1.3
+  |          ^^^^^^
+Syntax Error: Not a valid language name
