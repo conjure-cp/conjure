@@ -1,6 +1,26 @@
 Error:
-    405.essence:2:15:
-unexpected i
-expecting <->, comma, end of input, operator, rest of statement, or statement
-    such that for i in s . i % 2 = 0
-                  ^
+    Parser error in file: 405.essence Error is:
+ValidatorError 405.essence:2:11:
+  |
+2 | such that for i in s . i % 2 = 0
+  |           ^^^
+Error: Symbol not found "for"
+
+405.essence:2:15:
+  |
+2 | such that for i in s . i % 2 = 0
+  |               ^
+Error: Symbol not found "i"
+
+405.essence:2:15:
+  |
+2 | such that for i in s . i % 2 = 0
+  |               ^
+Missing ,
+
+405.essence:2:22:
+  |
+2 | such that for i in s . i % 2 = 0
+  |                      ^^^^^^^^^^^
+Skipped tokens
+
