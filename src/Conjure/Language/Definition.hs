@@ -67,6 +67,7 @@ import qualified Data.Vector as V               -- vector
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
+import Data.Aeson.Key (toText)
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -91,7 +92,7 @@ instance SimpleJSON Model where
         let (innersAsMaps, rest) = unzip [ case i of JSON.Object mp -> ([mp], []); _ -> ([], [i]) | i <- inners ]
                                     |> (\ (xs, ys) -> ((mconcat) <$> xs, concat ys))
         unless (null rest) $ bug $ "Expected json objects only, but got:" <+> vcat (map pretty rest)
-        return (JSON.Object innersAsMaps)
+        return (JSON.Object $ mconcat innersAsMaps)
     fromSimpleJSON = noFromSimpleJSON "Model"
 
 fromSimpleJSONModel ::
@@ -104,7 +105,7 @@ fromSimpleJSONModel ::
 fromSimpleJSONModel essence json =
     case json of
         JSON.Object inners -> do
-            stmts <- forM (M.toList inners) $ \ (name, valueJSON) -> do
+            stmts <- forM (KM.toList inners) $ \ (toText->name, valueJSON) -> do
                 -- traceM $ show $ "name    " <+> pretty name
                 let mdomain = [ dom
                               | Declaration (FindOrGiven Given (Name nm) dom) <- mStatements essence

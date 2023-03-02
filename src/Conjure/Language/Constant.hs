@@ -42,6 +42,7 @@ import Test.QuickCheck ( Arbitrary(..), oneof )
 
 -- aeson
 import qualified Data.Aeson as JSON
+import Data.Aeson.Key (toText)
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
@@ -112,7 +113,7 @@ instance SimpleJSON Constant where
         ConstantAbstract . AbsLitTuple <$> zipWithM fromSimpleJSON ts (V.toList xs)
 
     fromSimpleJSON t@(TypeVariant ts) x@(JSON.Object m) = do
-        mys <- forM (M.toList m) $ \ (name, value) -> do
+        mys <- forM (KM.toList m) $ \ (toText->name, value) -> do
             let mty = [ ty | (nm, ty) <- ts, nm == Name name ]
             case mty of
                 [ty] -> do
@@ -125,7 +126,7 @@ instance SimpleJSON Constant where
             _ -> noFromSimpleJSON "Constant" t x
 
     fromSimpleJSON t@(TypeRecord ts) x@(JSON.Object m) = do
-        mys <- forM (M.toList m) $ \ (name, value) -> do
+        mys <- forM (KM.toList m) $ \ (toText->name, value) -> do
             let mty = [ ty | (nm, ty) <- ts, nm == Name name ]
             case mty of
                 [ty] -> do
@@ -138,7 +139,7 @@ instance SimpleJSON Constant where
             else noFromSimpleJSON "Constant" t x
 
     fromSimpleJSON (TypeMatrix index inner) (JSON.Object m) = do
-        ys <- forM (M.toList m) $ \ (name, value) -> do
+        ys <- forM (KM.toList m) $ \ (toText->name, value) -> do
             -- the name must be an integer
             a <- fromSimpleJSON index (JSON.String name)
             b <- fromSimpleJSON inner value
@@ -165,7 +166,7 @@ instance SimpleJSON Constant where
         ConstantAbstract . AbsLitMSet <$> mapM (fromSimpleJSON t) (V.toList xs)
 
     fromSimpleJSON (TypeFunction fr to) (JSON.Object m) = do
-        ys <- forM (M.toList m) $ \ (name, value) -> do
+        ys <- forM (KM.toList m) $ \ (toText->name, value) -> do
             -- the name must be an integer
             -- and this is a function from ints we are reading here
             a <- fromSimpleJSON fr (JSON.String name)
