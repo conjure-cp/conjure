@@ -1,0 +1,17 @@
+Error:
+    Parser error in file: tests/parse_print/autogen/561~final/spec.essence Error is:
+ValidatorError tests/parse_print/autogen/561~final/spec.essence:4:25:
+  |
+4 | such that together({2}, partition({0}) - partition({3}))
+  |                         ^^^^^^^^^^^^^^
+Type error:
+	Expected:"Number / set/ mset / relation / function"
+	Got: partition from int
+
+tests/parse_print/autogen/561~final/spec.essence:4:42:
+  |
+4 | such that together({2}, partition({0}) - partition({3}))
+  |                                          ^^^^^^^^^^^^^^
+Type error:
+	Expected:"Number / set/ mset / relation / function"
+	Got: partition from int

@@ -1,0 +1,17 @@
+Error:
+    Parser error in file: tests/parse_print/autogen/316~final/spec.essence Error is:
+ValidatorError tests/parse_print/autogen/316~final/spec.essence:14:44:
+   |
+14 |               tuple (true); int(1..4)] --> partition({false, true, true}, {false, false},
+   |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected:"Number / set/ mset / relation / function"
+	Got: partition from bool
+
+tests/parse_print/autogen/316~final/spec.essence:17:44:
+   |
+17 |                                            partition({false, false, true, true, true}, {false, true, true},
+   |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected:"Number / set/ mset / relation / function"
+	Got: partition from bool
