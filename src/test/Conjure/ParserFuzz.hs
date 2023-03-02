@@ -15,20 +15,22 @@ import Test.Tasty.HUnit (assertFailure, testCaseSteps, assertEqual)
 import Conjure.Language.Parser (runLexerAndParser)
 import Conjure.Language.AST.ASTParser (runASTParser, parseProgram)
 import Conjure.Language.NewLexer (runLexer, Reformable (reform), reformList)
-import qualified Data.Text as T (pack, lines) 
+import qualified Data.Text as T (pack, lines, unpack) 
 import qualified Data.Text.Lazy as L  
-import Data.ByteString.Char8(hPutStrLn, pack)
+import Data.ByteString.Char8(hPutStrLn, pack, unpack)
 import Conjure.Language.AST.Reformer (Flattenable(flatten))
 import Data.Algorithm.Diff (getDiff, getGroupedDiff)
 import Data.Algorithm.DiffOutput (ppDiff)
 import GHC.IO.Handle.FD (stderr)
+import System.Console.CmdArgs.Helper (execute)
+import Shelly (run, shelly, silently)
 
 
 tests :: IO TestTree
 tests = do
     let baseDir = "tests"
-    allFiles <- readFileIfExists "tests/allfiles.txt"
-    let allFileList = lines $ fromMaybe "" allFiles
+    allFiles <-  shelly $ silently $ run  "git" ["ls-tree", "--full-tree",  "--name-only", "-r", "HEAD"] 
+    let allFileList = lines $ T.unpack allFiles
     contents <- mapM readFileIfExists allFileList
     let testCases = [testFile fp fd | (fp,Just fd) <-zip allFileList contents,False]
     return (testGroup "parse_fuzz" testCases)
