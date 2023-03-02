@@ -8,7 +8,7 @@ on:
                             # so we build the solvers once a week to make sure they still build OK.
   push:
     branches:
-      - master              # run for the master branch
+      - main                # run for the main branch
     paths:
       - etc/build/install*.sh
       - Makefile
