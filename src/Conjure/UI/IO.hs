@@ -89,7 +89,6 @@ readParamJSON ::
     MonadIO m =>
     MonadFail m =>
     MonadUserError m =>
-    MonadLog m =>
     Model -> FilePath -> m Model
 readParamJSON model fp = do
     (_, contents) <- liftIO $ pairWithContents fp
@@ -106,7 +105,6 @@ readParamOrSolutionFromFile ::
     MonadIO m =>
     MonadFailDoc m =>
     MonadUserError m =>
-    MonadLog m =>
     Model -> FilePath -> m Model
 readParamOrSolutionFromFile model fp = do
     if ".json" `isSuffixOf` fp

@@ -98,7 +98,6 @@ instance SimpleJSON Model where
 fromSimpleJSONModel ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     MonadUserError m =>
-    MonadLog m =>
     Model ->
     JSON.Value ->
     m Model
@@ -121,7 +120,7 @@ fromSimpleJSONModel essence json =
                         -- traceM $ show $ "value   " <+> pretty value
                         return $ Just $ Declaration (Letting (Name name) value)
                     _ -> do
-                        logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
+                        -- logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
                         return Nothing
             return def { mStatements = catMaybes stmts }
         _ -> noFromSimpleJSON "Model" TypeAny json
