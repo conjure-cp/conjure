@@ -650,7 +650,11 @@ parseShortTuple = do
     openB <- need L_OpenParen
     lst <- commaList parseDomain
     closeB <- want L_CloseParen
-    return $ ShortTupleDomainNode $ ListNode (RealToken openB) lst closeB
+    return $ case lst of 
+        Seq [SeqElem d Nothing] -> d
+        Seq _ -> ShortTupleDomainNode $ ListNode (RealToken openB) lst closeB
+    
+    
 
 parseRecord :: Parser DomainNode
 parseRecord = do
