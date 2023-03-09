@@ -2,52 +2,52 @@ type AbstractLiteral<T> = IAbsLitTuple<T> | IAbsLitRecord<T> | IAbsLitVariant<T>
 
 interface IAbsLitTuple<T> {
   tag: "AbsLitTuple";
-  contents: T[];
+  contents: Expression[];
 }
 
 interface IAbsLitRecord<T> {
   tag: "AbsLitRecord";
-  contents: [Name, T][];
+  contents: [Name, Expression][];
 }
 
 interface IAbsLitVariant<T> {
   tag: "AbsLitVariant";
-  contents: [[Name, Domain<void, T>][], Name, T];
+  contents: [[Name, Domain<void, Expression>][], Name, Expression];
 }
 
 interface IAbsLitMatrix<T> {
   tag: "AbsLitMatrix";
-  contents: [Domain<void, T>, T[]];
+  contents: [Domain<void, Expression>, Expression[]];
 }
 
 interface IAbsLitSet<T> {
   tag: "AbsLitSet";
-  contents: T[];
+  contents: Expression[];
 }
 
 interface IAbsLitMSet<T> {
   tag: "AbsLitMSet";
-  contents: T[];
+  contents: Expression[];
 }
 
 interface IAbsLitFunction<T> {
   tag: "AbsLitFunction";
-  contents: [T, T][];
+  contents: [Expression, Expression][];
 }
 
 interface IAbsLitSequence<T> {
   tag: "AbsLitSequence";
-  contents: T[];
+  contents: Expression[];
 }
 
 interface IAbsLitRelation<T> {
   tag: "AbsLitRelation";
-  contents: T[][];
+  contents: Expression[][];
 }
 
 interface IAbsLitPartition<T> {
   tag: "AbsLitPartition";
-  contents: T[][];
+  contents: Expression[][];
 }
 
 type AbstractPattern = ISingle | IAbsPatTuple | IAbsPatMatrix | IAbsPatSet | IAbstractPatternMetaVar;
@@ -175,82 +175,82 @@ interface IDomainBool<T1, T2> {
 
 interface IDomainIntE<T1, T2> {
   tag: "DomainIntE";
-  contents: T2;
+  contents: Expression;
 }
 
 interface IDomainInt<T1, T2> {
   tag: "DomainInt";
-  contents: [IntTag, Range<T2>[]];
+  contents: [IntTag, Range<Expression>[]];
 }
 
 interface IDomainEnum<T1, T2> {
   tag: "DomainEnum";
-  contents: [Name, Range<T2>[], [Name, number][]];
+  contents: [Name, Range<Expression>[], [Name, number][]];
 }
 
 interface IDomainUnnamed<T1, T2> {
   tag: "DomainUnnamed";
-  contents: [Name, T2];
+  contents: [Name, Expression];
 }
 
 interface IDomainTuple<T1, T2> {
   tag: "DomainTuple";
-  contents: Domain<T1, T2>[];
+  contents: Domain<void, Expression>[];
 }
 
 interface IDomainRecord<T1, T2> {
   tag: "DomainRecord";
-  contents: [Name, Domain<T1, T2>][];
+  contents: [Name, Domain<void, Expression>][];
 }
 
 interface IDomainVariant<T1, T2> {
   tag: "DomainVariant";
-  contents: [Name, Domain<T1, T2>][];
+  contents: [Name, Domain<void, Expression>][];
 }
 
 interface IDomainMatrix<T1, T2> {
   tag: "DomainMatrix";
-  contents: [Domain<void, T2>, Domain<T1, T2>];
+  contents: [Domain<void, Expression>, Domain<void, Expression>];
 }
 
 interface IDomainSet<T1, T2> {
   tag: "DomainSet";
-  contents: [T1, SetAttr<T2>, Domain<T1, T2>];
+  contents: [void, SetAttr<Expression>, Domain<void, Expression>];
 }
 
 interface IDomainMSet<T1, T2> {
   tag: "DomainMSet";
-  contents: [T1, MSetAttr<T2>, Domain<T1, T2>];
+  contents: [void, MSetAttr<Expression>, Domain<void, Expression>];
 }
 
 interface IDomainFunction<T1, T2> {
   tag: "DomainFunction";
-  contents: [T1, FunctionAttr<T2>, Domain<T1, T2>, Domain<T1, T2>];
+  contents: [void, FunctionAttr<Expression>, Domain<void, Expression>, Domain<void, Expression>];
 }
 
 interface IDomainSequence<T1, T2> {
   tag: "DomainSequence";
-  contents: [T1, SequenceAttr<T2>, Domain<T1, T2>];
+  contents: [void, SequenceAttr<Expression>, Domain<void, Expression>];
 }
 
 interface IDomainRelation<T1, T2> {
   tag: "DomainRelation";
-  contents: [T1, RelationAttr<T2>, Domain<T1, T2>[]];
+  contents: [void, RelationAttr<Expression>, Domain<void, Expression>[]];
 }
 
 interface IDomainPartition<T1, T2> {
   tag: "DomainPartition";
-  contents: [T1, PartitionAttr<T2>, Domain<T1, T2>];
+  contents: [void, PartitionAttr<Expression>, Domain<void, Expression>];
 }
 
 interface IDomainOp<T1, T2> {
   tag: "DomainOp";
-  contents: [Name, Domain<T1, T2>[]];
+  contents: [Name, Domain<void, Expression>[]];
 }
 
 interface IDomainReference<T1, T2> {
   tag: "DomainReference";
-  contents: [Name, Domain<T1, T2>];
+  contents: [Name, Domain<void, Expression>];
 }
 
 interface IDomainMetaVar<T1, T2> {
@@ -309,7 +309,7 @@ type FindOrGiven = "Find" | "Given" | "Quantified" | "CutFind" | "LocalFind";
 
 type FunctionAttr<T> = IFunctionAttr<T>;
 
-type IFunctionAttr<T> = [SizeAttr<T>, PartialityAttr, JectivityAttr];
+type IFunctionAttr<T> = [SizeAttr<Expression>, PartialityAttr, JectivityAttr];
 
 type Generator = IGenDomainNoRepr | IGenDomainHasRepr | IGenInExpr;
 
@@ -496,7 +496,7 @@ interface IModelInfo {
 
 type MSetAttr<T> = IMSetAttr<T>;
 
-type IMSetAttr<T> = [SizeAttr<T>, OccurAttr<T>];
+type IMSetAttr<T> = [SizeAttr<Expression>, OccurAttr<Expression>];
 
 type Name = IName | IMachineName | INameMetaVar;
 
@@ -525,708 +525,708 @@ interface IOccurAttr_None<T> {
 
 interface IOccurAttr_MinOccur<T> {
   tag: "OccurAttr_MinOccur";
-  contents: T;
+  contents: Expression;
 }
 
 interface IOccurAttr_MaxOccur<T> {
   tag: "OccurAttr_MaxOccur";
-  contents: T;
+  contents: Expression;
 }
 
 interface IOccurAttr_MinMaxOccur<T> {
   tag: "OccurAttr_MinMaxOccur";
-  contents: [T, T];
+  contents: [Expression, Expression];
 }
 
 type Op<T> = IMkOpActive<T> | IMkOpAllDiff<T> | IMkOpAllDiffExcept<T> | IMkOpAnd<T> | IMkOpApart<T> | IMkOpAtLeast<T> | IMkOpAtMost<T> | IMkOpAttributeAsConstraint<T> | IMkOpCatchUndef<T> | IMkOpDefined<T> | IMkOpDiv<T> | IMkOpDontCare<T> | IMkOpDotLeq<T> | IMkOpDotLt<T> | IMkOpEq<T> | IMkOpFactorial<T> | IMkOpFlatten<T> | IMkOpFreq<T> | IMkOpGCC<T> | IMkOpGeq<T> | IMkOpGt<T> | IMkOpHist<T> | IMkOpIff<T> | IMkOpImage<T> | IMkOpImageSet<T> | IMkOpImply<T> | IMkOpIn<T> | IMkOpIndexing<T> | IMkOpIntersect<T> | IMkOpInverse<T> | IMkOpLeq<T> | IMkOpLexLeq<T> | IMkOpLexLt<T> | IMkOpLt<T> | IMkOpMakeTable<T> | IMkOpMax<T> | IMkOpMin<T> | IMkOpMinus<T> | IMkOpMod<T> | IMkOpNegate<T> | IMkOpNeq<T> | IMkOpNot<T> | IMkOpOr<T> | IMkOpParticipants<T> | IMkOpParts<T> | IMkOpParty<T> | IMkOpPow<T> | IMkOpPowerSet<T> | IMkOpPreImage<T> | IMkOpPred<T> | IMkOpProduct<T> | IMkOpRange<T> | IMkOpRelationProj<T> | IMkOpRestrict<T> | IMkOpSlicing<T> | IMkOpSubsequence<T> | IMkOpSubset<T> | IMkOpSubsetEq<T> | IMkOpSubstring<T> | IMkOpSucc<T> | IMkOpSum<T> | IMkOpSupset<T> | IMkOpSupsetEq<T> | IMkOpTable<T> | IMkOpTildeLeq<T> | IMkOpTildeLt<T> | IMkOpToInt<T> | IMkOpToMSet<T> | IMkOpToRelation<T> | IMkOpToSet<T> | IMkOpTogether<T> | IMkOpTransform<T> | IMkOpTrue<T> | IMkOpTwoBars<T> | IMkOpUnion<T> | IMkOpXor<T>;
 
 interface IMkOpActive<T> {
   tag: "MkOpActive";
-  contents: OpActive<T>;
+  contents: OpActive<Expression>;
 }
 
 interface IMkOpAllDiff<T> {
   tag: "MkOpAllDiff";
-  contents: OpAllDiff<T>;
+  contents: OpAllDiff<Expression>;
 }
 
 interface IMkOpAllDiffExcept<T> {
   tag: "MkOpAllDiffExcept";
-  contents: OpAllDiffExcept<T>;
+  contents: OpAllDiffExcept<Expression>;
 }
 
 interface IMkOpAnd<T> {
   tag: "MkOpAnd";
-  contents: OpAnd<T>;
+  contents: OpAnd<Expression>;
 }
 
 interface IMkOpApart<T> {
   tag: "MkOpApart";
-  contents: OpApart<T>;
+  contents: OpApart<Expression>;
 }
 
 interface IMkOpAtLeast<T> {
   tag: "MkOpAtLeast";
-  contents: OpAtLeast<T>;
+  contents: OpAtLeast<Expression>;
 }
 
 interface IMkOpAtMost<T> {
   tag: "MkOpAtMost";
-  contents: OpAtMost<T>;
+  contents: OpAtMost<Expression>;
 }
 
 interface IMkOpAttributeAsConstraint<T> {
   tag: "MkOpAttributeAsConstraint";
-  contents: OpAttributeAsConstraint<T>;
+  contents: OpAttributeAsConstraint<Expression>;
 }
 
 interface IMkOpCatchUndef<T> {
   tag: "MkOpCatchUndef";
-  contents: OpCatchUndef<T>;
+  contents: OpCatchUndef<Expression>;
 }
 
 interface IMkOpDefined<T> {
   tag: "MkOpDefined";
-  contents: OpDefined<T>;
+  contents: OpDefined<Expression>;
 }
 
 interface IMkOpDiv<T> {
   tag: "MkOpDiv";
-  contents: OpDiv<T>;
+  contents: OpDiv<Expression>;
 }
 
 interface IMkOpDontCare<T> {
   tag: "MkOpDontCare";
-  contents: OpDontCare<T>;
+  contents: OpDontCare<Expression>;
 }
 
 interface IMkOpDotLeq<T> {
   tag: "MkOpDotLeq";
-  contents: OpDotLeq<T>;
+  contents: OpDotLeq<Expression>;
 }
 
 interface IMkOpDotLt<T> {
   tag: "MkOpDotLt";
-  contents: OpDotLt<T>;
+  contents: OpDotLt<Expression>;
 }
 
 interface IMkOpEq<T> {
   tag: "MkOpEq";
-  contents: OpEq<T>;
+  contents: OpEq<Expression>;
 }
 
 interface IMkOpFactorial<T> {
   tag: "MkOpFactorial";
-  contents: OpFactorial<T>;
+  contents: OpFactorial<Expression>;
 }
 
 interface IMkOpFlatten<T> {
   tag: "MkOpFlatten";
-  contents: OpFlatten<T>;
+  contents: OpFlatten<Expression>;
 }
 
 interface IMkOpFreq<T> {
   tag: "MkOpFreq";
-  contents: OpFreq<T>;
+  contents: OpFreq<Expression>;
 }
 
 interface IMkOpGCC<T> {
   tag: "MkOpGCC";
-  contents: OpGCC<T>;
+  contents: OpGCC<Expression>;
 }
 
 interface IMkOpGeq<T> {
   tag: "MkOpGeq";
-  contents: OpGeq<T>;
+  contents: OpGeq<Expression>;
 }
 
 interface IMkOpGt<T> {
   tag: "MkOpGt";
-  contents: OpGt<T>;
+  contents: OpGt<Expression>;
 }
 
 interface IMkOpHist<T> {
   tag: "MkOpHist";
-  contents: OpHist<T>;
+  contents: OpHist<Expression>;
 }
 
 interface IMkOpIff<T> {
   tag: "MkOpIff";
-  contents: OpIff<T>;
+  contents: OpIff<Expression>;
 }
 
 interface IMkOpImage<T> {
   tag: "MkOpImage";
-  contents: OpImage<T>;
+  contents: OpImage<Expression>;
 }
 
 interface IMkOpImageSet<T> {
   tag: "MkOpImageSet";
-  contents: OpImageSet<T>;
+  contents: OpImageSet<Expression>;
 }
 
 interface IMkOpImply<T> {
   tag: "MkOpImply";
-  contents: OpImply<T>;
+  contents: OpImply<Expression>;
 }
 
 interface IMkOpIn<T> {
   tag: "MkOpIn";
-  contents: OpIn<T>;
+  contents: OpIn<Expression>;
 }
 
 interface IMkOpIndexing<T> {
   tag: "MkOpIndexing";
-  contents: OpIndexing<T>;
+  contents: OpIndexing<Expression>;
 }
 
 interface IMkOpIntersect<T> {
   tag: "MkOpIntersect";
-  contents: OpIntersect<T>;
+  contents: OpIntersect<Expression>;
 }
 
 interface IMkOpInverse<T> {
   tag: "MkOpInverse";
-  contents: OpInverse<T>;
+  contents: OpInverse<Expression>;
 }
 
 interface IMkOpLeq<T> {
   tag: "MkOpLeq";
-  contents: OpLeq<T>;
+  contents: OpLeq<Expression>;
 }
 
 interface IMkOpLexLeq<T> {
   tag: "MkOpLexLeq";
-  contents: OpLexLeq<T>;
+  contents: OpLexLeq<Expression>;
 }
 
 interface IMkOpLexLt<T> {
   tag: "MkOpLexLt";
-  contents: OpLexLt<T>;
+  contents: OpLexLt<Expression>;
 }
 
 interface IMkOpLt<T> {
   tag: "MkOpLt";
-  contents: OpLt<T>;
+  contents: OpLt<Expression>;
 }
 
 interface IMkOpMakeTable<T> {
   tag: "MkOpMakeTable";
-  contents: OpMakeTable<T>;
+  contents: OpMakeTable<Expression>;
 }
 
 interface IMkOpMax<T> {
   tag: "MkOpMax";
-  contents: OpMax<T>;
+  contents: OpMax<Expression>;
 }
 
 interface IMkOpMin<T> {
   tag: "MkOpMin";
-  contents: OpMin<T>;
+  contents: OpMin<Expression>;
 }
 
 interface IMkOpMinus<T> {
   tag: "MkOpMinus";
-  contents: OpMinus<T>;
+  contents: OpMinus<Expression>;
 }
 
 interface IMkOpMod<T> {
   tag: "MkOpMod";
-  contents: OpMod<T>;
+  contents: OpMod<Expression>;
 }
 
 interface IMkOpNegate<T> {
   tag: "MkOpNegate";
-  contents: OpNegate<T>;
+  contents: OpNegate<Expression>;
 }
 
 interface IMkOpNeq<T> {
   tag: "MkOpNeq";
-  contents: OpNeq<T>;
+  contents: OpNeq<Expression>;
 }
 
 interface IMkOpNot<T> {
   tag: "MkOpNot";
-  contents: OpNot<T>;
+  contents: OpNot<Expression>;
 }
 
 interface IMkOpOr<T> {
   tag: "MkOpOr";
-  contents: OpOr<T>;
+  contents: OpOr<Expression>;
 }
 
 interface IMkOpParticipants<T> {
   tag: "MkOpParticipants";
-  contents: OpParticipants<T>;
+  contents: OpParticipants<Expression>;
 }
 
 interface IMkOpParts<T> {
   tag: "MkOpParts";
-  contents: OpParts<T>;
+  contents: OpParts<Expression>;
 }
 
 interface IMkOpParty<T> {
   tag: "MkOpParty";
-  contents: OpParty<T>;
+  contents: OpParty<Expression>;
 }
 
 interface IMkOpPow<T> {
   tag: "MkOpPow";
-  contents: OpPow<T>;
+  contents: OpPow<Expression>;
 }
 
 interface IMkOpPowerSet<T> {
   tag: "MkOpPowerSet";
-  contents: OpPowerSet<T>;
+  contents: OpPowerSet<Expression>;
 }
 
 interface IMkOpPreImage<T> {
   tag: "MkOpPreImage";
-  contents: OpPreImage<T>;
+  contents: OpPreImage<Expression>;
 }
 
 interface IMkOpPred<T> {
   tag: "MkOpPred";
-  contents: OpPred<T>;
+  contents: OpPred<Expression>;
 }
 
 interface IMkOpProduct<T> {
   tag: "MkOpProduct";
-  contents: OpProduct<T>;
+  contents: OpProduct<Expression>;
 }
 
 interface IMkOpRange<T> {
   tag: "MkOpRange";
-  contents: OpRange<T>;
+  contents: OpRange<Expression>;
 }
 
 interface IMkOpRelationProj<T> {
   tag: "MkOpRelationProj";
-  contents: OpRelationProj<T>;
+  contents: OpRelationProj<Expression>;
 }
 
 interface IMkOpRestrict<T> {
   tag: "MkOpRestrict";
-  contents: OpRestrict<T>;
+  contents: OpRestrict<Expression>;
 }
 
 interface IMkOpSlicing<T> {
   tag: "MkOpSlicing";
-  contents: OpSlicing<T>;
+  contents: OpSlicing<Expression>;
 }
 
 interface IMkOpSubsequence<T> {
   tag: "MkOpSubsequence";
-  contents: OpSubsequence<T>;
+  contents: OpSubsequence<Expression>;
 }
 
 interface IMkOpSubset<T> {
   tag: "MkOpSubset";
-  contents: OpSubset<T>;
+  contents: OpSubset<Expression>;
 }
 
 interface IMkOpSubsetEq<T> {
   tag: "MkOpSubsetEq";
-  contents: OpSubsetEq<T>;
+  contents: OpSubsetEq<Expression>;
 }
 
 interface IMkOpSubstring<T> {
   tag: "MkOpSubstring";
-  contents: OpSubstring<T>;
+  contents: OpSubstring<Expression>;
 }
 
 interface IMkOpSucc<T> {
   tag: "MkOpSucc";
-  contents: OpSucc<T>;
+  contents: OpSucc<Expression>;
 }
 
 interface IMkOpSum<T> {
   tag: "MkOpSum";
-  contents: OpSum<T>;
+  contents: OpSum<Expression>;
 }
 
 interface IMkOpSupset<T> {
   tag: "MkOpSupset";
-  contents: OpSupset<T>;
+  contents: OpSupset<Expression>;
 }
 
 interface IMkOpSupsetEq<T> {
   tag: "MkOpSupsetEq";
-  contents: OpSupsetEq<T>;
+  contents: OpSupsetEq<Expression>;
 }
 
 interface IMkOpTable<T> {
   tag: "MkOpTable";
-  contents: OpTable<T>;
+  contents: OpTable<Expression>;
 }
 
 interface IMkOpTildeLeq<T> {
   tag: "MkOpTildeLeq";
-  contents: OpTildeLeq<T>;
+  contents: OpTildeLeq<Expression>;
 }
 
 interface IMkOpTildeLt<T> {
   tag: "MkOpTildeLt";
-  contents: OpTildeLt<T>;
+  contents: OpTildeLt<Expression>;
 }
 
 interface IMkOpToInt<T> {
   tag: "MkOpToInt";
-  contents: OpToInt<T>;
+  contents: OpToInt<Expression>;
 }
 
 interface IMkOpToMSet<T> {
   tag: "MkOpToMSet";
-  contents: OpToMSet<T>;
+  contents: OpToMSet<Expression>;
 }
 
 interface IMkOpToRelation<T> {
   tag: "MkOpToRelation";
-  contents: OpToRelation<T>;
+  contents: OpToRelation<Expression>;
 }
 
 interface IMkOpToSet<T> {
   tag: "MkOpToSet";
-  contents: OpToSet<T>;
+  contents: OpToSet<Expression>;
 }
 
 interface IMkOpTogether<T> {
   tag: "MkOpTogether";
-  contents: OpTogether<T>;
+  contents: OpTogether<Expression>;
 }
 
 interface IMkOpTransform<T> {
   tag: "MkOpTransform";
-  contents: OpTransform<T>;
+  contents: OpTransform<Expression>;
 }
 
 interface IMkOpTrue<T> {
   tag: "MkOpTrue";
-  contents: OpTrue<T>;
+  contents: OpTrue<Expression>;
 }
 
 interface IMkOpTwoBars<T> {
   tag: "MkOpTwoBars";
-  contents: OpTwoBars<T>;
+  contents: OpTwoBars<Expression>;
 }
 
 interface IMkOpUnion<T> {
   tag: "MkOpUnion";
-  contents: OpUnion<T>;
+  contents: OpUnion<Expression>;
 }
 
 interface IMkOpXor<T> {
   tag: "MkOpXor";
-  contents: OpXor<T>;
+  contents: OpXor<Expression>;
 }
 
 type OpActive<T> = IOpActive<T>;
 
-type IOpActive<T> = [T, Name];
+type IOpActive<T> = [Expression, Name];
 
 type OpAllDiff<T> = IOpAllDiff<T>;
 
-type IOpAllDiff<T> = T;
+type IOpAllDiff<T> = Expression;
 
 type OpAllDiffExcept<T> = IOpAllDiffExcept<T>;
 
-type IOpAllDiffExcept<T> = [T, T];
+type IOpAllDiffExcept<T> = [Expression, Expression];
 
 type OpAnd<T> = IOpAnd<T>;
 
-type IOpAnd<T> = T;
+type IOpAnd<T> = Expression;
 
 type OpApart<T> = IOpApart<T>;
 
-type IOpApart<T> = [T, T];
+type IOpApart<T> = [Expression, Expression];
 
 type OpAtLeast<T> = IOpAtLeast<T>;
 
-type IOpAtLeast<T> = [T, T, T];
+type IOpAtLeast<T> = [Expression, Expression, Expression];
 
 type OpAtMost<T> = IOpAtMost<T>;
 
-type IOpAtMost<T> = [T, T, T];
+type IOpAtMost<T> = [Expression, Expression, Expression];
 
 type OpAttributeAsConstraint<T> = IOpAttributeAsConstraint<T>;
 
-type IOpAttributeAsConstraint<T> = [T, AttrName, T];
+type IOpAttributeAsConstraint<T> = [Expression, AttrName, Expression];
 
 type OpCatchUndef<T> = IOpCatchUndef<T>;
 
-type IOpCatchUndef<T> = [T, T];
+type IOpCatchUndef<T> = [Expression, Expression];
 
 type OpDefined<T> = IOpDefined<T>;
 
-type IOpDefined<T> = T;
+type IOpDefined<T> = Expression;
 
 type OpDiv<T> = IOpDiv<T>;
 
-type IOpDiv<T> = [T, T];
+type IOpDiv<T> = [Expression, Expression];
 
 type OpDontCare<T> = IOpDontCare<T>;
 
-type IOpDontCare<T> = T;
+type IOpDontCare<T> = Expression;
 
 type OpDotLeq<T> = IOpDotLeq<T>;
 
-type IOpDotLeq<T> = [T, T];
+type IOpDotLeq<T> = [Expression, Expression];
 
 type OpDotLt<T> = IOpDotLt<T>;
 
-type IOpDotLt<T> = [T, T];
+type IOpDotLt<T> = [Expression, Expression];
 
 type OpEq<T> = IOpEq<T>;
 
-type IOpEq<T> = [T, T];
+type IOpEq<T> = [Expression, Expression];
 
 type OpFactorial<T> = IOpFactorial<T>;
 
-type IOpFactorial<T> = T;
+type IOpFactorial<T> = Expression;
 
 type OpFlatten<T> = IOpFlatten<T>;
 
-type IOpFlatten<T> = [number, T];
+type IOpFlatten<T> = [number, Expression];
 
 type OpFreq<T> = IOpFreq<T>;
 
-type IOpFreq<T> = [T, T];
+type IOpFreq<T> = [Expression, Expression];
 
 type OpGCC<T> = IOpGCC<T>;
 
-type IOpGCC<T> = [T, T, T];
+type IOpGCC<T> = [Expression, Expression, Expression];
 
 type OpGeq<T> = IOpGeq<T>;
 
-type IOpGeq<T> = [T, T];
+type IOpGeq<T> = [Expression, Expression];
 
 type OpGt<T> = IOpGt<T>;
 
-type IOpGt<T> = [T, T];
+type IOpGt<T> = [Expression, Expression];
 
 type OpHist<T> = IOpHist<T>;
 
-type IOpHist<T> = T;
+type IOpHist<T> = Expression;
 
 type OpIff<T> = IOpIff<T>;
 
-type IOpIff<T> = [T, T];
+type IOpIff<T> = [Expression, Expression];
 
 type OpImage<T> = IOpImage<T>;
 
-type IOpImage<T> = [T, T];
+type IOpImage<T> = [Expression, Expression];
 
 type OpImageSet<T> = IOpImageSet<T>;
 
-type IOpImageSet<T> = [T, T];
+type IOpImageSet<T> = [Expression, Expression];
 
 type OpImply<T> = IOpImply<T>;
 
-type IOpImply<T> = [T, T];
+type IOpImply<T> = [Expression, Expression];
 
 type OpIn<T> = IOpIn<T>;
 
-type IOpIn<T> = [T, T];
+type IOpIn<T> = [Expression, Expression];
 
 type OpIndexing<T> = IOpIndexing<T>;
 
-type IOpIndexing<T> = [T, T];
+type IOpIndexing<T> = [Expression, Expression];
 
 type OpIntersect<T> = IOpIntersect<T>;
 
-type IOpIntersect<T> = [T, T];
+type IOpIntersect<T> = [Expression, Expression];
 
 type OpInverse<T> = IOpInverse<T>;
 
-type IOpInverse<T> = [T, T];
+type IOpInverse<T> = [Expression, Expression];
 
 type OpLeq<T> = IOpLeq<T>;
 
-type IOpLeq<T> = [T, T];
+type IOpLeq<T> = [Expression, Expression];
 
 type OpLexLeq<T> = IOpLexLeq<T>;
 
-type IOpLexLeq<T> = [T, T];
+type IOpLexLeq<T> = [Expression, Expression];
 
 type OpLexLt<T> = IOpLexLt<T>;
 
-type IOpLexLt<T> = [T, T];
+type IOpLexLt<T> = [Expression, Expression];
 
 type OpLt<T> = IOpLt<T>;
 
-type IOpLt<T> = [T, T];
+type IOpLt<T> = [Expression, Expression];
 
 type OpMax<T> = IOpMax<T>;
 
-type IOpMax<T> = T;
+type IOpMax<T> = Expression;
 
 type OpMin<T> = IOpMin<T>;
 
-type IOpMin<T> = T;
+type IOpMin<T> = Expression;
 
 type OpMinus<T> = IOpMinus<T>;
 
-type IOpMinus<T> = [T, T];
+type IOpMinus<T> = [Expression, Expression];
 
 type OpMod<T> = IOpMod<T>;
 
-type IOpMod<T> = [T, T];
+type IOpMod<T> = [Expression, Expression];
 
 type OpNegate<T> = IOpNegate<T>;
 
-type IOpNegate<T> = T;
+type IOpNegate<T> = Expression;
 
 type OpNeq<T> = IOpNeq<T>;
 
-type IOpNeq<T> = [T, T];
+type IOpNeq<T> = [Expression, Expression];
 
 type OpNot<T> = IOpNot<T>;
 
-type IOpNot<T> = T;
+type IOpNot<T> = Expression;
 
 type OpOr<T> = IOpOr<T>;
 
-type IOpOr<T> = T;
+type IOpOr<T> = Expression;
 
 type OpParticipants<T> = IOpParticipants<T>;
 
-type IOpParticipants<T> = T;
+type IOpParticipants<T> = Expression;
 
 type OpParts<T> = IOpParts<T>;
 
-type IOpParts<T> = T;
+type IOpParts<T> = Expression;
 
 type OpParty<T> = IOpParty<T>;
 
-type IOpParty<T> = [T, T];
+type IOpParty<T> = [Expression, Expression];
 
 type OpPow<T> = IOpPow<T>;
 
-type IOpPow<T> = [T, T];
+type IOpPow<T> = [Expression, Expression];
 
 type OpPowerSet<T> = IOpPowerSet<T>;
 
-type IOpPowerSet<T> = T;
+type IOpPowerSet<T> = Expression;
 
 type OpPred<T> = IOpPred<T>;
 
-type IOpPred<T> = T;
+type IOpPred<T> = Expression;
 
 type OpPreImage<T> = IOpPreImage<T>;
 
-type IOpPreImage<T> = [T, T];
+type IOpPreImage<T> = [Expression, Expression];
 
 type OpProduct<T> = IOpProduct<T>;
 
-type IOpProduct<T> = T;
+type IOpProduct<T> = Expression;
 
 type OpRange<T> = IOpRange<T>;
 
-type IOpRange<T> = T;
+type IOpRange<T> = Expression;
 
 type OpRelationProj<T> = IOpRelationProj<T>;
 
-type IOpRelationProj<T> = [T, T[]];
+type IOpRelationProj<T> = [Expression, Expression[]];
 
 type OpRestrict<T> = IOpRestrict<T>;
 
-type IOpRestrict<T> = [T, T];
+type IOpRestrict<T> = [Expression, Expression];
 
 type OpSlicing<T> = IOpSlicing<T>;
 
-type IOpSlicing<T> = [T, T, T];
+type IOpSlicing<T> = [Expression, Expression, Expression];
 
 type OpSubsequence<T> = IOpSubsequence<T>;
 
-type IOpSubsequence<T> = [T, T];
+type IOpSubsequence<T> = [Expression, Expression];
 
 type OpSubset<T> = IOpSubset<T>;
 
-type IOpSubset<T> = [T, T];
+type IOpSubset<T> = [Expression, Expression];
 
 type OpSubsetEq<T> = IOpSubsetEq<T>;
 
-type IOpSubsetEq<T> = [T, T];
+type IOpSubsetEq<T> = [Expression, Expression];
 
 type OpSubstring<T> = IOpSubstring<T>;
 
-type IOpSubstring<T> = [T, T];
+type IOpSubstring<T> = [Expression, Expression];
 
 type OpSucc<T> = IOpSucc<T>;
 
-type IOpSucc<T> = T;
+type IOpSucc<T> = Expression;
 
 type OpSum<T> = IOpSum<T>;
 
-type IOpSum<T> = T;
+type IOpSum<T> = Expression;
 
 type OpSupset<T> = IOpSupset<T>;
 
-type IOpSupset<T> = [T, T];
+type IOpSupset<T> = [Expression, Expression];
 
 type OpSupsetEq<T> = IOpSupsetEq<T>;
 
-type IOpSupsetEq<T> = [T, T];
+type IOpSupsetEq<T> = [Expression, Expression];
 
 type OpTable<T> = IOpTable<T>;
 
-type IOpTable<T> = [T, T];
+type IOpTable<T> = [Expression, Expression];
 
 type OpTildeLeq<T> = IOpTildeLeq<T>;
 
-type IOpTildeLeq<T> = [T, T];
+type IOpTildeLeq<T> = [Expression, Expression];
 
 type OpTildeLt<T> = IOpTildeLt<T>;
 
-type IOpTildeLt<T> = [T, T];
+type IOpTildeLt<T> = [Expression, Expression];
 
 type OpTogether<T> = IOpTogether<T>;
 
-type IOpTogether<T> = [T, T];
+type IOpTogether<T> = [Expression, Expression];
 
 type OpToInt<T> = IOpToInt<T>;
 
-type IOpToInt<T> = T;
+type IOpToInt<T> = Expression;
 
 type OpToMSet<T> = IOpToMSet<T>;
 
-type IOpToMSet<T> = T;
+type IOpToMSet<T> = Expression;
 
 type OpToRelation<T> = IOpToRelation<T>;
 
-type IOpToRelation<T> = T;
+type IOpToRelation<T> = Expression;
 
 type OpToSet<T> = IOpToSet<T>;
 
-type IOpToSet<T> = [boolean, T];
+type IOpToSet<T> = [boolean, Expression];
 
 type OpTransform<T> = IOpTransform<T>;
 
-type IOpTransform<T> = [T, T];
+type IOpTransform<T> = [Expression, Expression];
 
 type OpTrue<T> = IOpTrue<T>;
 
-type IOpTrue<T> = T;
+type IOpTrue<T> = Expression;
 
 type OpTwoBars<T> = IOpTwoBars<T>;
 
-type IOpTwoBars<T> = T;
+type IOpTwoBars<T> = Expression;
 
 type OpUnion<T> = IOpUnion<T>;
 
-type IOpUnion<T> = [T, T];
+type IOpUnion<T> = [Expression, Expression];
 
 type OpXor<T> = IOpXor<T>;
 
-type IOpXor<T> = T;
+type IOpXor<T> = Expression;
 
 type PartialityAttr = "PartialityAttr_Partial" | "PartialityAttr_Total";
 
 type PartitionAttr<T> = IPartitionAttr<T>;
 
 interface IPartitionAttr<T> {
-  partsNum: SizeAttr<T>;
-  partsSize: SizeAttr<T>;
+  partsNum: SizeAttr<Type>;
+  partsSize: SizeAttr<Type>;
   isRegular: boolean;
 }
 
@@ -1238,22 +1238,22 @@ interface IRangeOpen<T> {
 
 interface IRangeSingle<T> {
   tag: "RangeSingle";
-  contents: T;
+  contents: Type;
 }
 
 interface IRangeLowerBounded<T> {
   tag: "RangeLowerBounded";
-  contents: T;
+  contents: Type;
 }
 
 interface IRangeUpperBounded<T> {
   tag: "RangeUpperBounded";
-  contents: T;
+  contents: Type;
 }
 
 interface IRangeBounded<T> {
   tag: "RangeBounded";
-  contents: [T, T];
+  contents: [Type, Type];
 }
 
 type ReferenceTo = IAlias | IInComprehension | IDeclNoRepr | IDeclHasRepr | IRecordField | IVariantField;
@@ -1301,7 +1301,7 @@ interface IRegion {
 
 type RelationAttr<T> = IRelationAttr<T>;
 
-type IRelationAttr<T> = [SizeAttr<T>, BinaryRelationAttrs];
+type IRelationAttr<T> = [SizeAttr<Type>, BinaryRelationAttrs];
 
 type SearchOrder = IBranchingOn | ICut;
 
@@ -1317,11 +1317,11 @@ interface ICut {
 
 type SequenceAttr<T> = ISequenceAttr<T>;
 
-type ISequenceAttr<T> = [SizeAttr<T>, JectivityAttr];
+type ISequenceAttr<T> = [SizeAttr<Type>, JectivityAttr];
 
 type SetAttr<T> = ISetAttr<T>;
 
-type ISetAttr<T> = SizeAttr<T>;
+type ISetAttr<T> = SizeAttr<Type>;
 
 type SizeAttr<T> = ISizeAttr_None<T> | ISizeAttr_Size<T> | ISizeAttr_MinSize<T> | ISizeAttr_MaxSize<T> | ISizeAttr_MinMaxSize<T>;
 
@@ -1331,22 +1331,22 @@ interface ISizeAttr_None<T> {
 
 interface ISizeAttr_Size<T> {
   tag: "SizeAttr_Size";
-  contents: T;
+  contents: Type;
 }
 
 interface ISizeAttr_MinSize<T> {
   tag: "SizeAttr_MinSize";
-  contents: T;
+  contents: Type;
 }
 
 interface ISizeAttr_MaxSize<T> {
   tag: "SizeAttr_MaxSize";
-  contents: T;
+  contents: Type;
 }
 
 interface ISizeAttr_MinMaxSize<T> {
   tag: "SizeAttr_MinMaxSize";
-  contents: [T, T];
+  contents: [Type, Type];
 }
 
 type Statement = IDeclaration | ISearchOrder | ISearchHeuristic | IWhere | IObjective | ISuchThat;
