@@ -47,11 +47,11 @@ install:
 .PHONY: test
 test:
 	@if ${COVERAGE}; then \
-		stack test --coverage --test-arguments '--limit-time ${LIMIT_TIME}';\
+		stack test --coverage --test-arguments '--hide-successes --limit-time ${LIMIT_TIME}';\
 		stack hpc report conjure-cp $(find . -name conjure.tix);\
 		ls .stack-work/install/*/*/*/hpc/combined/custom;\
 	else\
-		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
+		stack test --test-arguments '--hide-successes --limit-time ${LIMIT_TIME}';\
 	fi
 
 stack.yaml:
