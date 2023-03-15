@@ -17,13 +17,5 @@ We will do our best to help!
 Contributors
 ------------
 
-The following list of people have contributed to the development of Conjure.
+.. include:: ../CONTRIBUTORS.md
 
-- `Özgür Akgün <http://ozgur.host.cs.st-andrews.ac.uk>`_
-- `Alan Frisch <http://www-users.cs.york.ac.uk/frisch>`_
-- `Ian Gent <http://ipg.host.cs.st-andrews.ac.uk>`_
-- `Brahim Hnich <http://homes.ieu.edu.tr/bhnich>`_
-- `Bilal Syed Hussain <http://bh246.host.cs.st-andrews.ac.uk>`_
-- `Chris Jefferson <http://caj21.host.cs.st-andrews.ac.uk>`_
-- `Ian Miguel <http://ijm.host.cs.st-andrews.ac.uk>`_
-- `Peter Nightingale <http://pwn1.host.cs.st-andrews.ac.uk>`_
