@@ -52,8 +52,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Conjure'
-copyright = u'2009–2022, Conjure developers'
-author = u'Özgür Akgün, Saad Attieh, Juliana Bowles, Nguyen Dang, Joan Espasa Arxer, Jordina Francès de Mas, Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, Ian Miguel, András Salamon and Christopher Stone'
+copyright = u'2009–2023, Conjure developers'
+author = u'Özgür Akgün, Saad Attieh, Nguyen Dang, Joan Espasa Arxer, Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, Ian Miguel, András Salamon and Christopher Stone'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
