@@ -53,7 +53,18 @@ master_doc = 'index'
 # General information about the project.
 project = u'Conjure'
 copyright = u'2009–2023, Conjure developers'
-author = u'Özgür Akgün, Saad Attieh, Nguyen Dang, Joan Espasa Arxer, Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, Ian Miguel, András Salamon and Christopher Stone'
+author = u'''Özgür Akgün \\and
+Saad Attieh \\and
+Nguyen Dang \\and
+Joan Espasa Arxer \\and
+Ian Gent \\and
+Ruth Hoffmann \\and
+Chris Jefferson \\and
+Gökberk Koçak \\and
+Alice Lynch \\and
+Ian Miguel \\and
+András Salamon \\and
+Christopher Stone'''
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -238,11 +249,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Conjure.tex', u'Conjure Documentation, Release %s' % version,
-     u'''Özgür Akgün, Saad Attieh, Juliana Bowles,
-     Nguyen Dang, Joan Espasa Arxer, Jordina Francès de Mas, 
-     Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, 
-     Ian Miguel, András Salamon and Christopher Stone''', 'manual'),
+    (master_doc, 'Conjure.tex', u'Conjure Documentation', author, 'manual'),
 ]
 
 
@@ -272,7 +279,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'conjure', u'Conjure Documentation, Release %s' % version,
+    (master_doc, 'conjure', u'Conjure Documentation',
      [author], 1)
 ]
 
@@ -286,7 +293,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Conjure', u'Conjure Documentation, Release %s' % version,
+    (master_doc, 'Conjure', u'Conjure Documentation',
      author, 'Conjure', 'Conjure: The Automated Constraint Modelling Tool',
      'Miscellaneous'),
 ]

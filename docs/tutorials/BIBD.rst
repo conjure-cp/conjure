@@ -189,7 +189,7 @@ There is a nicer way to do the final constraint, instead of using a second ``for
 
 
 
-Providing information in the find statements rather than as constraints often leads to better perform. Essence provides :ref:`attributes<Domains>` which can be attached to find statements . One of them is size k, which tells Essence that a set is of size k. In our model the number of farms and the number of crops per farm are in effect the size of the crop_assignment set and the size of the sets within the crop_assignment set. Therefore we can move these definitions out of the list of constraints and into the find statement.
+Providing information in the find statements rather than as constraints often leads to better perform. Essence provides domain attributes which can be attached to find statements . One of them is size k, which tells Essence that a set is of size k. In our model the number of farms and the number of crops per farm are in effect the size of the crop_assignment set and the size of the sets within the crop_assignment set. Therefore we can move these definitions out of the list of constraints and into the find statement.
 
 .. code-block:: essence
 
