@@ -21,7 +21,7 @@ We need to specify the crops, the number of farms, the number of crops that can 
 
 Emily has decided that she wants each crop to be grown in 2 different farms, and that each pair of farmers will have 1 crop in common.
 
-Essence will take a .param file containing the values of the initial parameters. In the .param file we should define the parameters:
+Essence will take a ``.param`` file containing the values of the initial parameters. In the ``.param`` file we should define the parameters:
 
 .. code-block:: essence
 
@@ -31,7 +31,7 @@ Essence will take a .param file containing the values of the initial parameters.
   letting farms_per_crop be 2
   letting overlap be 1
 
-The model will be in a .essence file. It should start by accessing the provided parameters, this uses the given keyword, followed by the names of the parameters and their type.
+The model will be in a ``.essence`` file. It should start by accessing the provided parameters, this uses the ``given`` keyword, followed by the names of the parameters and their type.
 
 .. code-block:: essence
 
@@ -64,7 +64,7 @@ Result::
 
 With no constraints it produces an empty set for crop assignment.
 
-The first, basic, constraint is the number of farms. The number of sets in the crop_assignment set should equal the number of farms. ``|crop_assignment|`` indicates the size of the crop_assignment set. By setting the size equal to the number of farms (after the ``such that`` keyword) the solver will only produce solutions where the size of the set is the same as the number of farms.  A comma separates constraints, so at the end of a line this indicates that there are more constraints to follow (none for the moment).
+The first, basic, constraint is the number of farms. The number of sets in the ``crop_assignment`` set should equal the number of farms. ``|crop_assignment|`` indicates the size of the ``crop_assignment`` set. By setting the size equal to the number of farms (after the ``such that`` keyword) the solver will only produce solutions where the size of the set is the same as the number of farms.  A comma separates constraints, so at the end of a line this indicates that there are more constraints to follow (none for the moment).
 
 .. code-block:: essence
 
@@ -139,9 +139,9 @@ Our model now produces a crop assignment that assigns the correct number of crop
 
 We need to check every pair of farms, we can do this by using two ``forAll`` keywords (``forAll farm1 in crop_assignment. forAll farm2 in crop_assignment . [OurConstraint]``). We can then use the ``intersect`` keyword to get all crops that the two farms have in common, and require the size of this intersection to be equal to the overlap parameter (``|farm1 intersect farm2| = overlap``).
 
-However, running the model at this point produces no solutions, as iterating over the crop_assignment in this way means that sometimes ``farm1`` and ``farm2`` will be the same farm, so the intersection will be the number of crops assigned to the farm (3) and never be 1 (the overlap parameter), resulting in no valid solutions.
+However, running the model at this point produces no solutions, as iterating over the ``crop_assignment`` in this way means that sometimes ``farm1`` and ``farm2`` will be the same farm, so the intersection will be the number of crops assigned to the farm (3) and never be 1 (the overlap parameter), resulting in no valid solutions.
 
-In order to avoid this we need to add an further condition to the constraint which checks they are not the same farm before applying the constraint. ``->`` is used, where the left hand side has a condition and the right hand side has a constraint which is only used if the left hand side is true. ``farm1 != farm2 -> |farm1 intersect farm2| = overlap``
+In order to avoid this we need to add a further condition to the constraint which checks they are not the same farm before applying the constraint. ``->`` is used, where the left hand side has a condition and the right hand side has a constraint which is only used if the left hand side is true. ``farm1 != farm2 -> |farm1 intersect farm2| = overlap``
 
 
 .. code-block:: essence
