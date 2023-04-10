@@ -964,6 +964,7 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , case lookup solverName solverExecutables of
                                           Nothing -> bug ("solverExecutables" <+> pretty solverName)
                                           Just ex -> stringToText ex
+                                      , stringToText ("-" ++ solverName)
                                       ]
         _ -> userErr1 ("Unknown solver:" <+> pretty solver)
 
