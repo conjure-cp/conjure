@@ -20,7 +20,6 @@ cask "conjure" do
   binary "conjure-v#{version}-macos-arm-with-solvers/glucose"
   binary "conjure-v#{version}-macos-arm-with-solvers/glucose-syrup"
   binary "conjure-v#{version}-macos-arm-with-solvers/kissat"
-  # binary "conjure-v#{version}-macos-arm-with-solvers/lib"
   binary "conjure-v#{version}-macos-arm-with-solvers/lingeling"
   binary "conjure-v#{version}-macos-arm-with-solvers/minion"
   binary "conjure-v#{version}-macos-arm-with-solvers/nbc_minisat_all_release"
