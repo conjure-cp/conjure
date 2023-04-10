@@ -1,8 +1,10 @@
-Copy the `conjure.rb` file to `/opt/homebrew/Library/Taps/homebrew/homebrew-cask/Casks/conjure.rb`
+Set environment variable `EDITOR` to a preferred editor if the default `vi` is not a good choice, then run
+```
+brew edit --cask conjure.rb
+```
+and save the file. This puts the cask in the caskroom of the brew installation.
 
-Run brew install conjure
-
-This should copy Conjure, Savile Row and a bunch of solvers to your path.
+Next run `brew install conjure` to copy Conjure, Savile Row and a bunch of solvers to your path.
 
 Todo
 
