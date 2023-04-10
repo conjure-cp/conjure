@@ -6,7 +6,8 @@ cask "conjure" do
   sha256 arm:   "0634a83c895abee4124236ea4ff297393bc1f1756461eeaa766815d6be5a5bc8",
          intel: "???"
 
-  url "https://github.com/conjure-cp/conjure/releases/download/v#{version}/conjure-v#{version}-macos-#{arch}-with-solvers.zip"
+  url "https://github.com/conjure-cp/conjure/releases/download/v#{version}/conjure-v#{version}-macos-#{arch}-with-solvers.zip",
+      verified: "github.com/conjure-cp/conjure"
   name "conjure"
   desc "Conjure: The Automated Constraint Modelling Tool"
   homepage "https://conjure.readthedocs.io/en/latest/welcome.html"
