@@ -4,7 +4,7 @@ cask "conjure" do
 
   version "2.4.0"
   sha256 arm:   "0634a83c895abee4124236ea4ff297393bc1f1756461eeaa766815d6be5a5bc8",
-         intel: "???"
+         intel: "3e2e3d7a56181c6a12785a9081cde789cad4a91480d8a3de78c5d6d0f85fc516"
 
   url "https://github.com/conjure-cp/conjure/releases/download/v#{version}/conjure-v#{version}-macos-#{arch}-with-solvers.zip",
       verified: "github.com/conjure-cp/conjure"
