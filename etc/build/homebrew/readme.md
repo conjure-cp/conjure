@@ -2,7 +2,7 @@
 
 `conjure.rb` is a Homebrew cask for Conjure. It installs the appropriate MacOS binary distribution from github. This includes a full set of solvers except `z3`. Solver `z3` is not installed because it is a brew package and installing it could conflict with the brew version. *Note: running any of the solvers installed by this cask currently results in quarantine warnings since the solver binaries from github are not signed.*
 
-`conjure-formula.rb` is a Homebrew formula for Conjure, but is still being developed. After installing some Python modules, this formula downloads a binary `stack` from the official Haskell web site and runs it to fetch the complete index of Haskell packages. It then builds Conjure from source: this currently requires some work-arounds to complete. Once built, Conjure is installed as well as an official binary distribution of Savile Row, but no additional solvers.
+`formula/conjure.rb` is a Homebrew formula for Conjure, but is still being developed. After installing some Python modules, this formula downloads a binary `stack` from the official Haskell web site and runs it to fetch the complete index of Haskell packages. It then builds Conjure from source: this currently requires some work-arounds to complete. Once built, Conjure is installed as well as an official binary distribution of Savile Row, but no additional solvers.
 
 
 # How to install the cask
@@ -32,6 +32,15 @@ brew install --formula formula/conjure.rb
 to install Conjure and Savile Row. Note that this will not install any solvers, so you might want to run `brew install z3` to install a solver.
 
 The formula currently uses the 2.4.0 release, which doesn't support the minimal path used by Homebrew for source builds.
+
+
+# How to uninstall the formula
+
+Run
+```
+brew uninstall --formula conjure
+```
+to remove the version of Conjure and Savile Row installed by the formula.
 
 
 # Todo
