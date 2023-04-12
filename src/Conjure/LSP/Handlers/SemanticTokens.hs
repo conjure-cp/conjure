@@ -7,7 +7,7 @@ import Data.Text (pack)
 import Conjure.LSP.Util (withProcessedDoc, ProcessedFile (ProcessedFile), sourcePosToPosition, sendInfoMessage, sendErrorMessage)
 import Conjure.Language.Validator (ValidatorState (symbolCategories), TaggedToken (TaggedToken), TagType (..))
 import Language.LSP.Types.Lens (HasParams(..), HasTextDocument (textDocument))
-import Conjure.Language.NewLexer (ETok(..), Offsets (..), trueLength)
+import Conjure.Language.Lexer (ETok(..), Offsets (..), trueLength)
 import Language.LSP.Types (SemanticTokenTypes(..), SemanticTokenModifiers (..))
 import qualified Data.Map as M
 

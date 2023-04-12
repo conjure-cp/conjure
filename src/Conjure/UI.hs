@@ -207,6 +207,10 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | LSP
+        { logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize UI
