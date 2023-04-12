@@ -1389,6 +1389,10 @@ ui = modes
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\
                     \which aims to make search faster."
+    ,LSP {
+        logLevel = def,
+        limitTime = Nothing
+    } &= name "lsp"
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
