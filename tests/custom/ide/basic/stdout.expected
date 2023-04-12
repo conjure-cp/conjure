@@ -1,7 +1,6 @@
  == lexer.essence ==
 Error:
-    Parser error in file: lexer.essence Error is:
-ValidatorError lexer.essence:7:29:
+    lexer.essence:7:29:
   |
 7 | such that x + y = z, x = 1, # y = 2
   |                             ^^^^^^^
@@ -11,8 +10,7 @@ Skipped tokens
 
  == parser.essence ==
 Error:
-    Parser error in file: parser.essence Error is:
-ValidatorError parser.essence:7:27:
+    parser.essence:7:27:
   |
 7 | such that x + y = z, x = 1 = y = 2
   |                           ^
@@ -40,13 +38,12 @@ Missing ,
 
  == type.essence ==
 Error:
-    Parser error in file: type.essence Error is:
-ValidatorError type.essence:7:22:
+    type.essence:7:22:
   |
 7 | such that x + y = z, x union y = 2
   |                      ^
 Type error:
-	Expected:"Set MSet funcition or relation"
+	Expected: "Set MSet funcition or relation"
 	Got: int
 
 type.essence:7:30:
@@ -54,7 +51,7 @@ type.essence:7:30:
 7 | such that x + y = z, x union y = 2
   |                              ^
 Type error:
-	Expected:"Set MSet funcition or relation"
+	Expected: "Set MSet funcition or relation"
 	Got: int
 
 
