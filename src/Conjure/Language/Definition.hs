@@ -90,13 +90,14 @@ instance SimpleJSON Model where
     toSimpleJSON m = do
         inners <- mapM toSimpleJSON (mStatements m)
         let (innersAsMaps, rest) = unzip [ case i of JSON.Object mp -> ([mp], []); _ -> ([], [i]) | i <- inners ]
-                                    |> (\ (xs, ys) -> ((mconcat) <$> xs, concat ys))
+                                    |> (\ (xs, ys) -> (mconcat <$> xs, concat ys))
         unless (null rest) $ bug $ "Expected json objects only, but got:" <+> vcat (map pretty rest)
         return (JSON.Object $ mconcat innersAsMaps)
     fromSimpleJSON = noFromSimpleJSON "Model"
 
 fromSimpleJSONModel ::
     (?typeCheckerMode :: TypeCheckerMode) =>
+    MonadLog m =>
     MonadUserError m =>
     Model ->
     JSON.Value ->
@@ -120,7 +121,7 @@ fromSimpleJSONModel essence json =
                         -- traceM $ show $ "value   " <+> pretty value
                         return $ Just $ Declaration (Letting (Name name) value)
                     _ -> do
-                        -- logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
+                        logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
                         return Nothing
             return def { mStatements = catMaybes stmts }
         _ -> noFromSimpleJSON "Model" TypeAny json

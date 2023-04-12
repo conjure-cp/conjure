@@ -27,7 +27,7 @@ module Conjure.Language.AST.Helpers (
 import Conjure.Language.AST.Syntax
 import Conjure.Language.Attributes (allAttributLexemes)
 import Conjure.Language.Lexemes
-import Conjure.Language.NewLexer
+import Conjure.Language.Lexer
 import Conjure.Prelude hiding (many)
 import qualified Data.Set as Set
 import Data.Void

@@ -525,6 +525,9 @@ lexemeFace l =
         Nothing ->  (show l)
         Just t  ->  (T.unpack t)
 
+lexemeFaceDoc :: Lexeme -> Doc
+lexemeFaceDoc = stringToDoc . lexemeFace
+
 lexemeText :: Lexeme -> T.Text
 lexemeText l = fromMaybe (T.pack $ show l) (M.lookup l mapLexemeToText)
 

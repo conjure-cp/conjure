@@ -2,6 +2,18 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- This module is where the syntax tree is mapped to the model.
+-- This has three main roles
+-- Syntax checking:
+--      When it comes to missing tokens these should usually be handled by the 
+--      low level token validation functions, however in some special cases
+--      where the tokens are manipulated manually the checks need to be added
+-- Type checking:
+--      
+-- Metadata additions:
+--      this includeds things like marking tokens for documentation, as well as
+--      setting up structural regions such as quantigied expressions
+
 module Conjure.Language.Validator where
 
 import Conjure.Language.AST.Syntax as S
@@ -10,7 +22,7 @@ import qualified Conjure.Language.Expression as D
     ( Expression(Typed) )
 import Conjure.Language.Domain
 import Conjure.Language.Lexemes
-import Conjure.Language.NewLexer (ETok (ETok, lexeme), tokenSourcePos, totalLength, tokenStart, trueLength, sourcePos0)
+import Conjure.Language.Lexer (ETok (ETok, lexeme), tokenSourcePos, totalLength, tokenStart, trueLength, sourcePos0)
 
 import Conjure.Language.Attributes
 import Conjure.Prelude
@@ -204,7 +216,6 @@ data StructuralType
     | SGuard
     | SGen
     | SBody
-    
     deriving Show
 
 data RegionInfo = RegionInfo {

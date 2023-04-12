@@ -1,6 +1,6 @@
 module Conjure.Language.AST.Syntax  where
 
-import Conjure.Language.NewLexer (ETok, prettySplitComments)
+import Conjure.Language.Lexer (ETok(..), prettySplitComments)
 import Conjure.Prelude hiding (Doc, group)
 
 import Prettyprinter 

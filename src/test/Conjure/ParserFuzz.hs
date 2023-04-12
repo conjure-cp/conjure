@@ -14,7 +14,7 @@ import Test.Tasty.HUnit (assertFailure, testCaseSteps, assertEqual)
 
 import Conjure.Language.Parser (runLexerAndParser)
 import Conjure.Language.AST.ASTParser (runASTParser, parseProgram)
-import Conjure.Language.NewLexer (runLexer, Reformable (reform), reformList)
+import Conjure.Language.Lexer (runLexer, Reformable (reform), reformList)
 import qualified Data.Text as T (pack, lines, unpack) 
 import qualified Data.Text.Lazy as L  
 import Data.ByteString.Char8(hPutStrLn, pack, unpack)

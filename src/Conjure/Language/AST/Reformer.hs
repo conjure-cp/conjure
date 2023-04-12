@@ -1,7 +1,7 @@
 module Conjure.Language.AST.Reformer (Flattenable(..)) where
 
 import Conjure.Language.AST.Syntax
-import Conjure.Language.NewLexer (ETok (..))
+import Conjure.Language.Lexer (ETok (..))
 import Conjure.Prelude
 import Data.Sequence ((><))
 import qualified Data.Sequence as S

@@ -227,7 +227,7 @@ savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
                                       <$> getDirectoryContents outputsDir
             forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                 let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ padLeft 6 '0' (show i)
-                eprimeSolution <- readParamOrSolutionFromFile eprimeModel (outputsDir </> eprimeSolutionPath)
+                eprimeSolution <- runLoggerPipeIO LogDebug $ readParamOrSolutionFromFile eprimeModel (outputsDir </> eprimeSolutionPath)
                 res <- runUserErrorT $ ignoreLogs $ runNameGen () $
                             translateSolution eprimeModel def eprimeSolution
                 case res of
@@ -252,7 +252,7 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
     fileShouldExist (outputsDir </> modelPath)
     fileShouldExist (tBaseDir   </> paramPath)
     eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
-    param       <- readParamOrSolutionFromFile eprimeModel (tBaseDir   </> paramPath)
+    param       <- runLoggerPipeIO LogDebug $ readParamOrSolutionFromFile eprimeModel (tBaseDir   </> paramPath)
     eprimeParam <- ignoreLogs $ runNameGen () $ translateParameter False eprimeModel param
     let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
     writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
@@ -276,7 +276,7 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
                                       <$> getDirectoryContents outputsDir
             forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                 let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ padLeft 6 '0' (show i)
-                eprimeSolution <- readParamOrSolutionFromFile eprimeModel (outputsDir </> eprimeSolutionPath)
+                eprimeSolution <- runLoggerPipeIO LogDebug $ readParamOrSolutionFromFile eprimeModel (outputsDir </> eprimeSolutionPath)
                 res <- runUserErrorT $ ignoreLogs $ runNameGen () $
                             translateSolution eprimeModel param eprimeSolution
                 case res of
@@ -301,7 +301,7 @@ validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
     forM_ solutionPaths $ \ solutionPath -> do
         step (unwords ["Validating solution:", solutionPath])
         fileShouldExist (outputsDir </> solutionPath)
-        solution <- readParamOrSolutionFromFile essence (outputsDir </> solutionPath)
+        solution <- runLoggerPipeIO LogDebug $ readParamOrSolutionFromFile essence (outputsDir </> solutionPath)
         result   <- runUserErrorT $ ignoreLogs $ runNameGen () $ do
             [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
             validateSolution essence2 param2 solution2
@@ -319,11 +319,11 @@ validateSolutionWithParams step TestDirFiles{..} paramSolutionPaths = do
     essence <- readModelFromFile essenceFile
     forM_ paramSolutionPaths $ \ (paramPath, solutionPaths) -> do
         fileShouldExist (tBaseDir </> paramPath)
-        param <- readParamOrSolutionFromFile essence (tBaseDir </> paramPath)
+        param <- runLoggerPipeIO LogDebug $ readParamOrSolutionFromFile essence (tBaseDir </> paramPath)
         forM_ solutionPaths $ \ solutionPath -> do
             step (unwords ["Validating solution:", paramPath, solutionPath])
             fileShouldExist (outputsDir </> solutionPath)
-            solution <- readParamOrSolutionFromFile essence (outputsDir </> solutionPath)
+            solution <- runLoggerPipeIO LogDebug $ readParamOrSolutionFromFile essence (outputsDir </> solutionPath)
             result   <- runUserErrorT $ ignoreLogs $ runNameGen () $ do
                 [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
                 validateSolution essence2 param2 solution2
@@ -444,7 +444,7 @@ noDuplicateSolutions step TestDirFiles{..} = do
     models    <- sort . filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
     params    <- sort . filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
     solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
-    solutionContents <- forM solutions $ \ s -> do m <- readParamOrSolutionFromFile (def :: Model) (outputsDir </> s)
+    solutionContents <- forM solutions $ \ s -> do m <-runLoggerPipeIO LogDebug (readParamOrSolutionFromFile (def :: Model) (outputsDir </> s))
                                                    return (s, m)
     let
         grouped :: [ ( Maybe String             -- the parameter

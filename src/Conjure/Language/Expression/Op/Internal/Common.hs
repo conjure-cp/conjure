@@ -31,7 +31,8 @@ import Conjure.Language.Domain as X
 import Conjure.Language.TypeOf as X
 import Conjure.Language.Pretty as X
 import Conjure.Language.AdHoc as X
-import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
+import Conjure.Language.Lexemes as X (lexemeFaceDoc)
+import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme )
 
 
 class SimplifyOp op x where
@@ -48,7 +49,7 @@ class BinaryOperator op where
 
 -- | just the operator not the arguments
 opPretty :: BinaryOperator op => proxy op -> Doc
-opPretty = lexemeFace . opLexeme
+opPretty = lexemeFaceDoc . opLexeme
 
 opFixityPrec :: BinaryOperator op => proxy op -> (Fixity, Int)
 opFixityPrec op =
@@ -236,8 +237,6 @@ operators =
     , ( BinaryOp L_TildeLeq     FNone   ,  400 )
     , ( BinaryOp L_TildeGt      FNone   ,  400 )
     , ( BinaryOp L_TildeGeq     FNone   ,  400 )
-    , ( UnaryPrefix L_Minus           , 2000 )
-    , ( UnaryPrefix L_ExclamationMark , 2000 )
     , ( UnaryPrefix L_Minus           , 2000 )
     , ( UnaryPrefix L_ExclamationMark , 2000 )
     ]

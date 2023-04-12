@@ -19,7 +19,7 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
-import Conjure.UI.TypeScript ( tsDef )
+
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
@@ -75,7 +75,6 @@ mainWithArgs :: forall m .
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
-mainWithArgs TSDEF{} = liftIO tsDef
 mainWithArgs mode@Modelling{..} = do
     essenceM <- readModelFromFile essence
     doIfNotCached          -- start the show!

@@ -1,27 +1,57 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Language.Lexer
     ( Lexeme(..)
     , LexemePos(..)
-    , textToLexeme
+    , textToLexeme,
+    ETok(..),
+    Offsets(..),
+    Reformable(..),
+    prettySplitComments,
+    eLex,
+    reformList,
+    tokenSourcePos,
+    totalLength,
+    trueLength,
+    tokenStart,
+    sourcePos0,
+    LexerError(..),
+    runLexer,
+    ETokenStream(..)
     , lexemeText
-    , lexemeFace
     ) where
-import Conjure.Prelude hiding (some,many)
-import Conjure.Language.Lexemes hiding (lexemeFace)
-import Data.Char ( isAlpha, isAlphaNum )
+
+import Conjure.Language.Lexemes
+import Conjure.Prelude hiding (many, some,Text)
+import Data.Char (isAlpha, isAlphaNum)
 import Data.Void
-import qualified Data.HashMap.Strict as M
+
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
-import Conjure.Language.Pretty
-import qualified Text.Megaparsec.Char.Lexer as L
+import Data.Text (Text)
+import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
+
+import Data.List (splitAt)
+import qualified Data.List.NonEmpty as NE
+import qualified Text.Megaparsec as L
+import Prelude (read)
+import qualified Prettyprinter as Pr
+import Conjure.Prelude hiding (some,many)
+
+import qualified Data.HashMap.Strict as M
+import qualified Data.Text as T
+
+import Conjure.Language.Pretty
+
 
 import Text.Megaparsec --( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
 import Text.Megaparsec.Stream ()
@@ -33,51 +63,33 @@ data LexemePos = LexemePos
                     SourcePos       -- source position, just after this lexeme, including whitespace after the lexeme
     deriving (Show,Eq, Ord)
 
+sourcePos0 :: SourcePos
+sourcePos0 = SourcePos "" (mkPos  1) (mkPos 1)
 
-lexemeFace :: Lexeme -> Doc
-lexemeFace L_Newline = "new line"
-lexemeFace L_Carriage = "\\r"
-lexemeFace L_Space   = "space character"
-lexemeFace L_Tab     = "tab character"
-lexemeFace (LIntLiteral i) = pretty i
-lexemeFace (LIdentifier i) = pretty (T.unpack i)
--- lexemeFace (LComment    i) = Pr.text (T.unpack i)
-lexemeFace l =
-    case M.lookup l mapLexemeToText of
-        Nothing -> pretty (show l)
-        Just t  -> pretty . T.unpack $ t
+class Reformable a where
+    reform :: a -> L.Text
 
-isLexemeSpace :: Lexeme -> Bool
-isLexemeSpace L_Newline {} = True
-isLexemeSpace L_Carriage{} = True
-isLexemeSpace L_Tab     {} = True
-isLexemeSpace L_Space   {} = True
--- isLexemeSpace LComment  {} = True
-isLexemeSpace _            = False
+instance Reformable ETok where
+    reform e | oTLength (offsets e) == 0 = ""
+    reform (ETok{capture=cap,trivia=triv}) = L.append  (L.concat $ map showTrivia triv) (L.fromStrict cap)
+        where
+            showTrivia :: Trivia -> L.Text
+            showTrivia x = case x of
+              WhiteSpace txt    -> L.fromStrict txt
+              LineComment txt   -> L.fromStrict txt
+              BlockComment txt  -> L.fromStrict txt
 
-tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
-tryLex running (face,lexeme) = do
-    rest <- T.stripPrefix face running
-    if T.all isIdentifierLetter face
-        then
-            case T.uncons rest of
-                Just (ch, _) | isIdentifierLetter ch -> Nothing
-                _                                    -> Just (rest, lexeme)
-        else Just (rest, lexeme)
-
--- tryLexIntLiteral :: T.Text -> Maybe (T.Text, Lexeme)
--- tryLexIntLiteral t =
---     case T.decimal t of
---         Left _ -> Nothing
---         Right (x, rest) -> Just (rest, LIntLiteral x)
-
+reformList :: (Traversable t ,Reformable a) => t a -> L.Text
+reformList =  L.concat  . map reform . toList
 
 emojis :: [Char]
-emojis = concat [['\x1f600'..'\x1F64F'],
-                 ['\x1f300'..'\x1f5ff'],
-                 ['\x1f680'..'\x1f999'],
-                 ['\x1f1e0'..'\x1f1ff']]
-
+emojis =
+    concat
+        [ ['\x1f600' .. '\x1F64F']
+        , ['\x1f300' .. '\x1f5ff']
+        , ['\x1f680' .. '\x1f999']
+        , ['\x1f1e0' .. '\x1f1ff']
+        ]
 
 isIdentifierFirstLetter :: Char -> Bool
 isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem` emojis
@@ -85,179 +97,258 @@ isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem
 isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
-tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexMetaVar running = do
-    ('&', rest) <- T.uncons running
-    (rest2, LIdentifier iden) <- tryLexIden rest
-    return (rest2, LMetaVar iden)
+data Offsets =Offsets {oStart::Int,oTrueStart :: Int,oTLength::Int,oSourcePos::SourcePos}
+    deriving (Show, Eq, Ord)
+type Lexer = Parsec Void Text
 
-tryLexIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIden running = do
-    let (iden,rest) = T.span isIdentifierLetter running
-    (ch, _) <- T.uncons running
-    if isIdentifierFirstLetter ch
-        then
-            if T.null iden
-                then Nothing
-                else Just (rest, LIdentifier iden)
-        else Nothing
+-- type Lexer = Parsec Void Text ETokenStream
 
-tryLexQuotedIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexQuotedIden running = do
-    let
-        go inp = do
-            ('\"', rest) <- T.uncons inp
-            go2 "\"" rest
+data Trivia = WhiteSpace Text | LineComment Text | BlockComment Text
+    deriving (Show, Eq, Ord)
 
-        -- after the first "
-        go2 sofar inp = do
-            (ch, rest) <- T.uncons inp
-            case ch of
-                -- end
-                '\"'
-                    | sofar /= "\""         -- so we don't allow empty strings
-                    -> Just (rest, LIdentifier (T.pack (reverse ('\"' : sofar))))
-                -- escaped
-                '\\' -> do
-                    (ch2, rest2) <- T.uncons rest
-                    case ch2 of
-                        '\"' -> go2 ('\"':sofar) rest2
-                        '\\' -> go2 ('\\':sofar) rest2
-                        _ -> Nothing
-                _ -> go2 (ch:sofar) rest
-    go running
+data ETok = ETok
+    { offsets :: Offsets
+    , trivia :: [Trivia]
+    , lexeme :: Lexeme
+    , capture :: Text
+    }
+    deriving (Eq, Ord)
 
--- tryLexComment :: T.Text -> Maybe (T.Text, Lexeme)
--- tryLexComment running = let (dollar,rest1) = T.span (=='$') running
---                         in  if T.null dollar
---                                 then Nothing
---                                 else let (commentLine,rest2) = T.span (/='\n') rest1
---                                      in  Just (rest2, LComment commentLine)
+instance Pr.Pretty ETok where
+    pretty = Pr.unAnnotate . uncurry (Pr.<>) .  prettySplitComments
+
+prettySplitComments :: ETok -> (Pr.Doc ann, Pr.Doc ann)
+prettySplitComments (ETok _ tr _ capture) = (Pr.hcat [Pr.pretty t Pr.<> Pr.hardline | LineComment t <- tr],Pr.pretty capture)
 
 
--- instance ShowToken [LexemePos] where
---     showToken = intercalate ", " . map showToken
+totalLength :: ETok -> Int
+totalLength = oTLength . offsets
 
--- instance ShowToken LexemePos where
---     showToken (LexemePos tok _ _) = showToken tok
+trueLength :: ETok -> Int
+trueLength (ETok{offsets = (Offsets o d l _)}) = max 0 (l + (o-d))
 
--- instance ShowToken Lexeme where
---     showToken = show . lexemeFace
+tokenStart :: ETok -> Int
+tokenStart (ETok{offsets = (Offsets _  s _ _)}) = s
 
---Generic
+tokenSourcePos :: ETok -> SourcePos
+tokenSourcePos = oSourcePos . offsets
+sourcePosAfter :: ETok -> SourcePos
+sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
 
--- instance Hashable Lexeme
-
-type Offsets = (Int,Int,Int,Lexeme)
-type Parser = Parsec Void T.Text
-data Trivia = WhiteSpace T.Text | LineComment T.Text | BlockComment  T.Text
-    deriving (Show,Eq,Ord)
-data ETok = ETok {
-            offsets :: Offsets,
-            trivia :: [Trivia],
-            lexeme :: Lexeme
-}
-            deriving (Eq,Ord)
-
-
-makeToken :: Offsets -> [Trivia] -> Lexeme -> ETok
+makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 
-eLex :: Parser [ETok]
-eLex = manyTill aToken eof
+data LexerError = LexerError String
+    deriving (Show)
 
-aToken :: Parser ETok
+runLexer :: Text -> Either LexerError ETokenStream
+runLexer txt = case runParser eLex "Lexer" txt of
+  Left peb -> Left $ LexerError $ errorBundlePretty peb
+  Right ets -> Right $ ETokenStream txt ets
+
+
+eLex :: Lexer [ETok]
+eLex =
+    do
+        main <- many $ try aToken
+        end <- pEOF
+        return $ main ++ [end]
+
+aToken :: Lexer ETok
 aToken = do
-            start <- getOffset
-            whiteSpace <- pTrivia
-            wse <- getOffset
-            tok <- aLexeme
-            tokenEnd <- getOffset
-            return $ makeToken (start,wse,tokenEnd-start,tok) whiteSpace tok
+    start <- getOffset
+    whiteSpace <- pTrivia
+    wse <- getOffset
+    spos <- getSourcePos
+    (tok,cap) <- aLexeme
+    tokenEnd <- getOffset
+    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whiteSpace tok cap
 
-aLexeme :: Parser Lexeme
-aLexeme  = try pEOF
-    <|> try pNumber
-    <|> try (choice $ map pLexeme lexemes)
-    <|> try pIdentifier
-    <|> try pMetaVar
-
-pEOF :: Parser Lexeme
+pEOF :: Lexer ETok
 pEOF = do
-        eof
-        return L_EOF
+    start <- getOffset
+    whiteSpace <- pTrivia
+    wse <- getOffset
+    spos <- getSourcePos
+    eof
+    tokenEnd <- getOffset
+    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whiteSpace L_EOF ""
 
-pNumber :: Parser Lexeme
+
+aLexeme :: Lexer (Lexeme,Text)
+aLexeme = aLexemeStrict <|> pFallback
+
+aLexemeStrict :: Lexer (Lexeme,Text)
+aLexemeStrict =
+    try
+        pNumber
+        <|> try  (choice (map pLexeme lexemes) <?> "Lexeme")
+        <|> try pIdentifier
+        <|> try pQuotedIdentifier
+        <|> try pMetaVar
+
+
+pNumber :: Lexer (Lexeme,Text)
 pNumber = do
-            LIntLiteral <$> L.decimal
+    v <- takeWhile1P Nothing (`elem` ['1','2','3','4','5','6','7','8','9','0'])
+    let n = read $ T.unpack v
+    return (LIntLiteral n,v)
+    <?> "Numeric Literal"
 
-pMetaVar :: Parser Lexeme
+pMetaVar :: Lexer (Lexeme,Text)
 pMetaVar = do
-            empty
-            return $ LMetaVar "TODO"
+    amp <- chunk "&"
+    (_,cap) <- pIdentifier
+    return (LMetaVar cap,amp `T.append` cap)
 
-
-pIdentifier :: Parser Lexeme
+pIdentifier :: Lexer (Lexeme,Text)
 pIdentifier = do
-                firstLetter <- takeWhile1P Nothing isIdentifierFirstLetter
-                rest <- takeWhileP Nothing isIdentifierLetter
-                return $ LIdentifier (T.append firstLetter rest)
+    firstLetter <- takeWhile1P Nothing isIdentifierFirstLetter
+    rest <- takeWhileP Nothing isIdentifierLetter
+    let ident = T.append firstLetter rest
+    return ( LIdentifier ident, ident)
+    <?> "Identifier"
 
+pQuotedIdentifier :: Lexer (Lexeme,Text)
+pQuotedIdentifier = do
+    l <- quoted
+    return (LIdentifier l,l)
 
-pLexeme :: (T.Text,Lexeme) -> Parser Lexeme
-pLexeme (s,l) = do
-                    tok <- string s
-                    return l
+pFallback :: Lexer (Lexeme,Text)
+pFallback = do
+    q <- T.pack <$> someTill anySingle (lookAhead $ try somethingValid)
+    return (LUnexpected  q,q)
+  where
+    somethingValid :: Lexer ()
+    somethingValid = void pTrivia <|> void aLexemeStrict <|> eof
 
-pTrivia :: Parser [Trivia]
+pLexeme :: (Text, Lexeme) -> Lexer (Lexeme,Text)
+pLexeme (s, l) = do
+    tok <- string s
+    notFollowedBy $ if isIdentifierLetter $ T.last tok then nonIden else empty
+    return (l,tok)
+    <?> "Lexeme :" ++ show l
+    where
+        nonIden = takeWhile1P Nothing isIdentifierLetter
+
+pTrivia :: Lexer [Trivia]
 pTrivia = many (whiteSpace <|> lineComment <|> blockComment)
 
-whiteSpace :: Parser Trivia
+whiteSpace :: Lexer Trivia
 whiteSpace = do
-                s <- some spaceChar
-                return $  WhiteSpace $ T.pack s
+    s <- some spaceChar
+    return $ WhiteSpace $ T.pack s
 
-lineEnd :: Parser ()
-lineEnd = do
-            _ <- optional eol
-            _ <- optional eof
-            return ()
+quoted :: Lexer Text
+quoted = do
+    open <- char '\"'
+    (body,end) <- manyTill_ anySingle $ char '\"'
+    return $ T.pack  $ open:body++[end]
 
-lineComment :: Parser Trivia
+lineEnd :: Lexer [Char]
+lineEnd = T.unpack <$> eol <|> ( eof >> return [])
+
+lineComment :: Lexer Trivia
 lineComment = do
-                _<-try (chunk "$")
-                text <- manyTill L.charLiteral lineEnd
-                return $ LineComment $ T.pack text
+    _ <- try (chunk "$")
+    (text,end) <- manyTill_ anySingle lineEnd
+    return $ LineComment $ T.pack ('$' : text++end)
 
-blockComment :: Parser Trivia
+blockComment :: Lexer Trivia
 blockComment = do
-                _ <- try (chunk "/*")
-                text <- manyTill L.charLiteral (chunk "*/")
-                return $ BlockComment $ T.pack text
+    _ <- try (chunk "/*")
+    text <- manyTill L.anySingle (lookAhead (void(chunk "*/") <|>eof))
+    cl <- optional $ chunk "*/"
+    let cl' = fromMaybe "" cl
+    return $ BlockComment $ T.concat ["/*",T.pack text ,cl' ]
+
+
+data ETokenStream = ETokenStream
+    { streamSourceText :: Text
+    , streamTokens :: [ETok]
+    }
+instance Stream ETokenStream where
+    type Token ETokenStream = ETok
+    type Tokens ETokenStream = [ETok]
+    tokenToChunk _ x = [x]
+    tokensToChunk _ xs = xs
+    chunkToTokens _ = id
+    chunkLength _ = length
+    chunkEmpty _ [] = True
+    chunkEmpty _ _ = False
+    take1_ :: ETokenStream -> Maybe (Token ETokenStream, ETokenStream)
+    take1_ (ETokenStream _ (x : xs)) = Just (x, buildStream xs)
+    take1_ (ETokenStream _ []) = Nothing
+    takeN_ :: Int -> ETokenStream -> Maybe (Tokens ETokenStream, ETokenStream)
+    takeN_ n xs | n <= 0 = Just ([], xs)
+    takeN_ _ (ETokenStream _ []) = Nothing
+    takeN_ n (ETokenStream s xs) = Just (take n xs, buildStream $ drop n xs)
+    takeWhile_ :: (Token ETokenStream -> Bool) -> ETokenStream -> (Tokens ETokenStream, ETokenStream)
+    takeWhile_ p (ETokenStream _ xs) =
+        (a, buildStream b)
+      where
+        (a, b) = span p xs
+
+-- (takeWhile p xs,ETokenStream $ dropWhile p xs)
+
+buildStream :: [ETok] -> ETokenStream
+buildStream xs = case NE.nonEmpty xs of
+    Nothing -> ETokenStream "" xs
+    Just _ -> ETokenStream (T.pack "showTokens pxy s") xs
+
+instance VisualStream ETokenStream where
+    showTokens _ =  L.unpack . reformList
+    tokensLength _ = sum . fmap ( oTLength . offsets )
+
+-- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
+instance TraversableStream ETokenStream where
+    reachOffset o PosState{..} =
+        ( Just (prefix ++ restOfLine)
+        , PosState
+            { pstateInput = buildStream post
+            , pstateOffset = max pstateOffset o
+            , pstateSourcePos = newSourcePos
+            , pstateTabWidth = pstateTabWidth
+            , pstateLinePrefix = prefix
+            }
+        )
+      where
+        prefix =
+            if sameLine
+                then pstateLinePrefix ++ preLine
+                else preLine
+        sameLine = sourceLine newSourcePos == sourceLine pstateSourcePos
+        newSourcePos =
+            case post of
+                [] -> pstateSourcePos
+                (x : _) -> tokenSourcePos x
+        (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
+        (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
+        preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
+        restOfLine = takeWhile (/= '\n') postStr
+
+pxy :: Proxy ETokenStream
+pxy = Proxy
+
+
+-- lexemeFace :: Lexeme -> Doc
+-- lexemeFace L_Newline = "new line"
+-- lexemeFace L_Carriage = "\\r"
+-- lexemeFace L_Space   = "space character"
+-- lexemeFace L_Tab     = "tab character"
+-- lexemeFace (LIntLiteral i) = pretty i
+-- lexemeFace (LIdentifier i) = pretty (T.unpack i)
+-- lexemeFace l =
+--     case M.lookup l mapLexemeToText of
+--         Nothing -> pretty (show l)
+--         Just t  -> pretty . T.unpack $ t
+
 
 instance Show ETok where
-    show (ETok _ _ q) = show q
+    show (ETok _ _ _ q) = show q
 
-newtype ETokenStream = ETokenStream [ETok]
-instance Stream ETokenStream where
-    type Token ETokenStream= ETok
-    type Tokens ETokenStream= [ETok]
-    tokenToChunk proxy x = [x]
-    tokensToChunk proxy xs= xs
-    chunkToTokens proxy = id
-    chunkLength proxy = length
-    chunkEmpty proxy xs = False
-    take1_ (ETokenStream (x:xs)) = Just (x, ETokenStream xs)
-    take1_ (ETokenStream []) = Nothing
-    takeN_ n xs | n<=0 = Just([],xs)
-    takeN_ n (ETokenStream []) = Nothing
-    takeN_ n (ETokenStream xs) = Just (take n xs,ETokenStream $ drop n xs)
-    takeWhile_ p (ETokenStream xs) = (takeWhile p xs,ETokenStream $ dropWhile p xs)
-instance VisualStream ETokenStream where
-    showTokens p q = concat $ show <$> q
-    tokensLength p ls = sum $ len <$> ls
-                        where len (ETok (_,_,x,_) _ _) = x
 
-instance TraversableStream ETokenStream where
-    reachOffset i s = (Nothing, s)
-    reachOffsetNoLine i s = s 
+
+-- instance TraversableStream ETokenStream where
+--     reachOffset i s = (Nothing, s)
+--     reachOffsetNoLine i s = s 

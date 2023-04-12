@@ -88,6 +88,7 @@ readParamJSON ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
     MonadFail m =>
+    MonadLog m =>
     MonadUserError m =>
     Model -> FilePath -> m Model
 readParamJSON model fp = do
@@ -103,6 +104,7 @@ readParamJSON model fp = do
 readParamOrSolutionFromFile ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
+    MonadLog m =>
     MonadFailDoc m =>
     MonadUserError m =>
     Model -> FilePath -> m Model

@@ -6,7 +6,7 @@ import Data.Void (Void)
 import qualified Data.Set as Set
 import Conjure.Language.AST.Syntax
 import Conjure.Language.AST.ASTParser
-import Conjure.Language.NewLexer
+import Conjure.Language.Lexer
 import Conjure.Language.Lexemes
 import qualified Data.Text
 import qualified Data.Text as T
@@ -33,7 +33,7 @@ instance ShowErrorComponent DiagnosticForPrint where
 
 tokenErrorToDisplay :: LToken -> String
 tokenErrorToDisplay (RealToken _ ) = error "tokenError with valid token"
-tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ show t
+tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ (lexemeFace $ lexeme t)
 tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
     L_Missing s -> s
     LMissingIdentifier -> "<identifier>"

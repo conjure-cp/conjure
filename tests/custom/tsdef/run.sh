@@ -1,1 +1,0 @@
-conjure tsdef
