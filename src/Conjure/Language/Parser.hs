@@ -47,12 +47,18 @@ import Conjure.Language.AST.Reformer (Flattenable (flatten))
 import Conjure.Language.Pretty 
 import qualified Prettyprinter as Pr
 
-
 type  Pipeline a b = ( (Parsec Void ETokenStream) a ,a -> V.ValidatorS b,Bool)
 
 
 data PipelineError = LexErr LexerError | ParserError ParserError | ValidatorError Doc
-    deriving (Show)
+      deriving Show
+
+instance Pretty PipelineError where
+    pretty (ValidatorError d) = d
+    pretty e  = pretty $ show e
+
+
+
 
 lexAndParse :: Flattenable a => P.Parser a -> Text -> Either PipelineError a
 lexAndParse parse t = do
@@ -107,7 +113,7 @@ parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAn
 
 runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p (Just file,inp) of
-  Left pe -> Left $ "Parser error in file:" <+> pretty file <+> pretty  ("Error is:\n" ++ show pe)
+  Left pe -> Left $ pretty pe
   Right a -> Right a
 
 

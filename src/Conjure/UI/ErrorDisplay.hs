@@ -50,12 +50,12 @@ displayError x = case x of
   SemanticError txt -> "Error: " ++ T.unpack txt
   CustomError txt -> "Error: " ++ T.unpack txt
   TypeError expected got -> "Type error:\n\tExpected: " ++ show (pretty expected) ++ "\n\tGot: " ++ show (pretty got)
-  ComplexTypeError msg ty -> "Type error:\n\tExpected:" ++ show msg ++ "\n\tGot: " ++ (show $ pretty ty)
+  ComplexTypeError msg ty -> "Type error:\n\tExpected: " ++ show msg ++ "\n\tGot: " ++ (show $ pretty ty)
   SkippedTokens -> "Skipped tokens"
   UnexpectedArg -> "Unexpected argument"
   MissingArgsError expected got -> "Insufficient args, expected " ++ (show expected) ++ " got " ++ (show got)
   InternalError -> "Pattern match failiure"
-  InternalErrorS txt -> "Something went wrong:" ++ T.unpack txt
+  InternalErrorS txt -> "Something went wrong: " ++ T.unpack txt
   WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
   KindError a b -> show $ "Tried to use a " <> pretty b <> " where " <> pretty a <> " was expected"
 
