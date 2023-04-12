@@ -2,14 +2,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- This module is where the syntax tree is mapped to the model.
--- This has three main roles
+-- This module is where the syntax tree is mapped to the model. This is also the
+-- stage at which all errrors are reported. 
+-- This has three main parts
 -- Syntax checking:
 --      When it comes to missing tokens these should usually be handled by the 
 --      low level token validation functions, however in some special cases
 --      where the tokens are manipulated manually the checks need to be added
 -- Type checking:
---      
+--      Type check operators and build up the symbol table. 
 -- Metadata additions:
 --      this includeds things like marking tokens for documentation, as well as
 --      setting up structural regions such as quantigied expressions
