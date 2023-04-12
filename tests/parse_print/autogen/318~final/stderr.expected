@@ -1,11 +1,10 @@
 Error:
-    Parser error in file: tests/parse_print/autogen/318~final/spec.essence Error is:
-ValidatorError tests/parse_print/autogen/318~final/spec.essence:4:24:
+    tests/parse_print/autogen/318~final/spec.essence:4:24:
   |
 4 | such that participants(partition({0}) - partition({4})) = {5}
   |                        ^^^^^^^^^^^^^^
 Type error:
-	Expected:"Number / set/ mset / relation / function"
+	Expected: "Number / set/ mset / relation / function"
 	Got: partition from int
 
 tests/parse_print/autogen/318~final/spec.essence:4:41:
@@ -13,5 +12,5 @@ tests/parse_print/autogen/318~final/spec.essence:4:41:
 4 | such that participants(partition({0}) - partition({4})) = {5}
   |                                         ^^^^^^^^^^^^^^
 Type error:
-	Expected:"Number / set/ mset / relation / function"
+	Expected: "Number / set/ mset / relation / function"
 	Got: partition from int

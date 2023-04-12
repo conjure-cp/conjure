@@ -1,11 +1,10 @@
 Error:
-    Parser error in file: defined-type-error.essence Error is:
-ValidatorError defined-type-error.essence:2:24:
+    defined-type-error.essence:2:24:
   |
 2 | such that b = (defined(1) = defined(1))
   |                        ^
 Type error:
-	Expected:"Function or Sequence"
+	Expected: "Function or Sequence"
 	Got: int
 
 defined-type-error.essence:2:37:
@@ -13,6 +12,6 @@ defined-type-error.essence:2:37:
 2 | such that b = (defined(1) = defined(1))
   |                                     ^
 Type error:
-	Expected:"Function or Sequence"
+	Expected: "Function or Sequence"
 	Got: int
 

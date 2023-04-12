@@ -1,9 +1,8 @@
 Error:
-    Parser error in file: tests/parse_print/basic/typeErrorInDecl/typeErrorInDecl.essence Error is:
-ValidatorError tests/parse_print/basic/typeErrorInDecl/typeErrorInDecl.essence:3:19:
+    tests/parse_print/basic/typeErrorInDecl/typeErrorInDecl.essence:3:19:
   |
 3 | find x : int(1..2+false)
   |                   ^^^^^
 Type error:
-	Expected:"Number or Enum"
+	Expected: "Number or Enum"
 	Got: bool

@@ -1,11 +1,10 @@
 Error:
-    Parser error in file: tests/parse_print/autogen/441~1435208191_85/spec.essence Error is:
-ValidatorError tests/parse_print/autogen/441~1435208191_85/spec.essence:16:14:
+    tests/parse_print/autogen/441~1435208191_85/spec.essence:16:14:
    |
 16 |              partition({false, true, true, true}) - (partition() : `partition from bool`)),
    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected:"Number / set/ mset / relation / function"
+	Expected: "Number / set/ mset / relation / function"
 	Got: partition from bool
 
 tests/parse_print/autogen/441~1435208191_85/spec.essence:16:53:
@@ -13,5 +12,5 @@ tests/parse_print/autogen/441~1435208191_85/spec.essence:16:53:
 16 |              partition({false, true, true, true}) - (partition() : `partition from bool`)),
    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected:"Number / set/ mset / relation / function"
+	Expected: "Number / set/ mset / relation / function"
 	Got: partition from bool

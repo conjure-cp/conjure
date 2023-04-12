@@ -1,11 +1,10 @@
 Error:
-    Parser error in file: tests/parse_print/autogen/325~1435147026_26/spec.essence Error is:
-ValidatorError tests/parse_print/autogen/325~1435147026_26/spec.essence:99:14:
+    tests/parse_print/autogen/325~1435147026_26/spec.essence:99:14:
    |
 99 |              partition({[false; int(0..0)],
    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected:"Number / set/ mset / relation / function"
+	Expected: "Number / set/ mset / relation / function"
 	Got: partition from matrix indexed by [int] of bool
 
 tests/parse_print/autogen/325~1435147026_26/spec.essence:107:14:
@@ -13,5 +12,5 @@ tests/parse_print/autogen/325~1435147026_26/spec.essence:107:14:
 107 |              partition({[true, false; int(4, 2..2)], [false, false, true, false; int(5..8)],
     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected:"Number / set/ mset / relation / function"
+	Expected: "Number / set/ mset / relation / function"
 	Got: partition from matrix indexed by [int] of bool

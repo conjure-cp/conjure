@@ -1,11 +1,10 @@
 Error:
-    Parser error in file: hist-type-error.essence Error is:
-ValidatorError hist-type-error.essence:2:21:
+    hist-type-error.essence:2:21:
   |
 2 | such that b = (hist(false) = hist(false))
   |                     ^^^^^
 Type error:
-	Expected:"Matrix, List or MSet"
+	Expected: "Matrix, List or MSet"
 	Got: bool
 
 hist-type-error.essence:2:35:
@@ -13,6 +12,6 @@ hist-type-error.essence:2:35:
 2 | such that b = (hist(false) = hist(false))
   |                                   ^^^^^
 Type error:
-	Expected:"Matrix, List or MSet"
+	Expected: "Matrix, List or MSet"
 	Got: bool
 

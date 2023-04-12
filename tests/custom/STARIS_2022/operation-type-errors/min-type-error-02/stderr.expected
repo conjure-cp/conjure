@@ -1,10 +1,9 @@
 Error:
-    Parser error in file: min-type-error.essence Error is:
-ValidatorError min-type-error.essence:2:20:
+    min-type-error.essence:2:20:
   |
 2 | such that b = (min([false, true, false, true]) = false)
   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected:"Domain of int-like or matrix of int-like"
+	Expected: "Domain of int-like or matrix of int-like"
 	Got: matrix indexed by [int] of bool
 

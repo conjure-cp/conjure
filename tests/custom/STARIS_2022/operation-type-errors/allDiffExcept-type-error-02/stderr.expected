@@ -1,11 +1,10 @@
 Error:
-    Parser error in file: allDiffExcept-type-error.essence Error is:
-ValidatorError allDiffExcept-type-error.essence:2:35:
+    allDiffExcept-type-error.essence:2:35:
   |
 2 | such that b = alldifferent_except(false, [1, 2, 3, 4])
   |                                   ^^^^^
 Type error:
-	Expected:"Matrix or list"
+	Expected: "Matrix or list"
 	Got: bool
 
 allDiffExcept-type-error.essence:2:42:
@@ -13,6 +12,6 @@ allDiffExcept-type-error.essence:2:42:
 2 | such that b = alldifferent_except(false, [1, 2, 3, 4])
   |                                          ^^^^^^^^^^^^
 Type error:
-	Expected:"int enum or bool"
+	Expected: "int enum or bool"
 	Got: matrix indexed by [int] of int
 
