@@ -1883,7 +1883,7 @@ resolveReference :: RegionTagged Name -> ValidatorS Kind
 resolveReference (r,Name n) | n /= "" = do
     c <- getSymbol n
     case c of
-      Nothing -> raiseTypeError (r <!> (CustomError . pack $ "Symbol not found "++ show n)) >> return (simple TypeAny)
+      Nothing -> raiseTypeError (r <!> (CustomError  (T.concat ["Symbol not found \"" , n , "\""]))) >> return (simple TypeAny)
       Just (reg,_,t) -> do
         putReference r n t reg
         -- addRegion (RegionInfo {rRegion=r,rText=n, rType=Just t, rDeclaration=Ref reg})

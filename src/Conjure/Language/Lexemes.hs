@@ -8,6 +8,7 @@ import Conjure.Prelude
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
+import Data.Char (chr, ord)
 
 data Lexeme
     = LIntLiteral Integer
@@ -518,7 +519,7 @@ lexemeFace L_Carriage = "\\r"
 lexemeFace L_Space   = "space character"
 lexemeFace L_Tab     = "tab character"
 lexemeFace (LIntLiteral i) = show i
-lexemeFace (LIdentifier i) = (T.unpack i)
+lexemeFace (LIdentifier i) = T.unpack i
 -- lexemeFace (LComment    i) = Pr.text (T.unpack i)
 lexemeFace l =
     case M.lookup l mapLexemeToText of
@@ -529,6 +530,7 @@ lexemeFaceDoc :: Lexeme -> Doc
 lexemeFaceDoc = stringToDoc . lexemeFace
 
 lexemeText :: Lexeme -> T.Text
+lexemeText (LIdentifier t) =  t
 lexemeText l = fromMaybe (T.pack $ show l) (M.lookup l mapLexemeToText)
 
 --Categories
