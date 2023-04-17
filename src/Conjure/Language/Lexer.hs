@@ -19,6 +19,7 @@ module Conjure.Language.Lexer
     eLex,
     reformList,
     tokenSourcePos,
+    sourcePosAfter,
     totalLength,
     trueLength,
     tokenStart,
@@ -125,8 +126,9 @@ tokenStart (ETok{offsets = (Offsets _  s _ _)}) = s
 
 tokenSourcePos :: ETok -> SourcePos
 tokenSourcePos = oSourcePos . offsets
--- sourcePosAfter :: ETok -> SourcePos
--- sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
+
+sourcePosAfter :: ETok -> SourcePos
+sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
 
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
@@ -134,8 +136,8 @@ makeToken = ETok
 data LexerError = LexerError String
     deriving (Show)
 
-runLexer :: Text -> Either LexerError ETokenStream
-runLexer txt = case runParser eLex "Lexer" txt of
+runLexer :: Text -> Maybe FilePath -> Either LexerError ETokenStream
+runLexer txt fp = case runParser eLex (fromMaybe "Lexer" fp) txt of
   Left peb -> Left $ LexerError $ errorBundlePretty peb
   Right ets -> Right $ ETokenStream txt ets
 
@@ -199,6 +201,7 @@ pIdentifier = do
     firstLetter <- takeWhile1P Nothing isIdentifierFirstLetter
     rest <- takeWhileP Nothing isIdentifierLetter
     let ident = T.append firstLetter rest
+    -- traceM $ T.unpack . T.pack $ map chr $ map ord $ T.unpack ident
     return ( LIdentifier ident, ident)
     <?> "Identifier"
 

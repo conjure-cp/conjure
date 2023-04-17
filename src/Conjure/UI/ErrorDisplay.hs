@@ -71,7 +71,7 @@ printSymbolTable :: SymbolTable -> IO ()
 printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs tab)
     where
         printEntry :: (Text ,SymbolTableValue) -> IO ()
-        printEntry (a,(_,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
+        printEntry (a,(_,c,t)) = putStrLn $ T.unpack a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
 
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
 captureErrors = (mapM_ captureError) . collapseSkipped . removeAmbiguousTypeWarning
@@ -114,19 +114,22 @@ captureError (ValidatorDiagnostic area message) = do
 
 
 
-val :: String -> IO ()
-val s = do
+val :: String -> String -> IO ()
+val path s = do
     let str = s
     let other = []
     let txt = Data.Text.pack str
-    let lexed = parseMaybe eLex txt
-    let stream = ETokenStream txt $ fromMaybe other lexed
+    let lexed = runLexer txt (Just path)
+    let stream = either (const $ ETokenStream txt  other) id lexed
+    let (ETokenStream _ toks) = stream
+    putStrLn $ concat $ map (T.unpack . capture) toks
+    
     -- parseTest parseProgram stream
     let progStruct = runParser parseProgram "TEST" stream
 
     case progStruct of
         Left _ -> putStrLn "error"
-        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (initialState p){typeChecking=True} in
+        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (initialState p (Just txt)){typeChecking=True} in
             case qpr of
                 (model, vds,st) -> do
                     print (show model)
@@ -145,6 +148,6 @@ valFile p = do
     path <- readFileIfExists p
     case path of
       Nothing -> putStrLn "NO such file"
-      Just s -> val s
+      Just s -> val p s
     return ()
 -- putStrLn validateFind

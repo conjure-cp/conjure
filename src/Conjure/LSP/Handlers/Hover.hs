@@ -25,7 +25,7 @@ hoverHandler = requestHandler STextDocumentHover $ \ req res -> do
 
 
 prettySymbol :: RegionInfo -> LspM () (Maybe MarkupContent)
-prettySymbol (RegionInfo _ _ dt _) = case dt of
+prettySymbol (RegionInfo _ _ dt _ _) = case dt of
     Definition nm ty -> return $ Just . snippet . pack.show $ hcat [pretty $ nm ," : ",pretty.show $ CPr.pretty ty]
     LiteralDecl{} -> return Nothing
     Ref nm k _ -> return . Just .snippet . pack.show $ hcat [pretty $ nm," : ",pretty.show $ CPr.pretty k] --pack.show $ vcat [hcat [text.unpack $ nm ,":",pretty ty]," Declared : "<> pretty (sourcePosToPosition sp)]

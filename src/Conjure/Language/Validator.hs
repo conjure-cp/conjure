@@ -223,17 +223,18 @@ data RegionInfo = RegionInfo {
     rRegion :: DiagnosticRegion,
     rSubRegion :: Maybe DiagnosticRegion,
     rRegionType :: RegionType,
-    rChildren :: [RegionInfo]
+    rChildren :: [RegionInfo],
+    rTable :: SymbolTable
 } deriving Show
 
 mkDeclaration :: DiagnosticRegion -> Text -> Kind -> RegionInfo
-mkDeclaration r n (t) = RegionInfo r (Just r) (Definition n t) []
+mkDeclaration r n (t) = RegionInfo r (Just r) (Definition n t) [] M.empty
 
 mkLiteral :: DiagnosticRegion -> Text -> Typed a -> RegionInfo
-mkLiteral r _ (Typed t _) = RegionInfo r (Just r) (LiteralDecl (simple t)) []
+mkLiteral r _ (Typed t _) = RegionInfo r (Just r) (LiteralDecl (simple t)) [] M.empty
 
 putReference :: DiagnosticRegion -> Text -> Kind -> DiagnosticRegion -> ValidatorS ()
-putReference r n t ref = addRegion (RegionInfo r Nothing (Ref n t ref) [])
+putReference r n t ref = addRegion (RegionInfo r Nothing (Ref n t ref) [] M.empty)
 
 holdDeclarations :: ValidatorS a -> ValidatorS (a,[RegionInfo])
 holdDeclarations f = do
@@ -251,15 +252,16 @@ wrapRegion' ::  DiagnosticRegion -> DiagnosticRegion -> StructuralType -> Valida
 wrapRegion' regMain regSel ty f = do
     (res,ds) <- holdDeclarations f
     let rMain = regMain
-    let rSel = Just $ regSel
-    let new = RegionInfo rMain rSel (Structural ty) ds
+    let rSel = Just regSel
+    st <- gets (symbolTable)
+    let new = RegionInfo rMain rSel (Structural ty) ds st
     unless (null ds) $ addRegion new
     return res
 
 -- injectRegion :: DiagnosticRegion -> DiagnosticRegion -> ()
 
 putDocs :: Flattenable a => DocType -> Text -> a -> ValidatorS ()
-putDocs t nm r = addRegion $ RegionInfo {rRegion=symbolRegion r,rSubRegion=Nothing, rRegionType=Documentation t nm,rChildren=[]}
+putDocs t nm r = addRegion $ RegionInfo {rRegion=symbolRegion r,rSubRegion=Nothing, rRegionType=Documentation t nm,rChildren=[], rTable = M.empty}
 putKeywordDocs :: Flattenable a =>Text ->a -> ValidatorS ()
 putKeywordDocs = putDocs KeywordD
 putTypeDoc :: Flattenable a =>Text ->a -> ValidatorS ()
@@ -310,7 +312,8 @@ data ValidatorState = ValidatorState {
     regionInfo :: [RegionInfo],
     symbolTable :: SymbolTable,
     symbolCategories ::Map ETok TaggedToken,
-    currentContext :: DiagnosticRegion
+    currentContext :: DiagnosticRegion,
+    filePath :: Maybe Text
 }
     deriving Show
 -- instance Default ValidatorState where
@@ -321,15 +324,18 @@ data ValidatorState = ValidatorState {
 --         symbolTable=M.empty
 --         }
 
-initialState :: Flattenable a => a -> ValidatorState
-initialState r = ValidatorState {
+initialState :: Flattenable a => a -> Maybe Text -> ValidatorState
+initialState r path = ValidatorState {
         typeChecking = True,
         regionInfo=[],
         symbolCategories=M.empty,
         symbolTable=M.empty,
-        currentContext=symbolRegion r
+        currentContext=symbolRegion r,
+        filePath = path
         }
-type SymbolTable = (Map Text SymbolTableValue)
+type SymbolTable = (Map Text SymbolTableValue) 
+
+
 type SymbolTableValue = (DiagnosticRegion,Bool,Kind)
 -- instance Show SymbolTableValue where
 --     show (SType t) = show $ pretty t
@@ -396,7 +402,7 @@ runValidator :: (ValidatorT r w a) -> r -> (a,[w],r)
 runValidator (ValidatorT r) d = deState $ runWriter (runStateT r d)
 
 isSyntacticallyValid :: Flattenable a=> (a->ValidatorS b) -> a -> Bool
-isSyntacticallyValid v s = case runValidator (v s) (initialState s){typeChecking=False} of 
+isSyntacticallyValid v s = case runValidator (v s) (initialState s Nothing){typeChecking=False} of 
         (_,vds,_) -> not $ any isError vds
 
 todoTypeAny :: Maybe a -> Maybe (Typed a)
@@ -1258,7 +1264,8 @@ validateOperatorExpression (BinaryOpNode lexp op rexp) = do
         rRegion=symbolRegion op,
         rSubRegion=Nothing,
         rRegionType=Documentation OperatorD (T.pack $ show op'),
-        rChildren=[]})
+        rChildren=[],
+        rTable=M.empty})
     return . Typed resultType  $ mkBinOp ( pack $ lexemeFace op') (lExpr) (rExpr)
 validateOperatorExpression (PostfixOpNode expr pon) = do
     postFixOp <-  validatePostfixOp pon

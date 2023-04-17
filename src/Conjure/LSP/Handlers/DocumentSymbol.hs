@@ -21,7 +21,7 @@ docSymbolHandler = requestHandler STextDocumentDocumentSymbol $ \req res -> do
 
 
 translate :: RegionInfo -> Maybe T.DocumentSymbol
-translate reg@(RegionInfo r rSel ty cs) =
+translate reg@(RegionInfo r rSel ty cs _) =
     (\x -> DocumentSymbol
                 (getRegionName reg)
                 (getRegionDetail reg)

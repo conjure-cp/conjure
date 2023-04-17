@@ -62,14 +62,15 @@ instance Pretty PipelineError where
 
 lexAndParse :: Flattenable a => P.Parser a -> Text -> Either PipelineError a
 lexAndParse parse t = do
-    lr <- either (Left . LexErr) Right $ L.runLexer t
+    lr <- either (Left . LexErr) Right $ L.runLexer t Nothing
     either (Left . ParserError ) Right $ runASTParser parse lr
 
 runPipeline :: Flattenable a =>Pipeline a b -> (Maybe FilePath,Text) -> Either PipelineError b
 runPipeline (parse,val,tc) (fp,txt) = do
-            lexResult <- either (Left . LexErr) Right $ L.runLexer txt
+            lexResult <- either (Left . LexErr) Right $ L.runLexer txt fp
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
-            let x = V.runValidator (val parseResult) (V.initialState parseResult){V.typeChecking= tc}
+            let fileNameText = T.pack <$> fp
+            let x = V.runValidator (val parseResult) (V.initialState parseResult fileNameText){V.typeChecking= tc}
             case x of
                 (m, ds,_) | not $ any V.isError ds -> Right m
                 (_, ves,_) -> Left $ ValidatorError $ pretty (showDiagnosticsForConsole ves fp txt)     

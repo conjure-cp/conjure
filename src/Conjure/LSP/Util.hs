@@ -28,7 +28,7 @@ data ProcessedFile = ProcessedFile {
 processFile :: Text -> Either PipelineError ProcessedFile
 processFile t = do
     parsed <- lexAndParse parseProgram t
-    let (m,d,s) = runValidator (validateModel parsed) (initialState  parsed)
+    let (m,d,s) = runValidator (validateModel parsed) (initialState  parsed Nothing) --TODO: wire up
     return $ ProcessedFile m d s
 
 
@@ -124,9 +124,14 @@ sourcePosToPosition (SourcePos _ r c) = Position
     (fromInteger $ -1 + toInteger (unPos r))
     (fromInteger $ -1 + toInteger (unPos c))
 
+
 regionToRange :: DiagnosticRegion -> L.Range
 regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (sourcePosToPosition ep)
 
+regionToLocation :: DiagnosticRegion -> L.Location
+regionToLocation reg@(DiagnosticRegion (SourcePos f _ _) _ _ _) = L.Location
+    (filePathToUri f)
+    (regionToRange reg)
 
 snippet :: Text -> MarkupContent
 snippet = markedUpContent "essence"
