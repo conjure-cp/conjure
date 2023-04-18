@@ -59,6 +59,7 @@ displayError x = case x of
   InternalErrorS txt -> "Something went wrong: " ++ T.unpack txt
   WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
   KindError a b -> show $ "Tried to use a " <> pretty b <> " where " <> pretty a <> " was expected"
+  CategoryError categ reason -> show $ "Cannot use variable of category :" <+> pretty categ <+> "in the context of " <> pretty reason
 
 showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Maybe String -> Text -> String
 showDiagnosticsForConsole errs fileName text

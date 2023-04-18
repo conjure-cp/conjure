@@ -57,6 +57,7 @@ import Control.Monad (mapAndUnzipM)
 import Conjure.Bug (bug)
 import Conjure.Language.Pretty
 import Data.List (splitAt)
+import Conjure.Language.CategoryOf(Category (CatConstant, CatParameter, CatDecision))
 
 data TagType
     =TtType
@@ -108,11 +109,12 @@ data Typed a = Typed Type a
 instance Functor Typed where
   fmap f (Typed k a) = Typed k (f a)
 
--- instance TypeOf (Typed a) where
---     typeOf (Typed () _) = return t
 
 simple :: Type -> Kind
-simple = Kind ValueType
+simple = Kind $ ValueType CatConstant
+
+withCat :: Category -> Type -> Kind
+withCat = Kind . ValueType 
 
 data Kind = Kind Class Type
     deriving (Show,Eq,Ord)
@@ -120,13 +122,13 @@ data Kind = Kind Class Type
 instance Pretty Kind where
     -- pretty (Kind MemberType t) = "Member of " <> pretty t
     pretty (Kind DomainType t) = "domain `" <> pretty t <> "`"
-    pretty (Kind ValueType t) = pretty t
-data Class = DomainType | ValueType 
+    pretty (Kind (ValueType _) t) = pretty t
+data Class = DomainType | ValueType Category
     deriving (Show,Eq,Ord)
 instance Pretty Class where
     pretty c = case c of
       DomainType -> "Domain"
-      ValueType -> "Value"
+      ValueType _-> "Value"
 untype :: Typed a -> a
 untype (Typed _ a) = a
 
@@ -174,6 +176,7 @@ data ErrorType
     | UnexpectedArg
     | TypeError Type Type -- Expected, got
     | ComplexTypeError Text Type -- Expected, got
+    | CategoryError Category Text
     | KindError Class Class
     | InternalError --Used to explicitly tag invalid pattern matches
     | InternalErrorS Text -- Used for giving detail to bug messages
@@ -271,7 +274,7 @@ putAttrDoc = putDocs AttributeD
 
 --Infix symbol validation and tagging
 isA ::  SToken -> TagType -> ValidatorS ()
-isA a b= flagSToken a b
+isA a b = flagSToken a b
 
 isA' ::  LToken -> TagType -> ValidatorS ()
 isA' a b= validateSymbol a >> flagToken a b
@@ -287,7 +290,7 @@ flagSToken (StrictToken _ t) c = modify (\x@ValidatorState{symbolCategories=sc}-
 
 
 tagWithType :: NameNode -> Kind -> ValidatorS ()
-tagWithType (NameNode (NameNodeS lt)) (Kind ValueType ty) = flagSToken lt $ case ty of
+tagWithType (NameNode (NameNodeS lt)) (Kind (ValueType _) ty) = flagSToken lt $ case ty of
    TypeEnum _ -> TtEnum
    TypeInt (TagEnum _) -> TtEnumMember
    TypeInt (TagUnnamed _) -> TtEnumMember
@@ -313,7 +316,8 @@ data ValidatorState = ValidatorState {
     symbolTable :: SymbolTable,
     symbolCategories ::Map ETok TaggedToken,
     currentContext :: DiagnosticRegion,
-    filePath :: Maybe Text
+    filePath :: Maybe Text,
+    categoryLimit :: (Category,Text) --Category,Context (e.g domain)
 }
     deriving Show
 -- instance Default ValidatorState where
@@ -331,7 +335,8 @@ initialState r path = ValidatorState {
         symbolCategories=M.empty,
         symbolTable=M.empty,
         currentContext=symbolRegion r,
-        filePath = path
+        filePath = path,
+        categoryLimit = (CatDecision ,"root")
         }
 type SymbolTable = (Map Text SymbolTableValue) 
 
@@ -409,6 +414,19 @@ todoTypeAny :: Maybe a -> Maybe (Typed a)
 todoTypeAny = typeAs TypeAny
 
 
+setCategoryLimit :: (Category ,Text) -> ValidatorS a -> ValidatorS a
+setCategoryLimit c f= do
+    tmp <- gets categoryLimit
+    modify (\s -> s{categoryLimit=c})
+    res <- f 
+    modify (\s -> s{categoryLimit=tmp})
+    return res
+
+checkCategory :: Kind -> ValidatorS ()
+checkCategory (Kind (ValueType category) _) = do
+    (refCat,context) <- gets categoryLimit
+    unless (refCat >= category ) $ contextTypeError $ CategoryError category context
+checkCategory (Kind DomainType _) = return ()
 
 validateModel :: ProgramTree -> ValidatorS Model
 validateModel model = do
@@ -434,7 +452,7 @@ validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
     nums <- catMaybes <$> validateSequence_ getNum v
     return . pure $
         LanguageVersion
-            (Name $ name)
+            (Name name)
             (if null nums then [1,3] else nums)
     where
         getNum :: SToken -> Validator Int
@@ -469,7 +487,7 @@ validateHeuristicStatement lt exp = do
                         return $ pure [SearchHeuristic  (Name nm)]
                     else
                         invalid $ symbolRegion nn <!> (SemanticError $ T.concat ["Invalid heuristic " , nm , " Expected one of: ", (pack $ show validHeuristics )])
-      _ ->  (invalid $ symbolRegion exp <!> SemanticError "Only identifiers are allowed as heuristics")
+      _ ->  invalid $ symbolRegion exp <!> SemanticError "Only identifiers are allowed as heuristics"
     return $ fromMaybe [] h
 
 
@@ -487,7 +505,7 @@ validateWhereStatement w@(WhereStatementNode l1 exprs) = wrapRegion w w SWhere $
     return [ws]
 
 validateObjectiveStatement :: ObjectiveStatementNode -> ValidatorS [Statement]
-validateObjectiveStatement o@(ObjectiveMin lt en) = wrapRegion o o (SGoal "Minimising") $ do
+validateObjectiveStatement o@(ObjectiveMin lt en) = wrapRegion o o (SGoal "Minimising") $  do
     lt `isA` TtKeyword
     exp <- validateExpression en
     return [Objective Minimising $ untype exp]
@@ -542,9 +560,9 @@ validateGiven (GivenStatementNode idents l1 domain) =
         names <- validateSequence (validateNameAs TtVariable) idents
         (dType, dom) <- typeSplit <$> validateDomain domain
         let memberType = getDomainMembers dType
-        let declarations = [(mkDeclaration r n (simple memberType)) | (r, Name n) <- names]
+        let declarations = [(mkDeclaration r n (withCat CatParameter memberType)) | (r, Name n) <- names]
         mapM_ addRegion declarations
-        mapM_ (\(r,x) -> putSymbol (x,(r,False,simple memberType)) ) names
+        mapM_ (\(r,x) -> putSymbol (x,(r,False,withCat CatParameter memberType)) ) names
         return  $ [ FindOrGiven Given nm dom|(_,nm) <- names ]
 validateGiven (GivenEnumNode se l1 l2 l3) =
     do
@@ -561,8 +579,8 @@ validateFind (FindStatementNode names colon domain) = do
     names' <- validateSequence (validateNameAs TtVariable) names
     (dType, dom) <- typeSplit <$> validateDomain domain
     let memberType = getDomainMembers dType
-    mapM_ (\(r,x) -> putSymbol (x,(r,False,simple memberType) )) names'
-    mapM_ addRegion [mkDeclaration r n (simple memberType) | (r, Name n) <- names']
+    mapM_ (\(r,x) -> putSymbol (x,(r,False,withCat CatDecision memberType) )) names'
+    mapM_ addRegion [mkDeclaration r n (withCat CatDecision memberType) | (r, Name n) <- names']
     return  $ [ FindOrGiven Find nm dom|(_,nm) <- names']
 
 validateLetting :: LettingStatementNode -> ValidatorS [Declaration]
@@ -647,9 +665,9 @@ validateSymbol s =
 
 -- [MissingTokenError ]
 getValueType :: Kind -> ValidatorS Type
-getValueType (Kind ValueType t) = pure t
+getValueType (Kind (ValueType _) t) = pure t
 getValueType (Kind k _) = do
-    contextTypeError $ KindError ValueType k
+    contextTypeError $ KindError (ValueType CatConstant) k
     return TypeAny
 
 getDomainType :: Kind -> ValidatorS Type
@@ -667,8 +685,9 @@ validateDomainWithRepr dom = do
     (t,dom') <- typeSplit <$> validateDomain dom
     return . (Typed t) $ changeRepr NoRepresentation dom'
 
+
 validateDomain :: DomainNode -> ValidatorS TypedDomain
-validateDomain dm = case dm of
+validateDomain dm = setCategoryLimit (CatParameter,"Domain") $ case dm of
     ParenDomainNode _ dom rt -> do checkSymbols [rt] ; validateDomain dom
     MetaVarDomain lt ->  do mv <- validateMetaVar lt ; return . Typed TypeAny $ DomainMetaVar mv
     BoolDomainNode lt -> (lt `isA` TtType >> (return . Typed TypeBool) DomainBool)
@@ -780,7 +799,7 @@ validateDomain dm = case dm of
                 let lst' = mapMaybe (\(r,m)->(\x->(r,x))<$>m) lst
                 let (ts,ds) = unzip $ map (\(r,(x,typeSplit->(t,d)))->((x,t),(r,(x,d)))) lst'
                 --push members
-                let t n = Kind ValueType $ TypeRecordMember n ts
+                let t n = Kind (ValueType CatConstant) $ TypeRecordMember n ts
                 mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t a))) ds
                 return $ Typed (TypeRecord ts) (DomainRecord (unregion <$> ds))
     validateVariantDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
@@ -789,7 +808,7 @@ validateDomain dm = case dm of
                 let lst' = mapMaybe (\(r,m)->(\x->(r,x))<$>m) lst
                 let (ts,ds) = unzip $ map (\(r,(x,typeSplit->(t,d)))->((x,t),(r,(x,d)))) lst'
                 --push members
-                let t n = Kind ValueType $ TypeVariantMember  n ts
+                let t n = Kind (ValueType CatConstant) $ TypeVariantMember  n ts
                 mapM_ (\(r,(a,_))->putSymbol (a,(r,False,t a))) ds
                 return $ Typed (TypeVariant ts) (DomainVariant (unregion <$> ds))
     validateMatrixDomain :: ListNode DomainNode -> DomainNode -> ValidatorS TypedDomain
@@ -1070,7 +1089,7 @@ validateExpression expr = do
     where
         typeCheckAbs :: Kind -> ValidatorS ()
         typeCheckAbs (Kind DomainType _) = pure ()
-        typeCheckAbs (Kind ValueType t) = case t of
+        typeCheckAbs (Kind ValueType{}  t) = case t of
                     TypeAny       -> return ()
                     TypeInt _       -> return ()
                     TypeList{}      -> return ()
@@ -1165,7 +1184,6 @@ validateQuantificationExpression q@(QuantificationExpressionNode name pats over 
             let qBody =  Comprehension body  (over'++g')
             let result = Typed rType (mkOp (translateQnName name')  [qBody])
             putKeywordDocs (T.pack $ show name') name
-            
             wrapRegion q q (SQuantification (lexemeText  name') (simple rType)) (mapM_ addRegion (gDec++genDec++bDecl))
             return result
     where
@@ -1235,6 +1253,7 @@ validateIdentifierExpr name = do
     n <- validateIdentifierS name
     setContextFrom name
     t <- resolveReference (symbolRegion name,Name n)
+    checkCategory t
     tagWithType (NameNode name) t
     t' <- getValueType t
     return . Typed t' $ Reference (Name n) Nothing
@@ -2107,7 +2126,7 @@ instance Fallback Expression where
 instance (Fallback a) => Fallback (Typed a) where
     fallback = Typed TypeAny . fallback
 instance (Fallback a) => Fallback (Kind, a) where
-    fallback  msg = (Kind ValueType TypeAny , fallback msg)
+    fallback  msg = (Kind (ValueType CatConstant) TypeAny , fallback msg)
 instance Fallback (Maybe a) where
     fallback = const Nothing
 instance Fallback Name where
@@ -2187,7 +2206,7 @@ functionOps l = case l of
             t2 <- getValueType k2
             f (r1,Typed t1 e1) (r2,Typed t2 e2)
         typeOnly :: Maybe (Kind,Expression) -> Maybe Type
-        typeOnly (Just (Kind ValueType t,_)) = Just t
+        typeOnly (Just (Kind ValueType{} t,_)) = Just t
         typeOnly _ = Nothing
         unFuncV a t= unFunc (valueOnly a) (t . typeOnly)
         biFuncV :: (SArg -> SArg -> Validator ()) -> (Maybe Type-> Maybe Type -> Maybe Type) -> ([Expression] -> Expression) -> [Arg] -> ValidatorS (Typed Expression)
@@ -2333,11 +2352,11 @@ functionOps l = case l of
                             Just (Kind DomainType t) -> getDomainMembers t
                             _ -> TypeAny
                 from = case kv of
-                            Just (Kind ValueType (TypeFunction fr _)) | typesUnifyS [dType,fr]-> mostDefinedS [dType,fr]
-                            Just (Kind ValueType (TypeFunction fr _)) ->  fr
+                            Just (Kind ValueType{} (TypeFunction fr _)) | typesUnifyS [dType,fr]-> mostDefinedS [dType,fr]
+                            Just (Kind ValueType{} (TypeFunction fr _)) ->  fr
                             _ -> mostDefinedS [TypeAny,dType]
                 to = case kv of
-                        Just (Kind ValueType (TypeFunction _ to')) -> to'
+                        Just (Kind ValueType{} (TypeFunction _ to')) -> to'
                         _ -> TypeAny
 
 
@@ -2428,10 +2447,10 @@ functionOps l = case l of
         minMaxType :: Maybe (Kind,a) -> Maybe Type
         minMaxType (Just (Kind DomainType t@(TypeInt{}),_)) = Just t
         minMaxType (Just (Kind DomainType (TypeEnum (Name nm)),_)) = Just . TypeInt $ TagEnum nm
-        minMaxType (Just (Kind ValueType (TypeMatrix _ a),_)) = minMaxType (Just (Kind DomainType a,()))
-        minMaxType (Just (Kind ValueType (TypeList  a) ,_)) =  minMaxType (Just (Kind DomainType a,()))
-        minMaxType (Just (Kind ValueType (TypeSet  a) ,_) )=  minMaxType (Just (Kind DomainType a,()))
-        minMaxType (Just (Kind ValueType (TypeMSet a) ,_) )=  minMaxType (Just (Kind DomainType a,()))
+        minMaxType (Just (Kind ValueType{} (TypeMatrix _ a),_)) = minMaxType (Just (Kind DomainType a,()))
+        minMaxType (Just (Kind ValueType{} (TypeList  a) ,_)) =  minMaxType (Just (Kind DomainType a,()))
+        minMaxType (Just (Kind ValueType{} (TypeSet  a) ,_) )=  minMaxType (Just (Kind DomainType a,()))
+        minMaxType (Just (Kind ValueType{} (TypeMSet a) ,_) )=  minMaxType (Just (Kind DomainType a,()))
         minMaxType _ = Just TypeAny
 
         transformArgs :: SArg -> SArg -> Validator ()

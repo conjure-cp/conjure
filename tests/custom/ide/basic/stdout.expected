@@ -58,11 +58,18 @@ Type error:
 
  == category.essence ==
 Error:
-    Category checking failed.
-    The domain   : int(x..y)
-    Its category : decision
-    In the definition of: t
-    
+    category.essence:7:14:
+  |
+7 | find t : int(x..y)
+  |              ^
+Cannot use variable of category : decision in the context of Domain
+
+category.essence:7:17:
+  |
+7 | find t : int(x..y)
+  |                 ^
+Cannot use variable of category : decision in the context of Domain
+
 
 
  == wellformed.essence ==
