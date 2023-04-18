@@ -37,8 +37,8 @@ testFile fp = testCaseSteps (map (\ch -> if ch == '/' then '.' else ch) fp) $ \s
     step "Lexing"
     let usableFileData = concat (take 1000 . lines $ fromMaybe [] fd)
     let fText = T.pack usableFileData
-    case runLexer $ fText of
-      Left _le -> assertFailure $ "Lexer failed in:" ++ fp
+    case runLexer fText (Just fp) of
+      Left le -> assertFailure $ "Lexer failed in:" ++ fp
       Right ets -> do
                 step "parsing"
                 case runASTParser parseProgram ets of
