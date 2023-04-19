@@ -15,7 +15,7 @@ hoverHandler :: Handlers (LspM ())
 hoverHandler = requestHandler STextDocumentHover $ \ req res -> do
     let RequestMessage _ _ _ (HoverParams _doc pos _workDone) = req
     let Position _l _c' = pos
-    withProcessedDoc _doc $ \(ProcessedFile _ _ st) -> do
+    withProcessedDoc _doc $ \(ProcessedFile _ _ st _) -> do
         let ranges = getRelevantRegions st pos
         texts <- mapM prettySymbol ranges
         let ms = HoverContents  $ mconcat (catMaybes texts)

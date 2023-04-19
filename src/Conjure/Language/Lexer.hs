@@ -106,7 +106,7 @@ data ETok = ETok
     , lexeme :: Lexeme
     , capture :: Text
     }
-    deriving (Eq, Ord)
+    deriving (Eq, Ord,Show)
 
 instance Pr.Pretty ETok where
     pretty = Pr.unAnnotate . uncurry (Pr.<>) .  prettySplitComments
@@ -328,8 +328,8 @@ pxy = Proxy
 
 
 
-instance Show ETok where
-    show (ETok _ _ _ q) = show q
+-- instance Show ETok where
+--     show (ETok _ _ _ q) = show q
 
 
 

@@ -16,7 +16,7 @@ import Conjure.Language.Pretty (prettyT)
 docSymbolHandler :: Handlers (LspM ())
 docSymbolHandler = requestHandler STextDocumentDocumentSymbol $ \req res -> do
     let ps = req ^. params . textDocument
-    withProcessedDoc ps $ \(ProcessedFile _ _ (regionInfo -> ri)) -> do
+    withProcessedDoc ps $ \(ProcessedFile _ _ (regionInfo -> ri) _) -> do
         res $ Right $ InL . T.List $ mapMaybe translate ri
 
 
