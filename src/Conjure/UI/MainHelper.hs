@@ -65,7 +65,6 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 -- parallel-io
 import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
 import Conjure.LSP.LanguageServer (startServer, LSPConfig (LSPConfig))
-import Conjure.Language.Parser (prettyPrintWithChecks)
 
 
 mainWithArgs :: forall m .

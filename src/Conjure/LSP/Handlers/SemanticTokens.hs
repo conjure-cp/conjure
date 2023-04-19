@@ -3,8 +3,7 @@ import Language.LSP.Server (requestHandler, LspM, Handlers)
 import qualified Language.LSP.Types as T
 import Control.Lens
 import Conjure.Prelude
-import Data.Text (pack)
-import Conjure.LSP.Util (withProcessedDoc, ProcessedFile (ProcessedFile), sourcePosToPosition, sendInfoMessage, sendErrorMessage)
+import Conjure.LSP.Util (withProcessedDoc, ProcessedFile (ProcessedFile), sourcePosToPosition,  sendErrorMessage)
 import Conjure.Language.Validator (ValidatorState (symbolCategories), TaggedToken (TaggedToken), TagType (..))
 import Language.LSP.Types.Lens (HasParams(..), HasTextDocument (textDocument))
 import Conjure.Language.Lexer (ETok(..), Offsets (..), trueLength)

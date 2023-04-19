@@ -1,14 +1,13 @@
 module Conjure.LSP.Handlers.DocumentSymbol where
 
-import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getProcessedDoc, getRelevantRegions, regionToRange, withProcessedDoc)
+import Conjure.LSP.Util (ProcessedFile (ProcessedFile), regionToRange, withProcessedDoc)
 import Conjure.Language (Type (..))
-import Conjure.Language.Pretty (Pretty (..))
 import Conjure.Language.Type (IntTag (..))
 import Conjure.Language.Validator (Class (..), Kind (..), RegionInfo (..), ValidatorState (regionInfo), RegionType (..), StructuralType (..))
 import Conjure.Prelude
 import Control.Lens
-import Data.Text (pack, unpack, intercalate)
-import Language.LSP.Server (Handlers, LspM, requestHandler, sendNotification)
+import Data.Text (intercalate)
+import Language.LSP.Server (Handlers, LspM, requestHandler)
 import Language.LSP.Types (SymbolKind(..),SMethod(STextDocumentDocumentSymbol),type  (|?) (..), DocumentSymbol (..))
 import qualified Language.LSP.Types as T 
 import Language.LSP.Types.Lens (HasParams (..), HasTextDocument (textDocument))
@@ -39,9 +38,9 @@ translate reg@(RegionInfo r rSel ty cs) =
 
 getRegionName :: RegionInfo -> Text
 getRegionName (rRegionType->rType) = case rType of 
-  Definition txt ki -> txt
-  LiteralDecl ki -> "Literal"
-  Ref txt ki dr -> txt
+  Definition txt _ -> txt
+  LiteralDecl _ -> "Literal"
+  Ref txt _ _ -> txt
   Structural st -> case st of
     SSuchThat -> "Constraints"
     SGiven -> "Parameters"
@@ -56,25 +55,24 @@ getRegionName (rRegionType->rType) = case rType of
     SGen -> "Generator"
     SWhere -> "Parameter validation"
     SGoal dir -> dir
-    _ -> pack $ show st
-  Documentation dt txt -> ""
+  Documentation _ _ -> ""
 
 getRegionDetail :: RegionInfo -> Maybe Text
-getRegionDetail (RegionInfo{rRegionType=rType,rChildren=children}) = 
+getRegionDetail (RegionInfo{rRegionType=rType,rChildren=childDefs}) = 
     case rType of
-        Definition txt ki -> Just $ prettyT ki
+        Definition _ ki -> Just $ prettyT ki
         LiteralDecl ki -> Just $ prettyT ki
-        Ref txt ki dr -> Just $ prettyT ki
+        Ref _ ki _ -> Just $ prettyT ki
         Structural st -> case st of
             SSuchThat -> Nothing
-            SGiven -> Just $ getDefs children
-            SFind -> Just  $ getDefs children
-            SLetting -> Just $ getDefs children
-            SEnum nm -> Just "new type enum"
+            SGiven -> Just $ getDefs childDefs
+            SFind -> Just  $ getDefs childDefs
+            SLetting -> Just $ getDefs childDefs
+            SEnum _ -> Just "new type enum"
             SQuantification  _ ki -> Just $ prettyT ki
             SComprehension ki -> Just $ prettyT ki
             _ -> Nothing
-        Documentation dt txt -> Nothing
+        Documentation{} -> Nothing
     where        
         getDefs :: [RegionInfo] -> Text
         getDefs rs = Data.Text.intercalate ", " [nm | Definition nm _ <- rRegionType <$> rs]
@@ -101,7 +99,7 @@ symbolKindFromDeclaration (Structural st) = Just $ (case st of
    SFind -> SkField
    SLetting -> SkField
    SBranching -> SkClass
-   SEnum nm -> SkEnum
+   SEnum _ -> SkEnum
    SQuantification _ _-> SkOperator
    SComprehension _ -> SkArray
    SGuard ->  SkBoolean

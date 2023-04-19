@@ -33,8 +33,8 @@ processFile t = do
 
 
 getErrorsForURI :: NormalizedUri -> LspM () (Either Text ProcessedFile)
-getErrorsForURI uri = do
-    r <- getVirtualFile uri
+getErrorsForURI furi = do
+    r <- getVirtualFile furi
     let f = maybe "" virtualFileText r
     getErrorsFromText f
 
@@ -61,7 +61,7 @@ getRangeFromRegion (DiagnosticRegion {drSourcePos=(SourcePos _ r c),drLength=l})
 
 getDiagnosticDetails :: V.Diagnostic -> (DiagnosticSeverity,Text)
 getDiagnosticDetails x = case x of
-  V.Error et -> (DsError,pack $displayError et)
+  V.Error et -> (DsError,pack $ displayError et)
   V.Warning wt -> (DsWarning , pack $ displayWarning wt)
   V.Info it -> (DsHint,pack $ show it)
 
@@ -131,6 +131,6 @@ regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (s
 snippet :: Text -> MarkupContent
 snippet = markedUpContent "essence"
 
-instance Pretty Position where
-    pretty (Position (pretty . show->r) (pretty . show->c)) =  r <> ":" <> c
+prettyPos :: Position -> Doc
+prettyPos (Position (pretty . show->r) (pretty . show->c)) =  r <> ":" <> c
 

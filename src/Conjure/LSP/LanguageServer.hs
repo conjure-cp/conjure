@@ -5,7 +5,7 @@ module Conjure.LSP.LanguageServer where
 import Language.LSP.Server
 import qualified Language.LSP.Types as J
 
-import Conjure.LSP.Handlers.File (fileHandlers, fileOpenedHandler)
+import Conjure.LSP.Handlers.File (fileHandlers)
 import Conjure.LSP.Handlers.Initialize (handleInitialized)
 import Conjure.Prelude
 import Conjure.LSP.Handlers.Hover (hoverHandler)
@@ -16,7 +16,7 @@ import Conjure.LSP.Handlers.Format (formatHandler)
 data LSPConfig = LSPConfig {}
 
 startServer :: LSPConfig -> IO ()
-startServer cfg = do
+startServer _ = do
     _ <- runServer $ conjureLanguageServer
     return ()
 

@@ -1,5 +1,5 @@
 module Conjure.LSP.Documentation where
-import Paths_conjure_cp (getDataDir, getDataFileName)
+import Paths_conjure_cp (getDataFileName)
 import Language.LSP.Types (MarkupKind (MkMarkdown), MarkupContent (MarkupContent))
 import Conjure.Prelude
 import qualified Data.Text as T

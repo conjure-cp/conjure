@@ -4,13 +4,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Conjure.LSP.Handlers.File where
 import Conjure.Prelude
-import Language.LSP.Server (notificationHandler, Handlers, LspM, sendNotification, publishDiagnostics, getVirtualFile)
-import Language.LSP.Types (SMethod (STextDocumentDidOpen, STextDocumentDidChange, STextDocumentDidClose), NotificationMessage (NotificationMessage), DidOpenTextDocumentParams (DidOpenTextDocumentParams), DidChangeTextDocumentParams (DidChangeTextDocumentParams), DidCloseTextDocumentParams (DidCloseTextDocumentParams), toNormalizedUri, Uri)
+import Language.LSP.Server (notificationHandler, Handlers, LspM,  publishDiagnostics, getVirtualFile)
+import Language.LSP.Types (
+    SMethod (STextDocumentDidOpen, STextDocumentDidChange, STextDocumentDidClose)
+    , toNormalizedUri
+    ,Uri)
 import Data.Text (pack)
 import Control.Lens
 import Language.LSP.VFS
 import Language.LSP.Types.Lens (HasTextDocument(textDocument), HasParams (..), HasUri (uri))
-import Conjure.LSP.Util (getErrorsForURI, getErrorsFromText, sendInfoMessage, sendErrorMessage, getDiagnostics)
+import Conjure.LSP.Util (getErrorsFromText,sendErrorMessage, getDiagnostics)
 import Language.LSP.Diagnostics (partitionBySource)
 import Prettyprinter
 fileHandlers :: Handlers (LspM ())
@@ -18,8 +21,6 @@ fileHandlers = mconcat [fileOpenedHandler,fileChangedHandler,fileClosedHandler]
 
 fileOpenedHandler :: Handlers (LspM ())
 fileOpenedHandler = notificationHandler STextDocumentDidOpen $ \ req -> do
-    let NotificationMessage _ _ (DidOpenTextDocumentParams doc) = req
-    -- sendNotification SWindowShowMessage (ShowMessageParams MtInfo $ pack ("Opened file "++ show doc++ "\n"))
     let td = req^.params.textDocument
     doDiagForDocument td
     pure ()
@@ -28,17 +29,12 @@ fileOpenedHandler = notificationHandler STextDocumentDidOpen $ \ req -> do
 
 fileChangedHandler :: Handlers (LspM ())
 fileChangedHandler = notificationHandler STextDocumentDidChange $ \ req -> do
-    let NotificationMessage _ _ (DidChangeTextDocumentParams id chg) = req
-    -- sendInfoMessage $ pack ("Changed file "++ show chg ++ "\n")
     let td = req^.params.textDocument
     doDiagForDocument td
     pure ()
-
+ --handle this only to suppress not implemented message
 fileClosedHandler :: Handlers (LspM ())
-fileClosedHandler = notificationHandler STextDocumentDidClose $ \ req -> do
-    let NotificationMessage _ _ (DidCloseTextDocumentParams id) = req
-    -- sendInfoMessage $ pack ("Closed file "++ show id ++ "\n")
-    pure ()
+fileClosedHandler = notificationHandler STextDocumentDidClose $ \ _ ->  pure ()
 
 
 
