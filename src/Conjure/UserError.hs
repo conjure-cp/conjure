@@ -78,11 +78,11 @@ instance (Functor m) => Functor (UserErrorT m) where
     fmap f = UserErrorT . fmap (fmap f) . runUserErrorT
 
 instance (MonadFailDoc m) => Applicative (UserErrorT m) where
-    pure = return
+    pure = UserErrorT . return .Right
     (<*>) = ap
 
 instance (MonadFailDoc m) => Monad (UserErrorT m) where
-    return a = UserErrorT $ return (Right a)
+    return = pure
     m >>= k = UserErrorT $ do
         a <- runUserErrorT m
         case a of

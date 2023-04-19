@@ -98,7 +98,7 @@ import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
 import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
 
-import Control.Monad.Fail 
+
 import Control.Arrow                as X ( first, second, (***), (&&&) )
 import Control.Category             as X ( (<<<), (>>>) )
 
@@ -139,7 +139,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, appendFile, getLine )
-import System.IO.Error ( isDoesNotExistError, isUserError, ioeGetErrorType )
+import System.IO.Error ( isDoesNotExistError, ioeGetErrorType )
 import Control.Exception as X ( catch, throwIO, SomeException )
 
 import Data.Proxy as X ( Proxy(..) )
@@ -163,12 +163,6 @@ import qualified Data.Aeson.Types as JSON
 
 -- QuickCheck
 import Test.QuickCheck ( Gen )
-
--- megaparsec
--- megaparsec
-import Text.Megaparsec ( ParsecT, Parsec )
-
--- pretty
 
 
 -- uniplate
@@ -222,7 +216,6 @@ import Data.Time.Clock ( getCurrentTime )
 import System.TimeIt as X ( timeIt, timeItNamed )
 
 import Debug.Trace as X ( trace, traceM )
-import Data.Void (Void)
 import GHC.IO.Exception (IOErrorType(InvalidArgument))
 import Text.PrettyPrint.Annotated.HughesPJ ((<+>))
 -- import Prettyprinter (PageWidth(AvailablePerLine))
@@ -230,7 +223,7 @@ import Text.PrettyPrint.Annotated.HughesPJ ((<+>))
 
 
 
-data EssenceDocAnnotation = EssenceDocAnnotation
+type EssenceDocAnnotation = ()
 
 type Doc = Pr.Doc EssenceDocAnnotation
 
@@ -461,11 +454,11 @@ instance (Functor m) => Functor (ExceptT m) where
     fmap f = ExceptT . fmap (fmap f) . runExceptT
 
 instance (Functor m, Monad m) => Applicative (ExceptT m) where
-    pure = return
+    pure =  ExceptT . return . Right
     (<*>) = ap
 
 instance (Monad m) => Monad (ExceptT m) where
-    return a = ExceptT $ return (Right a)
+    return = pure
     m >>= k = ExceptT $ do
         a <- runExceptT m
         case a of

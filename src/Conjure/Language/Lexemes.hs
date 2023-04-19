@@ -7,8 +7,8 @@ module Conjure.Language.Lexemes where
 import Conjure.Prelude
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
-import qualified Data.Text.Lazy as L
-import Data.Char (chr, ord)
+
+
 
 data Lexeme
     = LIntLiteral Integer

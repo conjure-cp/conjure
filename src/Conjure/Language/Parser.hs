@@ -29,7 +29,7 @@ import Text.Megaparsec (Parsec)
 -- text
 import qualified Data.Text as T
 import Conjure.Language.Lexer (ETokenStream, LexerError)
-import Conjure.Language.Validator (Validator(..), (?=>))
+import Conjure.Language.Validator ((?=>))
 import qualified Conjure.Language.Validator as V
 import qualified Conjure.Language.AST.ASTParser as P
 import qualified Conjure.Language.AST.Syntax as S

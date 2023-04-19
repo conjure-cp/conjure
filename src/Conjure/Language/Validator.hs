@@ -481,7 +481,7 @@ validateWhereStatement w@(WhereStatementNode l1 exprs) = wrapRegion w w SWhere $
     return [ws]
 
 validateObjectiveStatement :: ObjectiveStatementNode -> ValidatorS [Statement]
-validateObjectiveStatement o@(ObjectiveMin lt en) = wrapRegion o o (SGoal "Minimising") $do
+validateObjectiveStatement o@(ObjectiveMin lt en) = wrapRegion o o (SGoal "Minimising") $ do
     lt `isA` TtKeyword
     exp <- validateExpression en
     return [Objective Minimising $ untype exp]
@@ -663,7 +663,7 @@ validateDomainWithRepr dom = do
 
 validateDomain :: DomainNode -> ValidatorS TypedDomain
 validateDomain dm = case dm of
-    ParenDomainNode st dom rt -> do checkSymbols [rt] ; validateDomain dom
+    ParenDomainNode _ dom rt -> do checkSymbols [rt] ; validateDomain dom
     MetaVarDomain lt ->  do mv <- validateMetaVar lt ; return . Typed TypeAny $ DomainMetaVar mv
     BoolDomainNode lt -> (lt `isA` TtType >> (return . Typed TypeBool) DomainBool)
     RangedIntDomainNode l1 rs -> do
@@ -997,7 +997,7 @@ validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
     case M.lookup name vs of
       Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
       Just False -> invalid $ t <!> SemanticError "attribute %name% does not take an argument"
-      Just True -> return . pure $(\x -> (name,Just x)) expr
+      Just True -> return . pure $ (\x -> (name,Just x)) expr
 
 
 validateNamedDomainInVariant :: NamedDomainNode -> ValidatorS (Name, TypedDomain)
@@ -1242,7 +1242,7 @@ validateOperatorExpression (PrefixOpNode lt expr) = do
             L_Minus -> tInt
             L_ExclamationMark -> TypeBool
             _ -> bug . pretty $ "Unknown prefix op " ++ show op
-    putDocs OperatorD (T.pack $"pre_"++show op) lt
+    putDocs OperatorD (T.pack $ "pre_"++show op) lt
     expr' <-  validateExpression expr ?=> exactly refT
     return . Typed refT $ mkOp (PrefixOp op) [expr']
     --lookup symbol
@@ -1626,7 +1626,7 @@ projectionType r t = case t of
           TypeRelation ts -> return $ TypeTuple ts
           TypePartition ty -> return $ TypeSet ty
           TypeFunction fr to -> return $ TypeTuple [fr,to]
-          _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Expression of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
+          _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Expression of type " ++ (show $ pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
 projectionTypeDomain :: DiagnosticRegion -> Type -> ValidatorS Type
 projectionTypeDomain _ t = case t of --TODO check and do properly
           TypeAny -> return  TypeAny
@@ -2460,8 +2460,8 @@ functionOps l = case l of
         imageArgs (r1,typeOf_->t1) r2 = do
             from <- case t1 of
                 TypeAny -> return $ Just TypeAny
-                TypeFunction a _ -> return $Just a
-                TypeSequence _ -> return $Just tInt
+                TypeFunction a _ -> return $ Just a
+                TypeSequence _ -> return $ Just tInt
                 _ -> Nothing <$ (raiseTypeError $ (r1 <!> ComplexTypeError "Function or Sequence" t1))
             case from of 
                 Just f -> unifyTypes f r2 >> return (pure ())

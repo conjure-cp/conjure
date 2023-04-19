@@ -8,14 +8,13 @@ import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
-import qualified Data.Aeson.Types as JSON ( Value )
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 import qualified Data.Vector as V               -- vector
 
 -- scientific
 import Data.Scientific ( floatingOrInteger )
 import qualified Data.Aeson.KeyMap as KM
-import Data.Aeson.Types
+
 
 
 class ExpressionLike a where

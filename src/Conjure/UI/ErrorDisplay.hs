@@ -2,7 +2,7 @@ module Conjure.UI.ErrorDisplay where
 import Conjure.Prelude
 import Conjure.Language.Validator
 import Text.Megaparsec
-import Data.Void (Void)
+
 import qualified Data.Set as Set
 import Conjure.Language.AST.Syntax
 import Conjure.Language.AST.ASTParser
@@ -10,7 +10,7 @@ import Conjure.Language.Lexer
 import Conjure.Language.Lexemes
 import qualified Data.Text
 import qualified Data.Text as T
-import Data.Map.Strict (mapWithKey, assocs)
+import Data.Map.Strict (assocs)
 import Conjure.Language.Pretty
 import Conjure.Language.AST.Reformer
 
@@ -70,7 +70,7 @@ printSymbolTable :: SymbolTable -> IO ()
 printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs tab)
     where
         printEntry :: (Text ,SymbolTableValue) -> IO ()
-        printEntry (a,(r,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
+        printEntry (a,(_,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
 
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
 captureErrors = (mapM_ captureError) . collapseSkipped . removeAmbiguousTypeWarning

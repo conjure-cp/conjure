@@ -7,7 +7,7 @@ import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.Aeson.KeyMap as KM
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -37,7 +37,7 @@ instance Pretty x => Pretty (OpNot x) where
     prettyPrec prec (OpNot a) = parensIf (prec > 2000) ("!" <> prettyPrec 2000 a)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpNot x) where
-    varSymBreakingDescription (OpNot a) = JSON.Object $KM.fromList
+    varSymBreakingDescription (OpNot a) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpNot")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

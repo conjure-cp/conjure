@@ -4,6 +4,7 @@ module Conjure.UI.IO
     , readModelPreambleFromFile
     , readModelInfoFromFile
     , readParamJSON
+    , readASTFromFile
     , readParamOrSolutionFromFile
     , writeModel, writeModels
     , readModel
@@ -36,7 +37,7 @@ import qualified Data.ByteString.Char8 as BS ( putStrLn )
 import Conjure.Language.AST.Syntax (ProgramTree)
 import Conjure.Language.AST.ASTParser (parseProgram)
 import Conjure.Language.Validator (runValidator, validateModel, ValidatorState (typeChecking), initialState, isError)
-import Text.Megaparsec (errorBundlePretty)
+
 import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 
 readASTFromFile :: 

@@ -1,8 +1,7 @@
 module Conjure.Language.Expression.OpTypes  where
-import Conjure.Language.Lexemes (Lexeme)
 import Conjure.Language.Expression.Op.Internal.Common (Type (..))
 import Conjure.Prelude
-import Conjure.Language.Expression.Op.Internal.Common (Lexeme(..), IntTag (TagInt), mostDefined)
+import Conjure.Language.Expression.Op.Internal.Common (IntTag (TagInt))
 
 type TypeMapping2 = Type -> Type -> Type
 

@@ -38,7 +38,7 @@ import System.Directory ( removeFile )
 import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- uniplate zipper
 import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole, replaceHole, right, up )
-import Conjure.Prelude (MonadFailDoc)
+
 
 type ExpressionZ = Zipper Expression Expression
 type FindVar     = (Name, Domain () Expression)

@@ -63,8 +63,8 @@ import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
 import qualified Data.Text as T ( unlines, isInfixOf )
 
 -- parallel-io
-import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
-import Conjure.Language.Parser (prettyPrintWithChecks)
+import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
+
 
 
 mainWithArgs :: forall m .
@@ -236,7 +236,7 @@ mainWithArgs AutoIG{..} | removeAux = do
                  | st <- mStatements model
                  ]
     writeModel lineWidth outputFormat (Just outputFilepath) model {mStatements = catMaybes stmts'}
-mainWithArgs AutoIG{..} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
+mainWithArgs AutoIG{} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
 mainWithArgs Boost{..} = do
     model <- readModelFromFile essence
     runNameGen model $ do

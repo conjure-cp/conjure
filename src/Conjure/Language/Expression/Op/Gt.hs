@@ -7,7 +7,7 @@ import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.Aeson.KeyMap as KM
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -37,7 +37,7 @@ instance Pretty x => Pretty (OpGt x) where
     prettyPrec prec op@(OpGt a b) = prettyPrecBinOp prec [op] a b
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpGt x) where
-    varSymBreakingDescription (OpGt a b) = JSON.Object $KM.fromList
+    varSymBreakingDescription (OpGt a b) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpGt")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

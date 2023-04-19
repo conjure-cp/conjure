@@ -19,8 +19,7 @@ import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Syntax
 import Conjure.Language.Lexer
 
--- import Conjure.Language.AST.Expression
-import Conjure.Language.Lexemes
+
 import Text.Megaparsec
 
 import Conjure.Language.AST.Reformer (Flattenable(..))

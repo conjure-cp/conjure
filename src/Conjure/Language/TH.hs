@@ -16,7 +16,7 @@ import Conjure.Language.Lenses as X ( fixTHParsing ) -- reexporting because it i
 -- import qualified Text.Megaparsec as MP
 
 -- -- template-haskell
-import Language.Haskell.TH ( Q, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )
+import Language.Haskell.TH (mkName, ExpQ, varE, appE, PatQ, varP, wildP )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 
 -- syb

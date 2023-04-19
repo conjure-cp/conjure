@@ -36,7 +36,6 @@ import Data.Void
 
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
-import Data.Text (Text)
 import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
 
@@ -47,13 +46,7 @@ import Prelude (read)
 import qualified Prettyprinter as Pr
 import Conjure.Prelude hiding (some,many)
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.Text as T
 
-import Conjure.Language.Pretty
-
-
-import Text.Megaparsec --( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
 import Text.Megaparsec.Stream ()
 
 
@@ -132,8 +125,8 @@ tokenStart (ETok{offsets = (Offsets _  s _ _)}) = s
 
 tokenSourcePos :: ETok -> SourcePos
 tokenSourcePos = oSourcePos . offsets
-sourcePosAfter :: ETok -> SourcePos
-sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
+-- sourcePosAfter :: ETok -> SourcePos
+-- sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
 
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
@@ -157,22 +150,22 @@ eLex =
 aToken :: Lexer ETok
 aToken = do
     start <- getOffset
-    whiteSpace <- pTrivia
+    whitespace <- pTrivia
     wse <- getOffset
     spos <- getSourcePos
     (tok,cap) <- aLexeme
     tokenEnd <- getOffset
-    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whiteSpace tok cap
+    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whitespace tok cap
 
 pEOF :: Lexer ETok
 pEOF = do
     start <- getOffset
-    whiteSpace <- pTrivia
+    whitespace <- pTrivia
     wse <- getOffset
     spos <- getSourcePos
     eof
     tokenEnd <- getOffset
-    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whiteSpace L_EOF ""
+    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whitespace L_EOF ""
 
 
 aLexeme :: Lexer (Lexeme,Text)
@@ -282,7 +275,7 @@ instance Stream ETokenStream where
     takeN_ :: Int -> ETokenStream -> Maybe (Tokens ETokenStream, ETokenStream)
     takeN_ n xs | n <= 0 = Just ([], xs)
     takeN_ _ (ETokenStream _ []) = Nothing
-    takeN_ n (ETokenStream s xs) = Just (take n xs, buildStream $ drop n xs)
+    takeN_ n (ETokenStream _ xs) = Just (take n xs, buildStream $ drop n xs)
     takeWhile_ :: (Token ETokenStream -> Bool) -> ETokenStream -> (Tokens ETokenStream, ETokenStream)
     takeWhile_ p (ETokenStream _ xs) =
         (a, buildStream b)
@@ -330,18 +323,6 @@ instance TraversableStream ETokenStream where
 pxy :: Proxy ETokenStream
 pxy = Proxy
 
-
--- lexemeFace :: Lexeme -> Doc
--- lexemeFace L_Newline = "new line"
--- lexemeFace L_Carriage = "\\r"
--- lexemeFace L_Space   = "space character"
--- lexemeFace L_Tab     = "tab character"
--- lexemeFace (LIntLiteral i) = pretty i
--- lexemeFace (LIdentifier i) = pretty (T.unpack i)
--- lexemeFace l =
---     case M.lookup l mapLexemeToText of
---         Nothing -> pretty (show l)
---         Just t  -> pretty . T.unpack $ t
 
 
 instance Show ETok where

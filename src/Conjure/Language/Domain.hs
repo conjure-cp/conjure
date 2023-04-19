@@ -610,10 +610,10 @@ instance Default   BinaryRelationAttrs where def = BinaryRelationAttrs S.empty
 instance Pretty BinaryRelationAttrs where
     pretty (BinaryRelationAttrs attrs) = prettyList id "," (S.toList attrs)
 instance Semigroup BinaryRelationAttrs where
-    (<>) = mappend
+    (<>) (BinaryRelationAttrs a) (BinaryRelationAttrs b) = BinaryRelationAttrs (S.union a b)
 instance Monoid BinaryRelationAttrs where
     mempty = BinaryRelationAttrs def
-    mappend (BinaryRelationAttrs a) (BinaryRelationAttrs b) = BinaryRelationAttrs (S.union a b)
+    
 
 
 data BinaryRelationAttr

@@ -3,8 +3,7 @@
 module Conjure.Language.Pretty
     ( module X
     , Pretty(..)
-    , (<++>), (<+>), (<>)
-    , (<+->)
+    , (<+->),(<++>)
     , prettyList, prettyListDoc
     , parensIf
     , render, renderNormal, renderWide
@@ -44,7 +43,6 @@ import qualified Data.Vector as V                           -- vector
 -- import qualified Prettyprinter as Pr
 
 import qualified Text.PrettyPrint.Annotated.HughesPJ as Pr
-import Text.PrettyPrint.HughesPJ (Style(..))
 import Text.PrettyPrint.Annotated.HughesPJ hiding (Doc,render)
 
 

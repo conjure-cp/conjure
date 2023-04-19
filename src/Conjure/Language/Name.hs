@@ -49,11 +49,10 @@ instance Pretty Name where
     pretty (NameMetaVar n) = "&" <> pretty n
 
 instance Semigroup Name where
-    (<>) = mappend
+    (<>) (Name a) (Name b) = Name (mappend a b)
+    (<>) (MachineName base n rest) (Name new) = MachineName base n (rest++[new])
+    (<>) (Name a) (MachineName base n rest) = MachineName (mappend a base) n rest
+    (<>) a b = bug $ "mappend{Name}" <+> vcat [pretty (show a), pretty (show b)]
 
 instance Monoid Name where
     mempty = ""
-    mappend (Name a) (Name b) = Name (mappend a b)
-    mappend (MachineName base n rest) (Name new) = MachineName base n (rest++[new])
-    mappend (Name a) (MachineName base n rest) = MachineName (mappend a base) n rest
-    mappend a b = bug $ "mappend{Name}" <+> vcat [pretty (show a), pretty (show b)]
