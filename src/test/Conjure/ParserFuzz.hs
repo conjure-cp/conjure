@@ -31,14 +31,15 @@ tests = do
     let baseDir = "tests"
     allFiles <-  shelly $ silently $ run  "git" ["ls-tree", "--full-tree",  "--name-only", "-r", "HEAD"] 
     let allFileList = lines $ T.unpack allFiles
-    contents <- mapM readFileIfExists allFileList
-    let testCases = [testFile fp fd | (fp,Just fd) <-zip allFileList contents,False]
+    -- contents <- mapM readFileIfExists allFileList
+    let testCases = testFile <$> allFileList
     return (testGroup "parse_fuzz" testCases)
 
-testFile :: FilePath -> String -> TestTree
-testFile fp fd = testCaseSteps (map (\ch -> if ch == '/' then '.' else ch) fp) $ \step ->  do
+testFile :: FilePath -> TestTree
+testFile fp = testCaseSteps (map (\ch -> if ch == '/' then '.' else ch) fp) $ \step ->  do
+    fd <- readFileIfExists fp
     step "Lexing"
-    let usableFileData = concat (take 1000 . lines $ fd)
+    let usableFileData = concat (take 1000 . lines $ fromMaybe [] fd)
     let fText = T.pack usableFileData
     case runLexer $ fText of
       Left le -> assertFailure $ "Lexer failed in:" ++ fp
