@@ -204,6 +204,7 @@ instance Flattenable PostfixOpNode where
 
 instance Flattenable DomainNode where
     flatten x =  case x of
+        ParenDomainNode a b c -> mconcat [flatten a, flatten b, flatten c]
         BoolDomainNode lt -> flatten lt
         RangedIntDomainNode lt ln -> flatten lt >< flatten ln
         MetaVarDomain a -> flatten a

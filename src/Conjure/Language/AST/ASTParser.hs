@@ -651,7 +651,7 @@ parseShortTuple = do
     lst <- commaList parseDomain
     closeB <- want L_CloseParen
     return $ case lst of 
-        Seq [SeqElem d Nothing] -> d
+        Seq [SeqElem d Nothing] -> ParenDomainNode openB d closeB
         Seq _ -> ShortTupleDomainNode $ ListNode (RealToken openB) lst closeB
     
     
@@ -732,7 +732,7 @@ parseRelation = do
 parsePartition :: Parser DomainNode
 parsePartition = do
     lPartition <- need L_partition
-    attributes <- optional parseAttributes
+    attributes <- optional $ try parseAttributes
     lFrom <- want L_from
     domain <- parseDomain
     return $ PartitionDomainNode lPartition attributes lFrom domain

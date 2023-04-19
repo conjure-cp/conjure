@@ -201,11 +201,11 @@ instance Pretty BranchingStatementNode where
 type MAttributes = Maybe (ListNode AttributeNode)
 
 data DomainNode
-    = BoolDomainNode SToken
+    = ParenDomainNode SToken DomainNode LToken
+    | BoolDomainNode SToken
     | RangedIntDomainNode SToken (Maybe (ListNode RangeNode))
     | RangedEnumNode NameNodeS (Maybe (ListNode RangeNode))
-    | -- | EnumDomainNode NameNode
-      MetaVarDomain SToken
+    | MetaVarDomain SToken
     | ShortTupleDomainNode (ListNode DomainNode)
     | TupleDomainNode SToken (ListNode DomainNode)
     | RecordDomainNode SToken (ListNode NamedDomainNode)
@@ -222,6 +222,7 @@ data DomainNode
 
 instance Pretty DomainNode where
     pretty x = case x of
+        ParenDomainNode op dom cl -> pretty op <> pretty dom <> pretty cl
         BoolDomainNode lt -> pretty lt
         RangedIntDomainNode lt m_ln -> pretty lt <> pretty m_ln
         RangedEnumNode nn m_ln -> pretty nn <> pretty m_ln

@@ -663,6 +663,7 @@ validateDomainWithRepr dom = do
 
 validateDomain :: DomainNode -> ValidatorS TypedDomain
 validateDomain dm = case dm of
+    ParenDomainNode st dom rt -> do checkSymbols [rt] ; validateDomain dom
     MetaVarDomain lt ->  do mv <- validateMetaVar lt ; return . Typed TypeAny $ DomainMetaVar mv
     BoolDomainNode lt -> (lt `isA` TtType >> (return . Typed TypeBool) DomainBool)
     RangedIntDomainNode l1 rs -> do

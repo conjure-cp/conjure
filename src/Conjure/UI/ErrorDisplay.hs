@@ -12,7 +12,7 @@ import qualified Data.Text
 import qualified Data.Text as T
 import Data.Map.Strict (mapWithKey, assocs)
 import Conjure.Language.Pretty
-
+import Conjure.Language.AST.Reformer
 
 
 type Parser t = Parsec DiagnosticForPrint Text t
@@ -133,6 +133,8 @@ val s = do
                     printSymbolTable $ symbolTable st
                     putStrLn $ show $ (regionInfo st)
                     putStrLn $ showDiagnosticsForConsole vds Nothing txt
+                    putStrLn $ show . reformList $ flatten p
+                    putStrLn $ show p
 
             -- putStrLn $ show qpr
 
