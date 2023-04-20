@@ -29,13 +29,13 @@ suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
         let errors = [(r,d) | (ValidatorDiagnostic r (Error (TokenError d))) <- diags ] 
         let contextTokens = take 1 [ lexeme w | (r,MissingToken w) <- errors,isInRange nextTStart r] 
         let missingTokenBasedHint = case contextTokens of 
-                [l] -> makeMissingTokenHint l
-                _ -> []
+                [l] -> map defaultCompletion $ makeMissingTokenHint l
+                _ -> makeSuggestionsFromSymbolTable symbols
                 where 
-                    makeMissingTokenHint (L_Missing s) = [pack s]
-                    makeMissingTokenHint (LMissingIdentifier) = ["newIdentifier1"]
+                    makeMissingTokenHint (L_Missing s) = [pack $ show s]
+                    makeMissingTokenHint LMissingIdentifier = ["newIdentifier1"]
                     makeMissingTokenHint l = [lexemeText l]
-        res $ Right $ InL . T.List $ (map defaultCompletion missingTokenBasedHint) ++  makeSuggestionsFromSymbolTable symbols
+        res $ Right $ InL . T.List $ missingTokenBasedHint
 
 isInRange :: T.Position -> DiagnosticRegion -> Bool
 isInRange p reg = sourcePosToPosition (drSourcePos reg) == p

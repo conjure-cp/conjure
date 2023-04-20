@@ -286,13 +286,17 @@ data Lexeme
     | L_transform
 
     -- helper
-    | L_Missing String
+    | L_Missing MissingStructuralElements
     | L_EOF
     | L_SpecialCase
 
     deriving (Eq, Ord, Show,Generic) --Generic
 
 instance Hashable Lexeme
+
+data MissingStructuralElements = MissingExpression | MissingDomain | MissingUnknown
+    deriving (Eq, Ord, Show,Generic) --Generic
+instance Hashable MissingStructuralElements
 
 lexemes :: [(T.Text, Lexeme)]
 lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap

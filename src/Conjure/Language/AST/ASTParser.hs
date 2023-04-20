@@ -18,7 +18,7 @@ import Conjure.Prelude hiding (many,some)
 import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Syntax
 import Conjure.Language.Lexer
-
+import Conjure.Language.Lexemes
 
 import Text.Megaparsec
 
@@ -203,7 +203,7 @@ parseExpression :: Parser ExpressionNode
 parseExpression = try $ do
     parseOperator
         <|> parseAtomicExpression 
-        <|> (MissingExpressionNode <$> makeMissing (L_Missing "expression"))
+        <|> (MissingExpressionNode <$> makeMissing (L_Missing MissingExpression))
 
 parseExpressionStrict :: Parser ExpressionNode -- can fail
 parseExpressionStrict = try $ do
@@ -227,7 +227,7 @@ parseAtomicExpression = do
             ,  AbsExpression <$> parseAbsExpression
             ,  QuantificationExpr <$> parseQuantificationStatement
             ,  DomainExpression <$> parseDomainExpression
-            ,  MissingExpressionNode <$> makeMissing (L_Missing "Expr")
+            ,  MissingExpressionNode <$> makeMissing (L_Missing MissingExpression)
             ]
 
 
@@ -794,7 +794,7 @@ parseAttribute = do
 parseMissingDomain :: Parser DomainNode
 parseMissingDomain =
     do
-        m <- makeMissing (L_Missing "Domain")
+        m <- makeMissing (L_Missing MissingDomain)
         return $ MissingDomainNode m
         <?> "Anything"
 

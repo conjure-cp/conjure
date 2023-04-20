@@ -162,7 +162,7 @@ parseSequence1 divider pElem = do
 
 parseSequence :: (Null a, Show a) => Lexeme -> Parser a -> Parser (Sequence a)
 parseSequence divider pElem = try $ do
-    missingPlaceholder <- makeMissing $ L_Missing "SequenceElem"
+    missingPlaceholder <- makeMissing $ L_Missing MissingUnknown
     sElem <- optional pElem
     sep <- want divider
     case (sElem, isMissing sep) of
