@@ -22,7 +22,7 @@ import Conjure.Language.Lexemes
 
 import Text.Megaparsec
 
-import Conjure.Language.AST.Reformer (Flattenable(..))
+import Conjure.Language.AST.Reformer (HighLevelTree(..),flattenSeq)
 import Conjure.Language.Expression.Op.Internal.Common
 import Control.Monad.Combinators.Expr
 import qualified Data.Text.Lazy as L
@@ -32,7 +32,7 @@ newtype ParserError = ParserError (Doc)
     deriving (Show)
 
 
-runASTParser ::Flattenable a => Parser a -> ETokenStream -> Either ParserError a
+runASTParser ::HighLevelTree a => Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str =
     case runParser p "parser" str of
         Left peb -> Left $ ParserError . pretty $ errorBundlePretty peb
@@ -821,7 +821,7 @@ example s = do
           Right pt -> do
             print $  show pt
             putStrLn "Reforming"
-            print $ reformList (flatten pt) == L.fromStrict txt
+            print $ reformList (flattenSeq pt) == L.fromStrict txt
 
             putStrLn "Pretty:"
             let pp = renderAST 80 pt

@@ -23,7 +23,7 @@ import qualified Conjure.Language.Expression as D
     ( Expression(Typed) )
 import Conjure.Language.Domain
 import Conjure.Language.Lexemes
-import Conjure.Language.Lexer (ETok (ETok, lexeme), tokenSourcePos, totalLength, tokenStart, trueLength, sourcePos0)
+import Conjure.Language.Lexer (ETok (ETok, lexeme),tokenOffset, tokenSourcePos, totalLength,  trueLength, sourcePos0, sourcePosAfter)
 
 import Conjure.Language.Attributes
 import Conjure.Prelude
@@ -50,7 +50,7 @@ import Conjure.Language.Expression.Op
       OpIndexing(OpIndexing), OpType (..), OpAttributeAsConstraint (OpAttributeAsConstraint),
       )
 import Conjure.Language.Domain.AddAttributes (allSupportedAttributes)
-import Conjure.Language.AST.Reformer (Flattenable (flatten))
+import Conjure.Language.AST.Reformer (flattenSeq,makeTree, HighLevelTree)
 import Text.Megaparsec.Pos (SourcePos(..))
 import Data.Sequence (Seq (..), viewr, ViewR (..))
 import Control.Monad (mapAndUnzipM)
@@ -248,7 +248,7 @@ holdDeclarations f = do
     modify (\s->s{regionInfo=prev})
     return (res,decls)
 
-wrapRegion :: (Flattenable a,Flattenable b) => a -> b -> StructuralType -> ValidatorS n -> ValidatorS n
+wrapRegion :: (HighLevelTree a,HighLevelTree b) => a -> b -> StructuralType -> ValidatorS n -> ValidatorS n
 wrapRegion regMain regSel = wrapRegion' (symbolRegion regMain) (symbolRegion regSel) 
 
 wrapRegion' ::  DiagnosticRegion -> DiagnosticRegion -> StructuralType -> ValidatorS n -> ValidatorS n
@@ -263,13 +263,13 @@ wrapRegion' regMain regSel ty f = do
 
 -- injectRegion :: DiagnosticRegion -> DiagnosticRegion -> ()
 
-putDocs :: Flattenable a => DocType -> Text -> a -> ValidatorS ()
+putDocs :: HighLevelTree a => DocType -> Text -> a -> ValidatorS ()
 putDocs t nm r = addRegion $ RegionInfo {rRegion=symbolRegion r,rSubRegion=Nothing, rRegionType=Documentation t nm,rChildren=[], rTable = M.empty}
-putKeywordDocs :: Flattenable a =>Text ->a -> ValidatorS ()
+putKeywordDocs :: HighLevelTree a => Text -> a -> ValidatorS ()
 putKeywordDocs = putDocs KeywordD
-putTypeDoc :: Flattenable a =>Text ->a -> ValidatorS ()
+putTypeDoc :: HighLevelTree a =>Text ->a -> ValidatorS ()
 putTypeDoc = putDocs TypeD 
-putAttrDoc :: Flattenable a =>Text ->a -> ValidatorS ()
+putAttrDoc :: HighLevelTree a =>Text ->a -> ValidatorS ()
 putAttrDoc = putDocs AttributeD 
 
 --Infix symbol validation and tagging
@@ -328,7 +328,7 @@ data ValidatorState = ValidatorState {
 --         symbolTable=M.empty
 --         }
 
-initialState :: Flattenable a => a -> Maybe Text -> ValidatorState
+initialState :: HighLevelTree a => a -> Maybe Text -> ValidatorState
 initialState r path = ValidatorState {
         typeChecking = True,
         regionInfo=[],
@@ -394,7 +394,7 @@ getContext = currentContext <$> get
 setContext :: DiagnosticRegion -> ValidatorS ()
 setContext r = modify (\p -> p{currentContext = r})
 
-setContextFrom :: Flattenable a => a -> ValidatorS ()
+setContextFrom :: HighLevelTree a => a -> ValidatorS ()
 setContextFrom a = setContext $ symbolRegion a
 
 -- strict :: Validator a -> ValidatorS a
@@ -406,7 +406,7 @@ deState ((a,r),n) = (a,n,r)
 runValidator :: (ValidatorT r w a) -> r -> (a,[w],r)
 runValidator (ValidatorT r) d = deState $ runWriter (runStateT r d)
 
-isSyntacticallyValid :: Flattenable a=> (a->ValidatorS b) -> a -> Bool
+isSyntacticallyValid :: HighLevelTree a=> (a->ValidatorS b) -> a -> Bool
 isSyntacticallyValid v s = case runValidator (v s) (initialState s Nothing){typeChecking=False} of 
         (_,vds,_) -> not $ any isError vds
 
@@ -518,7 +518,7 @@ validateSuchThatStatement :: SuchThatStatementNode -> ValidatorS [Statement]
 validateSuchThatStatement s@(SuchThatStatementNode l1 l2 exprs) = wrapRegion s s SSuchThat $ do
     l1 `isA` TtKeyword
     l2 `isA'` TtKeyword
-    putKeywordDocs "such_that" [flatten l1,flatten l2]
+    putKeywordDocs "such_that" ((makeTree l1) `mappend` makeTree l2)
     exprs' <- validateSequence validateExpression exprs
     bools <- mapM (\(a,b)->do setContext a; return b ?=> tCondition) exprs'
     let bool_exprs = bools
@@ -528,7 +528,7 @@ validateBranchingStatement :: BranchingStatementNode -> ValidatorS [Statement]
 validateBranchingStatement b@(BranchingStatementNode l1 l2 sts) = wrapRegion b b SBranching $ do
     l1 `isA` TtKeyword
     l2 `isA'` TtKeyword
-    putKeywordDocs "branchin_on" [flatten l1,flatten l2]
+    putKeywordDocs "branchin_on" ((makeTree l1) `mappend` makeTree l2)
     branchings <-catMaybes <$> validateList_ (f2n validateBranchingParts) sts
     return [SearchOrder branchings]
     where
@@ -1749,10 +1749,10 @@ listToSeq :: ListNode a -> ValidatorS (Sequence a)
 listToSeq (ListNode l1 s l2) = checkSymbols [l1,l2] >> return s
 
 --visit a sequence, return a list of elements, nothing if missing
-sequenceElems :: (Flattenable a) => Sequence a -> ValidatorS [Maybe a]
+sequenceElems :: (HighLevelTree a) => Sequence a -> ValidatorS [Maybe a]
 sequenceElems (Seq els) = mapM (validateSequenceElem_ validateIdentity) els
 
-listElems :: Flattenable a => ListNode a -> ValidatorS [Maybe a]
+listElems :: HighLevelTree a => ListNode a -> ValidatorS [Maybe a]
 listElems = sequenceElems <=< listToSeq
 
 
@@ -1762,13 +1762,13 @@ validateIdentity = return . pure
 validateArray :: (a -> ValidatorS b) -> [a] -> ValidatorS [b]
 validateArray f l = mapM f l
 
-validateList :: (Flattenable a,Fallback b) =>(a -> ValidatorS b) -> ListNode a -> ValidatorS [RegionTagged b]
+validateList :: (HighLevelTree a,Fallback b) =>(a -> ValidatorS b) -> ListNode a -> ValidatorS [RegionTagged b]
 validateList validator (ListNode st seq end) = do
     _ <- validateSymbol st
     _ <- validateSymbol end
     validateSequence validator seq
 
-validateList_ :: (Flattenable a,Fallback b) =>(a -> ValidatorS b) -> ListNode a -> ValidatorS [b]
+validateList_ :: (HighLevelTree a,Fallback b) =>(a -> ValidatorS b) -> ListNode a -> ValidatorS [b]
 validateList_ validator (ListNode st seq end) = do
     _ <- validateSymbol st
     _ <- validateSymbol end
@@ -1780,14 +1780,14 @@ validateList_ validator (ListNode st seq end) = do
 --     L_ExclamationMark -> "not"
 --     _ -> pack $ lexemeFace x
 
-validateSequence :: (Flattenable a,Fallback b) =>(a -> ValidatorS b) -> Sequence a -> ValidatorS [RegionTagged b]
+validateSequence :: (HighLevelTree a,Fallback b) =>(a -> ValidatorS b) -> Sequence a -> ValidatorS [RegionTagged b]
 validateSequence f (Seq vals) = validateArray (validateSequenceElem f) vals
-validateSequence_ :: (Flattenable a,Fallback b) =>(a -> ValidatorS b) -> Sequence a -> ValidatorS [b]
+validateSequence_ :: (HighLevelTree a,Fallback b) =>(a -> ValidatorS b) -> Sequence a -> ValidatorS [b]
 validateSequence_ f s = do
     q <- validateSequence f s
     return . map snd $ q
 
-validateSequenceElem :: (Flattenable a,Fallback b) => (a -> ValidatorS b) -> SeqElem a -> ValidatorS (RegionTagged b)
+validateSequenceElem :: (HighLevelTree a,Fallback b) => (a -> ValidatorS b) -> SeqElem a -> ValidatorS (RegionTagged b)
 validateSequenceElem f (SeqElem i s) = do
                             case s of
                               Nothing -> pure ()
@@ -1800,7 +1800,7 @@ validateSequenceElem _ (MissingSeqElem plc sepr) = do
     return $ (symbolRegion plc , fallback "Missing elem")
 
 
-validateSequenceElem_ :: (Flattenable a,Fallback b) => (a -> ValidatorS b) -> SeqElem a -> ValidatorS (b)
+validateSequenceElem_ :: (HighLevelTree a,Fallback b) => (a -> ValidatorS b) -> SeqElem a -> ValidatorS (b)
 validateSequenceElem_ f (SeqElem i s) = do
                             case s of
                               Nothing -> pure ()
@@ -1843,19 +1843,19 @@ global =DiagnosticRegion sourcePos0 sourcePos0 0 0
 --               SkippedToken _ -> trueLength h
 --         DiagnosticRegion start (offsetPositionBy tLength start) offset tLength
 
-symbolRegion :: Flattenable a => a -> DiagnosticRegion
+symbolRegion :: HighLevelTree a => a -> DiagnosticRegion
 symbolRegion a = case range of
         (h :<| rst) -> do
                 let end =case viewr rst of
                         EmptyR -> h
                         _ :> et -> et
-                let start = tokenSourcePos h
-                let offset = tokenStart h
+                let start = tokenSourcePos $ h
+                let offset = tokenOffset h
                 let tLength = sum (totalLength <$> rst) + trueLength h
-                let en = tokenSourcePos end
-                DiagnosticRegion start (offsetPositionBy (trueLength end) en) offset tLength
+                let en = sourcePosAfter end
+                DiagnosticRegion start en offset tLength
         _ -> global
-        where range :: Seq ETok = flatten a
+        where range :: Seq ETok = flattenSeq a
 
 
 (<!>) :: WithRegion a => a -> ErrorType -> ValidatorDiagnostic

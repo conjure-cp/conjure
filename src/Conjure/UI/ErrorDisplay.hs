@@ -3,6 +3,8 @@ import Conjure.Prelude
 import Conjure.Language.Validator
 import Text.Megaparsec
 
+import Data.Generics.Uniplate.Data as U
+
 import qualified Data.Set as Set
 import Conjure.Language.AST.Syntax
 import Conjure.Language.AST.ASTParser
@@ -13,6 +15,8 @@ import qualified Data.Text as T
 import Data.Map.Strict (assocs)
 import Conjure.Language.Pretty
 import Conjure.Language.AST.Reformer
+import Data.Data
+import Data.Traversable (traverse)
 
 
 type Parser t = Parsec DiagnosticForPrint Text t
@@ -152,3 +156,15 @@ valFile p = do
       Just s -> val p s
     return ()
 -- putStrLn validateFind
+
+withParseTree :: String -> (ProgramTree -> IO ()) -> IO()
+withParseTree pa f = do
+    fil <- readFileIfExists pa
+    case runParser parseProgram "TEST" (either (const $ error "bad") id $ runLexer (maybe "" T.pack fil) Nothing) of
+        Left _ -> error "bad"
+        Right pt -> void $ f pt
+
+listBounds :: Int -> Int ->  ProgramTree -> IO ()
+listBounds a b t = do
+    let hlt = makeTree t
+    sequence_ [print $ toConstr  t | x@(HLTagged t _) <- universe hlt,contains (SourcePos "" (mkPos a) (mkPos b)) x]

@@ -9,7 +9,7 @@ import Language.LSP.Server
 
 import Conjure.Language.Parser (PipelineError(..), lexAndParse)
 import Language.LSP.VFS (virtualFileText, VirtualFile)
-import Text.Megaparsec (SourcePos(..), unPos)
+import Text.Megaparsec (SourcePos(..), unPos, mkPos)
 import Data.Text (pack)
 import Data.Foldable (find)
 import Language.LSP.Types as L
@@ -131,6 +131,15 @@ sourcePosToPosition (SourcePos _ r c) = Position
     (fromInteger $ -1 + toInteger (unPos r))
     (fromInteger $ -1 + toInteger (unPos c))
 
+positionToSourcePos :: Position -> SourcePos
+positionToSourcePos (Position r c) = SourcePos
+    ""
+    (mkPos ri)
+    ( mkPos  ci)
+    where
+        ri = fromIntegral r + 1
+        ci = fromIntegral c + 1
+
 
 regionToRange :: DiagnosticRegion -> L.Range
 regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (sourcePosToPosition ep)
@@ -154,6 +163,7 @@ getNextTokenStart ref tree = let
 
 posInf :: Position 
 posInf = Position (negate 1) (negate 1)
+
 tokensAtPosition :: Position -> Seq.Seq ETok -> [ETok]
 tokensAtPosition p s = maybeToList (find (posAfter p ) s)
     where 

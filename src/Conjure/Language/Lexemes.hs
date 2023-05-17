@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 
@@ -290,12 +291,12 @@ data Lexeme
     | L_EOF
     | L_SpecialCase
 
-    deriving (Eq, Ord, Show,Generic) --Generic
+    deriving (Eq, Ord, Show,Data,Generic) --Generic
 
 instance Hashable Lexeme
 
 data MissingStructuralElements = MissingExpression | MissingDomain | MissingUnknown
-    deriving (Eq, Ord, Show,Generic) --Generic
+    deriving (Eq, Ord, Show,Data,Generic) --Generic
 instance Hashable MissingStructuralElements
 
 lexemes :: [(T.Text, Lexeme)]

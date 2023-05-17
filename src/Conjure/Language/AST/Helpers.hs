@@ -69,9 +69,10 @@ intLiteral = token test Set.empty <?> "Int Literal"
 
 makeMissing :: Lexeme -> Parser LToken
 makeMissing l = do
-    ETok (Offsets st _ _ _) _ _ _ <- lookAhead anySingle
+    dummyToken <- lookAhead anySingle
+    let st = oStart . offsets $ dummyToken
     spos <- getSourcePos
-    return (MissingToken (ETok (Offsets st st 0 spos) [] l ""))
+    return (MissingToken (ETok (Offsets st 0 0 spos spos spos) [] l ""))
 
 makeUnexpected :: Parser LToken
 makeUnexpected = SkippedToken <$> anySingle
@@ -82,12 +83,12 @@ want (LIdentifier _) = do
     (ETok o t lex _) <- lookAhead anySingle
     case lex of
         (LIdentifier _) -> makeStrict <$> anySingle
-        _ -> return $ MissingToken $ ETok o{oTLength = 0} t LMissingIdentifier ""
+        _ -> return $ MissingToken $ ETok o{oTotalLength = 0} t LMissingIdentifier ""
 want a = do
     (ETok o t lex _) <- lookAhead anySingle
     if lex == a
         then makeStrict <$> anySingle
-        else return $ MissingToken $ ETok o{oTLength = 0} t a ""
+        else return $ MissingToken $ ETok o{oTotalLength = 0} t a ""
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser SToken
