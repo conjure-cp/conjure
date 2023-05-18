@@ -54,7 +54,7 @@ test:
 		stack test --test-arguments '--hide-successes --limit-time ${LIMIT_TIME}';\
 	fi
 
-stack.yaml:
+stack.yaml: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
 
 .PHONY: preinstall
