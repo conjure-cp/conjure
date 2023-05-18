@@ -207,6 +207,10 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | LSP
+        { logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize UI
@@ -1385,6 +1389,10 @@ ui = modes
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\
                     \which aims to make search faster."
+    ,LSP {
+        logLevel = def,
+        limitTime = Nothing
+    } &= name "lsp"
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]

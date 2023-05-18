@@ -64,7 +64,7 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 
 -- parallel-io
 import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
-
+import Conjure.LSP.LanguageServer (startServer, LSPConfig (LSPConfig))
 
 
 mainWithArgs :: forall m .
@@ -75,6 +75,7 @@ mainWithArgs :: forall m .
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
+mainWithArgs LSP{} = liftIO $ startServer LSPConfig 
 mainWithArgs mode@Modelling{..} = do
     essenceM <- readModelFromFile essence
     doIfNotCached          -- start the show!
