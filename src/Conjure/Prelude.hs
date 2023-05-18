@@ -4,6 +4,8 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+
 
 module Conjure.Prelude
     ( module X
@@ -49,6 +51,7 @@ module Conjure.Prelude
     , getDirectoryContents
     , RunStateAsWriter, runStateAsWriterT, sawTell
     , stripPostfix
+    , Doc , 
     ) where
 
 import GHC.Err as X ( error )
@@ -83,7 +86,7 @@ import Control.Monad                as X ( Monad(return, (>>), (>>=))
                                          , (<=<), (>=>), (=<<), ap, join
                                          , guard, void, when, unless
                                          , zipWithM, zipWithM_, foldM, filterM, replicateM
-                                         , MonadPlus(..), mzero, msum )
+                                         , MonadPlus(..), mzero, msum)
 import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
@@ -94,6 +97,8 @@ import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
 import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
+
+
 import Control.Arrow                as X ( first, second, (***), (&&&) )
 import Control.Category             as X ( (<<<), (>>>) )
 
@@ -134,7 +139,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, appendFile, getLine )
-import System.IO.Error ( isDoesNotExistError )
+import System.IO.Error ( isDoesNotExistError, ioeGetErrorType )
 import Control.Exception as X ( catch, throwIO, SomeException )
 
 import Data.Proxy as X ( Proxy(..) )
@@ -159,16 +164,6 @@ import qualified Data.Aeson.Types as JSON
 -- QuickCheck
 import Test.QuickCheck ( Gen )
 
--- megaparsec
-import Text.Megaparsec.Prim ( ParsecT )
-
--- pretty
-import Text.PrettyPrint as X
-    ( Doc
-    , (<>), (<+>), ($$)
-    , hang, nest, punctuate
-    , hcat, vcat, fsep, hsep, sep
-    )
 
 -- uniplate
 import Data.Generics.Uniplate.Data as X
@@ -196,7 +191,7 @@ import System.Random ( StdGen, mkStdGen, setStdGen, randomRIO )
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Text.PrettyPrint as Pr
+import qualified Text.PrettyPrint.Annotated.HughesPJ as Pr
 
 -- containers
 import qualified Data.Set as S
@@ -221,6 +216,35 @@ import Data.Time.Clock ( getCurrentTime )
 import System.TimeIt as X ( timeIt, timeItNamed )
 
 import Debug.Trace as X ( trace, traceM )
+import GHC.IO.Exception (IOErrorType(InvalidArgument))
+import Text.PrettyPrint.Annotated.HughesPJ ((<+>))
+-- import Prettyprinter (PageWidth(AvailablePerLine))
+-- import Prettyprinter.Render.String (renderString)
+
+
+
+type EssenceDocAnnotation = ()
+
+type Doc = Pr.Doc EssenceDocAnnotation
+
+-- instance Eq Doc where
+--     a == b = show a == show b
+--compats
+-- hang :: Doc -> Int ->Doc -> Doc
+-- hang a n b = a <+> Pr.hang n b
+
+-- hcat :: [Doc] -> Doc 
+-- hcat = Pr.hcat
+
+-- fsep :: [Doc] -> Doc
+-- fsep = Pr.fillSep
+
+-- cat :: [Doc] -> Doc
+-- cat = Pr.cat
+
+-- nest :: Int -> Doc -> Doc
+-- nest = Pr.nest
+
 
 tracing :: Show a => String -> a -> a
 tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
@@ -416,8 +440,6 @@ instance MonadFail Gen where
 instance MonadFailDoc Gen where
     failDoc = Control.Monad.fail . show
 
-instance MonadFailDoc (ParsecT l m) where
-    failDoc = Control.Monad.fail . show
 
 instance MonadFailDoc m => MonadFailDoc (Pipes.Proxy a b c d m) where
     failDoc = lift . failDoc
@@ -432,11 +454,11 @@ instance (Functor m) => Functor (ExceptT m) where
     fmap f = ExceptT . fmap (fmap f) . runExceptT
 
 instance (Functor m, Monad m) => Applicative (ExceptT m) where
-    pure = return
+    pure =  ExceptT . return . Right
     (<*>) = ap
 
 instance (Monad m) => Monad (ExceptT m) where
-    return a = ExceptT $ return (Right a)
+    return = pure
     m >>= k = ExceptT $ do
         a <- runExceptT m
         case a of
@@ -545,6 +567,7 @@ runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
         each (Left (lvl, msg)) =
             when (lvl <= l) $ do
                 let txt = Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg
+                -- let txt = renderString $ (Pr.layoutPretty $ Pr.LayoutOptions (AvailablePerLine 200 1.0)) msg
                 when ("[" `isPrefixOf` txt) $ do
                     liftIO clearScreen
                     liftIO (setCursorPosition 0 0)
@@ -597,8 +620,9 @@ readFileIfExists :: FilePath -> IO (Maybe String)
 readFileIfExists f = (Just <$> readFile f) `catch` handleExists
     where
         handleExists e
+            | ioeGetErrorType e == InvalidArgument = return Nothing -- handle non-text files gracefully
             | isDoesNotExistError e = return Nothing
-            | otherwise = throwIO e
+            | otherwise = trace (show e) $ throwIO e
 
 removeDirectoryIfExists :: FilePath -> IO ()
 removeDirectoryIfExists f = removeDirectoryRecursive f `catch` handleExists

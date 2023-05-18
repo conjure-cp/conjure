@@ -8,7 +8,6 @@ import Conjure.Prelude
 import Conjure.Bug
 
 import Conjure.Language
-import Conjure.Language.Domain ( HasRepresentation(..) )
 import Conjure.Language.RepresentationOf ( RepresentationOf(..) )
 import Conjure.Compute.DomainUnion
 

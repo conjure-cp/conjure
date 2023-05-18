@@ -62,13 +62,13 @@ categoryChecking :: (MonadFailDoc m, MonadUserError m) => Model -> m Model
 categoryChecking m = do
     errors1 <- fmap concat $ forM (mStatements m) $ \ st -> case st of
         Declaration (FindOrGiven _forg name domain) -> do
-            let cat = categoryOf domain
-            return [(domain, (name, cat)) | cat > CatParameter]
+            let category = categoryOf domain
+            return [(domain, (name, category)) | category > CatParameter]
         _ -> return []
     errors2 <- fmap concat $ forM (universeBi (mStatements m) :: [Domain () Expression]) $ \ domain -> do
-        let cat = categoryOf domain
-        return [ (domain, cat)
-               | cat > CatQuantified
+        let category = categoryOf domain
+        return [ (domain, category)
+               | category > CatQuantified
                , domain `notElem` map fst errors1        -- only if this is a new error
                ]
 
@@ -76,18 +76,18 @@ categoryChecking m = do
         then return m
         else userErr1 $ vcat
             $  [ "Category checking failed." ]
-            ++ concat ( nub [ [ "The domain   :" <+> pretty domain
-                              , "Its category :" <+> pretty cat
+            ++ concat ( [ [ "The domain   :" <+> pretty domain
+                              , "Its category :" <+> pretty category
                               , "In the definition of:" <+> pretty name
                               , ""
                               ]
-                            | (domain, (name, cat)) <- errors1
+                            | (domain, (name, category)) <- nub errors1
                             ] )
-            ++ concat ( nub [ [ "The domain   :" <+> pretty domain
-                              , "Its category :" <+> pretty cat
+            ++ concat ( [ [ "The domain   :" <+> pretty domain
+                              , "Its category :" <+> pretty category
                               , ""
                               ]
-                            | (domain, cat) <- errors2
+                            | (domain, category) <- nub errors2
                             ] )
 
 initInfo_Lettings :: Model -> Model

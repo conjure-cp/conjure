@@ -1,0 +1,8 @@
+Error:
+    tests/parse_print/basic/typeErrorInDecl/typeErrorInDecl.essence:3:19:
+  |
+3 | find x : int(1..2+false)
+  |                   ^^^^^
+Type error:
+	Expected: "Number or Enum"
+	Got: bool

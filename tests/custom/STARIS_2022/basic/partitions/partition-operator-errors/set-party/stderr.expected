@@ -1,3 +1,9 @@
 Error:
-    In a 'such that' statement: a = party(2, s)
-    Error: Type error in party(2, s)
+    set-party.essence:4:23:
+  |
+4 | such that a = party(2,s)
+  |                       ^
+Type error:
+	Expected: partition from int
+	Got: set of int
+

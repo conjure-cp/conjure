@@ -60,11 +60,13 @@ import Conjure.Language.Expression
 -- aeson
 import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
+import Data.Aeson.Key (toText)
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -87,22 +89,22 @@ instance SimpleJSON Model where
     toSimpleJSON m = do
         inners <- mapM toSimpleJSON (mStatements m)
         let (innersAsMaps, rest) = unzip [ case i of JSON.Object mp -> ([mp], []); _ -> ([], [i]) | i <- inners ]
-                                    |> (\ (xs, ys) -> (M.unions (concat xs), concat ys))
+                                    |> (\ (xs, ys) -> (mconcat <$> xs, concat ys))
         unless (null rest) $ bug $ "Expected json objects only, but got:" <+> vcat (map pretty rest)
-        return (JSON.Object innersAsMaps)
+        return (JSON.Object $ mconcat innersAsMaps)
     fromSimpleJSON = noFromSimpleJSON "Model"
 
 fromSimpleJSONModel ::
     (?typeCheckerMode :: TypeCheckerMode) =>
-    MonadUserError m =>
     MonadLog m =>
+    MonadUserError m =>
     Model ->
     JSON.Value ->
     m Model
 fromSimpleJSONModel essence json =
     case json of
         JSON.Object inners -> do
-            stmts <- forM (M.toList inners) $ \ (name, valueJSON) -> do
+            stmts <- forM (KM.toList inners) $ \ (toText->name, valueJSON) -> do
                 -- traceM $ show $ "name    " <+> pretty name
                 let mdomain = [ dom
                               | Declaration (FindOrGiven Given (Name nm) dom) <- mStatements essence
@@ -141,7 +143,7 @@ instance Pretty Model where
         ]
 
 instance VarSymBreakingDescription Model where
-    varSymBreakingDescription m = JSON.Object $ M.fromList
+    varSymBreakingDescription m = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Model")
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription $ mStatements m)

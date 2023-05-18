@@ -1,7 +1,17 @@
 Error:
-    In a 'such that' statement: b = (4 substring false)
-    Error:
-        Type error in 4 substring false
-                      Unexpected types for operands:
-                       - int
-                       - bool
+    substring-type-error.essence:2:16:
+  |
+2 | such that b = (4 substring false)
+  |                ^
+Type error:
+	Expected: sequence of ?
+	Got: int
+
+substring-type-error.essence:2:28:
+  |
+2 | such that b = (4 substring false)
+  |                            ^^^^^
+Type error:
+	Expected: sequence of ?
+	Got: bool
+

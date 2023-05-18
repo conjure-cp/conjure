@@ -13,6 +13,10 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+    ( changeRepr,
+      typeOfDomain,
+      Domain(DomainUnnamed, DomainReference, DomainRecord,
+             DomainVariant) )
 import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.Pretty
@@ -200,7 +204,7 @@ resolveX (Reference nm Nothing) = do
 resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolving
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> return p                             -- hence, do not fail if not in the context
+        Nothing -> return p                             -- hence, do not failDoc if not in the context
         Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
             | DeclHasRepr{} <- refto                    -- but the old one did, do not update
             -> return p
@@ -310,12 +314,12 @@ resolveAbsPat _ (Single nm) x = addName nm $ Alias x
 resolveAbsPat context (AbsPatTuple ps) x =
     sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
               | (p, i_) <- zip ps allNats
-              , let i = fromInt i_
+              , let i   = fromInt i_ 
               ]
 resolveAbsPat context (AbsPatMatrix ps) x =
     sequence_ [ resolveAbsPat context p [essence| &x[&i] |]
               | (p, i_) <- zip ps allNats
-              , let i = fromInt i_
+              , let i  = fromInt i_
               ]
 resolveAbsPat context (AbsPatSet ps) x = do
     ys <- case x of

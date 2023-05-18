@@ -7,7 +7,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -57,12 +58,12 @@ instance (Pretty x, ExpressionLike x) => Pretty (OpSum x) where
     prettyPrec _ (OpSum x) = "sum" <> prParens (pretty x)
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpSum x) where
-    varSymBreakingDescription (OpSum x) | Just xs <- listOut x = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpSum x) | Just xs <- listOut x = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpSum")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (OpSum x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpSum x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpSum")
         , ("children", varSymBreakingDescription x)
         ]

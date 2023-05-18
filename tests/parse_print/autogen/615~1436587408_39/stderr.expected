@@ -1,0 +1,16 @@
+Error:
+    tests/parse_print/autogen/615~1436587408_39/spec.essence:6:11:
+  |
+6 |           (partition() : `partition from bool`) -
+  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool
+
+tests/parse_print/autogen/615~1436587408_39/spec.essence:7:11:
+  |
+7 |           partition({false, false}, {false}, {true, false}, {true}, {true, false, true})),
+  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool

@@ -1,3 +1,9 @@
 Error:
-    In a 'such that' statement: h = hist(s)
-    Error: Type error in hist(s)
+    hist-type-error.essence:3:20:
+  |
+3 | such that h = hist(s)
+  |                    ^
+Type error:
+	Expected: "Matrix, List or MSet"
+	Got: set of int
+

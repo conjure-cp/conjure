@@ -1,0 +1,16 @@
+Error:
+    tests/parse_print/autogen/446~final/spec.essence:5:45:
+  |
+5 |     (partition() : `partition from bool`) = partition({true}) - partition({false})
+  |                                             ^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool
+
+tests/parse_print/autogen/446~final/spec.essence:5:65:
+  |
+5 |     (partition() : `partition from bool`) = partition({true}) - partition({false})
+  |                                                                 ^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool

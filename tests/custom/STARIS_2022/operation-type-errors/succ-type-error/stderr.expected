@@ -1,3 +1,9 @@
 Error:
-    In a 'such that' statement: b = succ([false, true, false; int(1..3)])
-    Error: Type error in succ([false, true, false; int(1..3)])
+    succ-type-error.essence:2:20:
+  |
+2 | such that b = succ([false, true, false])
+  |                    ^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "int enum or bool"
+	Got: matrix indexed by [int] of bool
+

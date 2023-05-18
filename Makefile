@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=8.6 make"
-export GHC_VERSION?=8.6
+export GHC_VERSION?=9.0
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
@@ -14,8 +14,8 @@ export LIMIT_TIME?=10
 install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this location."
-	@echo "For example: \"GHC_VERSION=8.4 make install\""
-	@echo "Supported versions: 8.4, 8.6"
+	@echo "For example: \"GHC_VERSION=9.2 make install\""
+	@echo "Supported version:  9.0 , 9.2"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."
@@ -47,11 +47,11 @@ install:
 .PHONY: test
 test:
 	@if ${COVERAGE}; then \
-		stack test --coverage --test-arguments '--limit-time ${LIMIT_TIME}';\
+		stack test --coverage --test-arguments '--hide-successes --limit-time ${LIMIT_TIME}';\
 		stack hpc report conjure-cp $(find . -name conjure.tix);\
 		ls .stack-work/install/*/*/*/hpc/combined/custom;\
 	else\
-		stack test --test-arguments '--limit-time ${LIMIT_TIME}';\
+		stack test --test-arguments '--hide-successes --limit-time ${LIMIT_TIME}';\
 	fi
 
 stack.yaml:

@@ -1,0 +1,32 @@
+Error:
+    tests/parse_print/issues/207/207.essence:16:53:
+   |
+16 |                                                   . (v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2]) * v__6[2, 1])
+   |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number or Enum"
+	Got: bool
+
+tests/parse_print/issues/207/207.essence:16:108:
+   |
+16 |                                                   . (v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2]) * v__6[2, 1])
+   |                                                                                                            ^^^^^^^^^^
+Type error:
+	Expected: bool
+	Got: int
+
+tests/parse_print/issues/207/207.essence:21:53:
+   |
+21 |                                                   . (v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2]) * v__6[2, 2])
+   |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number or Enum"
+	Got: bool
+
+tests/parse_print/issues/207/207.essence:21:108:
+   |
+21 |                                                   . (v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2]) * v__6[2, 2])
+   |                                                                                                            ^^^^^^^^^^
+Type error:
+	Expected: bool
+	Got: int

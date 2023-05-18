@@ -18,7 +18,7 @@ rule_Comprehension = "sequence-comprehension{ExplicitBounded}" `namedRule` theRu
                     SizeAttr_Size x -> return x
                     SizeAttr_MaxSize x -> return x
                     SizeAttr_MinMaxSize _ x -> return x
-                    _ -> fail "rule_Comprehension_Defined maxSize"
+                    _ -> failDoc "rule_Comprehension_Defined maxSize"
         [sLength, sValues]         <- downX1 sequ
         let upd val old = lambdaToFunction pat old val
         return

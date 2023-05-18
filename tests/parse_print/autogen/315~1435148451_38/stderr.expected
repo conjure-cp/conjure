@@ -1,0 +1,16 @@
+Error:
+    tests/parse_print/autogen/315~1435148451_38/spec.essence:19:44:
+   |
+19 |               tuple (true); int(1..4)] --> partition({false, true, true}, {false, false},
+   |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool
+
+tests/parse_print/autogen/315~1435148451_38/spec.essence:22:44:
+   |
+22 |                                            partition({false, false, true, true, true}, {false, true, true},
+   |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool

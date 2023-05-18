@@ -8,12 +8,13 @@ import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
-import qualified Data.Aeson.Types as JSON ( Value )
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 import qualified Data.Vector as V               -- vector
 
 -- scientific
 import Data.Scientific ( floatingOrInteger )
+import qualified Data.Aeson.KeyMap as KM
+
 
 
 class ExpressionLike a where
@@ -97,8 +98,8 @@ noToMiniZinc a = userErr1 $ vcat
     ]
 
 class SimpleJSON a where
-    toSimpleJSON :: MonadUserError m => a -> m JSON.Value
-    fromSimpleJSON :: MonadUserError m => Type -> JSON.Value -> m a
+    toSimpleJSON :: (MonadFail m,MonadUserError m) => a -> m JSON.Value
+    fromSimpleJSON ::(MonadFail m, MonadUserError m) => Type -> JSON.Value -> m a
 
 instance SimpleJSON Integer where
     toSimpleJSON = return . toJSON
@@ -119,7 +120,7 @@ data AsDictionary a b = AsDictionary [(a,b)]
 instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y) where
     toSimpleJSON (AsDictionary xs) = do
         (ys, asList) <- fmap unzip $ forM xs $ \ (a,b) -> do
-            let aStr = stringToText $ renderNormal $ pretty a
+            let aStr = fromString $ renderNormal $ pretty a
             aJSON <- toSimpleJSON a
             bJSON <- toSimpleJSON b
             let abPair = JSON.Array $ V.fromList [aJSON, bJSON]
@@ -131,7 +132,7 @@ instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y)
         let zs = catMaybes ys
         if length ys == length zs
             -- all were suitable as keys, great
-            then return $ JSON.Object $ M.fromList zs
+            then return $ JSON.Object $ KM.fromList zs
             else return $ JSON.Array $ V.fromList asList
     fromSimpleJSON = noFromSimpleJSON "AsDictionary"
 

@@ -44,7 +44,14 @@ instance (EnumerateDomain m, MonadFail m) => EnumerateDomain (UserErrorT m) wher
 
 -- | Use this if you don't want to allow a (EnumerateDomain m => m a) computation actually do IO.
 data EnumerateDomainNoIO a = Done a | TriedIO | Failed Doc
-    deriving (Eq, Show)
+    deriving (Show)
+
+instance Eq a => Eq (EnumerateDomainNoIO a) where
+     (Done a) == (Done b) = a ==b
+     TriedIO == TriedIO = True
+     (Failed _) == (Failed _) = True
+     _ == _ = False
+
 
 instance Functor EnumerateDomainNoIO where
     fmap _ (Failed msg) = Failed msg
@@ -52,11 +59,10 @@ instance Functor EnumerateDomainNoIO where
     fmap f (Done x)     = Done (f x)
 
 instance Applicative EnumerateDomainNoIO where
-    pure = return
+    pure = Done
     (<*>) = ap
 
 instance Monad EnumerateDomainNoIO where
-    return = Done
     Failed msg >>= _ = Failed msg
     TriedIO    >>= _ = TriedIO
     Done x     >>= f = f x

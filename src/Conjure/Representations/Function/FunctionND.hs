@@ -256,6 +256,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
 
+
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
 viewAsDomainTuple (DomainTuple doms) = Just doms
 viewAsDomainTuple (DomainRecord doms) = Just (doms |> sortBy (comparing fst) |> map snd)

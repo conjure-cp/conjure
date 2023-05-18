@@ -38,7 +38,7 @@ import System.Directory ( removeFile )
 import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- uniplate zipper
 import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole, replaceHole, right, up )
-import Conjure.Prelude (MonadFailDoc)
+
 
 type ExpressionZ = Zipper Expression Expression
 type FindVar     = (Name, Domain () Expression)
@@ -214,11 +214,11 @@ refersTo (Reference n _) a = n `elem` namesFromAbstractPattern a
 refersTo _ _               = False
 
 -- | Get a single name from an abstract pattern.
-nameFromAbstractPattern :: (MonadFail m) => AbstractPattern -> m Name
+nameFromAbstractPattern :: (MonadFailDoc m) => AbstractPattern -> m Name
 nameFromAbstractPattern a = case namesFromAbstractPattern a of
                                  [n] -> pure n
-                                 []  -> fail "[nameFromAbstractPattern] no names in abstract pattern"
-                                 _   -> fail "[nameFromAbstractPattern] more than one name in abstract pattern"
+                                 []  -> failDoc "[nameFromAbstractPattern] no names in abstract pattern"
+                                 _   -> failDoc "[nameFromAbstractPattern] more than one name in abstract pattern"
 
 -- | Get the list of names from an abstract pattern.
 namesFromAbstractPattern :: AbstractPattern -> [Name]

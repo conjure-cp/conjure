@@ -1,5 +1,9 @@
 Error:
-    In a 'such that' statement: i = product([false, true, false; int(1..3)])
-    Error:
-        Type error in product([false, true, false; int(1..3)])
-                      The argument has type: matrix indexed by [int] of bool
+    product-type-error.essence:2:23:
+  |
+2 | such that i = product([false, true, false])
+  |                       ^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Integer elements"
+	Got: bool
+

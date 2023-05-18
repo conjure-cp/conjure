@@ -1,5 +1,9 @@
 Error:
-    In a 'such that' statement: b = or(5)
-    Error:
-        Type error in or(5)
-                      The argument has type: int
+    or-type-error.essence:2:19:
+  |
+2 | such that b = (or(5))
+  |                   ^
+Type error:
+	Expected: "Collection of boolean"
+	Got: int
+

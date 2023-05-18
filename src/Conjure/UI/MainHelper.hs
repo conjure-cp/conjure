@@ -19,14 +19,14 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
-import Conjure.UI.TypeScript ( tsDef )
+
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGen, NameGenM, runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render, prParens )
+import Conjure.Language.Pretty 
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
@@ -51,7 +51,7 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
 
 -- system-filepath
-import qualified Filesystem.Path as Sys ( FilePath )
+-- import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile, findExecutable )
@@ -66,6 +66,7 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
 
 
+
 mainWithArgs :: forall m .
     MonadIO m =>
     MonadLog m =>
@@ -74,7 +75,6 @@ mainWithArgs :: forall m .
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
-mainWithArgs TSDEF{} = liftIO tsDef
 mainWithArgs mode@Modelling{..} = do
     essenceM <- readModelFromFile essence
     doIfNotCached          -- start the show!
@@ -143,6 +143,10 @@ mainWithArgs IDE{..} = do
             json <- runNameGen () $ modelRepresentationsJSON essence2
             liftIO $ putStrLn $ render lineWidth json
         | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
+-- mainWithArgs Pretty{..} | outputFormat == Plain= do
+--     (_,cts) <- liftIO $ pairWithContents essence
+--     res <- prettyPrintWithChecks cts
+--     liftIO $ putStrLn $ render lineWidth res
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
@@ -154,6 +158,7 @@ mainWithArgs Pretty{..} = do
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
     writeModel lineWidth outputFormat Nothing model1
+    
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
@@ -231,7 +236,7 @@ mainWithArgs AutoIG{..} | removeAux = do
                  | st <- mStatements model
                  ]
     writeModel lineWidth outputFormat (Just outputFilepath) model {mStatements = catMaybes stmts'}
-mainWithArgs AutoIG{..} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
+mainWithArgs AutoIG{} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
 mainWithArgs Boost{..} = do
     model <- readModelFromFile essence
     runNameGen model $ do
@@ -743,7 +748,7 @@ pp LogNone = const $ return ()
 pp _       = liftIO . putStrLn . renderNormal
 
 
-savilerowScriptName :: Sys.FilePath
+savilerowScriptName :: FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"

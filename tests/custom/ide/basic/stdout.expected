@@ -1,27 +1,59 @@
  == lexer.essence ==
-Error: Lexing error: # y = 2
+Error:
+    lexer.essence:7:29:
+  |
+7 | such that x + y = z, x = 1, # y = 2
+  |                             ^^^^^^^
+Skipped tokens
 
 
 
  == parser.essence ==
 Error:
-    parser.essence:7:28:
-unexpected =
-expecting <->, comma, end of input, operator, rest of statement, or statement
-    such that x + y = z, x = 1 = y = 2
-                               ^
+    parser.essence:7:27:
+  |
+7 | such that x + y = z, x = 1 = y = 2
+  |                           ^
+Missing Expr
+
+parser.essence:7:28:
+  |
+7 | such that x + y = z, x = 1 = y = 2
+  |                            ^
+Missing ,
+
+parser.essence:7:31:
+  |
+7 | such that x + y = z, x = 1 = y = 2
+  |                               ^
+Missing Expr
+
+parser.essence:7:32:
+  |
+7 | such that x + y = z, x = 1 = y = 2
+  |                                ^
+Missing ,
+
 
 
  == type.essence ==
 Error:
-    In a 'such that' statement: x union y = 2
-    Error:
-        When type checking: x union y
-        Arguments have unsupported types.
-        lhs        : x
-        type of lhs: int
-        rhs        : y
-        type of rhs: int
+    type.essence:7:22:
+  |
+7 | such that x + y = z, x union y = 2
+  |                      ^
+Type error:
+	Expected: "Set MSet funcition or relation"
+	Got: int
+
+type.essence:7:30:
+  |
+7 | such that x + y = z, x union y = 2
+  |                              ^
+Type error:
+	Expected: "Set MSet funcition or relation"
+	Got: int
+
 
 
  == category.essence ==
@@ -37,8 +69,8 @@ Error:
 {"mInfo":
      {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
       "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
-      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
-      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
  "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
  "mStatements":
      [{"Declaration":

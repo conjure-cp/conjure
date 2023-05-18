@@ -3,10 +3,10 @@ module Main where
 import Conjure.Prelude
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.MainHelper ( mainWithArgs )
-import Conjure.Language.Pretty ( pretty )
+import Conjure.Language.Pretty 
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UserError ( userErr1 )
-import Conjure.Language.Pretty ( renderWide )
+
 import Conjure.Language.NameGen ( runNameGen )
 
 -- base

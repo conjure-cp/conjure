@@ -4,6 +4,7 @@ module Conjure.UI.IO
     , readModelPreambleFromFile
     , readModelInfoFromFile
     , readParamJSON
+    , readASTFromFile
     , readParamOrSolutionFromFile
     , writeModel, writeModels
     , readModel
@@ -17,7 +18,7 @@ import Conjure.UI
 import Conjure.Language
 import qualified Conjure.Language.Parser as Parser
 import qualified Conjure.Language.ParserC as ParserC
-import Conjure.Language.Parser ( Parser )
+import Conjure.Language.Parser 
 
 -- aeson
 import qualified Data.Aeson ( eitherDecodeStrict )
@@ -33,7 +34,31 @@ import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- bytestring
 import qualified Data.ByteString as BS ( readFile, writeFile )
 import qualified Data.ByteString.Char8 as BS ( putStrLn )
+import Conjure.Language.AST.Syntax (ProgramTree)
+import Conjure.Language.AST.ASTParser (parseProgram)
+import Conjure.Language.Validator (runValidator, validateModel, ValidatorState (typeChecking), initialState, isError)
 
+import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
+
+readASTFromFile :: 
+    MonadIO m =>
+    MonadFailDoc m =>
+    MonadUserError m =>
+    FilePath -> m ProgramTree
+readASTFromFile fp = do
+    (_,contents) <- liftIO $ pairWithContents fp
+    v <-case lexAndParse parseProgram contents of
+      Left pe -> failDoc $ pretty $  show pe
+      Right pt -> return pt
+    case
+        runValidator
+          (validateModel v) (initialState v) {typeChecking = False}
+            of 
+        (_, vds, _) | any isError vds -> pure v
+        (_,vds,_) -> failDoc $ "Cannot pretty print a model with errors" <+> pretty (showDiagnosticsForConsole vds (Just fp) contents)
+
+        
+    
 
 readModelFromFile ::
     MonadIO m =>
@@ -63,8 +88,9 @@ readModelFromStdin = do
 readParamJSON ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
-    MonadUserError m =>
+    MonadFail m =>
     MonadLog m =>
+    MonadUserError m =>
     Model -> FilePath -> m Model
 readParamJSON model fp = do
     (_, contents) <- liftIO $ pairWithContents fp
@@ -79,9 +105,9 @@ readParamJSON model fp = do
 readParamOrSolutionFromFile ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
+    MonadLog m =>
     MonadFailDoc m =>
     MonadUserError m =>
-    MonadLog m =>
     Model -> FilePath -> m Model
 readParamOrSolutionFromFile model fp = do
     if ".json" `isSuffixOf` fp
@@ -125,18 +151,19 @@ readModelInfoFromFile fp = do
 readModel ::
     MonadFailDoc m =>
     MonadUserError m =>
-    Parser Model ->
+    Parser.Pipeline ProgramTree Model ->
     Maybe (Text -> Text) ->
     (FilePath, Text) ->
     m Model
 readModel modelParser preprocess (fp, con) = do
-
     model <- case preprocess of
         Nothing -> return def
         Just prep ->
-            case Parser.runLexerAndParser modelParser fp (prep con) of
-                Left  e -> userErr1 e
-                Right x -> return x
+            do 
+                let res = Parser.runLexerAndParser modelParser fp (prep con)
+                case res of
+                    Left  e -> userErr1 e
+                    Right x -> return x
 
     let
         infoBlock = con
@@ -176,6 +203,7 @@ onlyPreamble
 
 
 writeModel ::
+    MonadFail m =>
     MonadIO m =>
     MonadUserError m =>
     Int ->
@@ -221,6 +249,7 @@ writeModel _ _ _ _ = bug "writeModels"
 
 
 writeModels ::
+    MonadFail m =>
     MonadIO m =>
     MonadUserError m =>
     Int ->
