@@ -857,6 +857,12 @@ solverExecutables =
 smtSolvers :: [String]
 smtSolvers = ["boolector", "yices", "z3"]
 
+smtSolversSRFlag :: String -> String
+smtSolversSRFlag "boolector" = "-boolector"
+smtSolversSRFlag "yices" = "-yices2"
+smtSolversSRFlag "z3" = "-z3"
+smtSolversSRFlag _ = bug "smtSolversSRFlag"
+
 smtSupportedLogics :: String -> [String]
 smtSupportedLogics "boolector" = ["bv"]
 smtSupportedLogics "yices" = ["bv", "lia", "idl"]
@@ -970,6 +976,7 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , case lookup solverName solverExecutables of
                                           Nothing -> bug ("solverExecutables" <+> pretty solverName)
                                           Just ex -> stringToText ex
+                                      , stringToText (smtSolversSRFlag solverName)
                                       ]
         _ -> userErr1 ("Unknown solver:" <+> pretty solver)
 
