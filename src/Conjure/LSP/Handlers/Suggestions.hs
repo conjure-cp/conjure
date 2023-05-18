@@ -3,7 +3,6 @@ module Conjure.LSP.Handlers.Suggestions where
 import Conjure.LSP.Util (ProcessedFile (ProcessedFile), regionToRange, withProcessedDoc,getNextTokenStart,sourcePosToPosition, positionToSourcePos, sendInfoMessage)
 import Conjure.Language (Type (..))
 import Conjure.Language.AST.Reformer
-import Conjure.Language.Type (IntTag (..))
 import Conjure.Language.Lexer
 import Conjure.Language.Lexemes
 import Conjure.Language.Validator --(Class (..), Kind (..), RegionInfo (..), ValidatorState (regionInfo), RegionType (..), StructuralType (..),symbolTable)
@@ -12,13 +11,12 @@ import Control.Lens
 import Data.Text (intercalate,pack)
 import Language.LSP.Server (Handlers, LspM, requestHandler)
 import Language.LSP.Types (SymbolKind(..),SMethod(STextDocumentCompletion),type  (|?) (..), CompletionItem (..), CompletionItemKind (..), Position(..))
-import qualified Language.LSP.Types as T 
+import qualified Language.LSP.Types as T
 import Language.LSP.Types.Lens (HasParams (..), HasTextDocument (textDocument), HasPosition (position), HasCompletionItemKind (completionItemKind))
 import Conjure.Language.Pretty (prettyT)
 import qualified Data.Map.Strict as Map
 import Conjure.Language.Validator (ErrorType(TokenError), DiagnosticRegion (drSourcePos))
 import Conjure.Language.AST.Syntax (LToken(MissingToken))
-import Conjure.Language.AST.Reformer (HLTree (HLNone), TreeItemLinks (TIList),ListItemClasses(..))
 import Text.Megaparsec (SourcePos)
 
 suggestionHandler :: Handlers (LspM ())
@@ -29,12 +27,12 @@ suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
         let symbols = Map.toList $ rTable $ head  ri
         let nextTStart = getNextTokenStart context pt
         let innermostSymbolTable = symbols
-        let errors = [(r,d) | (ValidatorDiagnostic r (Error (TokenError d))) <- diags ] 
-        let contextTokens = take 1 [ lexeme w | (r,MissingToken w) <- errors,isInRange nextTStart r] 
-        let missingTokenBasedHint = case contextTokens of 
+        let errors = [(r,d) | (ValidatorDiagnostic r (Error (TokenError d))) <- diags ]
+        let contextTokens = take 1 [ lexeme w | (r,MissingToken w) <- errors,isInRange nextTStart r]
+        let missingTokenBasedHint = case contextTokens of
                 [l] -> makeMissingTokenHint l
                 _ -> makeSuggestionsFromSymbolTable symbols
-                where 
+                where
                     makeMissingTokenHint (L_Missing s) = case s of
                         MissingExpression -> makeExpressionSuggestions innermostSymbolTable
                         MissingDomain -> makeDomainSuggestions innermostSymbolTable
@@ -44,11 +42,11 @@ suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
                     makeMissingTokenHint l = [defaultCompletion $ lexemeText l]
         sendInfoMessage $ pack . show $ context
         let tlSymbol = getLowestLevelTaggedRegion (positionToSourcePos context) $ makeTree pt
-        let tlSymbolSuggestion = case tlSymbol of 
+        let tlSymbolSuggestion = case tlSymbol of
                 Just (TIDomain _) -> makeDomainSuggestions innermostSymbolTable
                 Just (TIExpression _) -> makeExpressionSuggestions innermostSymbolTable
                 Just (TIList t) -> makeTagSuggestions innermostSymbolTable t
-                q -> [defaultCompletion $ pack . show $ q] 
+                q -> [defaultCompletion $ pack . show $ q]
         res $ Right $ InL . T.List $ tlSymbolSuggestion ++ missingTokenBasedHint
 
 isInRange :: T.Position -> DiagnosticRegion -> Bool
@@ -146,17 +144,17 @@ keywordCompletions :: [CompletionItem]
 keywordCompletions = []
 
 getLowestLevelTaggedRegion :: SourcePos -> HLTree ->  Maybe TreeItemLinks
-getLowestLevelTaggedRegion p tr = 
+getLowestLevelTaggedRegion p tr =
     let regs = filterContaining p tr
     in case [t | HLTagged t _ <- regs, t /= TIGeneral] of
         [] -> Nothing
         (ins) -> Just $ last ins
 
 topLevelSuggestions :: [CompletionItem]
-topLevelSuggestions = defaultCompletion <$> [
-    "find $1 : $2",
-    "such that $0",
-    "given $1 : $2"
+topLevelSuggestions = uncurry snippetCompletion <$> [
+    ("find","find $1 : $2"),
+    ("given","such that $0"),
+    ("such that","given $1 : $2")
     ]
 
 freeIdentifierSuggestion :: a -> [CompletionItem]
