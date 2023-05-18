@@ -64,16 +64,6 @@ preinstall:
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
 
-.PHONY: freeze
-freeze:
-	@bash etc/build/freeze-deps.sh
-
-.PHONY: refreeze
-refreeze:
-	@make clean
-	@BUILD_TESTS=yes make install-using-cabal
-	@make freeze
-
 .PHONY: clean
 clean:
 	@bash etc/build/clean.sh
