@@ -8,14 +8,13 @@ import Conjure.Language.Lexemes
 import Conjure.Language.Validator --(Class (..), Kind (..), RegionInfo (..), ValidatorState (regionInfo), RegionType (..), StructuralType (..),symbolTable)
 import Conjure.Prelude
 import Control.Lens
-import Data.Text (intercalate,pack)
+import Data.Text (pack)
 import Language.LSP.Server (Handlers, LspM, requestHandler)
-import Language.LSP.Types (SymbolKind(..),SMethod(STextDocumentCompletion),type  (|?) (..), CompletionItem (..), CompletionItemKind (..), Position(..))
+import Language.LSP.Types (SMethod(STextDocumentCompletion),type  (|?) (..), CompletionItem (..), CompletionItemKind (..))
 import qualified Language.LSP.Types as T
-import Language.LSP.Types.Lens (HasParams (..), HasTextDocument (textDocument), HasPosition (position), HasCompletionItemKind (completionItemKind))
+import Language.LSP.Types.Lens (HasParams (..), HasTextDocument (textDocument), HasPosition (position))
 import Conjure.Language.Pretty (prettyT)
 import qualified Data.Map.Strict as Map
-import Conjure.Language.Validator (ErrorType(TokenError), DiagnosticRegion (drSourcePos))
 import Conjure.Language.AST.Syntax (LToken(MissingToken))
 import Text.Megaparsec (SourcePos)
 
@@ -47,7 +46,7 @@ suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
                 Just (TIExpression _) -> makeExpressionSuggestions innermostSymbolTable
                 Just (TIList t) -> makeTagSuggestions innermostSymbolTable t
                 q -> [defaultCompletion $ pack . show $ q]
-        res $ Right $ InL . T.List $ tlSymbolSuggestion ++ missingTokenBasedHint
+        res $ Right $ InL . T.List $  missingTokenBasedHint ++ tlSymbolSuggestion
 
 isInRange :: T.Position -> DiagnosticRegion -> Bool
 isInRange p reg = sourcePosToPosition (drSourcePos reg) == p
@@ -56,7 +55,7 @@ prettyNodeType :: TreeItemLinks -> Text
 prettyNodeType (TIExpression _) = "Expression"
 prettyNodeType (TIDomain _) = "Domain"
 prettyNodeType TIGeneral = "General"
-prettyNodeType (TIList t) = pack  ("[ " ++ (show  t) ++ "]")
+prettyNodeType (TIList t) = pack  ("[ " ++ show  t ++ "]")
 
 makeSuggestionsFromSymbolTable :: [(Text,SymbolTableValue)] -> [CompletionItem]
 makeSuggestionsFromSymbolTable = map symbolToHint
@@ -73,10 +72,12 @@ makeDomainSuggestions table = stDomains ++ newDomainPlaceholders
             ("set","set of $1"),
             ("mset","mset of $1")
             ]
+
 makeExpressionSuggestions :: [(Text,SymbolTableValue)] -> [CompletionItem]
 makeExpressionSuggestions table = stExprs ++ newExpressionPlaceholders
     where stExprs = map symbolToHint $ [x | x@(_,(_,_,Kind ValueType{} t)) <- table,typesUnifyS [t,TypeAny]]
           newExpressionPlaceholders = []
+
 makeTagSuggestions :: [(Text,SymbolTableValue)] -> ListItemClasses -> [CompletionItem]
 makeTagSuggestions table tag = case tag of
     ICAttribute -> defaultCompletion <$> ["size"]
