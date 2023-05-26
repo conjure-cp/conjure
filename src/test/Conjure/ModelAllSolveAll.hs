@@ -43,7 +43,7 @@ import qualified Data.Set as S ( fromList, toList, empty, null, difference )
 
 -- Diff
 -- Diff
-import Data.Algorithm.Diff ( Diff(..), getGroupedDiff, PolyDiff (..) )
+import Data.Algorithm.Diff ( getGroupedDiff, PolyDiff (..) )
 import Data.Algorithm.DiffOutput ( ppDiff )
 
 

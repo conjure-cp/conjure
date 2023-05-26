@@ -10,28 +10,24 @@ import Conjure.Prelude
 
 -- tasty
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (assertFailure, testCaseSteps, assertEqual)
+import Test.Tasty.HUnit (assertFailure, testCaseSteps)
 
-import Conjure.Language.Parser (runLexerAndParser)
 import Conjure.Language.AST.ASTParser (runASTParser, parseProgram)
-import Conjure.Language.Lexer (runLexer, Reformable (reform), reformList)
-import qualified Data.Text as T (pack, lines, unpack) 
-import qualified Data.Text.Lazy as L  
-import Data.ByteString.Char8(hPutStrLn, pack, unpack)
+import Conjure.Language.Lexer (runLexer, reformList)
+import qualified Data.Text as T (pack, unpack) 
+import qualified Data.Text.Lazy as L
+import Data.ByteString.Char8(hPutStrLn, pack)
 import Conjure.Language.AST.Reformer (Flattenable(flatten))
-import Data.Algorithm.Diff (getDiff, getGroupedDiff)
+import Data.Algorithm.Diff (getGroupedDiff)
 import Data.Algorithm.DiffOutput (ppDiff)
 import GHC.IO.Handle.FD (stderr)
-import System.Console.CmdArgs.Helper (execute)
 import Shelly (run, shelly, silently)
 
 
 tests :: IO TestTree
 tests = do
-    let baseDir = "tests"
     allFiles <-  shelly $ silently $ run  "git" ["ls-tree", "--full-tree",  "--name-only", "-r", "HEAD"] 
     let allFileList = lines $ T.unpack allFiles
-    -- contents <- mapM readFileIfExists allFileList
     let testCases = testFile <$> allFileList
     return (testGroup "parse_fuzz" testCases)
 
@@ -42,11 +38,11 @@ testFile fp = testCaseSteps (map (\ch -> if ch == '/' then '.' else ch) fp) $ \s
     let usableFileData = concat (take 1000 . lines $ fromMaybe [] fd)
     let fText = T.pack usableFileData
     case runLexer $ fText of
-      Left le -> assertFailure $ "Lexer failed in:" ++ fp
+      Left _le -> assertFailure $ "Lexer failed in:" ++ fp
       Right ets -> do
                 step "parsing"
                 case runASTParser parseProgram ets of
-                  Left pe -> assertFailure $ "Parser failed in:" ++ fp
+                  Left _pe -> assertFailure $ "Parser failed in:" ++ fp
                   Right pt -> do
                     step "RoundTripping"
                     let roundTrip = L.unpack $ reformList $ flatten pt
