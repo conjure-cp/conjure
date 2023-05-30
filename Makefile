@@ -5,6 +5,7 @@ SHELL := /bin/bash
 # override by calling the makefile like so: "GHC_VERSION=9.2 make"
 export GHC_VERSION?=9.2
 export BIN_DIR?=${HOME}/.local/bin
+export PATH := $(BIN_DIR):$(PATH)
 export CI?=false
 export BUILD_TESTS?=false
 export COVERAGE?=false
