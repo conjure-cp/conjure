@@ -376,7 +376,13 @@ mainWithArgs config@Solve{..} = do
                             case stripPostfix ext (snd (splitFileName file)) of
                                 Nothing -> return ()
                                 Just base -> do
-                                    let parts = splitOn "-" base
+                                    let parts' = splitOn "-" base
+                                    let parts = case (head parts', parts', last parts') of
+                                                    (model, _:paramparts, stripPrefix "solution" -> msolnum) ->
+                                                        case msolnum of
+                                                            Nothing -> [model, intercalate "-" paramparts]
+                                                            Just{}  -> [model, intercalate "-" (init paramparts), last paramparts]
+                                                    _ -> parts'
                                     case (solutionsInOneFile, null essenceParams, nbSolutions == "1", parts) of
                                         -- not parameterised, but no solution numbers. must be using solutionsInOneFile.
                                         (True, True, _singleSolution, [_model]) ->
