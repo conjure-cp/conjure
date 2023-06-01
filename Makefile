@@ -16,7 +16,7 @@ install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this location."
 	@echo "For example: \"GHC_VERSION=9.2 make install\""
-	@echo "Supported version:  9.0 , 9.2"
+	@echo "Supported versions:  9.0, 9.2"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."
