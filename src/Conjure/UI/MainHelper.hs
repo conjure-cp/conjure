@@ -385,12 +385,12 @@ mainWithArgs config@Solve{..} = do
                                                     _ -> parts'
                                     case (solutionsInOneFile, null essenceParams, nbSolutions == "1", parts) of
                                         -- not parameterised, but no solution numbers. must be using solutionsInOneFile.
-                                        (True, True, _singleSolution, [_model]) ->
+                                        (True, True, _singleSolution, [_model, ""]) ->
                                             copySolution file $ essenceDir
                                                                 </> essenceBasename
                                                                 <.> ext
                                         -- not parameterised, with solution numbers
-                                        (False, True, singleSolution, [_model, (stripPrefix "solution" -> Just solnum)]) ->
+                                        (False, True, singleSolution, [_model, "", (stripPrefix "solution" -> Just solnum)]) ->
                                             if singleSolution
                                                 then when (solnum == "000001") $ -- only copy the first solution
                                                      copySolution file $ essenceDir
