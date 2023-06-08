@@ -1,0 +1,18 @@
+$ https://sumplete.com/
+$ delete numbers so each row and column adds up to the target number
+
+given n : int(1..)
+letting M be n*9 $ largest possible target number
+letting rows be domain int(1..n)
+letting cols be domain int(1..n)
+letting digits be domain int(1..9)
+letting targets be domain int(0..M)
+
+given c : matrix indexed by [rows,cols] of digits
+given rt : matrix indexed by [rows] of targets
+given ct : matrix indexed by [cols] of targets
+
+find d : function (total) (rows,cols) --> int(0..1)
+such that
+  forAll i : rows . (sum j : cols . d((i,j))*c[i,j]) = rt[i]
+, forAll j : cols . (sum i : rows . d((i,j))*c[i,j]) = ct[j]
