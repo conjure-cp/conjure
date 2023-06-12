@@ -15,10 +15,7 @@ import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
 import Data.Text.IO as T ( readFile, writeFile )
 
 -- shelly
-import Shelly ( cd, bash, errExit, lastStderr,FilePath )
-
--- system-filepath
-import Filesystem.Path.CurrentOS as Path ( fromText )
+import Shelly ( cd, bash, errExit, lastStderr )
 
 
 tests :: IO (TestTimeLimit -> TestTree)
