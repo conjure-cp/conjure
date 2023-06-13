@@ -49,10 +49,12 @@ getDocsForBuiltin _ = pure Nothing
 fallbackMsg :: String -> String -> MarkupContent
 fallbackMsg c n = MarkupContent MkMarkdown $ T.concat ["[Create this doc](", createURL c n,")"]
 
+branch :: String
+branch = "main"
 
 readUrl :: String -> String -> String
 readUrl category name = concat
-    [ "https://raw.githubusercontent.com/conjure-cp/conjure/onlinedocs-hover/docs/bits/"
+    [ "https://raw.githubusercontent.com/conjure-cp/conjure/" ++ branch ++ "/docs/bits/"
     , category
     , "/"
     , name
@@ -62,7 +64,7 @@ readUrl category name = concat
 
 createURL :: String -> String -> Text
 createURL category name = T.pack $ concat [
-            "https://github.com/conjure-cp/conjure/new/onlinedocs-hover/docs/bits/"
+            "https://github.com/conjure-cp/conjure/new/" ++ branch ++ "/docs/bits/"
              ,category
              ,"?filename="
              , name
@@ -72,7 +74,7 @@ createURL category name = T.pack $ concat [
 
 editURL :: String -> String -> Text
 editURL category name = T.pack $ concat [
-            "https://github.com/conjure-cp/conjure/edit/onlinedocs-hover/docs/bits/"
+            "https://github.com/conjure-cp/conjure/edit/" ++ branch ++ "/docs/bits/"
              ,category
              ,"/"
              , name
