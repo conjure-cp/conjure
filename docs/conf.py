@@ -33,7 +33,8 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 extensions = [
     'sphinx.ext.todo',
     'sphinxcontrib.bibtex',
-    'sphinxcontrib.jquery'
+    'sphinxcontrib.jquery',
+    'nbsphinx'
 ]
 bibtex_bibfiles = ['refs.bib']
 
