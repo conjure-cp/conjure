@@ -9,7 +9,7 @@ Problem
 ``n x n`` board where each column and row is filled with the unique numbers from 1 to ``n``, similar to a sudoku.
 In contrast to sudoku, there are less than and greater than symbols between cells indicating that one cell has to be filled with a number greater than (or less than) than the cell on the other side of the operator.
 
-.. image:: tutorials/futoshiki/example.png
+.. image:: example.png
     :scale: 50%
     :alt: Example futoshiki board.
     
