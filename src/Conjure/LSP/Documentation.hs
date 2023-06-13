@@ -1,41 +1,73 @@
 module Conjure.LSP.Documentation where
-import Paths_conjure_cp (getDataFileName)
-import Language.LSP.Types (MarkupKind (MkMarkdown), MarkupContent (MarkupContent))
+
 import Conjure.Prelude
-import qualified Data.Text as T
 import Conjure.Language.Validator (DocType (..), RegionType (Documentation))
 
-tryGetDocsByName :: String -> IO(Maybe MarkupContent)
-tryGetDocsByName name = do
-    fileName <-  getDataFileName ("data/docs/"++name ++ ".md") 
-    fileData <- readFileIfExists fileName
-    return $ MarkupContent MkMarkdown . T.pack  <$> fileData
- 
+import Language.LSP.Types (MarkupKind (MkMarkdown), MarkupContent (MarkupContent))
+import qualified Data.Text as T
+import Data.Text.Encoding ( decodeUtf8 )
+
+-- from: https://stackoverflow.com/a/60793739/463977
+import Network.HTTP.Client          -- package http-client
+import Network.HTTP.Client.TLS      -- package http-client-tls
+import qualified Data.ByteString.Lazy as BL
 
 getDocsForBuiltin :: RegionType -> IO (Maybe MarkupContent)
-getDocsForBuiltin (Documentation prefix (T.unpack->name)) = do
+getDocsForBuiltin (Documentation prefix (T.unpack -> name)) = do
     let category = case prefix of
-          OperatorD -> "op/"
-          FunctionD -> "function/"
-          KeywordD -> "keyword/"
-          TypeD -> "types/"
-          AttributeD -> "attributes/"
-    res <- tryGetDocsByName $ category ++ name
-    return . Just $ case res of 
-      Nothing -> fallbackMsg category name
-      Just mc -> mc
-getDocsForBuiltin _ = pure Nothing
+          OperatorD -> "operator"
+          FunctionD -> "function"
+          KeywordD -> "keyword"
+          TypeD -> "type"
+          AttributeD -> "attribute"
+    -- create a connection manager
+    manager <- newManager tlsManagerSettings
+    -- create the request
+    request <- parseRequest (getReadUrl category name)
+    -- make the request
+    r <- httpLbs request manager
+    -- get the contents (as a lazy ByteString)
+    let contents = decodeUtf8 $ BL.toStrict $ responseBody r
+
+    if contents == "404: Not Found"
+        then return $ Just $ fallbackMsg category name
+        else return $ Just $ MarkupContent MkMarkdown $ T.concat
+            [ contents
+            , "\n\n -- \n\n"
+            , "[Edit this doc](",edit category name,")"
+            ]
+getDocsForBuiltin _ = pure Nothing 
 
 
 fallbackMsg :: String -> String -> MarkupContent
-fallbackMsg c n = MarkupContent MkMarkdown $ T.concat ["[Create This Doc](",getEditUrl c n,")"]
+fallbackMsg c n = MarkupContent MkMarkdown $ T.concat ["[Create this doc](", createURL c n,")"]
 
-getEditUrl :: String -> String -> Text
-getEditUrl category name = T.pack $ concat [
-            "https://github.com/conjure-cp/conjure/new/master/data/docs/"
+
+readUrl :: String -> String -> String
+readUrl category name = concat
+    [ "https://raw.githubusercontent.com/conjure-cp/conjure/onlinedocs-hover/docs/bits/"
+    , category
+    , "/"
+    , name
+    , ".md"
+    ]
+
+
+createURL :: String -> String -> Text
+createURL category name = T.pack $ concat [
+            "https://github.com/conjure-cp/conjure/new/onlinedocs-hover/docs/bits/"
              ,category
-             ,name
              ,"?filename="
+             , name
+             ,".md"
+            ]
+
+
+editURL :: String -> String -> Text
+editURL category name = T.pack $ concat [
+            "https://github.com/conjure-cp/conjure/edit/onlinedocs-hover/docs/bits/"
+             ,category
+             ,"/"
              , name
              ,".md"
             ]
