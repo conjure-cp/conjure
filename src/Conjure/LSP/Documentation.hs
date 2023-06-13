@@ -14,28 +14,35 @@ import qualified Data.ByteString.Lazy as BL
 
 getDocsForBuiltin :: RegionType -> IO (Maybe MarkupContent)
 getDocsForBuiltin (Documentation prefix (T.unpack -> name)) = do
-    let category = case prefix of
+    let
+        category = case prefix of
           OperatorD -> "operator"
           FunctionD -> "function"
           KeywordD -> "keyword"
           TypeD -> "type"
           AttributeD -> "attribute"
-    -- create a connection manager
-    manager <- newManager tlsManagerSettings
-    -- create the request
-    request <- parseRequest (getReadUrl category name)
-    -- make the request
-    r <- httpLbs request manager
-    -- get the contents (as a lazy ByteString)
-    let contents = decodeUtf8 $ BL.toStrict $ responseBody r
 
-    if contents == "404: Not Found"
-        then return $ Just $ fallbackMsg category name
-        else return $ Just $ MarkupContent MkMarkdown $ T.concat
-            [ contents
-            , "\n\n -- \n\n"
-            , "[Edit this doc](",edit category name,")"
-            ]
+        download = do
+            -- create a connection manager
+            manager <- newManager tlsManagerSettings
+            -- create the request
+            request <- parseRequest (readUrl category name)
+            -- make the request
+            r <- httpLbs request manager
+            -- get the contents (as a lazy ByteString)
+            let contents = decodeUtf8 $ BL.toStrict $ responseBody r
+            if contents == "404: Not Found"
+                then return $ Just $ fallbackMsg category name
+                else return $ Just $ MarkupContent MkMarkdown $ T.concat
+                    [ contents
+                    , "\n\n -- \n\n"
+                    , "[Edit this doc](",editURL category name,")"
+                    ]
+
+        handler :: HttpException -> IO (Maybe MarkupContent)
+        handler _ = return $ Just $ MarkupContent MkMarkdown "No internet connection"
+
+    download `catch` handler
 getDocsForBuiltin _ = pure Nothing 
 
 
