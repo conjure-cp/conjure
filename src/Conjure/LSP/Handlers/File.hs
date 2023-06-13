@@ -5,10 +5,7 @@
 module Conjure.LSP.Handlers.File where
 import Conjure.Prelude
 import Language.LSP.Server (notificationHandler, Handlers, LspM,  publishDiagnostics, getVirtualFile)
-import Language.LSP.Types (
-    SMethod (STextDocumentDidOpen, STextDocumentDidChange, STextDocumentDidClose)
-    , toNormalizedUri
-    ,Uri)
+import Language.LSP.Types (SMethod (..), toNormalizedUri, Uri)
 import Data.Text (pack)
 import Control.Lens
 import Language.LSP.VFS
@@ -18,6 +15,11 @@ import Language.LSP.Diagnostics (partitionBySource)
 import Prettyprinter
 fileHandlers :: Handlers (LspM ())
 fileHandlers = mconcat [fileOpenedHandler,fileChangedHandler,fileClosedHandler]
+
+unhandled :: [Handlers (LspM ())]
+unhandled = [ notificationHandler SCancelRequest $ \ _ -> pure ()
+            , notificationHandler STextDocumentDidSave $ \ _ -> pure ()
+            ]
 
 fileOpenedHandler :: Handlers (LspM ())
 fileOpenedHandler = notificationHandler STextDocumentDidOpen $ \ req -> do

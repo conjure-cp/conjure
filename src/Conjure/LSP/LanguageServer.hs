@@ -5,7 +5,7 @@ module Conjure.LSP.LanguageServer where
 import Language.LSP.Server
 import qualified Language.LSP.Types as J
 
-import Conjure.LSP.Handlers.File (fileHandlers)
+import Conjure.LSP.Handlers.File (unhandled, fileHandlers)
 import Conjure.LSP.Handlers.Initialize (handleInitialized)
 import Conjure.Prelude
 import Conjure.LSP.Handlers.Hover (hoverHandler)
@@ -35,7 +35,7 @@ conjureLanguageServer =
 
 handlers :: Handlers (LspM ())
 handlers =
-    mconcat
+    mconcat $ unhandled ++
         [ fileHandlers
         , handleInitialized
         , hoverHandler
