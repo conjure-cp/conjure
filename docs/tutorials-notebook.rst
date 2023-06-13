@@ -14,3 +14,8 @@ See `conjure-notebook repository <https://github.com/conjure-cp/conjure-notebook
     :maxdepth: 1
 
     tutorials/notebooks/KnapsackProblem
+    tutorials/notebooks/NurseRostering
+    tutorials/notebooks/Futoshiki
+    tutorials/notebooks/Semigroups,_Monoids_and_Groups
+    tutorials/notebooks/Handcrafting_Instance_Generators_in_Essence
+    tutorials/notebooks/SimplePermutations
