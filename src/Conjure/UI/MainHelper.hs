@@ -407,20 +407,22 @@ mainWithArgs config@Solve{..} = do
                                                                                     ]
                                                                 <.> ext
                                         -- parameterised, with solution numbers
-                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)]) | param `elem` params ->
-                                            if singleSolution
-                                                then when (solnum == "000001") $ -- only copy the first solution
-                                                     copySolution file $ essenceDir
-                                                                </> intercalate "-" [ essenceBasename
-                                                                                    , param
-                                                                                    ]
-                                                                <.> ext
-                                                else copySolution file $ essenceDir
-                                                                </> intercalate "-" [ essenceBasename
-                                                                                    , param
-                                                                                    , solnum
-                                                                                    ]
-                                                                <.> ext
+                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)])
+                                            | or [ param `elem` params
+                                                 , or [('/' : param) `isSuffixOf` p | p <- params] ] ->
+                                                if singleSolution
+                                                    then when (solnum == "000001") $ -- only copy the first solution
+                                                        copySolution file $ essenceDir
+                                                                    </> intercalate "-" [ essenceBasename
+                                                                                        , param
+                                                                                        ]
+                                                                    <.> ext
+                                                    else copySolution file $ essenceDir
+                                                                    </> intercalate "-" [ essenceBasename
+                                                                                        , param
+                                                                                        , solnum
+                                                                                        ]
+                                                                    <.> ext
                                         _ -> return () -- ignore, we don't know how to handle this file
 
     liftIO stopGlobalPool
