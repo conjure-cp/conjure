@@ -407,7 +407,7 @@ mainWithArgs config@Solve{..} = do
                                                                                     ]
                                                                 <.> ext
                                         -- parameterised, with solution numbers
-                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)]) | param `elem` params ->
+                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)]) | or [param `isSuffixOf` p | p <- params] ->
                                             if singleSolution
                                                 then when (solnum == "000001") $ -- only copy the first solution
                                                      copySolution file $ essenceDir
