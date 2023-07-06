@@ -25,6 +25,7 @@ module Conjure.Language.Lexer
     trueLength,
     trueStart,
     tokenOffset,
+    tokenStartOffset,
     sourcePos0,
     LexerError(..),
     runLexer,
@@ -66,7 +67,7 @@ class Reformable a where
     reform :: a -> L.Text
 
 instance Reformable ETok where
-    reform e | trueLength e == 0 = ""
+    reform e | totalLength e == 0 = ""
     reform (ETok{capture=cap,trivia=triv}) = L.append  (L.concat $ map showTrivia triv) (L.fromStrict cap)
         where
             showTrivia :: Trivia -> L.Text
@@ -133,6 +134,8 @@ trueLength = oTokenLength . offsets
 -- tokenStart (ETok{offsets = (Offsets _  s _ _ _)}) = s
 tokenOffset :: ETok -> Int
 tokenOffset = oStart . offsets
+tokenStartOffset t = oStart o + (oTotalLength o - oTokenLength o)
+    where o = offsets t
 
 trueStart :: ETok -> SourcePos
 trueStart = oTrueStart . offsets

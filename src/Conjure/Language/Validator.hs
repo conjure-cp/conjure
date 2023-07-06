@@ -23,7 +23,7 @@ import qualified Conjure.Language.Expression as D
     ( Expression(Typed) )
 import Conjure.Language.Domain
 import Conjure.Language.Lexemes
-import Conjure.Language.Lexer (ETok (ETok, lexeme),tokenOffset, tokenSourcePos, totalLength,  trueLength, sourcePos0, sourcePosAfter)
+import Conjure.Language.Lexer (ETok (ETok, lexeme),tokenOffset, tokenSourcePos, totalLength,  trueLength, sourcePos0, sourcePosAfter, trueStart, Offsets (..), tokenStartOffset)
 
 import Conjure.Language.Attributes
 import Conjure.Prelude
@@ -1849,8 +1849,8 @@ symbolRegion a = case range of
                 let end =case viewr rst of
                         EmptyR -> h
                         _ :> et -> et
-                let start = tokenSourcePos $ h
-                let offset = tokenOffset h
+                let start = tokenSourcePos h
+                let offset = tokenStartOffset h
                 let tLength = sum (totalLength <$> rst) + trueLength h
                 let en = sourcePosAfter end
                 DiagnosticRegion start en offset tLength

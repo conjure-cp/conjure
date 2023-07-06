@@ -38,7 +38,7 @@ instance ShowErrorComponent DiagnosticForPrint where
 
 tokenErrorToDisplay :: LToken -> String
 tokenErrorToDisplay (RealToken _ ) = error "tokenError with valid token"
-tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ (lexemeFace $ lexeme t)
+tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ lexemeFace (lexeme t)
 tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
     L_Missing s -> show s
     LMissingIdentifier -> "<identifier>"

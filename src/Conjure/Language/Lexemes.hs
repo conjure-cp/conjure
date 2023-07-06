@@ -296,7 +296,12 @@ data Lexeme
 instance Hashable Lexeme
 
 data MissingStructuralElements = MissingExpression | MissingDomain | MissingUnknown
-    deriving (Eq, Ord, Show,Data,Generic) --Generic
+    deriving (Eq, Ord, Data,Generic) --Generic
+instance Show MissingStructuralElements where
+    show MissingExpression = "Expression"
+    show MissingDomain = "Domain"
+    show MissingUnknown = "Unknown"
+
 instance Hashable MissingStructuralElements
 
 lexemes :: [(T.Text, Lexeme)]
