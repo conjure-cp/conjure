@@ -1,6 +1,6 @@
 module Conjure.LSP.Handlers.Suggestions (suggestionHandler) where
 
-import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getNextTokenStart, positionToSourcePos, regionToRange, sendInfoMessage, sourcePosToPosition, withProcessedDoc)
+import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getNextTokenStart, positionToSourcePos, sendInfoMessage, sourcePosToPosition, withProcessedDoc, getRelevantRegions)
 import Conjure.Language (Type (..))
 import Conjure.Language.AST.Reformer
 -- (Class (..), Kind (..), RegionInfo (..), ValidatorState (regionInfo), RegionType (..), StructuralType (..),symbolTable)
@@ -24,29 +24,30 @@ suggestionHandler :: Handlers (LspM ())
 suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
   let ps = req ^. params . textDocument
   let context = req ^. params . position
-  withProcessedDoc ps $ \(ProcessedFile _ diags (regionInfo -> ri) pt) -> do
-    let symbols = Map.toList $ rTable $ head ri
+  withProcessedDoc ps $ \(ProcessedFile _ diags valState pt) -> do
     let nextTStart = getNextTokenStart context pt
-    let innermostSymbolTable = symbols -- update this so that it uses closest enclosing scope
+    let roi = getRelevantRegions valState nextTStart
+    let innermostSymbolTable = if null roi then [] else Map.toList . rTable $ last roi
     let errors = [(r, d) | (ValidatorDiagnostic r (Error (TokenError d))) <- diags]
     let contextTokens = take 1 [lexeme w | (r, MissingToken w) <- errors, isInRange nextTStart r]
     let missingTokenBasedHint = missingToSuggestion innermostSymbolTable contextTokens
-    sendInfoMessage $ pack . show $ context
+    -- sendInfoMessage $ pack . show $ context
     let tlSymbol = getLowestLevelTaggedRegion (positionToSourcePos context) $ makeTree pt
     let tlSymbolSuggestion = case tlSymbol of
           Just (TIDomain _) -> makeDomainSuggestions innermostSymbolTable
           Just (TIExpression _) -> makeExpressionSuggestions innermostSymbolTable
           Just (TIList t) -> makeTagSuggestions innermostSymbolTable t
-          q -> [defaultCompletion $ pack . show $ q]
+          _ -> [] -- or for debugging -> [defaultCompletion $ pack . show $ tlSymbol]
     res $
       Right $
-        InL . T.List $
+        InL . T.List $ nubBy isSameInsertion $
           concat
             [ missingTokenBasedHint,
               tlSymbolSuggestion,
-              keywordCompletions,
-              missingTokenBasedHint
+              keywordCompletions
             ]
+isSameInsertion :: CompletionItem -> CompletionItem -> Bool
+isSameInsertion CompletionItem{_label=a} CompletionItem{_label=b} = a == b
 
 isInRange :: T.Position -> DiagnosticRegion -> Bool
 isInRange p reg = sourcePosToPosition (drSourcePos reg) == p
