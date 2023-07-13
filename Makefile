@@ -121,10 +121,11 @@ solvers:
 	@echo ""
 	@echo "Set the environment variable PROCESSES to specify the number of cores to use. Default is 1."
 	@echo ""
-	@echo "Dependencies: cmake and gmp."
-	@if [ `uname` == "Darwin" ]; then echo "You can run: 'brew install cmake gmp' to install them."; fi
+	@echo "Dependencies: autoconf, cmake and gmp."
+	@if [ `uname` == "Darwin" ]; then echo "You can run: 'brew install autoconf cmake gmp' to install them."; fi
 	@echo ""
 	@mkdir -p ${BIN_DIR}
+	@rm -f make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null
 	@etc/build/silent-wrapper.sh etc/build/install-bc_minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-boolector.sh
 	@etc/build/silent-wrapper.sh etc/build/install-cadical.sh
@@ -138,4 +139,4 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
 	@etc/build/silent-wrapper.sh etc/build/install-yices.sh
 	@etc/build/silent-wrapper.sh etc/build/install-z3.sh
-	@if ls *.stderr *.stdout > /dev/null 2> /dev/null; then echo "At least one solver didn't build successfully."; exit 1; fi
+	@if ls make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null; then echo "At least one solver didn't build successfully."; exit 1; fi
