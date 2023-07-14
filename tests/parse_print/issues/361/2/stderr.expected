@@ -1,17 +1,5 @@
 Error:
-    tests/parse_print/issues/361/2/361_2.essence:2:41:
-  |
-2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
-  |                                         ^
-Missing Expr
-
-tests/parse_print/issues/361/2/361_2.essence:2:41:
-  |
-2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
-  |                                         ^
-Missing Expr
-
-tests/parse_print/issues/361/2/361_2.essence:2:42:
+    tests/parse_print/issues/361/2/361_2.essence:2:42:
   |
 2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
   |                                          ^^^^^^^^^^^^^^^^^^
@@ -21,4 +9,16 @@ tests/parse_print/issues/361/2/361_2.essence:2:42:
   |
 2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
   |                                          ^
-Missing .
+Missing Expression
+
+tests/parse_print/issues/361/2/361_2.essence:2:42:
+  |
+2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
+  |                                          ^
+Missing Expression
+
+tests/parse_print/issues/361/2/361_2.essence:2:42:
+  |
+2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
+  |                                          ^
+Missing int

@@ -9,7 +9,7 @@ tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e1
   |
 4 |         int(0..undefined(modulo zero: 0 % 0 : `int`))
   |                                 ^
-Missing ,
+Missing zero
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:4:37:
   |
@@ -21,19 +21,13 @@ tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e1
   |
 4 |         int(0..undefined(modulo zero: 0 % 0 : `int`))
   |                                     ^
-Missing )
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:4:37:
   |
 4 |         int(0..undefined(modulo zero: 0 % 0 : `int`))
   |                                     ^
-Missing ,
-
-tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:4:38:
-  |
-4 |         int(0..undefined(modulo zero: 0 % 0 : `int`))
-  |                                      ^
-Missing Domain
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:4:39:
   |
@@ -41,11 +35,17 @@ tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e1
   |                                       ^^^^^^^^^^^^^^^
 Skipped tokens
 
+tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:4:39:
+  |
+4 |         int(0..undefined(modulo zero: 0 % 0 : `int`))
+  |                                       ^
+Missing Domain
+
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:52:
   |
 6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
   |                                                    ^
-Missing ,
+Missing zero
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:56:
   |
@@ -63,31 +63,25 @@ tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e1
   |
 6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
   |                                                        ^
-Missing )
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:56:
   |
 6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
   |                                                        ^
-Missing ]
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:56:
   |
 6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
   |                                                        ^
-Missing of
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:56:
   |
 6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
   |                                                        ^
-Missing ,
-
-tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:57:
-  |
-6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
-  |                                                         ^
-Missing Domain
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:58:
   |
@@ -95,11 +89,17 @@ tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e1
   |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Skipped tokens
 
+tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:6:58:
+  |
+6 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`))] of int(0..5)
+  |                                                          ^
+Missing Domain
+
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:52:
   |
 8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
   |                                                    ^
-Missing ,
+Missing zero
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:56:
   |
@@ -117,37 +117,37 @@ tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e1
   |
 8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
   |                                                        ^
-Missing )
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:56:
   |
 8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
   |                                                        ^
-Missing ]
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:56:
   |
 8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
   |                                                        ^
-Missing of
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:56:
   |
 8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
   |                                                        ^
-Missing ,
-
-tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:57:
-  |
-8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
-  |                                                         ^
-Missing Domain
+Missing :
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:58:
   |
 8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
   |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Skipped tokens
+
+tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:8:58:
+  |
+8 |         matrix indexed by [int(1..undefined(modulo zero: 0 % 0 : `int`)), int(1..5),
+  |                                                          ^
+Missing Domain
 
 tests/parse_print/autogen-bilals-fixed/282fe3e111717af84f27689693c94ac4/282fe3e111717af84f27689693c94ac4.eprime.essence:9:28:
   |
