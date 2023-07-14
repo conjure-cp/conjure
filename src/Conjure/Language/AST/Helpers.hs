@@ -86,7 +86,7 @@ want a = do
     tok@(ETok _ _ lex _) <- lookAhead anySingle
     if lex == a
         then makeStrict <$> anySingle
-        else return $ MissingToken $ nullBefore lex tok
+        else return $ MissingToken $ nullBefore a tok
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser SToken
