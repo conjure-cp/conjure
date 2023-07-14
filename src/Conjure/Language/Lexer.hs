@@ -27,6 +27,7 @@ module Conjure.Language.Lexer
     tokenOffset,
     tokenStartOffset,
     sourcePos0,
+    nullBefore,
     LexerError(..),
     runLexer,
     ETokenStream(..)
@@ -95,11 +96,11 @@ isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
 data Offsets = Offsets {
-        oStart::Int,
-        oTotalLength::Int,
-        oTokenLength::Int,
-        oTrueStart :: SourcePos,
-        oSourcePos::SourcePos,
+        oStart::Int, -- the starting offset of the token (including whitespace)
+        oTotalLength::Int, -- (the total length of the the token)
+        oTokenLength::Int, -- (the length of the token excluding trivia)
+        oTrueStart :: SourcePos, -- start pos of the token
+        oSourcePos::SourcePos, -- start pos of the lexeme
         oEndPos::SourcePos}
     deriving (Show, Eq, Ord , Data)
 type Lexer = Parsec Void Text
@@ -134,6 +135,7 @@ trueLength = oTokenLength . offsets
 -- tokenStart (ETok{offsets = (Offsets _  s _ _ _)}) = s
 tokenOffset :: ETok -> Int
 tokenOffset = oStart . offsets
+tokenStartOffset :: ETok -> Int
 tokenStartOffset t = oStart o + (oTotalLength o - oTokenLength o)
     where o = offsets t
 
@@ -149,7 +151,13 @@ sourcePosAfter = oEndPos . offsets
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 
-data LexerError = LexerError String
+--make an empty token that precedes the given token with the given lexeme
+nullBefore :: Lexeme -> ETok -> ETok
+nullBefore lex tok = ETok offs [] lex ""
+    where
+        sp = tokenSourcePos tok
+        offs =  Offsets (tokenStartOffset tok) 0 0 sp sp sp
+newtype LexerError = LexerError String
     deriving (Show)
 
 runLexer :: Text -> Maybe FilePath -> Either LexerError ETokenStream
