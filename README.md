@@ -28,6 +28,13 @@ how to [contact](http://conjure.readthedocs.io/en/latest/contact.html) the devel
 
 We host a few demo applications: See [https://conjure-cp.github.io/demos](https://conjure-cp.github.io/demos)
 
+## Conjure Notebook
+
+Conjure can be used inside a Jupyter notebook, with seamless Python integration. Using this extension, parameters are automatically passed from Python to Conjure and solutions are automatically made available in Python.
+
+See the [conjure-cp/conjure-notebook](https://github.com/conjure-cp/conjure-notebook) repository for details.
+
+
 ## Repository
 
 Conjure's source code, issue tracker and releases are hosted on the [conjure-cp/conjure](http://www.github.com/conjure-cp/conjure) Github repository.
