@@ -8,7 +8,7 @@ This repository contains the development version of the tool.
 - For release versions please see the [releases](https://github.com/conjure-cp/conjure/releases) section.
 - If you want to cite Conjure, use the instructions on Zenodo [![DOI](https://zenodo.org/badge/57966170.svg)](https://zenodo.org/badge/latestdoi/57966170)
 - Conjure's license is BSD3 [![License BSD3](https://img.shields.io/badge/license-BSD3-brightgreen.svg)](http://opensource.org/licenses/BSD-3-Clause)
-- Documentation is hosted on Read the Docs [![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
+- [Documentation](https://conjure.readthedocs.io) is hosted on Read the Docs [![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
 - Continuous testing on Github actions
   - [![Building on all platforms](https://github.com/conjure-cp/conjure/actions/workflows/build.yml/badge.svg)](https://github.com/conjure-cp/conjure/actions/workflows/build.yml)
   - [![Running all tests](https://github.com/conjure-cp/conjure/actions/workflows/test.yml/badge.svg)](https://github.com/conjure-cp/conjure/actions/workflows/test.yml)
@@ -23,6 +23,10 @@ Documentation for Conjure and its input language Essence can be found [here](htt
 The documentation also contains information on
 how to [install](http://conjure.readthedocs.io/en/latest/installation.html) Conjure and
 how to [contact](http://conjure.readthedocs.io/en/latest/contact.html) the developers.
+
+## Demos
+
+We host a few demo applications: See [https://conjure-cp.github.io/demos](https://conjure-cp.github.io/demos)
 
 ## Repository
 
