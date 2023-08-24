@@ -178,12 +178,12 @@ aToken = do
     start <- getOffset
     startPos <- getSourcePos
     whitespace <- pTrivia
-    tokenOffset <- getOffset
+    tokenOffset_ <- getOffset
     tokenStart <- getSourcePos
     (tok,cap) <- aLexeme
     tokenEnd <- getOffset
     endPos <- getSourcePos
-    return $ makeToken (Offsets start (tokenEnd - start) (tokenEnd - tokenOffset) startPos tokenStart endPos) whitespace tok cap
+    return $ makeToken (Offsets start (tokenEnd - start) (tokenEnd - tokenOffset_) startPos tokenStart endPos) whitespace tok cap
 
 pEOF :: Lexer ETok
 pEOF = do
