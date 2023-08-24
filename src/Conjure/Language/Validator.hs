@@ -23,7 +23,7 @@ import qualified Conjure.Language.Expression as D
     ( Expression(Typed) )
 import Conjure.Language.Domain
 import Conjure.Language.Lexemes
-import Conjure.Language.Lexer (ETok (ETok, lexeme),tokenOffset, tokenSourcePos, totalLength,  trueLength, sourcePos0, sourcePosAfter, trueStart, Offsets (..), tokenStartOffset)
+import Conjure.Language.Lexer (ETok (ETok, lexeme), tokenSourcePos, totalLength,  trueLength, sourcePos0, sourcePosAfter, tokenStartOffset)
 
 import Conjure.Language.Attributes
 import Conjure.Prelude

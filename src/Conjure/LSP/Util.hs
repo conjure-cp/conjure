@@ -22,7 +22,6 @@ import Conjure.Language.AST.Syntax (ProgramTree)
 import Conjure.Language.Lexer
 import Conjure.Language.AST.Reformer
 import qualified Data.Sequence as Seq
-import Conjure.Language.Lexer (Offsets(oSourcePos))
 
 
 data ProcessedFile = ProcessedFile {
@@ -165,6 +164,6 @@ posInf :: Position
 posInf = Position (negate 1) (negate 1)
 
 tokensAtPosition :: Position -> Seq.Seq ETok -> [ETok]
-tokensAtPosition p s = maybeToList (find (posAfter p ) s)
+tokensAtPosition p s = maybeToList (find (posAfter p) s)
     where 
-        posAfter p t = p < sourcePosToPosition (oSourcePos $ offsets t) 
+        posAfter q t = q < sourcePosToPosition (oSourcePos $ offsets t) 

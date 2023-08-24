@@ -3,8 +3,6 @@ import Conjure.Prelude
 import Conjure.Language.Validator
 import Text.Megaparsec
 
-import Data.Generics.Uniplate.Data as U
-
 import qualified Data.Set as Set
 import Conjure.Language.AST.Syntax
 import Conjure.Language.AST.ASTParser
@@ -16,7 +14,6 @@ import Data.Map.Strict (assocs)
 import Conjure.Language.Pretty
 import Conjure.Language.AST.Reformer
 import Data.Data
-import Data.Traversable (traverse)
 
 
 type Parser t = Parsec DiagnosticForPrint Text t
@@ -167,4 +164,4 @@ withParseTree pa f = do
 listBounds :: Int -> Int ->  ProgramTree -> IO ()
 listBounds a b t = do
     let hlt = makeTree t
-    sequence_ [print $ toConstr  t | x@(HLTagged t _) <- universe hlt,contains (SourcePos "" (mkPos a) (mkPos b)) x]
+    sequence_ [print $ toConstr t' | x@(HLTagged t' _) <- universe hlt,contains (SourcePos "" (mkPos a) (mkPos b)) x]

@@ -1,6 +1,6 @@
 module Conjure.LSP.Handlers.Suggestions (suggestionHandler) where
 
-import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getNextTokenStart, positionToSourcePos, sendInfoMessage, sourcePosToPosition, withProcessedDoc, getRelevantRegions)
+import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getNextTokenStart, positionToSourcePos, sourcePosToPosition, withProcessedDoc, getRelevantRegions)
 import Conjure.Language (Type (..))
 import Conjure.Language.AST.Reformer
 -- (Class (..), Kind (..), RegionInfo (..), ValidatorState (regionInfo), RegionType (..), StructuralType (..),symbolTable)
@@ -12,7 +12,6 @@ import Conjure.Language.Pretty (prettyT)
 import Conjure.Language.Validator
 import Conjure.Prelude
 import Control.Lens
-import Data.Text (pack)
 import Language.LSP.Server (Handlers, LspM, requestHandler)
 import Language.LSP.Types (SMethod(STextDocumentCompletion),type  (|?) (..), CompletionItem (..), CompletionItemKind (..))
 import qualified Language.LSP.Types as T
