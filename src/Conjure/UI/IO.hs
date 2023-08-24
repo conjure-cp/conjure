@@ -52,7 +52,7 @@ readASTFromFile fp = do
       Right pt -> return pt
     case
         runValidator
-          (validateModel v) (initialState v) {typeChecking = False}
+          (validateModel v) (initialState v (Just $ T.pack fp)) {typeChecking = False}
             of 
         (_, vds, _) | any isError vds -> pure v
         (_,vds,_) -> failDoc $ "Cannot pretty print a model with errors" <+> pretty (showDiagnosticsForConsole vds (Just fp) contents)

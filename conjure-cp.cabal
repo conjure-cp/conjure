@@ -259,6 +259,7 @@ Library
                      , Conjure.LSP.Handlers.DocumentSymbol
                      , Conjure.LSP.Handlers.SemanticTokens
                      , Conjure.LSP.Handlers.Format
+                     , Conjure.LSP.Handlers.Suggestions
                      , Conjure.LSP.Util
 
     build-depends    : base >= 4.12.0
@@ -333,7 +334,7 @@ Library
         TypeOperators
         ViewPatterns
     ghc-options:
-        -O2
+        -O1
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
@@ -370,7 +371,7 @@ Executable conjure
         TypeOperators
         ViewPatterns
     ghc-options:
-        -O2
+        -O1
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures

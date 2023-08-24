@@ -43,7 +43,7 @@ import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 import Conjure.Language.Type (Type(..))
 -- import Conjure.Language.AST.Helpers (ParserState)
 import qualified Conjure.Language.AST.Helpers as P
-import Conjure.Language.AST.Reformer (Flattenable (flatten))
+import Conjure.Language.AST.Reformer (HighLevelTree(..),flatten)
 import Conjure.Language.Pretty 
 import qualified Prettyprinter as Pr
 
@@ -60,16 +60,17 @@ instance Pretty PipelineError where
 
 
 
-lexAndParse :: Flattenable a => P.Parser a -> Text -> Either PipelineError a
+lexAndParse :: HighLevelTree a => P.Parser a -> Text -> Either PipelineError a
 lexAndParse parse t = do
-    lr <- either (Left . LexErr) Right $ L.runLexer t
+    lr <- either (Left . LexErr) Right $ L.runLexer t Nothing
     either (Left . ParserError ) Right $ runASTParser parse lr
 
-runPipeline :: Flattenable a =>Pipeline a b -> (Maybe FilePath,Text) -> Either PipelineError b
+runPipeline :: HighLevelTree a =>Pipeline a b -> (Maybe FilePath,Text) -> Either PipelineError b
 runPipeline (parse,val,tc) (fp,txt) = do
-            lexResult <- either (Left . LexErr) Right $ L.runLexer txt
+            lexResult <- either (Left . LexErr) Right $ L.runLexer txt fp
             parseResult <- either (Left . ParserError ) Right $ runASTParser parse lexResult
-            let x = V.runValidator (val parseResult) (V.initialState parseResult){V.typeChecking= tc}
+            let fileNameText = T.pack <$> fp
+            let x = V.runValidator (val parseResult) (V.initialState parseResult fileNameText){V.typeChecking= tc}
             case x of
                 (m, ds,_) | not $ any V.isError ds -> Right m
                 (_, ves,_) -> Left $ ValidatorError $ pretty (showDiagnosticsForConsole ves fp txt)     
@@ -80,7 +81,7 @@ parseModel = (parseProgram, V.validateModel,True)
    
 
 
-parseIO :: (MonadFailDoc m, Flattenable i) => Pipeline i a -> String -> m a
+parseIO :: (MonadFailDoc m, HighLevelTree i) => Pipeline i a -> String -> m a
 parseIO p s = do
             case runPipeline p $ (Just "IO",T.pack s) of
                 Left err -> failDoc $ pretty $ show err
@@ -111,7 +112,7 @@ parseExpr :: Pipeline S.ExpressionNode Expression
 parseExpr = (P.parseExpression,\x -> V.validateExpression x ?=> V.exactly TypeAny,True)
 
 
-runLexerAndParser :: Flattenable n => Pipeline n a -> String -> T.Text -> Either Doc a
+runLexerAndParser :: HighLevelTree n => Pipeline n a -> String -> T.Text -> Either Doc a
 runLexerAndParser p file inp = case runPipeline p (Just file,inp) of
   Left pe -> Left $ pretty pe
   Right a -> Right a
@@ -134,6 +135,6 @@ partialPretty (S.ProgramTree lv sns lt) = Pr.vcat [
         langVer = case lv of
           Nothing -> "language Essence 1.3" 
           Just _ -> if V.isSyntacticallyValid V.validateLanguageVersion lv then Pr.pretty lv else fallback lv
-        fallback :: Flattenable a => a -> Pr.Doc ann
+        fallback :: HighLevelTree a => a -> Pr.Doc ann
         fallback v = Pr.pretty $ L.reformList $ flatten v
         pTopLevel st = if V.isSyntacticallyValid V.validateStatement st then Pr.pretty st else fallback st

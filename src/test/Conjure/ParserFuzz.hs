@@ -17,7 +17,7 @@ import Conjure.Language.Lexer (runLexer, reformList)
 import qualified Data.Text as T (pack, unpack) 
 import qualified Data.Text.Lazy as L
 import Data.ByteString.Char8(hPutStrLn, pack)
-import Conjure.Language.AST.Reformer (Flattenable(flatten))
+import Conjure.Language.AST.Reformer (flattenSeq)
 import Data.Algorithm.Diff (getGroupedDiff)
 import Data.Algorithm.DiffOutput (ppDiff)
 import GHC.IO.Handle.FD (stderr)
@@ -37,15 +37,15 @@ testFile fp = testCaseSteps (map (\ch -> if ch == '/' then '.' else ch) fp) $ \s
     step "Lexing"
     let usableFileData = concat (take 1000 . lines $ fromMaybe [] fd)
     let fText = T.pack usableFileData
-    case runLexer $ fText of
-      Left _le -> assertFailure $ "Lexer failed in:" ++ fp
+    case runLexer fText (Just fp) of
+      Left le -> assertFailure $ "Lexer failed in:" ++ fp
       Right ets -> do
                 step "parsing"
                 case runASTParser parseProgram ets of
                   Left _pe -> assertFailure $ "Parser failed in:" ++ fp
                   Right pt -> do
                     step "RoundTripping"
-                    let roundTrip = L.unpack $ reformList $ flatten pt
+                    let roundTrip = L.unpack $ reformList $ flattenSeq pt
                     unless (roundTrip == usableFileData) $ do
                         let diff = getGroupedDiff (lines roundTrip) (lines usableFileData)
                         Data.ByteString.Char8.hPutStrLn stderr $ Data.ByteString.Char8.pack $ "===DIFF: " ++ fp

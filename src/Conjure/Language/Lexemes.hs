@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 
@@ -286,13 +287,22 @@ data Lexeme
     | L_transform
 
     -- helper
-    | L_Missing String
+    | L_Missing MissingStructuralElements
     | L_EOF
     | L_SpecialCase
 
-    deriving (Eq, Ord, Show,Generic) --Generic
+    deriving (Eq, Ord, Show,Data,Generic) --Generic
 
 instance Hashable Lexeme
+
+data MissingStructuralElements = MissingExpression | MissingDomain | MissingUnknown
+    deriving (Eq, Ord, Data,Generic) --Generic
+instance Show MissingStructuralElements where
+    show MissingExpression = "Expression"
+    show MissingDomain = "Domain"
+    show MissingUnknown = "Unknown"
+
+instance Hashable MissingStructuralElements
 
 lexemes :: [(T.Text, Lexeme)]
 lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap

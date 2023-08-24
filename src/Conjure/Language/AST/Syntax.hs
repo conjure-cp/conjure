@@ -1,21 +1,23 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Conjure.Language.AST.Syntax  where
-
+import Data.Data
 import Conjure.Language.Lexer (ETok(..), prettySplitComments)
-import Conjure.Prelude hiding (Doc, group)
+import Conjure.Prelude hiding (Doc, group,Data,Typeable)
 
 import Prettyprinter 
 
 import Prettyprinter.Render.Text (renderStrict)
 
+
 data LToken
     = RealToken SToken
     | MissingToken ETok
     | SkippedToken ETok
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Data)
 
 data SToken
     = StrictToken [ETok] ETok
-    deriving (Eq , Ord, Show)
+    deriving (Eq , Ord, Show, Data)
 instance Null SToken where
     isMissing = const False
 instance Pretty SToken where
@@ -37,7 +39,7 @@ data ProgramTree = ProgramTree
     , statements :: [StatementNode]
     , eofToken :: SToken
     }
-    deriving (Show)
+    deriving (Show, Data ,Typeable)
 
 instance Pretty ProgramTree where
     pretty (ProgramTree l s e) =
@@ -48,7 +50,7 @@ instance Pretty ProgramTree where
             ]
 
 data LangVersionNode = LangVersionNode SToken NameNode (Sequence SToken)
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty LangVersionNode where
     pretty (LangVersionNode t n ns) = pretty t <+> pretty n <+> pretty ns
 
@@ -60,7 +62,7 @@ data StatementNode
     | ObjectiveStatement ObjectiveStatementNode
     | HeuristicStatement SToken ExpressionNode
     | UnexpectedToken LToken
-    deriving (Show)
+    deriving (Show, Data , Typeable)
 instance Pretty StatementNode where
     pretty x = case x of
         DeclarationStatement dsn -> pretty dsn
@@ -76,7 +78,7 @@ data SuchThatStatementNode
         SToken -- Such
         LToken -- That
         (Sequence ExpressionNode) -- constraints
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty SuchThatStatementNode where
     pretty (SuchThatStatementNode l1 l2 es) = topLevelPretty [RealToken l1, l2] (pretty es)
@@ -85,7 +87,7 @@ data WhereStatementNode
     = WhereStatementNode
         SToken -- where
         (Sequence ExpressionNode) -- expresssions
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty WhereStatementNode where
     pretty (WhereStatementNode w se) = topLevelPretty [RealToken w] (pretty se)
@@ -93,7 +95,7 @@ instance Pretty WhereStatementNode where
 data ObjectiveStatementNode
     = ObjectiveMin SToken ExpressionNode
     | ObjectiveMax SToken ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty ObjectiveStatementNode where
     pretty x = case x of
         ObjectiveMin lt en -> pretty lt <+> pretty en
@@ -104,7 +106,7 @@ data DeclarationStatementNode
     = FindStatement SToken (Sequence FindStatementNode)
     | GivenStatement SToken (Sequence GivenStatementNode)
     | LettingStatement SToken (Sequence LettingStatementNode)
-    deriving (Show)
+    deriving (Show, Data, Typeable)
 
 instance Pretty DeclarationStatementNode where
     pretty x = case x of
@@ -116,7 +118,7 @@ data FindStatementNode
         (Sequence NameNode) -- names
         LToken -- colon
         DomainNode -- domain
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty FindStatementNode where
     pretty (FindStatementNode names col dom) = pretty names <+> pretty col <+> pretty dom
 instance Null FindStatementNode where
@@ -131,7 +133,7 @@ data GivenStatementNode
         LToken -- new
         LToken -- type
         LToken -- enum
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty GivenStatementNode where
     pretty g = case g of
         GivenStatementNode se lt dn -> pretty se <+> pretty lt <+> pretty dn
@@ -146,7 +148,7 @@ data LettingStatementNode
         (Sequence NameNode)
         LToken --
         LettingAssignmentNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty LettingStatementNode where
     pretty (LettingStatementNode ns be assign) = pretty ns <+> pretty be <+> pretty assign
 
@@ -169,7 +171,7 @@ data LettingAssignmentNode
         LToken -- lOf
         LToken -- lSize
         ExpressionNode -- expr
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty LettingAssignmentNode where
     pretty a = case a of
@@ -191,7 +193,7 @@ data BranchingStatementNode
         SToken
         LToken
         (ListNode ExpressionNode)
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty BranchingStatementNode where
     pretty (BranchingStatementNode br o exs) = pretty br <+> pretty o <+> pretty exs
@@ -218,7 +220,7 @@ data DomainNode
     | RelationDomainNode SToken MAttributes LToken (ListNode DomainNode)
     | PartitionDomainNode SToken MAttributes LToken DomainNode
     | MissingDomainNode LToken
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty DomainNode where
     pretty x = case x of
@@ -249,7 +251,7 @@ instance Null DomainNode where
     isMissing _ = False
 
 data IndexedByNode = IndexedByNode LToken LToken
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty IndexedByNode where
     pretty (IndexedByNode a b) = pretty a <+> pretty b
 data RangeNode
@@ -258,7 +260,7 @@ data RangeNode
     | RightUnboundedRangeNode ExpressionNode DoubleDotNode
     | LeftUnboundedRangeNode DoubleDotNode ExpressionNode
     | BoundedRangeNode ExpressionNode DoubleDotNode ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty RangeNode where
     pretty x = case x of
@@ -273,11 +275,11 @@ instance Null RangeNode where
 
 type DoubleDotNode = SToken
 
--- data DoubleDotNode = DoubleDotNode LToken LToken deriving (Show)
+-- data DoubleDotNode = DoubleDotNode LToken LToken deriving (Show, Data)
 
 data AttributeNode
     = NamedAttributeNode SToken (Maybe ExpressionNode)
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty AttributeNode where
     pretty (NamedAttributeNode a m_e) = pretty a <+> pretty m_e
 
@@ -286,7 +288,7 @@ instance Null AttributeNode where
 
 
 data NamedDomainNode = NameDomainNode NameNode (Maybe (LToken, DomainNode))
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty NamedDomainNode where
     pretty (NameDomainNode nn Nothing) = pretty nn
     pretty (NameDomainNode nn (Just (e, d))) = pretty nn <> pretty e <> pretty d
@@ -297,14 +299,14 @@ instance Null NamedDomainNode where
 
 -- Common Statements
 data NameNodeS = NameNodeS SToken 
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty NameNodeS where
     pretty (NameNodeS n) = pretty n
 
 instance Null NameNodeS where
     isMissing = const False
 data NameNode = NameNode NameNodeS | MissingNameNode LToken
-    deriving (Show)
+    deriving (Show, Data)
 
 
 instance Pretty NameNode where
@@ -329,7 +331,7 @@ data ExpressionNode
     | AttributeAsConstriant SToken (ListNode ExpressionNode)
     | MissingExpressionNode LToken
     | SpecialCase SpecialCaseNode
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty ExpressionNode where
     pretty x = case x of
@@ -350,26 +352,26 @@ instance Null ExpressionNode where
     isMissing _ = False
 
 data SpecialCaseNode = ExprWithDecls SToken ExpressionNode SToken [StatementNode] SToken
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty SpecialCaseNode where
     pretty x = case x of
         ExprWithDecls lt en lt' sns lt2 -> group $ cat [pretty lt, pretty en, pretty lt', pretty sns, pretty lt2]
 
 data DomainExpressionNode
     = DomainExpressionNode LToken DomainNode LToken
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty DomainExpressionNode where
     pretty (DomainExpressionNode l d r) = pretty l <> pretty d <> pretty r
 data ParenExpressionNode = ParenExpressionNode LToken ExpressionNode LToken
-    deriving (Show)
+    deriving (Show, Data)
 
-newtype ShortTuple = ShortTuple (ListNode ExpressionNode) deriving (Show)
+newtype ShortTuple = ShortTuple (ListNode ExpressionNode) deriving (Show, Data)
 instance Pretty ShortTuple where
     pretty (ShortTuple exps) = pretty exps
 instance Null ShortTuple where
     isMissing (ShortTuple ls) = isMissing ls
 
-data LongTuple = LongTuple SToken (ListNode ExpressionNode) deriving (Show)
+data LongTuple = LongTuple SToken (ListNode ExpressionNode) deriving (Show, Data)
 instance Pretty LongTuple where
     pretty (LongTuple t exps) = pretty t <> pretty exps
 
@@ -391,7 +393,7 @@ data LiteralNode
     | SequenceLiteral SToken (ListNode ExpressionNode)
     | RelationLiteral SToken (ListNode RelationElemNode)
     | PartitionLiteral SToken (ListNode PartitionElemNode)
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty LiteralNode where
     pretty l = case l of
@@ -416,7 +418,7 @@ data MatrixLiteralNode
         (Maybe OverDomainNode) -- explicitDomain
         (Maybe ComprehensionNode) -- compBody
         LToken -- close
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty MatrixLiteralNode where
     pretty (MatrixLiteralNode bl es d c br) =
@@ -431,13 +433,13 @@ data ComprehensionNode
     = ComprehensionNode
         SToken
         (Sequence ComprehensionBodyNode)
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty ComprehensionNode where
     pretty (ComprehensionNode bar es) = align $ pretty bar <+> pretty es
 
 data RecordMemberNode = RecordMemberNode NameNode LToken ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty RecordMemberNode where
     pretty (RecordMemberNode n t e) = pretty n <> pretty t <> pretty e
 
@@ -445,7 +447,7 @@ instance Null RecordMemberNode where
     isMissing (RecordMemberNode n t e) = isMissing n && isMissing t && isMissing e
 
 data ArrowPairNode = ArrowPairNode ExpressionNode LToken ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty ArrowPairNode where
     pretty (ArrowPairNode l a r) = pretty l <> pretty a <> pretty r
 instance Null ArrowPairNode where
@@ -454,7 +456,7 @@ instance Null ArrowPairNode where
 data RelationElemNode
     = RelationElemNodeLabeled LongTuple
     | RelationElemNodeShort ShortTuple
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty RelationElemNode where
     pretty x = case x of
         RelationElemNodeLabeled lt -> pretty lt
@@ -464,7 +466,7 @@ instance Null RelationElemNode where
     isMissing (RelationElemNodeShort st) = isMissing st
 
 newtype PartitionElemNode = PartitionElemNode (ListNode ExpressionNode)
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty PartitionElemNode where
     pretty (PartitionElemNode l) = pretty l
 instance Null PartitionElemNode where
@@ -478,7 +480,7 @@ data QuantificationExpressionNode
         (Maybe QuanticationGuard)
         LToken -- dot
         ExpressionNode
-    deriving (Show) -- MAYBE?
+    deriving (Show, Data) -- MAYBE?
 
 instance Pretty QuantificationExpressionNode where
     pretty (QuantificationExpressionNode q pats over m_guard lDot body) =
@@ -489,7 +491,7 @@ data QuantificationOverNode
     = QuantifiedSubsetOfNode SToken ExpressionNode
     | QuantifiedMemberOfNode SToken ExpressionNode
     | QuantifiedDomainNode OverDomainNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty QuantificationOverNode where
     pretty q = case q of
         QuantifiedSubsetOfNode lt en -> pretty lt <+> pretty en
@@ -497,7 +499,7 @@ instance Pretty QuantificationOverNode where
         QuantifiedDomainNode odn -> pretty odn
 
 data OverDomainNode = OverDomainNode LToken DomainNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty OverDomainNode where
     pretty (OverDomainNode a b) = pretty a <+> pretty b
 data AbstractPatternNode
@@ -506,7 +508,7 @@ data AbstractPatternNode
     | AbstractPatternTuple (Maybe LToken) (ListNode AbstractPatternNode)
     | AbstractPatternMatrix (ListNode AbstractPatternNode)
     | AbstractPatternSet (ListNode AbstractPatternNode)
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty AbstractPatternNode where
     pretty a = case a of
         AbstractIdentifier nn -> pretty nn
@@ -518,12 +520,12 @@ instance Pretty AbstractPatternNode where
 instance Null AbstractPatternNode where
     isMissing (_) = False
 data QuanticationGuard = QuanticationGuard SToken ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty QuanticationGuard where
     pretty (QuanticationGuard a e) = pretty a <+> pretty e
 data QuantificationPattern
     = QuantificationPattern ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 
 data ComprehensionExpressionNode
     = ComprehensionExpressionNode
@@ -532,14 +534,14 @@ data ComprehensionExpressionNode
         LToken
         (Sequence ComprehensionBodyNode)
         LToken
-    deriving (Show)
+    deriving (Show, Data)
 
 data ComprehensionBodyNode
     = CompBodyCondition ExpressionNode
     | CompBodyDomain (Sequence AbstractPatternNode) SToken DomainNode
     | CompBodyGenExpr (Sequence AbstractPatternNode) SToken ExpressionNode
     | CompBodyLettingNode SToken AbstractPatternNode LToken ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty ComprehensionBodyNode where
     pretty x = case x of
@@ -557,7 +559,7 @@ data OperatorExpressionNode
     = PostfixOpNode ExpressionNode PostfixOpNode
     | PrefixOpNode SToken ExpressionNode
     | BinaryOpNode ExpressionNode SToken ExpressionNode
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty OperatorExpressionNode where
     pretty x = case x of
@@ -570,7 +572,7 @@ data PostfixOpNode
     | OpFactorial SToken
     | ExplicitDomain SToken SToken DomainNode LToken
     | ApplicationNode (ListNode ExpressionNode)
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty PostfixOpNode where
     pretty o = case o of
@@ -584,13 +586,13 @@ instance Pretty PostfixOpNode where
 
 data IndexerNode
     = Indexer
-    deriving (Show)
+    deriving (Show, Data)
 data ListNode itemType = ListNode
     { lOpBracket :: LToken
     , items :: Sequence itemType
     , lClBracket :: LToken
     }
-    deriving (Show)
+    deriving (Show, Data)
 
 -- prettyList :: Pretty a => ListNode a > Doc
 -- prettyList (ListNode start es end) = group $ align $ cat $
@@ -614,7 +616,7 @@ instance (Null a) => Null (ListNode a) where
 newtype Sequence itemType = Seq
     { elems :: [SeqElem itemType]
     }
-    deriving (Show)
+    deriving (Show, Data)
 
 instance Pretty a => Pretty (Sequence a) where
     pretty (Seq xs) = align $ sep $ map pretty xs
@@ -632,7 +634,7 @@ instance (Null a) => Null (Sequence a) where
     isMissing (Seq [a]) = isMissing a
     isMissing (Seq _) = False
 
--- deriving (Show)
+-- deriving (Show, Data)
 -- instance (Show a) => Show (Sequence a) where
 --     show (Seq e) = "Seq:\n" ++ intercalate "\n\t" (map show e) ++ "\n"
 
@@ -642,7 +644,7 @@ data SeqElem itemType
         , separator :: Maybe LToken
         }
     | MissingSeqElem LToken LToken
-    deriving (Show)
+    deriving (Show, Data)
 instance Pretty a => Pretty (SeqElem a) where
     pretty (SeqElem i s) = pretty i <> pretty s
     pretty _ = emptyDoc
@@ -670,3 +672,5 @@ flatIndent amt d = flatAlt (line <> indent amt d) d
 
 renderAST :: Int -> ProgramTree -> Text
 renderAST n = renderStrict . layoutSmart (LayoutOptions $ AvailablePerLine n 0.8) . pretty
+
+

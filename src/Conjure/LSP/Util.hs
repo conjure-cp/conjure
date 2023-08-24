@@ -9,27 +9,34 @@ import Language.LSP.Server
 
 import Conjure.Language.Parser (PipelineError(..), lexAndParse)
 import Language.LSP.VFS (virtualFileText, VirtualFile)
-import Text.Megaparsec (SourcePos(..), unPos)
+import Text.Megaparsec (SourcePos(..), unPos, mkPos)
 import Data.Text (pack)
+import Data.Foldable (find)
 import Language.LSP.Types as L
 import Conjure.Language.Validator (DiagnosticRegion(..), ValidatorState (ValidatorState, regionInfo), runValidator,  ValidatorDiagnostic, RegionInfo (..), initialState, validateModel)
 import Conjure.UI.ErrorDisplay (displayError, displayWarning)
 import Conjure.Language.AST.ASTParser (parseProgram)
 import Language.LSP.Types.Lens (HasUri (uri))
 import Control.Lens ((^.))
+import Conjure.Language.AST.Syntax (ProgramTree)
+import Conjure.Language.Lexer
+import Conjure.Language.AST.Reformer
+import qualified Data.Sequence as Seq
+import Conjure.Language.Lexer (Offsets(oSourcePos))
 
 
 data ProcessedFile = ProcessedFile {
     model:: Model,
     diagnostics::[ValidatorDiagnostic],
-    state:: ValidatorState
+    state:: ValidatorState,
+    parseTree :: ProgramTree
 }
 
 processFile :: Text -> Either PipelineError ProcessedFile
 processFile t = do
     parsed <- lexAndParse parseProgram t
-    let (m,d,s) = runValidator (validateModel parsed) (initialState  parsed)
-    return $ ProcessedFile m d s
+    let (m,d,s) = runValidator (validateModel parsed) (initialState  parsed Nothing) --TODO: wire up
+    return $ ProcessedFile m d s parsed
 
 
 getErrorsForURI :: NormalizedUri -> LspM () (Either Text ProcessedFile)
@@ -42,7 +49,7 @@ getErrorsFromText :: Text -> LspM () (Either Text ProcessedFile)
 getErrorsFromText t = return $ either (Left . pack.show) Right $ processFile t
 
 getDiagnostics :: ProcessedFile -> [Diagnostic]
-getDiagnostics (ProcessedFile _ ds _) = mapMaybe valErrToDiagnostic ds
+getDiagnostics (ProcessedFile{diagnostics=ds}) = mapMaybe valErrToDiagnostic ds
 
 valErrToDiagnostic :: V.ValidatorDiagnostic -> Maybe Diagnostic
 valErrToDiagnostic (V.ValidatorDiagnostic region message) = do
@@ -107,7 +114,7 @@ withProcessedDoc d f = do
 
 
 getRelevantRegions :: ValidatorState -> Position -> [RegionInfo]
-getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn (rRegion) $ concatMap filteredFlatten info
+getRelevantRegions (ValidatorState {regionInfo=info}) pos = sortOn rRegion $ concatMap filteredFlatten info
     where
         p::RegionInfo -> Bool
         p (RegionInfo {rRegion=reg}) = case reg of
@@ -124,9 +131,23 @@ sourcePosToPosition (SourcePos _ r c) = Position
     (fromInteger $ -1 + toInteger (unPos r))
     (fromInteger $ -1 + toInteger (unPos c))
 
+positionToSourcePos :: Position -> SourcePos
+positionToSourcePos (Position r c) = SourcePos
+    ""
+    (mkPos ri)
+    ( mkPos  ci)
+    where
+        ri = fromIntegral r + 1
+        ci = fromIntegral c + 1
+
+
 regionToRange :: DiagnosticRegion -> L.Range
 regionToRange (DiagnosticRegion sp ep _ _) = L.Range (sourcePosToPosition sp) (sourcePosToPosition ep)
 
+regionToLocation :: DiagnosticRegion -> L.Location
+regionToLocation reg@(DiagnosticRegion (SourcePos f _ _) _ _ _) = L.Location
+    (filePathToUri f)
+    (regionToRange reg)
 
 snippet :: Text -> MarkupContent
 snippet = markedUpContent "essence"
@@ -134,3 +155,16 @@ snippet = markedUpContent "essence"
 prettyPos :: Position -> Doc
 prettyPos (Position (pretty . show->r) (pretty . show->c)) =  r <> ":" <> c
 
+getNextTokenStart :: Position -> ProgramTree -> Position
+getNextTokenStart ref tree = let
+    toks = flatten tree
+    tokSp = map (sourcePosToPosition . oSourcePos . offsets) (toList toks)
+    in fromMaybe posInf $ find (ref <=) tokSp 
+
+posInf :: Position 
+posInf = Position (negate 1) (negate 1)
+
+tokensAtPosition :: Position -> Seq.Seq ETok -> [ETok]
+tokensAtPosition p s = maybeToList (find (posAfter p ) s)
+    where 
+        posAfter p t = p < sourcePosToPosition (oSourcePos $ offsets t) 

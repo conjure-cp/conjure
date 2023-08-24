@@ -17,7 +17,7 @@ semanticTokensHandler = semanticTokensHandlerFull
 semanticTokensHandlerFull :: Handlers (LspM ())
 semanticTokensHandlerFull = requestHandler T.STextDocumentSemanticTokensFull $ \ req res -> do
     let ps = req^.params . textDocument
-    withProcessedDoc ps $ \(ProcessedFile _ _ (symbolCategories->ts)) -> do
+    withProcessedDoc ps $ \(ProcessedFile _ _ (symbolCategories->ts) _) -> do
         let toks = mapMaybe createSemanticToken (sortOn (\(TaggedToken _ (oTrueStart . offsets->e)) -> e) $ M.elems ts)
         -- sendInfoMessage . pack $  "Got semantic tokens req : " ++ show toks
         let sToks = T.makeSemanticTokens def toks

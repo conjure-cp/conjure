@@ -69,9 +69,8 @@ intLiteral = token test Set.empty <?> "Int Literal"
 
 makeMissing :: Lexeme -> Parser LToken
 makeMissing l = do
-    ETok (Offsets st _ _ _) _ _ _ <- lookAhead anySingle
-    spos <- getSourcePos
-    return (MissingToken (ETok (Offsets st st 0 spos) [] l ""))
+    dummyToken <- lookAhead anySingle
+    return . MissingToken $ nullBefore l dummyToken
 
 makeUnexpected :: Parser LToken
 makeUnexpected = SkippedToken <$> anySingle
@@ -79,15 +78,15 @@ makeUnexpected = SkippedToken <$> anySingle
 -- try to get a token from the stream but allow failiure
 want :: Lexeme -> Parser LToken
 want (LIdentifier _) = do
-    (ETok o t lex _) <- lookAhead anySingle
+    tok@(ETok _ _ lex _) <- lookAhead anySingle
     case lex of
         (LIdentifier _) -> makeStrict <$> anySingle
-        _ -> return $ MissingToken $ ETok o{oTLength = 0} t LMissingIdentifier ""
+        _ -> return $ MissingToken $ nullBefore LMissingIdentifier tok
 want a = do
-    (ETok o t lex _) <- lookAhead anySingle
+    tok@(ETok _ _ lex _) <- lookAhead anySingle
     if lex == a
         then makeStrict <$> anySingle
-        else return $ MissingToken $ ETok o{oTLength = 0} t a ""
+        else return $ MissingToken $ nullBefore a tok
 
 -- get a symbol from the stream with no fallback
 need :: Lexeme -> Parser SToken
@@ -162,7 +161,7 @@ parseSequence1 divider pElem = do
 
 parseSequence :: (Null a, Show a) => Lexeme -> Parser a -> Parser (Sequence a)
 parseSequence divider pElem = try $ do
-    missingPlaceholder <- makeMissing $ L_Missing "SequenceElem"
+    missingPlaceholder <- makeMissing $ L_Missing MissingUnknown
     sElem <- optional pElem
     sep <- want divider
     case (sElem, isMissing sep) of

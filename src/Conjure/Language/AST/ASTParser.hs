@@ -18,11 +18,11 @@ import Conjure.Prelude hiding (many,some)
 import Conjure.Language.AST.Helpers
 import Conjure.Language.AST.Syntax
 import Conjure.Language.Lexer
-
+import Conjure.Language.Lexemes
 
 import Text.Megaparsec
 
-import Conjure.Language.AST.Reformer (Flattenable(..))
+import Conjure.Language.AST.Reformer (HighLevelTree(..),flattenSeq)
 import Conjure.Language.Expression.Op.Internal.Common
 import Control.Monad.Combinators.Expr
 import qualified Data.Text.Lazy as L
@@ -32,7 +32,7 @@ newtype ParserError = ParserError (Doc)
     deriving (Show)
 
 
-runASTParser ::Flattenable a => Parser a -> ETokenStream -> Either ParserError a
+runASTParser ::HighLevelTree a => Parser a -> ETokenStream -> Either ParserError a
 runASTParser p str =
     case runParser p "parser" str of
         Left peb -> Left $ ParserError . pretty $ errorBundlePretty peb
@@ -203,7 +203,7 @@ parseExpression :: Parser ExpressionNode
 parseExpression = try $ do
     parseOperator
         <|> parseAtomicExpression 
-        <|> (MissingExpressionNode <$> makeMissing (L_Missing "expression"))
+        <|> (MissingExpressionNode <$> makeMissing (L_Missing MissingExpression))
 
 parseExpressionStrict :: Parser ExpressionNode -- can fail
 parseExpressionStrict = try $ do
@@ -227,7 +227,7 @@ parseAtomicExpression = do
             ,  AbsExpression <$> parseAbsExpression
             ,  QuantificationExpr <$> parseQuantificationStatement
             ,  DomainExpression <$> parseDomainExpression
-            ,  MissingExpressionNode <$> makeMissing (L_Missing "Expr")
+            ,  MissingExpressionNode <$> makeMissing (L_Missing MissingExpression)
             ]
 
 
@@ -794,7 +794,7 @@ parseAttribute = do
 parseMissingDomain :: Parser DomainNode
 parseMissingDomain =
     do
-        m <- makeMissing (L_Missing "Domain")
+        m <- makeMissing (L_Missing MissingDomain)
         return $ MissingDomainNode m
         <?> "Anything"
 
@@ -821,7 +821,7 @@ example s = do
           Right pt -> do
             print $  show pt
             putStrLn "Reforming"
-            print $ reformList (flatten pt) == L.fromStrict txt
+            print $ reformList (flattenSeq pt) == L.fromStrict txt
 
             putStrLn "Pretty:"
             let pp = renderAST 80 pt

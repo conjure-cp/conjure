@@ -1,275 +1,392 @@
-module Conjure.Language.AST.Reformer (Flattenable(..)) where
+{-# LANGUAGE DeriveDataTypeable #-}
+module Conjure.Language.AST.Reformer (HighLevelTree(..),HLTree(..),flatten,flattenSeq,contains,filterContaining,TreeItemLinks(..),ListItemClasses(..)) where
 
 import Conjure.Language.AST.Syntax
-import Conjure.Language.Lexer (ETok (..))
+import Conjure.Language.Lexer (ETok (..), trueStart, sourcePosAfter)
 import Conjure.Prelude
-import Data.Sequence ((><))
+
+
+import Data.Semigroup ((<>))
 import qualified Data.Sequence as S
+import Text.Megaparsec (SourcePos (SourcePos))
 
 
 
 
-class Flattenable a where
-    flatten :: Flattenable a => a -> S.Seq ETok
+-- class HighLevelTree a where
+--     makeTree :: HighLevelTree a => a -> S.Seq ETok
+flatten :: HighLevelTree a => a -> [ETok]
+flatten x = case makeTree x of
+    HLNone -> []
+    HLTagged _ xs -> concatMap flatten xs
+    HLLeaf t -> [t]
+flattenSeq :: HighLevelTree a => a -> S.Seq ETok
+flattenSeq = S.fromList . flatten
 
-instance Flattenable (S.Seq ETok) where
-    flatten = id
-instance Flattenable ProgramTree where
-    flatten (ProgramTree lv sts end) = mconcat [flatten lv , mconcat $ map flatten sts , flatten end]
+instance HighLevelTree HLTree where
+    makeTree = id
 
-instance Flattenable LangVersionNode where
-    flatten (LangVersionNode l1 l2 l3) = flatten l1 >< flatten l2 >< flatten l3
-instance Flattenable StatementNode where
-    flatten x = case x of
-        DeclarationStatement dsn -> flatten dsn
-        BranchingStatement bsn -> flatten bsn
-        SuchThatStatement stsn -> flatten stsn
-        WhereStatement wsn -> flatten wsn
-        ObjectiveStatement osn -> flatten osn
-        HeuristicStatement l1 ex -> flatten l1 >< flatten ex
-        UnexpectedToken tok -> flatten tok
+instance HighLevelTree StatementNode where
+    makeTree x = case x of
+        DeclarationStatement dsn -> makeTree dsn
+        BranchingStatement bsn -> makeTree bsn
+        SuchThatStatement stsn -> makeTree stsn
+        WhereStatement wsn -> makeTree wsn
+        ObjectiveStatement osn -> makeTree osn
+        HeuristicStatement l1 ex -> makeTree l1 <> makeTree ex
+        UnexpectedToken tok -> makeTree tok
 
-instance Flattenable DeclarationStatementNode where
-    flatten x = case x of
-        FindStatement f fsn -> flatten f >< flatten fsn
-        GivenStatement g gsn -> flatten g >< flatten gsn
-        LettingStatement t lsn -> flatten t >< flatten lsn
-
-
-instance Flattenable LettingStatementNode where 
-    flatten (LettingStatementNode a b c) = mconcat[ flatten a, flatten b, flatten c]
-
-instance Flattenable LettingAssignmentNode where
-    flatten x = case x of
-        LettingExpr d ->  flatten d
-        LettingDomain d e -> flatten d >< flatten e
-        LettingEnum d e f g -> mconcat [flatten d, flatten e, flatten f, flatten g]
-        LettingAnon d e f g h -> mconcat [flatten d, flatten e, flatten f, flatten g, flatten h]
-
-instance Flattenable FindStatementNode where
-    flatten (FindStatementNode a b c) = mconcat  [flatten a, flatten b, flatten c]
-
-instance Flattenable GivenStatementNode where
-    flatten x = case x of
-        GivenStatementNode a b c -> mconcat [flatten a, flatten b, flatten c]
-        GivenEnumNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
+instance HighLevelTree DeclarationStatementNode where
+    makeTree x = case x of
+        FindStatement f fsn -> makeTree f <> makeTree fsn
+        GivenStatement g gsn -> makeTree g <> makeTree gsn
+        LettingStatement t lsn -> makeTree t <> makeTree lsn
 
 
+instance HighLevelTree LettingStatementNode where 
+    makeTree (LettingStatementNode a b c) = mconcat[ makeTree a, makeTree b, makeTree c]
 
-instance Flattenable BranchingStatementNode where
-    flatten (BranchingStatementNode lt lt' ln) = mconcat [flatten lt, flatten lt', flatten ln]
+instance HighLevelTree LettingAssignmentNode where
+    makeTree x = case x of
+        LettingExpr d ->  makeTree d
+        LettingDomain d e -> makeTree d <> makeTree e
+        LettingEnum d e f g -> mconcat [makeTree d, makeTree e, makeTree f, makeTree g]
+        LettingAnon d e f g h -> mconcat [makeTree d, makeTree e, makeTree f, makeTree g, makeTree h]
+
+instance HighLevelTree FindStatementNode where
+    makeTree (FindStatementNode a b c) = mconcat  [makeTree a, makeTree b, makeTree c]
+
+instance HighLevelTree GivenStatementNode where
+    makeTree x = case x of
+        GivenStatementNode a b c -> mconcat [makeTree a, makeTree b, makeTree c]
+        GivenEnumNode a b c d -> mconcat [makeTree a, makeTree b, makeTree c, makeTree d]
 
 
-instance Flattenable SuchThatStatementNode where
-    flatten (SuchThatStatementNode l1 l2 l3) =  flatten l1 >< flatten l2 >< flatten l3
-instance Flattenable WhereStatementNode where
-    flatten (WhereStatementNode l1 l2) =  flatten l1 >< flatten l2
-instance Flattenable ObjectiveStatementNode where
-    flatten x =  case x of
-        ObjectiveMin lt en -> flatten lt >< flatten en
-        ObjectiveMax lt en -> flatten lt >< flatten en
 
-instance Flattenable LToken where
-    flatten x =  case x of
-        RealToken st -> flatten st
-        MissingToken et ->  flatten et
-        SkippedToken et ->  flatten et
+instance HighLevelTree BranchingStatementNode where
+    makeTree (BranchingStatementNode lt lt' ln) = mconcat [makeTree lt, makeTree lt', makeTree ln]
 
-instance Flattenable SToken where
-    flatten (StrictToken xs e) = flatten xs >< flatten e
-instance Flattenable ETok where
-    flatten = pure
 
-instance Flattenable ExpressionNode where
-    flatten x =  case x of
-        Literal ln -> flatten ln
-        IdentifierNode nn -> flatten nn
-        MetaVarExpr tk -> flatten tk
-        QuantificationExpr qen -> flatten qen
-        OperatorExpressionNode oen -> flatten oen
-        ParenExpression pen ->flatten pen
-        AbsExpression pen ->  flatten pen
-        DomainExpression dex -> flatten dex
-        FunctionalApplicationNode lt ln ->  flatten lt >< flatten ln
-        SpecialCase nd -> flatten nd
-        AttributeAsConstriant l1 exprs -> flatten l1 >< flatten exprs
-        MissingExpressionNode e ->  flatten e
+instance HighLevelTree SuchThatStatementNode where
+    makeTree (SuchThatStatementNode l1 l2 l3) =  makeTree l1 <> makeTree l2 <> makeTree l3
+instance HighLevelTree WhereStatementNode where
+    makeTree (WhereStatementNode l1 l2) =  makeTree l1 <> makeTree l2
+instance HighLevelTree ObjectiveStatementNode where
+    makeTree x =  case x of
+        ObjectiveMin lt en -> makeTree lt <> makeTree en
+        ObjectiveMax lt en -> makeTree lt <> makeTree en
 
-instance Flattenable SpecialCaseNode where 
-    flatten x = case x of 
-        ExprWithDecls l1 en l2 sns l3 -> mconcat [flatten l1,flatten en,flatten l2, flatten sns , flatten l3]
 
-instance Flattenable DomainExpressionNode where
-    flatten (DomainExpressionNode a b c) = flatten a >< flatten b >< flatten c
-instance Flattenable QuantificationExpressionNode where
-    flatten (QuantificationExpressionNode a b c d e f) = mconcat [
-        flatten a, flatten b, flatten c, flatten d, flatten e, flatten f]
-instance Flattenable QuantificationOverNode where
-    flatten x = case x of
-      QuantifiedSubsetOfNode a b -> flatten a >< flatten b
-      QuantifiedMemberOfNode a b -> flatten a >< flatten b
-      QuantifiedDomainNode a -> flatten a
 
-instance Flattenable OverDomainNode where
-    flatten (OverDomainNode a b) = flatten a >< flatten b
 
-instance Flattenable QuanticationGuard where
-    flatten (QuanticationGuard a b ) = flatten a >< flatten b
+instance HighLevelTree ExpressionNode where
+    makeTree x = HLTagged (TIExpression x) $ case x of
+        Literal ln -> [makeTree ln]
+        IdentifierNode nn -> [makeTree nn]
+        MetaVarExpr tk -> [makeTree tk]
+        QuantificationExpr qen -> [makeTree qen]
+        OperatorExpressionNode oen -> [makeTree oen]
+        ParenExpression pen ->[makeTree pen]
+        AbsExpression pen ->  [makeTree pen]
+        DomainExpression dex -> [makeTree dex]
+        FunctionalApplicationNode lt ln ->  [makeTree lt ,makeTree ln]
+        SpecialCase nd -> [makeTree nd]
+        AttributeAsConstriant l1 exprs -> [makeTree l1 , makeTree exprs]
+        MissingExpressionNode e ->  [makeTree e]
 
-instance Flattenable AbstractPatternNode where
-    flatten x = case x of
-      AbstractIdentifier nn -> flatten nn
-      AbstractMetaVar lt -> flatten lt
-      AbstractPatternTuple a b -> flatten a >< flatten b
-      AbstractPatternMatrix ln -> flatten ln
-      AbstractPatternSet ln -> flatten ln
-instance Flattenable QuantificationPattern where
-    flatten (QuantificationPattern en) = flatten en
+instance HighLevelTree SpecialCaseNode where 
+    makeTree x = case x of 
+        ExprWithDecls l1 en l2 sns l3 -> mconcat [makeTree l1,makeTree en,makeTree l2, makeTree sns , makeTree l3]
 
-instance Flattenable LiteralNode where
-    flatten x = case x of
-        IntLiteral lt -> flatten lt
-        BoolLiteral lt -> flatten lt
-        MatrixLiteral mln -> flatten mln
-        TupleLiteralNode lt -> flatten lt
-        TupleLiteralNodeShort st -> flatten st
-        RecordLiteral lt ln -> flatten lt >< flatten ln
-        VariantLiteral lt ln -> flatten lt >< flatten ln
-        SetLiteral ln -> flatten ln
-        MSetLiteral lt ln -> flatten lt >< flatten ln
-        FunctionLiteral lt ln -> flatten lt >< flatten ln
-        SequenceLiteral lt ln -> flatten lt >< flatten ln
-        RelationLiteral lt ln -> flatten lt >< flatten ln
-        PartitionLiteral lt ln -> flatten lt >< flatten ln
 
-instance Flattenable PartitionElemNode where
-    flatten (PartitionElemNode ln) = flatten ln
+instance HighLevelTree DomainExpressionNode where
+    makeTree (DomainExpressionNode a b c) = makeTree a <> makeTree b <> makeTree c
+instance HighLevelTree QuantificationExpressionNode where
+    makeTree (QuantificationExpressionNode a b c d e f) = mconcat [
+        makeTree a, makeTree b, makeTree c, makeTree d, makeTree e, makeTree f]
 
-instance Flattenable RelationElemNode where
-    flatten x = case x of
-        RelationElemNodeLabeled lt -> flatten lt
-        RelationElemNodeShort st -> flatten st
+instance HighLevelTree QuantificationOverNode where
+    makeTree x = case x of
+      QuantifiedSubsetOfNode a b -> makeTree a <> makeTree b
+      QuantifiedMemberOfNode a b -> makeTree a <> makeTree b
+      QuantifiedDomainNode a -> makeTree a
 
-instance Flattenable ArrowPairNode where
-    flatten (ArrowPairNode a b c) = mconcat [flatten a, flatten b, flatten c]
+instance HighLevelTree OverDomainNode where
+    makeTree (OverDomainNode a b) = makeTree a <> makeTree b
 
-instance Flattenable RecordMemberNode where
-    flatten (RecordMemberNode nn lt en) =  mconcat [flatten nn, flatten lt, flatten en]
-instance Flattenable LongTuple where
-    flatten (LongTuple a b) =  flatten a >< flatten b
+instance HighLevelTree QuanticationGuard where
+    makeTree (QuanticationGuard a b ) = makeTree a <> makeTree b
 
-instance Flattenable ShortTuple where
-    flatten (ShortTuple a) = flatten a
+instance HighLevelTree AbstractPatternNode where
+    makeTree x = case x of
+      AbstractIdentifier nn -> makeTree nn
+      AbstractMetaVar lt -> makeTree lt
+      AbstractPatternTuple a b -> makeTree a <> makeTree b
+      AbstractPatternMatrix ln -> makeTree ln
+      AbstractPatternSet ln -> makeTree ln
+instance HighLevelTree QuantificationPattern where
+    makeTree (QuantificationPattern en) = makeTree en
 
-instance Flattenable MatrixLiteralNode where
-    flatten ( MatrixLiteralNode a b c d e) = mconcat
-            [ flatten a
-            , flatten b
-            , flatten c
-            , flatten d
-            , flatten e
+instance HighLevelTree LiteralNode where
+    makeTree x = case x of
+        IntLiteral lt -> makeTree lt
+        BoolLiteral lt -> makeTree lt
+        MatrixLiteral mln -> makeTree mln
+        TupleLiteralNode lt -> makeTree lt
+        TupleLiteralNodeShort st -> makeTree st
+        RecordLiteral lt ln -> makeTree lt <> makeTree ln
+        VariantLiteral lt ln -> makeTree lt <> makeTree ln
+        SetLiteral ln -> makeTree ln
+        MSetLiteral lt ln -> makeTree lt <> makeTree ln
+        FunctionLiteral lt ln -> makeTree lt <> makeTree ln
+        SequenceLiteral lt ln -> makeTree lt <> makeTree ln
+        RelationLiteral lt ln -> makeTree lt <> makeTree ln
+        PartitionLiteral lt ln -> makeTree lt <> makeTree ln
+
+instance HighLevelTree PartitionElemNode where
+    makeTree (PartitionElemNode ln) = makeTree ln
+
+instance HighLevelTree RelationElemNode where
+    makeTree x = case x of
+        RelationElemNodeLabeled lt -> makeTree lt
+        RelationElemNodeShort st -> makeTree st
+
+instance HighLevelTree ArrowPairNode where
+    makeTree (ArrowPairNode a b c) = mconcat [makeTree a, makeTree b, makeTree c]
+
+instance HighLevelTree RecordMemberNode where
+    makeTree (RecordMemberNode nn lt en) =  mconcat [makeTree nn, makeTree lt, makeTree en]
+instance HighLevelTree LongTuple where
+    makeTree (LongTuple a b) =  makeTree a <> makeTree b
+
+instance HighLevelTree ShortTuple where
+    makeTree (ShortTuple a) = makeTree a
+
+instance HighLevelTree MatrixLiteralNode where
+    makeTree ( MatrixLiteralNode a b c d e) = mconcat
+            [ makeTree a
+            , makeTree b
+            , makeTree c
+            , makeTree d
+            , makeTree e
             ]
 
-instance Flattenable ComprehensionNode where
-    flatten (ComprehensionNode a b) = flatten a >< flatten b
-instance Flattenable ComprehensionExpressionNode where
-    flatten (ComprehensionExpressionNode a b c d e) =
+instance HighLevelTree ComprehensionNode where
+    makeTree (ComprehensionNode a b) = makeTree a <> makeTree b
+instance HighLevelTree ComprehensionExpressionNode where
+    makeTree (ComprehensionExpressionNode a b c d e) =
         mconcat
-            [ flatten a
-            , flatten b
-            , flatten c
-            , flatten d
-            , flatten e
+            [ makeTree a
+            , makeTree b
+            , makeTree c
+            , makeTree d
+            , makeTree e
             ]
 
-instance Flattenable ComprehensionBodyNode where
-    flatten x =  case x of
-        CompBodyCondition en -> flatten en
-        CompBodyDomain a b c -> flatten a >< flatten b >< flatten c
-        CompBodyGenExpr a b c -> flatten a >< flatten b >< flatten c
-        CompBodyLettingNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
+instance HighLevelTree ComprehensionBodyNode where
+    makeTree x =  case x of
+        CompBodyCondition en -> makeTree en
+        CompBodyDomain a b c -> makeTree a <> makeTree b <> makeTree c
+        CompBodyGenExpr a b c -> makeTree a <> makeTree b <> makeTree c
+        CompBodyLettingNode a b c d -> mconcat [makeTree a, makeTree b, makeTree c, makeTree d]
 
-instance Flattenable OperatorExpressionNode where
-    flatten x =  case x of
-        PostfixOpNode en pon -> flatten en >< flatten pon
-        PrefixOpNode lt en -> flatten lt >< flatten en
-        BinaryOpNode en lt en' -> mconcat [flatten en, flatten lt, flatten en']
+instance HighLevelTree OperatorExpressionNode where
+    makeTree x =  case x of
+        PostfixOpNode en pon -> makeTree en <> makeTree pon
+        PrefixOpNode lt en -> makeTree lt <> makeTree en
+        BinaryOpNode en lt en' -> mconcat [makeTree en, makeTree lt, makeTree en']
 
-instance Flattenable PostfixOpNode where
-    flatten x =  case x of
-        IndexedNode l -> flatten l
-        OpFactorial lt -> flatten lt
-        ApplicationNode ln -> flatten ln
-        ExplicitDomain l1 l2 dom l3 -> mconcat  [flatten l1,flatten l2,flatten dom,flatten l3]
-
-instance Flattenable DomainNode where
-    flatten x =  case x of
-        ParenDomainNode a b c -> mconcat [flatten a, flatten b, flatten c]
-        BoolDomainNode lt -> flatten lt
-        RangedIntDomainNode lt ln -> flatten lt >< flatten ln
-        MetaVarDomain a -> flatten a
-        RangedEnumNode nn ln -> flatten nn >< flatten ln
-        -- EnumDomainNode nn -> flatten nn
-        ShortTupleDomainNode ln -> flatten ln
-        TupleDomainNode lt ln -> flatten lt >< flatten ln
-        RecordDomainNode lt ln -> flatten lt >< flatten ln
-        VariantDomainNode lt ln -> flatten lt >< flatten ln
-        MatrixDomainNode a m_ib b c d -> mconcat [flatten a, flatten m_ib, flatten b, flatten c, flatten d]
-        SetDomainNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
-        MSetDomainNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
-        FunctionDomainNode a b c d e -> mconcat [flatten a, flatten b, flatten c, flatten d, flatten e]
-        SequenceDomainNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
-        RelationDomainNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
-        PartitionDomainNode a b c d -> mconcat [flatten a, flatten b, flatten c, flatten d]
-        MissingDomainNode m -> flatten m
-
-instance Flattenable IndexedByNode where
-    flatten (IndexedByNode a b ) = flatten a >< flatten b
-
-instance (Flattenable a) => Flattenable (Maybe a) where
-    flatten (Just x) = flatten x
-    flatten Nothing = S.empty
-instance Flattenable AttributeNode where
-    flatten x =  case x of
-        NamedAttributeNode nn m_e -> flatten nn >< flatten m_e
-        -- NamedExpressionAttribute nn en -> flatten nn >< flatten en
-
-instance Flattenable RangeNode where
-    flatten x =  case x of
-        SingleRangeNode en -> flatten en
-        OpenRangeNode ddn -> flatten ddn
-        RightUnboundedRangeNode en ddn -> flatten en >< flatten ddn
-        LeftUnboundedRangeNode ddn en -> flatten ddn >< flatten en
-        BoundedRangeNode en ddn en' -> mconcat [flatten en, flatten ddn, flatten en']
-
--- instance Flattenable DoubleDotNode where
---     flatten (DoubleDotNode a b) =  flatten a >< flatten b
-
-instance Flattenable NamedDomainNode where
-    flatten (NameDomainNode a Nothing) = flatten a
-    flatten (NameDomainNode a (Just (b,c))) = mconcat [flatten a,flatten b,flatten c]
-
-instance Flattenable NameNode where
-    flatten (NameNode n) =  flatten n
-    flatten (MissingNameNode n) =  flatten n
-instance Flattenable NameNodeS where
-    flatten (NameNodeS n) =  flatten n
-
-instance Flattenable ParenExpressionNode where
-    flatten (ParenExpressionNode a b c) =  flatten a >< flatten b >< flatten c
-
-instance Flattenable b => Flattenable (ListNode b) where
-    flatten (ListNode l1 seq l2) =  mconcat [flatten l1, flatten seq, flatten l2]
-
-instance Flattenable b => Flattenable (Sequence b) where
-    flatten (Seq es) = mconcat $ map flatten es
-
-instance Flattenable b => Flattenable (SeqElem b) where
-    flatten (SeqElem v s) =  flatten v >< flatten s
-    flatten (MissingSeqElem v s) =  flatten v >< flatten s
-instance Flattenable b => Flattenable [b] where
-    flatten = mconcat . map flatten 
+instance HighLevelTree PostfixOpNode where
+    makeTree x =  case x of
+        IndexedNode l -> makeTree l
+        OpFactorial lt -> makeTree lt
+        ApplicationNode ln -> makeTree ln
+        ExplicitDomain l1 l2 dom l3 -> mconcat  [makeTree l1,makeTree l2,makeTree dom,makeTree l3]
 
 
 
 
+instance HighLevelTree DomainNode where
+    makeTree x = HLTagged (TIDomain x) $ case x of
+        ParenDomainNode a b c -> [makeTree a, makeTree b, makeTree c]
+        BoolDomainNode lt -> [makeTree lt]
+        RangedIntDomainNode lt ln -> [makeTree lt,makeTree ln]
+        MetaVarDomain a -> [makeTree a]
+        RangedEnumNode nn ln -> [makeTree nn ,  makeTree ln]
+        -- EnumDomainNode nn -> makeTree nn
+        ShortTupleDomainNode ln -> [makeTree ln]
+        TupleDomainNode lt ln -> [makeTree lt , makeTree ln]
+        RecordDomainNode lt ln -> [makeTree lt , makeTree ln]
+        VariantDomainNode lt ln -> [makeTree lt , makeTree ln]
+        MatrixDomainNode a m_ib b c d -> [makeTree a ,makeTree m_ib, makeTree b , makeTree c , makeTree d]
+        SetDomainNode a b c d -> [makeTree a , makeTree  b , makeTree c , makeTree d]
+        MSetDomainNode a b c d -> [makeTree a , makeTree  b, makeTree c , makeTree d]
+        FunctionDomainNode a b c d e -> [makeTree a , makeTree  b , makeTree c , makeTree d,makeTree e]
+        SequenceDomainNode a b c d -> [makeTree a , makeTree  b , makeTree c , makeTree d]
+        RelationDomainNode a b c d -> [makeTree a , makeTree b , makeTree c , makeTree d]
+        PartitionDomainNode a b c d -> [makeTree a , makeTree b , makeTree c , makeTree d]
+        MissingDomainNode m -> [makeTree m]
+
+instance HighLevelTree IndexedByNode where
+    makeTree (IndexedByNode a b ) = makeTree a <> makeTree b
+
+
+instance HighLevelTree a => HighLevelTree (Maybe a) where
+  makeTree = maybe mempty makeTree 
+
+instance HighLevelTree AttributeNode where
+    makeTree x =  case x of
+        NamedAttributeNode nn m_e -> makeTree nn <> makeTree m_e
+        -- NamedExpressionAttribute nn en -> makeTree nn <> makeTree en
+
+instance HighLevelTree RangeNode where
+    makeTree x =  case x of
+        SingleRangeNode en -> makeTree en
+        OpenRangeNode ddn -> makeTree ddn
+        RightUnboundedRangeNode en ddn -> makeTree en <> makeTree ddn
+        LeftUnboundedRangeNode ddn en -> makeTree ddn <> makeTree en
+        BoundedRangeNode en ddn en' -> mconcat [makeTree en, makeTree ddn, makeTree en']
+
+-- instance HighLevelTree DoubleDotNode where
+--     makeTree (DoubleDotNode a b) =  makeTree a <> makeTree b
+
+instance HighLevelTree NamedDomainNode where
+    makeTree (NameDomainNode a Nothing) = makeTree a
+    makeTree (NameDomainNode a (Just (b,c))) = mconcat [makeTree a,makeTree b,makeTree c]
+
+instance HighLevelTree NameNode where
+    makeTree (NameNode n) =  makeTree n
+    makeTree (MissingNameNode n) =  makeTree n
+
+instance HighLevelTree NameNodeS where
+    makeTree (NameNodeS n) =  makeTree n
+instance HighLevelTree ParenExpressionNode where
+    makeTree (ParenExpressionNode a b c) =  makeTree a <> makeTree b <> makeTree c
+
+
+
+
+
+instance HighLevelTree b => HighLevelTree (Sequence b) where
+    makeTree (Seq es) = mconcat $ map makeTree es
+
+instance HighLevelTree b => HighLevelTree (SeqElem b) where
+    makeTree (SeqElem v s) =  makeTree v <> makeTree s
+    makeTree (MissingSeqElem v s) =  makeTree v <> makeTree s
+instance HighLevelTree b => HighLevelTree [b] where
+    makeTree = HLTagged TIGeneral . map makeTree 
+
+type TreeTag = ListItemClasses
+data HLTree 
+    = HLTagged TreeItemLinks [HLTree]
+    | HLLeaf ETok
+    | HLNone
+    deriving (Show,Data,Typeable)
+
+instance Semigroup HLTree where
+    HLNone <> a = a
+    a <> HLNone = a
+    HLTagged TIGeneral xs <> a = HLTagged TIGeneral (xs++[a])
+    a <> HLTagged TIGeneral xs = HLTagged TIGeneral $ a:xs
+    a <> b = HLTagged TIGeneral [a,b]
+
+instance Monoid HLTree where
+    mempty = HLNone
+
+taggedSeq :: HighLevelTree a => TreeTag -> Sequence a -> HLTree
+taggedSeq s (Seq els) = HLTagged (TIList s) $ makeTree <$> els 
+taggedList :: HighLevelTree a => TreeTag -> ListNode a -> HLTree
+taggedList s (ListNode a b c) = HLTagged TIGeneral $ makeTree a : taggedSeq s b  : [makeTree c]
+
+-- Tag types for nodes, mainly used to guide completions
+data ListItemClasses 
+    = ICAttribute
+    | ICExpression
+    | ICDomain
+    | ICRange
+    | ICIdentifier
+    | ICStatement
+    deriving (Show,Data,Ord,Eq)
+
+-- Embed the actual syntax portion into the tree, in case needed
+data TreeItemLinks
+    = TIExpression ExpressionNode
+    | TIDomain DomainNode
+    | TIList ListItemClasses
+    | TIGeneral
+    deriving (Show,Data)
+instance Eq TreeItemLinks where
+    TIGeneral == TIGeneral = True
+    _ == _ = False
+instance HighLevelTree (ListNode ExpressionNode) where
+    makeTree = taggedList ICExpression
+instance HighLevelTree (ListNode NameNode) where
+    makeTree = taggedList ICIdentifier
+instance HighLevelTree (ListNode DomainNode) where
+    makeTree = taggedList ICDomain
+
+instance HighLevelTree (ListNode RangeNode) where
+    makeTree = taggedList ICRange
+
+instance HighLevelTree (ListNode AttributeNode) where
+    makeTree = taggedList ICAttribute
+instance HighLevelTree (ListNode RecordMemberNode) where
+    makeTree = taggedList ICIdentifier
+instance HighLevelTree (ListNode ArrowPairNode) where
+    makeTree = taggedList ICIdentifier
+instance HighLevelTree (ListNode RelationElemNode) where
+    makeTree = taggedList ICIdentifier
+instance HighLevelTree (ListNode PartitionElemNode) where
+    makeTree = taggedList ICIdentifier
+instance HighLevelTree (ListNode NamedDomainNode) where
+    makeTree = taggedList ICIdentifier
+
+instance HighLevelTree (ListNode AbstractPatternNode) where
+    makeTree = taggedList ICIdentifier
+class HighLevelTree a where
+    makeTree :: a -> HLTree
+
+instance HighLevelTree LToken where
+    makeTree (RealToken a) = makeTree a
+    makeTree (SkippedToken t) = HLLeaf t
+    makeTree (MissingToken m) = HLLeaf m
+instance HighLevelTree SToken where
+    makeTree (StrictToken ts t) =  HLTagged TIGeneral $ (HLLeaf <$> ts) ++ [HLLeaf t] 
+
+instance HighLevelTree ProgramTree where
+  makeTree (ProgramTree Nothing sts cln) = HLTagged TIGeneral $ (HLTagged (TIList ICStatement) $ makeTree <$> sts) : [makeTree cln] 
+  makeTree (ProgramTree (Just lv) sts cln) = HLTagged TIGeneral $ [makeTree lv] ++ (makeTree <$> sts) ++ [makeTree cln] 
+
+instance HighLevelTree LangVersionNode where
+    makeTree (LangVersionNode a b c) = HLTagged TIGeneral $ makeTree a : makeTree b : [makeTree c]
+
+
+-- getContainers :: HLTree -> Int -> Int -> HLTree
+-- getContainers HLNone r c = HLNone
+
+
+bounds :: ETok -> SourcePos -> Bool
+bounds t (SourcePos _ r c)= let
+    (SourcePos _ rl cl,SourcePos _ rr cr) = (trueStart t,sourcePosAfter  t)
+        in r >= rl && c >= cl && r <= rr && c <= cr
+
+-- inBounds :: SourcePos -> HLTree -> Bool
+-- inBounds (SourcePos _ r c) t 
+--     | null $ flatten t = False
+--     | otherwise = let 
+--         (SourcePos _ rl cl,SourcePos _ rr cr) = bounds t
+--         in r >= rl && c >= cl && r <= rr && c <= cr
+
+contains :: SourcePos -> HLTree -> Bool
+contains p t = case t of 
+    HLNone -> False
+    HLLeaf e -> bounds e p
+    HLTagged _ xs -> any (contains p) xs
+    -- HLGeneral xs -> any (contains p) xs
+    -- HLList _ xs -> any (contains p ) xs
+
+filterContaining :: SourcePos -> HLTree -> [HLTree]
+filterContaining _ HLNone = []
+filterContaining p n@(HLLeaf _) = [n |contains p n]
+filterContaining p (HLTagged t xs) = let cs = [x | x <-xs,contains p x]
+                                        in HLTagged t cs : concatMap (filterContaining p) cs

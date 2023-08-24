@@ -12,6 +12,7 @@ import Conjure.LSP.Handlers.Hover (hoverHandler)
 import Conjure.LSP.Handlers.DocumentSymbol (docSymbolHandler)
 import Conjure.LSP.Handlers.SemanticTokens (semanticTokensHandler)
 import Conjure.LSP.Handlers.Format (formatHandler)
+import Conjure.LSP.Handlers.Suggestions (suggestionHandler)
 
 data LSPConfig = LSPConfig {}
 
@@ -42,6 +43,7 @@ handlers =
         , docSymbolHandler
         , semanticTokensHandler
         , formatHandler
+        , suggestionHandler
         ]
 
 

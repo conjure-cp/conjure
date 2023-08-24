@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
@@ -19,10 +20,14 @@ module Conjure.Language.Lexer
     eLex,
     reformList,
     tokenSourcePos,
+    sourcePosAfter,
     totalLength,
     trueLength,
-    tokenStart,
+    trueStart,
+    tokenOffset,
+    tokenStartOffset,
     sourcePos0,
+    nullBefore,
     LexerError(..),
     runLexer,
     ETokenStream(..)
@@ -63,7 +68,7 @@ class Reformable a where
     reform :: a -> L.Text
 
 instance Reformable ETok where
-    reform e | oTLength (offsets e) == 0 = ""
+    reform e | totalLength e == 0 = ""
     reform (ETok{capture=cap,trivia=triv}) = L.append  (L.concat $ map showTrivia triv) (L.fromStrict cap)
         where
             showTrivia :: Trivia -> L.Text
@@ -90,14 +95,20 @@ isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem
 isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
-data Offsets =Offsets {oStart::Int,oTrueStart :: Int,oTLength::Int,oSourcePos::SourcePos}
-    deriving (Show, Eq, Ord)
+data Offsets = Offsets {
+        oStart::Int, -- the starting offset of the token (including whitespace)
+        oTotalLength::Int, -- (the total length of the the token)
+        oTokenLength::Int, -- (the length of the token excluding trivia)
+        oTrueStart :: SourcePos, -- start pos of the token
+        oSourcePos::SourcePos, -- start pos of the lexeme
+        oEndPos::SourcePos}
+    deriving (Show, Eq, Ord , Data)
 type Lexer = Parsec Void Text
 
 -- type Lexer = Parsec Void Text ETokenStream
 
 data Trivia = WhiteSpace Text | LineComment Text | BlockComment Text
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord , Data)
 
 data ETok = ETok
     { offsets :: Offsets
@@ -105,7 +116,7 @@ data ETok = ETok
     , lexeme :: Lexeme
     , capture :: Text
     }
-    deriving (Eq, Ord)
+    deriving (Eq, Ord,Show , Data)
 
 instance Pr.Pretty ETok where
     pretty = Pr.unAnnotate . uncurry (Pr.<>) .  prettySplitComments
@@ -115,27 +126,42 @@ prettySplitComments (ETok _ tr _ capture) = (Pr.hcat [Pr.pretty t Pr.<> Pr.hardl
 
 
 totalLength :: ETok -> Int
-totalLength = oTLength . offsets
+totalLength = oTotalLength . offsets
 
 trueLength :: ETok -> Int
-trueLength (ETok{offsets = (Offsets o d l _)}) = max 0 (l + (o-d))
+trueLength = oTokenLength . offsets
 
-tokenStart :: ETok -> Int
-tokenStart (ETok{offsets = (Offsets _  s _ _)}) = s
+-- tokenStart :: ETok -> Int
+-- tokenStart (ETok{offsets = (Offsets _  s _ _ _)}) = s
+tokenOffset :: ETok -> Int
+tokenOffset = oStart . offsets
+tokenStartOffset :: ETok -> Int
+tokenStartOffset t = oStart o + (oTotalLength o - oTokenLength o)
+    where o = offsets t
+
+trueStart :: ETok -> SourcePos
+trueStart = oTrueStart . offsets
 
 tokenSourcePos :: ETok -> SourcePos
 tokenSourcePos = oSourcePos . offsets
--- sourcePosAfter :: ETok -> SourcePos
--- sourcePosAfter ETok {offsets=(Offsets _ _ l (SourcePos a b (unPos->c)))} = SourcePos a b (mkPos (c + l))
+
+sourcePosAfter :: ETok -> SourcePos
+sourcePosAfter = oEndPos . offsets
 
 makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
 makeToken = ETok
 
-data LexerError = LexerError String
+--make an empty token that precedes the given token with the given lexeme
+nullBefore :: Lexeme -> ETok -> ETok
+nullBefore lex tok = ETok offs [] lex ""
+    where
+        sp = tokenSourcePos tok
+        offs =  Offsets (tokenStartOffset tok) 0 0 sp sp sp
+newtype LexerError = LexerError String
     deriving (Show)
 
-runLexer :: Text -> Either LexerError ETokenStream
-runLexer txt = case runParser eLex "Lexer" txt of
+runLexer :: Text -> Maybe FilePath -> Either LexerError ETokenStream
+runLexer txt fp = case runParser eLex (fromMaybe "Lexer" fp) txt of
   Left peb -> Left $ LexerError $ errorBundlePretty peb
   Right ets -> Right $ ETokenStream txt ets
 
@@ -150,22 +176,26 @@ eLex =
 aToken :: Lexer ETok
 aToken = do
     start <- getOffset
+    startPos <- getSourcePos
     whitespace <- pTrivia
-    wse <- getOffset
-    spos <- getSourcePos
+    tokenOffset <- getOffset
+    tokenStart <- getSourcePos
     (tok,cap) <- aLexeme
     tokenEnd <- getOffset
-    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whitespace tok cap
+    endPos <- getSourcePos
+    return $ makeToken (Offsets start (tokenEnd - start) (tokenEnd - tokenOffset) startPos tokenStart endPos) whitespace tok cap
 
 pEOF :: Lexer ETok
 pEOF = do
     start <- getOffset
+    startPos <- getSourcePos
     whitespace <- pTrivia
     wse <- getOffset
-    spos <- getSourcePos
+    tokenStart <- getSourcePos
     eof
     tokenEnd <- getOffset
-    return $ makeToken (Offsets start wse (tokenEnd - start) spos) whitespace L_EOF ""
+    endPos <- getSourcePos
+    return $ makeToken (Offsets start (tokenEnd - start) (tokenEnd - wse) startPos tokenStart endPos) whitespace L_EOF ""
 
 
 aLexeme :: Lexer (Lexeme,Text)
@@ -199,6 +229,7 @@ pIdentifier = do
     firstLetter <- takeWhile1P Nothing isIdentifierFirstLetter
     rest <- takeWhileP Nothing isIdentifierLetter
     let ident = T.append firstLetter rest
+    -- traceM $ T.unpack . T.pack $ map chr $ map ord $ T.unpack ident
     return ( LIdentifier ident, ident)
     <?> "Identifier"
 
@@ -291,7 +322,7 @@ buildStream xs = case NE.nonEmpty xs of
 
 instance VisualStream ETokenStream where
     showTokens _ =  L.unpack . reformList
-    tokensLength _ = sum . fmap ( oTLength . offsets )
+    tokensLength _ = sum . fmap trueLength
 
 -- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
 instance TraversableStream ETokenStream where
@@ -325,8 +356,8 @@ pxy = Proxy
 
 
 
-instance Show ETok where
-    show (ETok _ _ _ q) = show q
+-- instance Show ETok where
+--     show (ETok _ _ _ q) = show q
 
 
 

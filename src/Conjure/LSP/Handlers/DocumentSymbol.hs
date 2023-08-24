@@ -16,12 +16,12 @@ import Conjure.Language.Pretty (prettyT)
 docSymbolHandler :: Handlers (LspM ())
 docSymbolHandler = requestHandler STextDocumentDocumentSymbol $ \req res -> do
     let ps = req ^. params . textDocument
-    withProcessedDoc ps $ \(ProcessedFile _ _ (regionInfo -> ri)) -> do
+    withProcessedDoc ps $ \(ProcessedFile _ _ (regionInfo -> ri) _) -> do
         res $ Right $ InL . T.List $ mapMaybe translate ri
 
 
 translate :: RegionInfo -> Maybe T.DocumentSymbol
-translate reg@(RegionInfo r rSel ty cs) =
+translate reg@(RegionInfo r rSel ty cs _) =
     (\x -> DocumentSymbol
                 (getRegionName reg)
                 (getRegionDetail reg)
@@ -78,10 +78,10 @@ getRegionDetail (RegionInfo{rRegionType=rType,rChildren=childDefs}) =
         getDefs rs = Data.Text.intercalate ", " [nm | Definition nm _ <- rRegionType <$> rs]
 symbolKindFromDeclaration :: RegionType -> Maybe T.SymbolKind
 symbolKindFromDeclaration (Definition _ t) = Just $ case t of
-    Kind ValueType (TypeInt TagEnum{}) -> SkEnumMember
-    Kind ValueType (TypeRecordMember{}) -> SkField
-    Kind ValueType (TypeVariantMember{}) -> SkField
-    Kind ValueType _ -> SkVariable
+    Kind ValueType{} (TypeInt TagEnum{}) -> SkEnumMember
+    Kind ValueType{} (TypeRecordMember{}) -> SkField
+    Kind ValueType{} (TypeVariantMember{}) -> SkField
+    Kind ValueType{} _ -> SkVariable
     Kind DomainType _ -> SkTypeParameter
 symbolKindFromDeclaration (LiteralDecl t) = Just $ case t of
                 Kind _ ty -> case ty of

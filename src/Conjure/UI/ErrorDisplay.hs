@@ -3,6 +3,8 @@ import Conjure.Prelude
 import Conjure.Language.Validator
 import Text.Megaparsec
 
+import Data.Generics.Uniplate.Data as U
+
 import qualified Data.Set as Set
 import Conjure.Language.AST.Syntax
 import Conjure.Language.AST.ASTParser
@@ -13,6 +15,8 @@ import qualified Data.Text as T
 import Data.Map.Strict (assocs)
 import Conjure.Language.Pretty
 import Conjure.Language.AST.Reformer
+import Data.Data
+import Data.Traversable (traverse)
 
 
 type Parser t = Parsec DiagnosticForPrint Text t
@@ -34,9 +38,9 @@ instance ShowErrorComponent DiagnosticForPrint where
 
 tokenErrorToDisplay :: LToken -> String
 tokenErrorToDisplay (RealToken _ ) = error "tokenError with valid token"
-tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ (lexemeFace $ lexeme t)
+tokenErrorToDisplay (SkippedToken t) = "Unexpected " ++ lexemeFace (lexeme t)
 tokenErrorToDisplay (MissingToken (lexeme->l)) = "Missing " ++ case l of
-    L_Missing s -> s
+    L_Missing s -> show s
     LMissingIdentifier -> "<identifier>"
     _ -> T.unpack $ lexemeText l
 
@@ -59,6 +63,7 @@ displayError x = case x of
   InternalErrorS txt -> "Something went wrong: " ++ T.unpack txt
   WithReplacements e alts -> displayError e ++ "\n\tValid alternatives: " ++ intercalate "," (show <$> alts)
   KindError a b -> show $ "Tried to use a " <> pretty b <> " where " <> pretty a <> " was expected"
+  CategoryError categ reason -> show $ "Cannot use variable of category :" <+> pretty categ <+> "in the context of " <> pretty reason
 
 showDiagnosticsForConsole :: [ValidatorDiagnostic] -> Maybe String -> Text -> String
 showDiagnosticsForConsole errs fileName text
@@ -71,7 +76,7 @@ printSymbolTable :: SymbolTable -> IO ()
 printSymbolTable tab = putStrLn "Symbol table" >> ( mapM_  printEntry $ assocs tab)
     where
         printEntry :: (Text ,SymbolTableValue) -> IO ()
-        printEntry (a,(_,c,t)) = putStrLn $ show a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
+        printEntry (a,(_,c,t)) = putStrLn $ T.unpack a ++ ":" ++ show (pretty t) ++ if c then " Enum" else ""
 
 captureErrors :: [ValidatorDiagnostic] -> Parser ()
 captureErrors = (mapM_ captureError) . collapseSkipped . removeAmbiguousTypeWarning
@@ -114,19 +119,22 @@ captureError (ValidatorDiagnostic area message) = do
 
 
 
-val :: String -> IO ()
-val s = do
+val :: String -> String -> IO ()
+val path s = do
     let str = s
     let other = []
     let txt = Data.Text.pack str
-    let lexed = parseMaybe eLex txt
-    let stream = ETokenStream txt $ fromMaybe other lexed
+    let lexed = runLexer txt (Just path)
+    let stream = either (const $ ETokenStream txt  other) id lexed
+    let (ETokenStream _ toks) = stream
+    putStrLn $ concat $ map (T.unpack . capture) toks
+    
     -- parseTest parseProgram stream
     let progStruct = runParser parseProgram "TEST" stream
 
     case progStruct of
         Left _ -> putStrLn "error"
-        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (initialState p){typeChecking=True} in
+        Right p@(ProgramTree{}) -> let qpr = runValidator (validateModel p) (initialState p (Just txt)){typeChecking=True} in
             case qpr of
                 (model, vds,st) -> do
                     print (show model)
@@ -145,6 +153,18 @@ valFile p = do
     path <- readFileIfExists p
     case path of
       Nothing -> putStrLn "NO such file"
-      Just s -> val s
+      Just s -> val p s
     return ()
 -- putStrLn validateFind
+
+withParseTree :: String -> (ProgramTree -> IO ()) -> IO()
+withParseTree pa f = do
+    fil <- readFileIfExists pa
+    case runParser parseProgram "TEST" (either (const $ error "bad") id $ runLexer (maybe "" T.pack fil) Nothing) of
+        Left _ -> error "bad"
+        Right pt -> void $ f pt
+
+listBounds :: Int -> Int ->  ProgramTree -> IO ()
+listBounds a b t = do
+    let hlt = makeTree t
+    sequence_ [print $ toConstr  t | x@(HLTagged t _) <- universe hlt,contains (SourcePos "" (mkPos a) (mkPos b)) x]
