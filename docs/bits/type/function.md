@@ -16,7 +16,7 @@ There are 3 groups of function attributes
 
   You can also explicity define a function as seen [here.](...)
   See demonstrations of the function attributes [here]()
-  Or see functions used to solve the Magic Hexagon Problem here [here](...)
+  Or see functions used to solve the Magic Hexagon Problem here [here](https://github.com/conjure-cp/conjure/tree/main/docs/notebooks/magicHexagon.ipynb)
 
   Much of the informatin about functions lifted from [the readthedocs](https://conjure.readthedocs.io/en/latest/essence.html)
 
