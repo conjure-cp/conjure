@@ -1,4 +1,4 @@
-#Operator mod
+**Mod operator**
 ```
 %
 ```
