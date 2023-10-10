@@ -1,0 +1,23 @@
+**function domains**
+
+Takes 2 ```domains```(this page yet to be written) as arguments: the ```defined``` set and the ```range``` set of the function.
+The ```defined```set is the domain of the function - the set of inputs for the function
+the ```range``` set is the codomain of the function - the set of possible outputs for the function
+
+```essence
+**function** < comma separated attributes(optional)> <defined> --> <range>
+```
+There are 3 groups of function attributes
+  ~ related to cardinality = ```size```, ```minSize```, and ```maxSize```. They take arguments
+  ~ related to function properties = ```injective```, ```subjective```, ```bijective```
+  ~ related to partiality = ```total```
+
+  Functions are partial by default
+
+  You can also explicity define a function as seen [here.](...)
+  See demonstrations of the function attributes [here]()
+  Or see functions used to solve the Magic Hexagon Problem here [here](...)
+
+  Much of the informatin about functions lifted from [the readthedocs](https://conjure.readthedocs.io/en/latest/essence.html)
+
+  
