@@ -69,6 +69,7 @@ RUN du -sh /root/.local/bin
 FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
+RUN apt-get update
 RUN apt-get install -y --no-install-recommends default-jre-headless
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin
