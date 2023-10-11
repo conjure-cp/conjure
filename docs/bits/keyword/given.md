@@ -2,6 +2,6 @@
 
 The `given` keyword is used to declare parameters.
 ```
-GivenStatement := "given" Name ":" Domain
+given n : int(1..)
 ```
-The domains of parameters do not have to be finite.
+In the example above n is declared as a name of parameter, int(1..) is declared as a domain. 
