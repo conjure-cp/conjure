@@ -9,7 +9,7 @@ the ```range``` set is the codomain of the function - the set of possible output
 ```
 There are 3 groups of function attributes
   ~ related to cardinality = ```size```, ```minSize```, and ```maxSize```. They take arguments
-  ~ related to function properties = ```injective```, ```subjective```, ```bijective```
+  ~ related to function properties = ```injective```, ```surjective```, ```bijective```
   ~ related to partiality = ```total```
 
   Functions are partial by default
