@@ -22,7 +22,7 @@ import Conjure.Process.Sanity ( sanityChecks )
 
 
 typeCheckModel_StandAlone ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     MonadLog m =>
     NameGen m =>
@@ -45,6 +45,7 @@ typeCheckModel_StandAlone model0 = do
 
 
 typeCheckModel ::
+    MonadFail m =>
     MonadUserError m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m Model
@@ -137,7 +138,7 @@ typeCheckModel model1 = do
                     go (TypeTuple ts) o =
                         fromList <$> sequence [ go t [essence| &o[&i] |]
                                               | (i', t) <- zip allNats ts
-                                              , let i = fromInt i'
+                                              , let i :: Expression = fromInt i'
                                               ]
                     go (TypeMatrix _ t) (AbstractLiteral (AbsLitMatrix _ os)) =
                         fromList <$> sequence [ go t o | o <- os ]
@@ -213,7 +214,7 @@ typeCheckModel model1 = do
     -- now that everything knows its type, we can recover
     -- DomainInt [RangeSingle x] from DomainIntE x, if x has type int
     let
-        domainIntERecover :: forall m . Monad m => Domain () Expression -> m (Domain () Expression)
+        domainIntERecover :: forall m . MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         domainIntERecover d@(DomainIntE x) = do
             ty <- runExceptT $ typeOf x
             return $ case ty of

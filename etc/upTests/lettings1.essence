@@ -1,9 +1,0 @@
-language ESSENCE 2.0
-
-letting V be domain int(1..3)
-
-find x : set (minSize 1) of V
-$ find x : set (minSize 1) of int(1..3)  $ works
-
-such that
-    3 in x

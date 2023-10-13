@@ -1,0 +1,70 @@
+name: Building on all platforms
+
+on:
+  workflow_dispatch:        # can be triggered manually
+  push:
+    branches:
+      - main                # run for the main branch
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - etc/build/**
+      - .github/workflows/build.yml
+  pull_request:             # and for PRs
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - etc/build/**
+      - .github/workflows/build.yml
+                            # other branches that want testing must create a PR
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        GHC_VERSION: ["9.0", "9.2", "9.4"]
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Install Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+
+      - name: Install Minion
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
+
+      - name: Simple test
+        shell: bash
+        run: |
+          echo "find x : set of int(1..5) such that sum(x)=5" > test.essence
+          conjure solve test.essence --number-of-solutions=all --solutions-in-one-file --output-format=json
+          cat test.solutions.json
+          diff <(echo '[{"x":[5]},{"x":[2,3]},{"x":[1,4]}]' | tr -d '[:space:]') <(cat test.solutions.json | tr -d '[:space:]')

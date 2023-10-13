@@ -16,7 +16,7 @@ import Conjure.Language.TH
 
 -- | From the top level constraints, find the AACs and lift them to the domains of the declarations.
 --   Complain for any remaining AACs.
-attributeAsConstraints :: MonadFail m => Model -> m Model
+attributeAsConstraints :: MonadFailDoc m => Model -> m Model
 attributeAsConstraints m = do
     let statements0 = mStatements m
     statements1 <- transformBiM attributeAsConstraints_OnLocals statements0
@@ -24,13 +24,13 @@ attributeAsConstraints m = do
     return m { mStatements = statements2 }
 
 
-attributeAsConstraints_OnLocals :: MonadFail m => Expression -> m Expression
+attributeAsConstraints_OnLocals :: MonadFailDoc m => Expression -> m Expression
 attributeAsConstraints_OnLocals (WithLocals h (AuxiliaryVars locals)) =
     WithLocals h . AuxiliaryVars <$> attributeAsConstraints_OnStmts locals
 attributeAsConstraints_OnLocals x = return x
 
 
-attributeAsConstraints_OnStmts :: MonadFail m => [Statement] -> m [Statement]
+attributeAsConstraints_OnStmts :: MonadFailDoc m => [Statement] -> m [Statement]
 attributeAsConstraints_OnStmts statements0 = do
 
     -- collecting top level attribute-as-constraints
@@ -63,7 +63,7 @@ attributeAsConstraints_OnStmts statements0 = do
 
 
 mkAttributeToConstraint
-    :: (NameGen m, MonadFail m, Pretty r, Eq r)
+    :: (NameGen m, MonadFailDoc m, Pretty r, Eq r)
     => Domain r Expression                          -- the input domain
     -> AttrName                                     -- the name of the attribute
     -> Maybe Expression                             -- the value for the attribute
@@ -76,7 +76,7 @@ mkAttributeToConstraint domain attr mval x = do
     return cons
 
 attributeToConstraint
-    :: (NameGen m, MonadFail m, Pretty r, Eq r)
+    :: (NameGen m, MonadFailDoc m, Pretty r, Eq r)
     => Domain r Expression                          -- the input domain
     -> AttrName                                     -- the name of the attribute
     -> Maybe Expression                             -- the value for the attribute
@@ -87,7 +87,7 @@ attributeToConstraint domain@DomainSet{} = generator where
     generator "minSize" (Just val) = return $ \ x -> return [essence| |&x| >= &val |]
     generator "maxSize" (Just val) = return $ \ x -> return [essence| |&x| <= &val |]
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -102,7 +102,7 @@ attributeToConstraint domain@DomainMSet{} = generator where
         (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in &x . freq(&x,&i) <= &val |]
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -124,7 +124,7 @@ attributeToConstraint domain@(DomainFunction _ _ inF inT) = generator where
         b <- generator "injective"  Nothing >>= \ gen -> gen x
         return [essence| &a /\ &b |]
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -188,7 +188,7 @@ attributeToConstraint domain@(DomainRelation _ _ [dom,dom2]) | dom == dom2 = gen
         c <- generator "transitive"    Nothing >>= \ gen -> gen rel
         return [essence| &a /\ &b /\ &c |]
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -197,7 +197,7 @@ attributeToConstraint domain@DomainRelation{} = generator where
     generator "minSize"  (Just val) = return $ \ x -> return [essence| |&x| >= &val |]
     generator "maxSize"  (Just val) = return $ \ x -> return [essence| |&x| <= &val |]
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
@@ -222,12 +222,12 @@ attributeToConstraint domain@DomainPartition{} = generator where
         (jPat, j) <- quantifiedVar
         return [essence| forAll &iPat, &jPat in parts(&x) . |&i| = |&j| |]
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]
 
 attributeToConstraint domain = generator where
     generator attr _ =
-        fail $ vcat [ "Unsupported attribute:" <+> pretty attr
+        failDoc $ vcat [ "Unsupported attribute:" <+> pretty attr
                     , "For the domain:" <+> pretty domain
                     ]

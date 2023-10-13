@@ -1,0 +1,37 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]},
+                       {"DomainSet":
+                            [[], {"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainRelation":
+                      [[],
+                       [{"SizeAttr_MaxSize":
+                             {"Op":
+                                  {"MkOpPow":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}}},
+                        []],
+                       [{"DomainBool": []},
+                        {"DomainRelation":
+                             [[], [{"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}}, []],
+                              [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]]}]]}]}},
+      {"SuchThat": [{"Reference": [{"Name": "var1"}, null]}]}]}

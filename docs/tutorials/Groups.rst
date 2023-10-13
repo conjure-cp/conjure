@@ -1,5 +1,3 @@
-..  _Group:
-
 
 Semigroups, Monoids and Groups
 ------------------------------

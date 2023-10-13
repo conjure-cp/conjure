@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Combined
     ( downD, downC, up
@@ -46,7 +45,7 @@ import Conjure.Representations.Partition.PartitionAsSet
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
 downToX1 ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -56,7 +55,7 @@ downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
 downD1 ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -66,7 +65,7 @@ downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 -- | Refine (down) a domain, together with a constant (C), one level (1).
 --   The domain has to be fully instantiated.
 downC1 ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -78,7 +77,7 @@ downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, consta
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up1 ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -89,7 +88,7 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
 downD ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -103,7 +102,7 @@ downD inp@(_, domain) = do
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
 downC ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -120,7 +119,7 @@ downC inp0 = do
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -132,7 +131,7 @@ up ctxt (name, highDomain) = do
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
-                Nothing -> fail $ vcat
+                Nothing -> failDoc $ vcat
                     $ ("No value for:" <+> pretty name)
                     : "Bindings in context:"
                     : prettyContext ctxt
@@ -149,7 +148,7 @@ up ctxt (name, highDomain) = do
 
 -- | ...
 symmetryOrderingDispatch ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -167,7 +166,7 @@ symmetryOrderingDispatch downX1 inp domain =
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
 dispatch ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     Pretty x =>
@@ -227,40 +226,26 @@ type AllRepresentations m = [[Representation m]]
 
 -- | No levels!
 reprsStandardOrderNoLevels ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     AllRepresentations m
-reprsStandardOrderNoLevels = return $ concat
-    [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
-      , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
-      , function1D, function1DPartial, functionND, functionNDPartial, functionNDPartialDummy
-      , sequenceExplicitBounded
-      , relationAsMatrix
-      , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
-      , partitionOccurrence
-      ]
-    , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
-      , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
-      ]
-    ]
+reprsStandardOrderNoLevels = [concat reprsStandardOrder]
 
 
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.
 reprsStandardOrder ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     AllRepresentations m
 reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
+      , setExplicit, setOccurrence, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
       , function1D, function1DPartial, functionND, functionNDPartial, functionNDPartialDummy
@@ -277,7 +262,7 @@ reprsStandardOrder =
 
 -- | Sparser representations are to be preferred for parameters.
 reprsSparseOrder ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -331,7 +316,7 @@ reprOptions reprs (expandDomainReference -> domain) = go reprs
 --   Makes recursive calls to generate the complete structural constraints.
 --   Takes in a function to refine inner guys.
 getStructurals ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

@@ -1,9 +1,16 @@
 Error:
-    In a 'such that' statement: together({[true; int(1)]}, partition({[true; int(1)]}) - partition({[false; int(1)]}))
-    Error:
-        When type checking: partition({[true; int(1)]}) - partition({[false; int(1)]})
-        Arguments have unsupported types.
-        lhs        : partition({[true; int(1)]})
-        type of lhs: partition from matrix indexed by [int] of bool
-        rhs        : partition({[false; int(1)]})
-        type of rhs: partition from matrix indexed by [int] of bool
+    tests/parse_print/autogen/326~final/spec.essence:6:14:
+  |
+6 |              partition({[true; int(1..1)]}) - partition({[false; int(1..1)]}))
+  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from matrix indexed by [int] of bool
+
+tests/parse_print/autogen/326~final/spec.essence:6:47:
+  |
+6 |              partition({[true; int(1..1)]}) - partition({[false; int(1..1)]}))
+  |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from matrix indexed by [int] of bool

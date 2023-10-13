@@ -1,0 +1,35 @@
+{"model":
+     {"children":
+          [{"children":
+                {"domain":
+                     {"DomainFunction":
+                          [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_None"],
+                           {"DomainInt":
+                                [{"TagInt": []},
+                                 [{"RangeBounded":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+                           {"DomainInt":
+                                [{"TagInt": []},
+                                 [{"RangeBounded":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]}]},
+                 "forg": "Find", "name": {"Name": "f"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"children": [false, {"Reference": {"Name": "f"}}], "type": "OpToSet"},
+                       {"ConstantAbstract":
+                            {"AbsLitSet":
+                                 [{"ConstantAbstract":
+                                       {"AbsLitTuple":
+                                            [{"ConstantInt": [{"TagInt": []}, 0]},
+                                             {"ConstantInt": [{"TagInt": []}, 0]}]}},
+                                  {"ConstantAbstract":
+                                       {"AbsLitTuple":
+                                            [{"ConstantInt": [{"TagInt": []}, 1]},
+                                             {"ConstantInt": [{"TagInt": []}, 1]}]}}]}}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["f"]}

@@ -1,6 +1,8 @@
 Error:
-    In a declaration statement: find x: int(1..2 + false)
-    Error:
-        Not uniformly typed: [2, false; int(1..2)]
-        Involved types are: int
-                            bool
+    tests/parse_print/basic/typeErrorInDecl/typeErrorInDecl.essence:3:19:
+  |
+3 | find x : int(1..2+false)
+  |                   ^^^^^
+Type error:
+	Expected: "Number or Enum"
+	Got: bool

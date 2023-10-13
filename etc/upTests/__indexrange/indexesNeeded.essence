@@ -1,7 +1,0 @@
-language Essence 1.3
-
-find m : matrix indexed by [int(2,4),int(1,3,6..9),int(1..3,7..8,9)] of int(0..20)
-
-such that
-    forAll i : int(1,3,7..8,9) .
-        allDiff(m[2,i]) /\ allDiff(m[4,i])

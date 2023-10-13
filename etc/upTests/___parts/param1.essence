@@ -1,8 +1,0 @@
-language Essence 2.0
-
-given n : int(1..5)
-
-find x : set (minSize n ) of set (minSize 1) of int(1..n)
-
-such that
-    forAll y in x . (sum i in y . i) < n+3

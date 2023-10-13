@@ -1,9 +1,0 @@
-language Essence 1.3
-
-given n_upper: int(1..20)
-given n_boats: int(1..20)
-find n_periods: int(1..20)
-letting Boat be domain int(1..n_boats)
-find capacity: function (total) Boat --> int(1..n_upper)
-find crew: function (total) Boat --> int(1..n_upper)
-such that forAll i : Boat . crew(i) <= capacity(i)

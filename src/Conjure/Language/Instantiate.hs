@@ -39,7 +39,7 @@ trySimplify ctxt x = do
 
 
 instantiateExpression ::
-    MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -55,7 +55,7 @@ instantiateExpression ctxt x = do
 
 
 instantiateDomain ::
-    MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
     NameGen m =>
     Pretty r =>
@@ -69,7 +69,7 @@ newtype HasUndef = HasUndef Any
     deriving (Semigroup, Monoid)
 
 instantiateE ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -78,7 +78,7 @@ instantiateE ::
 instantiateE (Comprehension body gensOrConds) = do
     let
         loop ::
-            MonadFail m =>
+            MonadFailDoc m =>
             MonadState [(Name, Expression)] m =>
             EnumerateDomain m =>
             NameGen m =>
@@ -141,15 +141,21 @@ instantiateE (Comprehension body gensOrConds) = do
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
 instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantField name ty
-instantiateE (Reference _    (Just (Alias x))) = instantiateE x
-instantiateE (Reference name _) = do
+instantiateE (Reference name refto) = do
     ctxt <- gets id
     case name `lookup` ctxt of
-        Nothing -> fail $ vcat
-            $ ("No value for:" <+> pretty name)
-            : "Bindings in context:"
-            : prettyContext ctxt
         Just x -> instantiateE x
+        Nothing ->
+            case refto of
+                Just (Alias x) ->
+                    -- we do not have this name in context, but we have it stored in the Reference itself
+                    -- reuse that
+                    instantiateE x
+                _ -> 
+                    failDoc $ vcat
+                    $ ("No value for:" <+> pretty name)
+                    : "Bindings in context:"
+                    : prettyContext ctxt
 
 instantiateE (Constant c) = return c
 instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
@@ -162,7 +168,7 @@ instantiateE (Domain (DomainReference name Nothing)) = do
     ctxt <- gets id
     case name `lookup` ctxt of
         Just (Domain d) -> instantiateE (Domain d)
-        _ -> fail $ vcat
+        _ -> failDoc $ vcat
             $ ("No value for:" <+> pretty name)
             : "Bindings in context:"
             : prettyContext ctxt
@@ -174,8 +180,8 @@ instantiateE (WithLocals b (AuxiliaryVars locals)) = do
             constant <- instantiateE x
             case constant of
                 ConstantBool True -> return ()
-                _                 -> fail $ "local:" <+> pretty constant
-        _ -> fail $ "local:" <+> pretty local
+                _                 -> failDoc $ "local:" <+> pretty constant
+        _ -> failDoc $ "local:" <+> pretty local
     instantiateE b
 
 instantiateE (WithLocals b (DefinednessConstraints locals)) = do
@@ -183,14 +189,14 @@ instantiateE (WithLocals b (DefinednessConstraints locals)) = do
             constant <- instantiateE x
             case constant of
                 ConstantBool True -> return ()
-                _                 -> fail $ "local:" <+> pretty constant
+                _                 -> failDoc $ "local:" <+> pretty constant
     instantiateE b
 
-instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
+instantiateE x = failDoc $ "instantiateE:" <+> pretty (show x)
 
 
 instantiateOp ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -200,7 +206,7 @@ instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstan
 
 
 instantiateAbsLit ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -221,7 +227,7 @@ instantiateAbsLit x = do
 
 
 instantiateD ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -244,8 +250,8 @@ instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
     case lookup nm st of
         Just (Domain dom) -> instantiateD (defRepr dom)
-        Just _  -> fail $ ("DomainEnum not found in state, Just:" <+> pretty nm) <++> vcat (map pretty st)
-        Nothing -> fail $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
+        Just _  -> failDoc $ ("DomainEnum not found in state, Just:" <+> pretty nm) <++> vcat (map pretty st)
+        Nothing -> failDoc $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
 instantiateD (DomainEnum nm rs0 _) = do
     let fmap4 = fmap . fmap . fmap . fmap
     let e2c' x = either bug id (e2c x)
@@ -254,8 +260,8 @@ instantiateD (DomainEnum nm rs0 _) = do
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
             Just (Constant (ConstantInt _ i)) -> return (n, i)
-            Nothing -> fail $ "No value for member of enum domain:" <+> pretty n
-            Just c  -> fail $ vcat [ "Incompatible value for member of enum domain:" <+> pretty nm
+            Nothing -> failDoc $ "No value for member of enum domain:" <+> pretty n
+            Just c  -> failDoc $ vcat [ "Incompatible value for member of enum domain:" <+> pretty nm
                                    , "    Looking up for member:" <+> pretty n
                                    , "    Expected an integer, but got:" <+> pretty c
                                    ]
@@ -279,7 +285,7 @@ instantiateD (DomainReference name Nothing) = do
     ctxt <- gets id
     case name `lookup` ctxt of
         Just (Domain d) -> instantiateD (defRepr d)
-        _ -> fail $ vcat
+        _ -> failDoc $ vcat
             $ ("No value for:" <+> pretty name)
             : "Bindings in context:"
             : prettyContext ctxt
@@ -287,7 +293,7 @@ instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 
 
 instantiateSetAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -297,7 +303,7 @@ instantiateSetAttr (SetAttr s) = SetAttr <$> instantiateSizeAttr s
 
 
 instantiateSizeAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -311,7 +317,7 @@ instantiateSizeAttr (SizeAttr_MinMaxSize x y) = SizeAttr_MinMaxSize <$> instanti
 
 
 instantiateMSetAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -321,7 +327,7 @@ instantiateMSetAttr (MSetAttr s o) = MSetAttr <$> instantiateSizeAttr s <*> inst
 
 
 instantiateOccurAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -334,7 +340,7 @@ instantiateOccurAttr (OccurAttr_MinMaxOccur x y) = OccurAttr_MinMaxOccur <$> ins
 
 
 instantiateFunctionAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -347,7 +353,7 @@ instantiateFunctionAttr (FunctionAttr s p j) =
 
 
 instantiateSequenceAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
@@ -360,7 +366,7 @@ instantiateSequenceAttr (SequenceAttr s j) =
 
 
 instantiateRelationAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
@@ -371,7 +377,7 @@ instantiateRelationAttr (RelationAttr s b) = RelationAttr <$> instantiateSizeAtt
 
 
 instantiatePartitionAttr ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
@@ -385,7 +391,7 @@ instantiatePartitionAttr (PartitionAttr a b r) =
 
 
 instantiateR ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadState [(Name, Expression)] m =>
     EnumerateDomain m =>
     NameGen m =>
@@ -403,11 +409,11 @@ bind :: (Functor m, MonadState [(Name, Expression)] m)
     -> Constant
     -> m Bool -- False means skip
 bind (Single nm) val = modify ((nm, Constant val) :) >> return True
-bind (AbsPatTuple  pats) (ConstantAbstract (AbsLitTuple    vals))
+bind (AbsPatTuple pats) (viewConstantTuple -> Just vals)
     | length pats == length vals = and <$> zipWithM bind pats vals
-bind (AbsPatMatrix pats) (ConstantAbstract (AbsLitMatrix _ vals))
+bind (AbsPatMatrix pats) (viewConstantMatrix -> Just (_, vals))
     | length pats == length vals = and <$> zipWithM bind pats vals
-bind (AbsPatSet    pats) (ConstantAbstract (AbsLitSet      vals))
+bind (AbsPatSet pats) (viewConstantSet -> Just vals)
     | length pats == length vals = and <$> zipWithM bind pats vals
     | otherwise                  = return False
 bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:" <+> pretty val]

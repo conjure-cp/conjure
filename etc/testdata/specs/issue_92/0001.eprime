@@ -1,5 +1,0 @@
-language ESSENCE' 1.0
-
-letting Index be domain int(1..2)
-find fs_Matrix1D: matrix indexed by [Index, Index] of int(-1, 1)
-such that fs_Matrix1D[1, 1] != fs_Matrix1D[2, 1]

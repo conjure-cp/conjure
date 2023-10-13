@@ -1,0 +1,650 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]},
+                       {"DomainMatrix":
+                            [{"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}]]},
+                             {"DomainMatrix":
+                                  [{"DomainBool": []},
+                                   {"DomainInt":
+                                        [{"TagInt": []},
+                                         [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}},
+                                          {"RangeSingle":
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]}]}]}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpEq":
+                                      [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                       {"Op":
+                                            {"MkOpSum":
+                                                 {"Comprehension":
+                                                      [{"Op":
+                                                            {"MkOpOr":
+                                                                 {"Comprehension":
+                                                                      [{"Op":
+                                                                            {"MkOpAnd":
+                                                                                 {"AbstractLiteral":
+                                                                                      {"AbsLitMatrix":
+                                                                                           [{"DomainInt":
+                                                                                                 [{"TagInt": []},
+                                                                                                  [{"RangeBounded":
+                                                                                                        [{"Constant":
+                                                                                                              {"ConstantInt":
+                                                                                                                   [{"TagInt":
+                                                                                                                         []},
+                                                                                                                    1]}},
+                                                                                                         {"Constant":
+                                                                                                              {"ConstantInt":
+                                                                                                                   [{"TagInt":
+                                                                                                                         []},
+                                                                                                                    2]}}]}]]},
+                                                                                            [{"Op":
+                                                                                                  {"MkOpLeq":
+                                                                                                       [{"Reference":
+                                                                                                             [{"Name":
+                                                                                                                   "q14"},
+                                                                                                              null]},
+                                                                                                        {"Op":
+                                                                                                             {"MkOpIndexing":
+                                                                                                                  [{"Reference":
+                                                                                                                        [{"Name":
+                                                                                                                              "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                                                                         null]},
+                                                                                                                   {"Reference":
+                                                                                                                        [{"Name":
+                                                                                                                              "q11"},
+                                                                                                                         null]}]}}]}},
+                                                                                             {"Op":
+                                                                                                  {"MkOpAnd":
+                                                                                                       {"AbstractLiteral":
+                                                                                                            {"AbsLitMatrix":
+                                                                                                                 [{"DomainInt":
+                                                                                                                       [{"TagInt":
+                                                                                                                             []},
+                                                                                                                        [{"RangeBounded":
+                                                                                                                              [{"Constant":
+                                                                                                                                    {"ConstantInt":
+                                                                                                                                         [{"TagInt":
+                                                                                                                                               []},
+                                                                                                                                          1]}},
+                                                                                                                               {"Constant":
+                                                                                                                                    {"ConstantInt":
+                                                                                                                                         [{"TagInt":
+                                                                                                                                               []},
+                                                                                                                                          2]}}]}]]},
+                                                                                                                  [{"Op":
+                                                                                                                        {"MkOpAnd":
+                                                                                                                             {"Comprehension":
+                                                                                                                                  [{"Op":
+                                                                                                                                        {"MkOpEq":
+                                                                                                                                             [{"Op":
+                                                                                                                                                   {"MkOpIndexing":
+                                                                                                                                                        [{"Reference":
+                                                                                                                                                              [{"Name":
+                                                                                                                                                                    "q1_Function1D"},
+                                                                                                                                                               null]},
+                                                                                                                                                         {"Reference":
+                                                                                                                                                              [{"Name":
+                                                                                                                                                                    "q16"},
+                                                                                                                                                               null]}]}},
+                                                                                                                                              {"Op":
+                                                                                                                                                   {"MkOpIndexing":
+                                                                                                                                                        [{"Op":
+                                                                                                                                                              {"MkOpIndexing":
+                                                                                                                                                                   [{"Op":
+                                                                                                                                                                         {"MkOpIndexing":
+                                                                                                                                                                              [{"Reference":
+                                                                                                                                                                                    [{"Name":
+                                                                                                                                                                                          "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                                                                                                     null]},
+                                                                                                                                                                               {"Reference":
+                                                                                                                                                                                    [{"Name":
+                                                                                                                                                                                          "q11"},
+                                                                                                                                                                                     null]}]}},
+                                                                                                                                                                    {"Reference":
+                                                                                                                                                                         [{"Name":
+                                                                                                                                                                               "q14"},
+                                                                                                                                                                          null]}]}},
+                                                                                                                                                         {"Reference":
+                                                                                                                                                              [{"Name":
+                                                                                                                                                                    "q16"},
+                                                                                                                                                               null]}]}}]}},
+                                                                                                                                   [{"Generator":
+                                                                                                                                         {"GenDomainNoRepr":
+                                                                                                                                              [{"Single":
+                                                                                                                                                    {"Name":
+                                                                                                                                                         "q16"}},
+                                                                                                                                               {"DomainBool":
+                                                                                                                                                    []}]}}]]}}},
+                                                                                                                   {"Op":
+                                                                                                                        {"MkOpAnd":
+                                                                                                                             {"Comprehension":
+                                                                                                                                  [{"Op":
+                                                                                                                                        {"MkOpEq":
+                                                                                                                                             [{"Op":
+                                                                                                                                                   {"MkOpIndexing":
+                                                                                                                                                        [{"Op":
+                                                                                                                                                              {"MkOpIndexing":
+                                                                                                                                                                   [{"Op":
+                                                                                                                                                                         {"MkOpIndexing":
+                                                                                                                                                                              [{"Reference":
+                                                                                                                                                                                    [{"Name":
+                                                                                                                                                                                          "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                                                                                                     null]},
+                                                                                                                                                                               {"Reference":
+                                                                                                                                                                                    [{"Name":
+                                                                                                                                                                                          "q11"},
+                                                                                                                                                                                     null]}]}},
+                                                                                                                                                                    {"Reference":
+                                                                                                                                                                         [{"Name":
+                                                                                                                                                                               "q14"},
+                                                                                                                                                                          null]}]}},
+                                                                                                                                                         {"Reference":
+                                                                                                                                                              [{"Name":
+                                                                                                                                                                    "q17"},
+                                                                                                                                                               null]}]}},
+                                                                                                                                              {"Op":
+                                                                                                                                                   {"MkOpIndexing":
+                                                                                                                                                        [{"Reference":
+                                                                                                                                                              [{"Name":
+                                                                                                                                                                    "q1_Function1D"},
+                                                                                                                                                               null]},
+                                                                                                                                                         {"Reference":
+                                                                                                                                                              [{"Name":
+                                                                                                                                                                    "q17"},
+                                                                                                                                                               null]}]}}]}},
+                                                                                                                                   [{"Generator":
+                                                                                                                                         {"GenDomainNoRepr":
+                                                                                                                                              [{"Single":
+                                                                                                                                                    {"Name":
+                                                                                                                                                         "q17"}},
+                                                                                                                                               {"DomainBool":
+                                                                                                                                                    []}]}}]]}}}]]}}}}]]}}}},
+                                                                       [{"Generator":
+                                                                             {"GenDomainNoRepr":
+                                                                                  [{"Single": {"Name": "q14"}},
+                                                                                   {"DomainInt":
+                                                                                        [{"TagInt": []},
+                                                                                         [{"RangeBounded":
+                                                                                               [{"Constant":
+                                                                                                     {"ConstantInt":
+                                                                                                          [{"TagInt":
+                                                                                                                []},
+                                                                                                           1]}},
+                                                                                                {"Constant":
+                                                                                                     {"ConstantInt":
+                                                                                                          [{"TagInt":
+                                                                                                                []},
+                                                                                                           6]}}]}]]}]}}]]}}},
+                                                       [{"Generator":
+                                                             {"GenDomainNoRepr":
+                                                                  [{"Single": {"Name": "q11"}},
+                                                                   {"DomainInt":
+                                                                        [{"TagInt": []},
+                                                                         [{"RangeBounded":
+                                                                               [{"Constant":
+                                                                                     {"ConstantInt":
+                                                                                          [{"TagInt": []}, 1]}},
+                                                                                {"Constant":
+                                                                                     {"ConstantInt":
+                                                                                          [{"TagInt": []},
+                                                                                           5]}}]}]]}]}}]]}}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q1_Function1D"}},
+                                        {"DomainMatrix":
+                                             [{"DomainBool": []},
+                                              {"DomainInt":
+                                                   [{"TagInt": []},
+                                                    [{"RangeSingle":
+                                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}},
+                                                     {"RangeSingle":
+                                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]}]}]}},
+                             {"Condition": {"Constant": {"ConstantBool": true}}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpGeq":
+                                      [{"Op":
+                                            {"MkOpIndexing":
+                                                 [{"Reference":
+                                                       [{"Name":
+                                                             "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                        null]},
+                                                  {"Reference": [{"Name": "q12"}, null]}]}},
+                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q12"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpOr":
+                                      {"AbstractLiteral":
+                                           {"AbsLitMatrix":
+                                                [{"DomainInt":
+                                                      [{"TagInt": []},
+                                                       [{"RangeBounded":
+                                                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                                 [{"Op":
+                                                       {"MkOpLt":
+                                                            [{"Op":
+                                                                  {"MkOpIndexing":
+                                                                       [{"Reference":
+                                                                             [{"Name":
+                                                                                   "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                              null]},
+                                                                        {"Reference": [{"Name": "q4"}, null]}]}},
+                                                             {"Op":
+                                                                  {"MkOpIndexing":
+                                                                       [{"Reference":
+                                                                             [{"Name":
+                                                                                   "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                              null]},
+                                                                        {"Op":
+                                                                             {"MkOpSum":
+                                                                                  {"AbstractLiteral":
+                                                                                       {"AbsLitMatrix":
+                                                                                            [{"DomainInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   [{"RangeBounded":
+                                                                                                         [{"Constant":
+                                                                                                               {"ConstantInt":
+                                                                                                                    [{"TagInt":
+                                                                                                                          []},
+                                                                                                                     1]}},
+                                                                                                          {"Constant":
+                                                                                                               {"ConstantInt":
+                                                                                                                    [{"TagInt":
+                                                                                                                          []},
+                                                                                                                     2]}}]}]]},
+                                                                                             [{"Reference":
+                                                                                                   [{"Name": "q4"},
+                                                                                                    null]},
+                                                                                              {"Constant":
+                                                                                                   {"ConstantInt":
+                                                                                                        [{"TagInt": []},
+                                                                                                         1]}}]]}}}}]}}]}},
+                                                  {"Op":
+                                                       {"MkOpAnd":
+                                                            {"AbstractLiteral":
+                                                                 {"AbsLitMatrix":
+                                                                      [{"DomainInt":
+                                                                            [{"TagInt": []},
+                                                                             [{"RangeBounded":
+                                                                                   [{"Constant":
+                                                                                         {"ConstantInt":
+                                                                                              [{"TagInt": []}, 1]}},
+                                                                                    {"Constant":
+                                                                                         {"ConstantInt":
+                                                                                              [{"TagInt": []},
+                                                                                               2]}}]}]]},
+                                                                       [{"Op":
+                                                                             {"MkOpEq":
+                                                                                  [{"Op":
+                                                                                        {"MkOpIndexing":
+                                                                                             [{"Reference":
+                                                                                                   [{"Name":
+                                                                                                         "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                                                    null]},
+                                                                                              {"Reference":
+                                                                                                   [{"Name": "q4"},
+                                                                                                    null]}]}},
+                                                                                   {"Op":
+                                                                                        {"MkOpIndexing":
+                                                                                             [{"Reference":
+                                                                                                   [{"Name":
+                                                                                                         "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                                                    null]},
+                                                                                              {"Op":
+                                                                                                   {"MkOpSum":
+                                                                                                        {"AbstractLiteral":
+                                                                                                             {"AbsLitMatrix":
+                                                                                                                  [{"DomainInt":
+                                                                                                                        [{"TagInt":
+                                                                                                                              []},
+                                                                                                                         [{"RangeBounded":
+                                                                                                                               [{"Constant":
+                                                                                                                                     {"ConstantInt":
+                                                                                                                                          [{"TagInt":
+                                                                                                                                                []},
+                                                                                                                                           1]}},
+                                                                                                                                {"Constant":
+                                                                                                                                     {"ConstantInt":
+                                                                                                                                          [{"TagInt":
+                                                                                                                                                []},
+                                                                                                                                           2]}}]}]]},
+                                                                                                                   [{"Reference":
+                                                                                                                         [{"Name":
+                                                                                                                               "q4"},
+                                                                                                                          null]},
+                                                                                                                    {"Constant":
+                                                                                                                         {"ConstantInt":
+                                                                                                                              [{"TagInt":
+                                                                                                                                    []},
+                                                                                                                               1]}}]]}}}}]}}]}},
+                                                                        {"Op":
+                                                                             {"MkOpLexLt":
+                                                                                  [{"Op":
+                                                                                        {"MkOpFlatten":
+                                                                                             [null,
+                                                                                              {"Op":
+                                                                                                   {"MkOpSlicing":
+                                                                                                        [{"Op":
+                                                                                                              {"MkOpSlicing":
+                                                                                                                   [{"Op":
+                                                                                                                         {"MkOpIndexing":
+                                                                                                                              [{"Reference":
+                                                                                                                                    [{"Name":
+                                                                                                                                          "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                                                     null]},
+                                                                                                                               {"Reference":
+                                                                                                                                    [{"Name":
+                                                                                                                                          "q4"},
+                                                                                                                                     null]}]}},
+                                                                                                                    null,
+                                                                                                                    null]}},
+                                                                                                         null,
+                                                                                                         null]}}]}},
+                                                                                   {"Op":
+                                                                                        {"MkOpFlatten":
+                                                                                             [null,
+                                                                                              {"Op":
+                                                                                                   {"MkOpSlicing":
+                                                                                                        [{"Op":
+                                                                                                              {"MkOpSlicing":
+                                                                                                                   [{"Op":
+                                                                                                                         {"MkOpIndexing":
+                                                                                                                              [{"Reference":
+                                                                                                                                    [{"Name":
+                                                                                                                                          "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                                                     null]},
+                                                                                                                               {"Op":
+                                                                                                                                    {"MkOpSum":
+                                                                                                                                         {"AbstractLiteral":
+                                                                                                                                              {"AbsLitMatrix":
+                                                                                                                                                   [{"DomainInt":
+                                                                                                                                                         [{"TagInt":
+                                                                                                                                                               []},
+                                                                                                                                                          [{"RangeBounded":
+                                                                                                                                                                [{"Constant":
+                                                                                                                                                                      {"ConstantInt":
+                                                                                                                                                                           [{"TagInt":
+                                                                                                                                                                                 []},
+                                                                                                                                                                            1]}},
+                                                                                                                                                                 {"Constant":
+                                                                                                                                                                      {"ConstantInt":
+                                                                                                                                                                           [{"TagInt":
+                                                                                                                                                                                 []},
+                                                                                                                                                                            2]}}]}]]},
+                                                                                                                                                    [{"Reference":
+                                                                                                                                                          [{"Name":
+                                                                                                                                                                "q4"},
+                                                                                                                                                           null]},
+                                                                                                                                                     {"Constant":
+                                                                                                                                                          {"ConstantInt":
+                                                                                                                                                               [{"TagInt":
+                                                                                                                                                                     []},
+                                                                                                                                                                1]}}]]}}}}]}},
+                                                                                                                    null,
+                                                                                                                    null]}},
+                                                                                                         null,
+                                                                                                         null]}}]}}]}}]]}}}}]]}}}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q4"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpAnd":
+                                      {"Comprehension":
+                                           [{"Op":
+                                                 {"MkOpImply":
+                                                      [{"Op":
+                                                            {"MkOpLeq":
+                                                                 [{"Op":
+                                                                       {"MkOpSum":
+                                                                            {"AbstractLiteral":
+                                                                                 {"AbsLitMatrix":
+                                                                                      [{"DomainInt":
+                                                                                            [{"TagInt": []},
+                                                                                             [{"RangeBounded":
+                                                                                                   [{"Constant":
+                                                                                                         {"ConstantInt":
+                                                                                                              [{"TagInt":
+                                                                                                                    []},
+                                                                                                               1]}},
+                                                                                                    {"Constant":
+                                                                                                         {"ConstantInt":
+                                                                                                              [{"TagInt":
+                                                                                                                    []},
+                                                                                                               2]}}]}]]},
+                                                                                       [{"Reference":
+                                                                                             [{"Name": "q6"}, null]},
+                                                                                        {"Constant":
+                                                                                             {"ConstantInt":
+                                                                                                  [{"TagInt": []},
+                                                                                                   1]}}]]}}}},
+                                                                  {"Op":
+                                                                       {"MkOpIndexing":
+                                                                            [{"Reference":
+                                                                                  [{"Name":
+                                                                                        "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                                   null]},
+                                                                             {"Reference":
+                                                                                  [{"Name": "q5"}, null]}]}}]}},
+                                                       {"Op":
+                                                            {"MkOpLexLt":
+                                                                 [{"Op":
+                                                                       {"MkOpSlicing":
+                                                                            [{"Op":
+                                                                                  {"MkOpIndexing":
+                                                                                       [{"Op":
+                                                                                             {"MkOpIndexing":
+                                                                                                  [{"Reference":
+                                                                                                        [{"Name":
+                                                                                                              "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                         null]},
+                                                                                                   {"Reference":
+                                                                                                        [{"Name": "q5"},
+                                                                                                         null]}]}},
+                                                                                        {"Reference":
+                                                                                             [{"Name": "q6"}, null]}]}},
+                                                                             null, null]}},
+                                                                  {"Op":
+                                                                       {"MkOpSlicing":
+                                                                            [{"Op":
+                                                                                  {"MkOpIndexing":
+                                                                                       [{"Op":
+                                                                                             {"MkOpIndexing":
+                                                                                                  [{"Reference":
+                                                                                                        [{"Name":
+                                                                                                              "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                         null]},
+                                                                                                   {"Reference":
+                                                                                                        [{"Name": "q5"},
+                                                                                                         null]}]}},
+                                                                                        {"Op":
+                                                                                             {"MkOpSum":
+                                                                                                  {"AbstractLiteral":
+                                                                                                       {"AbsLitMatrix":
+                                                                                                            [{"DomainInt":
+                                                                                                                  [{"TagInt":
+                                                                                                                        []},
+                                                                                                                   [{"RangeBounded":
+                                                                                                                         [{"Constant":
+                                                                                                                               {"ConstantInt":
+                                                                                                                                    [{"TagInt":
+                                                                                                                                          []},
+                                                                                                                                     1]}},
+                                                                                                                          {"Constant":
+                                                                                                                               {"ConstantInt":
+                                                                                                                                    [{"TagInt":
+                                                                                                                                          []},
+                                                                                                                                     2]}}]}]]},
+                                                                                                             [{"Reference":
+                                                                                                                   [{"Name":
+                                                                                                                         "q6"},
+                                                                                                                    null]},
+                                                                                                              {"Constant":
+                                                                                                                   {"ConstantInt":
+                                                                                                                        [{"TagInt":
+                                                                                                                              []},
+                                                                                                                         1]}}]]}}}}]}},
+                                                                             null, null]}}]}}]}},
+                                            [{"Generator":
+                                                  {"GenDomainNoRepr":
+                                                       [{"Single": {"Name": "q6"}},
+                                                        {"DomainInt":
+                                                             [{"TagInt": []},
+                                                              [{"RangeBounded":
+                                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                                     {"Constant":
+                                                                          {"ConstantInt":
+                                                                               [{"TagInt": []}, 5]}}]}]]}]}}]]}}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q5"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpAnd":
+                                      {"Comprehension":
+                                           [{"Op":
+                                                 {"MkOpImply":
+                                                      [{"Op":
+                                                            {"MkOpGt":
+                                                                 [{"Reference": [{"Name": "q7"}, null]},
+                                                                  {"Op":
+                                                                       {"MkOpIndexing":
+                                                                            [{"Reference":
+                                                                                  [{"Name":
+                                                                                        "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                                                   null]},
+                                                                             {"Reference":
+                                                                                  [{"Name": "q5"}, null]}]}}]}},
+                                                       {"Op":
+                                                            {"MkOpAnd":
+                                                                 {"Comprehension":
+                                                                      [{"Op":
+                                                                            {"MkOpEq":
+                                                                                 [{"Op":
+                                                                                       {"MkOpIndexing":
+                                                                                            [{"Op":
+                                                                                                  {"MkOpIndexing":
+                                                                                                       [{"Op":
+                                                                                                             {"MkOpIndexing":
+                                                                                                                  [{"Reference":
+                                                                                                                        [{"Name":
+                                                                                                                              "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D"},
+                                                                                                                         null]},
+                                                                                                                   {"Reference":
+                                                                                                                        [{"Name":
+                                                                                                                              "q5"},
+                                                                                                                         null]}]}},
+                                                                                                        {"Reference":
+                                                                                                             [{"Name":
+                                                                                                                   "q7"},
+                                                                                                              null]}]}},
+                                                                                             {"Reference":
+                                                                                                  [{"Name": "q26"},
+                                                                                                   null]}]}},
+                                                                                  {"Constant":
+                                                                                       {"ConstantInt":
+                                                                                            [{"TagInt": []}, 4]}}]}},
+                                                                       [{"Generator":
+                                                                             {"GenDomainNoRepr":
+                                                                                  [{"Single": {"Name": "q26"}},
+                                                                                   {"DomainBool": []}]}}]]}}}]}},
+                                            [{"Generator":
+                                                  {"GenDomainNoRepr":
+                                                       [{"Single": {"Name": "q7"}},
+                                                        {"DomainInt":
+                                                             [{"TagInt": []},
+                                                              [{"RangeBounded":
+                                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                                     {"Constant":
+                                                                          {"ConstantInt":
+                                                                               [{"TagInt": []}, 6]}}]}]]}]}}]]}}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q5"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpLeq":
+                                      [{"Op":
+                                            {"MkOpIndexing":
+                                                 [{"Reference":
+                                                       [{"Name":
+                                                             "var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker"},
+                                                        null]},
+                                                  {"Reference": [{"Name": "q5"}, null]}]}},
+                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "q5"}},
+                                        {"DomainInt":
+                                             [{"TagInt": []},
+                                              [{"RangeBounded":
+                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                     {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}}]]}}}]}]}

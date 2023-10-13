@@ -1,0 +1,22 @@
+Generating models for matrixQ.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: matrixQ.solution
+File: conjure-output/model000001.eprime
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(1..3)] of int(1..3)
+branching on [m]
+such that and([m[q2] = 2 | q2 : int(1..3)])
+
+--------------------
+
+File: conjure-output/model000001-solution000001.solution
+language Essence 1.3
+
+letting m be [2, 2, 2; int(1..3)]
+--------------------
+

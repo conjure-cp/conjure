@@ -151,7 +151,7 @@ rule_Eq_Comprehension = "sequence-eq-comprehension" `namedRule` theRule where
                 let cardinality = Comprehension 1 goc
                 return
                     [essence|
-                        |&x| = sum (&cardinality) /\
+                        |&x| = sum(&cardinality) /\
                         and([ &y[&i[1]] = &i[2]
                             | &iPat <- &x
                             ])
@@ -293,7 +293,7 @@ rule_Comprehension_Defined = "sequence-defined" `namedRule` theRule where
                     SizeAttr_Size x -> return x
                     SizeAttr_MaxSize x -> return x
                     SizeAttr_MinMaxSize _ x -> return x
-                    _ -> fail "rule_Comprehension_Defined maxSize"
+                    _ -> failDoc "rule_Comprehension_Defined maxSize"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
@@ -410,7 +410,7 @@ rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
                         TypeSequence TypeBool <- typeOf func
                         return (func, arg)
                 case try of
-                    Nothing -> return (const ch)        -- do not fail if a child is not of proper form
+                    Nothing -> return (const ch)        -- do not failDoc if a child is not of proper form
                     Just (func, arg) -> do              -- just return it back unchanged
                         seenBefore <- gets id
                         case seenBefore of
@@ -456,7 +456,7 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
                         TypeSequence (TypeInt _) <- typeOf func
                         return (func, arg)
                 case try of
-                    Nothing -> return (const ch)        -- do not fail if a child is not of proper form
+                    Nothing -> return (const ch)        -- do not failDoc if a child is not of proper form
                     Just (func, arg) -> do              -- just return it back unchanged
                         seenBefore <- gets id
                         case seenBefore of
@@ -526,14 +526,14 @@ rule_Substring = "substring" `namedRule` theRule where
                     SizeAttr_Size x -> return x
                     SizeAttr_MaxSize x -> return x
                     SizeAttr_MinMaxSize _ x -> return x
-                    _ -> fail "rule_Substring maxSize"
+                    _ -> failDoc "rule_Substring maxSize"
 
         DomainSequence _ (SequenceAttr bSizeAttr _) _ <- domainOf b
         bMaxSize <- case bSizeAttr of
                     SizeAttr_Size x -> return x
                     SizeAttr_MaxSize x -> return x
                     SizeAttr_MinMaxSize _ x -> return x
-                    _ -> fail "rule_Substring maxSize"
+                    _ -> failDoc "rule_Substring maxSize"
 
         let maxSize = [essence| max([&aMaxSize, &bMaxSize]) |]
 
@@ -564,14 +564,14 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                     SizeAttr_Size x -> return x
                     SizeAttr_MaxSize x -> return x
                     SizeAttr_MinMaxSize _ x -> return x
-                    _ -> fail "rule_Subsequence maxSize"
+                    _ -> failDoc "rule_Subsequence maxSize"
 
         DomainSequence _ (SequenceAttr bSizeAttr _) _ <- domainOf b
         bMaxSize <- case bSizeAttr of
                     SizeAttr_Size x -> return x
                     SizeAttr_MaxSize x -> return x
                     SizeAttr_MinMaxSize _ x -> return x
-                    _ -> fail "rule_Subsequence maxSize"
+                    _ -> failDoc "rule_Subsequence maxSize"
 
         -- for each value in a, find an index into b such that these indices are in increasing order
         -- when there are multiple mappings that produce the same "a" (i.e. when there are duplicates in b)

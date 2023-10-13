@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Max where
@@ -7,7 +7,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -56,12 +57,12 @@ instance Pretty x => Pretty (OpMax x) where
     prettyPrec _ (OpMax x) = "max" <> prParens (pretty x)
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpMax x) where
-    varSymBreakingDescription (OpMax x) | Just xs <- listOut x = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpMax x) | Just xs <- listOut x = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpMax")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (OpMax x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpMax x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpMax")
         , ("children", varSymBreakingDescription x)
         ]

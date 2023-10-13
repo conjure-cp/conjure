@@ -14,7 +14,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 import qualified Data.HashMap.Strict as M
 
 
-function1DPartial :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+function1DPartial :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 function1DPartial = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -134,7 +134,7 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals_)
+              , viewConstantFunction -> Just vals_
               ) | domainCanIndexMatrix innerDomainFr = do
             let vals = M.fromList vals_
             z <- zeroVal innerDomainTo
@@ -177,26 +177,26 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
                     functionValues <- forM (zip3 flagMatrix froms valuesMatrix) $ \ (flag, from, to) ->
                         case viewConstantBool flag of
                             Just b  -> return $ if b then Just (from,to) else Nothing
-                            Nothing -> fail $ vcat [ "Expected a boolean, but got:" <++> pretty flag
+                            Nothing -> failDoc $ vcat [ "Expected a boolean, but got:" <++> pretty flag
                                                    , "When working on:" <+> pretty name
                                                    , "With domain:" <+> pretty domain
                                                    ]
                     return ( name, ConstantAbstract $ AbsLitFunction $ catMaybes functionValues )
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in Function1DPartial up 1)"
                     , "No value for:" <+> pretty (nameFlags domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in Function1DPartial up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                _ -> fail $ vcat $
+                _ -> failDoc $ vcat $
                     [ "Expected matrix literals for:" <+> pretty (nameFlags domain name)
                                             <+> "and" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name

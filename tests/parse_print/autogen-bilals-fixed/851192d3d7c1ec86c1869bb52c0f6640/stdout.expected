@@ -1,0 +1,116 @@
+language ESSENCE' 1.0
+
+find var1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..3)] of bool
+find var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..3)] of int(0..5)
+find var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..3), int(1..5), int(1)] of int(0..5)
+find var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..3), int(1..5), int(1)] of bool
+such that
+    and([var1_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
+         var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1] <
+         var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1]
+         \/
+         var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1] =
+         var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1]
+         /\
+         (flatten(var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                      [q1, .., ..])
+          <lex
+          flatten(var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                      [q1 + 1, .., ..])
+          \/
+          and([var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                   [q1, q15, 1]
+               =
+               var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                   [q1 + 1, q15, 1]
+                   | q15 : int(1..5)])
+          /\
+          flatten(var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                      [q1, .., ..])
+          <lex
+          flatten(var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                      [q1 + 1, .., ..]))
+             | q1 : int(1..2)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q2] = false ->
+         var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q2] = 0 /\
+         and([var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q2, q21, 1]
+              = 0
+              /\
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                  [q2, q21, 1]
+              = false
+                  | q21 : int(1..5)])
+             | q2 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> var1_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..2)]),
+    1 <= sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..3)]),
+    sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..3)]) <= 3,
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         and([q6 + 1 <= var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] ->
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q6, ..]
+              <lex
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q6 + 1, ..]
+              \/
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q6, 1]
+              =
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q6 + 1, 1]
+              /\
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                  [q5, q6, ..]
+              <lex
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                  [q5, q6 + 1, ..]
+                  | q6 : int(1..4)])
+             | q5 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         and([q7 > var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] ->
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q7, 1]
+              = 0
+              /\
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                  [q5, q7, 1]
+              = false
+                  | q7 : int(1..5)])
+             | q5 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         2 <= var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5]
+             | q5 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         and([q8 <= var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] ->
+              (var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                   [q5, q8, 1]
+               = 0
+               ->
+               var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                   [q5, q8, 1]
+               = false)
+                  | q8 : int(1..5)])
+             | q5 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         and([q8 <= var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] ->
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q8, 1]
+              >= 5
+                  | q8 : int(1..5)])
+             | q5 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         and([q8 <= var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] ->
+              0 <=
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q8, 1]
+                  | q8 : int(1..5)])
+             | q5 : int(1..3)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+         and([q8 <= var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] ->
+              var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                  [q5, q8, 1]
+              <= 1
+                  | q8 : int(1..5)])
+             | q5 : int(1..3)])

@@ -1,9 +1,0 @@
-language Essence 1.3 
-
-letting Index be domain int(1..3)
-
-find fs : set(size 3) of set (size 2) of function Index --> int(-1,1)
-such that
-    forAll f in fs .
-        forAll f2 in f .
-            f2(1) = -1

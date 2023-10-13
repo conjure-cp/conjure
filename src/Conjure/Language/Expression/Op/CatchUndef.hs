@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.CatchUndef where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -38,7 +39,7 @@ instance Pretty x => Pretty (OpCatchUndef x) where
     prettyPrec _ (OpCatchUndef a b) = "catchUndef" <> prettyList prParens "," [a, b]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpCatchUndef x) where
-    varSymBreakingDescription (OpCatchUndef x y) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpCatchUndef x y) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpCatchUndef")
         , ("children", JSON.Array $ V.fromList [ varSymBreakingDescription x
                                                , varSymBreakingDescription y

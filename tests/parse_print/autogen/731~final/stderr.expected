@@ -1,14 +1,6 @@
 Error:
-    Category checking failed.
-    The domain   : set (minSize var1) of mset (minSize 2, maxSize 3, minOccur var1 ** var1) of bool
-    Its category : decision
-    
-    The domain   : mset (minSize 2, maxSize 3, minOccur var1 ** var1) of bool
-    Its category : decision
-    
-    The domain   : set of mset (minSize 1, maxSize 2, maxOccur var1 % var1) of bool
-    Its category : decision
-    
-    The domain   : mset (minSize 1, maxSize 2, maxOccur var1 % var1) of bool
-    Its category : decision
-    
+    tests/parse_print/autogen/731~final/spec.essence:8:37:
+  |
+8 |                | l_2 : set (minSize var1) of
+  |                                     ^^^^
+Cannot use variable of category : decision in the context of Domain

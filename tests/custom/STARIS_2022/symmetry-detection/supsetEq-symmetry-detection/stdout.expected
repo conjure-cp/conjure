@@ -1,0 +1,19 @@
+{"model":
+     {"children":
+          [{"children": {"domain": {"DomainBool": []}, "forg": "Find", "name": {"Name": "e"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "e"}},
+                       {"children":
+                            [{"ConstantAbstract":
+                                  {"AbsLitSet":
+                                       [{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantInt": [{"TagInt": []}, 1]}]}},
+                             {"ConstantAbstract":
+                                  {"AbsLitSet":
+                                       [{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantInt": [{"TagInt": []}, 0]}]}}],
+                        "type": "OpSupsetEq"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["e"]}

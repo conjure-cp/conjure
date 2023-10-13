@@ -1,9 +1,0 @@
-language Essence 2.0
-
-find a : tuple (int(0..9))
-find b : tuple (int(0..9),int(3..8),set of int(3..4) )
-find c : tuple (int(0..9), set of int(3..4))
-
-such that
-	c[1] = a[1],
-	c[2] = b[3]

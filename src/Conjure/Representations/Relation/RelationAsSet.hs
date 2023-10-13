@@ -1,6 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 
@@ -13,7 +12,7 @@ import Conjure.Representations.Common
 
 
 relationAsSet
-    :: forall m . (MonadFail m, NameGen m)
+    :: forall m . (MonadFailDoc  m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
@@ -95,7 +94,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
         downC :: TypeOf_DownC m
         downC ( name
               , inDom
-              , ConstantAbstract (AbsLitRelation vals)
+              , viewConstantRelation -> Just  vals
               ) = do
             outDom <- outDomain inDom
             rDownC
@@ -113,17 +112,17 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation Relation_AsSet{} _ _)) =
             case lookup (outName domain name) ctxt of
-                Just (ConstantAbstract (AbsLitSet tuples)) -> do
+                Just (viewConstantSet -> Just tuples) -> do
                     vals <- mapM viewConstantTuple tuples
                     return (name, ConstantAbstract (AbsLitRelation vals))
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in RelationAsSet up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                Just constant -> fail $ vcat $
+                Just constant -> failDoc $ vcat $
                     [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain

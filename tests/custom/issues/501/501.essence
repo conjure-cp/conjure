@@ -1,0 +1,20 @@
+language Essence 1.3
+$ Williams, IPL 109 p.315 (2009) Short Cheap Tour
+$ find path of length at least k, minimising total sum of edge costs
+$ note: can be solved in O^{*}(4^k) randomized time whp
+given n,k : int(1..)
+letting vertices be domain int(1..n)
+letting edge be domain (vertices, vertices)
+given w : function edge --> int
+letting path be domain matrix indexed by [int(0..k)] of vertices
+
+find p : path
+find cost : int(-(k*min(range(w)))..(k*max(range(w))))
+
+such that
+  forAll j : int(1..k) . (p[j-1],p[j]) in defined(w)
+
+such that
+  cost = sum([w((p[i-1],p[i])) | i : int(1..k)])
+
+minimising cost

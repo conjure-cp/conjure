@@ -1,0 +1,9 @@
+$ The variant triggers refinement output that is vulnerable to the bug
+find x : variant {i:int(1..3),b:bool}
+$ The backslash at the end of the next line doesn't get eacaped, producing "... /\"
+such that active(x,i) -> x[i]>2 /\
+x[i]<5
+
+$ Simpler cases that fail since `\ ` isn't a valid JSON escape sequence
+find y:bool such that y /\ true
+find z:bool such that and([z,true])

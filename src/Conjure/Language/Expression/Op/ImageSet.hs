@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.ImageSet where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -43,7 +44,7 @@ instance Pretty x => Pretty (OpImageSet x) where
     prettyPrec _ (OpImageSet a b) = "imageSet" <> prettyList prParens "," [a,b]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpImageSet x) where
-    varSymBreakingDescription (OpImageSet a b) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpImageSet a b) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpImageSet")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

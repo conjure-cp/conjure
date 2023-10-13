@@ -8,13 +8,13 @@ import Conjure.Language
 import Conjure.Language.CategoryOf
 
 
-sanityChecks :: (MonadFail m, MonadUserError m) => Model -> m Model
+sanityChecks :: (MonadFailDoc m, MonadUserError m) => Model -> m Model
 sanityChecks model = do
     let
         recordErr :: MonadWriter [Doc] m => [Doc] -> m ()
         recordErr = tell . return . vcat
 
-        check :: (MonadFail m, MonadWriter [Doc] m) => Model -> m Model
+        check :: (MonadFailDoc m, MonadWriter [Doc] m) => Model -> m Model
         check m = do
             upToOneObjective m
             upToOneHeuristic m
@@ -115,14 +115,15 @@ sanityChecks model = do
 
 
         -- check for function literals
-        --     they cannot contain anything > CatParameter
         --     they cannot map the same element to multiple range elemnets
         -- check for partition literals
-        --     they cannot contain anything > CatParameter
         --     the parts have to be disjoint
         -- TODO: Generate where clauses for when they contain parameters.
-        checkLit :: MonadFail m => Expression -> m Expression
+        checkLit :: MonadFailDoc m => Expression -> m Expression
         checkLit lit = case lit of
+            AbstractLiteral (AbsLitSet xs) -> do
+                let ys = fromList xs
+                return $ WithLocals lit (DefinednessConstraints [ [essence| allDiff(&ys) |] ])
             AbstractLiteral (AbsLitFunction mappings) -> do
                 let defineds = fromList $ map fst mappings
                 return $ WithLocals lit (DefinednessConstraints [ [essence| allDiff(&defineds) |] ])

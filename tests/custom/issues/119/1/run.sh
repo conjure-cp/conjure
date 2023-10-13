@@ -8,7 +8,7 @@ cat conjure-output/*.solution
 
 echo "----"
 
-cat conjure-output/*.solution | grep -v '\$' | LC_ALL=C sort -u
+cat conjure-output/*.solution | grep -v "^[$]" | LC_ALL=C sort -u
 
 rm -rf conjure-output *.solution
 

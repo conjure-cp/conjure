@@ -4,15 +4,15 @@ module Conjure.UserError
     , failToUserError, failToBug
     ) where
 
-import Conjure.Prelude hiding ( fail )
-import qualified Conjure.Prelude as Prelude ( MonadFail(..) )
+import Conjure.Prelude 
+-- import qualified Conjure.Prelude as Prelude ( MonadFail(..) )
 import Conjure.Bug
 import Conjure.Language.Pretty
 
 -- base
 import System.Exit ( exitWith, ExitCode(..) )
 import System.IO as X ( stderr, hPutStrLn )
-import Control.Monad ( fail )
+
 
 -- pipes
 import qualified Pipes
@@ -21,7 +21,7 @@ import qualified Pipes
 userErr1 :: MonadUserError m => Doc -> m a
 userErr1 = userErr . return
 
-class Monad m => MonadUserError m where
+class MonadFailDoc m => MonadUserError m where
     userErr :: [Doc] -> m a
 
 instance MonadUserError (Either Doc) where
@@ -77,20 +77,21 @@ runUserError ma = runIdentity (runUserErrorT ma)
 instance (Functor m) => Functor (UserErrorT m) where
     fmap f = UserErrorT . fmap (fmap f) . runUserErrorT
 
-instance (Functor m, MonadFail m) => Applicative (UserErrorT m) where
-    pure = return
+instance (MonadFailDoc m) => Applicative (UserErrorT m) where
+    pure = UserErrorT . return .Right
     (<*>) = ap
 
-instance (MonadFail m) => Monad (UserErrorT m) where
-    return a = UserErrorT $ return (Right a)
+instance (MonadFailDoc m) => Monad (UserErrorT m) where
+    return = pure
     m >>= k = UserErrorT $ do
         a <- runUserErrorT m
         case a of
             Left e -> return (Left e)
             Right x -> runUserErrorT (k x)
-    fail = lift . fail
 
-instance (MonadIO m, MonadFail m) => MonadIO (UserErrorT m) where
+-- instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
+--     failDoc = lift . failDoc
+instance (MonadIO m, MonadFailDoc m) => MonadIO (UserErrorT m) where
     liftIO comp = UserErrorT $ do
         res <- liftIO comp
         return (Right res)
@@ -100,10 +101,13 @@ instance MonadTrans UserErrorT where
         res <- comp
         return (Right res)
 
-instance MonadFail m => MonadFail (UserErrorT m) where
-    fail = lift . Prelude.fail
+instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
+    failDoc = lift . failDoc
 
-instance MonadFail m => MonadUserError (UserErrorT m) where
+instance MonadFailDoc m => MonadFail (UserErrorT m) where
+    fail = lift . fail
+
+instance MonadFailDoc m => MonadUserError (UserErrorT m) where
     userErr msgs = UserErrorT $ return $ Left msgs
 
 

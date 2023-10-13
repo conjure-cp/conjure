@@ -1,17 +1,16 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Domain
     ( Domain(..)
     , HasRepresentation(..)
     , Range(..), rangesInts
-    , SetAttr(..), SizeAttr(..), getMaxFrom_SizeAttr
+    , SetAttr(..), SizeAttr(..), getMaxFrom_SizeAttr, intersectSizeAttr
     , MSetAttr(..), OccurAttr(..), getMaxFrom_OccurAttr
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , SequenceAttr(..)
-    , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
+    , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..), binRelNames
     , PartitionAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
@@ -118,7 +117,7 @@ instance Arbitrary x => Arbitrary (Domain r x) where
 
 
 typeOfDomain ::
-    MonadFail m =>
+    MonadFailDoc m =>
     Pretty r =>
     TypeOf x =>
     Pretty x =>
@@ -133,7 +132,7 @@ typeOfDomain d@(DomainIntE x)          = do
         TypeList     (TypeInt TagInt) -> return ()
         TypeMatrix _ (TypeInt TagInt) -> return ()
         TypeSet      (TypeInt TagInt) -> return ()
-        _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
+        _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
     return (TypeInt TagInt)
@@ -142,7 +141,7 @@ typeOfDomain d@(DomainInt t rs)        = do
         ty <- typeOf x
         case ty of
             TypeInt{} -> return ()
-            _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
+            _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
                              , "For:" <+> pretty x
                              , "In domain:" <+> pretty d
                              ]
@@ -165,7 +164,7 @@ typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
         then return (mostDefined ts)
-        else fail ("Type error in" <+> pretty p)
+        else failDoc ("Type error in" <+> pretty p)
 typeOfDomain (DomainReference _ (Just d)) = typeOfDomain d
 typeOfDomain (DomainReference nm Nothing) = bug $ "typeOfDomain: DomainReference" <+> pretty nm
 typeOfDomain (DomainMetaVar nm) = bug $ "typeOfDomain: DomainMetaVar &" <> pretty nm
@@ -258,7 +257,7 @@ reprTree DomainMetaVar{}   = Tree Nothing []
 reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel = rootLabel . reprTree
 
-applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
+applyReprTree :: (MonadFailDoc m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
 applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainIntE{}    (Tree Nothing []) = return (defRepr dom)
@@ -280,7 +279,7 @@ applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainParti
 applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
-applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
+applyReprTree dom _ = failDoc $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
@@ -335,11 +334,17 @@ data AttrName
     | AttrName_antiSymmetric
     | AttrName_aSymmetric
     | AttrName_transitive
+    | AttrName_leftTotal
+    | AttrName_rightTotal
     | AttrName_connex
     | AttrName_Euclidean
     | AttrName_serial
     | AttrName_equivalence
     | AttrName_partialOrder
+    | AttrName_linearOrder
+    | AttrName_weakOrder
+    | AttrName_preOrder
+    | AttrName_strictPartialOrder
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize AttrName
@@ -371,11 +376,17 @@ instance Pretty AttrName where
     pretty AttrName_antiSymmetric = "antiSymmetric"
     pretty AttrName_aSymmetric = "aSymmetric"
     pretty AttrName_transitive = "transitive"
+    pretty AttrName_leftTotal = "leftTotal"
+    pretty AttrName_rightTotal = "rightTotal"
     pretty AttrName_connex = "connex"
     pretty AttrName_Euclidean = "Euclidean"
     pretty AttrName_serial = "serial"
     pretty AttrName_equivalence = "equivalence"
     pretty AttrName_partialOrder = "partialOrder"
+    pretty AttrName_linearOrder = "linearOrder"
+    pretty AttrName_weakOrder = "weakOrder"
+    pretty AttrName_preOrder = "preOrder"
+    pretty AttrName_strictPartialOrder = "strictPartialOrder"
 
 instance IsString AttrName where
     fromString "size" = AttrName_size
@@ -402,11 +413,23 @@ instance IsString AttrName where
     fromString "aSymmetric" = AttrName_aSymmetric
     fromString "transitive" = AttrName_transitive
     fromString "connex" = AttrName_connex
+    fromString "leftTotal" = AttrName_leftTotal
+    fromString "rightTotal" = AttrName_rightTotal
     fromString "Euclidean" = AttrName_Euclidean
     fromString "serial" = AttrName_serial
     fromString "equivalence" = AttrName_equivalence
     fromString "partialOrder" = AttrName_partialOrder
+    fromString "linearOrder" = AttrName_linearOrder
+    fromString "weakOrder" = AttrName_weakOrder
+    fromString "preOrder" = AttrName_preOrder
     fromString s = bug $ "fromString{AttrName}:" <+> pretty s
+
+binRelNames :: [String]
+binRelNames = [ "reflexive", "irreflexive", "coreflexive"
+              , "symmetric", "antiSymmetric", "aSymmetric"
+              , "transitive", "total", "leftTotal", "rightTotal", "connex", "Euclidean"
+              , "serial", "equivalence", "weakOrder", "preOrder", "partialOrder", "strictPartialOrder", "linearOrder"
+              ]
 
 
 --------------------------------------------------------------------------------
@@ -445,12 +468,17 @@ instance Pretty a => Pretty (SizeAttr a) where
     pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <> ", maxSize" <+> pretty y
 
 
-getMaxFrom_SizeAttr :: MonadFail m => SizeAttr a -> m a
+getMaxFrom_SizeAttr :: MonadFailDoc m => SizeAttr a -> m a
 getMaxFrom_SizeAttr (SizeAttr_Size n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MaxSize n) = return n
 getMaxFrom_SizeAttr (SizeAttr_MinMaxSize _ n) = return n
-getMaxFrom_SizeAttr _ = fail "getMaxFrom_SizeAttr"
+getMaxFrom_SizeAttr _ = failDoc "getMaxFrom_SizeAttr"
 
+intersectSizeAttr :: SizeAttr a -> SizeAttr a -> SizeAttr a
+intersectSizeAttr SizeAttr_None s = s
+intersectSizeAttr s@SizeAttr_Size{} _ = s
+intersectSizeAttr _ s@SizeAttr_Size{} = s
+intersectSizeAttr s _ = s
 
 data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -461,7 +489,7 @@ instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = genericParseJSO
 instance Default (MSetAttr a) where def = MSetAttr def def
 instance Pretty a => Pretty (MSetAttr a) where
     pretty (MSetAttr a b) =
-        let inside = filter (/=prEmpty) [ pretty a
+        let inside = filter ((""/=) . show) [ pretty a
                                         , pretty b
                                         ]
         in  if null inside
@@ -487,10 +515,10 @@ instance Pretty a => Pretty (OccurAttr a) where
     pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <> ", maxOccur" <+> pretty y
 
 
-getMaxFrom_OccurAttr :: MonadFail m => OccurAttr a -> m a
+getMaxFrom_OccurAttr :: MonadFailDoc m => OccurAttr a -> m a
 getMaxFrom_OccurAttr (OccurAttr_MaxOccur n) = return n
 getMaxFrom_OccurAttr (OccurAttr_MinMaxOccur _ n) = return n
-getMaxFrom_OccurAttr _ = fail "getMaxFrom_OccurAttr"
+getMaxFrom_OccurAttr _ = failDoc "getMaxFrom_OccurAttr"
 
 
 data FunctionAttr x
@@ -503,7 +531,7 @@ instance FromJSON  a => FromJSON  (FunctionAttr a) where parseJSON = genericPars
 instance Default (FunctionAttr a) where def = FunctionAttr def def def
 instance Pretty a => Pretty (FunctionAttr a) where
     pretty (FunctionAttr a b c) =
-        let inside = filter (/=prEmpty) [pretty a, pretty b, pretty c]
+        let inside = filter ((""/=) . show) [pretty a, pretty b, pretty c]
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
@@ -551,7 +579,7 @@ instance FromJSON  a => FromJSON  (SequenceAttr a) where parseJSON = genericPars
 instance Default (SequenceAttr a) where def = SequenceAttr def def
 instance Pretty a => Pretty (SequenceAttr a) where
     pretty (SequenceAttr a b) =
-        let inside = filter (/=prEmpty) [pretty a, pretty b]
+        let inside = filter ((""/=) . show) [pretty a, pretty b]
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
@@ -566,7 +594,7 @@ instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = genericPars
 instance Default (RelationAttr a) where def = RelationAttr def def
 instance Pretty a => Pretty (RelationAttr a) where
     pretty (RelationAttr a b) =
-        let inside = filter (/=prEmpty) [pretty a, pretty b]
+        let inside = filter ((""/=) . show) [pretty a, pretty b]
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
@@ -582,10 +610,10 @@ instance Default   BinaryRelationAttrs where def = BinaryRelationAttrs S.empty
 instance Pretty BinaryRelationAttrs where
     pretty (BinaryRelationAttrs attrs) = prettyList id "," (S.toList attrs)
 instance Semigroup BinaryRelationAttrs where
-    (<>) = mappend
+    (<>) (BinaryRelationAttrs a) (BinaryRelationAttrs b) = BinaryRelationAttrs (S.union a b)
 instance Monoid BinaryRelationAttrs where
     mempty = BinaryRelationAttrs def
-    mappend (BinaryRelationAttrs a) (BinaryRelationAttrs b) = BinaryRelationAttrs (S.union a b)
+    
 
 
 data BinaryRelationAttr
@@ -597,78 +625,88 @@ data BinaryRelationAttr
     | BinRelAttr_ASymmetric
     | BinRelAttr_Transitive
     | BinRelAttr_Total
+    | BinRelAttr_LeftTotal
+    | BinRelAttr_RightTotal
     | BinRelAttr_Connex
     | BinRelAttr_Euclidean
     | BinRelAttr_Serial
     | BinRelAttr_Equivalence
     | BinRelAttr_PartialOrder
+    | BinRelAttr_LinearOrder
+    | BinRelAttr_WeakOrder
+    | BinRelAttr_PreOrder
+    | BinRelAttr_StrictPartialOrder
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize BinaryRelationAttr
 instance Hashable  BinaryRelationAttr
 instance ToJSON    BinaryRelationAttr where toJSON = genericToJSON jsonOptions
 instance FromJSON  BinaryRelationAttr where parseJSON = genericParseJSON jsonOptions
 instance Pretty BinaryRelationAttr where
-    pretty BinRelAttr_Reflexive     = "reflexive"
-    pretty BinRelAttr_Irreflexive   = "irreflexive"
-    pretty BinRelAttr_Coreflexive   = "coreflexive"
-    pretty BinRelAttr_Symmetric     = "symmetric"
-    pretty BinRelAttr_AntiSymmetric = "antiSymmetric"
-    pretty BinRelAttr_ASymmetric    = "aSymmetric"
-    pretty BinRelAttr_Transitive    = "transitive"
-    pretty BinRelAttr_Total         = "total"
-    pretty BinRelAttr_Connex        = "connex"
-    pretty BinRelAttr_Euclidean     = "Euclidean"
-    pretty BinRelAttr_Serial        = "serial"
-    pretty BinRelAttr_Equivalence   = "equivalence"
-    pretty BinRelAttr_PartialOrder  = "partialOrder"
+    pretty BinRelAttr_Reflexive          = "reflexive"
+    pretty BinRelAttr_Irreflexive        = "irreflexive"
+    pretty BinRelAttr_Coreflexive        = "coreflexive"
+    pretty BinRelAttr_Symmetric          = "symmetric"
+    pretty BinRelAttr_AntiSymmetric      = "antiSymmetric"
+    pretty BinRelAttr_ASymmetric         = "aSymmetric"
+    pretty BinRelAttr_Transitive         = "transitive"
+    pretty BinRelAttr_Total              = "total"
+    pretty BinRelAttr_LeftTotal          = "leftTotal"
+    pretty BinRelAttr_RightTotal         = "rightTotal"
+    pretty BinRelAttr_Connex             = "connex"
+    pretty BinRelAttr_Euclidean          = "Euclidean"
+    pretty BinRelAttr_Serial             = "serial"
+    pretty BinRelAttr_Equivalence        = "equivalence"
+    pretty BinRelAttr_PartialOrder       = "partialOrder"
+    pretty BinRelAttr_LinearOrder        = "linearOrder"
+    pretty BinRelAttr_WeakOrder          = "weakOrder"
+    pretty BinRelAttr_PreOrder           = "preOrder"
+    pretty BinRelAttr_StrictPartialOrder = "strictPartialOrder"
 
-readBinRel :: MonadFail m => AttrName -> m BinaryRelationAttr
-readBinRel AttrName_reflexive     = return BinRelAttr_Reflexive
-readBinRel AttrName_irreflexive   = return BinRelAttr_Irreflexive
-readBinRel AttrName_coreflexive   = return BinRelAttr_Coreflexive
-readBinRel AttrName_symmetric     = return BinRelAttr_Symmetric
-readBinRel AttrName_antiSymmetric = return BinRelAttr_AntiSymmetric
-readBinRel AttrName_aSymmetric    = return BinRelAttr_ASymmetric
-readBinRel AttrName_transitive    = return BinRelAttr_Transitive
-readBinRel AttrName_total         = return BinRelAttr_Total
-readBinRel AttrName_connex        = return BinRelAttr_Connex
-readBinRel AttrName_Euclidean     = return BinRelAttr_Euclidean
-readBinRel AttrName_serial        = return BinRelAttr_Serial
-readBinRel AttrName_equivalence   = return BinRelAttr_Equivalence
-readBinRel AttrName_partialOrder  = return BinRelAttr_PartialOrder
-readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
+
+readBinRel :: MonadFailDoc m => AttrName -> m BinaryRelationAttr
+readBinRel AttrName_reflexive          = return BinRelAttr_Reflexive
+readBinRel AttrName_irreflexive        = return BinRelAttr_Irreflexive
+readBinRel AttrName_coreflexive        = return BinRelAttr_Coreflexive
+readBinRel AttrName_symmetric          = return BinRelAttr_Symmetric
+readBinRel AttrName_antiSymmetric      = return BinRelAttr_AntiSymmetric
+readBinRel AttrName_aSymmetric         = return BinRelAttr_ASymmetric
+readBinRel AttrName_transitive         = return BinRelAttr_Transitive
+readBinRel AttrName_total              = return BinRelAttr_Total
+readBinRel AttrName_leftTotal          = return BinRelAttr_LeftTotal
+readBinRel AttrName_rightTotal         = return BinRelAttr_RightTotal
+readBinRel AttrName_connex             = return BinRelAttr_Connex
+readBinRel AttrName_Euclidean          = return BinRelAttr_Euclidean
+readBinRel AttrName_serial             = return BinRelAttr_Serial
+readBinRel AttrName_equivalence        = return BinRelAttr_Equivalence
+readBinRel AttrName_partialOrder       = return BinRelAttr_PartialOrder
+readBinRel AttrName_strictPartialOrder = return BinRelAttr_StrictPartialOrder
+readBinRel AttrName_linearOrder        = return BinRelAttr_LinearOrder
+readBinRel AttrName_weakOrder          = return BinRelAttr_WeakOrder
+readBinRel AttrName_preOrder           = return BinRelAttr_PreOrder
+readBinRel a = failDoc $ "Not a binary relation attribute:" <+> pretty a
 
 binRelToAttrName :: BinaryRelationAttr -> AttrName
-binRelToAttrName BinRelAttr_Reflexive       = AttrName_reflexive    
-binRelToAttrName BinRelAttr_Irreflexive     = AttrName_irreflexive  
-binRelToAttrName BinRelAttr_Coreflexive     = AttrName_coreflexive  
-binRelToAttrName BinRelAttr_Symmetric       = AttrName_symmetric    
-binRelToAttrName BinRelAttr_AntiSymmetric   = AttrName_antiSymmetric
-binRelToAttrName BinRelAttr_ASymmetric      = AttrName_aSymmetric   
-binRelToAttrName BinRelAttr_Transitive      = AttrName_transitive   
-binRelToAttrName BinRelAttr_Total           = AttrName_total        
-binRelToAttrName BinRelAttr_Connex          = AttrName_connex       
-binRelToAttrName BinRelAttr_Euclidean       = AttrName_Euclidean    
-binRelToAttrName BinRelAttr_Serial          = AttrName_serial       
-binRelToAttrName BinRelAttr_Equivalence     = AttrName_equivalence  
-binRelToAttrName BinRelAttr_PartialOrder    = AttrName_partialOrder 
+binRelToAttrName BinRelAttr_Reflexive          = AttrName_reflexive
+binRelToAttrName BinRelAttr_Irreflexive        = AttrName_irreflexive
+binRelToAttrName BinRelAttr_Coreflexive        = AttrName_coreflexive
+binRelToAttrName BinRelAttr_Symmetric          = AttrName_symmetric
+binRelToAttrName BinRelAttr_AntiSymmetric      = AttrName_antiSymmetric
+binRelToAttrName BinRelAttr_ASymmetric         = AttrName_aSymmetric
+binRelToAttrName BinRelAttr_Transitive         = AttrName_transitive
+binRelToAttrName BinRelAttr_Total              = AttrName_total
+binRelToAttrName BinRelAttr_LeftTotal          = AttrName_leftTotal
+binRelToAttrName BinRelAttr_RightTotal         = AttrName_rightTotal
+binRelToAttrName BinRelAttr_Connex             = AttrName_connex
+binRelToAttrName BinRelAttr_Euclidean          = AttrName_Euclidean
+binRelToAttrName BinRelAttr_Serial             = AttrName_serial
+binRelToAttrName BinRelAttr_Equivalence        = AttrName_equivalence
+binRelToAttrName BinRelAttr_PartialOrder       = AttrName_partialOrder
+binRelToAttrName BinRelAttr_LinearOrder        = AttrName_linearOrder
+binRelToAttrName BinRelAttr_WeakOrder          = AttrName_weakOrder
+binRelToAttrName BinRelAttr_PreOrder           = AttrName_preOrder
+binRelToAttrName BinRelAttr_StrictPartialOrder = AttrName_strictPartialOrder
 
--- reflexive        forAll x : T . rel(x,x)
--- irreflexive      forAll x : T . !rel(x,x)
--- coreflexive      forAll x,y : T . rel(x,y) -> x = y
---
--- symmetric        forAll x,y : T . rel(x,y) -> rel(y,x)
--- antisymmetric    forAll x,y : T . rel(x,y) /\ rel(y,x) -> x = y
--- asymmetric       forAll x,y : T . rel(x,y) -> !rel(y,x)
---
--- transitive       forAll x,y,z : T . rel(x,y) /\ rel(y,z) -> rel(x,z)
---
--- total            forAll x,y : T . rel(x,y) \/ rel(y,x)
--- connex           forAll x,y : T . rel(x,y) \/ rel(y,x) \/ x = y
--- Euclidean        forAll x,y,z : T . rel(x,y) /\ rel(x,z) -> rel(y,z)
--- serial           forAll x : T . exists y : T . rel(x,y)
--- equivalence      reflexive + symmetric + transitive
--- partialOrder     reflexive + antisymmetric + transitive
+
 
 
 data PartitionAttr a = PartitionAttr
@@ -684,7 +722,7 @@ instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = genericPar
 instance Default (PartitionAttr a) where def = PartitionAttr def def False
 instance Pretty a => Pretty (PartitionAttr a) where
     pretty (PartitionAttr a b c) =
-        let inside = filter (/=prEmpty) [ prettyNum a
+        let inside = filter ((""/=) . show) [ prettyNum a
                                         , prettySize b
                                         , prettyReg c
                                         ]
@@ -755,14 +793,14 @@ instance Arbitrary a => Arbitrary (Range a) where
         , RangeBounded <$> arbitrary <*> arbitrary
         ]
 
-rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Integer]
+rangesInts :: (MonadFailDoc m, ExpressionLike c) => [Range c] -> m [Integer]
 rangesInts = fmap (sortNub . concat) . mapM rangeInts
     where
         rangeInts (RangeSingle x) = return <$> intOut "rangeInts 1" x
         rangeInts (RangeBounded x y) = do x' <- intOut "rangeInts 2" x
                                           y' <- intOut "rangeInts 3" y
                                           return [x' .. y']
-        rangeInts _ = fail "Infinite range (or not an integer range)"
+        rangeInts _ = failDoc "Infinite range (or not an integer range)"
 
 expandRanges :: ExpressionLike c => [Range c] -> [Range c]
 expandRanges [RangeBounded a b] = [RangeBounded a b]
@@ -828,12 +866,13 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainIntE x) = "int" <> prParens (pretty x)
 
-    pretty (DomainInt (TagEnum nm) _) = pretty nm
-    pretty (DomainInt (TagUnnamed nm) _) = pretty nm
+    -- print them like integers even when they are tagged
+    -- pretty (DomainInt (TagEnum nm) _) = pretty nm
+    -- pretty (DomainInt (TagUnnamed nm) _) = pretty nm
 
     pretty (DomainInt _ []) = "int"
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
-        
+
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _             _) = pretty name
 
@@ -844,38 +883,36 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
         <+> prettyList prParens "," inners
 
     pretty (DomainRecord xs) = "record" <+> prettyList prBraces ","
-        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
+        [ pretty nm <+> ":" <++> pretty d | (nm, d) <- xs ]
 
     pretty (DomainVariant xs) = "variant" <+> prettyList prBraces ","
-        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
+        [ pretty nm <+> ":" <++> pretty d | (nm, d) <- xs ]
 
     pretty (DomainMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices
-                              <+> "of" <+> pretty inner
+                              <+> "of" <++> pretty inner
         where
             (indices,inner) = first (index:) $ collect innerNested
             collect (DomainMatrix i j) = first (i:) $ collect j
             collect x = ([],x)
 
     pretty (DomainSet r attrs inner) =
-        hang ("set" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+        "set" <+> prettyAttrs r attrs <+> "of" <++> pretty inner
 
     pretty (DomainMSet r attrs inner) =
-        hang ("mset" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+        "mset" <+> prettyAttrs r attrs <+> "of" <++> pretty inner
 
     pretty (DomainFunction r attrs innerFrom innerTo) =
-        hang ("function" <+> prettyAttrs r attrs) 4 $
-            hang (pretty innerFrom) 4 $
-                "-->" <+> pretty innerTo
+        "function" <+> prettyAttrs r attrs <++> pretty innerFrom <++> "-->" <++> pretty innerTo
 
     pretty (DomainSequence r attrs inner) =
-        hang ("sequence" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+        "sequence" <+> prettyAttrs r attrs <+> "of" <++> pretty inner
 
     pretty (DomainRelation r attrs inners)
-        = hang ("relation" <+> prettyAttrs r attrs <+> "of") 4 (prettyList prParens " *" inners)
+        = "relation" <+> prettyAttrs r attrs <+> "of" <++> prettyList prParens " *" inners
 
     pretty (DomainPartition r attrs inner)
-        = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
+        = "partition" <+> prettyAttrs r attrs <+> "from" <++> pretty inner
 
     pretty d@DomainOp{} = pretty (show d)
 
@@ -887,7 +924,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 prettyAttrs :: (Pretty a, Pretty b) => a -> b -> Doc
 prettyAttrs a bs =
     let prettya = pretty a
-    in  if prettya == "()"
+    in  if show prettya == "()"
             then pretty bs
             else prBraces prettya <+> pretty bs
 
@@ -1012,14 +1049,14 @@ normaliseRange  norm (RangeLowerBounded x) = RangeLowerBounded (norm x)
 normaliseRange  norm (RangeUpperBounded x) = RangeUpperBounded (norm x)
 normaliseRange  norm (RangeBounded x y)    = RangeBounded (norm x) (norm y)
 
-innerDomainOf :: (MonadFail m, Show x) => Domain () x -> m (Domain () x)
+innerDomainOf :: (MonadFailDoc m, Show x) => Domain () x -> m (Domain () x)
 innerDomainOf (DomainMatrix _ t) = return t
 innerDomainOf (DomainSet _ _ t) = return t
 innerDomainOf (DomainMSet _ _ t) = return t
 innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
 innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
 innerDomainOf (DomainPartition _ _ t) = return (DomainSet () def t)
-innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
+innerDomainOf t = failDoc ("innerDomainOf:" <+> pretty (show t))
 
 singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x
 singletonDomainInt (DomainInt _ [RangeSingle a]) = Just a

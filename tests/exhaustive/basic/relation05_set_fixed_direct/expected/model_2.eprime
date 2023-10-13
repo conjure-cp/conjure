@@ -1,17 +1,16 @@
 language ESSENCE' 1.0
 
-find x_RelationAsSetR3_ExplicitR3_1: matrix indexed by [int(1..4)] of int(1..2)
-find x_RelationAsSetR3_ExplicitR3_2_Explicit: matrix indexed by [int(1..4), int(1..2)] of int(1..3)
-branching on [x_RelationAsSetR3_ExplicitR3_1, x_RelationAsSetR3_ExplicitR3_2_Explicit]
+find x_RelationAsSetR2_ExplicitR2_1: matrix indexed by [int(1..4)] of int(1..2)
+find x_RelationAsSetR2_ExplicitR2_2_Occurrence: matrix indexed by [int(1..4), int(1..3)] of bool
+branching on [x_RelationAsSetR2_ExplicitR2_1, x_RelationAsSetR2_ExplicitR2_2_Occurrence]
 such that
-    and([flatten([[x_RelationAsSetR3_ExplicitR3_1[q1]; int(1)],
-                  [x_RelationAsSetR3_ExplicitR3_2_Explicit[q1, q5] | q5 : int(1..2)];
+    and([flatten([[x_RelationAsSetR2_ExplicitR2_1[q1]; int(1)],
+                  [-toInt(x_RelationAsSetR2_ExplicitR2_2_Occurrence[q1, q4]) | q4 : int(1..3)];
                       int(1..2)])
          <lex
-         flatten([[x_RelationAsSetR3_ExplicitR3_1[q1 + 1]; int(1)],
-                  [x_RelationAsSetR3_ExplicitR3_2_Explicit[q1 + 1, q6] | q6 : int(1..2)];
+         flatten([[x_RelationAsSetR2_ExplicitR2_1[q1 + 1]; int(1)],
+                  [-toInt(x_RelationAsSetR2_ExplicitR2_2_Occurrence[q1 + 1, q5]) | q5 : int(1..3)];
                       int(1..2)])
              | q1 : int(1..3)]),
-    and([x_RelationAsSetR3_ExplicitR3_2_Explicit[q2, 1] < x_RelationAsSetR3_ExplicitR3_2_Explicit[q2, 2]
-             | q2 : int(1..4)])
+    and([2 = sum([toInt(x_RelationAsSetR2_ExplicitR2_2_Occurrence[q2, q3]) | q3 : int(1..3)]) | q2 : int(1..4)])
 

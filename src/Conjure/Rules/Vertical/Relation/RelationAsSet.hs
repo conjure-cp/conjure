@@ -80,8 +80,8 @@ rule_In = "relation-in{RelationAsSet}" `namedRule` theRule where
     theRule _ = na "rule_In"
 
     tableCheck ::
-        MonadFail m =>
-        (?typeCheckerMode::TypeCheckerMode) =>
+        MonadFailDoc m =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
         Expression -> Expression -> m ()
     tableCheck x rel | categoryOf rel < CatDecision = do
         tyX <- typeOf x

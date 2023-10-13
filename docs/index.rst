@@ -16,6 +16,7 @@ Conjure: The Automated Constraint Modelling Tool
     features
     essence
     tutorials
+    tutorials-notebook
     zreferences
     contact
 

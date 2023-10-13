@@ -1,0 +1,38 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainSet":
+                      [[],
+                       {"SizeAttr_MinMaxSize":
+                            [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                             {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                       {"DomainRelation":
+                            [[],
+                             [{"SizeAttr_Size":
+                                   {"Op":
+                                        {"MkOpSum":
+                                             {"AbstractLiteral":
+                                                  {"AbsLitMatrix":
+                                                       [{"DomainInt":
+                                                             [{"TagInt": []},
+                                                              [{"RangeBounded":
+                                                                    [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                                                     {"Constant":
+                                                                          {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                                                        [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                                         {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]]}}}}},
+                              []],
+                             [{"DomainRelation":
+                                   [[], [{"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}}, []],
+                                    [{"DomainBool": []},
+                                     {"DomainSet":
+                                          [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}},
+                                           {"DomainBool": []}]}]]}]]}]}]}},
+      {"SuchThat": [{"Constant": {"ConstantBool": true}}, {"Constant": {"ConstantBool": true}}]}]}

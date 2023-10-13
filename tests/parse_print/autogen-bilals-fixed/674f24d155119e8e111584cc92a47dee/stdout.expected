@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..0)] of int(0..4)
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..0)] of bool
+find var3_RelationAsMatrix: matrix indexed by [bool, bool, bool] of bool
+such that
+    var1,
+    sum([sum([sum([var3_RelationAsMatrix[q7, q8, q9] | q9 : bool]) | q8 : bool]) | q7 : bool]) <= 5

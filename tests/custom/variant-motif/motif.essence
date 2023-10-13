@@ -1,0 +1,22 @@
+
+given numNodes : int
+letting NODE be domain int(1..numNodes)
+given data : matrix indexed by [NODE, NODE] of int(0..1)
+
+find covering : matrix indexed by [NODE, NODE] of variant { notAnEdge
+                                                          , edgeCover
+                                                          , clique3 : NODE          $ which other node?
+                                                          }
+
+such that forAll i,j : NODE . data[i,j] = 0 <-> active(covering[i,j], notAnEdge)
+
+such that forAll i,j : NODE . active(covering[i,j], clique3) -> exists k : NODE . and([ covering[i,j][clique3] = k
+                                                                                      , covering[i,k][clique3] = j
+                                                                                      , covering[j,k][clique3] = i
+                                                                                      ])
+
+find numEdgeCovers : int(0..numNodes**2) such that numEdgeCovers = sum([toInt(active(covering[i,j], edgeCover)) | i,j : NODE ])
+find numClique3s   : int(0..numNodes**2) such that numClique3s   = sum([toInt(active(covering[i,j], clique3)) | i,j : NODE ])
+
+such that numClique3s >= 40
+$ maximising numClique3s

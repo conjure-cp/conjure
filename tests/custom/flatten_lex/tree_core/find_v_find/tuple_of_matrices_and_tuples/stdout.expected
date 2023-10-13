@@ -1,4 +1,5 @@
 language ESSENCE' 1.0
+
 find A_1_1: bool
 find A_1_2: bool
 find A_2: matrix indexed by [int(0..1)] of int(1..5)
@@ -16,3 +17,4 @@ such that
     flatten([flatten([[-toInt(B_1_1); int(1)], [-toInt(B_1_2); int(1)]; int(1..2)]), [B_2[q4] | q4 : int(0..1)],
              [-toInt(B_3); int(1)];
                  int(1..3)])
+

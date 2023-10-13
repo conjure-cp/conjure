@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.AtMost where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -47,7 +48,7 @@ instance Pretty x => Pretty (OpAtMost x) where
     prettyPrec _ (OpAtMost a b c) = "atmost" <> prettyList prParens "," [a, b, c]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpAtMost x) where
-    varSymBreakingDescription (OpAtMost a b c) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpAtMost a b c) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpAtMost")
         , ("children", JSON.Array $ V.fromList [ varSymBreakingDescription a
                                                , varSymBreakingDescription b

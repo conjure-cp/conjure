@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Function.FunctionNDPartial ( functionNDPartial ) where
 
@@ -15,7 +14,7 @@ import Conjure.Representations.Function.FunctionND ( viewAsDomainTuple, mkLensAs
 
 
 functionNDPartial :: forall m .
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -164,7 +163,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , viewConstantFunction -> Just vals
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             z <- zeroVal innerDomainTo
@@ -180,7 +179,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                 unrollD is j = foldr DomainMatrix j is
 
             let
-                unrollC :: MonadFail m
+                unrollC :: MonadFailDoc m
                         => [Domain () Constant]
                         -> [Constant]               -- indices
                         -> m (Constant, Constant)
@@ -203,7 +202,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                     return ( ConstantAbstract $ AbsLitMatrix i matrixFlags
                            , ConstantAbstract $ AbsLitMatrix i matrixVals
                            )
-                unrollC is prevIndices = fail $ vcat [ "FunctionNDPartial.up.unrollC"
+                unrollC is prevIndices = failDoc $ vcat [ "FunctionNDPartial.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
@@ -232,15 +231,15 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
             case (lookup (nameFlags domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just flagMatrix, Just valuesMatrix) -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (MonadFailDoc m, Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc m => Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
-                                Nothing -> fail "Value not found. FunctionNDPartial.up.index"
+                                Nothing -> failDoc "Value not found. FunctionNDPartial.up.index"
                                 Just v  -> index v is
                         index m is = bug ("FunctionNDPartial.up.index" <+> pretty m <+> pretty (show is))
 
@@ -251,7 +250,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                         case viewConstantBool flag of
                             Just False -> return Nothing
                             Just True  -> return (Just (mk these, value))
-                            _ -> fail $ vcat
+                            _ -> failDoc $ vcat
                                 [ "Expecting a boolean literal, but got:" <++> pretty flag
                                 , "                           , and    :" <+> pretty value
                                 , "When working on:" <+> pretty name
@@ -261,14 +260,14 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                            , ConstantAbstract $ AbsLitFunction $ catMaybes vals
                            )
 
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in FunctionNDPartial up 1)"
                     , "No value for:" <+> pretty (nameFlags domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in FunctionNDPartial up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
@@ -282,7 +281,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
             [flags, values] <- downX1 inp
             Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
-            
+
             -- setting up the quantification
             let kRange = case innerDomainFr of
                     DomainTuple ts  -> map fromInt [1 .. genericLength ts]
@@ -295,7 +294,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                 valuesIndexed = make opMatrixIndexing values toIndex
 
             soValues <- innerSO downX1 valuesIndexed innerDomainTo
-
+            
             return $ 
                 Comprehension
                     [essence| ( -&flagsIndexed
@@ -303,4 +302,3 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                               )
                             |]
                     [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
-

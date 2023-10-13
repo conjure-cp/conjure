@@ -1,0 +1,24 @@
+{"model":
+     {"children":
+          [{"children":
+                {"domain":
+                     {"DomainSet":
+                          [[], {"SizeAttr_None": []},
+                           {"DomainSet":
+                                [[], {"SizeAttr_None": []},
+                                 {"DomainInt":
+                                      [{"TagInt": []},
+                                       [{"RangeBounded":
+                                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}]},
+                 "forg": "Find", "name": {"Name": "S"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "S"}},
+                       {"children": [{"ConstantAbstract": {"AbsLitSet": [{"ConstantInt": [{"TagInt": []}, 0]}]}}],
+                        "type": "OpPowerSet"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["S"]}

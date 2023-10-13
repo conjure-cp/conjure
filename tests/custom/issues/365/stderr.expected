@@ -1,6 +1,15 @@
 Error:
     365.essence:2:56:
-unexpected >
-expecting expression
-    find i : int(0..9) such that forAll j : int(0..9) . j <> i
-                                                           ^
+  |
+2 | find i : int(0..9) such that forAll j : int(0..9) . j <> i
+  |                                                        ^
+Missing Expression
+
+365.essence:2:58:
+  |
+2 | find i : int(0..9) such that forAll j : int(0..9) . j <> i
+  |                                                          ^
+Type error:
+	Expected: bool
+	Got: int
+

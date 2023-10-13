@@ -11,7 +11,7 @@ import Conjure.Representations.Common
 
 
 sequenceExplicitBounded :: forall m .
-    MonadFail m =>
+    MonadFailDoc m=>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -35,7 +35,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
 
         getMaxSize (SizeAttr_MaxSize x) = return x
         getMaxSize (SizeAttr_MinMaxSize _ x) = return x
-        getMaxSize _ = fail "Unknown maxSize"
+        getMaxSize _ = failDoc "Unknown maxSize"
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainSequence
@@ -208,7 +208,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) innerDomain)
-              , ConstantAbstract (AbsLitSequence constants)
+              , viewConstantSequence -> Just constants
               ) =
             return $ Just
                 [ ( nameMarker domain name
@@ -222,14 +222,14 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
                 ]
         downC ( name
               , domain@(DomainSequence _ (SequenceAttr sizeAttr _) innerDomain)
-              , ConstantAbstract (AbsLitSequence constants)
+              , viewConstantSequence -> Just constants
               ) = do
             maxSize <- getMaxSize sizeAttr
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
                     ConstantInt _ x -> return x
-                    _ -> fail $ vcat
+                    _ -> failDoc $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
@@ -262,26 +262,26 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
                             case viewConstantMatrix constantMatrix of
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))
-                                _ -> fail $ vcat
+                                _ -> failDoc $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting an integer literal for:" <+> pretty (nameMarker domain name)
                                 , "But got:" <+> pretty marker
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in Sequence ExplicitBounded up 1)"
                     , "No value for:" <+> pretty (nameMarker domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in Sequence ExplicitBounded up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name

@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Conjure.Language.EvaluateOp ( EvaluateOp(..) ) where
 
 import Conjure.Prelude
@@ -17,7 +15,7 @@ import {-# SOURCE #-} Conjure.Process.ValidateConstantForDomain ( validateConsta
 --   Make sure the output is normalised.
 class EvaluateOp op where
     evaluateOp :: 
-        MonadFail m =>
+        MonadFailDoc m =>
         NameGen m =>
         EnumerateDomain m =>
         (?typeCheckerMode :: TypeCheckerMode) =>
@@ -113,7 +111,7 @@ instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten (Just n) m) = do
         let flat lvl c | lvl < 0 = return [c]
             flat lvl (viewConstantMatrix -> Just (_, xs)) = concatMapM (flat (lvl-1)) xs
-            flat _ _ = fail $ "Cannot flatten" <+> pretty n <+> "levels."
+            flat _ _ = failDoc $ "Cannot flatten" <+> pretty n <+> "levels."
         flattened <- flat n m
         return (ConstantAbstract $ AbsLitMatrix
                     (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength flattened))])
@@ -121,6 +119,7 @@ instance EvaluateOp OpFlatten where
 
 instance EvaluateOp OpFreq where
     evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp (OpFreq (viewConstantMatrix -> Just (_, cs)) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
 instance EvaluateOp OpFromSolution where
@@ -208,7 +207,7 @@ instance EvaluateOp OpIndexing where
         ty   <- typeOf m
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                            TypeList tyTo     -> return tyTo
-                           _ -> fail "evaluateOp{OpIndexing}"
+                           _ -> failDoc "evaluateOp{OpIndexing}"
         return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
     evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt _ x)) = do
             ty   <- typeOf m
@@ -230,7 +229,7 @@ instance EvaluateOp OpIndexing where
         return (at vals (fromInteger (x-1)))
     evaluateOp rec@(OpIndexing (viewConstantRecord -> Just vals) (ConstantField name _)) =
         case lookup name vals of
-            Nothing -> fail $ vcat
+            Nothing -> failDoc $ vcat
                     [ "Record doesn't have a member with this name:" <+> pretty name
                     , "Record:" <+> pretty rec
                     ]
@@ -678,9 +677,21 @@ instance EvaluateOp OpGCC where
     evaluateOp op@OpGCC{} = na $ "evaluateOp{OpGCC}" <+> pretty op
 
 instance EvaluateOp OpAtLeast where
+    evaluateOp (OpAtLeast (intsOut "" -> Just vars)
+                          (intsOut "" -> Just bounds)
+                          (intsOut "" -> Just vals)) = do
+        return $ ConstantBool $ and [ sum [1 | x <- vars, x == val] >= bound
+                                    | (bound, val) <- zip bounds vals
+                                    ]
     evaluateOp op@OpAtLeast{} = na $ "evaluateOp{OpAtLeast}" <+> pretty op
 
 instance EvaluateOp OpAtMost where
+    evaluateOp (OpAtMost (intsOut "" -> Just vars)
+                         (intsOut "" -> Just bounds)
+                         (intsOut "" -> Just vals)) = do
+        return $ ConstantBool $ and [ sum [1 | x <- vars, x == val] <= bound
+                                    | (bound, val) <- zip bounds vals
+                                    ]
     evaluateOp op@OpAtMost{} = na $ "evaluateOp{OpAtMost}" <+> pretty op
 
 instance EvaluateOp OpTildeLeq where
@@ -788,24 +799,24 @@ instance EvaluateOp OpUnion where
 
 instance EvaluateOp OpXor where
     evaluateOp (OpXor x) = ConstantBool . xor <$> boolsOut x
-        where xor xs = 1 == length [ () | True <- xs ]
+        where xor xs = odd (length [ () | True <- xs ])
 
 
-boolsOut :: MonadFail m => Constant -> m [Bool]
+boolsOut :: MonadFailDoc m => Constant -> m [Bool]
 boolsOut (viewConstantMatrix -> Just (_, cs)) = concatMapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
-intsOut :: MonadFail m => Doc -> Constant -> m [Integer]
+intsOut :: MonadFailDoc m => Doc -> Constant -> m [Integer]
 intsOut doc (viewConstantMatrix -> Just (_, cs)) = concatMapM (intsOut doc) cs
 intsOut doc (viewConstantSet -> Just cs) = concatMapM (intsOut doc) cs
 intsOut doc (viewConstantMSet -> Just cs) = concatMapM (intsOut doc) cs
 intsOut doc b = return <$> intOut ("intsOut" <+> doc) b
 
-intsOut2D :: MonadFail m => Doc -> Constant -> m [[Integer]]
+intsOut2D :: MonadFailDoc m => Doc -> Constant -> m [[Integer]]
 intsOut2D doc (viewConstantMatrix -> Just (_, cs)) = mapM (intsOut doc) cs
 intsOut2D doc (viewConstantSet -> Just cs) = mapM (intsOut doc) cs
 intsOut2D doc (viewConstantMSet -> Just cs) = mapM (intsOut doc) cs
-intsOut2D doc _ = fail ("intsOut2D" <+> doc)
+intsOut2D doc _ = failDoc ("intsOut2D" <+> doc)
 
 tildeLt :: Constant -> Constant -> Bool
 tildeLt = tilLt

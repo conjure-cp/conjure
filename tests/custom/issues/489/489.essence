@@ -1,0 +1,4 @@
+letting T be new type enum {A,B,A,C}
+letting fullday be function(A-->1, B-->2,A-->1,C-->4)
+find f : function(total) T --> int(1..10)
+such that forAll t : T. f(t) = fullday(t)

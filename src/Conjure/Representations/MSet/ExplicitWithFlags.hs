@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+msetExplicitWithFlags :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 msetExplicitWithFlags = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -31,7 +31,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
             MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
             MSetAttr _ (OccurAttr_MaxOccur x) -> do y <- domainSizeOf innerDomain ; return (x * y)
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> do y <- domainSizeOf innerDomain ; return (x * y)
-            _ -> fail ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+            _ -> failDoc ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
 
         getMinOccur attrs = case attrs of
             MSetAttr _ (OccurAttr_MinOccur x) -> Just x
@@ -44,7 +44,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
             MSetAttr (SizeAttr_Size x) _ -> return x
             MSetAttr (SizeAttr_MaxSize x) _ -> return x
             MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
-            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
+            _ -> failDoc ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainMSet _ attrs innerDomain)) = do
@@ -92,10 +92,11 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                     return [essence| sum &iPat : int(1..&maxSize) . &flags[&i] |]
 
                 -- maxOccur is enforced by the domain of the flag
-                minOccurrenceCons flags = do
+                minOccurrenceCons flags values = do
                     (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
                     return
-                        [ [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] = 0 \/ &flags[&i] >= &minOccur |]
+                        [ [essence| forAll &iPat : &innerDomain . exists &jPat : int(1..&maxSize) . &flags[&j] >= &minOccur /\ &values[&j] = &i |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
 
@@ -118,7 +119,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                             [ orderingWhenFlagged    flags values
                             , dontCareWhenNotFlagged flags values
                             , flagsToTheLeft         flags
-                            , minOccurrenceCons      flags
+                            , minOccurrenceCons      flags values
                             , mkSizeCons sizeAttrs <$> cardinality flags
                             , innerStructuralCons flags values
                             ]
@@ -129,7 +130,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
-              , ConstantAbstract (AbsLitMSet constants')
+              , viewConstantMSet -> Just constants'
               ) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = mkDomainIntB 1 maxSize
@@ -139,7 +140,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
             maxSizeInt <-
                 case maxSize of
                     ConstantInt _ x -> return x
-                    _ -> fail $ vcat
+                    _ -> failDoc $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
@@ -176,26 +177,26 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
                                                     [ replicate (fromInteger i) v
                                                     | (ConstantInt TagInt i,v) <- zip flags vals
                                                     ] )
-                                _ -> fail $ vcat
+                                _ -> failDoc $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (nameFlag domain name)
                                 , "But got:" <+> pretty flagMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                (Nothing, _) -> fail $ vcat $
+                (Nothing, _) -> failDoc $ vcat $
                     [ "(in MSet ExplicitVarSizeWithFlags up 1)"
                     , "No value for:" <+> pretty (nameFlag domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> fail $ vcat $
+                (_, Nothing) -> failDoc $ vcat $
                     [ "(in MSet ExplicitVarSizeWithFlags up 2)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name

@@ -1,6 +1,0 @@
-language ESSENCE 2.0
-
-find x : matrix indexed by [int(1..2)] of set(minSize 1) of (int(4,5,6),int(7,8,9)) 
-such that
-    (4,7) in x[1],
-    x[2] = {(5,8),(6,9)}

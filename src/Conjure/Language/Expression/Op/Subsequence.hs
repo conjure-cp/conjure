@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.Subsequence where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -27,7 +28,11 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubsequence x) where
         tyb <- typeOf b
         case (tya, tyb) of
             (TypeSequence{}, TypeSequence{}) -> return TypeBool
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected types for operands:"
+                                       , " - " <> pretty tya
+                                       , " - " <> pretty tyb
+                                       ]
 
 instance SimplifyOp OpSubsequence x where
     simplifyOp _ = na "simplifyOp{OpSubsequence}"
@@ -36,7 +41,7 @@ instance Pretty x => Pretty (OpSubsequence x) where
     prettyPrec prec op@(OpSubsequence a b) = prettyPrecBinOp prec [op] a b
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpSubsequence x) where
-    varSymBreakingDescription (OpSubsequence a b) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpSubsequence a b) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpSubsequence")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

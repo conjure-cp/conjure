@@ -11,6 +11,7 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.Type
 
@@ -26,13 +27,32 @@ import qualified Data.HashMap.Strict as M
 
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
-removeEnumsFromModel :: (MonadFail m, MonadLog m, MonadUserError m) => Model -> m Model
+removeEnumsFromModel ::
+    MonadFailDoc m =>
+    MonadLog m =>
+    MonadUserError m =>
+    Model -> m Model
 removeEnumsFromModel =
+    preCheckForNameReuse >=>
     removeEnumsFromModel_LettingEnums >=>
     removeEnumsFromModel_GivenEnums   >=>
     checkEnums
 
     where
+
+        -- check if names defined as part of enumerated types are later used as names of top-level or quantified declarations
+        preCheckForNameReuse model = do
+            let enumNames = concat [ names | Declaration (LettingDomainDefnEnum _ names) <- mStatements model ]
+            let redefinedTopLevel = [ name | Declaration (FindOrGiven _ name _) <- mStatements model, name `elem` enumNames ]
+            let redefinedQuantified = [ name | Generator gen <- universeBi (mStatements model), name@Name{} <- universeBi gen, name `elem` enumNames ]
+            let redefined = redefinedTopLevel ++ redefinedQuantified
+            let duplicates = [ name | (name, count) <- histogram enumNames, count > 1 ]
+            unless (null duplicates) $ userErr1 $ "Enumerated value defined multiple times:" <+> prettyList id "," duplicates
+            unless (null redefined) $ userErr1 $ vcat
+                [ "Members of an enum domain are later redefined as top-level or quantified variables."
+                , "Check:" <+> prettyList id "," redefined
+                ]
+            return model
 
         removeEnumsFromModel_LettingEnums model = do
             (statements', ( enumDomainNames :: [(Name, Domain () Expression)]
@@ -67,7 +87,7 @@ removeEnumsFromModel =
                     = return (fromIntWithTag i (TagEnum ename))
                 onX p = return p
 
-                onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
+                onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
                 onD (DomainEnum nm@(Name nmText) (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
                     = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
@@ -130,7 +150,7 @@ removeEnumsFromModel =
 
 
 removeEnumsFromParam
-    :: (MonadFail m, MonadUserError m)
+    :: (MonadFailDoc m, MonadUserError m)
     => Model -> Model -> m (Model, Model)
 removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
@@ -167,7 +187,7 @@ removeEnumsFromParam model param = do
             = return (fromIntWithTag i (TagEnum ename))
         onX p = return p
 
-        onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
+        onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm@(Name nmText) (Just ranges) _)
             | Just _ <- M.lookup nm enumDomainNames
             = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
@@ -201,6 +221,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
         helper domain constant = case (domain, constant) of
 
+            (_, TypedConstant c _) -> helper domain c
+
             (_, c@ConstantUndefined{}) -> c
 
             (DomainBool  , c) -> c
@@ -214,62 +236,64 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainReference ename _  , ConstantInt _ i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat  [ "domain  :" <+> pretty domain
-                                                                                  , "constant:" <+> pretty constant
-                                                                                  ]
+                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat [ "domain  :" <+> pretty domain
+                                                                            , "constant:" <+> pretty constant
+                                                                            ]
 
-            (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
+            (DomainTuple ds, viewConstantTuple -> Just cs) ->
                 ConstantAbstract $ AbsLitTuple
                     [ helper d c
                     | (d,c) <- zip ds cs ]
 
-            (DomainRecord ds, ConstantAbstract (AbsLitRecord cs)) ->
+            (DomainRecord (sortOn fst -> ds), viewConstantRecord -> Just cs) ->
                 ConstantAbstract $ AbsLitRecord
                     [ (n, helper d c)
                     | ((n,d),(_,c)) <- zip ds cs ]
 
-            (DomainVariant ds, ConstantAbstract (AbsLitVariant t n c)) ->
+            (DomainVariant ds, viewConstantVariant -> Just (t, n, c)) ->
                 case lookup n ds of
                     Nothing -> bug $ "addEnumsAndUnnamedsBack Variant:" <++> vcat [ "domain  :" <+> pretty domain
                                                                                   , "constant:" <+> pretty constant
                                                                                   ]
                     Just d  -> ConstantAbstract $ AbsLitVariant t n (helper d c)
 
-            (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
+            (DomainMatrix _ inner, viewConstantMatrix -> Just (index, vals)) ->
                 ConstantAbstract $ AbsLitMatrix index $ map (helper inner) vals
 
-            (DomainSet _ _ inner, ConstantAbstract (AbsLitSet vals)) ->
+            (DomainSet _ _ inner, viewConstantSet -> Just vals) ->
                 ConstantAbstract $ AbsLitSet $ map (helper inner) vals
 
-            (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet vals)) ->
+            (DomainMSet _ _ inner, viewConstantMSet -> Just vals) ->
                 ConstantAbstract $ AbsLitMSet $ map (helper inner) vals
 
-            (DomainFunction _ _ fr to, ConstantAbstract (AbsLitFunction vals)) ->
+            (DomainFunction _ _ fr to, viewConstantFunction -> Just vals) ->
                 ConstantAbstract $ AbsLitFunction
                     [ (helper fr a, helper to b)
                     | (a,b) <- vals ]
 
-            (DomainSequence _ _ inner, ConstantAbstract (AbsLitSequence vals)) ->
+            (DomainSequence _ _ inner, viewConstantSequence -> Just vals) ->
                 ConstantAbstract $ AbsLitSequence $ map (helper inner) vals
 
-            (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
+            (DomainRelation _ _ inners, viewConstantRelation -> Just vals) ->
                 ConstantAbstract $ AbsLitRelation
                     [ [ helper d c | (d,c) <- zip inners line ]
                     | line <- vals ]
 
-            (DomainPartition _ _ inner, ConstantAbstract (AbsLitPartition vals)) ->
+            (DomainPartition _ _ inner, viewConstantPartition -> Just vals) ->
                 ConstantAbstract $ AbsLitPartition
                     [ [ helper inner c | c <- line ]
                     | line <- vals ]
 
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
+                                                             , "domain  :" <+> pretty (show domain)
+                                                             , "constant:" <+> pretty (show constant)
                                                              ])
 
 -- first Name is the value, the second Name is the name of the enum domain
-nameToX :: MonadFail m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
+nameToX :: MonadFailDoc m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
 nameToX nameToIntMapping (Reference nm _) = case M.lookup nm nameToIntMapping of
-    Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
+    Nothing -> failDoc (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
     Just (Name ename, i)  -> return (fromIntWithTag i (TagEnum ename))
     Just (ename, i) -> bug $ "nameToX, nm:" <+> vcat [pretty (show ename), pretty i]
 nameToX _ x = return x

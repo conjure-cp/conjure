@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Function.FunctionNDPartialDummy ( functionNDPartialDummy ) where
 
@@ -17,7 +16,7 @@ import Conjure.Representations.Function.FunctionND ( viewAsDomainTupleS, mkLensA
 
 
 functionNDPartialDummy :: forall m .
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -176,7 +175,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTupleS -> Just innerDomainFrs)
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals)
+              , viewConstantFunction -> Just vals
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTupleS innerDomainFr = do
             let
@@ -210,7 +209,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return $ ConstantAbstract $ AbsLitMatrix i matrixVals
-                unrollC is prevIndices = fail $ vcat [ "FunctionNDPartialDummy.up.unrollC"
+                unrollC is prevIndices = failDoc $ vcat [ "FunctionNDPartialDummy.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
@@ -235,15 +234,15 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
             case lookup (outName domain name) ctxt of
                 Just valuesMatrix -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc m =>  Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
-                                Nothing -> fail "Value not found. FunctionND.up.index"
+                                Nothing -> failDoc "Value not found. FunctionND.up.index"
                                 Just v  -> index v is
                         index m is = bug ("FunctionND.up.index" <+> pretty m <+> pretty (show is))
 
@@ -258,7 +257,7 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
                     return ( name
                            , ConstantAbstract $ AbsLitFunction (catMaybes vals)
                            )
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in FunctionNDPartialDummy up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
@@ -269,28 +268,6 @@ functionNDPartialDummy = Representation chck downD structuralCons downC up symme
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
         symmetryOrdering innerSO downX1 inp domain = do
-            [flags, values] <- downX1 inp
-            Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
-            (iPat, i) <- quantifiedVar
-            
-            -- setting up the quantification
-            let kRange = case innerDomainFr of
-                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
-                    DomainRecord rs -> map (fromName . fst) rs
-                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
-                                    , "indexDomain:" <+> pretty innerDomainFr
-                                    ]
-                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
-                flagsIndexed = make opMatrixIndexing flags toIndex
-                valuesIndexed = make opMatrixIndexing values toIndex
-
-            soValues <- innerSO downX1 valuesIndexed innerDomainTo
-
-            return $ 
-                Comprehension
-                    [essence| ( -&flagsIndexed
-                              , &soValues
-                              )
-                            |]
-                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
-
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix _innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            innerSO downX1 values innerDomainTo

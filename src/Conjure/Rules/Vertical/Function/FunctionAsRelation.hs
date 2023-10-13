@@ -143,8 +143,8 @@ rule_InDefined = "function-inDefined{FunctionAsRelation}" `namedRule` theRule wh
     theRule _ = na "rule_InDefined"
 
     tableCheck ::
-        MonadFail m =>
-        (?typeCheckerMode::TypeCheckerMode) =>
+        MonadFailDoc m =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
         Expression -> Expression -> m ()
     tableCheck x func | categoryOf func < CatDecision = do
         tyX <- typeOf x
@@ -180,8 +180,8 @@ rule_InToSet = "function-inToSet{FunctionAsRelation}" `namedRule` theRule where
     theRule _ = na "rule_InToSet"
 
     tableCheck ::
-        MonadFail m =>
-        (?typeCheckerMode::TypeCheckerMode) =>
+        MonadFailDoc m =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
         Expression -> Expression -> m ()
     tableCheck x func | categoryOf func < CatDecision = do
         tyX <- typeOf x

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.TwoBars where
@@ -7,7 +7,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -47,7 +48,7 @@ instance Pretty x => Pretty (OpTwoBars x) where
     prettyPrec _ (OpTwoBars a) = "|" <> pretty a <> "|"
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpTwoBars x) where
-    varSymBreakingDescription (OpTwoBars a) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpTwoBars a) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpTwoBars")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

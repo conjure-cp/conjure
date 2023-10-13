@@ -1,6 +1,0 @@
-language Essence 2.0
-
-find x : set (minSize 1) of set (minSize 1) of int(1..2)
-
-such that
-    forAll y in x . (sum i in y . i) = 2

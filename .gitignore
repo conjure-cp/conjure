@@ -8,17 +8,28 @@ src/Conjure/Language/Expression/Op/Internal/Generated.hs
 stack.yaml
 cabal.config
 dist
+dist-newstyle
 cabal.sandbox.config
 .cabal-sandbox
 .stack-work
 stack.yaml.lock
+dist-*/
 
 # test outputs
 tests/exhaustive/**/outputs
 tests/parse_print/**/stdout
 tests/parse_print/**/stderr
+tests/parse_print/**/typecheck
+tests/parse_print/**/model.json
 tests/custom/**/stdout
 tests/custom/**/stderr
+
+#parallel tests outputs
+test_results/
+tests/**/*.gz
+conjure-testing
+test_commands
+test_joblog
 
 # docs
 docs/_build
@@ -37,3 +48,6 @@ gitignored
 
 # .MINION files
 .MINION*
+
+# code coverage files
+*.tix

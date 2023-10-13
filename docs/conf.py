@@ -33,7 +33,10 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 extensions = [
     'sphinx.ext.todo',
     'sphinxcontrib.bibtex',
+    'sphinxcontrib.jquery',
+    'nbsphinx'
 ]
+bibtex_bibfiles = ['refs.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -51,15 +54,26 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Conjure'
-copyright = u'2009-2019, Conjure developers'
-author = u'Özgür Akgün, Saad Attieh, Juliana Bowles, Ngyuen Dang, Joan Espasa Arxer, Jordina Francès de Mas, Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, Ian Miguel, András Salamon and Christopher Stone'
+copyright = u'2009–2023, Conjure developers'
+author = u'''Özgür Akgün \\and
+Saad Attieh \\and
+Nguyen Dang \\and
+Joan Espasa Arxer \\and
+Ian Gent \\and
+Ruth Hoffmann \\and
+Chris Jefferson \\and
+Gökberk Koçak \\and
+Alice Lynch \\and
+Ian Miguel \\and
+András Salamon \\and
+Christopher Stone'''
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = u'2.3.0'
+version = u'2.5.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -68,7 +82,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+#language = None
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -112,13 +126,28 @@ todo_include_todos = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-if not on_rtd:
-    html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    'analytics_id': 'G-6T6SSFK9G1',
+    'analytics_anonymize_ip': False,
+    'logo_only': False,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': False,
+    # 'vcs_pageview_mode': '',
+    # 'style_nav_header_background': 'white',
+    # Toc options
+    'collapse_navigation': True,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
+}
+
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -237,11 +266,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Conjure.tex', u'Conjure Documentation, Release %s' % version,
-     u'''Özgür Akgün, Saad Attieh, Juliana Bowles,
-     Ngyuen Dang, Joan Espasa Arxer, Jordina Francès de Mas, 
-     Ian Gent, Ruth Hoffmann, Chris Jefferson, Gökberk Koçak, Alice Lynch, 
-     Ian Miguel, András Salamon and Christopher Stone''', 'manual'),
+    (master_doc, 'Conjure.tex', u'Conjure Documentation', author, 'manual'),
 ]
 
 
@@ -271,7 +296,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'conjure', u'Conjure Documentation, Release %s' % version,
+    (master_doc, 'conjure', u'Conjure Documentation',
      [author], 1)
 ]
 
@@ -285,7 +310,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Conjure', u'Conjure Documentation, Release %s' % version,
+    (master_doc, 'Conjure', u'Conjure Documentation',
      author, 'Conjure', 'Conjure: The Automated Constraint Modelling Tool',
      'Miscellaneous'),
 ]
@@ -383,6 +408,6 @@ inline_highlight_literals = True
 
 def setup(sphinx):
     from BNFLexer import BNFLexer
-    sphinx.add_lexer("bnf", BNFLexer())
+    sphinx.add_lexer("bnf", BNFLexer)
     from EssenceLexer import EssenceLexer
-    sphinx.add_lexer("essence", EssenceLexer())
+    sphinx.add_lexer("essence", EssenceLexer)
