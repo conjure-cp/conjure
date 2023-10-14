@@ -7,7 +7,7 @@
 # First stage: Building
 
 # Setting up
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:23.10 AS builder
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /conjure/
 
@@ -66,9 +66,11 @@ RUN du -sh /root/.local/bin
 ################################################################################
 # Second stage: Copying the binaries
 
-FROM alpine:3.17
+FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends default-jre-headless
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin
 
