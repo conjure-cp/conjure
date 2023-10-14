@@ -11,6 +11,7 @@ on:
       - src/**
       - tests/**
       - etc/build/**
+      - etc/savilerow
       - .github/workflows/test.yml
   pull_request:             # and for PRs
     paths:
@@ -19,6 +20,7 @@ on:
       - src/**
       - tests/**
       - etc/build/**
+      - etc/savilerow
       - .github/workflows/test.yml
                             # other branches that want testing must create a PR
 
