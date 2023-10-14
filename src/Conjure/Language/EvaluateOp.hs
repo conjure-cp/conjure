@@ -735,8 +735,6 @@ instance EvaluateOp OpToRelation where
     evaluateOp op = na $ "evaluateOp{OpToRelation}:" <++> pretty (show op)
 
 instance EvaluateOp OpToSet where
-    evaluateOp (OpToSet _ (viewConstantMatrix -> Just (_, xs))) =
-        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
     evaluateOp (OpToSet _ (viewConstantSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
     evaluateOp (OpToSet _ (viewConstantMSet -> Just xs)) =
@@ -745,6 +743,8 @@ instance EvaluateOp OpToSet where
         return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract $ AbsLitTuple [a,b] | (a,b) <- xs]
     evaluateOp (OpToSet _ (viewConstantRelation -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map (ConstantAbstract . AbsLitTuple) xs
+    evaluateOp (OpToSet _ (viewConstantMatrix -> Just (_, xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
     evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
 
 instance EvaluateOp OpTransform where

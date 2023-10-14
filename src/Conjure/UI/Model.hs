@@ -2615,7 +2615,7 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule p = do
         constant <- instantiateExpression [] p
         unless (null [() | ConstantUndefined{} <- universe constant]) $
-            na "rule_PartialEvaluate, undefined"
+            na "rule_FullEvaluate, undefined"
         return ("Full evaluator", return $ Constant constant)
 
 

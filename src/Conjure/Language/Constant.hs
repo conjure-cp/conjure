@@ -456,7 +456,7 @@ viewConstantMatrix constant =
                 indices_as_int = [ i | ConstantInt _ i <- indices ]
             if length indices == length indices_as_int
                 then
-                    if length indices > 0
+                    if not (null indices)
                         then
                             if maximum indices_as_int - minimum indices_as_int + 1 == genericLength indices
                                 then return (DomainInt TagInt [RangeBounded (fromInt (minimum indices_as_int)) (fromInt (maximum indices_as_int))], values)
