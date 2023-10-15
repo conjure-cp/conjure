@@ -8,6 +8,8 @@ name: Publishing Docker image to ghcr.io
 on:
   workflow_dispatch:        # can be triggered manually
   workflow_run:             # run only when all tests pass
+    branches:
+      - main
     workflows:
       - Running all tests
     types:
