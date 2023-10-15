@@ -32,7 +32,7 @@ such that
                           int(-4..0)],
              relation((toMSet({true -> true}),
                        (function(true --> 7, true --> 9) != function(true --> 5, true --> 1),
-                        true <-> false -> true /\ true),
+                        (true <-> false) -> true /\ true),
                        partition({-5, 9}, {0}, {|partition({true, true})|}, {-1 * -5 % toInt(false)}, {6})),
                       (mset(true != false -> false, true != false /\ (false \/ false), false in mset(true, false),
                             false -> 3 != 9, function(3 --> true) != function(-4 --> false),
