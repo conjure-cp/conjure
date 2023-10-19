@@ -22,7 +22,7 @@ such that
                 relation((9 / -2 + var1, toInt(true) in {0}, true),
                          (toInt(false) + 0 % -5, 3 != 1 /\ 0 != 8, false \/ true -> false != false),
                          (var1, function(true --> false, false --> false) = function(true --> true, false --> true),
-                          false -> false -> (false -> true)))),
+                          (false -> false) -> (false -> true)))),
                ([partition({3}); int(-3)], -4,
                 relation((var1 in (mset() : `mset of int`), true, toInt(var3)),
                          (true != (false != false), true, toInt(var3)),
