@@ -1,4 +1,4 @@
-# Enumerated Domains
+# new type enum
 
 Enumerated types can be declared in two ways: using a given-enum syntax or using a letting-enum syntax.
 

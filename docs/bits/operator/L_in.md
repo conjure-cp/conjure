@@ -1,4 +1,4 @@
-# in - membership check
+# in (membership check)
 
 ```essence
 in
