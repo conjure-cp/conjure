@@ -3,7 +3,7 @@ This is the addition operator.
 ```
 a + b
 ```
-will return the sum of a and b.
+will return the sum of ```a```and ```b```.
 
 This operation can only be performed on integers.
 
