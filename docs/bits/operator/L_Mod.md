@@ -1,4 +1,5 @@
-**Mod operator**
+# % - modulo
+
 ```
 %
 ```

@@ -1,4 +1,5 @@
-## Operator in
+# in - membership check
+
 ```essence
 in
 ```

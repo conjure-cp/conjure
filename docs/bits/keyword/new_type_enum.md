@@ -1,4 +1,5 @@
-## Enum Domains
+# Enumerated Domains
+
 Enumerated types can be declared in two ways: using a given-enum syntax or using a letting-enum syntax.
 
 The given-enum syntax defers the specification of actual values of the enumerated type until instantiation. With this syntax, an enumerated type can be declared by only giving its name in the problem specification file. In a parameter file, values for the actual members of this type can be given. This allows Conjure to produce a model independent of the values of the enumerated type and only substitute the actual values during parameter instantiation.
