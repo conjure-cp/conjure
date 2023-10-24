@@ -1,4 +1,4 @@
-## operator ** 
+# ** (power)
 
 This is the exponent operator.
 
@@ -13,6 +13,6 @@ Savile row will flag negative exponents (negative values of ```b```) as errors. 
 ``` x ** y = x * (x ** (y-1))``` holds if ```x``` is an integer and ```y``` is a positive integer.
 This ensures that ```x ** 1 = 0``` for all ```x```.#
 
-For more information see [here.](https://conjure.readthedocs.io/en/latest/essence.html#arithmetic-operators)
+For more information see [here](https://conjure.readthedocs.io/en/latest/essence.html#arithmetic-operators).
 
-See this in action [here.](...)
+See this in action [here](...).

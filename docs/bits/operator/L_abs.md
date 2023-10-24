@@ -1,4 +1,4 @@
-## operator |x|
+# |x| (absolute value)
 
 This is the absolute value operator. It returns the absolute value of ```x```.
 This is calculated using
@@ -11,4 +11,4 @@ If ```x``` is a non-positive integer, then [toInt](https://github.com/conjure-cp
 This holds for integers ```x``` such that ```|x| <= 2```<sup>```62```</sup>```-2```.
 Outside of this range, errors may be flagged up by Savile Row or Minion.
 
-See how this works [here.](...)
+See how this works [here](...).
