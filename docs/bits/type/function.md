@@ -14,7 +14,7 @@ There are 3 groups of function attributes:
 
 -  related to function properties = [injective](https://github/conjure-cp/conjure/docs/bits/attribute/L_injective.md), [surjective](https://github/conjure-cp/conjure/docs/bits/attribute/L_surjective.md), [bijective](https://github/conjure-cp/conjure/docs/bits/attribute/L_size.md).
 
-- related to partiality = ```total```.
+- related to partiality = [total](https://github/conjure-cp/conjure/docs/bits/attribute/L_total.md).
 
   Functions are partial by default
 
