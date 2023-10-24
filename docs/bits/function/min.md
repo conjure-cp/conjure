@@ -1,4 +1,5 @@
-# Min
+# min
+
 ```essence
 min(expr) $or
 min(`domain`)

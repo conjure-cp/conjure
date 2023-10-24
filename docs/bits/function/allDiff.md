@@ -1,4 +1,5 @@
-# AllDifferent
+# allDiff
+
 ```essence
 allDiff(_)
 ```

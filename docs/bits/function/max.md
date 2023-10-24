@@ -1,4 +1,5 @@
-# Max
+# max
+
 ```essence
 max(expr) $or
 max(`domain`)
