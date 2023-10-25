@@ -1,4 +1,4 @@
-# size attribute
+# size 
 
 Takes an integer parameter, n. 
 
