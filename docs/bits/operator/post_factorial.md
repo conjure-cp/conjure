@@ -8,4 +8,4 @@ When ``` x <= 0 ```, ```x! = 0```.
 
 It can't be directly used in expressions with decision variables. For more information about this see [here.](https://conjure.readthedocs.io/en/latest/essence.html#arithmetic-operators)
 
-To see how this works see [here](...).
+To see how this works see [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/factorial.ipynb).
