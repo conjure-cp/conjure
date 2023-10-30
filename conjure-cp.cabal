@@ -333,6 +333,7 @@ Library
         ScopedTypeVariables
         TypeOperators
         ViewPatterns
+        ImportQualifiedPost
     ghc-options:
         -O1
         -fwarn-incomplete-patterns
@@ -370,6 +371,7 @@ Executable conjure
         ScopedTypeVariables
         TypeOperators
         ViewPatterns
+        ImportQualifiedPost
     ghc-options:
         -O1
         -fwarn-incomplete-patterns
@@ -432,6 +434,7 @@ Test-Suite conjure-testing
         ScopedTypeVariables
         TypeOperators
         ViewPatterns
+        ImportQualifiedPost
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

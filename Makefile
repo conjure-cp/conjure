@@ -40,10 +40,12 @@ install:
 	@bash etc/build/install.sh
 	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
-	@echo - savilerow
+	@echo "Copied savilerow to ${BIN_DIR}"
 	@echo
 	@${BIN_DIR}/conjure --version
 	@${BIN_DIR}/savilerow -help | head -n1
+	@echo
+	@echo
 
 .PHONY: test
 test:

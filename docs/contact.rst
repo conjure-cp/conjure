@@ -4,7 +4,7 @@
 Contact
 =======
 
-Conjure's main developer is `Özgür Akgün <http://ozgur.host.cs.st-andrews.ac.uk>`_.
+Conjure's main developer is `Özgür Akgün <ozgurakgun.github.io>`_.
 Please get in touch via `email <ozgur.akgun@st-andrews.ac.uk>`_ if you have comments, suggestions, or if you encounter any problems.
 
 You can also use the `issue tracker <https://github.com/conjure-cp/conjure/issues>`_ to report bugs.

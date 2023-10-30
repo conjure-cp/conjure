@@ -211,7 +211,7 @@ operators =
     , ( BinaryOp L_Eq           FNone   ,  400 )
     , ( BinaryOp L_Or           FLeft   ,  110 )
     , ( BinaryOp L_And          FLeft   ,  120 )
-    , ( BinaryOp L_Imply        FLeft   ,   50 )
+    , ( BinaryOp L_Imply        FNone   ,   50 )
     , ( BinaryOp L_Iff          FNone   ,   50 )
     , ( BinaryOp L_union        FLeft   ,  600 )
     , ( BinaryOp L_intersect    FLeft   ,  700 )
