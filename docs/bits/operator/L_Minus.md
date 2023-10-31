@@ -10,4 +10,4 @@ will subtract b from a. As well as negate values such that
 ```
 
 This can only be performed on integers.
-See this in action [here] (https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/addition_and_subtraction_examples.ipynb).
+See this in action [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/addition_and_subtraction_examples.ipynb).
