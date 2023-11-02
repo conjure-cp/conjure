@@ -1,6 +1,10 @@
-# in (membership check)
+# in
+
+test if element is in set
 
 ```essence
-in
+find a : bool such that a = (1 in {0,1})
 ```
-The in operator is checks if the left operand is contained within the right operand. 
+This syntax is checking if 1 is in the set {0,1}
+
+See it demonstrated [here](https://github.com/conjure-cp/conjure/blob/main/docs/Set_operators.ipynb).
