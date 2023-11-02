@@ -67,7 +67,7 @@ removeEnumsFromModel =
                                                 (fromIntWithTag (genericLength names) (TagEnum enameText))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
-                                             , zip names (zip (cycle [ename]) allNats)
+                                             , zip names (map (ename,) allNats)
                                              ) `mappend` )
                                 repeated -> userErr1 $ vcat
                                     [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
