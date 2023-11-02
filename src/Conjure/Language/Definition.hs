@@ -264,7 +264,7 @@ initInfo model = model { mInfo = info }
                 ]
             , miEnumGivens   = [ nm     | Declaration (GivenDomainDefnEnum nm)         <- mStatements model ]
             , miEnumLettings = [ d      | Declaration d@LettingDomainDefnEnum{}        <- mStatements model ]
-            , miLettings     = bug "Not initialised yet: miLettings"
+            , miLettings     = []
             , miUnnameds     = [ (nm,s) | Declaration (LettingDomainDefnUnnamed nm s)  <- mStatements model ]
             }
 

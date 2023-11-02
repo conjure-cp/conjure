@@ -1,0 +1,65 @@
+letting w be 6000
+letting v be 6000
+letting b be 2
+
+letting groceries be new type enum{
+    "Bread",
+    "Carrots",
+    "Broccoli",
+    "Spinach",
+    "Apples",
+    "Bananas",
+    "Oranges",
+    "Rice",
+    "Cereal",
+    "Soft Drinks",
+    "Ice Cream"
+}
+
+letting weight be function(
+    "Bread" --> 500,
+    "Carrots" --> 500,
+    "Broccoli" --> 600,
+    "Spinach" --> 200,
+    "Apples" --> 1000,
+    "Bananas" --> 700,
+    "Oranges" --> 900,
+    "Rice" --> 1000,
+    "Cereal" --> 500,
+    "Soft Drinks" --> 1000,
+    "Ice Cream" --> 700
+)
+
+letting volume be function(
+    "Bread" --> 1000,
+    "Carrots" --> 1000,
+    "Broccoli" --> 1500,
+    "Spinach" --> 500,
+    "Apples" --> 1500,
+    "Bananas" --> 1000,
+    "Oranges" --> 1600,
+    "Rice" --> 1200,
+    "Cereal" --> 700,
+    "Soft Drinks" --> 2000,
+    "Ice Cream" --> 1000
+)
+
+letting importance be function(
+    "Bread" --> 8,
+    "Carrots" --> 7,
+    "Broccoli" --> 8,
+    "Spinach" --> 8,
+    "Apples" --> 8,
+    "Bananas" --> 7,
+    "Oranges" --> 9,
+    "Rice" --> 10,
+    "Cereal" --> 7,
+    "Soft Drinks" --> 4,
+    "Ice Cream" --> 5
+)
+
+find bag : partition (numParts 2) from groceries
+$ find bag : set of groceries
+
+such that forAll i in bag . |i| < 10
+

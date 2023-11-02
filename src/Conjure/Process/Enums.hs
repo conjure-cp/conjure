@@ -44,13 +44,11 @@ removeEnumsFromModel =
         preCheckForNameReuse model = do
             let enumNames = concat [ names | Declaration (LettingDomainDefnEnum _ names) <- mStatements model ]
             let redefinedTopLevel = [ name | Declaration (FindOrGiven _ name _) <- mStatements model, name `elem` enumNames ]
-            let redefinedQuantified = [ name | Generator gen <- universeBi (mStatements model), name@Name{} <- universeBi gen, name `elem` enumNames ]
-            let redefined = redefinedTopLevel ++ redefinedQuantified
             let duplicates = [ name | (name, count) <- histogram enumNames, count > 1 ]
             unless (null duplicates) $ userErr1 $ "Enumerated value defined multiple times:" <+> prettyList id "," duplicates
-            unless (null redefined) $ userErr1 $ vcat
+            unless (null redefinedTopLevel) $ userErr1 $ vcat
                 [ "Members of an enum domain are later redefined as top-level or quantified variables."
-                , "Check:" <+> prettyList id "," redefined
+                , "Check:" <+> prettyList id "," redefinedTopLevel
                 ]
             return model
 
