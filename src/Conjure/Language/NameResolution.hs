@@ -291,12 +291,11 @@ resolveD (DomainReference nm Nothing) = do
         Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> DomainReference nm . Just <$> resolveD (changeRepr def r)
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
-resolveD (DomainEnum nm Nothing Nothing) = do
+resolveD d@(DomainEnum nm Nothing Nothing) = do
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
-        Just (Alias (Domain d)) -> resolveD (changeRepr def d)
-        Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
+        Just (Alias (Domain d')) -> resolveD (changeRepr def d')
+        _ -> return d
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOfDomain d'
