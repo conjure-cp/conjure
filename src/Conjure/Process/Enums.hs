@@ -75,8 +75,10 @@ removeEnumsFromModel =
                                     , "Repeated:" <+> prettyList id "," repeated
                                     , "While working on domain:" <+> pretty st
                                     ]
-                            return (Declaration (Letting ename (Domain outDomain)))
-                        _ -> return st
+                            return [ Declaration (Letting (ename `mappend` "_EnumSize") (fromInt $ genericLength names))
+                                   , Declaration (Letting ename (Domain outDomain))
+                                   ]
+                        _ -> return [st]
 
             let nameToIntMapping = M.fromList nameToIntMapping_
 
@@ -100,7 +102,7 @@ removeEnumsFromModel =
                 onD p = return p
 
             statements'' <- (transformBiM onD >=> transformBiM onX) statements'
-            return model { mStatements = statements'' }
+            return model { mStatements = concat statements'' }
 
         removeEnumsFromModel_GivenEnums model = do
             (statements', enumDomainNames) <-
