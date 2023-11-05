@@ -36,8 +36,6 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt TagInt [])))
-    domainSizeOf (DomainEnum _ (Just rs) _) = do
-        make opSum . fromList <$> mapM domainSizeOfRange rs
     domainSizeOf (DomainUnnamed _ x) = return x
     domainSizeOf (DomainTuple []) = return 1
     domainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM domainSizeOf xs

@@ -1236,7 +1236,6 @@ prologue model = do
     >>= removeUnderscores             >>= logDebugIdModel "[removeUnderscores]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
     >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
-    >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= inferAttributes               >>= logDebugIdModel "[inferAttributes]"
     >>= inlineLettingDomainsForDecls  >>= logDebugIdModel "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugIdModel "[lettingsForComplexInDoms]"

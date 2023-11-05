@@ -15,8 +15,8 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
     ( changeRepr,
       typeOfDomain,
-      Domain(..),
-      Range(..) )
+      Domain(DomainUnnamed, DomainReference, DomainRecord,
+             DomainVariant) )
 import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.Pretty
@@ -147,7 +147,6 @@ resolveStatement st =
                     addName nm $ Alias (Domain (DomainUnnamed nm x'))
                     return (Declaration (LettingDomainDefnUnnamed nm x'))
                 LettingDomainDefnEnum (Name ename) nms -> do
-                    addName (Name ename) $ Alias $ Domain $ DomainEnum (Name ename) (Just [RangeBounded 1 (fromInt $ genericLength nms)]) (Just (zip nms [1..]))
                     sequence_ [ addName nm $ Alias (Constant (ConstantInt (TagEnum ename) i))
                               | (nm, i) <- zip nms [1..]
                               ]
@@ -291,11 +290,6 @@ resolveD (DomainReference nm Nothing) = do
         Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> DomainReference nm . Just <$> resolveD (changeRepr def r)
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
-resolveD d@(DomainEnum nm Nothing Nothing) = do
-    mval <- gets (lookup nm)
-    case mval of
-        Just (Alias (Domain d')) -> resolveD (changeRepr def d')
-        _ -> return d
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOfDomain d'
