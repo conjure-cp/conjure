@@ -1,0 +1,111 @@
+name: Make a release
+
+on:
+  workflow_dispatch:        # can be triggered manually
+  push:
+    tags:
+        - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        GHC_VERSION: ["9.4"]
+        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          release_suffix: linux
+        - os: macos-latest
+          release_suffix: macos-intel
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}
+  
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Build Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+
+      - name: Setting PATH (for solvers)
+        shell: bash
+        run: |
+          echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+          echo "/usr/lib/ccache" >> ${GITHUB_PATH}
+          echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
+
+      - name: Installing dependencies (gperf) on Linux
+        shell: bash
+        run: sudo apt-get install -y gperf
+        if: runner.os == 'Linux'
+
+      - name: Installing dependencies (gperf) on macOS
+        shell: bash
+        run: brew install gperf
+        if: runner.os == 'macOS'
+
+      - name: Build solvers
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
+
+# when gecode comes back, this is the list
+# conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+
+      - name: Strip binaries
+        shell: bash
+        run: |
+          cd ~/.local/bin
+          strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure
+          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+
+# See https://jon.sprig.gs/blog/post/2442
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      - name: Upload assets
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip
+            ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip
