@@ -27,3 +27,4 @@ Types of domains:
 
 
 For more information about different domain types see [here](https://conjure.readthedocs.io/en/latest/essence.html).
+To see how to define these types as domains see [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/letting_domain.ipynb).
