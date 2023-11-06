@@ -9,17 +9,19 @@ on:
 permissions:
   contents: write
 
-env:
-  GHC_VERSION: "9.4"
-
 jobs:
 
-  Build:
+  Job:
 
     strategy:
       matrix:
         GHC_VERSION: ["9.4"]
         os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          release_suffix: linux
+        - os: macos-latest
+          release_suffix: macos-intel
 
     runs-on: ${{ matrix.os }}
 
@@ -56,15 +58,7 @@ jobs:
 
       - name: Build solvers
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin make solvers
-
-      - name: Set variable for Ubuntu
-        if: runner.os == 'Linux'
-        run: echo "OS=linux" >> ${GITHUB_ENV}
-  
-      - name: Set variable for macOS
-        if: runner.os == 'macOS'
-        run: echo "OS=macos-intel" >> ${GITHUB_ENV}
+        run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
 
 # when gecode comes back, this is the list
 # conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
@@ -74,8 +68,8 @@ jobs:
         run: |
           cd ~/.local/bin
           strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-          zip -r -9 conjure-${{ github.ref_name }}-${OS}.zip conjure
-          zip -r -9 conjure-${{ github.ref_name }}-${OS}-with-solvers.zip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure
+          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
 
 # See https://jon.sprig.gs/blog/post/2442
       - name: Create Release
@@ -96,5 +90,5 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            ~/.local/bin/conjure-${{ github.ref_name }}-${OS}.zip
-            ~/.local/bin/conjure-${{ github.ref_name }}-${OS}-with-solvers.zip
+            ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip
+            ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip
