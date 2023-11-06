@@ -57,8 +57,8 @@ RUN make install
 # Make binaries a bit smaller
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
-RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-# RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+# RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
 
