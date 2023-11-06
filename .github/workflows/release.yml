@@ -79,16 +79,18 @@ jobs:
 
 # when gecode comes back, this is the list
 # conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-
       - name: Strip binaries
         shell: bash
         run: |
-          cd ~/.local/bin
+          pushd ~/.local/bin
           strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
           zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure
           zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+          popd
+          cp ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip .
+          cp ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip .
 
-# See https://jon.sprig.gs/blog/post/2442
+# See https://github.com/softprops/action-gh-release
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -99,13 +101,6 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
-
-      - name: Upload assets
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
           files: |
-            ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip
-            ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip
+            conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip
+            conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip
