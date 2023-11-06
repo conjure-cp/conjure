@@ -56,6 +56,23 @@ jobs:
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
+      - name: Setting PATH (for solvers)
+        shell: bash
+        run: |
+          echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+          echo "/usr/lib/ccache" >> ${GITHUB_PATH}
+          echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
+
+      - name: Installing dependencies (gperf) on Linux
+        shell: bash
+        run: sudo apt-get install -y gperf
+        if: runner.os == 'Linux'
+
+      - name: Installing dependencies (gperf) on macOS
+        shell: bash
+        run: brew install gperf
+        if: runner.os == 'macOS'
+
       - name: Build solvers
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
