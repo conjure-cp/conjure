@@ -854,6 +854,7 @@ solverExecutables =
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
     , ( "open-wbo"        , "open-wbo" )
+    , ( "or-tools"        , "fzn-ortools" )
     , ( "coin-or"         , "minizinc" )
     , ( "cplex"           , "minizinc" )
     , ( "yices"           , "yices-smt2" )
@@ -919,6 +920,7 @@ srMkArgs Solve{..} outBase modelPath = do
         "minion"            -> return [ "-minion" ]
         "gecode"            -> return [ "-gecode" ]
         "chuffed"           -> return [ "-chuffed"]
+        "or-tools"          -> return [ "-or-tools"]
         "glucose"           -> return [ "-sat"
                                       , "-sat-family", "glucose"
                                       , "-satsolver-bin", "glucose"

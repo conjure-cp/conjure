@@ -139,6 +139,7 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-minion.sh
 	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
+	@etc/build/silent-wrapper.sh etc/build/install-ortools.sh
 	@etc/build/silent-wrapper.sh etc/build/install-yices.sh
 	@etc/build/silent-wrapper.sh etc/build/install-z3.sh
 	@if ls make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null; then echo "At least one solver didn't build successfully."; exit 1; fi
