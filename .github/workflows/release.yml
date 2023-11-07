@@ -59,7 +59,7 @@ jobs:
       - name: Setting PATH (for solvers)
         shell: bash
         run: |
-          echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+          echo "${HOME}/solver-binaries" >> ${GITHUB_PATH}
           echo "/usr/lib/ccache" >> ${GITHUB_PATH}
           echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
 
@@ -75,31 +75,34 @@ jobs:
 
       - name: Build solvers
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
+        run: |
+          rm -rf ${HOME}/solver-binaries
+          BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
 
 # when gecode comes back, this is the list
 # conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
       - name: Strip binaries
         shell: bash
         run: |
-          pushd ~/.local/bin
+          pushd ${HOME}/solver-binaries
 
-          strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+          cp -r ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar lib .
+
+          strip *
+
+          mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          cp -r * conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
 
           mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
           cp conjure conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
-
-          mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
-          cp conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
-          cp -r savilerow savilerow.jar lib conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
 
           zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
           zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
 
           popd
 
-          cp ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip .
-          cp ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip .
+          cp ${HOME}/solver-binaries/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip .
+          cp ${HOME}/solver-binaries/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip .
 
 # See https://github.com/softprops/action-gh-release
       - name: Create Release
