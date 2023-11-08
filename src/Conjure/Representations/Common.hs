@@ -76,9 +76,18 @@ mkBinRelConsSoft maxNum divisor (BinaryRelationAttrs binRelAttrs) dom rel = do
         one BinRelAttr_Total         = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) \/ &rel(&y,&x)) |]
         one BinRelAttr_Connex        = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y)) |]
         one BinRelAttr_Euclidean     = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . toInt(&rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z)) |]
-        one BinRelAttr_Serial        = return [essence| &maxNum / &divisor <= sum &xP : &dom . toInt(exists &yP : &dom . &rel(&x,&y)) |]
-        one BinRelAttr_Equivalence   = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
-        one BinRelAttr_PartialOrder  = one BinRelAttr_Reflexive ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+        one BinRelAttr_LeftTotal     = return [essence| &maxNum / &divisor <= sum &xP : &dom . sum &yP : &dom . toInt(&rel(&x,&y)) |]
+        one BinRelAttr_RightTotal    = return [essence| &maxNum / &divisor <= sum &yP : &dom . sum &xP : &dom . toInt(&rel(&x,&y)) |]
+
+        one BinRelAttr_Serial             = one BinRelAttr_LeftTotal
+        one BinRelAttr_Equivalence        = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
+        one BinRelAttr_LinearOrder        = one BinRelAttr_Total ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+        one BinRelAttr_WeakOrder          = one BinRelAttr_Total ++ one BinRelAttr_Transitive
+        one BinRelAttr_PreOrder           = one BinRelAttr_Reflexive ++ one BinRelAttr_Transitive
+        one BinRelAttr_PartialOrder       = one BinRelAttr_Reflexive ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+        one BinRelAttr_StrictPartialOrder = one BinRelAttr_Irreflexive ++ one BinRelAttr_ASymmetric ++ one BinRelAttr_Transitive
+
+
 
     return $ concatMap one (S.toList binRelAttrs)
 
