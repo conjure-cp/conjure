@@ -102,10 +102,14 @@ jobs:
 
           strip $(find . -type f -perm -u+x | grep -v savilerow)
 
-          mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
-          cp -r * conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          cd ..
+          rm -rf conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          cp -r solver-binaries conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          cd solver-binaries
+          cp ../conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers .
 
-          mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
+          rm -rf conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
+          mkdir conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
           cp conjure conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
 
           zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
