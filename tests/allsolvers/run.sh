@@ -21,11 +21,11 @@ echo ""
 echo ""
 echo "========================================"
 
-echo "gecode"
-conjure solve test.essence --solver gecode
-echo ""
-echo ""
-echo "========================================"
+# echo "gecode"
+# conjure solve test.essence --solver gecode
+# echo ""
+# echo ""
+# echo "========================================"
 
 echo "chuffed"
 conjure solve test.essence --solver chuffed
