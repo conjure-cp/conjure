@@ -35,6 +35,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    outputs:
+      dynamic_value: ${{ steps.set_version.outputs.version }}
+
     steps:
 
       - uses: actions/checkout@v3
@@ -89,13 +92,18 @@ jobs:
           rm -rf ${HOME}/solver-binaries
           BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
 
-      - name: Set variable based on trigger (ref_name if on tag, sha otherwise)
+      - name: Set variable based on trigger (ref_name if on tag, PR number if a PR, commit sha otherwise)
         id: set_version
         run: |
-          if [[ ${{ github.ref }} == refs/tags/* ]]; then
-            echo "::set-output name=version::${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "PR Number: ${{ github.event.pull_request.number }}"
+            echo "::set-output name=value::${{ github.event.pull_request.number }}"
+          elif [[ ${{ github.ref }} == refs/tags/* ]]; then
+            echo "Tag Name: ${{ github.ref_name }}"
+            echo "::set-output name=value::${{ github.ref_name }}"
           else
-            echo "::set-output name=version::${{ github.sha }}"
+            echo "Commit SHA: ${{ github.sha }}"
+            echo "::set-output name=value::${{ github.sha }}"
           fi
 
       - name: Strip binaries and create the zip archives
