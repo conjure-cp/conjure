@@ -22,7 +22,7 @@ cmake --build build
 cp build/bin/fzn-ortools ${BIN_DIR}/fzn-ortools
 ls -l build/lib
 # .dylib or .a depending on OS
-cp build/lib/libortools_flatzinc.9.* build/lib/libortools.9.* ${BIN_DIR}
+cp build/lib/libortools* ${BIN_DIR}
 echo "ortools executable is at ${BIN_DIR}/fzn-ortools"
 ls -l ${BIN_DIR}/fzn-ortools
 popd
