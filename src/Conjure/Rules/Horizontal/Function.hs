@@ -735,7 +735,7 @@ rule_Defined_Intersect = "function-Defined-intersect" `namedRule` theRule where
         tx      <- typeOf x
         case tx of
             TypeFunction{} -> return ()
-            _              -> fail "type incompatibility in intersect operator"
+            _              -> failDoc "type incompatibility in intersect operator"
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for function intersection"
@@ -761,7 +761,7 @@ rule_DefinedOrRange_Union = "function-DefinedOrRange-union" `namedRule` theRule 
         tx      <- typeOf x
         case tx of
             TypeFunction{} -> return ()
-            _              -> fail "type incompatibility in union operator"
+            _              -> failDoc "type incompatibility in union operator"
         let mkx = mk x
         let mky = mk y
         let i = Reference iPat Nothing
@@ -795,7 +795,7 @@ rule_DefinedOrRange_Difference = "function-DefinedOrRange-difference" `namedRule
         tx      <- typeOf x
         case tx of
             TypeFunction{} -> return ()
-            _              -> fail "type incompatibility in difference operator"
+            _              -> failDoc "type incompatibility in difference operator"
         let mkx = mk x
         let mky = mk y
         let i = Reference iPat Nothing

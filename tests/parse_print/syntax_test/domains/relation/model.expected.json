@@ -1,0 +1,60 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"Letting":
+                [{"Name": "simple"},
+                 {"Domain":
+                      {"DomainRelation":
+                           [[], [{"SizeAttr_None": []}, []],
+                            [{"DomainBool": []}, {"DomainInt": [{"TagInt": []}, []]}]]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized"},
+                 {"Domain":
+                      {"DomainRelation":
+                           [[], [{"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}}, []],
+                            [{"DomainBool": []}, {"DomainInt": [{"TagInt": []}, []]}]]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized2"},
+                 {"Domain":
+                      {"DomainRelation":
+                           [[], [{"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}}, []],
+                            [{"DomainBool": []}, {"DomainInt": [{"TagInt": []}, []]}]]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized3"},
+                 {"Domain":
+                      {"DomainRelation":
+                           [[], [{"SizeAttr_MaxSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}, []],
+                            [{"DomainBool": []}, {"DomainInt": [{"TagInt": []}, []]}]]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized4"},
+                 {"Domain":
+                      {"DomainRelation":
+                           [[],
+                            [{"SizeAttr_MinMaxSize":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]},
+                             []],
+                            [{"DomainBool": []}, {"DomainInt": [{"TagInt": []}, []]}]]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "all"},
+                 {"Domain":
+                      {"DomainRelation":
+                           [[],
+                            [{"SizeAttr_MinMaxSize":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                             ["BinRelAttr_Reflexive", "BinRelAttr_Irreflexive", "BinRelAttr_Coreflexive",
+                              "BinRelAttr_Symmetric", "BinRelAttr_AntiSymmetric", "BinRelAttr_ASymmetric",
+                              "BinRelAttr_Transitive", "BinRelAttr_Total", "BinRelAttr_Connex", "BinRelAttr_Euclidean",
+                              "BinRelAttr_Serial", "BinRelAttr_Equivalence", "BinRelAttr_PartialOrder"]],
+                            [{"DomainInt": [{"TagInt": []}, []]}, {"DomainInt": [{"TagInt": []}, []]}]]}}]}}]}

@@ -200,7 +200,7 @@ arbitraryDomainAndConstant = sized dispatch
             return ( domainOut
                    , let try n =
                             if n >= maxRetries
-                                then fail (vcat [ "setFixed: maxRetries"
+                                then failDoc (vcat [ "setFixed: maxRetries"
                                                 , pretty domainOut
                                                 ])
                                 else do
@@ -251,7 +251,7 @@ arbitraryDomainAndConstant = sized dispatch
             return ( domainOut
                    , let try n =
                             if n >= maxRetries
-                                then fail (vcat [ "setFixed: maxRetries"
+                                then failDoc (vcat [ "setFixed: maxRetries"
                                                 , pretty domainOut
                                                 ])
                                 else do
@@ -265,7 +265,7 @@ arbitraryDomainAndConstant = sized dispatch
                    )
 
 pickFromList :: [a] -> Gen a
-pickFromList [] = fail "pickFromList []"
+pickFromList [] = failDoc "pickFromList []"
 pickFromList xs = do
     index <- choose (0, length xs - 1)
     return (xs `at` index)

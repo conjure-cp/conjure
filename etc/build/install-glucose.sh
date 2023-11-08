@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# version as of 18 November 2022
+VERSION=4.2.1
+
 source "download.sh" 2> /dev/null               # if called from the script dir
 source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
 
@@ -14,9 +17,9 @@ rm -rf tmp-install-glucose
 mkdir -p tmp-install-glucose
 pushd tmp-install-glucose
 
-download http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-syrup-4.1.tgz
-tar zxf glucose-syrup-4.1.tgz
-cd glucose-syrup-4.1/
+download http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-$VERSION.zip
+unzip glucose-$VERSION.zip
+cd glucose-$VERSION/sources
 (
     cd simp
     make -j${PROCESSES} r

@@ -1,0 +1,51 @@
+language ESSENCE' 1.0
+
+find var1_Explicit: matrix indexed by [int(1), int(0..5, 5)] of bool
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0..3)
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..3), int(1..0)] of int(0)
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..3), int(1..0)] of bool
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix:
+        matrix indexed by [int(1..3), bool, bool] of bool
+find var3_1: matrix indexed by [int(5, 2)] of bool
+find var3_2: matrix indexed by [int(5, 2)] of bool
+find var3_3: matrix indexed by [int(5, 2)] of bool
+find var3_4: matrix indexed by [int(5, 2)] of bool
+find var4: bool
+such that
+    var4,
+    and([q4 + 1 <= var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q4, ..]
+         <lex
+         var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags
+             [q4 + 1, ..]
+         \/
+         var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values
+             [q4, ..]
+         <lex
+         var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values
+             [q4 + 1, ..]
+         \/
+         flatten(var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix[q4, .., ..])
+         <lex
+         flatten(var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix
+                     [q4 + 1, .., ..])
+             | q4 : int(1..2)]),
+    and([q5 > var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([and([var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix
+                       [q5, q31, q32]
+                   = false
+                       | q32 : bool])
+                  | q31 : bool])
+             | q5 : int(1..3)]),
+    0 <= var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker,
+    var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 3,
+    and([q6 <= var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker -> false | q6 : int(1..3)]),
+    and([q6 <= var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         4 <=
+         sum([sum([var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix
+                       [q6, q13, q14]
+                       | q14 : bool])
+                  | q13 : bool])
+             | q6 : int(1..3)])

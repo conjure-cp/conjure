@@ -1,7 +1,0 @@
-language ESSENCE' 1.0
-
-letting e_fromEnumSize be domain int(1..)
-letting e_fromEnum be domain int(1..e_fromEnumSize)
-given i: e_fromEnum
-find m: matrix indexed by [e_fromEnum] of bool
-such that m[i]

@@ -1,0 +1,117 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var5"},
+                 {"DomainSet":
+                      [[], {"SizeAttr_None": []},
+                       {"DomainTuple":
+                            [{"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Constant": {"ConstantBool": true}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "q_9"}}, {"Reference": [{"Name": "var5"}, null]}]}},
+                             {"Condition": {"Constant": {"ConstantBool": false}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, 1]}]}}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, -2]}]}}}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, 1]}]}}},
+                                             {"Reference": [{"Name": "q_9"}, null]}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, -2]}]}}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, -2]}]}}}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, -2]}]}}},
+                                             {"Reference": [{"Name": "q_9"}, null]}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"AbstractLiteral":
+                                                  {"AbsLitTuple":
+                                                       [{"Op":
+                                                             {"MkOpMin":
+                                                                  {"Constant":
+                                                                       {"ConstantAbstract":
+                                                                            {"AbsLitMSet":
+                                                                                 [{"ConstantInt": [{"TagInt": []}, -1]},
+                                                                                  {"ConstantInt":
+                                                                                       [{"TagInt": []}, -1]}]}}}}}]}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, -2]}]}}}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"AbstractLiteral":
+                                                  {"AbsLitTuple":
+                                                       [{"Op":
+                                                             {"MkOpMin":
+                                                                  {"Constant":
+                                                                       {"ConstantAbstract":
+                                                                            {"AbsLitMSet":
+                                                                                 [{"ConstantInt": [{"TagInt": []}, -1]},
+                                                                                  {"ConstantInt":
+                                                                                       [{"TagInt": []}, -1]}]}}}}}]}},
+                                             {"Reference": [{"Name": "q_9"}, null]}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"AbstractLiteral":
+                                                  {"AbsLitTuple":
+                                                       [{"Op":
+                                                             {"MkOpMin":
+                                                                  {"Typed":
+                                                                       [{"Constant":
+                                                                             {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                                        {"TypeMSet":
+                                                                             {"TypeInt": {"TagInt": []}}}]}}}]}},
+                                             {"Constant":
+                                                  {"ConstantAbstract":
+                                                       {"AbsLitTuple": [{"ConstantInt": [{"TagInt": []}, -2]}]}}}]}}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpEq":
+                                            [{"AbstractLiteral":
+                                                  {"AbsLitTuple":
+                                                       [{"Op":
+                                                             {"MkOpMin":
+                                                                  {"Typed":
+                                                                       [{"Constant":
+                                                                             {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                                        {"TypeMSet":
+                                                                             {"TypeInt": {"TagInt": []}}}]}}}]}},
+                                             {"Reference": [{"Name": "q_9"}, null]}]}}}]]}}}]}]}

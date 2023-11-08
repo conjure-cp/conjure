@@ -28,7 +28,7 @@ import qualified Data.HashMap.Strict as M
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
 removeEnumsFromModel ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     MonadUserError m =>
     Model -> m Model
@@ -46,6 +46,8 @@ removeEnumsFromModel =
             let redefinedTopLevel = [ name | Declaration (FindOrGiven _ name _) <- mStatements model, name `elem` enumNames ]
             let redefinedQuantified = [ name | Generator gen <- universeBi (mStatements model), name@Name{} <- universeBi gen, name `elem` enumNames ]
             let redefined = redefinedTopLevel ++ redefinedQuantified
+            let duplicates = [ name | (name, count) <- histogram enumNames, count > 1 ]
+            unless (null duplicates) $ userErr1 $ "Enumerated value defined multiple times:" <+> prettyList id "," duplicates
             unless (null redefined) $ userErr1 $ vcat
                 [ "Members of an enum domain are later redefined as top-level or quantified variables."
                 , "Check:" <+> prettyList id "," redefined
@@ -65,7 +67,7 @@ removeEnumsFromModel =
                                                 (fromIntWithTag (genericLength names) (TagEnum enameText))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
-                                             , zip names (zip (cycle [ename]) allNats)
+                                             , zip names (map (ename,) allNats)
                                              ) `mappend` )
                                 repeated -> userErr1 $ vcat
                                     [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
@@ -73,8 +75,10 @@ removeEnumsFromModel =
                                     , "Repeated:" <+> prettyList id "," repeated
                                     , "While working on domain:" <+> pretty st
                                     ]
-                            return (Declaration (Letting ename (Domain outDomain)))
-                        _ -> return st
+                            return [ Declaration (Letting (ename `mappend` "_EnumSize") (fromInt $ genericLength names))
+                                   , Declaration (Letting ename (Domain outDomain))
+                                   ]
+                        _ -> return [st]
 
             let nameToIntMapping = M.fromList nameToIntMapping_
 
@@ -85,7 +89,7 @@ removeEnumsFromModel =
                     = return (fromIntWithTag i (TagEnum ename))
                 onX p = return p
 
-                onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
+                onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
                 onD (DomainEnum nm@(Name nmText) (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
                     = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
@@ -98,7 +102,7 @@ removeEnumsFromModel =
                 onD p = return p
 
             statements'' <- (transformBiM onD >=> transformBiM onX) statements'
-            return model { mStatements = statements'' }
+            return model { mStatements = concat statements'' }
 
         removeEnumsFromModel_GivenEnums model = do
             (statements', enumDomainNames) <-
@@ -148,7 +152,7 @@ removeEnumsFromModel =
 
 
 removeEnumsFromParam
-    :: (MonadFail m, MonadUserError m)
+    :: (MonadFailDoc m, MonadUserError m)
     => Model -> Model -> m (Model, Model)
 removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
@@ -185,7 +189,7 @@ removeEnumsFromParam model param = do
             = return (fromIntWithTag i (TagEnum ename))
         onX p = return p
 
-        onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
+        onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm@(Name nmText) (Just ranges) _)
             | Just _ <- M.lookup nm enumDomainNames
             = DomainInt (TagEnum nmText) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
@@ -289,9 +293,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                                                              ])
 
 -- first Name is the value, the second Name is the name of the enum domain
-nameToX :: MonadFail m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
+nameToX :: MonadFailDoc m => M.HashMap Name (Name, Integer) -> Expression -> m Expression
 nameToX nameToIntMapping (Reference nm _) = case M.lookup nm nameToIntMapping of
-    Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
+    Nothing -> failDoc (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
     Just (Name ename, i)  -> return (fromIntWithTag i (TagEnum ename))
     Just (ename, i) -> bug $ "nameToX, nm:" <+> vcat [pretty (show ename), pretty i]
 nameToX _ x = return x

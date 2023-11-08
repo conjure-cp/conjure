@@ -1,0 +1,17 @@
+{"model":
+     {"children":
+          [{"children":
+                {"name": {"Name": "D"}, "type": "GivenDomainDefnEnum",
+                 "values": [{"Name": "North"}, {"Name": "East"}, {"Name": "South"}, {"Name": "West"}]},
+            "type": "Declaration"},
+           {"children":
+                {"domain": {"DomainEnum": [{"Name": "D"}, null, null]}, "forg": "Find", "name": {"Name": "a"},
+                 "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "a"}}, {"children": [{"Reference": {"Name": "East"}}], "type": "OpSucc"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["East", "a"]}

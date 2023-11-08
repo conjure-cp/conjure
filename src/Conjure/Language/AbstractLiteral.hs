@@ -16,7 +16,7 @@ import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Vector as V               -- vector
 
 
@@ -45,8 +45,11 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitRecord xs -> do
                 xs' <- forM xs $ \ (nm, x) -> do
                     x' <- toSimpleJSON x
-                    return (stringToText (renderNormal nm), x')
-                return $ JSON.Object $ M.fromList xs'
+                    return (fromString (renderNormal nm), x')
+                return $ JSON.Object $ KM.fromList xs'
+            AbsLitVariant _ nm x -> do
+                x' <- toSimpleJSON x
+                return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), x')]
             AbsLitMatrix index xs ->
                 case index of
                     DomainInt _ ranges -> do
@@ -59,8 +62,7 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitSequence xs -> toSimpleJSON xs
             AbsLitRelation xs -> toSimpleJSON xs
             AbsLitPartition xs -> toSimpleJSON xs
-            _ -> noToSimpleJSON lit
-    fromSimpleJSON x = noFromSimpleJSON "AbstractLiteral" x
+    fromSimpleJSON = noFromSimpleJSON "AbstractLiteral"
 
 instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (AbstractLiteral x) where
     toMiniZinc lit =
@@ -86,7 +88,7 @@ instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (Abstr
 
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
-    pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <+> pretty x
+    pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <++> pretty x
                                                                     | (n,x) <- xs ]
     pretty (AbsLitVariant _ n x) = "variant" <+> prBraces (pretty n <+> "=" <+> pretty x)
     pretty (AbsLitMatrix _     []) = "[]"
@@ -99,48 +101,48 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (AbstractLiteral x) where
-    varSymBreakingDescription (AbsLitTuple xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitTuple xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitTuple")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription AbsLitRecord{} = JSON.Object $ M.fromList
+    varSymBreakingDescription AbsLitRecord{} = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitRecord")
         ]
-    varSymBreakingDescription AbsLitVariant{} = JSON.Object $ M.fromList
+    varSymBreakingDescription AbsLitVariant{} = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitVariant")
         ]
-    varSymBreakingDescription (AbsLitMatrix _ xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitMatrix _ xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitMatrix")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (AbsLitSet xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitSet xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitSet")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitMSet xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitMSet xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitMSet")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitFunction xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitFunction xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitFunction")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription (AbsLitTuple [x,y]) | (x,y) <- xs ])
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitSequence xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitSequence xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitSequence")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription (AbsLitTuple [fromInt i, x]) | (i,x) <- zip allNats xs ])
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitRelation xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitRelation xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitRelation")
         , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitTuple) xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbsLitPartition xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsLitPartition xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsLitPartition")
         , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitSet) xs)
         , ("symmetricChildren", JSON.Bool True)
@@ -154,7 +156,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitRecord       xs) = TypeRecord   <$> sequence [ do t <- typeOf x ; return (n,t)
                                                                  | (n,x) <- xs ]
 
-    typeOf   (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the type of variant literal."
+    typeOf   (AbsLitVariant Nothing  _ _) = failDoc "Cannot calculate the type of variant literal."
     typeOf   (AbsLitVariant (Just t) _ _) = fmap TypeVariant $ forM t $ \ (n,d) -> do
         dt <- typeOfDomain d
         return (n, dt)

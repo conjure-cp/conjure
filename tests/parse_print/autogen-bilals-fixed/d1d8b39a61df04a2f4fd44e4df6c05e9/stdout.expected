@@ -15,9 +15,9 @@ such that
     !=
     function(partition({partition({true}, {false})},
                        {partition({true, false}), partition({true}, {true}), partition({false, true})})
-                 --> partition({var2(true -> true)}),
+                 --> partition({image(var2, true -> true)}),
              partition({partition({false})}, {partition({true}, {false})}, {partition({true})})
-                 --> partition({var1, var2(false)}, {toInt(true)}),
+                 --> partition({var1, image(var2, false)}, {toInt(true)}),
              partition({partition({false, true}), partition({true})}, {partition({true})}, {partition({false, true})})
                  --> partition({toInt(true)}, {-2 ** (-10)}, {5})),
     and([false | q_6 : int(-3..0), |toSet(mset(5, 1))| <= q_6])

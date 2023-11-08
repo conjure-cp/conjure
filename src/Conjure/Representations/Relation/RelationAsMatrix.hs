@@ -11,7 +11,7 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-relationAsMatrix :: forall m . (MonadFail m, NameGen m) => Representation m
+relationAsMatrix :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -42,7 +42,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
             (DomainRelation Relation_AsMatrix (RelationAttr sizeAttr binRelAttr) innerDomains)
                 | all domainCanIndexMatrix innerDomains = do
             let cardinality m = do
-                    let unroll _ [] = fail "RelationAsMatrix.cardinality.unroll []"
+                    let unroll _ [] = failDoc "RelationAsMatrix.cardinality.unroll []"
                         unroll n [dom] = do
                             (iPat, i) <- quantifiedVar
                             return [essence| sum &iPat : &dom . toInt(&n[&i]) |]
@@ -101,7 +101,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return $ ConstantAbstract $ AbsLitMatrix i matrixVals
-                unrollC is prevIndices = fail $ vcat [ "RelationAsMatrix.up.unrollC"
+                unrollC is prevIndices = failDoc $ vcat [ "RelationAsMatrix.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
@@ -124,7 +124,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
         up ctxt (name, domain@(DomainRelation Relation_AsMatrix _ innerDomains)) =
 
             case lookup (outName domain name) ctxt of
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in RelationAsMatrix up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
@@ -133,17 +133,17 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (MonadFailDoc m, Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc m => Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
-                                Nothing -> fail "Value not found. RelationAsMatrix.up.index"
+                                Nothing -> failDoc "Value not found. RelationAsMatrix.up.index"
                                 Just v  -> index v is
-                        index m is = fail ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
+                        index m is = failDoc ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
 
                     indices  <- allIndices innerDomains
                     vals     <- forM indices $ \ these -> do
@@ -151,7 +151,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                         case viewConstantBool indexed of
                             Just False -> return Nothing
                             Just True  -> return (Just these)
-                            _ -> fail $ vcat
+                            _ -> failDoc $ vcat
                                 [ "Expecting a boolean literal, but got:" <++> pretty indexed
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain

@@ -1,0 +1,100 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given1"},
+                 {"DomainFunction":
+                      [[],
+                       [{"SizeAttr_MaxSize":
+                             {"Op":
+                                  {"MkOpPow":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}}},
+                        "PartialityAttr_Partial", "JectivityAttr_Injective"],
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]},
+                       {"DomainRelation":
+                            [[], [{"SizeAttr_MaxSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}, []],
+                             [{"DomainBool": []}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainSet":
+                      [[], {"SizeAttr_None": []},
+                       {"DomainSet":
+                            [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given2"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainPartition":
+                      [[],
+                       {"isRegular": true,
+                        "partsNum": {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}},
+                        "partsSize": {"SizeAttr_None": []}},
+                       {"DomainSet":
+                            [[],
+                             {"SizeAttr_MinMaxSize":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                             {"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}},
+                                    {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]}]}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpImply":
+                      [{"Op": {"MkOpNot": {"Constant": {"ConstantBool": false}}}},
+                       {"Op":
+                            {"MkOpIff":
+                                 [{"Constant": {"ConstantBool": false}}, {"Constant": {"ConstantBool": false}}]}}]}},
+            {"Constant": {"ConstantBool": false}},
+            {"Op":
+                 {"MkOpNeq":
+                      [{"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitFunction":
+                                      [[{"ConstantInt": [{"TagInt": []}, 2]}, {"ConstantBool": true}],
+                                       [{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantBool": true}],
+                                       [{"ConstantInt": [{"TagInt": []}, 3]}, {"ConstantBool": true}],
+                                       [{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantBool": true}],
+                                       [{"ConstantInt": [{"TagInt": []}, 4]}, {"ConstantBool": false}]]}}},
+                       {"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitFunction":
+                                      [[{"ConstantInt": [{"TagInt": []}, 5]}, {"ConstantBool": true}],
+                                       [{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantBool": false}],
+                                       [{"ConstantInt": [{"TagInt": []}, 3]}, {"ConstantBool": false}],
+                                       [{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantBool": true}]]}}}]}},
+            {"Op":
+                 {"MkOpImply":
+                      [{"Op":
+                            {"MkOpNeq":
+                                 [{"Reference": [{"Name": "given2"}, null]},
+                                  {"Reference": [{"Name": "given2"}, null]}]}},
+                       {"Op": {"MkOpNot": {"Constant": {"ConstantBool": true}}}}]}},
+            {"Op":
+                 {"MkOpIndexing":
+                      [{"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitTuple":
+                                      [{"ConstantInt": [{"TagInt": []}, 5]}, {"ConstantBool": true},
+                                       {"ConstantBool": false}]}}},
+                       {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}}]},
+      {"Objective": ["Minimising", {"Reference": [{"Name": "given2"}, null]}]}]}

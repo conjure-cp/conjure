@@ -1,0 +1,91 @@
+name: Running all tests (code coverage)
+
+on:
+  workflow_dispatch:        # can be triggered manually
+  push:
+    branches:
+      - main                # run for the main branch only
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - tests/**
+      - etc/build/**
+      - .github/workflows/test-coverage.yml
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        GHC_VERSION: [9.4]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}
+  
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Install Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true make
+
+      - name: Install Minion
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-minion.sh
+
+      - name: Install Chuffed
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-chuffed.sh
+
+      - name: Install Cadical
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-cadical.sh
+
+      - name: Install Kissat
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-kissat.sh
+
+      - name: Install GNU Parallel
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin etc/build/install-gnu-parallel.sh
+
+      - name: Run tests
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin LIMIT_TIME=0 COVERAGE=true make test
+
+      - name: Upload code coverage report to GitHub
+        shell: bash
+        env:
+          COVERAGE_DEPLOY_KEY: ${{ secrets.COVERAGE_DEPLOY_KEY }}
+        run: |
+          mkdir ~/.ssh
+          printf %s "$COVERAGE_DEPLOY_KEY" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+          COVERAGE=true etc/build/record-coverage.sh

@@ -1,6 +1,0 @@
-language ESSENCE' 1.0
-
-find s_SetExplicit: matrix indexed by [int(1..2)] of bool
-such that
-    s_SetExplicit[1] < s_SetExplicit[2],
-    exists v__0 : int(1..2) . s_SetExplicit[v__0] = true

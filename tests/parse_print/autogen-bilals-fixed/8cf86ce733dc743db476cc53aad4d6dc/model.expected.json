@@ -1,0 +1,27 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given1"},
+                 {"DomainPartition":
+                      [[], {"isRegular": true, "partsNum": {"SizeAttr_None": []}, "partsSize": {"SizeAttr_None": []}},
+                       {"DomainPartition":
+                            [[],
+                             {"isRegular": true,
+                              "partsNum":
+                                  {"SizeAttr_MinMaxSize":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                              "partsSize": {"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}}},
+                             {"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                                    {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}]]}]}]}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "unused"}, {"DomainBool": []}]}}]}

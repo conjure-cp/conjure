@@ -1,6 +1,18 @@
 Error:
     tests/parse_print/issues/133/1/133_1.essence:3:8:
-unexpected be
-expecting colon or comma
-    find a be int(1..9)
-           ^
+  |
+3 | find a be int(1..9)
+  |        ^^^^^^^^^^^^
+Skipped tokens
+
+tests/parse_print/issues/133/1/133_1.essence:3:8:
+  |
+3 | find a be int(1..9)
+  |        ^
+Missing Domain
+
+tests/parse_print/issues/133/1/133_1.essence:3:8:
+  |
+3 | find a be int(1..9)
+  |        ^
+Missing :

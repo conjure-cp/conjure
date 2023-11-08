@@ -1,0 +1,205 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "n_upper"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 100]}}]}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "n_boats"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 100]}}]}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "n_periods"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 100]}}]}]]}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "Boat"},
+                 {"Domain":
+                      {"DomainInt":
+                           [{"TagInt": []},
+                            [{"RangeBounded":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                   {"Reference": [{"Name": "n_boats"}, null]}]}]]}}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "capacity"},
+                 {"DomainFunction":
+                      [[], [{"SizeAttr_None": []}, "PartialityAttr_Total", "JectivityAttr_None"],
+                       {"DomainReference": [{"Name": "Boat"}, null]},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Reference": [{"Name": "n_upper"}, null]}]}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "crew"},
+                 {"DomainFunction":
+                      [[], [{"SizeAttr_None": []}, "PartialityAttr_Total", "JectivityAttr_None"],
+                       {"DomainReference": [{"Name": "Boat"}, null]},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Reference": [{"Name": "n_upper"}, null]}]}]]}]}]}},
+      {"Where":
+           [{"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpLeq":
+                                      [{"Op":
+                                            {"MkOpImage":
+                                                 [{"Reference": [{"Name": "crew"}, null]},
+                                                  {"Reference": [{"Name": "i"}, null]}]}},
+                                       {"Op":
+                                            {"MkOpImage":
+                                                 [{"Reference": [{"Name": "capacity"}, null]},
+                                                  {"Reference": [{"Name": "i"}, null]}]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "i"}},
+                                        {"DomainReference": [{"Name": "Boat"}, null]}]}}]]}}}]},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "hosts"},
+                 {"DomainSet": [[], {"SizeAttr_None": []}, {"DomainReference": [{"Name": "Boat"}, null]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "sched"},
+                 {"DomainSet":
+                      [[], {"SizeAttr_Size": {"Reference": [{"Name": "n_periods"}, null]}},
+                       {"DomainFunction":
+                            [[], [{"SizeAttr_None": []}, "PartialityAttr_Total", "JectivityAttr_None"],
+                             {"DomainReference": [{"Name": "Boat"}, null]},
+                             {"DomainReference": [{"Name": "Boat"}, null]}]}]}]}},
+      {"Objective": ["Minimising", {"Op": {"MkOpTwoBars": {"Reference": [{"Name": "hosts"}, null]}}}]},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpSubsetEq":
+                                      [{"Op": {"MkOpRange": {"Reference": [{"Name": "p"}, null]}}},
+                                       {"Reference": [{"Name": "hosts"}, null]}]}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "p"}}, {"Reference": [{"Name": "sched"}, null]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpAnd":
+                                      {"Comprehension":
+                                           [{"Op":
+                                                 {"MkOpEq":
+                                                      [{"Op":
+                                                            {"MkOpImage":
+                                                                 [{"Reference": [{"Name": "p"}, null]},
+                                                                  {"Reference": [{"Name": "h"}, null]}]}},
+                                                       {"Reference": [{"Name": "h"}, null]}]}},
+                                            [{"Generator":
+                                                  {"GenInExpr":
+                                                       [{"Single": {"Name": "h"}},
+                                                        {"Reference": [{"Name": "hosts"}, null]}]}}]]}}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "p"}}, {"Reference": [{"Name": "sched"}, null]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpAnd":
+                                      {"Comprehension":
+                                           [{"Op":
+                                                 {"MkOpLeq":
+                                                      [{"Op":
+                                                            {"MkOpSum":
+                                                                 {"Comprehension":
+                                                                      [{"Op":
+                                                                            {"MkOpImage":
+                                                                                 [{"Reference":
+                                                                                       [{"Name": "crew"}, null]},
+                                                                                  {"Reference":
+                                                                                       [{"Name": "b"}, null]}]}},
+                                                                       [{"Generator":
+                                                                             {"GenInExpr":
+                                                                                  [{"Single": {"Name": "b"}},
+                                                                                   {"Op":
+                                                                                        {"MkOpPreImage":
+                                                                                             [{"Reference":
+                                                                                                   [{"Name": "p"},
+                                                                                                    null]},
+                                                                                              {"Reference":
+                                                                                                   [{"Name": "h"},
+                                                                                                    null]}]}}]}}]]}}},
+                                                       {"Op":
+                                                            {"MkOpImage":
+                                                                 [{"Reference": [{"Name": "capacity"}, null]},
+                                                                  {"Reference": [{"Name": "h"}, null]}]}}]}},
+                                            [{"Generator":
+                                                  {"GenInExpr":
+                                                       [{"Single": {"Name": "h"}},
+                                                        {"Reference": [{"Name": "hosts"}, null]}]}}]]}}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "p"}}, {"Reference": [{"Name": "sched"}, null]}]}}]]}}},
+            {"Op":
+                 {"MkOpAnd":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpLeq":
+                                      [{"Op":
+                                            {"MkOpSum":
+                                                 {"Comprehension":
+                                                      [{"Op":
+                                                            {"MkOpToInt":
+                                                                 {"Op":
+                                                                      {"MkOpEq":
+                                                                           [{"Op":
+                                                                                 {"MkOpImage":
+                                                                                      [{"Reference":
+                                                                                            [{"Name": "p"}, null]},
+                                                                                       {"Reference":
+                                                                                            [{"Name": "b1"}, null]}]}},
+                                                                            {"Op":
+                                                                                 {"MkOpImage":
+                                                                                      [{"Reference":
+                                                                                            [{"Name": "p"}, null]},
+                                                                                       {"Reference":
+                                                                                            [{"Name": "b2"},
+                                                                                             null]}]}}]}}}},
+                                                       [{"Generator":
+                                                             {"GenInExpr":
+                                                                  [{"Single": {"Name": "p"}},
+                                                                   {"Reference": [{"Name": "sched"}, null]}]}}]]}}},
+                                       {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
+                            [{"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "b1"}}, {"DomainReference": [{"Name": "Boat"}, null]}]}},
+                             {"Generator":
+                                  {"GenDomainNoRepr":
+                                       [{"Single": {"Name": "b2"}}, {"DomainReference": [{"Name": "Boat"}, null]}]}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpNeq":
+                                            [{"Reference": [{"Name": "b1"}, null]},
+                                             {"Reference": [{"Name": "b2"}, null]}]}}}]]}}}]}]}

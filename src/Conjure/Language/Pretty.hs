@@ -1,20 +1,25 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Conjure.Language.Pretty
-    ( Pretty(..)
-    , (<++>), (<+>), (<>)
-    , (<+->)
+    ( module X
+    , Pretty(..)
+    , (<+->),(<++>)
     , prettyList, prettyListDoc
     , parensIf
     , render, renderNormal, renderWide
-    , hang, hcat
     , prEmpty, prParens, prBrackets, prBraces
     , Doc
     , prettyContext
     , logDebugId
     , tracingPretty
+    , prettyT
     ) where
-
+import Text.PrettyPrint.Annotated.HughesPJ as X
+   ( 
+    (<>), (<+>), ($$)
+    , hang, nest, punctuate , cat
+    , hcat, vcat, fsep, hsep, sep
+    )
 -- conjure
 import Conjure.Prelude
 
@@ -22,20 +27,23 @@ import Conjure.Prelude
 import Text.Printf ( printf )
 
 -- text
-import qualified Data.Text as T ( Text, unpack, replace, length )
+-- text
+import qualified Data.Text as T ( Text, unpack, length, singleton, concatMap, pack )
 
 -- pretty
-import Text.PrettyPrint
-    ( parens, brackets, braces, empty       -- will be exported with new names
-    , text                                  -- only used in this module
-    , style, renderStyle, lineLength, ribbonsPerLine
-    )
+
 
 -- aeson
 import Data.Aeson as JSON
+import qualified Data.Aeson.KeyMap as KM
 import Data.Scientific ( Scientific, floatingOrInteger )    -- scientific
 import qualified Data.HashMap.Strict as M                   -- unordered-containers
 import qualified Data.Vector as V                           -- vector
+-- import qualified Prettyprinter.Render.String as Pr
+-- import qualified Prettyprinter as Pr
+
+import qualified Text.PrettyPrint.Annotated.HughesPJ as Pr
+import Text.PrettyPrint.Annotated.HughesPJ hiding (Doc,render)
 
 
 class Show a => Pretty a where
@@ -71,7 +79,7 @@ a <++> b = hang a 4 b
 
 -- | For debugging output, truncates the second argument to 5 lines
 (<+->) :: Doc -> Doc -> Doc
-a <+-> b = a <+> (vcat $ map pretty $ take 5 $ lines $ renderWide $ b)
+a <+-> b = a <+> (Pr.vcat $ map pretty $ take 5 $ lines $ renderWide $ b)
 
 prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
 prettyList wrap punc = prettyListDoc wrap punc . map pretty
@@ -92,6 +100,7 @@ renderWide :: Pretty a => a -> String
 renderWide = render 240
 
 render :: Pretty a => Int -> a -> String
+-- render w = Pr.renderString . (Pr.layoutSmart (Pr.LayoutOptions $ AvailablePerLine w 1.0) . pretty)
 render w = renderStyle (style { lineLength = w, ribbonsPerLine = 1 }) . pretty
 
 prEmpty :: Doc
@@ -107,31 +116,43 @@ prBraces :: Doc -> Doc
 prBraces = braces
 
 prettyContext :: (Pretty a, Pretty b) => [(a,b)] -> [Doc]
-prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
+prettyContext = map (\ (a,b) -> Pr.nest 4 $ pretty a <> ":" <+> pretty b )
+
+
+
 
 
 --------------------------------------------------------------------------------
 -- JSON ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- Not exhaustive, just the ones that are 
+-- likely to appear and cause trouble in output.
+jsonEsc :: Char -> Text
+jsonEsc '"' = "\\\""
+jsonEsc '\\' = "\\\\"
+jsonEsc '\r' = "\\r"
+jsonEsc '\n' = "\\n"
+jsonEsc c = T.singleton c
+
 instance Pretty JSON.Value where
     pretty (Object x) = pretty x
     pretty (Array x) = pretty x
-    pretty (String x) = "\"" <> pretty (T.unpack (T.replace "\"" "\\\"" x)) <> "\""
+    pretty (String x) = "\"" <> pretty (T.unpack (T.concatMap jsonEsc x)) <> "\""
     pretty (Number x) = pretty x
     pretty (Bool False) = "false"
     pretty (Bool True) = "true"
     pretty Null = "null"
 
 instance Pretty JSON.Object where
-    pretty = prBraces . fsep . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
+    pretty = prBraces . fsep . Pr.punctuate "," . map f . sortBy (comp `on` fst) . KM.toList
         where
             f (key, Array value)
                 | not (any (\ v -> case v of String t -> T.length t < 20 ; _ -> True ) value)
                 = pretty (show key) <> ":" <++> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <++> pretty value
 
-            keyOrder :: M.HashMap Text Int
+            keyOrder :: M.HashMap Key Int
             keyOrder = M.fromList $
                 zip [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                     , "strategyQ", "strategyA"
@@ -141,17 +162,17 @@ instance Pretty JSON.Object where
                     , "originalDomains"
                     , "before", "after"
                     ] [1..]
-
+            comp :: Key -> Key -> Ordering
             comp a b =
                 let preferred = compare <$> M.lookup a keyOrder
                                         <*> M.lookup b keyOrder
                 in  fromMaybe (compare a b) preferred
 
 instance Pretty JSON.Array where
-    pretty = prBrackets . fsep . punctuate "," . map pretty . V.toList
+    pretty = prBrackets . fsep . Pr.punctuate "," . map pretty . V.toList
 
 prettyArrayVCat :: V.Vector Value -> Doc
-prettyArrayVCat = prBrackets . vcat . punctuate "," . map pretty . V.toList
+prettyArrayVCat = prBrackets . Pr.vcat . Pr.punctuate "," . map pretty . V.toList
 
 instance Pretty Scientific where
     pretty = either pretty pretty . (floatingOrInteger :: Scientific -> Either Double Integer)
@@ -161,3 +182,6 @@ logDebugId msg a = logDebug (msg <++> pretty a) >> return a
 
 tracingPretty :: Pretty a => Doc -> a -> a
 tracingPretty s a = trace (renderWide $ "tracing" <+> s <> ": " <++> pretty a) a
+
+prettyT :: Pretty a => a -> Text
+prettyT = T.pack.show.pretty

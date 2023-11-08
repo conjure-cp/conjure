@@ -1,0 +1,158 @@
+language ESSENCE' 1.0
+
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..65536)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..65536)] of int(0..16)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags:
+        matrix indexed by [int(1..65536), int(1..16), int(2..3)] of bool
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values:
+        matrix indexed by [int(1..65536), int(1..16), int(2..3)] of bool
+find aux1_Occurrence: matrix indexed by [matrix indexed by [int(2..3)] of bool, int(1..16), int(2..3)] of bool
+find aux2_Occurrence: matrix indexed by [matrix indexed by [int(2..3)] of bool, int(1..16), int(2..3)] of bool
+such that
+    and([and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                       [q17, q20, q29]
+                   -> aux1_Occurrence[q1_Function1DPartial_Flags, q20, q29]
+                       | q29 : int(2..3)])
+                  | q20 : int(1..16)])
+             | q1_Function1DPartial_Flags : matrix indexed by [int(2..3)] of bool]),
+    and([and([and([aux1_Occurrence[q1_Function1DPartial_Flags, q20, q26] ->
+                   or([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                           [q17, q20, q30]
+                       /\ q30 = q26
+                           | q30 : int(2..3)])
+                       | q26 : int(2..3)])
+                  | q20 : int(1..16)])
+             | q1_Function1DPartial_Flags : matrix indexed by [int(2..3)] of bool]),
+    and([and([and([aux2_Occurrence[q1_Function1DPartial_Flags, q20, q36]
+                       | q36 : int(2..3), q1_Function1DPartial_Flags[q36]])
+                  | q20 : int(1..16)])
+             | q1_Function1DPartial_Flags : matrix indexed by [int(2..3)] of bool]),
+    and([and([and([aux2_Occurrence[q1_Function1DPartial_Flags, q20, q33] ->
+                   or([q37 = q33 | q37 : int(2..3), q1_Function1DPartial_Flags[q37]])
+                       | q33 : int(2..3)])
+                  | q20 : int(1..16)])
+             | q1_Function1DPartial_Flags : matrix indexed by [int(2..3)] of bool]),
+    and([1 >=
+         sum([q17 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+              or([q20 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q17] /\
+                  (and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                            [q17, q20, q22]
+                        ->
+                        q1_Function1DPartial_Values[q22] =
+                        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                            [q17, q20, q22]
+                        /\ q1_Function1DPartial_Flags[q22]
+                            | q22 : int(2..3)])
+                   /\
+                   and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                            [q17, q20, q23]
+                        = q1_Function1DPartial_Values[q23]
+                        /\
+                        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                            [q17, q20, q23]
+                            | q23 : int(2..3), q1_Function1DPartial_Flags[q23]])
+                   /\
+                   (and([aux1_Occurrence[q1_Function1DPartial_Flags, q20, q25] -> q1_Function1DPartial_Flags[q25]
+                             | q25 : int(2..3)])
+                    /\
+                    and([aux2_Occurrence[q1_Function1DPartial_Flags, q20, q32] ->
+                         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                             [q17, q20, q32]
+                             | q32 : int(2..3)])))
+                      | q20 : int(1..16)])
+                  | q17 : int(1..65536)])
+             | q1_Function1DPartial_Flags : matrix indexed by [int(2..3)] of bool,
+               q1_Function1DPartial_Values : matrix indexed by [int(2..3)] of bool,
+               and([q1_Function1DPartial_Flags[q14] = false -> q1_Function1DPartial_Values[q14] = false
+                        | q14 : int(2..3)])]),
+    and([q18 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q18] >= 1
+             | q18 : int(1..65536)]),
+    and([q5 + 1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5] <
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5 + 1]
+         \/
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5] =
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5 + 1]
+         /\
+         (flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                      [q5, .., ..])
+          <lex
+          flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                      [q5 + 1, .., ..])
+          \/
+          and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                        [q5, q38, q40]
+                    =
+                    var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                        [q5 + 1, q38, q40]
+                        | q40 : int(2..3)])
+                   | q38 : int(1..16)])
+          /\
+          flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                      [q5, .., ..])
+          <lex
+          flatten(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                      [q5 + 1, .., ..]))
+             | q5 : int(1..65535)]),
+    and([q6 > var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6] = 0 /\
+         and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                       [q6, q54, q55]
+                   = false
+                       | q55 : int(2..3)])
+              /\
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                       [q6, q54, q56]
+                   = false
+                       | q56 : int(2..3)])
+                  | q54 : int(1..16)])
+             | q6 : int(1..65536)]),
+    and([q7 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q8 + 1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q7] ->
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                  [q7, q8, ..]
+              <lex
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                  [q7, q8 + 1, ..]
+              \/
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                       [q7, q8, q42]
+                   =
+                   var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                       [q7, q8 + 1, q42]
+                       | q42 : int(2..3)])
+              /\
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                  [q7, q8, ..]
+              <lex
+              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                  [q7, q8 + 1, ..]
+                  | q8 : int(1..15)])
+             | q7 : int(1..65536)]),
+    and([q7 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q9 > var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q7] ->
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                       [q7, q9, q57]
+                   = false
+                       | q57 : int(2..3)])
+              /\
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                       [q7, q9, q58]
+                   = false
+                       | q58 : int(2..3)])
+                  | q9 : int(1..16)])
+             | q7 : int(1..65536)]),
+    and([q7 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q10 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q7] ->
+              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags
+                       [q7, q10, q11]
+                   = false
+                   ->
+                   var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values
+                       [q7, q10, q11]
+                   = false
+                       | q11 : int(2..3)])
+                  | q10 : int(1..16)])
+             | q7 : int(1..65536)])

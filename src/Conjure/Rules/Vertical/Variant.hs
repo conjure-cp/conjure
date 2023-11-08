@@ -90,7 +90,7 @@ rule_Variant_Index = "variant-index" `namedRule` theRule where
         (xWhich:xs)    <- downX1 x
         name           <- nameOut arg
         argInt         <- case elemIndex name (map fst ds) of
-                            Nothing     -> fail "Variant indexing, not a member of the type."
+                            Nothing     -> failDoc "Variant indexing, not a member of the type."
                             Just argInt -> return argInt
         return
             ( "Variant indexing on:" <+> pretty p
@@ -110,7 +110,7 @@ rule_Variant_Active = "variant-active" `namedRule` theRule where
         TypeVariant ds <- typeOf x
         (xWhich:_)     <- downX1 x
         argInt         <- case elemIndex name (map fst ds) of
-                            Nothing     -> fail "Variant indexing, not a member of the type."
+                            Nothing     -> failDoc "Variant indexing, not a member of the type."
                             Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
         return
             ( "Variant active on:" <+> pretty p

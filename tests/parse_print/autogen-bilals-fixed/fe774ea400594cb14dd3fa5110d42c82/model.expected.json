@@ -1,0 +1,110 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                        {"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}]]}]}},
+      {"SuchThat":
+           [{"Reference": [{"Name": "var1"}, null]}, {"Reference": [{"Name": "var1"}, null]},
+            {"Op":
+                 {"MkOpEq":
+                      [{"AbstractLiteral":
+                            {"AbsLitMatrix":
+                                 [{"DomainInt":
+                                       [{"TagInt": []},
+                                        [{"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 11]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 12]}}]},
+                                         {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}},
+                                         {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 9]}}},
+                                         {"RangeBounded":
+                                              [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                               {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}]]},
+                                  [{"AbstractLiteral":
+                                        {"AbsLitSet":
+                                             [{"Typed":
+                                                   [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                    {"TypeMSet": {"TypeBool": []}}]}]}},
+                                   {"AbstractLiteral":
+                                        {"AbsLitSet":
+                                             [{"AbstractLiteral":
+                                                   {"AbsLitMSet":
+                                                        [{"Reference": [{"Name": "var1"}, null]},
+                                                         {"Reference": [{"Name": "var1"}, null]},
+                                                         {"Reference": [{"Name": "var1"}, null]}]}}]}},
+                                   {"AbstractLiteral":
+                                        {"AbsLitSet":
+                                             [{"Typed":
+                                                   [{"Constant": {"ConstantAbstract": {"AbsLitMSet": []}}},
+                                                    {"TypeMSet": {"TypeBool": []}}]}]}},
+                                   {"Constant":
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": true}, {"ConstantBool": true},
+                                                              {"ConstantBool": false}]}},
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": false}, {"ConstantBool": false},
+                                                              {"ConstantBool": true}]}},
+                                                   {"ConstantAbstract": {"AbsLitMSet": [{"ConstantBool": false}]}}]}}},
+                                   {"Typed":
+                                        [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                         {"TypeSet": {"TypeMSet": {"TypeBool": []}}}]}]]}},
+                       {"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitMatrix":
+                                      [{"DomainInt":
+                                            [{"TagInt": []},
+                                             [{"RangeSingle": {"ConstantInt": [{"TagInt": []}, 8]}},
+                                              {"RangeSingle": {"ConstantInt": [{"TagInt": []}, 9]}},
+                                              {"RangeBounded":
+                                                   [{"ConstantInt": [{"TagInt": []}, 3]},
+                                                    {"ConstantInt": [{"TagInt": []}, 3]}]}]]},
+                                       [{"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantAbstract": {"AbsLitMSet": [{"ConstantBool": false}]}},
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": true}, {"ConstantBool": true}]}},
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": false}, {"ConstantBool": false},
+                                                              {"ConstantBool": false}]}}]}},
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": false}, {"ConstantBool": true}]}},
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": true}, {"ConstantBool": true},
+                                                              {"ConstantBool": true}]}},
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": true}, {"ConstantBool": true}]}}]}},
+                                        {"ConstantAbstract":
+                                             {"AbsLitSet":
+                                                  [{"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": true}, {"ConstantBool": false}]}},
+                                                   {"ConstantAbstract":
+                                                        {"AbsLitMSet":
+                                                             [{"ConstantBool": true},
+                                                              {"ConstantBool": false}]}}]}}]]}}}]}},
+            {"Reference": [{"Name": "var1"}, null]}]},
+      {"Objective": ["Minimising", {"Reference": [{"Name": "var2"}, null]}]}]}

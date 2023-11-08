@@ -1,0 +1,34 @@
+
+letting n be 4
+
+
+letting hints be function(
+        (1,1) --> 2,
+        (2,2) --> 2
+)
+
+
+letting less_than be relation(
+        ((1,1) , (2,1)),
+        ((4,2) , (3,2)),
+        ((3,3) , (3,4)),
+        ((3,4) , (4,4))
+)
+
+
+letting DOMAIN be domain int(1..n)
+
+
+find board : matrix indexed by [DOMAIN, DOMAIN] of DOMAIN
+
+
+such that forAll (hint,num) in hints .
+        board[hint[1], hint[2]] = num,
+
+
+such that forAll i: DOMAIN .
+        allDiff(board[i,..]),
+
+
+such that forAll j: DOMAIN .
+        allDiff(board[..,j]),

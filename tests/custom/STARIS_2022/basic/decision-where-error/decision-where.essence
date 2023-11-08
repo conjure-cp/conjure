@@ -1,0 +1,4 @@
+$ where statements cannot refer to a decision variable, this checks that the error is produced
+$ note this was not caught by the conjure model, but by the savile row
+find x : int(1..10)
+where x = 5

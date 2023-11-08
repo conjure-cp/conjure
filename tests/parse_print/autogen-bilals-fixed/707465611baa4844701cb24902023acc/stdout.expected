@@ -1,0 +1,46 @@
+language ESSENCE' 1.0
+
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0..1)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1: matrix indexed by [int(1), int(0..4, 2..5)] of int(4, 2)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2: matrix indexed by [int(1), int(0..4, 2..5)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_1_1: matrix indexed by [int(1)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_1_2: matrix indexed by [int(1)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_2_1: matrix indexed by [int(1)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_2_2: matrix indexed by [int(1)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1), int(1)] of int(0..1)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1), int(1)] of bool
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0)
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Function1D:
+        matrix indexed by [int(1..0), int(5, 5), bool] of bool
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_1_RelationAsMatrix:
+        matrix indexed by [int(1..0), bool] of bool
+such that
+    1 > var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+    and([and([var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[1, q26] = 4 /\
+              var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[1, q26] = false
+                  | q26 : int(0..4, 2..5)]),
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_1_1[1] = false /\
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_1_2[1] = false
+         /\
+         (var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_2_1[1] = false /\
+          var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_2_2[1] = false),
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Flags[1, 1] = 0 /\
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Values[1, 1] = false;
+             int(1..3)]),
+    var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 1,
+    1 <= var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+    (var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Flags[1, 1] = 0 ->
+     var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Values[1, 1] = false),
+    1 <= var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+    var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Flags[1, 1] >= 3,
+    1 <= var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+    var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_3_1_ExplicitVarSizeWithFlags_Flags[1, 1] <= 1,
+    0 <= var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker,
+    and([true
+             | q17_Function1D : matrix indexed by [int(5, 5), bool] of bool,
+               and([allDiff(q17_Function1D[q21, ..]) | q21 : int(5, 5)]), false]),
+    and([false
+             | q19_1_RelationAsMatrix : matrix indexed by [bool] of bool,
+               3 = sum([q19_1_RelationAsMatrix[q23] | q23 : bool])])

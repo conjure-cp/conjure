@@ -1,0 +1,5 @@
+$ testing matrix indexing errors
+letting d be domain matrix indexed by [bool, int(1..5)] of int(1..2)
+find a : d such that a[true] = [1, 2, 2, 2, 2], a[false] = [1,1,1,1,2]
+find b : bool
+such that b = (a[1][true] = 1) $ swapped bool and int indices

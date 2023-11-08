@@ -17,7 +17,7 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-functionND :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+functionND :: forall m . (MonadFailDoc  m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -183,7 +183,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                             Just {} -> return []
 
                     unless (null missing) $
-                        fail $ vcat [ "Some points are undefined on a total function:" <++> prettyList id "," missing
+                        failDoc $ vcat [ "Some points are undefined on a total function:" <++> prettyList id "," missing
                                     , "    Function:" <+> pretty name
                                     , "    Domain:" <++> pretty domain
                                     , "    Value :" <++> pretty value
@@ -197,7 +197,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return $ ConstantAbstract $ AbsLitMatrix i matrixVals
-                unrollC is prevIndices = fail $ vcat [ "FunctionND.up.unrollC"
+                unrollC is prevIndices = failDoc $ vcat [ "FunctionND.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
@@ -222,15 +222,15 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             case lookup (nameValues domain name) ctxt of
                 Just valuesMatrix -> do
                     let
-                        allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
+                        allIndices :: (MonadFailDoc  m, Pretty r) => [Domain r Constant] -> m [[Constant]]
                         allIndices = fmap sequence . mapM domainValues
 
-                        index :: MonadFail m => Constant -> [Constant] -> m Constant
+                        index :: MonadFailDoc  m => Constant -> [Constant] -> m Constant
                         index m [] = return m
                         index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
-                                Nothing -> fail "Value not found. FunctionND.up.index"
+                                Nothing -> failDoc "Value not found. FunctionND.up.index"
                                 Just v  -> index v is
                         index m is = bug ("FunctionND.up.index" <+> pretty m <+> pretty (show is))
 
@@ -241,7 +241,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                     return ( name
                            , ConstantAbstract $ AbsLitFunction vals
                            )
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in FunctionND up)"
                     , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
@@ -255,6 +255,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
+
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
 viewAsDomainTuple (DomainTuple doms) = Just doms

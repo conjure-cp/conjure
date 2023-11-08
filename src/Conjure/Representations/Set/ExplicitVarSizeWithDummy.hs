@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithDummy :: forall m . (MonadFail m, NameGen m) => Representation m
+setExplicitVarSizeWithDummy :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -128,7 +128,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
             maxSizeInt <-
                 case maxSize of
                     ConstantInt _ x -> return x
-                    _ -> fail $ vcat
+                    _ -> failDoc $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
@@ -148,7 +148,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
         up ctxt (name, domain@(DomainSet Set_ExplicitVarSizeWithDummy _ innerDomain)) = do
             let dummyElem = calcDummyElemC innerDomain
             case lookup (outName domain name) ctxt of
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in Set ExplicitVarSizeWithDummy up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
@@ -159,7 +159,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up 
                     case viewConstantMatrix constant of
                         Just (_, vals) ->
                             return (name, ConstantAbstract (AbsLitSet [ v | v <- vals, v /= dummyElem ]))
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name

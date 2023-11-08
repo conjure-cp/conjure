@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# version as of 16 February 2023
+# alas, none of the published releases compile correctly
+VERSION=f2ce8db2fdb6cf2d357059e8959bb77442826ed6
+
 set -o errexit
 set -o nounset
 
@@ -12,7 +16,7 @@ mkdir tmp-install-gecode
 pushd tmp-install-gecode
 git clone https://github.com/Gecode/gecode.git
 cd gecode
-git checkout release-6.0.1
+git checkout $VERSION
 mkdir build
 cd build
 ../configure --disable-qt --disable-gist --enable-static

@@ -1,0 +1,17 @@
+Error:
+    subsequence-type-error.essence:2:16:
+  |
+2 | such that b = (4 subsequence false)
+  |                ^
+Type error:
+	Expected: sequence of ?
+	Got: int
+
+subsequence-type-error.essence:2:30:
+  |
+2 | such that b = (4 subsequence false)
+  |                              ^^^^^
+Type error:
+	Expected: sequence of ?
+	Got: bool
+

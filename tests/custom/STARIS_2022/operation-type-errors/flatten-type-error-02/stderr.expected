@@ -1,0 +1,17 @@
+Error:
+    flatten-type-error.essence:2:27:
+  |
+2 | such that b = (flatten(1, false) = flatten(1, false))
+  |                           ^^^^^
+Type error:
+	Expected: [[?]]
+	Got: bool
+
+flatten-type-error.essence:2:47:
+  |
+2 | such that b = (flatten(1, false) = flatten(1, false))
+  |                                               ^^^^^
+Type error:
+	Expected: [[?]]
+	Got: bool
+

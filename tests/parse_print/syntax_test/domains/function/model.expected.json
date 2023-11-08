@@ -1,0 +1,98 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"Letting":
+                [{"Name": "simple"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_None"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[],
+                            [{"SizeAttr_Size": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                             "PartialityAttr_Partial", "JectivityAttr_None"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized2"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[],
+                            [{"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}},
+                             "PartialityAttr_Partial", "JectivityAttr_None"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized3"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[],
+                            [{"SizeAttr_MaxSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}},
+                             "PartialityAttr_Partial", "JectivityAttr_None"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "sized4"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[],
+                            [{"SizeAttr_MinMaxSize":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]},
+                             "PartialityAttr_Partial", "JectivityAttr_None"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "ject1"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_Surjective"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "ject2"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_Injective"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "ject3"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_Bijective"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "ject4"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_Bijective"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "tot"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[], [{"SizeAttr_None": []}, "PartialityAttr_Total", "JectivityAttr_None"],
+                            {"DomainBool": []}, {"DomainBool": []}]}}]}},
+      {"Declaration":
+           {"Letting":
+                [{"Name": "all"},
+                 {"Domain":
+                      {"DomainFunction":
+                           [[],
+                            [{"SizeAttr_MinMaxSize":
+                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                   {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                             "PartialityAttr_Total", "JectivityAttr_Bijective"],
+                            {"DomainInt": [{"TagInt": []}, []]}, {"DomainInt": [{"TagInt": []}, []]}]}}]}}]}

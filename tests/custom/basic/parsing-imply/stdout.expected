@@ -1,120 +1,23 @@
 ========================================
 1_noparens.essence
-Generating models for 1_noparens.essence
+1,8d0
+< language Essence 1.3
+< 
+< find a: bool
+< find b: bool
+< find c: bool
+< find d: bool
+< such that a -> !b -> c -> d
+< 
+========================================
+2_leftparens.essence
+Generating models for 2_leftparens.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
 Savile Row: model000001.eprime
 Running minion for domain filtering.
 Running solver: minion
-$ Solution: 000001
-language Essence 1.3
-
-letting a be false
-letting b be false
-letting c be false
-letting d be false
-
-
-$ Solution: 000002
-language Essence 1.3
-
-letting a be false
-letting b be false
-letting c be false
-letting d be true
-
-
-$ Solution: 000003
-language Essence 1.3
-
-letting a be false
-letting b be false
-letting c be true
-letting d be true
-
-
-$ Solution: 000004
-language Essence 1.3
-
-letting a be false
-letting b be true
-letting c be false
-letting d be false
-
-
-$ Solution: 000005
-language Essence 1.3
-
-letting a be false
-letting b be true
-letting c be false
-letting d be true
-
-
-$ Solution: 000006
-language Essence 1.3
-
-letting a be false
-letting b be true
-letting c be true
-letting d be true
-
-
-$ Solution: 000007
-language Essence 1.3
-
-letting a be true
-letting b be false
-letting c be false
-letting d be false
-
-
-$ Solution: 000008
-language Essence 1.3
-
-letting a be true
-letting b be false
-letting c be false
-letting d be true
-
-
-$ Solution: 000009
-language Essence 1.3
-
-letting a be true
-letting b be false
-letting c be true
-letting d be true
-
-
-$ Solution: 000010
-language Essence 1.3
-
-letting a be true
-letting b be true
-letting c be false
-letting d be true
-
-
-$ Solution: 000011
-language Essence 1.3
-
-letting a be true
-letting b be true
-letting c be true
-letting d be true
-
-
-========================================
-2_leftparens.essence
-7c7
-< such that ((a -> !b) -> c) -> d
----
-> such that a -> !b -> c -> d
-Using cached models.
-Savile Row: model000001.eprime
-Running minion for domain filtering.
-Running solver: minion
+Copying solution to: 2_leftparens.solutions
 $ Solution: 000001
 language Essence 1.3
 
@@ -222,6 +125,7 @@ Saved under: conjure-output
 Savile Row: model000001.eprime
 Running minion for domain filtering.
 Running solver: minion
+Copying solution to: 3_rightparens.solutions
 $ Solution: 000001
 language Essence 1.3
 
@@ -359,19 +263,22 @@ letting d be true
 
 ========================================
 4_mixparens.essence
-Generating models for 4_mixparens.essence
-Generated models: model000001.eprime
-Saved under: conjure-output
-Savile Row: model000001.eprime
-Running minion for domain filtering.
-Running solver: minion
+1,8d0
+< language Essence 1.3
+< 
+< find a: bool
+< find b: bool
+< find c: bool
+< find d: bool
+< such that a -> (!b -> c) -> d
+< 
 $ Solution: 000001
 language Essence 1.3
 
 letting a be false
 letting b be false
 letting c be false
-letting d be true
+letting d be false
 
 
 $ Solution: 000002
@@ -379,11 +286,38 @@ language Essence 1.3
 
 letting a be false
 letting b be false
-letting c be true
+letting c be false
 letting d be true
 
 
 $ Solution: 000003
+language Essence 1.3
+
+letting a be false
+letting b be false
+letting c be true
+letting d be false
+
+
+$ Solution: 000004
+language Essence 1.3
+
+letting a be false
+letting b be false
+letting c be true
+letting d be true
+
+
+$ Solution: 000005
+language Essence 1.3
+
+letting a be false
+letting b be true
+letting c be false
+letting d be false
+
+
+$ Solution: 000006
 language Essence 1.3
 
 letting a be false
@@ -392,7 +326,16 @@ letting c be false
 letting d be true
 
 
-$ Solution: 000004
+$ Solution: 000007
+language Essence 1.3
+
+letting a be false
+letting b be true
+letting c be true
+letting d be false
+
+
+$ Solution: 000008
 language Essence 1.3
 
 letting a be false
@@ -401,7 +344,7 @@ letting c be true
 letting d be true
 
 
-$ Solution: 000005
+$ Solution: 000009
 language Essence 1.3
 
 letting a be true
@@ -410,7 +353,7 @@ letting c be false
 letting d be false
 
 
-$ Solution: 000006
+$ Solution: 000010
 language Essence 1.3
 
 letting a be true
@@ -419,7 +362,7 @@ letting c be false
 letting d be true
 
 
-$ Solution: 000007
+$ Solution: 000011
 language Essence 1.3
 
 letting a be true
@@ -428,7 +371,16 @@ letting c be true
 letting d be true
 
 
-$ Solution: 000008
+$ Solution: 000012
+language Essence 1.3
+
+letting a be true
+letting b be true
+letting c be false
+letting d be false
+
+
+$ Solution: 000013
 language Essence 1.3
 
 letting a be true
@@ -437,7 +389,16 @@ letting c be false
 letting d be true
 
 
-$ Solution: 000009
+$ Solution: 000014
+language Essence 1.3
+
+letting a be true
+letting b be true
+letting c be true
+letting d be false
+
+
+$ Solution: 000015
 language Essence 1.3
 
 letting a be true

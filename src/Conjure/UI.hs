@@ -218,7 +218,7 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    | TSDEF -- generate TypeScript definitions
+    | LSP
         { logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         }
@@ -230,7 +230,7 @@ instance ToJSON    UI where toJSON = genericToJSON jsonOptions
 instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
-data OutputFormat = Plain | Binary | ASTJSON | JSON | MiniZinc
+data OutputFormat = Plain | Binary | ASTJSON | JSON | JSONStream | MiniZinc
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize OutputFormat
@@ -480,6 +480,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -544,6 +545,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -608,6 +610,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -660,6 +663,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -984,6 +988,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1083,6 +1088,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1126,6 +1132,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1193,6 +1200,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1240,6 +1248,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1292,6 +1301,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1346,6 +1356,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1392,6 +1403,7 @@ ui = modes
                     \    binary: a binary encoding\n\
                     \    astjson: a JSON dump of the internal data structures, quite verbose\n\
                     \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
                     \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
@@ -1443,23 +1455,10 @@ ui = modes
         }   &= name "streamlining"
             &= explicit
             &= help "Generate streamliningd Essence models."
-    , TSDEF
-        { logLevel
-            = def
-            &= name "log-level"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Log level."
-        , limitTime
-            = Nothing
-            &= name "limit-time"
-            &= groupname "General"
-            &= explicit
-            &= help "Limit in seconds of real time."
-        }  &= name "tsdef"
-            &= explicit
-            &= help "Generate data type definitions in TypeScript.\n\
-                    \These can be used when interfacing with Conjure via JSON."
+    , LSP {
+        logLevel = def,
+        limitTime = Nothing
+    } &= name "lsp"
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
