@@ -5,6 +5,16 @@ on:
   push:
     tags:
       - "v*.*.*"
+  pull_request:             # and for PRs
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - tests/**
+      - etc/build/**
+      - etc/savilerow/**
+      - .github/workflows/release.yml
+                            # other branches that want testing must create a PR
 
 permissions:
   contents: write
