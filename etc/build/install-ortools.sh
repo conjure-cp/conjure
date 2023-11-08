@@ -21,7 +21,8 @@ cmake -S. -Bbuild -DBUILD_DEPS:BOOL=ONere
 cmake --build build
 cp build/bin/fzn-ortools ${BIN_DIR}/fzn-ortools
 ls -l build/lib
-cp build/lib/libortools_flatzinc.9.dylib build/lib/libortools.9.dylib ${BIN_DIR}
+# .dylib or .a depending on OS
+cp build/lib/libortools_flatzinc.9.* build/lib/libortools.9.* ${BIN_DIR}
 echo "ortools executable is at ${BIN_DIR}/fzn-ortools"
 ls -l ${BIN_DIR}/fzn-ortools
 popd
