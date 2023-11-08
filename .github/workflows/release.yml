@@ -113,7 +113,7 @@ jobs:
           rm -rf conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers
           cp -r solver-binaries conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers
           cd solver-binaries
-          cp ../conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers .
+          cp -r ../conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers .
 
           rm -rf conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}
           mkdir conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}
