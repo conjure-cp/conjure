@@ -86,9 +86,10 @@ jobs:
         run: |
           pushd ${HOME}/solver-binaries
 
-          cp -r ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar lib .
+          cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
+          cp -r lib/* lib/
 
-          strip *
+          strip $(find . -type f -perm -u+x)
 
           mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
           cp -r * conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
