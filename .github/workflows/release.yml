@@ -100,7 +100,7 @@ jobs:
         run: echo "RELEASE_VERSION=${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
         if: github.event_name == 'pull_request'
 
-      - name: Strip binaries and create the zip archives
+      - name: Create the zip archives
         shell: bash
         run: |
           pushd ${HOME}/solver-binaries
@@ -108,8 +108,6 @@ jobs:
           cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
           mkdir -p lib
           cp -r ~/.local/bin/lib/* lib/
-
-          strip $(find . -type f -perm -u+x | grep -v savilerow)
 
           cd ..
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
