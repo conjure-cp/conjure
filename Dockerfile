@@ -46,6 +46,7 @@ RUN PROCESSES=2 etc/build/install-lingeling.sh
 RUN PROCESSES=2 etc/build/install-minion.sh
 RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-open-wbo.sh
+RUN PROCESSES=2 etc/build/install-ortools.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
 RUN PROCESSES=2 etc/build/install-z3.sh
 
