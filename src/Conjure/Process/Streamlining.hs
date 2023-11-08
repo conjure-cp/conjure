@@ -8,7 +8,6 @@ module Conjure.Process.Streamlining
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
-import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Compute.DomainOf ( domainOf )
 import Conjure.Representations.Common ( mkBinRelCons, mkBinRelConsSoft )
 
