@@ -57,7 +57,7 @@ RUN make install
 # Make binaries a bit smaller
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
-RUN cd /root/.local/bin ; strip $(find . -type f -perm -u+x)
+RUN cd /root/.local/bin ; strip $(find . -type f -perm -u+x | grep -v savilerow)
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
 

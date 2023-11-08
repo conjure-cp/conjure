@@ -89,7 +89,7 @@ jobs:
           cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
           cp -r lib/* lib/
 
-          strip $(find . -type f -perm -u+x)
+          strip $(find . -type f -perm -u+x | grep -v savilerow)
 
           mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
           cp -r * conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
