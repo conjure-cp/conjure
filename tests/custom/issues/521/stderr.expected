@@ -1,0 +1,28 @@
+Error:
+    1.essence:2:36:
+  |
+2 | such that b = ([1, 2, 3] = flatten([1, 2, 3], 0))
+  |                                    ^^^^^^^^^
+Error: 1st arg must be a constant positive int
+
+1.essence:2:47:
+  |
+2 | such that b = ([1, 2, 3] = flatten([1, 2, 3], 0))
+  |                                               ^
+Type error:
+	Expected: [[?]]
+	Got: int
+
+Error:
+    2.essence:2:34:
+  |
+2 | such that c = alldifferent_except([1, 2, 5, 1, 6])
+  |                                  ^^^^^^^^^^^^^^^^^
+Insufficient args, expected 2 got 1
+
+Error: 3.essence:2:20:
+  |
+2 | such that b = party(5)
+  |                    ^^^
+Insufficient args, expected 2 got 1
+
