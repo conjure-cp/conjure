@@ -89,9 +89,16 @@ jobs:
           rm -rf ${HOME}/solver-binaries
           BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
 
-# when gecode comes back, this is the list
-# conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-      - name: Strip binaries
+      - name: Set variable based on trigger (ref_name if on tag, sha otherwise)
+        id: set_version
+        run: |
+          if [[ ${{ github.ref }} == refs/tags/* ]]; then
+            echo "::set-output name=version::${{ github.ref_name }}"
+          else
+            echo "::set-output name=version::${{ github.sha }}"
+          fi
+
+      - name: Strip binaries and create the zip archives
         shell: bash
         run: |
           pushd ${HOME}/solver-binaries
@@ -103,22 +110,22 @@ jobs:
           strip $(find . -type f -perm -u+x | grep -v savilerow)
 
           cd ..
-          rm -rf conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
-          cp -r solver-binaries conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          rm -rf conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers
+          cp -r solver-binaries conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers
           cd solver-binaries
-          cp ../conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers .
+          cp ../conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers .
 
-          rm -rf conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
-          mkdir conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
-          cp conjure conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
+          rm -rf conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}
+          mkdir conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}
+          cp conjure conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}
 
-          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
-          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          zip -r -9 conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}.zip conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}
+          zip -r -9 conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers
 
           popd
 
-          cp ${HOME}/solver-binaries/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip .
-          cp ${HOME}/solver-binaries/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip .
+          cp ${HOME}/solver-binaries/conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}.zip .
+          cp ${HOME}/solver-binaries/conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers.zip .
 
 # See https://github.com/softprops/action-gh-release
       - name: Create Release
@@ -128,10 +135,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ github.ref_name }}
+          name: ${{ steps.set_version.outputs.version }}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip
-            conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip
+            conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}.zip
+            conjure-${{ steps.set_version.outputs.version }}-${{ matrix.release_suffix }}-with-solvers.zip
