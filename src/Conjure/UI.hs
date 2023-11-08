@@ -494,7 +494,7 @@ ui = modes
             &= groupname "Streamlining"
             &= explicit
             &= help "A comma separated list of integers.\n\
-                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\n\
                     \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "modelling"
             &= explicit
@@ -1002,7 +1002,7 @@ ui = modes
             &= groupname "Streamlining"
             &= explicit
             &= help "A comma separated list of integers.\n\
-                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\n\
                     \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "solve"
             &= explicit
@@ -1454,7 +1454,7 @@ ui = modes
             &= help "Line width to use during pretty printing.\nDefault: 120"
         }   &= name "streamlining"
             &= explicit
-            &= help "Generate streamliningd Essence models."
+            &= help "Generate streamlined Essence models."
     , LSP {
         logLevel = def,
         limitTime = Nothing
