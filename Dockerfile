@@ -57,10 +57,12 @@ RUN make install
 # Make binaries a bit smaller
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
-RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-# RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+RUN cd /root/.local/bin ; strip *
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
+
+# a test to see if all solvers work as expected
+RUN tests/allsolvers/test.sh
 
 
 ################################################################################
@@ -73,7 +75,3 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends default-jre-headless
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin
-
-# Testing
-CMD echo "find x : set of int(1..3)" > model.essence ; conjure solve model.essence --number-of-solutions=all ; cat model.solutions
-
