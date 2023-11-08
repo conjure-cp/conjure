@@ -97,7 +97,8 @@ jobs:
           pushd ${HOME}/solver-binaries
 
           cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
-          cp -r lib/* lib/
+          mkdir -p lib
+          cp -r ~/.local/bin/lib/* lib/
 
           strip $(find . -type f -perm -u+x | grep -v savilerow)
 
