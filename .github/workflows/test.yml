@@ -8,7 +8,7 @@ on:
     paths:
       - conjure-cp.cabal
       - Makefile
-      - Dockerfile
+      - Dockerfile          # this is here because the docker-publish.yml depends on successful completion of this action
       - src/**
       - tests/**
       - etc/build/**
@@ -18,7 +18,6 @@ on:
     paths:
       - conjure-cp.cabal
       - Makefile
-      - Dockerfile
       - src/**
       - tests/**
       - etc/build/**
