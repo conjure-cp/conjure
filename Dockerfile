@@ -28,6 +28,7 @@ RUN apt-get install -y --no-install-recommends zip unzip                # needed
 RUN apt-get install -y --no-install-recommends autoconf                 # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
+RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 
 # Only copying the install*.sh scripts
 RUN mkdir -p etc
@@ -71,7 +72,7 @@ FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends default-jre-headless
+RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin
 
