@@ -8,6 +8,7 @@ import qualified Conjure.RepresentationsTest ( tests )
 import qualified Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) )
 import qualified Conjure.TypeCheckAll ( tests )
 import qualified Conjure.ParsePrint ( tests )
+import qualified Conjure.ParserFuzz ( tests )
 import qualified Conjure.Custom ( tests )
 
 -- tasty
@@ -24,6 +25,7 @@ main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
     typeCheckAllTests     <- Conjure.TypeCheckAll.tests
     parsePrintTests       <- Conjure.ParsePrint.tests
+    parseFuzzTests        <- Conjure.ParserFuzz.tests
     customTests           <- Conjure.Custom.tests
     let ingredients = antXMLRunner
                     : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.TestTimeLimit)]
@@ -32,6 +34,7 @@ main = do
         testGroup "conjure"
             [ Conjure.Language.DomainSizeTest.tests
             , Conjure.RepresentationsTest.tests
+            , parseFuzzTests
             , parsePrintTests
             , modelAllSolveAllTests testTimeLimit
             , typeCheckAllTests

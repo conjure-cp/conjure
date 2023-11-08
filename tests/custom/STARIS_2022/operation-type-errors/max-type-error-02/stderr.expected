@@ -1,5 +1,9 @@
 Error:
-    In a 'such that' statement: b = (max([false, true, false, true; int(1..4)]) = true)
-    Error:
-        Type error in max([false, true, false, true; int(1..4)])
-                      Unexpected type inside max: matrix indexed by [int] of bool
+    max-type-error.essence:2:20:
+  |
+2 | such that b = (max([false, true, false, true]) = true)
+  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Domain of int-like or matrix of int-like"
+	Got: matrix indexed by [int] of bool
+

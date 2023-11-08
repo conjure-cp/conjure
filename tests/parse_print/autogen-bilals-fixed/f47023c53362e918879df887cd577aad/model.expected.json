@@ -1,8 +1,8 @@
 {"mInfo":
      {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
       "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
-      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
-      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
  "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
  "mStatements":
      [{"Declaration":
@@ -134,37 +134,37 @@
                                                                                           [{"TagInt": []},
                                                                                            2]}}]]}}}}]]}},
                                               {"Op":
-                                                   {"MkOpRelationProj":
+                                                   {"MkOpImage":
                                                         [{"Reference": [{"Name": "var5"}, null]},
-                                                         [{"Op":
-                                                               {"MkOpUnion":
-                                                                    [{"Constant":
-                                                                          {"ConstantAbstract":
-                                                                               {"AbsLitSet":
-                                                                                    [{"ConstantInt":
-                                                                                          [{"TagInt": []}, 4]},
-                                                                                     {"ConstantInt":
-                                                                                          [{"TagInt": []}, 8]}]}}},
-                                                                     {"Constant":
-                                                                          {"ConstantAbstract":
-                                                                               {"AbsLitSet":
-                                                                                    [{"ConstantInt":
-                                                                                          [{"TagInt": []},
-                                                                                           -8]}]}}}]}}]]}},
+                                                         {"Op":
+                                                              {"MkOpUnion":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, 4]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 8]}]}}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []},
+                                                                                          -8]}]}}}]}}]}},
                                               {"Op":
-                                                   {"MkOpRelationProj":
+                                                   {"MkOpImage":
                                                         [{"Reference": [{"Name": "var5"}, null]},
-                                                         [{"Op":
-                                                               {"MkOpToSet":
-                                                                    [false,
-                                                                     {"Constant":
-                                                                          {"ConstantAbstract":
-                                                                               {"AbsLitMSet":
-                                                                                    [{"ConstantInt":
-                                                                                          [{"TagInt": []}, 0]},
-                                                                                     {"ConstantInt":
-                                                                                          [{"TagInt": []},
-                                                                                           4]}]}}}]}}]]}}]}}],
+                                                         {"Op":
+                                                              {"MkOpToSet":
+                                                                   [false,
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitMSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, 0]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []},
+                                                                                          4]}]}}}]}}]}}]}}],
                                   [{"Constant":
                                         {"ConstantAbstract":
                                              {"AbsLitSet":
@@ -197,21 +197,20 @@
                                    {"AbstractLiteral":
                                         {"AbsLitSet":
                                              [{"Op":
-                                                   {"MkOpRelationProj":
+                                                   {"MkOpImage":
                                                         [{"Reference": [{"Name": "var5"}, null]},
-                                                         [{"AbstractLiteral":
-                                                               {"AbsLitSet":
-                                                                    [{"Op":
-                                                                          {"MkOpRelationProj":
-                                                                               [{"Reference": [{"Name": "var2"}, null]},
-                                                                                [{"Op":
-                                                                                      {"MkOpImply":
-                                                                                           [{"Constant":
-                                                                                                 {"ConstantBool":
-                                                                                                      true}},
-                                                                                            {"Constant":
-                                                                                                 {"ConstantBool":
-                                                                                                      true}}]}}]]}}]}}]]}}]}}],
+                                                         {"AbstractLiteral":
+                                                              {"AbsLitSet":
+                                                                   [{"Op":
+                                                                         {"MkOpImage":
+                                                                              [{"Reference": [{"Name": "var2"}, null]},
+                                                                               {"Op":
+                                                                                    {"MkOpImply":
+                                                                                         [{"Constant":
+                                                                                               {"ConstantBool": true}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantBool":
+                                                                                                    true}}]}}]}}]}}]}}]}}],
                                   [{"Constant":
                                         {"ConstantAbstract":
                                              {"AbsLitSet":
@@ -324,18 +323,18 @@
                                    {"AbstractLiteral":
                                         {"AbsLitSet":
                                              [{"Op":
-                                                   {"MkOpRelationProj":
+                                                   {"MkOpImage":
                                                         [{"Reference": [{"Name": "var5"}, null]},
-                                                         [{"Op":
-                                                               {"MkOpParticipants":
-                                                                    {"Constant":
-                                                                         {"ConstantAbstract":
-                                                                              {"AbsLitPartition":
-                                                                                   [[{"ConstantInt":
-                                                                                          [{"TagInt": []}, -9]},
-                                                                                     {"ConstantInt":
-                                                                                          [{"TagInt": []},
-                                                                                           0]}]]}}}}}]]}}]}}]]}},
+                                                         {"Op":
+                                                              {"MkOpParticipants":
+                                                                   {"Constant":
+                                                                        {"ConstantAbstract":
+                                                                             {"AbsLitPartition":
+                                                                                  [[{"ConstantInt":
+                                                                                         [{"TagInt": []}, -9]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []},
+                                                                                          0]}]]}}}}}]}}]}}]]}},
                        {"AbstractLiteral":
                             {"AbsLitFunction":
                                  [[{"Constant":
@@ -384,42 +383,42 @@
                                    {"AbstractLiteral":
                                         {"AbsLitSet":
                                              [{"Op":
-                                                   {"MkOpRelationProj":
+                                                   {"MkOpImage":
                                                         [{"Reference": [{"Name": "var5"}, null]},
-                                                         [{"Op":
-                                                               {"MkOpUnion":
-                                                                    [{"Constant":
-                                                                          {"ConstantAbstract":
-                                                                               {"AbsLitSet":
-                                                                                    [{"ConstantInt":
-                                                                                          [{"TagInt": []}, 5]}]}}},
-                                                                     {"Constant":
-                                                                          {"ConstantAbstract":
-                                                                               {"AbsLitSet":
-                                                                                    [{"ConstantInt":
-                                                                                          [{"TagInt": []}, -4]},
-                                                                                     {"ConstantInt":
-                                                                                          [{"TagInt": []},
-                                                                                           -7]}]}}}]}}]]}},
+                                                         {"Op":
+                                                              {"MkOpUnion":
+                                                                   [{"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, 5]}]}}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitSet":
+                                                                                   [{"ConstantInt":
+                                                                                         [{"TagInt": []}, -4]},
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []},
+                                                                                          -7]}]}}}]}}]}},
                                               {"Op":
-                                                   {"MkOpRelationProj":
+                                                   {"MkOpImage":
                                                         [{"Reference": [{"Name": "var5"}, null]},
-                                                         [{"Op":
-                                                               {"MkOpParty":
-                                                                    [{"Op":
-                                                                          {"MkOpPow":
-                                                                               [{"Constant":
-                                                                                     {"ConstantInt":
-                                                                                          [{"TagInt": []}, 9]}},
-                                                                                {"Constant":
-                                                                                     {"ConstantInt":
-                                                                                          [{"TagInt": []}, 4]}}]}},
-                                                                     {"Constant":
-                                                                          {"ConstantAbstract":
-                                                                               {"AbsLitPartition":
-                                                                                    [[{"ConstantInt":
-                                                                                           [{"TagInt": []},
-                                                                                            2]}]]}}}]}}]]}},
+                                                         {"Op":
+                                                              {"MkOpParty":
+                                                                   [{"Op":
+                                                                         {"MkOpPow":
+                                                                              [{"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 9]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantInt":
+                                                                                         [{"TagInt": []}, 4]}}]}},
+                                                                    {"Constant":
+                                                                         {"ConstantAbstract":
+                                                                              {"AbsLitPartition":
+                                                                                   [[{"ConstantInt":
+                                                                                          [{"TagInt": []},
+                                                                                           2]}]]}}}]}}]}},
                                               {"AbstractLiteral":
                                                    {"AbsLitPartition":
                                                         [[{"Op":
@@ -888,24 +887,23 @@
                                                                      {"Constant":
                                                                           {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
                                                         [{"Op":
-                                                              {"MkOpRelationProj":
+                                                              {"MkOpImage":
                                                                    [{"Reference": [{"Name": "var4"}, null]},
-                                                                    [{"Op":
-                                                                          {"MkOpIn":
-                                                                               [{"Op":
-                                                                                     {"MkOpNeq":
-                                                                                          [{"Constant":
-                                                                                                {"ConstantBool":
-                                                                                                     false}},
-                                                                                           {"Constant":
-                                                                                                {"ConstantBool":
-                                                                                                     true}}]}},
-                                                                                {"Constant":
-                                                                                     {"ConstantAbstract":
-                                                                                          {"AbsLitSet":
-                                                                                               [{"ConstantBool": false},
-                                                                                                {"ConstantBool":
-                                                                                                     true}]}}}]}}]]}},
+                                                                    {"Op":
+                                                                         {"MkOpIn":
+                                                                              [{"Op":
+                                                                                    {"MkOpNeq":
+                                                                                         [{"Constant":
+                                                                                               {"ConstantBool": false}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantBool":
+                                                                                                    true}}]}},
+                                                                               {"Constant":
+                                                                                    {"ConstantAbstract":
+                                                                                         {"AbsLitSet":
+                                                                                              [{"ConstantBool": false},
+                                                                                               {"ConstantBool":
+                                                                                                    true}]}}}]}}]}},
                                                          {"Op":
                                                               {"MkOpTwoBars":
                                                                    {"Constant":
@@ -1028,33 +1026,32 @@
                                               {"Op":
                                                    {"MkOpPow":
                                                         [{"Op":
-                                                              {"MkOpRelationProj":
+                                                              {"MkOpImage":
                                                                    [{"Reference": [{"Name": "var4"}, null]},
-                                                                    [{"Op":
-                                                                          {"MkOpOr":
-                                                                               {"AbstractLiteral":
-                                                                                    {"AbsLitMatrix":
-                                                                                         [{"DomainInt":
-                                                                                               [{"TagInt": []},
-                                                                                                [{"RangeBounded":
-                                                                                                      [{"Constant":
-                                                                                                            {"ConstantInt":
-                                                                                                                 [{"TagInt":
-                                                                                                                       []},
-                                                                                                                  1]}},
-                                                                                                       {"Constant":
-                                                                                                            {"ConstantInt":
-                                                                                                                 [{"TagInt":
-                                                                                                                       []},
-                                                                                                                  2]}}]}]]},
-                                                                                          [{"Constant":
-                                                                                                {"ConstantBool":
-                                                                                                     false}},
-                                                                                           {"Constant":
-                                                                                                {"ConstantBool":
-                                                                                                     false}}]]}}}}]]}},
+                                                                    {"Op":
+                                                                         {"MkOpOr":
+                                                                              {"AbstractLiteral":
+                                                                                   {"AbsLitMatrix":
+                                                                                        [{"DomainInt":
+                                                                                              [{"TagInt": []},
+                                                                                               [{"RangeBounded":
+                                                                                                     [{"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 1]}},
+                                                                                                      {"Constant":
+                                                                                                           {"ConstantInt":
+                                                                                                                [{"TagInt":
+                                                                                                                      []},
+                                                                                                                 2]}}]}]]},
+                                                                                         [{"Constant":
+                                                                                               {"ConstantBool": false}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantBool":
+                                                                                                    false}}]]}}}}]}},
                                                          {"Op":
-                                                              {"MkOpRelationProj":
+                                                              {"MkOpImage":
                                                                    [{"Reference": [{"Name": "var2"}, null]},
-                                                                    [{"Constant":
-                                                                          {"ConstantBool": true}}]]}}]}}]}}]]}}]}}]}]}
+                                                                    {"Constant":
+                                                                         {"ConstantBool": true}}]}}]}}]}}]]}}]}}]}]}

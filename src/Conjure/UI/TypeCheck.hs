@@ -45,6 +45,7 @@ typeCheckModel_StandAlone model0 = do
 
 
 typeCheckModel ::
+    MonadFail m =>
     MonadUserError m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m Model
@@ -137,7 +138,7 @@ typeCheckModel model1 = do
                     go (TypeTuple ts) o =
                         fromList <$> sequence [ go t [essence| &o[&i] |]
                                               | (i', t) <- zip allNats ts
-                                              , let i = fromInt i'
+                                              , let i :: Expression = fromInt i'
                                               ]
                     go (TypeMatrix _ t) (AbstractLiteral (AbsLitMatrix _ os)) =
                         fromList <$> sequence [ go t o | o <- os ]

@@ -1,5 +1,9 @@
 Error:
-    In a 'such that' statement: b = (min(4) = 2)
-    Error:
-        Type error in min(4)
-                      Unexpected type inside min: int
+    min-type-error.essence:2:20:
+  |
+2 | such that b = (min(4) = 2)
+  |                    ^
+Type error:
+	Expected: "Domain of int-like or matrix of int-like"
+	Got: int
+

@@ -4,10 +4,10 @@ find unused: bool
 such that
     and([true
              | q_4_ExplicitVarSizeWithMarker_Marker : int(0..4),
-               q_4_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags : matrix indexed by [int(1..4),
-                                                                                                 bool] of bool,
-               q_4_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values : matrix indexed by [int(1..4),
-                                                                                                  bool] of int(5),
+               q_4_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags : matrix indexed by [int(1..4), bool] of
+                                                                                  bool,
+               q_4_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values : matrix indexed by [int(1..4), bool] of
+                                                                                   int(5),
                and([q1 + 1 <= q_4_ExplicitVarSizeWithMarker_Marker ->
                     q_4_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags[q1, ..] <lex
                     q_4_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags[q1 + 1, ..]

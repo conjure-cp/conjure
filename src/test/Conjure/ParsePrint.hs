@@ -6,7 +6,7 @@ module Conjure.ParsePrint (tests) where
 
 import Conjure.Language.Definition (Model)
 import Conjure.Language.NameGen (runNameGen)
-import Conjure.Language.Pretty (pretty, renderNormal, (<++>))
+import Conjure.Language.Pretty 
 import Conjure.Language.Type (TypeCheckerMode (..))
 import Conjure.Prelude
 import Conjure.UI (OutputFormat (..))
@@ -88,7 +88,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
             writeModel 120 Plain (Just (tBaseDir </> "stdout")) model
             case tyCheck model of
                 Left err -> writeFile (tBaseDir </> "typecheck") (renderNormal err)
-                Right () -> pure ()
+                Right () -> writeFile (tBaseDir </> "typecheck") ""
             removeFileIfExists (tBaseDir </> "stderr")
 
     let fixWindowsPaths :: String -> String
@@ -105,7 +105,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
 
         readIfExists :: FilePath -> IO String
         readIfExists f = fromMaybe "" <$> readFileIfExists f
-    do
+    e <- do
         step "Checking stderr"
         stderrG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stderr")
         stderrE <- readIfExists (tBaseDir </> "stderr.expected")
@@ -116,42 +116,43 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
                         [ "unexpected stderr:" <++> pretty stderrG
                         , "was expecting:    " <++> pretty stderrE
                         ]
-    do
-        step "Checking Generated Representation"
-        stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "model.json")
-        stdoutE <- readIfExists (tBaseDir </> "model.expected.json")
-        let diffs = do
-                jGiven <- stringToJson stdoutG
-                jReference <- stringToJson stdoutE
-                let Patch ds = diff jGiven jReference
-                return ds
-        case diffs of
-            Nothing -> assertFailure $ "JSON parser error in" ++ stdoutE
-            Just [] -> return ()
-            Just ops -> assertFailure $ renderNormal $ vcat ["Difference in json:" <++> vcat (map (stringToDoc . show) ops)]
-        
-    do
-        step "Checking stdout"
-        stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stdout")
-        stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
-        unless (stdoutE == stdoutG) $
-            assertFailure $
-                renderNormal $
-                    vcat
-                        [ "unexpected stdout:" <++> pretty stdoutG
-                        , "was expecting:    " <++> pretty stdoutE
-                        ]
-    do
-        step "Checking Types"
-        stdoutE <- fixWindowsPaths <$> readIfExists (tBaseDir </> "typecheck")
-        stdoutG <- readIfExists (tBaseDir </> "typecheck.expected")
-        unless (stdoutE == stdoutG) $
-            assertFailure $
-                renderNormal $
-                    vcat
-                        [ "unexpected typeError:" <++> pretty stdoutG
-                        , "was expecting:    " <++> pretty stdoutE
-                        ]
+        return stderrE
+    unless  (e /= "") $ do
+        do
+            step "Checking Generated Representation"
+            stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "model.json")
+            stdoutE <- readIfExists (tBaseDir </> "model.expected.json")
+            let diffs = do
+                    jGiven <- stringToJson stdoutG
+                    jReference <- stringToJson stdoutE
+                    let Patch ds = diff jGiven jReference
+                    return ds
+            case diffs of
+                Nothing -> assertFailure $ "JSON parser error in" ++ stdoutE
+                Just [] -> return ()
+                Just ops -> assertFailure $ renderNormal $ vcat ["Difference in json:" <++> vcat (map (stringToDoc . show) ops)]
+        do
+            step "Checking stdout"
+            stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stdout")
+            stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
+            unless (stdoutE == stdoutG) $
+                assertFailure $
+                    renderNormal $
+                        vcat
+                            [ "unexpected stdout:" <++> pretty stdoutG
+                            , "was expecting:    " <++> pretty stdoutE
+                            ]
+        do
+            step "Checking Types"
+            stdoutE <- fixWindowsPaths <$> readIfExists (tBaseDir </> "typecheck")
+            stdoutG <- readIfExists (tBaseDir </> "typecheck.expected")
+            unless (stdoutE == stdoutG) $
+                assertFailure $
+                    renderNormal $
+                        vcat
+                            [ "unexpected typeError:" <++> pretty stdoutG
+                            , "was expecting:    " <++> pretty stdoutE
+                            ]
 
 stringToJson :: String -> Maybe JSON.Value
 stringToJson "" = Just JSON.emptyObject

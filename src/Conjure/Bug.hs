@@ -10,14 +10,10 @@ import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
 import Conjure.Language.Pretty
 
-#if __GLASGOW_HASKELL__ >= 800
--- base
-import GHC.Stack ( HasCallStack )
+
+
 -- call this function instead of "error"
 bug :: HasCallStack => Doc -> a
-#else
-bug :: Doc -> a
-#endif
 bug message = error $ unlines
     [ "This should never happen, sorry!"
     , ""

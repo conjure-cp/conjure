@@ -1,16 +1,23 @@
 name: Building all solvers
 
 on:
+  workflow_dispatch:        # can be triggered manually
+  schedule:
+    - cron: '0 11 * * 1'    # run at 11.00 every Monday
+                            # we do not modify the install scripts or the Makefile very often,
+                            # so we build the solvers once a week to make sure they still build OK.
   push:
     branches:
-      - master              # run for the master branch
+      - main                # run for the main branch
     paths:
       - etc/build/install*.sh
       - Makefile
+      - .github/workflows/solvers.yml
   pull_request:             # and for PRs
     paths:
       - etc/build/install*.sh
       - Makefile
+      - .github/workflows/solvers.yml
                             # other branches that want testing must create a PR
 
 jobs:
@@ -19,7 +26,9 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os:
+        - ubuntu-latest
+        - macos-latest
 
     runs-on: ${{ matrix.os }}
 

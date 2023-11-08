@@ -1,3 +1,3 @@
 conjure solve *.essence
 cat multiset-basic.solution
-rm -r conjure-output
+rm -rf conjure-output

@@ -1,5 +1,17 @@
 Error:
-    In a 'such that' statement: b = (toMSet(false) = (2, 3, 2))
-    Error:
-        Type error in toMSet(false)
-                      The argument has type: bool
+    toMSet-type-error.essence:2:23:
+  |
+2 | such that b = (toMSet(false) = (2, 3, 2))
+  |                       ^^^^^
+Type error:
+	Expected: "Matrix ,list,function,relation,mset,set "
+	Got: bool
+
+toMSet-type-error.essence:2:32:
+  |
+2 | such that b = (toMSet(false) = (2, 3, 2))
+  |                                ^^^^^^^^^
+Type error:
+	Expected: mset of ?
+	Got: (int, int, int)
+

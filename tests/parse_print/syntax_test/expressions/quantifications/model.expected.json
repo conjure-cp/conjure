@@ -1,8 +1,8 @@
 {"mInfo":
      {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
       "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
-      "trailVerbose": [], "trailRewrites": [], "nameGenState": [], "nbExtraGivens": 0, "representations": [],
-      "representationsTree": [], "originalDomains": [], "trailGeneralised": []},
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
  "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
  "mStatements":
      [{"Declaration":
@@ -11,7 +11,10 @@
                  {"Op":
                       {"MkOpAnd":
                            {"Comprehension":
-                                [{"Reference": [{"Name": "x"}, null]},
+                                [{"Op":
+                                      {"MkOpEq":
+                                           [{"Reference": [{"Name": "x"}, null]},
+                                            {"Reference": [{"Name": "y"}, null]}]}},
                                  [{"Generator":
                                        {"GenDomainNoRepr":
                                             [{"Single": {"Name": "x"}},
@@ -43,7 +46,10 @@
                  {"Op":
                       {"MkOpAnd":
                            {"Comprehension":
-                                [{"Reference": [{"Name": "x"}, null]},
+                                [{"Op":
+                                      {"MkOpLt":
+                                           [{"Reference": [{"Name": "x"}, null]},
+                                            {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}},
                                  [{"Generator":
                                        {"GenDomainNoRepr":
                                             [{"Single": {"Name": "x"}},
@@ -64,17 +70,23 @@
                       {"MkOpAnd":
                            {"Comprehension":
                                 [{"Op":
-                                      {"MkOpSum":
-                                           {"AbstractLiteral":
-                                                {"AbsLitMatrix":
-                                                     [{"DomainInt":
-                                                           [{"TagInt": []},
-                                                            [{"RangeBounded":
-                                                                  [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
-                                                                   {"Constant":
-                                                                        {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
-                                                      [{"Reference": [{"Name": "x"}, null]},
-                                                       {"Reference": [{"Name": "y"}, null]}]]}}}},
+                                      {"MkOpEq":
+                                           [{"Op":
+                                                 {"MkOpSum":
+                                                      {"AbstractLiteral":
+                                                           {"AbsLitMatrix":
+                                                                [{"DomainInt":
+                                                                      [{"TagInt": []},
+                                                                       [{"RangeBounded":
+                                                                             [{"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 1]}},
+                                                                              {"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 2]}}]}]]},
+                                                                 [{"Reference": [{"Name": "x"}, null]},
+                                                                  {"Reference": [{"Name": "y"}, null]}]]}}}},
+                                            {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}},
                                  [{"Generator":
                                        {"GenDomainNoRepr":
                                             [{"Single": {"Name": "x"}},
@@ -98,7 +110,10 @@
                  {"Op":
                       {"MkOpAnd":
                            {"Comprehension":
-                                [{"Reference": [{"Name": "x"}, null]},
+                                [{"Op":
+                                      {"MkOpLt":
+                                           [{"Reference": [{"Name": "x"}, null]},
+                                            {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}},
                                  [{"Generator":
                                        {"GenInExpr":
                                             [{"Single": {"Name": "x"}},
@@ -120,7 +135,10 @@
                  {"Op":
                       {"MkOpAnd":
                            {"Comprehension":
-                                [{"Reference": [{"Name": "x"}, null]},
+                                [{"Op":
+                                      {"MkOpIn":
+                                           [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                            {"Reference": [{"Name": "x"}, null]}]}},
                                  [{"Generator":
                                        {"GenInExpr":
                                             [{"Single": {"Name": "x"}},

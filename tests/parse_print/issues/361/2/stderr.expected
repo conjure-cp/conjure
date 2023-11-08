@@ -1,6 +1,24 @@
 Error:
     tests/parse_print/issues/361/2/361_2.essence:2:42:
-unexpected int
-expecting expression
-    find x : int(1..2) such that forAll j in int(1..2) . x <= j
-                                             ^
+  |
+2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
+  |                                          ^^^^^^^^^^^^^^^^^^
+Skipped tokens
+
+tests/parse_print/issues/361/2/361_2.essence:2:42:
+  |
+2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
+  |                                          ^
+Missing Expression
+
+tests/parse_print/issues/361/2/361_2.essence:2:42:
+  |
+2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
+  |                                          ^
+Missing Expression
+
+tests/parse_print/issues/361/2/361_2.essence:2:42:
+  |
+2 | find x : int(1..2) such that forAll j in int(1..2) . x <= j
+  |                                          ^
+Missing .

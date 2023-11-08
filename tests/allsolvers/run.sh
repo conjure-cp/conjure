@@ -1,101 +1,101 @@
 
-echo -e "default, minion"
+echo "default, minion"
 conjure solve test.essence
 
 
 # CP solvers
 
-echo -e "\nminion"
+echo "\nminion"
 conjure solve test.essence --solver minion
 
-echo -e "\ngecode"
+echo "\ngecode"
 conjure solve test.essence --solver gecode
 
-echo -e "\nchuffed"
+echo "\nchuffed"
 conjure solve test.essence --solver chuffed
 
 
 # SAT solvers
 
-echo -e "\nglucose"
+echo "\nglucose"
 conjure solve test.essence --solver glucose
 
-echo -e "\nglucose-syrup"
+echo "\nglucose-syrup"
 conjure solve test.essence --solver glucose-syrup
 
-echo -e "\nlingeling"
+echo "\nlingeling"
 conjure solve test.essence --solver lingeling
 
-echo -e "\nplingeling"
+echo "\nplingeling"
 conjure solve test.essence --solver plingeling
 
-echo -e "\ntreengeling"
+echo "\ntreengeling"
 conjure solve test.essence --solver treengeling
 
-echo -e "\ncadical"
+echo "\ncadical"
 conjure solve test.essence --solver cadical
 
-echo -e "\nminisat"
+echo "\nminisat"
 conjure solve test.essence --solver minisat
 
 
 # AllSAT solvers
 
-echo -e "\nbc_minisat_all --number-of-solutions=all"
+echo "\nbc_minisat_all --number-of-solutions=all"
 conjure solve test.essence --solver bc_minisat_all --number-of-solutions=all
 
-echo -e "\nnbc_minisat_all --number-of-solutions=all"
+echo "\nnbc_minisat_all --number-of-solutions=all"
 conjure solve test.essence --solver nbc_minisat_all --number-of-solutions=all
 
 
 # MaxSAT solvers
 
-echo -e "\nopen-wbo"
+echo "\nopen-wbo"
 conjure solve testo.essence --solver open-wbo
 
 
 # MIP solvers (via MiniZinc)
 
-echo -e "\ncoin-or"
+echo "\ncoin-or"
 conjure solve test.essence --solver coin-or
 
-echo -e "\ncplex"
+echo "\ncplex"
 conjure solve test.essence --solver cplex
 
 
 # SMT solvers
 
-echo -e "\nboolector"
+echo "\nboolector"
 conjure solve test.essence --solver boolector
 
-echo -e "\nboolector-bv"
+echo "\nboolector-bv"
 conjure solve test.essence --solver boolector-bv
 
-echo -e "\nyices"
+echo "\nyices"
 conjure solve test.essence --solver yices
 
-echo -e "\nyices-bv"
+echo "\nyices-bv"
 conjure solve test.essence --solver yices-bv
 
-echo -e "\nyices-lia"
+echo "\nyices-lia"
 conjure solve test.essence --solver yices-lia
 
-echo -e "\nyices-idl"
+echo "\nyices-idl"
 conjure solve test.essence --solver yices-idl
 
-echo -e "\nz3"
+echo "\nz3"
 conjure solve test.essence --solver z3
 
-echo -e "\nz3-bv"
+echo "\nz3-bv"
 conjure solve test.essence --solver z3-bv
 
-echo -e "\nz3-lia"
+echo "\nz3-lia"
 conjure solve test.essence --solver z3-lia
 
-echo -e "\nz3-nia"
+echo "\nz3-nia"
 conjure solve test.essence --solver z3-nia
 
-echo -e "\nz3-idl"
+echo "\nz3-idl"
 conjure solve test.essence --solver z3-idl
 
 

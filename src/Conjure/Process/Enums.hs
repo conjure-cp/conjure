@@ -46,6 +46,8 @@ removeEnumsFromModel =
             let redefinedTopLevel = [ name | Declaration (FindOrGiven _ name _) <- mStatements model, name `elem` enumNames ]
             let redefinedQuantified = [ name | Generator gen <- universeBi (mStatements model), name@Name{} <- universeBi gen, name `elem` enumNames ]
             let redefined = redefinedTopLevel ++ redefinedQuantified
+            let duplicates = [ name | (name, count) <- histogram enumNames, count > 1 ]
+            unless (null duplicates) $ userErr1 $ "Enumerated value defined multiple times:" <+> prettyList id "," duplicates
             unless (null redefined) $ userErr1 $ vcat
                 [ "Members of an enum domain are later redefined as top-level or quantified variables."
                 , "Check:" <+> prettyList id "," redefined
@@ -65,7 +67,7 @@ removeEnumsFromModel =
                                                 (fromIntWithTag (genericLength names) (TagEnum enameText))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
-                                             , zip names (zip (cycle [ename]) allNats)
+                                             , zip names (map (ename,) allNats)
                                              ) `mappend` )
                                 repeated -> userErr1 $ vcat
                                     [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
@@ -73,8 +75,10 @@ removeEnumsFromModel =
                                     , "Repeated:" <+> prettyList id "," repeated
                                     , "While working on domain:" <+> pretty st
                                     ]
-                            return (Declaration (Letting ename (Domain outDomain)))
-                        _ -> return st
+                            return [ Declaration (Letting (ename `mappend` "_EnumSize") (fromInt $ genericLength names))
+                                   , Declaration (Letting ename (Domain outDomain))
+                                   ]
+                        _ -> return [st]
 
             let nameToIntMapping = M.fromList nameToIntMapping_
 
@@ -98,7 +102,7 @@ removeEnumsFromModel =
                 onD p = return p
 
             statements'' <- (transformBiM onD >=> transformBiM onX) statements'
-            return model { mStatements = statements'' }
+            return model { mStatements = concat statements'' }
 
         removeEnumsFromModel_GivenEnums model = do
             (statements', enumDomainNames) <-

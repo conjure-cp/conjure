@@ -88,12 +88,12 @@ such that
     and([q7[2] >= init_total_fuel_used_range_min | q7 <- init[total_fuel_used]]),
     and([q7[2] <= init_total_fuel_used_range_max | q7 <- init[total_fuel_used]])
 such that
-    and([init[fuel](a) > 0 /\ init[fuel](a) <= init[capacity](a)
+    and([image(init[fuel], a) > 0 /\ image(init[fuel], a) <= image(init[capacity], a)
              | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft]),
-    and([init[onboard](a) = sum([toInt(value) | ((_, p2), value) <- init[in_], p2 = a])
+    and([image(init[onboard], a) = sum([toInt(value) | ((_, p2), value) <- init[in_], p2 = a])
              | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft]),
-    init[total_fuel_used](0) = 0,
-    and([and([init[distance]((c1, c2)) = init[distance]((c2, c1)) /\ init[distance]((c1, c2)) > 0
+    image(init[total_fuel_used], 0) = 0,
+    and([and([image(init[distance], (c1, c2)) = image(init[distance], (c2, c1)) /\ image(init[distance], (c1, c2)) > 0
                   | c2 : int(0..100), c2 >= minid_city, c2 <= maxid_city])
              | c1 : int(0..100), c1 >= minid_city, c1 <= maxid_city]),
     and([1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p1 = a])
@@ -160,7 +160,7 @@ such that
     and([q10[1] <= maxid_aircraft | q10 <- goal[onboard]]),
     and([q10[2] >= goal_onboard_range_min | q10 <- goal[onboard]]),
     and([q10[2] <= goal_onboard_range_max | q10 <- goal[onboard]])
-such that and([goal[onboard](a) >= 0 | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft])
+such that and([image(goal[onboard], a) >= 0 | a : int(0..100), a >= minid_aircraft, a <= maxid_aircraft])
 
 --------------------
 
@@ -495,12 +495,12 @@ such that
     and([q7[2] >= init_total_fuel_used_range_min | q7 <- init[total_fuel_used]]),
     and([q7[2] <= init_total_fuel_used_range_max | q7 <- init[total_fuel_used]])
 such that
-    and([init[fuel](a) > 0 /\ init[fuel](a) <= init[capacity](a)
+    and([image(init[fuel], a) > 0 /\ image(init[fuel], a) <= image(init[capacity], a)
              | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft]),
-    and([init[onboard](a) = sum([toInt(value) | ((_, p2), value) <- init[in_], p2 = a])
+    and([image(init[onboard], a) = sum([toInt(value) | ((_, p2), value) <- init[in_], p2 = a])
              | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft]),
-    init[total_fuel_used](0) = 0,
-    and([and([init[distance]((c1, c2)) = init[distance]((c2, c1)) /\ init[distance]((c1, c2)) > 0
+    image(init[total_fuel_used], 0) = 0,
+    and([and([image(init[distance], (c1, c2)) = image(init[distance], (c2, c1)) /\ image(init[distance], (c1, c2)) > 0
                   | c2 : int(-10..50), c2 >= minid_city, c2 <= maxid_city])
              | c1 : int(-10..50), c1 >= minid_city, c1 <= maxid_city]),
     and([1 = sum([toInt(value = true) | ((p1, _), value) <- init[at_], p1 = a])
@@ -567,7 +567,7 @@ such that
     and([q10[1] <= maxid_aircraft | q10 <- goal[onboard]]),
     and([q10[2] >= goal_onboard_range_min | q10 <- goal[onboard]]),
     and([q10[2] <= goal_onboard_range_max | q10 <- goal[onboard]])
-such that and([goal[onboard](a) >= 0 | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft])
+such that and([image(goal[onboard], a) >= 0 | a : int(-10..50), a >= minid_aircraft, a <= maxid_aircraft])
 
 --------------------
 

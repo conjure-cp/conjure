@@ -1,0 +1,11 @@
+
+$ letting menu be new type enum {a,b,c}
+letting menu be domain int(1,2,3)
+letting menus be domain set (minSize 2) of menu
+letting probability be domain int(0..10) $ discretised
+letting individual be domain int(1,2)
+
+find p : function (total) (individual, menu, menus) --> probability
+
+such that p((1,2,{1,2})) = 5
+such that sum([j | (i,j) <- p]) = 5

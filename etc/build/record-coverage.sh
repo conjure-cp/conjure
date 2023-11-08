@@ -51,7 +51,7 @@ if ${COVERAGE} ; then
         git commit latest -m "Conjure commit: https://github.com/conjure-cp/conjure/commit/${SOURCE_VERSION}"
     fi
 
-    git push origin master
+    git push origin main
     )
 else
     echo "Skipping, COVERAGE is set to ${COVERAGE}"

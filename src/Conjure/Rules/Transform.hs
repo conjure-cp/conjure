@@ -286,7 +286,7 @@ rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule where
 
 rule_Lift_Transformed_Indexing :: Rule
 rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule where
-  matchIndexing :: (?typeCheckerMode::TypeCheckerMode)
+  matchIndexing :: (?typeCheckerMode :: TypeCheckerMode)
                       => Expression
                       -> Maybe (Expression, Expression, Expression, Expression) 
   matchIndexing exp = do
@@ -499,7 +499,7 @@ rule_Transformed_Variant_Index = "transformed-variant-index" `namedRule` theRule
         name           <- nameOut arg
         argInt         <-
           case elemIndex name (map fst ds) of
-            Nothing     -> fail "Variant indexing, not a member of the type."
+            Nothing     -> failDoc "Variant indexing, not a member of the type."
             Just argInt -> return argInt
         return
             ( "Variant indexing on:" <+> pretty p
@@ -521,7 +521,7 @@ rule_Transformed_Variant_Active = "transformed-variant-active" `namedRule` theRu
         TypeVariant ds <- typeOf x
         (xWhich:_)     <- downX1 x
         argInt         <- case elemIndex name (map fst ds) of
-                            Nothing     -> fail "Variant indexing, not a member of the type."
+                            Nothing     -> failDoc "Variant indexing, not a member of the type."
                             Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
         return
             ( "Variant active on:" <+> pretty p

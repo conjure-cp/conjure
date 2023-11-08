@@ -1,9 +1,9 @@
 Error:
-    In a 'such that' statement: x[a] = true
-    Error:
-        When type checking: x[a] = true
-        Cannot unify the types of the following.
-        lhs        : x[a]
-        type of lhs: int
-        rhs        : true
-        type of rhs: bool
+    record.essence:3:18:
+  |
+3 | such that x[a] = true
+  |                  ^^^^
+Type error:
+	Expected: int
+	Got: bool
+

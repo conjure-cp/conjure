@@ -1,5 +1,17 @@
 Error:
-    In a letting statement: letting z be x + y
-    Error:
-        Type error in x + y
-                      The argument has type: matrix indexed by [int] of (int, int)
+    addition.essence:4:14:
+  |
+4 | letting z be x + y
+  |              ^
+Type error:
+	Expected: "Number or Enum"
+	Got: (int, int)
+
+addition.essence:4:18:
+  |
+4 | letting z be x + y
+  |                  ^
+Type error:
+	Expected: "Number or Enum"
+	Got: (int, int)
+

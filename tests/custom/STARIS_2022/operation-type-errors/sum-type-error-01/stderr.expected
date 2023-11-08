@@ -1,5 +1,9 @@
 Error:
-    In a 'such that' statement: i = sum(5)
-    Error:
-        Type error in sum(5)
-                      The argument has type: int
+    sum-type-error.essence:2:19:
+  |
+2 | such that i = sum(5)
+  |                   ^
+Type error:
+	Expected: "Matrix or Set"
+	Got: int
+

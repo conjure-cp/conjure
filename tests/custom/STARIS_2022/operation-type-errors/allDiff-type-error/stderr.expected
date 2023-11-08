@@ -1,3 +1,9 @@
 Error:
-    In a 'such that' statement: b = allDiff(5)
-    Error: Type error in allDiff(5)
+    allDiff-type-error.essence:2:23:
+  |
+2 | such that b = allDiff(5)
+  |                       ^
+Type error:
+	Expected: "Matrix or list"
+	Got: int
+

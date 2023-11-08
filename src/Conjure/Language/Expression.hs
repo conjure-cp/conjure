@@ -37,11 +37,12 @@ import Conjure.Language.RepresentationOf
 
 -- aeson
 import qualified Data.Aeson as JSON
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 -- pretty
-import qualified Text.PrettyPrint as Pr ( cat )
+import Conjure.Language.Pretty as Pr ( cat )
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -84,22 +85,22 @@ instance Pretty Statement where
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
 
 instance VarSymBreakingDescription Statement where
-    varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Declaration x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Declaration")
         , ("children", varSymBreakingDescription x)
         ]
     varSymBreakingDescription SearchOrder{} = JSON.Null
     varSymBreakingDescription SearchHeuristic{} = JSON.Null
-    varSymBreakingDescription (Where xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Where xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Where")
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (Objective obj x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Objective obj x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String $ "Objective-" `mappend` stringToText (show obj))
         , ("children", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (SuchThat xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (SuchThat xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "SuchThat")
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
@@ -162,7 +163,7 @@ instance SimpleJSON Declaration where
         case d of
             Letting nm x -> do
                 x' <- toSimpleJSON x
-                return $ JSON.Object $ M.fromList [(stringToText (renderNormal nm), x')]
+                return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), x')]
             _ -> noToSimpleJSON d
     fromSimpleJSON = noFromSimpleJSON "Declaration"
 
@@ -284,27 +285,27 @@ instance Pretty Declaration where
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 instance VarSymBreakingDescription Declaration where
-    varSymBreakingDescription (FindOrGiven forg name domain) = JSON.Object $ M.fromList
+    varSymBreakingDescription (FindOrGiven forg name domain) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "FindOrGiven")
         , ("forg", toJSON forg)
         , ("name", toJSON name)
         , ("domain", toJSON domain)
         ]
-    varSymBreakingDescription (Letting name x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Letting name x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Letting")
         , ("name", toJSON name)
         , ("value", toJSON x)
         ]
-    varSymBreakingDescription (GivenDomainDefnEnum name) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GivenDomainDefnEnum name) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GivenDomainDefnEnum")
         , ("name", toJSON name)
         ]
-    varSymBreakingDescription (LettingDomainDefnEnum name xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (LettingDomainDefnEnum name xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GivenDomainDefnEnum")
         , ("name", toJSON name)
         , ("values", JSON.Array $ V.fromList $ map toJSON xs)
         ]
-    varSymBreakingDescription (LettingDomainDefnUnnamed name x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (LettingDomainDefnUnnamed name x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "LettingDomainDefnUnnamed")
         , ("name", toJSON name)
         , ("value", toJSON x)
@@ -364,7 +365,7 @@ instance SimpleJSON Expression where
                     (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
                     _ -> noToSimpleJSON x
             _ -> noToSimpleJSON x
-    fromSimpleJSON x = Constant <$> fromSimpleJSON x
+    fromSimpleJSON t x = Constant <$> fromSimpleJSON t x
 
 instance ToFromMiniZinc Expression where
     toMiniZinc x =
@@ -423,27 +424,27 @@ instance VarSymBreakingDescription Expression where
     varSymBreakingDescription (Constant x) = toJSON x
     varSymBreakingDescription (AbstractLiteral x) = varSymBreakingDescription x
     varSymBreakingDescription (Domain domain) = varSymBreakingDescription domain
-    varSymBreakingDescription (Reference name _) = JSON.Object $ M.singleton "Reference" (toJSON name)
-    varSymBreakingDescription (WithLocals h (AuxiliaryVars locs)) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Reference name _) = JSON.Object $ KM.singleton "Reference" (toJSON name)
+    varSymBreakingDescription (WithLocals h (AuxiliaryVars locs)) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "WithLocals")
         , ("head", varSymBreakingDescription h)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (WithLocals h (DefinednessConstraints locs)) = JSON.Object $ M.fromList
+    varSymBreakingDescription (WithLocals h (DefinednessConstraints locs)) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "WithLocals")
         , ("head", varSymBreakingDescription h)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (Comprehension h gocs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Comprehension h gocs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Comprehension")
         , ("head", varSymBreakingDescription h)
         , ("gocs", JSON.Array $ V.fromList $ map varSymBreakingDescription gocs)
         ]
     varSymBreakingDescription (Typed x _) = varSymBreakingDescription x
     varSymBreakingDescription (Op op) = varSymBreakingDescription op
-    varSymBreakingDescription (ExpressionMetaVar s) = JSON.Object $ M.fromList
+    varSymBreakingDescription (ExpressionMetaVar s) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "ExpressionMetaVar")
         , ("name", JSON.String (stringToText s))
         ]
@@ -755,12 +756,12 @@ instance ToJSON    ReferenceTo where toJSON = genericToJSON jsonOptions
 instance FromJSON  ReferenceTo where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty ReferenceTo where
-    pretty (Alias x) = "Alias" <+> prParens (pretty x)
-    pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
-    pretty (DeclNoRepr  forg nm dom _) = "DeclNoRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (DeclHasRepr forg nm dom  ) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (RecordField  nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
-    pretty (VariantField nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (Alias x) = "an alias for" <++> pretty x
+    pretty (InComprehension gen) = "a comprehension generator" <++> pretty gen
+    pretty (DeclNoRepr  forg nm dom _) = "declaration of" <++> pretty forg <+> pretty nm <> ":" <+> pretty dom
+    pretty (DeclHasRepr forg nm dom  ) = "declaration of" <++> pretty forg <+> pretty nm <> ":" <+> pretty dom
+    pretty (RecordField  nm ty) = "record field"  <++> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (VariantField nm ty) = "variant field" <++> prParens (pretty nm <+> ":" <+> pretty ty)
 
 data Region
     = NoRegion
@@ -807,20 +808,20 @@ instance Pretty AbstractPattern where
 
 instance VarSymBreakingDescription AbstractPattern where
     varSymBreakingDescription (Single nm) = toJSON nm
-    varSymBreakingDescription (AbsPatTuple xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsPatTuple xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsPatTuple")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (AbsPatMatrix xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsPatMatrix xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsPatMatrix")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (AbsPatSet xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsPatSet xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsPatSet")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbstractPatternMetaVar s) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbstractPatternMetaVar s) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbstractPatternMetaVar")
         , ("name", JSON.String (stringToText s))
         ]
@@ -851,15 +852,15 @@ instance Pretty GeneratorOrCondition where
     pretty (ComprehensionLetting n x) = "letting" <+> pretty n <+> "be" <+> pretty x
 
 instance VarSymBreakingDescription GeneratorOrCondition where
-    varSymBreakingDescription (Generator x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Generator x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Generator")
         , ("child", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (Condition x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Condition x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Condition")
         , ("child", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (ComprehensionLetting n x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (ComprehensionLetting n x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "ComprehensionLetting")
         , ("children", JSON.Array $ V.fromList [toJSON n, varSymBreakingDescription x])
         ]
@@ -882,17 +883,17 @@ instance Pretty Generator where
     pretty (GenInExpr        pat x) = pretty pat <+> "<-" <+> pretty x
 
 instance VarSymBreakingDescription Generator where
-    varSymBreakingDescription (GenDomainNoRepr  pat x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GenDomainNoRepr  pat x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GenDomainNoRepr")
         , ("pattern", varSymBreakingDescription pat)
         , ("generator", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (GenDomainHasRepr pat x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GenDomainHasRepr pat x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GenDomainHasRepr")
         , ("pattern", toJSON pat)
         , ("generator", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (GenInExpr        pat x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GenInExpr        pat x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GenInExpr")
         , ("pattern", varSymBreakingDescription pat)
         , ("generator", varSymBreakingDescription x)

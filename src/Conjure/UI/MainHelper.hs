@@ -9,7 +9,7 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON, prologue )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -19,14 +19,14 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
-import Conjure.UI.TypeScript ( tsDef )
+
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
-import Conjure.Language.NameGen ( NameGenM, runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render, prParens )
+import Conjure.Language.NameGen ( NameGen, NameGenM, runNameGen )
+import Conjure.Language.Pretty 
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
@@ -51,7 +51,7 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
 
 -- system-filepath
-import qualified Filesystem.Path as Sys ( FilePath )
+-- import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile, findExecutable )
@@ -63,7 +63,8 @@ import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
 import qualified Data.Text as T ( unlines, isInfixOf )
 
 -- parallel-io
-import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
+import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
+import Conjure.LSP.LanguageServer (startServer, LSPConfig (LSPConfig))
 
 
 mainWithArgs :: forall m .
@@ -71,9 +72,10 @@ mainWithArgs :: forall m .
     MonadLog m =>
     MonadFailDoc m =>
     EnumerateDomain m =>
+    NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
-mainWithArgs TSDEF{} = liftIO tsDef
+mainWithArgs LSP{} = liftIO $ startServer LSPConfig 
 mainWithArgs mode@Modelling{..} = do
     essenceM <- readModelFromFile essence
     doIfNotCached          -- start the show!
@@ -110,15 +112,15 @@ mainWithArgs TranslateParameter{..} = do
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- readParamOrSolutionFromFile essenceParam
+    essenceParamF <- readParamOrSolutionFromFile eprimeF essenceParam
     output <- runNameGen () $ translateParameter False eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- maybe (return def) readParamOrSolutionFromFile essenceParamO
-    eprimeSolutionF <- readParamOrSolutionFromFile eprimeSolution
+    essenceParamF <- maybe (return def) (readParamOrSolutionFromFile eprimeF) essenceParamO
+    eprimeSolutionF <- readParamOrSolutionFromFile eprimeF eprimeSolution
     output <- runNameGen () $ translateSolution eprimeF essenceParamF eprimeSolutionF
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel lineWidth outputFormat (Just outputFilename) output
@@ -126,8 +128,8 @@ mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
     essence2  <- readModelFromFile essence
-    param2    <- maybe (return def) readParamOrSolutionFromFile essenceParamO
-    solution2 <- readParamOrSolutionFromFile essenceSolution
+    param2    <- maybe (return def) (readParamOrSolutionFromFile essence2) essenceParamO
+    solution2 <- readParamOrSolutionFromFile essence2 essenceSolution
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs IDE{..} = do
@@ -142,17 +144,22 @@ mainWithArgs IDE{..} = do
             json <- runNameGen () $ modelRepresentationsJSON essence2
             liftIO $ putStrLn $ render lineWidth json
         | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
+-- mainWithArgs Pretty{..} | outputFormat == Plain= do
+--     (_,cts) <- liftIO $ pairWithContents essence
+--     res <- prettyPrintWithChecks cts
+--     liftIO $ putStrLn $ render lineWidth res
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
                 then do
                     liftIO $ hPutStrLn stderr "Parsing as a parameter file"
-                    readParamOrSolutionFromFile essence
+                    readParamOrSolutionFromFile def essence
                 else readModelFromFile essence
     let model1 = model0
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
     writeModel lineWidth outputFormat Nothing model1
+    
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
@@ -230,7 +237,7 @@ mainWithArgs AutoIG{..} | removeAux = do
                  | st <- mStatements model
                  ]
     writeModel lineWidth outputFormat (Just outputFilepath) model {mStatements = catMaybes stmts'}
-mainWithArgs AutoIG{..} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
+mainWithArgs AutoIG{} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
 mainWithArgs Boost{..} = do
     model <- readModelFromFile essence
     runNameGen model $ do
@@ -262,12 +269,13 @@ mainWithArgs config@Solve{..} = do
                        ])
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
-    essenceM <- readModelFromFile essence
+    essenceM_beforeNR <- readModelFromFile essence
+    essenceM <- prologue essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
         when (nbSolutions == "all" || nbSolutions /= "1") $
             userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
     essenceParamsParsed <- forM essenceParams $ \ f -> do
-        p <- readParamOrSolutionFromFile f
+        p <- readParamOrSolutionFromFile essenceM f
         return (f, p)
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
               ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
@@ -294,7 +302,7 @@ mainWithArgs config@Solve{..} = do
                     then return useExistingModels
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else doIfNotCached          -- start the show!
-                    ( sort (mStatements essenceM)
+                    ( sort (mStatements essenceM_beforeNR)
                     , portfolio
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
@@ -330,9 +338,11 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
-        Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
-            when validateSolutionsOpt $ liftIO $ validating solutions
+
+            when (null solutions) (pp logLevel "No solutions found.")
+
+            when validateSolutionsOpt $ validating solutions
 
             let params = nub [ dropExtension p | (_,p,_) <- solutions ]
 
@@ -366,15 +376,21 @@ mainWithArgs config@Solve{..} = do
                             case stripPostfix ext (snd (splitFileName file)) of
                                 Nothing -> return ()
                                 Just base -> do
-                                    let parts = splitOn "-" base
+                                    let parts' = splitOn "-" base
+                                    let parts = case (head parts', parts', last parts') of
+                                                    (model, _:paramparts, stripPrefix "solution" -> msolnum) ->
+                                                        case msolnum of
+                                                            Nothing -> [model, intercalate "-" paramparts]
+                                                            Just{}  -> [model, intercalate "-" (init paramparts), last paramparts]
+                                                    _ -> parts'
                                     case (solutionsInOneFile, null essenceParams, nbSolutions == "1", parts) of
                                         -- not parameterised, but no solution numbers. must be using solutionsInOneFile.
-                                        (True, True, _singleSolution, [_model]) ->
+                                        (True, True, _singleSolution, [_model, ""]) ->
                                             copySolution file $ essenceDir
                                                                 </> essenceBasename
                                                                 <.> ext
                                         -- not parameterised, with solution numbers
-                                        (False, True, singleSolution, [_model, (stripPrefix "solution" -> Just solnum)]) ->
+                                        (False, True, singleSolution, [_model, "", (stripPrefix "solution" -> Just solnum)]) ->
                                             if singleSolution
                                                 then when (solnum == "000001") $ -- only copy the first solution
                                                      copySolution file $ essenceDir
@@ -391,20 +407,22 @@ mainWithArgs config@Solve{..} = do
                                                                                     ]
                                                                 <.> ext
                                         -- parameterised, with solution numbers
-                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)]) | param `elem` params ->
-                                            if singleSolution
-                                                then when (solnum == "000001") $ -- only copy the first solution
-                                                     copySolution file $ essenceDir
-                                                                </> intercalate "-" [ essenceBasename
-                                                                                    , param
-                                                                                    ]
-                                                                <.> ext
-                                                else copySolution file $ essenceDir
-                                                                </> intercalate "-" [ essenceBasename
-                                                                                    , param
-                                                                                    , solnum
-                                                                                    ]
-                                                                <.> ext
+                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)])
+                                            | or [ param `elem` params
+                                                 , or [('/' : param) `isSuffixOf` p | p <- params] ] ->
+                                                if singleSolution
+                                                    then when (solnum == "000001") $ -- only copy the first solution
+                                                        copySolution file $ essenceDir
+                                                                    </> intercalate "-" [ essenceBasename
+                                                                                        , param
+                                                                                        ]
+                                                                    <.> ext
+                                                    else copySolution file $ essenceDir
+                                                                    </> intercalate "-" [ essenceBasename
+                                                                                        , param
+                                                                                        , solnum
+                                                                                        ]
+                                                                    <.> ext
                                         _ -> return () -- ignore, we don't know how to handle this file
 
     liftIO stopGlobalPool
@@ -448,13 +466,13 @@ mainWithArgs config@Solve{..} = do
                                   , p <- params
                                   ]
 
-        validating :: [(FilePath, FilePath, Maybe FilePath)] -> IO ()
+        -- validating :: [(FilePath, FilePath, Maybe FilePath)] -> IO ()
         validating solutions =
             if null essenceParams
-                then autoParallel_ [ validateSolutionNoParam config sol
-                                   | (_, _, Just sol) <- solutions ]
-                else autoParallel_ [ validateSolutionWithParams config sol p
-                                   | (_, p, Just sol) <- solutions ]
+                then sequence_ [ validateSolutionNoParam config sol
+                               | (_, _, Just sol) <- solutions ]
+                else sequence_ [ validateSolutionWithParams config sol p
+                               | (_, p, Just sol) <- solutions ]
 
 
 mainWithArgs_Modelling :: forall m .
@@ -739,7 +757,7 @@ pp LogNone = const $ return ()
 pp _       = liftIO . putStrLn . renderNormal
 
 
-savilerowScriptName :: Sys.FilePath
+savilerowScriptName :: FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"
@@ -846,6 +864,12 @@ solverExecutables =
 
 smtSolvers :: [String]
 smtSolvers = ["boolector", "yices", "z3"]
+
+smtSolversSRFlag :: String -> String
+smtSolversSRFlag "boolector" = "-boolector"
+smtSolversSRFlag "yices" = "-yices2"
+smtSolversSRFlag "z3" = "-z3"
+smtSolversSRFlag _ = bug "smtSolversSRFlag"
 
 smtSupportedLogics :: String -> [String]
 smtSupportedLogics "boolector" = ["bv"]
@@ -960,6 +984,7 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , case lookup solverName solverExecutables of
                                           Nothing -> bug ("solverExecutables" <+> pretty solverName)
                                           Just ex -> stringToText ex
+                                      , stringToText (smtSolversSRFlag solverName)
                                       ]
         _ -> userErr1 ("Unknown solver:" <+> pretty solver)
 
@@ -1053,7 +1078,7 @@ srStdoutHandler
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
-srCleanUp :: FilePath -> UI -> Text -> sols -> Sh (Either [Doc] sols)
+srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
 srCleanUp outBase Solve{..} stdoutSR solutions = do
 
     -- closing the array in the all solutions json file
@@ -1063,7 +1088,9 @@ srCleanUp outBase Solve{..} stdoutSR solutions = do
             True -> do
                 let mkFilename ext = outputDirectory </> outBase ++ ext
                 let filenameEssenceSolJSON = mkFilename ".solutions.json"
-                liftIO $ appendFile filenameEssenceSolJSON "]\n"
+                case solutions of
+                    [] -> liftIO $ writeFile  filenameEssenceSolJSON "[]\n"
+                    _  -> liftIO $ appendFile filenameEssenceSolJSON "]\n"
         _ -> return ()
 
     stderrSR   <- lastStderr
@@ -1093,25 +1120,33 @@ srCleanUp _ _ _ _ = bug "srCleanUp"
 
 
 validateSolutionNoParam ::
+    MonadIO m =>
+    MonadLog m =>
+    MonadFailDoc m =>
+    EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    UI -> FilePath -> IO ()
+    UI -> FilePath -> m ()
 validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
-    solution <- readParamOrSolutionFromFile solutionPath
+    solution <- readParamOrSolutionFromFile essenceM solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
     failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
 validateSolutionWithParams ::
+    MonadIO m =>
+    MonadLog m =>
+    MonadFailDoc m =>
+    EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    UI -> FilePath -> FilePath -> IO ()
+    UI -> FilePath -> FilePath -> m ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
     pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence
-    param    <- readParamOrSolutionFromFile paramPath
-    solution <- readParamOrSolutionFromFile solutionPath
+    param    <- readParamOrSolutionFromFile essenceM paramPath
+    solution <- readParamOrSolutionFromFile essenceM solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
     failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 param2 solution2
 validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
@@ -1137,8 +1172,4 @@ doIfNotCached (show . hash -> h) savedHashesFile getResult act = do
 
 autoParallel :: [IO a] -> IO [a]
 autoParallel = if numCapabilities > 1 then parallel else sequence
-
-
-autoParallel_ :: [IO ()] -> IO ()
-autoParallel_ = if numCapabilities > 1 then parallel_ else sequence_
 

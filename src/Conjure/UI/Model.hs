@@ -12,6 +12,7 @@ module Conjure.UI.Model
     , modelRepresentationsJSON
     , timedF
     , evaluateModel -- unused, exporting to suppress warning
+    , prologue
     ) where
 
 import Conjure.Prelude
@@ -118,6 +119,7 @@ import Pipes ( Pipe, Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 import qualified Data.Aeson.Types as JSON   -- aeson
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as M   -- containers
 import qualified Data.Vector as V           -- vector
 
@@ -308,13 +310,13 @@ modelRepresentationsJSON ::
 modelRepresentationsJSON model = do
     reprs <- modelRepresentations model
     return $ JSON.Array $ V.fromList
-        [ JSON.Object $ M.fromList
+        [ JSON.Object $ KM.fromList
             [ "name" ~~ r name
             , "representations" ~~ representationsJSON
             ]
         | (name, domains) <- reprs
         , let representationsJSON = JSON.Array $ V.fromList
-                [ JSON.Object $ M.fromList
+                [ JSON.Object $ KM.fromList
                     [ "description" ~~ r d
                     , "answer" ~~ toJSON i
                     ]
@@ -322,8 +324,8 @@ modelRepresentationsJSON model = do
                 ]
         ]
     where
-        (~~) :: Text -> JSONValue -> (Text, JSONValue)
-        x ~~ y = (x, y)
+        (~~) :: JSON.Key -> JSONValue -> (JSON.Key, JSONValue)
+        x ~~ y = ( x, y)
         r s = JSON.String $ stringToText $ render 100000 $ pretty s
 
 
@@ -981,7 +983,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
-    fails <- fmap (nub . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+    fails <- fmap (nubBy (\a b->show a == show b) . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
@@ -1326,7 +1328,7 @@ applicableRules Config{..} rulesAtLevel x = do
                     rResult <- ruleResult res
                     case (hole x, rResult) of
                         (Reference nm1 _, Reference nm2 _)
-                            | name /= "choose-repr"
+                            | show name /= "choose-repr"
                             , nm1 == nm2 -> bug $ vcat
                             [ "Rule applied inside a Reference."
                             , "Rule              :" <+> pretty name
@@ -2734,20 +2736,20 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                 let argOut = Comprehension [essence| toInt(&body) |] goc
                 return
                     ( "xor to sum"
-                    , return [essence| 1 = sum(&argOut) |]
+                    , return [essence| 1 = sum(&argOut) % 2 |]
                     )
             AbstractLiteral (AbsLitMatrix dom elems) -> do
                 let argOut = AbstractLiteral $ AbsLitMatrix dom
                                 [ [essence| toInt(&el) |] | el <- elems ]
                 return
                     ( "xor to sum"
-                    , return [essence| 1 = sum(&argOut) |]
+                    , return [essence| 1 = sum(&argOut) % 2 |]
                     )
             _ -> do
                 (iPat, i) <- quantifiedVar
                 return
                     ( "xor to sum"
-                    , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
+                    , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) % 2 |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
 
