@@ -5,21 +5,24 @@ find var1:
              function (maxSize --4, total, surjective)
                  relation (minSize 3, maxSize 3) of
                      (bool * bool * function (minSize 0, total) int(5, 3) --> int(5, 3) * (bool, bool, bool, bool))
-                     --> partition (maxPartSize 5 / 4) from bool,
+                 -->
+                 partition (maxPartSize 5 / 4) from bool,
          relation (minSize 3, maxSize 5) of
              (mset (maxSize 0, minOccur 0) of set (size 1) of matrix indexed by [int(4, 1..4)] of int(4..5, 0) *
-              matrix indexed by [int(0..3, 0..4)] of partition (minNumParts 5, maxNumParts 5, minPartSize 1) from
-                                                         relation (size 2) of (int(5, 2..4) * bool * bool) *
+              matrix indexed by [int(0..3, 0..4)] of
+                  partition (minNumParts 5, maxNumParts 5, minPartSize 1) from
+                      relation (size 2) of (int(5, 2..4) * bool * bool) *
               bool))
 find var2:
         mset (maxSize toInt(true), maxOccur 0) of
             function (maxSize freq(mset(partition({0, 5, 4, 4, 3})),
                                    partition({3 % 4}, {5 % 0, 5, 4, -2, 1}, {1 / 2}, {3 / 1, 2, 0 % 0, 2 - 2, -1})),
                       injective)
-                matrix indexed by [int(4, 4)] of partition (numParts 0, maxPartSize 0) from
-                                                     function (minSize 1, bijective) int(2..3, 1..4) --> bool
-                    --> partition (minNumParts 1 / 4, maxNumParts 3, partSize 2) from
-                            set (minSize 1 - 5) of relation (minSize 4, transitive) of (int(4, 5) * int(4, 5))
+                matrix indexed by [int(4, 4)] of
+                    partition (numParts 0, maxPartSize 0) from function (minSize 1, bijective) int(2..3, 1..4) --> bool
+                -->
+                partition (minNumParts 1 / 4, maxNumParts 3, partSize 2) from
+                    set (minSize 1 - 5) of relation (minSize 4, transitive) of (int(4, 5) * int(4, 5))
 find var3: int(4, 2)
 find var4:
         partition (numParts min(flatten(([] : `matrix indexed by [int, int] of int`))),

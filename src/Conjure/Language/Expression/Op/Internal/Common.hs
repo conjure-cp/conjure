@@ -7,6 +7,8 @@ module Conjure.Language.Expression.Op.Internal.Common
 
     , prettyPrecBinOp
     , Fixity(..), operators, functionals
+    , overloadedFunctionals
+    , quantifiers
     , EssenceOperatorParsingDescr(..)
 
     , raiseTypeError
@@ -29,7 +31,8 @@ import Conjure.Language.Domain as X
 import Conjure.Language.TypeOf as X
 import Conjure.Language.Pretty as X
 import Conjure.Language.AdHoc as X
-import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
+import Conjure.Language.Lexemes as X (lexemeFaceDoc)
+import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme )
 
 
 class SimplifyOp op x where
@@ -46,7 +49,7 @@ class BinaryOperator op where
 
 -- | just the operator not the arguments
 opPretty :: BinaryOperator op => proxy op -> Doc
-opPretty = lexemeFace . opLexeme
+opPretty = lexemeFaceDoc . opLexeme
 
 opFixityPrec :: BinaryOperator op => proxy op -> (Fixity, Int)
 opFixityPrec op =
@@ -208,7 +211,7 @@ operators =
     , ( BinaryOp L_Eq           FNone   ,  400 )
     , ( BinaryOp L_Or           FLeft   ,  110 )
     , ( BinaryOp L_And          FLeft   ,  120 )
-    , ( BinaryOp L_Imply        FLeft   ,   50 )
+    , ( BinaryOp L_Imply        FNone   ,   50 )
     , ( BinaryOp L_Iff          FNone   ,   50 )
     , ( BinaryOp L_union        FLeft   ,  600 )
     , ( BinaryOp L_intersect    FLeft   ,  700 )
@@ -236,6 +239,13 @@ operators =
     , ( BinaryOp L_TildeGeq     FNone   ,  400 )
     , ( UnaryPrefix L_Minus           , 2000 )
     , ( UnaryPrefix L_ExclamationMark , 2000 )
+    ]
+--Functional operators that clash with other constructs so require no spaces
+overloadedFunctionals :: [Lexeme]
+overloadedFunctionals = [
+    L_true,
+    L_Sum,
+    L_Product
     ]
 
 functionals :: [Lexeme]
@@ -281,11 +291,11 @@ functionals =
     , L_transform
     , L_true
 
-    , LIdentifier "and"
-    , LIdentifier "or"
-    , LIdentifier "sum"
-    , LIdentifier "product"
-    , LIdentifier "xor"
+    , L_fAnd
+    , L_fOr
+    , L_Sum
+    , L_Product
+    , L_fXor
 
     , L_active
 
@@ -294,6 +304,14 @@ functionals =
 
     , L_powerSet
 
+    ]
+
+quantifiers :: [Lexeme]
+quantifiers = [
+    L_ForAll,
+    L_Exists,
+    L_Product,
+    L_Sum
     ]
 
 raiseTypeError :: MonadFailDoc m => Pretty a => a -> m b

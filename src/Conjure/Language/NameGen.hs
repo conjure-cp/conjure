@@ -33,12 +33,15 @@ type NameKind = Text
 
 newtype NameGenM m a = NameGenM (StateT NameGenState m a)
     deriving ( Functor, Applicative, Monad
-             , MonadFail, MonadUserError
+             , MonadUserError
              , MonadLog
              , MonadTrans
              , MonadState NameGenState
              , MonadIO
              )
+instance (MonadFail m) => MonadFail (NameGenM m) where
+    fail = lift . fail
+
 
 instance (Functor m, Applicative m, MonadFail m) => MonadFailDoc (NameGenM m) where
     failDoc = lift . fail . show
@@ -82,7 +85,7 @@ instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
-instance (Functor m, Monad m) => NameGen (NameGenM m) where
+instance (Functor m, MonadFail m) => NameGen (NameGenM m) where
     nextName k = do
         mi <- gets (M.lookup k . fst)
         out <- case mi of

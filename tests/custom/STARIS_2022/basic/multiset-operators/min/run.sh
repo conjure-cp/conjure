@@ -1,3 +1,3 @@
 conjure solve *.essence
 cat min.solution
-rm -r conjure-output
+rm -rf conjure-output

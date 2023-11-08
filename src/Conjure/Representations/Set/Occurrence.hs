@@ -3,10 +3,12 @@
 module Conjure.Representations.Set.Occurrence ( setOccurrence ) where
 
 -- conjure
-import Conjure.Prelude
+import Conjure.Prelude hiding (MonadFail,fail)
 import Conjure.Language
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
+
+import Control.Monad.Fail
 
 
 setOccurrence :: forall m . (MonadFailDoc m, NameGen m) => Representation m
@@ -87,7 +89,7 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
         up _ _ = na "{up} Occurrence"
 
         -- produce a [int]
-        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering :: (MonadFail m) => TypeOf_SymmetryOrdering m
         symmetryOrdering _innerSO downX1 inp (DomainSet Set_Occurrence _attrs innerDomain) = do
             [m] <- downX1 inp
             (iPat, i) <- quantifiedVar

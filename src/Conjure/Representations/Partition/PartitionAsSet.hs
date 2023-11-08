@@ -100,7 +100,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         else return $ return $ -- for list
                                 [essence|
                                     forAll &iPat : &innerDomain .
-                                        1  = sum ([ 1
+                                        1  = sum([ 1
                                                   | &jPat <- &rel
                                                   , &i in &j
                                                   ])

@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -44,7 +45,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                                     else raiseTypeError $ "(relation projection)" <+> pretty p
                             loop _ _ = raiseTypeError $ "(relation projection)" <+> pretty p
                         TypeRelation <$> loop xs ts'
-            _ -> raiseTypeError $ "(relation projection)" <+> pretty p
+            _ -> raiseTypeError $ "(relation projection)" <+> vcat [pretty p, pretty tyR]
 
 instance SimplifyOp OpRelationProj x where
     simplifyOp _ = na "simplifyOp{OpRelationProj}"
@@ -55,7 +56,7 @@ instance Pretty x => Pretty (OpRelationProj x) where
               pr (Just b) = pretty b
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRelationProj x) where
-    varSymBreakingDescription (OpRelationProj a b) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpRelationProj a b) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpRelationProj")
         , ("children", JSON.Array $ V.fromList
             $ varSymBreakingDescription a

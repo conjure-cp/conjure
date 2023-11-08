@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -40,7 +41,7 @@ instance Pretty x => Pretty (OpToSet x) where
     prettyPrec _ (OpToSet _ a) = "toSet" <> prParens (pretty a)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpToSet x) where
-    varSymBreakingDescription (OpToSet b x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpToSet b x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpToSet")
         , ("children", JSON.Array $ V.fromList
             [ toJSON b

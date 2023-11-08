@@ -255,7 +255,7 @@ instantiateD (DomainEnum nm Nothing _) = do
 instantiateD (DomainEnum nm rs0 _) = do
     let fmap4 = fmap . fmap . fmap . fmap
     let e2c' x = either bug id (e2c x)
-    rs <- transformBiM (\ x -> Constant <$> instantiateE x ) (rs0 :: Maybe [Range Expression])
+    rs <- transformBiM (fmap Constant . instantiateE ) (rs0 :: Maybe [Range Expression])
                 |> fmap4 e2c'
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of

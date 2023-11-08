@@ -6,26 +6,37 @@ name: Publishing Docker image to ghcr.io
 # documentation.
 
 on:
-  push:
-    branches: [ master ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ master ]
-  release:
-    types: [published]
+  workflow_dispatch:        # can be triggered manually
+  workflow_run:             # run only when all tests pass
+    branches:
+      - main
+    workflows:
+      - Running all tests
+    types:
+      - completed
+  pull_request:             # and for PRs that edit the docker files
+    paths:
+      - Dockerfile
+      - .github/workflows/docker-publish.yml
+                            # other branches that want testing must create a PR
+
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
 
 jobs:
-  build:
+
+  Job:
+
+    # if this was triggered through a completed run of "Running all tests", we check if the run completed successfully
+    # if it was triggered through a PR, we just run it
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'pull_request'  || github.event_name == 'workflow_dispatch' }}
 
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
@@ -34,43 +45,37 @@ jobs:
       id-token: write
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v3
-      
-      # Setup ccache
-      - name: Setup ccache
-        uses: Chocobo1/setup-ccache-action@v1
 
-      # Workaround: https://github.com/docker/build-push-action/issues/461
+      # Set up buildx (Docker CLI plugin for extended build capabilities with BuildKit)
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+        uses: docker/setup-buildx-action@v2
 
       # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into registry
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v3
         with:
-          context: ./etc/build/docker/
-          push: ${{ github.event_name != 'pull_request' }}
+          context: .
+          push: ${{ github.event_name != 'pull_request' }} # do not push if this was triggered by a PR
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

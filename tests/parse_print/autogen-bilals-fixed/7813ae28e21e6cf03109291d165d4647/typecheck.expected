@@ -1,28 +1,46 @@
 Error:
     Undefined reference: q27
     Bindings in context:
-        q30: DeclNoRepr (quantified q30: int(1..2))
-        q1_Function1DPartial_Flags: DeclNoRepr (quantified q1_Function1DPartial_Flags: matrix indexed by [int(-2)] of bool)
-        aux2_Occurrence: DeclNoRepr (find aux2_Occurrence: matrix indexed by [matrix indexed by [int(-2)] of bool,
-                                                                              int(1..2), int(-2)] of bool)
-        aux1_Occurrence: DeclNoRepr (find aux1_Occurrence: matrix indexed by [matrix indexed by [int(-2)] of bool,
-                                                                              int(1..2), int(-2)] of bool)
-        var4_Function1DPartial_Values_Occurrence: DeclNoRepr (find var4_Function1DPartial_Values_Occurrence: matrix indexed by [int(-5,
-                                                                                                                                    5),
-                                                                                                                                int(3)] of bool)
-        var4_Function1DPartial_Flags: DeclNoRepr (find var4_Function1DPartial_Flags: matrix indexed by [int(-5,
-                                                                                                            5)] of bool)
-        var3_Function1DPartial_Values_Function1DPartial_Values: DeclNoRepr (find var3_Function1DPartial_Values_Function1DPartial_Values: matrix indexed by [bool,
-                                                                                                                                                            int(-1)] of int(3))
-        var3_Function1DPartial_Values_Function1DPartial_Flags: DeclNoRepr (find var3_Function1DPartial_Values_Function1DPartial_Flags: matrix indexed by [bool,
-                                                                                                                                                          int(-1)] of bool)
-        var3_Function1DPartial_Flags: DeclNoRepr (find var3_Function1DPartial_Flags: matrix indexed by [bool] of bool)
-        var2: DeclNoRepr (find var2: bool)
-        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: DeclNoRepr (find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: matrix indexed by [int(1..4),
-                                                                                                                                                                                                                                                                            int(1..2),
-                                                                                                                                                                                                                                                                            int(-2)] of int(-4))
-        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: DeclNoRepr (find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: matrix indexed by [int(1..4),
-                                                                                                                                                                                                                                                                          int(1..2),
-                                                                                                                                                                                                                                                                          int(-2)] of bool)
-        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..4)] of int(0..2))
-        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: DeclNoRepr (find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..4))
+        q30: declaration of quantified q30: int(1..2)
+        q1_Function1DPartial_Flags: declaration of
+                                        quantified q1_Function1DPartial_Flags: matrix indexed by [int(-2)] of bool
+        aux2_Occurrence: declaration of
+                             find aux2_Occurrence: matrix indexed by [matrix indexed by [int(-2)] of bool, int(1..2),
+                                                                      int(-2)] of
+                                                       bool
+        aux1_Occurrence: declaration of
+                             find aux1_Occurrence: matrix indexed by [matrix indexed by [int(-2)] of bool, int(1..2),
+                                                                      int(-2)] of
+                                                       bool
+        var4_Function1DPartial_Values_Occurrence: declaration of
+                                                      find var4_Function1DPartial_Values_Occurrence: matrix indexed by [int(-5,
+                                                                                                                            5),
+                                                                                                                        int(3)] of
+                                                                                                         bool
+        var4_Function1DPartial_Flags: declaration of
+                                          find var4_Function1DPartial_Flags: matrix indexed by [int(-5, 5)] of bool
+        var3_Function1DPartial_Values_Function1DPartial_Values: declaration of
+                                                                    find var3_Function1DPartial_Values_Function1DPartial_Values: matrix indexed by [bool,
+                                                                                                                                                    int(-1)] of
+                                                                                                                                     int(3)
+        var3_Function1DPartial_Values_Function1DPartial_Flags: declaration of
+                                                                   find var3_Function1DPartial_Values_Function1DPartial_Flags: matrix indexed by [bool,
+                                                                                                                                                  int(-1)] of
+                                                                                                                                   bool
+        var3_Function1DPartial_Flags: declaration of find var3_Function1DPartial_Flags: matrix indexed by [bool] of bool
+        var2: declaration of find var2: bool
+        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: declaration of
+                                                                                                                            find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Values: matrix indexed by [int(1..4),
+                                                                                                                                                                                                                                                                    int(1..2),
+                                                                                                                                                                                                                                                                    int(-2)] of
+                                                                                                                                                                                                                                                     int(-4)
+        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: declaration of
+                                                                                                                           find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1DPartial_Flags: matrix indexed by [int(1..4),
+                                                                                                                                                                                                                                                                  int(1..2),
+                                                                                                                                                                                                                                                                  int(-2)] of
+                                                                                                                                                                                                                                                   bool
+        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                                                                   find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..4)] of
+                                                                                                                                                                                                   int(0..2)
+        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: declaration of
+                                                                  find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..4)

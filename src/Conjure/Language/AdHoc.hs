@@ -8,12 +8,13 @@ import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
-import qualified Data.Aeson.Types as JSON ( Value )
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 import qualified Data.Vector as V               -- vector
 
 -- scientific
 import Data.Scientific ( floatingOrInteger )
+import qualified Data.Aeson.KeyMap as KM
+
 
 
 class ExpressionLike a where
@@ -97,25 +98,29 @@ noToMiniZinc a = userErr1 $ vcat
     ]
 
 class SimpleJSON a where
-    toSimpleJSON :: MonadUserError m => a -> m JSON.Value
-    fromSimpleJSON :: MonadUserError m => JSON.Value -> m a
+    toSimpleJSON :: (MonadFail m,MonadUserError m) => a -> m JSON.Value
+    fromSimpleJSON ::(MonadFail m, MonadUserError m) => Type -> JSON.Value -> m a
 
 instance SimpleJSON Integer where
     toSimpleJSON = return . toJSON
-    fromSimpleJSON x =
+    fromSimpleJSON t x =
         case x of
             JSON.Number y ->
                 case floatingOrInteger y of
                     Right z -> return z
-                    Left (d :: Double) -> noFromSimpleJSON "Integer" d
-            _ -> noFromSimpleJSON "Integer" x
+                    Left (d :: Double) -> noFromSimpleJSON "Integer" t d
+            JSON.String text ->
+                case readMay (textToString text) of
+                    Just z -> return z
+                    Nothing -> noFromSimpleJSON "Integer" t text
+            _ -> noFromSimpleJSON "Integer" t x
 
 data AsDictionary a b = AsDictionary [(a,b)]
 
 instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y) where
     toSimpleJSON (AsDictionary xs) = do
         (ys, asList) <- fmap unzip $ forM xs $ \ (a,b) -> do
-            let aStr = stringToText $ renderNormal $ pretty a
+            let aStr = fromString $ renderNormal $ pretty a
             aJSON <- toSimpleJSON a
             bJSON <- toSimpleJSON b
             let abPair = JSON.Array $ V.fromList [aJSON, bJSON]
@@ -127,22 +132,22 @@ instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y)
         let zs = catMaybes ys
         if length ys == length zs
             -- all were suitable as keys, great
-            then return $ JSON.Object $ M.fromList zs
+            then return $ JSON.Object $ KM.fromList zs
             else return $ JSON.Array $ V.fromList asList
-    fromSimpleJSON x = noFromSimpleJSON "AsDictionary" x
+    fromSimpleJSON = noFromSimpleJSON "AsDictionary"
 
 instance SimpleJSON x => SimpleJSON [x] where
     toSimpleJSON xs = do
         ys <- mapM toSimpleJSON xs
         return $ JSON.Array $ V.fromList ys
-    fromSimpleJSON x = noFromSimpleJSON "list" x
+    fromSimpleJSON = noFromSimpleJSON "list"
 
 instance (SimpleJSON x, SimpleJSON y) => SimpleJSON (x,y) where
     toSimpleJSON (x,y) = do
         x' <- toSimpleJSON x
         y' <- toSimpleJSON y
         return $ JSON.Array $ V.fromList [x', y']
-    fromSimpleJSON  x = noFromSimpleJSON "pair" x
+    fromSimpleJSON = noFromSimpleJSON "pair"
 
 
 noToSimpleJSON :: (MonadUserError m, Pretty a) =>  a -> m b
@@ -156,12 +161,15 @@ noToSimpleJSON a = userErr1 $ vcat
     ]
 
 
-noFromSimpleJSON :: (MonadUserError m, Pretty a, Show a) => String -> a -> m b
-noFromSimpleJSON src a = userErr1 $ vcat
+noFromSimpleJSON :: (MonadUserError m, Pretty a, Show a, Pretty b, Show b) => String -> a -> b -> m c
+noFromSimpleJSON src ty x = userErr1 $ vcat
     [ "Cannot convert this JSON to Essence yet."
     , ""
-    , pretty a
-    , pretty (show a)
+    , pretty ty
+    , pretty (show ty)
+    , ""
+    , pretty x
+    , pretty (show x)
     , ""
     , "Source:" <+> pretty src
     , ""

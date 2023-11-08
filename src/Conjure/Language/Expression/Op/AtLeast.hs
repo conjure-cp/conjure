@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -47,7 +48,7 @@ instance Pretty x => Pretty (OpAtLeast x) where
     prettyPrec _ (OpAtLeast a b c) = "atleast" <> prettyList prParens "," [a, b, c]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpAtLeast x) where
-    varSymBreakingDescription (OpAtLeast a b c) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpAtLeast a b c) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpAtLeast")
         , ("children", JSON.Array $ V.fromList [ varSymBreakingDescription a
                                                , varSymBreakingDescription b

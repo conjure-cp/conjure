@@ -3,7 +3,7 @@ Nurse rostering
 
 *Authors: András Salamon, Nguyen Dang, Saad Attieh*
 
-We now discuss a version of `Nurse Rostering <https://en.wikipedia.org/wiki/Nurse_scheduling_problem>`, a constrained scheduling problem.
+We now discuss a version of `Nurse Rostering <https://en.wikipedia.org/wiki/Nurse_scheduling_problem>`_, a constrained scheduling problem.
 Variants of this problem are also known by other names, such as *workforce planning* and *staff scheduling*.
 Unlike versions of this problem studied by operations research practitioners and researchers (such as competition instances :cite:`ceschia2019second`), we here focus on just a few of the simplest constraints.
 

@@ -1,8 +1,17 @@
 Error:
-    In a 'such that' statement: b = (a[1, true] = 1)
-    Error:
-        Indexing with inappropriate type:
-            The expression: a[1]
-            Indexing: a
-            Expected type of index: bool
-            Actual type of index  : int
+    matrix-index-error.essence:5:18:
+  |
+5 | such that b = (a[1][true] = 1) $ swapped bool and int indices
+  |                  ^
+Type error:
+	Expected: bool
+	Got: int
+
+matrix-index-error.essence:5:21:
+  |
+5 | such that b = (a[1][true] = 1) $ swapped bool and int indices
+  |                     ^^^^
+Type error:
+	Expected: int
+	Got: bool
+

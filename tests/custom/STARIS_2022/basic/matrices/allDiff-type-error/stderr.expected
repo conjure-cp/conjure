@@ -1,3 +1,9 @@
 Error:
-    In a 'such that' statement: a = allDiff(false)
-    Error: Type error in allDiff(false)
+    allDiff-type-error.essence:3:23:
+  |
+3 | such that a = allDiff(false)
+  |                       ^^^^^
+Type error:
+	Expected: "Matrix or list"
+	Got: bool
+

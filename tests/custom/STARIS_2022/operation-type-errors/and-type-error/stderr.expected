@@ -1,5 +1,15 @@
 Error:
-    In a 'such that' statement: b = and(1)
-    Error:
-        Type error in and(1)
-                      The argument has type: int
+    and-type-error.essence:2:19:
+  |
+2 | such that b = and(1, 3)
+  |                   ^
+Type error:
+	Expected: "Collection of boolean"
+	Got: int
+
+and-type-error.essence:2:22:
+  |
+2 | such that b = and(1, 3)
+  |                      ^
+Unexpected argument
+

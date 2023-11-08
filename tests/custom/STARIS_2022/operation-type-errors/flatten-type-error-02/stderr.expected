@@ -1,5 +1,17 @@
 Error:
-    In a 'such that' statement: b = (flatten(1, false) = flatten(1, false))
-    Error:
-        Type error in flatten(1, false)
-                      Cannot flatten 1 levels.
+    flatten-type-error.essence:2:27:
+  |
+2 | such that b = (flatten(1, false) = flatten(1, false))
+  |                           ^^^^^
+Type error:
+	Expected: [[?]]
+	Got: bool
+
+flatten-type-error.essence:2:47:
+  |
+2 | such that b = (flatten(1, false) = flatten(1, false))
+  |                                               ^^^^^
+Type error:
+	Expected: [[?]]
+	Got: bool
+

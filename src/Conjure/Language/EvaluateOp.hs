@@ -796,7 +796,7 @@ instance EvaluateOp OpUnion where
 
 instance EvaluateOp OpXor where
     evaluateOp (OpXor x) = ConstantBool . xor <$> boolsOut x
-        where xor xs = 1 == length [ () | True <- xs ]
+        where xor xs = odd (length [ () | True <- xs ])
 
 
 boolsOut :: MonadFailDoc m => Constant -> m [Bool]

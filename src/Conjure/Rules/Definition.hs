@@ -162,7 +162,7 @@ data Rule = Rule
                 -- a fail in {n} means that the rule isn't applicable
             , MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
-                -- a fail in {m} means a bug
+                -- a failDoc in {m} means a bug
             , ?typeCheckerMode :: TypeCheckerMode
             )
         => Zipper a Expression            -- to query context

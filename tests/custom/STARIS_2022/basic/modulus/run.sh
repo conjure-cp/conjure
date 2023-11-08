@@ -1,2 +1,2 @@
 conjure solve *.essence --number-of-solutions=all
-rm -r conjure-output
+rm -rf conjure-output

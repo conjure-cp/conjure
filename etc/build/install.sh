@@ -15,6 +15,7 @@ if  [ ${GHC_VERSION} == "head" ]; then
 fi
 
 if ${BUILD_TESTS}; then
+    rm -f .stack-work/dist/*/*/build/conjure-testing/conjure-testing
     COMMAND="${COMMAND} --test --no-run-tests"
 fi
 

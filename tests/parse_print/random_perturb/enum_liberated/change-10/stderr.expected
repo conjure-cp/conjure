@@ -1,6 +1,54 @@
 Error:
     tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:6:1:
-unexpected l
-expecting comma, end of input, rest of statement, or statement
-    l+tting E2 be new type enum {a, b, c, d, "hoh hoh hooo"}
-    ^
+  |
+6 | l+tting E2 be new type enum {a, b, c, d, "hoh hoh hooo"}
+  | ^
+Missing ,
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:6:2:
+  |
+6 | l+tting E2 be new type enum {a, b, c, d, "hoh hoh hooo"}
+  |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Skipped tokens
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:6:2:
+  |
+6 | l+tting E2 be new type enum {a, b, c, d, "hoh hoh hooo"}
+  |  ^
+Missing Domain
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:6:2:
+  |
+6 | l+tting E2 be new type enum {a, b, c, d, "hoh hoh hooo"}
+  |  ^
+Missing :
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:7:10:
+  |
+7 | find y : E2
+  |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:8:10:
+  |
+8 | find z : E2(a..c)
+  |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:9:10:
+  |
+9 | find t : E2(b,d)
+  |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:13:10:
+   |
+13 | find k : E2
+   |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/change-10/change-10.essence:14:20:
+   |
+14 | such that k = max(`E2`)
+   |                    ^^
+Error: Symbol not found "E2"

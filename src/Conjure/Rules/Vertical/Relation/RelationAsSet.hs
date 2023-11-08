@@ -81,7 +81,7 @@ rule_In = "relation-in{RelationAsSet}" `namedRule` theRule where
 
     tableCheck ::
         MonadFailDoc m =>
-        (?typeCheckerMode::TypeCheckerMode) =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
         Expression -> Expression -> m ()
     tableCheck x rel | categoryOf rel < CatDecision = do
         tyX <- typeOf x

@@ -1,0 +1,22 @@
+Error:
+    tests/parse_print/autogen-bilals-fixed/c73ac7607ea8c1229507ce9b34100189/c73ac7607ea8c1229507ce9b34100189.essence:109:40:
+    |
+109 |                               together(false != false, true <-> true, partition({false, true})) --> var2
+    |                                        ^^^^^^^^^^^^^^
+Type error:
+	Expected: set of ?
+	Got: bool
+
+tests/parse_print/autogen-bilals-fixed/c73ac7607ea8c1229507ce9b34100189/c73ac7607ea8c1229507ce9b34100189.essence:109:56:
+    |
+109 |                               together(false != false, true <-> true, partition({false, true})) --> var2
+    |                                                        ^^^^^^^^^^^^^
+Type error:
+	Expected: partition from ?
+	Got: bool
+
+tests/parse_print/autogen-bilals-fixed/c73ac7607ea8c1229507ce9b34100189/c73ac7607ea8c1229507ce9b34100189.essence:109:71:
+    |
+109 |                               together(false != false, true <-> true, partition({false, true})) --> var2
+    |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+Unexpected argument

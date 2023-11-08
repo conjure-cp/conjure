@@ -1,20 +1,23 @@
 name: Building on all platforms
 
 on:
+  workflow_dispatch:        # can be triggered manually
   push:
     branches:
-      - master              # run for the master branch
+      - main                # run for the main branch
     paths:
       - conjure-cp.cabal
       - Makefile
       - src/**
       - etc/build/**
+      - .github/workflows/build.yml
   pull_request:             # and for PRs
     paths:
       - conjure-cp.cabal
       - Makefile
       - src/**
       - etc/build/**
+      - .github/workflows/build.yml
                             # other branches that want testing must create a PR
 
 jobs:
@@ -23,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        GHC_VERSION: [8.6]
+        GHC_VERSION: ["9.0", "9.2", "9.4"]
         os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
@@ -43,9 +46,14 @@ jobs:
           path: |
             ~/.stack
             .stack-work
-          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}
+  
       - name: Setting PATH
         shell: bash
         run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}

@@ -33,7 +33,9 @@ data Type
     | TypeUnnamed Name
     | TypeTuple [Type]
     | TypeRecord [(Name, Type)]
+    | TypeRecordMember Name [(Name, Type)]
     | TypeVariant [(Name, Type)]
+    | TypeVariantMember Name [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -43,6 +45,7 @@ data Type
     | TypeRelation [Type]
     | TypePartition Type
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
 
 instance Serialize Type
 instance Hashable  Type
@@ -61,8 +64,10 @@ instance Pretty Type where
                          <> prettyList prParens "," xs
     pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeRecordMember n ts) = "member" <+> pretty n <+> "of" <+> pretty (TypeRecord ts)
     pretty (TypeVariant xs) = "variant" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeVariantMember n ts) = "member" <+> pretty n <+> "of" <+> pretty (TypeVariant ts)
     pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices
@@ -130,6 +135,17 @@ typeUnify (TypeRecord as) (TypeRecord bs)
                              Just b -> typeUnify a b
                       | (n,a) <- as
                       ]
+--special cases for when one is an instance
+-- TODO: Not the best solution so might need looking at
+typeUnify (TypeVariant as) (TypeVariant [(n,a)])
+    = case lookup n as of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+typeUnify (TypeVariant [(n,a)]) (TypeVariant as)
+    = case lookup n as of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+
 typeUnify (TypeVariant as) (TypeVariant bs)
     | length as /= length bs = False
     | otherwise = and [ case lookup n bs of

@@ -1,6 +1,24 @@
 Error:
     tests/parse_print/random_perturb/enum_liberated/change-06/change-06.essence:3:19:
-unexpected Knum
-expecting enum
-    given E1 new type Knum
-                      ^
+  |
+3 | given E1 new type Knum
+  |                   ^
+Missing enum
+
+tests/parse_print/random_perturb/enum_liberated/change-06/change-06.essence:3:19:
+  |
+3 | given E1 new type Knum
+  |                   ^
+Missing ,
+
+tests/parse_print/random_perturb/enum_liberated/change-06/change-06.essence:4:1:
+  |
+4 | find x : E1
+  | ^
+Missing Domain
+
+tests/parse_print/random_perturb/enum_liberated/change-06/change-06.essence:4:1:
+  |
+4 | find x : E1
+  | ^
+Missing :

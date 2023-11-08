@@ -1,0 +1,16 @@
+Error:
+    tests/parse_print/autogen/614~final/spec.essence:4:26:
+  |
+4 | such that apart({false}, partition({true}) - partition({false}))
+  |                          ^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool
+
+tests/parse_print/autogen/614~final/spec.essence:4:46:
+  |
+4 | such that apart({false}, partition({true}) - partition({false}))
+  |                                              ^^^^^^^^^^^^^^^^^^
+Type error:
+	Expected: "Number / set/ mset / relation / function"
+	Got: partition from bool

@@ -1,0 +1,16 @@
+Error 1:
+    In a 'such that' statement: t = s[1]
+    Error:
+        Indexing something other than a matrix or a tuple:
+            The expression: s[1]
+            Indexing: s
+            With type: sequence of (int, int)
+Error 2:
+    In a 'such that' statement: u = l[1]
+    Error:
+        When type checking: u = l[1]
+        Cannot unify the types of the following.
+        lhs        : u
+        type of lhs: (int, int)
+        rhs        : l[1]
+        type of rhs: (int, (int, int))

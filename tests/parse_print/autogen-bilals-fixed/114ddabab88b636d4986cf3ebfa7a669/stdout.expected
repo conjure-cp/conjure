@@ -62,7 +62,7 @@ such that
     and([{true} != {false, true} /\ (true \/ (true -> false)) -> false
              | q_12 <- var9,
                |q_12| >=
-               |range(function(var6(6) --> 1 * 4, function(true --> true, false --> false) --> toInt(true)))|]),
+               |range(function(image(var6, 6) --> 1 * 4, function(true --> true, false --> false) --> toInt(true)))|]),
     false,
     or([max(toMSet({2})) != 5 | q_13 : set of set of bool]),
     false,

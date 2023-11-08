@@ -11,6 +11,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Expression.Op
 import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
+import qualified Data.Kind as T (Type)
 
 
 -- | To use a lens for constructing stuf.
@@ -18,7 +19,7 @@ make :: (Proxy Identity -> (a, b)) -> a
 make  f = fst (f (Proxy :: Proxy Identity))
 
 -- | To use a lens for deconstructing stuf.
-match :: (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
+match :: (Proxy (m :: T.Type -> T.Type) -> (a, b -> m c)) -> b -> m c
 match f = snd (f Proxy)
 
 followAliases :: CanBeAnAlias b => (b -> c) -> b -> c
@@ -51,7 +52,7 @@ opMinus
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -70,7 +71,7 @@ opDiv
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -89,7 +90,7 @@ opMod
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -108,7 +109,7 @@ opPow
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -127,7 +128,7 @@ opNegate
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -146,7 +147,7 @@ opDontCare
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -162,7 +163,7 @@ opDontCare _ =
 
 opDefined
     :: MonadFailDoc m
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Expression -> Expression
        , Expression -> m Expression
        )
@@ -177,7 +178,7 @@ opDefined _ =
 
 opRange
     :: MonadFailDoc m
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Expression -> Expression
        , Expression -> m Expression
        )
@@ -195,7 +196,7 @@ opDefinedOrRange
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( (x -> x, x) -> x
        , x -> m (x -> x, x)
        )
@@ -210,7 +211,7 @@ opDefinedOrRange _ =
 
 opRestrict
     :: MonadFailDoc m
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Expression -> Domain () Expression -> Expression
        , Expression -> m (Expression, Domain () Expression)
        )
@@ -228,7 +229,7 @@ opToInt
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -247,7 +248,7 @@ opPowerSet
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -266,7 +267,7 @@ opToSet
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -285,7 +286,7 @@ opToSetWithFlag
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Bool -> x -> x
        , x -> m (Bool, x)
        )
@@ -304,7 +305,7 @@ opToMSet
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -323,7 +324,7 @@ opToRelation
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -342,7 +343,7 @@ opParts
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -361,7 +362,7 @@ opParty
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x, x)
        )
@@ -380,7 +381,7 @@ opParticipants
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -399,7 +400,7 @@ opImage
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x, x)
        )
@@ -418,7 +419,7 @@ opImageSet
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x, x)
        )
@@ -436,7 +437,7 @@ opTransform
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x, x)
        )
@@ -455,7 +456,7 @@ opRelationProj
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> [Maybe x] -> x
        , x -> m (x, [Maybe x])
        )
@@ -474,7 +475,7 @@ opRelationImage
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> [x] -> x
        , x -> m (x, [x])
        )
@@ -496,7 +497,7 @@ opIndexing
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -517,7 +518,7 @@ opMatrixIndexing
        , MonadFailDoc m
        , ?typeCheckerMode :: TypeCheckerMode
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> [x] -> x
        , x -> m (x,[x])
        )
@@ -549,7 +550,7 @@ opMatrixIndexingSlicing
        , TypeOf x
        , ?typeCheckerMode :: TypeCheckerMode
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> [Either x (Maybe x, Maybe x)] -> x
        , x -> m (x, [Either x (Maybe x, Maybe x)])           -- either an index or a slice
        )
@@ -591,7 +592,7 @@ opSlicing
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> Maybe x -> Maybe x -> x
        , x -> m (x, Maybe x, Maybe x)
        )
@@ -610,7 +611,7 @@ opFlatten
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -650,7 +651,7 @@ opConcatenate
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -669,7 +670,7 @@ opIn
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -688,7 +689,7 @@ opFreq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -707,7 +708,7 @@ opHist
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -726,7 +727,7 @@ opIntersect
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -745,7 +746,7 @@ opUnion
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -764,7 +765,7 @@ opSubsetEq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -783,7 +784,7 @@ opEq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -802,7 +803,7 @@ opNeq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -821,7 +822,7 @@ opLt
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -840,7 +841,7 @@ opLeq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -859,7 +860,7 @@ opGt
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -878,7 +879,7 @@ opGeq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -897,7 +898,7 @@ opDotLt
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -916,7 +917,7 @@ opDotLeq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -935,7 +936,7 @@ opTildeLt
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -954,7 +955,7 @@ opTildeLeq
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -973,7 +974,7 @@ opOr
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -992,7 +993,7 @@ opAnd
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1011,7 +1012,7 @@ opMax
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1030,7 +1031,7 @@ opMin
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1049,7 +1050,7 @@ opImply
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -1068,7 +1069,7 @@ opNot
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1087,7 +1088,7 @@ opProduct
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1106,7 +1107,7 @@ opSum
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1128,7 +1129,7 @@ opReducer
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( (x -> x, x) -> x
        , x -> m ( ReducerType
                 , Bool              -- defined on []
@@ -1158,7 +1159,7 @@ opModifier
     :: ( Op x :< x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( (x -> x, x) -> x
        , x -> m (x -> x, x)
        )
@@ -1177,7 +1178,7 @@ opModifierNoP
     :: ( Op x :< x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( (x -> x, x) -> x
        , x -> m (x -> x, x)
        )
@@ -1196,7 +1197,7 @@ opAllDiff
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1215,7 +1216,7 @@ opAllDiffExcept
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x, x)
        )
@@ -1231,7 +1232,7 @@ opAllDiffExcept _ =
 
 constantInt
     :: MonadFailDoc m
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Integer -> Expression
        , Expression -> m Integer
        )
@@ -1245,7 +1246,7 @@ constantInt _ =
 
 matrixLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> Domain () Expression -> [Expression] -> Expression
        , Expression -> m (Type, Domain () Expression, [Expression])
        )
@@ -1299,7 +1300,7 @@ onMatrixLiteral mlvl f = case mlvl of
 
 setLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
        )
@@ -1323,7 +1324,7 @@ setLiteral _ =
 
 msetLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
        )
@@ -1347,7 +1348,7 @@ msetLiteral _ =
 
 functionLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> [(Expression,Expression)] -> Expression
        , Expression -> m (Type, [(Expression,Expression)])
        )
@@ -1371,7 +1372,7 @@ functionLiteral _ =
 
 sequenceLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
        )
@@ -1395,7 +1396,7 @@ sequenceLiteral _ =
 
 relationLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
        )
@@ -1419,7 +1420,7 @@ relationLiteral _ =
 
 partitionLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
        )
@@ -1446,7 +1447,7 @@ opTwoBars
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1465,7 +1466,7 @@ opPreImage
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x -> x
        , x -> m (x,x)
        )
@@ -1484,7 +1485,7 @@ opActive
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> Name -> x
        , x -> m (x,Name)
        )
@@ -1503,7 +1504,7 @@ opFactorial
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( x -> x
        , x -> m x
        )
@@ -1522,7 +1523,7 @@ opLex
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( (x -> x -> x, (x,x)) -> x
        , x -> m (x -> x -> x, (x,x))
        )
@@ -1540,7 +1541,7 @@ opOrdering
        , Pretty x
        , MonadFailDoc m
        )
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type)
     -> ( (x -> x -> x, (x,x)) -> x
        , x -> m (x -> x -> x, (x,x))
        )
@@ -1574,7 +1575,13 @@ fixRelationProj= transformBi f
                         Just TypeFunction{} -> make opImage func arg
                         Just TypeSequence{} -> make opImage func arg
                         _                   -> p
+                Just (func, args) | arg <- catMaybes args, length arg == length args ->
+                    case typeOf func of
+                        Just TypeFunction{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypeSequence{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        _                   -> p
                 _ -> p
+
 
 
 maxOfDomain :: (MonadFailDoc m, Pretty r) => Domain r Expression -> m Expression
