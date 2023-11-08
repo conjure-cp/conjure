@@ -17,7 +17,7 @@ import Data.Set as S ( singleton )
 
 
 streamliningToStdout ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     MonadUserError m =>
     NameGen m =>
@@ -47,7 +47,7 @@ streamliningToStdout model = do
 
 
 streamlining ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     MonadUserError m =>
     NameGen m =>
@@ -92,7 +92,7 @@ attachGroup grps x = return (x, grps)
 
 -- given a reference to a top level variable, produce a list of all applicable streamliners
 streamlinersForSingleVariable ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -152,7 +152,7 @@ streamlinersForSingleVariable x = concatMapM ($ x)
 -- given an integer expression (which can be a reference to a decision variable),
 -- generate a constraint forcing it to be odd
 intOdd ::
-    MonadFail m =>
+    MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 intOdd x = do
@@ -163,7 +163,7 @@ intOdd x = do
 
 
 intEven ::
-    MonadFail m =>
+    MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
 intEven x = do
@@ -174,7 +174,7 @@ intEven x = do
 
 
 intLowerHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -191,7 +191,7 @@ intLowerHalf x = do
 
 
 intUpperHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -213,7 +213,7 @@ intUpperHalf x = do
 
 
 matrixAll ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -237,7 +237,7 @@ matrixAll innerStreamliner x = do
 
 
 matrixAtMostOne ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -258,7 +258,7 @@ matrixAtMostOne innerStreamliner x = do
         _ -> noStreamliner
 
 
-matrixHalf :: MonadFail m =>
+matrixHalf :: MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -281,7 +281,7 @@ matrixHalf innerStreamliner x = do
 
 
 matrixApproxHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -307,7 +307,7 @@ matrixApproxHalf innerStreamliner x = do
 
 
 matrixMoreThanHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -332,7 +332,7 @@ matrixMoreThanHalf innerStreamliner x = do
 
 
 matrixLessThanHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -362,7 +362,7 @@ matrixLessThanHalf innerStreamliner x = do
 
 
 setAll ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -388,7 +388,7 @@ setAll innerStreamliner x = do
 
 
 setAtMostOne ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -412,7 +412,7 @@ setAtMostOne innerStreamliner x = do
 
 
 setHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -437,7 +437,7 @@ setHalf innerStreamliner x = do
 
 
 setApproxHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -465,7 +465,7 @@ setApproxHalf innerStreamliner x = do
 
 
 setMoreThanHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -492,7 +492,7 @@ setMoreThanHalf innerStreamliner x = do
 
 
 setLessThanHalf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -519,7 +519,7 @@ setLessThanHalf innerStreamliner x = do
 
 
 relationCardinality ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -541,7 +541,7 @@ relationCardinality x = do
 
 
 binRelAttributes ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -582,7 +582,7 @@ binRelAttributes x = do
 
 
 monotonicallyIncreasing ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -608,7 +608,7 @@ monotonicallyIncreasing x = do
 
 
 monotonicallyDecreasing ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -633,7 +633,7 @@ monotonicallyDecreasing x = do
 
 
 smallestFirst ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -656,7 +656,7 @@ smallestFirst x = do
 
 
 largestFirst ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -679,7 +679,7 @@ largestFirst x = do
 
 
 commutative ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -700,7 +700,7 @@ commutative x = do
 
 
 nonCommutative ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -721,7 +721,7 @@ nonCommutative x = do
 
 
 associative ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
@@ -744,7 +744,7 @@ associative x = do
 
 
 onTuple ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Integer -> StreamlinerGen m -> StreamlinerGen m
@@ -769,7 +769,7 @@ onTuple n innerStreamliner x = do
 
 
 onRange ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -806,7 +806,7 @@ onRange innerStreamliner x = do
 
 
 onDefined ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -843,7 +843,7 @@ onDefined innerStreamliner x = do
         _ -> noStreamliner
 
 
--- diagonal :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+-- diagonal :: (MonadFailDoc m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 -- diagonal innerStreamliner x = do
 --     traceM $ show $ "diagnoal" <+> pretty x
 --     dom <- expandDomainReference <$> domainOf x
@@ -866,7 +866,7 @@ onDefined innerStreamliner x = do
 --         _ -> noStreamliner
 
 --
--- prefix :: (MonadFail m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
+-- prefix :: (MonadFailDoc m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
 -- prefix innerStreamliner x = do
 --     traceM $ show $ "prefix"
 --     dom <- expandDomainReference <$> domainOf x
@@ -890,7 +890,7 @@ onDefined innerStreamliner x = do
 --         _ -> noStreamliner
 --
 
--- postfix :: (MonadFail m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
+-- postfix :: (MonadFailDoc m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
 -- postfix innerStreamliner x = do
 --     traceM $ show $ "postfix"
 --     dom <- expandDomainReference <$> domainOf x
@@ -920,7 +920,7 @@ onDefined innerStreamliner x = do
 
 
 parts ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m -> StreamlinerGen m
@@ -947,7 +947,7 @@ parts innerStreamliner x = do
 
 
 quasiRegular ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     StreamlinerGen m
