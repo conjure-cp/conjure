@@ -8,10 +8,11 @@ on:
     paths:
       - conjure-cp.cabal
       - Makefile
+      - Dockerfile          # this is here because the docker-publish.yml depends on successful completion of this action
       - src/**
       - tests/**
       - etc/build/**
-      - etc/savilerow
+      - etc/savilerow/**
       - .github/workflows/test.yml
   pull_request:             # and for PRs
     paths:
@@ -20,7 +21,7 @@ on:
       - src/**
       - tests/**
       - etc/build/**
-      - etc/savilerow
+      - etc/savilerow/**
       - .github/workflows/test.yml
                             # other branches that want testing must create a PR
 

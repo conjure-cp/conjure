@@ -9,6 +9,7 @@ cd $DIR
 if ! diff stdout stdout.expected; then
     echo "The generated stdout doesn't match the expected stdout."
     echo "That's what we call a failed test around here..."
+    exit 1
 else
     echo "Pass!"
 fi
