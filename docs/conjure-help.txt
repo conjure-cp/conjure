@@ -89,6 +89,12 @@
                                               --log-choices), or a json file.
  General:
       --limit-time=INT                        Limit in seconds of real time.
+ Streamlining:
+      --generate-streamliners=ITEM            A comma separated list of integers.
+                                              If provided, the streamlining constraints that correspond to the given
+                                              integers will be generated.
+                                              Run "conjure streamlining ESSENCE_FILE" to generate a list of all
+                                              applicable streamliners.
  
  conjure translate-parameter [OPTIONS]
    Refinement of Essence parameter files for a particular Essence' model.
@@ -283,6 +289,12 @@
                                               Default logic for SMT solvers is bitvector (bv).
                                               Append a dash and the name of a logic to the solver name to choose a
                                               different logic. For example yices-idl.
+ Streamlining:
+      --generate-streamliners=ITEM            A comma separated list of integers.
+                                              If provided, the streamlining constraints that correspond to the given
+                                              integers will be generated.
+                                              Run "conjure streamlining ESSENCE_FILE" to generate a list of all
+                                              applicable streamliners.
  
  conjure ide [OPTIONS] ESSENCE_FILE
    IDE support features for Conjure.
@@ -456,6 +468,23 @@
                                               solutions are saved in a single file as json, this mode prints one
                                               solution per line
                                                   minizinc: minizinc format for data files, only used for solutions
+      --line-width=INT                        Line width to use during pretty printing.
+                                              Default: 120
+ General:
+      --limit-time=INT                        Time limit in seconds (real time).
+ 
+ conjure streamlining [OPTIONS] ESSENCE_FILE
+   Generate streamlined Essence models.
+ 
+ Logging & Output:
+      --log-level=LOGLEVEL                    Log level.
+      --output-format=FORMAT                  Conjure's output can be in multiple formats.
+                                                  plain : The default
+                                                  binary: A binary encoding of the Essence output.
+                                                          It can be read back in by Conjure.
+                                                  json  : A json encoding of the Essence output.
+                                                          It can be used by other tools integrating with Conjure
+                                                          in order to avoid having to parse textual Essence.
       --line-width=INT                        Line width to use during pretty printing.
                                               Default: 120
  General:
