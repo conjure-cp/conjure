@@ -933,6 +933,7 @@ ui = modes
                     \ - minion (CP solver)\n\
                     \ - gecode (CP solver)\n\
                     \ - chuffed (CP solver)\n\
+                    \ - or-tools (CP solver)\n\
                     \ - glucose (SAT solver)\n\
                     \ - glucose-syrup (SAT solver)\n\
                     \ - lingeling/plingeling/treengeling (SAT solver)\n\

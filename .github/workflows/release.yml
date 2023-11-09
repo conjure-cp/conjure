@@ -4,7 +4,17 @@ on:
   workflow_dispatch:        # can be triggered manually
   push:
     tags:
-        - 'v*'
+      - "v*.*.*"
+  pull_request:             # and for PRs
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - tests/**
+      - etc/build/**
+      - etc/savilerow/**
+      - .github/workflows/release.yml
+                            # other branches that want testing must create a PR
 
 permissions:
   contents: write
@@ -59,7 +69,7 @@ jobs:
       - name: Setting PATH (for solvers)
         shell: bash
         run: |
-          echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+          echo "${HOME}/solver-binaries" >> ${GITHUB_PATH}
           echo "/usr/lib/ccache" >> ${GITHUB_PATH}
           echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
 
@@ -75,43 +85,60 @@ jobs:
 
       - name: Build solvers
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
+        run: |
+          rm -rf ${HOME}/solver-binaries
+          BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
 
-# when gecode comes back, this is the list
-# conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-      - name: Strip binaries
+      - name: Set version string to the commit hash
+        run: echo "RELEASE_VERSION=${{ github.sha }}" >> "$GITHUB_ENV"
+
+      - name: Set version string based on trigger (ref_name if on tag)
+        run: echo "RELEASE_VERSION=${{ github.ref_name }}" >> "$GITHUB_ENV"
+        if: startsWith(github.ref, 'refs/tags/')
+
+      - name: Set version string based on trigger (PR number if a PR)
+        run: echo "RELEASE_VERSION=${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
+        if: github.event_name == 'pull_request'
+
+      - name: Create the zip archives
         shell: bash
         run: |
-          pushd ~/.local/bin
+          pushd ${HOME}/solver-binaries
 
-          strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
+          cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
+          mkdir -p lib
+          cp -r ~/.local/bin/lib/* lib/
 
-          mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
-          cp conjure conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
+          cd ..
+          rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          cp -r solver-binaries conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          cd solver-binaries
+          cp -r ../conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers .
 
-          mkdir -p conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
-          cp conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling minion nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
-          cp -r savilerow savilerow.jar lib conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          cp conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
 
-          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}
-          zip -r -9 conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers
+          zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
           popd
 
-          cp ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip .
-          cp ~/.local/bin/conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip .
+          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
+          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
 
 # See https://github.com/softprops/action-gh-release
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ github.ref_name }}
+          name: ${RELEASE_VERSION}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}.zip
-            conjure-${{ github.ref_name }}-${{ matrix.release_suffix }}-with-solvers.zip
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
