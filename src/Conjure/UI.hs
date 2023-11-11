@@ -54,6 +54,8 @@ data UI
         , savedChoices               :: Maybe FilePath
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        -- streamlining
+        , generateStreamliners       :: String
         }
     | TranslateParameter
         { eprime                     :: FilePath            -- eprime, mandatory
@@ -133,6 +135,8 @@ data UI
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        -- streamlining
+        , generateStreamliners       :: String
         }
     | IDE
         { essence                    :: FilePath            -- Optional, will read from stdin if not provided
@@ -203,6 +207,13 @@ data UI
         { essence                    :: FilePath
         , logLevel                   :: LogLevel
         , logRuleSuccesses           :: Bool
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
+        }
+    | Streamlining
+        { essence                    :: FilePath
+        , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
@@ -477,6 +488,14 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
+        , generateStreamliners
+            = ""
+            &= name "generate-streamliners"
+            &= groupname "Streamlining"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\n\
+                    \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "modelling"
             &= explicit
             &= help "The main act. Given a problem specification in Essence, \
@@ -914,6 +933,7 @@ ui = modes
                     \ - minion (CP solver)\n\
                     \ - gecode (CP solver)\n\
                     \ - chuffed (CP solver)\n\
+                    \ - or-tools (CP solver)\n\
                     \ - glucose (SAT solver)\n\
                     \ - glucose-syrup (SAT solver)\n\
                     \ - lingeling/plingeling/treengeling (SAT solver)\n\
@@ -977,6 +997,14 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
+        , generateStreamliners
+            = ""
+            &= name "generate-streamliners"
+            &= groupname "Streamlining"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\n\
+                    \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "solve"
             &= explicit
             &= help "A combined mode for convenience.\n\
@@ -1389,7 +1417,46 @@ ui = modes
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\
                     \which aims to make search faster."
-    ,LSP {
+    , Streamlining
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Time limit in seconds (real time)."
+        , outputFormat
+            = def
+            &= name "output-format"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= typ "FORMAT"
+            &= help "Conjure's output can be in multiple formats.\n\
+                    \    plain : The default\n\
+                    \    binary: A binary encoding of the Essence output.\n\
+                    \            It can be read back in by Conjure.\n\
+                    \    json  : A json encoding of the Essence output.\n\
+                    \            It can be used by other tools integrating with Conjure\n\
+                    \            in order to avoid having to parse textual Essence."
+        , lineWidth
+            = 120
+            &= name "line-width"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Line width to use during pretty printing.\nDefault: 120"
+        }   &= name "streamlining"
+            &= explicit
+            &= help "Generate streamlined Essence models."
+    , LSP {
         logLevel = def,
         limitTime = Nothing
     } &= name "lsp"

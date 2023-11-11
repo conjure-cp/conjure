@@ -112,6 +112,7 @@ data Config = Config
     , lineWidth                  :: Int
     , responses                  :: Maybe [Int]
     , responsesRepresentation    :: Maybe [(Name, Int)]
+    , generateStreamliners       :: Maybe [Int]
     , estimateNumberOfModels     :: Bool
     }
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -143,6 +144,7 @@ instance Default Config where
         , lineWidth                  = 120
         , responses                  = Nothing
         , responsesRepresentation    = Nothing
+        , generateStreamliners       = Nothing
         , estimateNumberOfModels     = False
         }
 
