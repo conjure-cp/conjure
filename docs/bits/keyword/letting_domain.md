@@ -17,7 +17,7 @@ Types of domains:
 [tuple](...)
 [record](...)
 [variant](...)
-[matrix](...)
+[matrix](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/matrix.md)
 [set](...)
 [multi-set](...)
 [function](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/function.md)
