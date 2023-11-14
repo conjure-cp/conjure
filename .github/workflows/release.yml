@@ -1,0 +1,144 @@
+name: Make a release
+
+on:
+  workflow_dispatch:        # can be triggered manually
+  push:
+    tags:
+      - "v*.*.*"
+  pull_request:             # and for PRs
+    paths:
+      - conjure-cp.cabal
+      - Makefile
+      - src/**
+      - tests/**
+      - etc/build/**
+      - etc/savilerow/**
+      - .github/workflows/release.yml
+                            # other branches that want testing must create a PR
+
+permissions:
+  contents: write
+
+jobs:
+
+  Job:
+
+    strategy:
+      matrix:
+        GHC_VERSION: ["9.4"]
+        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          release_suffix: linux
+        - os: macos-latest
+          release_suffix: macos-intel
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - uses: actions/checkout@v3
+        name: Checkout repository
+
+      - name: Stack version
+        shell: bash
+        run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
+
+      - uses: actions/cache@v3
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}
+  
+      - name: Setting PATH
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+
+      - name: Build Conjure
+        shell: bash
+        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+
+      - name: Setting PATH (for solvers)
+        shell: bash
+        run: |
+          echo "${HOME}/solver-binaries" >> ${GITHUB_PATH}
+          echo "/usr/lib/ccache" >> ${GITHUB_PATH}
+          echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
+
+      - name: Installing dependencies (gperf) on Linux
+        shell: bash
+        run: sudo apt-get install -y gperf
+        if: runner.os == 'Linux'
+
+      - name: Installing dependencies (gperf) on macOS
+        shell: bash
+        run: brew install gperf
+        if: runner.os == 'macOS'
+
+      - name: Build solvers
+        shell: bash
+        run: |
+          rm -rf ${HOME}/solver-binaries
+          BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
+
+      - name: Set version string to the commit hash
+        run: echo "RELEASE_VERSION=${{ github.sha }}" >> "$GITHUB_ENV"
+
+      - name: Set version string based on trigger (ref_name if on tag)
+        run: echo "RELEASE_VERSION=${{ github.ref_name }}" >> "$GITHUB_ENV"
+        if: startsWith(github.ref, 'refs/tags/')
+
+      - name: Set version string based on trigger (PR number if a PR)
+        run: echo "RELEASE_VERSION=${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
+        if: github.event_name == 'pull_request'
+
+      - name: Create the zip archives
+        shell: bash
+        run: |
+          pushd ${HOME}/solver-binaries
+
+          cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
+          mkdir -p lib
+          cp -r ~/.local/bin/lib/* lib/
+
+          cd ..
+          rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          cp -r solver-binaries conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          cd solver-binaries
+          cp -r ../conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers .
+
+          rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          cp conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+
+          zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+
+          popd
+
+          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
+          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
+
+# See https://github.com/softprops/action-gh-release
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${RELEASE_VERSION}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip

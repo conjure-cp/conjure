@@ -14,6 +14,9 @@ on:
       - Running all tests
     types:
       - completed
+  push:                     # for pushes to release tags (v*)
+    tags:
+      - "v*.*.*"
   pull_request:             # and for PRs that edit the docker files
     paths:
       - Dockerfile
