@@ -4,7 +4,6 @@ module Conjure.UI.IO
     , readModelPreambleFromFile
     , readModelInfoFromFile
     , readParamJSON
-    , readASTFromFile
     , readParamOrSolutionFromFile
     , writeModel, writeModels
     , readModel
@@ -18,7 +17,7 @@ import Conjure.UI
 import Conjure.Language
 import qualified Conjure.Language.Parser as Parser
 import qualified Conjure.Language.ParserC as ParserC
-import Conjure.Language.Parser 
+import Conjure.Language.AST.Syntax (ProgramTree)
 
 -- aeson
 import qualified Data.Aeson ( eitherDecodeStrict )
@@ -34,31 +33,23 @@ import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- bytestring
 import qualified Data.ByteString as BS ( readFile, writeFile )
 import qualified Data.ByteString.Char8 as BS ( putStrLn )
-import Conjure.Language.AST.Syntax (ProgramTree)
-import Conjure.Language.AST.ASTParser (parseProgram)
-import Conjure.Language.Validator (runValidator, validateModel, ValidatorState (typeChecking), initialState, isError)
 
-import Conjure.UI.ErrorDisplay (showDiagnosticsForConsole)
 
-readASTFromFile :: 
+readASTJSONFromFile :: 
     MonadIO m =>
-    MonadFailDoc m =>
-    MonadUserError m =>
-    FilePath -> m ProgramTree
-readASTFromFile fp = do
-    (_,contents) <- liftIO $ pairWithContents fp
-    v <-case lexAndParse parseProgram contents of
-      Left pe -> failDoc $ pretty $  show pe
-      Right pt -> return pt
-    case
-        runValidator
-          (validateModel v) (initialState v (Just $ T.pack fp)) {typeChecking = False}
-            of 
-        (_, vds, _) | any isError vds -> pure v
-        (_,vds,_) -> failDoc $ "Cannot pretty print a model with errors" <+> pretty (showDiagnosticsForConsole vds (Just fp) contents)
+    -- MonadFailDoc m =>
+    -- MonadUserError m =>
+    FilePath -> m (Either String Model)
+readASTJSONFromFile fp = do
+    (_, contents) <- liftIO $ pairWithContents fp
+    contents
+        |> T.encodeUtf8                     -- convert Text to ByteString
+        |> Data.Aeson.eitherDecodeStrict
+        |> return
+    -- case rawJSON of
+    --     Left err -> userErr1 (pretty err)
+    --     Right m -> return m
 
-        
-    
 
 readModelFromFile ::
     MonadIO m =>
@@ -70,8 +61,12 @@ readModelFromFile fp = do
     case Data.Serialize.decode con of
         Right res -> return res
         Left _ -> do
-            pair <- liftIO $ pairWithContents fp
-            readModel Parser.parseModel (Just id) pair
+            ast_ <- readASTJSONFromFile fp
+            case ast_ of
+                Right res -> return res
+                Left _ -> do
+                    pair <- liftIO $ pairWithContents fp
+                    readModel Parser.parseModel (Just id) pair
 
 
 readModelFromStdin ::
@@ -133,6 +128,7 @@ readModelPreambleFromFile fp = do
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
             readModel Parser.parseModel (Just onlyPreamble) pair
+
 
 readModelInfoFromFile ::
     MonadIO m =>
