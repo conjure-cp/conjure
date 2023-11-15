@@ -9,3 +9,4 @@ find e : bool such that e = together({1,2},P) $true
 This syntax is checking if {1,2} is in the part of the partition P
 
 See it demonstrated [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/Partition_operators.ipynb).
+
