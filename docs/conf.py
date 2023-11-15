@@ -31,11 +31,10 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.todo',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.jquery',
     'nbsphinx',
-    'sphinx_mdinclude'
+    'myst_parser'
 ]
 bibtex_bibfiles = ['refs.bib']
 
