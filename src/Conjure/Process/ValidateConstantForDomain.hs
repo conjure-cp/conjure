@@ -19,7 +19,7 @@ import Conjure.Language.Constant
       Constant(ConstantEnum, TypedConstant, ConstantInt, ConstantBool) )
 import Conjure.Language.Definition
     ( Name,
-      NameGen )
+      NameGen, forgetRepr )
 import Conjure.Language.Domain
     ( Domain(DomainBool, DomainUnnamed, DomainEnum, DomainPartition,
              DomainTuple, DomainRecord, DomainVariant, DomainMatrix, DomainInt,
@@ -35,16 +35,16 @@ import Conjure.Language.Domain
       SizeAttr(SizeAttr_MinMaxSize, SizeAttr_None, SizeAttr_Size,
                SizeAttr_MinSize, SizeAttr_MaxSize),
       SetAttr(SetAttr),
-      binRelToAttrName )
+      binRelToAttrName, SequenceAttr (SequenceAttr), JectivityAttr (JectivityAttr_Surjective, JectivityAttr_Bijective) )
 import Conjure.Language.Pretty 
 import Conjure.Language.Type ( TypeCheckerMode )
+import Conjure.Language.Expression
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
-import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
 
 -- containers
-import Data.Set as S ( size, size, toList )
-import Conjure.Language.Expression
+import Data.Set as S ( size, size, fromList, toList, toAscList, difference )
 
 
 -- | Assuming both the value and the domain are normalised
@@ -197,8 +197,29 @@ validateConstantForDomain name
 
 validateConstantForDomain name
     c@(viewConstantSequence -> Just vals)
-    d@(DomainSequence _ _ dInner) = nested c d $
-        mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
+    d@(DomainSequence _ attr dInner) = do
+        case attr of
+            SequenceAttr sizeAttr@(SizeAttr_Size (ConstantInt _ s)) _ | s /= genericLength vals ->
+                failDoc $ vcat
+                    [ "The value is not a member of the domain."
+                    , "Value :" <+> pretty c
+                    , "Domain:" <+> pretty d
+                    , "Reason: Domain attributes are not satisfied."
+                    , "Specifically:" <+> pretty sizeAttr
+                    ]
+            SequenceAttr _ jectivity | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective] -> do
+                constants <- enumerateDomain (forgetRepr dInner)
+                let missing = S.toAscList (S.fromList constants `S.difference` S.fromList vals)
+                unless (null missing) $  failDoc $ vcat
+                    [ "The value is not a member of the domain."
+                    , "Value :" <+> pretty c
+                    , "Domain:" <+> pretty d
+                    , "Reason: Domain attributes are not satisfied."
+                    , "Specifically:" <+> pretty JectivityAttr_Surjective
+                    ]
+            _ -> return () 
+        nested c d $
+            mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
 
 validateConstantForDomain name
     c@(viewConstantRelation -> Just valss)
