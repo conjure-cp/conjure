@@ -73,7 +73,7 @@ clean:
 
 .PHONY: docs
 docs:
-	(cd docs; make conjure-help; make latexpdf; make singlehtml)
+	(cd docs; bash build.sh)
 
 .PHONY: ghci
 ghci:
