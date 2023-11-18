@@ -14,4 +14,4 @@ The domain used to index the elements may be specifed too, such that.
 They are not ordered, but can be compared using equality operators. 
 Two matrices are only equal if their indices are the same.
 
-Read more about matrix domains [here](https://conjure.readthedocs.io/en/latest/essence.html#types).
+Read more about matrix domains [here](https://conjure.readthedocs.io/en/latest/essence.html#types) and see them demonstrated [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/matrix.ipynb).
