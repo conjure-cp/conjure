@@ -54,6 +54,44 @@ mkBinRelCons (BinaryRelationAttrs binRelAttrs) dom rel = do
     return $ concatMap one (S.toList binRelAttrs)
 
 
+mkBinRelConsSoft :: NameGen m => Expression -> Expression -> BinaryRelationAttrs -> Domain r Expression -> Expression -> m [Expression]
+mkBinRelConsSoft maxNum divisor (BinaryRelationAttrs binRelAttrs) dom rel = do
+    -- maxNum: if the property holds this many times, we perfectly satisfy this condition
+    -- divisor: 2,4,8
+    --          2: satisfy the property at least half the time
+    --          4: satisfy the property at least one quarter of the time
+    --          8: satisfy the property at least 1/8th of the time
+    (xP, x) <- quantifiedVar
+    (yP, y) <- quantifiedVar
+    (zP, z) <- quantifiedVar
+
+    let
+        one BinRelAttr_Reflexive     = return [essence| &maxNum / &divisor <= sum &xP           : &dom . toInt(&rel(&x,&x)) |]
+        one BinRelAttr_Irreflexive   = return [essence| &maxNum / &divisor <= sum &xP           : &dom . toInt(!(&rel(&x,&x))) |]
+        one BinRelAttr_Coreflexive   = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) -> &x=&y) |]
+        one BinRelAttr_Symmetric     = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) -> &rel(&y,&x)) |]
+        one BinRelAttr_AntiSymmetric = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) /\ &rel(&y,&x) -> &x=&y) |]
+        one BinRelAttr_ASymmetric    = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) -> !(&rel(&y,&x))) |]
+        one BinRelAttr_Transitive    = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . toInt(&rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z)) |]
+        one BinRelAttr_Total         = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) \/ &rel(&y,&x)) |]
+        one BinRelAttr_Connex        = return [essence| &maxNum / &divisor <= sum &xP, &yP      : &dom . toInt(&rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y)) |]
+        one BinRelAttr_Euclidean     = return [essence| &maxNum / &divisor <= sum &xP, &yP, &zP : &dom . toInt(&rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z)) |]
+        one BinRelAttr_LeftTotal     = return [essence| &maxNum / &divisor <= sum &xP : &dom . sum &yP : &dom . toInt(&rel(&x,&y)) |]
+        one BinRelAttr_RightTotal    = return [essence| &maxNum / &divisor <= sum &yP : &dom . sum &xP : &dom . toInt(&rel(&x,&y)) |]
+
+        one BinRelAttr_Serial             = one BinRelAttr_LeftTotal
+        one BinRelAttr_Equivalence        = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
+        one BinRelAttr_LinearOrder        = one BinRelAttr_Total ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+        one BinRelAttr_WeakOrder          = one BinRelAttr_Total ++ one BinRelAttr_Transitive
+        one BinRelAttr_PreOrder           = one BinRelAttr_Reflexive ++ one BinRelAttr_Transitive
+        one BinRelAttr_PartialOrder       = one BinRelAttr_Reflexive ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+        one BinRelAttr_StrictPartialOrder = one BinRelAttr_Irreflexive ++ one BinRelAttr_ASymmetric ++ one BinRelAttr_Transitive
+
+
+
+    return $ concatMap one (S.toList binRelAttrs)
+
+
 -- reflexive, the diagonal is full
 -- irreflexive, the diagonal is empty
 -- coreflexive, only the diagonal is full
@@ -79,3 +117,4 @@ mkBinRelCons (BinaryRelationAttrs binRelAttrs) dom rel = do
 -- preOrder: reflexive + transitive
 -- partialOrder: reflexive + antiSymmetric + transitive
 -- strictPartialOrder: irreflexive + transitive (implied aSymmetric)
+

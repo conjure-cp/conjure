@@ -14,7 +14,7 @@ import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
-import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
+import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
@@ -31,10 +31,12 @@ import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
+import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
 import Conjure.Process.Boost ( boost )
-import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
 import Conjure.Language.AdHoc ( toSimpleJSON )
+
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..), hPutStrLn, stderr )
@@ -103,6 +105,7 @@ mainWithArgs mode@Modelling{..} = do
           , limitTime
           , outputFormat
           )
+        , generateStreamliners
         )
         (outputDirectory </> ".conjure-checksum")
         (pp logLevel "Using cached models.")
@@ -200,6 +203,8 @@ mainWithArgs ParameterGenerator{..} = do
             | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
             ]
     liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
+mainWithArgs Streamlining{..} = runNameGen essence
+    (readModelFromFile essence >>= resolveNames >>= typeCheckModel >>= streamliningToStdout)
 mainWithArgs AutoIG{..} | generatorToIrace = do
     model <- readModelFromFile essence
     let
@@ -326,6 +331,7 @@ mainWithArgs config@Solve{..} = do
                       , limitTime
                       , outputFormat
                       )
+                    , generateStreamliners
                     )
                     (outputDirectory </> ".conjure-checksum")
                     (pp logLevel "Using cached models." >> getEprimes)
@@ -687,6 +693,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                                                      ]
 
             responsesList <- parseCommaSeparated "--responses" responses
+            generateStreamlinersList <- parseCommaSeparated "--generate-streamliners" generateStreamliners
 
             responsesRepresentationList <- do
                 if null responsesRepresentation
@@ -739,17 +746,23 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                 , Config.lineWidth                  = lineWidth
                 , Config.responses                  = responsesList
                 , Config.responsesRepresentation    = responsesRepresentationList
+                , Config.generateStreamliners       = generateStreamlinersList
                 , Config.estimateNumberOfModels     = estimateNumberOfModels
                 }
 
     essenceM <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
-    let
-        conjuring = do
-            config <- getConfig
-            runNameGen essenceM $ outputModels portfolioSize modelHashesBefore modelNamePrefix config essenceM
-    conjuring
+    config <- getConfig
+    runNameGen essenceM $ do
+        modelWithStreamliners <-
+            case Config.generateStreamliners config of
+                Nothing -> return essenceM
+                Just ix -> do
+                    streamliners <- pure essenceM >>= resolveNames >>= typeCheckModel >>= streamlining
+                    let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
+                    return essenceM { mStatements = mStatements essenceM ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
+        outputModels portfolioSize modelHashesBefore modelNamePrefix config modelWithStreamliners
 mainWithArgs_Modelling _ _ _ _ = bug "mainWithArgs_Modelling"
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
@@ -854,6 +867,7 @@ solverExecutables =
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
     , ( "open-wbo"        , "open-wbo" )
+    , ( "or-tools"        , "fzn-ortools" )
     , ( "coin-or"         , "minizinc" )
     , ( "cplex"           , "minizinc" )
     , ( "yices"           , "yices-smt2" )
@@ -919,6 +933,7 @@ srMkArgs Solve{..} outBase modelPath = do
         "minion"            -> return [ "-minion" ]
         "gecode"            -> return [ "-gecode" ]
         "chuffed"           -> return [ "-chuffed"]
+        "or-tools"          -> return [ "-or-tools"]
         "glucose"           -> return [ "-sat"
                                       , "-sat-family", "glucose"
                                       , "-satsolver-bin", "glucose"

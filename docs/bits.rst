@@ -11,15 +11,6 @@ The extension is open source as well, and it is hosted at https://github.com/con
 We include them here for reference and convenience, but this part of the documentation is intended to be useful primarily through the VS Code extension.
 
 .. toctree::
+   :glob:
 
-  bits/attribute/L_regular.md
-  bits/function/min.md
-  bits/function/and.md
-  bits/function/max.md
-  bits/function/allDiff.md
-  bits/keyword/find.md
-  bits/keyword/expr_projection.md
-  bits/keyword/new_type_enum.md
-  bits/operator/L_Div.md
-  bits/operator/L_in.md
-  bits/operator/L_Mod.md
+   bits/**

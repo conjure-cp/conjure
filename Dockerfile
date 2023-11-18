@@ -28,6 +28,7 @@ RUN apt-get install -y --no-install-recommends zip unzip                # needed
 RUN apt-get install -y --no-install-recommends autoconf                 # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
+RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 
 # Only copying the install*.sh scripts
 RUN mkdir -p etc
@@ -45,6 +46,7 @@ RUN PROCESSES=2 etc/build/install-lingeling.sh
 RUN PROCESSES=2 etc/build/install-minion.sh
 RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-open-wbo.sh
+RUN PROCESSES=2 etc/build/install-ortools.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
 RUN PROCESSES=2 etc/build/install-z3.sh
 
@@ -54,13 +56,12 @@ COPY . .
 # Building Conjure and copying Savile Row
 RUN make install
 
-# Make binaries a bit smaller
+# List the binaries
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
-RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-# RUN cd /root/.local/bin ; strip conjure bc_minisat_all_release boolector cadical fzn-chuffed fzn-gecode glucose glucose-syrup kissat lingeling nbc_minisat_all_release open-wbo plingeling treengeling yices yices-sat yices-smt yices-smt2 z3
-RUN ls -l /root/.local/bin
-RUN du -sh /root/.local/bin
+
+# a test to see if all solvers work as expected
+RUN tests/allsolvers/test.sh
 
 
 ################################################################################
@@ -70,10 +71,6 @@ FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends default-jre-headless
+RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin
-
-# Testing
-CMD echo "find x : set of int(1..3)" > model.essence ; conjure solve model.essence --number-of-solutions=all ; cat model.solutions
-
