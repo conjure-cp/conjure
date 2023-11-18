@@ -13,7 +13,7 @@ Types of domains:
 - [boolean](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_bool.md)
 - [integer](...)
 - [enumerated](...)
-- [unnamed](...)
+- [unnamed](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_unnamed.md)
 - [tuple](...)
 - [record](...)
 - [variant](...)
