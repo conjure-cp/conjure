@@ -266,9 +266,9 @@ applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) =
     DomainTuple <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainRecord as ) (Tree Nothing asRepr) =
-    (DomainRecord  . zip (map fst as)) <$> zipWithM applyReprTree (map snd as) asRepr
+    DomainRecord  . zip (map fst as) <$> zipWithM applyReprTree (map snd as) asRepr
 applyReprTree (DomainVariant as) (Tree Nothing asRepr) =
-    (DomainVariant . zip (map fst as)) <$> zipWithM applyReprTree (map snd as) asRepr
+    DomainVariant . zip (map fst as) <$> zipWithM applyReprTree (map snd as) asRepr
 applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> applyReprTree a aRepr
 applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
 applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet r attr <$> applyReprTree a aRepr
@@ -636,7 +636,8 @@ data BinaryRelationAttr
     | BinRelAttr_WeakOrder
     | BinRelAttr_PreOrder
     | BinRelAttr_StrictPartialOrder
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Bounded, Enum)
+
 instance Serialize BinaryRelationAttr
 instance Hashable  BinaryRelationAttr
 instance ToJSON    BinaryRelationAttr where toJSON = genericToJSON jsonOptions
