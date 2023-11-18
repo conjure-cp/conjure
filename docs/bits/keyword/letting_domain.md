@@ -11,7 +11,7 @@ letting x be domain int(1..10)
 Types of domains:
 
 - [boolean](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_bool.md)
-- [integer](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/int.md)
+- [integer](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_int.md)
 - [enumerated](...)
 - [unnamed](...)
 - [tuple](...)
