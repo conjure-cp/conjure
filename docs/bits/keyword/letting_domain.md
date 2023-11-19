@@ -15,7 +15,7 @@ Types of domains:
 - [enumerated](https://github.com/conjure-cp/conjure/blob/main/docs/bits/keyword/new_type_enum.md)
 - [unnamed](...)
 - [tuple](...)
-- [record](...)
+- [record](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_record.md)
 - [variant](...)
 - [matrix](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/matrix.md)
 - [set](...)
