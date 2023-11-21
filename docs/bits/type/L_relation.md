@@ -13,9 +13,9 @@ letting R be relation((1,1,0),(1,0,1),(0,1,1))
 
 Relations have two groups of attributes
 1. cardinality related
-    - [size]()
-    - [minSize]()
-    - [maxSize]()
+    - [size](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_size.md)
+    - [minSize](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_maxSize.md)
+    - [maxSize](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_minSize.md)
 2. Binary Relation (only on relations that contain 2 identical domains)
     - [reflexive]()
     - [irreflexive]()
