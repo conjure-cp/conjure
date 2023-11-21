@@ -1,5 +1,6 @@
 # relation
-Contains a list of domains.
+
+A list of pairs of elements of given domains that are related to each other.
 
 Defined by 
 ``` 
@@ -30,3 +31,5 @@ Relations have two groups of attributes
     - [serial](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_serial.md)
     - [equivalence](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_equivalence.md)
     - [partialOrder](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_partialOrder.md)
+
+See this demonstrated [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/RelationDomains.ipynb).
