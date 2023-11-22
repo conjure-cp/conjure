@@ -40,7 +40,7 @@ Semigroups
 
 The simplest object we will consider is a **semigroup**. A semigroup adds one constraint to our binary operation, **associativity**. A binary operation is associative if for all i,j and k in S,  R(i,R(j,k)) = R((R(i,j),k). This might look very abstract, but it is true of many binary operations, for example given integers i,j and k, (i+j)+k = i+(j+k), and (i * j) * k = i * (j * k).
 
-We begin by saying we want to check ``forAll i,j,k: S``. The strangest bit is all of the brackets seem doubled. Your vision isn't failing, this is because ``M`` is a one argument function (and we use ``M(x)`` to apply ``M`` to ``x``), but ``M`` takes a tuple as its argument (which we write as ``(i,j)``), so to apply ``M`` to ``i`` and ``j`` we write ``M((i,j))``.
+We begin by saying we want to check ``forAll i,j,k: S``. The strangest bit is all of the brackets seem doubled. Your vision isn't failing, this is because ``R`` is a one argument function (and we use ``R(x)`` to apply ``R`` to ``x``), but ``R`` takes a tuple as its argument (which we write as ``(i,j)``), so to apply ``R`` to ``i`` and ``j`` we write ``R((i,j))``.
 
 .. code-block:: essence
 
@@ -68,7 +68,7 @@ The first result is still the same, but there are fewer solutions to be found no
 Monoids
 ~~~~~~~
 
-Let's move further to monoids. A monoid is a semigroup with an extra condition, there has to exist some element of the semigroup, which we will call `e`, which acts as an **identity**. An **identity** is an element such that for all ``i`` in ``S``, ``R(e,i) = R(i,e) = e``.
+Let's move further to monoids. A monoid is a semigroup with an extra condition, there has to exist some element of the semigroup, which we will call `e`, which acts as an **identity**. An **identity** is an element such that for all ``i`` in ``S``, ``R(e,i) = R(i,e) = i``.
 
 Firstly we will add a variable to store the value of this ``e``, and then add the extra constraint which makes it an identity:
 
