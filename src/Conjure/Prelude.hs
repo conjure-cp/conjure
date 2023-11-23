@@ -4,7 +4,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE InstanceSigs #-}
 
 
 module Conjure.Prelude
@@ -51,7 +50,7 @@ module Conjure.Prelude
     , getDirectoryContents
     , RunStateAsWriter, runStateAsWriterT, sawTell
     , stripPostfix
-    , Doc , 
+    , Doc
     ) where
 
 import GHC.Err as X ( error )
@@ -80,7 +79,7 @@ import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some, optional )
 import qualified Control.Monad ( fail )
-import Control.Monad.Fail 
+import Control.Monad.Fail
 
 import Control.Monad                as X ( Monad(return, (>>), (>>=))
                                          , (<=<), (>=>), (=<<), ap, join
