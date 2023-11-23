@@ -138,7 +138,7 @@ parseLetting = try $ do
         lSize <- want L_size
         guard (not $ all isMissing [lOf,lSize])
         expr <- parseExpression
-        return $ LettingAnon lNew lType lOf lSize expr
+        return $ LettingUnnamed lNew lType lOf lSize expr
     finishEnum = do
         lNew <- want L_new
         lType <- want L_type

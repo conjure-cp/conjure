@@ -628,9 +628,9 @@ validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
       | (r, name@(Name n)) <- names'
     ]
   return $ [LettingDomainDefnEnum n members | (_, n) <- names']
-validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
+validateLettingAssignment names (LettingUnnamed l1 l2 l3 l4 szExp) = do
   [l1, l2, l3, l4] `are` TtKeyword -- TODO keywords
-  putDocs KeywordD "letting_anon" [l1, l2, l3, l4]
+  putDocs KeywordD "letting_unnamed" [l1, l2, l3, l4]
   names' <- validateSequence (validateNameAs TtEnum) names
   size <- do
     setContextFrom szExp
