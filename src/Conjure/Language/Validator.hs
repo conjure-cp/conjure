@@ -621,7 +621,7 @@ validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
                 let nameMap = zip memberNames ([1..] :: [Int])
                 let dType = Kind DomainType $ TypeEnum name
                 let tVal = TypeInt $ TagEnum n
-                
+
                 putReference r n dType r
                 void $ putSymbol (Name n,(r,True,dType))
                 mapM_ (
