@@ -14,3 +14,4 @@ x[name1] = domain1
 ```
 
 This is demonstrated [here](https://github.com/conjure-cp/conjure/blob/main/docs/notebooks/recordDomains.ipynb).
+Read more about it [here](https://conjure.readthedocs.io/en/latest/essence.html#record-domains).
