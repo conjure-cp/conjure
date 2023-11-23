@@ -532,7 +532,7 @@ validateBranchingStatement :: BranchingStatementNode -> ValidatorS [Statement]
 validateBranchingStatement b@(BranchingStatementNode l1 l2 sts) = wrapRegion b b SBranching $ do
   l1 `isA` TtKeyword
   l2 `isA'` TtKeyword
-  putKeywordDocs "branchin_on" ((makeTree l1) `mappend` makeTree l2)
+  putKeywordDocs "branching_on" (makeTree l1 `mappend` makeTree l2)
   branchings <- catMaybes <$> validateList_ (f2n validateBranchingParts) sts
   return [SearchOrder branchings]
   where
