@@ -162,7 +162,7 @@ mainWithArgs Pretty{..} = do
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
     writeModel lineWidth outputFormat Nothing model1
-    
+
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
@@ -273,7 +273,7 @@ mainWithArgs config@Solve{..} = do
                        , "Was given:" <+> pretty nbSolutions
                        ])
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
-        userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
+        userErr1 "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM_beforeNR <- readModelFromFile essence
     essenceM <- prologue essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
