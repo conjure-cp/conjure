@@ -22,7 +22,7 @@ Types of domains:
 - [multi-set](...)
 - [function](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/function.md)
 - [sequence](...)
-- [relation](...)
+- [relation](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_relation.md)
 - [partition](...)
 
 
