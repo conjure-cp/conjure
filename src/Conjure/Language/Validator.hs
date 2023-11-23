@@ -262,7 +262,7 @@ wrapRegion' regMain regSel ty f = do
   (res, ds) <- holdDeclarations f
   let rMain = regMain
   let rSel = Just regSel
-  st <- gets (symbolTable)
+  st <- gets symbolTable
   let new = RegionInfo rMain rSel (Structural ty) ds st
   unless (null ds) $ addRegion new
   return res
@@ -272,18 +272,9 @@ wrapRegion' regMain regSel ty f = do
 putDocs :: (HighLevelTree a) => DocType -> Text -> a -> ValidatorS ()
 putDocs t nm r = addRegion $ RegionInfo {rRegion = symbolRegion r, rSubRegion = Nothing, rRegionType = Documentation t nm, rChildren = [], rTable = M.empty}
 
-putKeywordDocs :: (HighLevelTree a) => Text -> a -> ValidatorS ()
-putKeywordDocs = putDocs KeywordD
-
-putTypeDoc :: (HighLevelTree a) => Text -> a -> ValidatorS ()
-putTypeDoc = putDocs TypeD
-
-putAttrDoc :: (HighLevelTree a) => Text -> a -> ValidatorS ()
-putAttrDoc = putDocs AttributeD
-
 -- Infix symbol validation and tagging
 isA :: SToken -> TagType -> ValidatorS ()
-isA a b = flagSToken a b
+isA = flagSToken
 
 isA' :: LToken -> TagType -> ValidatorS ()
 isA' a b = validateSymbol a >> flagToken a b
@@ -522,7 +513,7 @@ validateSuchThatStatement :: SuchThatStatementNode -> ValidatorS [Statement]
 validateSuchThatStatement s@(SuchThatStatementNode l1 l2 exprs) = wrapRegion s s SSuchThat $ do
   l1 `isA` TtKeyword
   l2 `isA'` TtKeyword
-  putKeywordDocs "such_that" ((makeTree l1) `mappend` makeTree l2)
+  putDocs KeywordD "such_that" ((makeTree l1) `mappend` makeTree l2)
   exprs' <- validateSequence validateExpression exprs
   bools <- mapM (\(a, b) -> do setContext a; return b ?=> tCondition) exprs'
   let bool_exprs = bools
@@ -532,7 +523,7 @@ validateBranchingStatement :: BranchingStatementNode -> ValidatorS [Statement]
 validateBranchingStatement b@(BranchingStatementNode l1 l2 sts) = wrapRegion b b SBranching $ do
   l1 `isA` TtKeyword
   l2 `isA'` TtKeyword
-  putKeywordDocs "branching_on" (makeTree l1 `mappend` makeTree l2)
+  putDocs KeywordD "branching_on" (makeTree l1 `mappend` makeTree l2)
   branchings <- catMaybes <$> validateList_ (f2n validateBranchingParts) sts
   return [SearchOrder branchings]
   where
@@ -547,9 +538,9 @@ validateBranchingStatement b@(BranchingStatementNode l1 l2 sts) = wrapRegion b b
 validateDeclarationStatement :: DeclarationStatementNode -> ValidatorS [Statement]
 validateDeclarationStatement stmt = do
   stmt' <- case stmt of
-    FindStatement l1 fs -> l1 `isA` TtKeyword >> putKeywordDocs "find" l1 >> validateStatementSeq SFind validateFind fs
-    GivenStatement l1 gs -> l1 `isA` TtKeyword >> putKeywordDocs "given" l1 >> validateStatementSeq SGiven validateGiven gs
-    LettingStatement l1 ls -> l1 `isA` TtKeyword >> putKeywordDocs "letting" l1 >> validateStatementSeq SLetting validateLetting ls
+    FindStatement l1 fs -> l1 `isA` TtKeyword >> putDocs KeywordD "find" l1 >> validateStatementSeq SFind validateFind fs
+    GivenStatement l1 gs -> l1 `isA` TtKeyword >> putDocs KeywordD "given" l1 >> validateStatementSeq SGiven validateGiven gs
+    LettingStatement l1 ls -> l1 `isA` TtKeyword >> putDocs KeywordD "letting" l1 >> validateStatementSeq SLetting validateLetting ls
   return $ Declaration <$> stmt'
   where
     validateStatementSeq s v l = wrapRegion stmt stmt (s) $ do
@@ -571,7 +562,7 @@ validateGiven (GivenStatementNode idents l1 domain) =
 validateGiven (GivenEnumNode se l1 l2 l3) =
   do
     [l1, l2, l3] `are` TtKeyword -- new Type enum
-    putKeywordDocs "new_type_enum" [l1, l2, l3]
+    putDocs KeywordD "new_type_enum" [l1, l2, l3]
     names <- validateSequence (validateNameAs TtEnum) se
     let eType = Kind DomainType . TypeEnum
     mapM_ (\(r, x) -> putSymbol (x, (r, True, eType x))) names
@@ -605,7 +596,7 @@ validateLettingAssignment names (LettingExpr en) = do
   return $ [Letting n e | (_, n) <- names']
 validateLettingAssignment names (LettingDomain lt dn) = do
   lt `isA` TtSubKeyword
-  putKeywordDocs "letting_domain" [lt]
+  putDocs KeywordD "letting_domain" [lt]
   (tDomain, domain) <- typeSplit <$> validateDomain dn
   names' <- validateSequence (validateNameAs TtDomain) names
   let declarations = [mkDeclaration r n (Kind DomainType tDomain) | (r, Name n) <- names']
@@ -614,7 +605,7 @@ validateLettingAssignment names (LettingDomain lt dn) = do
   return $ [Letting n (Domain domain) | (_, n) <- names']
 validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
   [l1, l2, l3] `are` TtKeyword
-  putKeywordDocs "new_type_enum" [l1, l2, l3]
+  putDocs KeywordD "new_type_enum" [l1, l2, l3]
   names' <- validateSequence (validateNameAs TtEnum) names
   memberNames <- validateList (validateNameAs TtEnumMember) enames
   let members = map snd memberNames
@@ -639,7 +630,7 @@ validateLettingAssignment names (LettingEnum l1 l2 l3 enames) = do
   return $ [LettingDomainDefnEnum n members | (_, n) <- names']
 validateLettingAssignment names (LettingAnon l1 l2 l3 l4 szExp) = do
   [l1, l2, l3, l4] `are` TtKeyword -- TODO keywords
-  putKeywordDocs "letting_anon" [l1, l2, l3, l4]
+  putDocs KeywordD "letting_anon" [l1, l2, l3, l4]
   names' <- validateSequence (validateNameAs TtEnum) names
   size <- do
     setContextFrom szExp
@@ -700,50 +691,50 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
   ShortTupleDomainNode lst -> validateTupleDomain lst
   TupleDomainNode l1 doms -> do
     l1 `isA` TtType
-    putTypeDoc "tuple" l1
+    putDocs TypeD "tuple" l1
     validateTupleDomain doms
   RecordDomainNode l1 ndom -> do
     l1 `isA` TtType
-    putTypeDoc "record" l1
+    putDocs TypeD "record" l1
     validateRecordDomain ndom
   VariantDomainNode l1 ndom -> do
     l1 `isA` TtType
-    putTypeDoc "variant" l1
+    putDocs TypeD "variant" l1
     validateVariantDomain ndom
   MatrixDomainNode l1 m_ib idoms l2 dom -> do
     l1 `isA` TtType
-    putTypeDoc "matrix" l1
+    putDocs TypeD "matrix" l1
     l2 `isA'` TtSubKeyword
     validateIndexedByNode m_ib
     validateMatrixDomain idoms dom
   SetDomainNode l1 attrs l2 dom -> do
     l1 `isA` TtType
-    putTypeDoc "set" l1
+    putDocs TypeD "set" l1
     l2 `isA'` TtSubKeyword
     validateSetDomain attrs dom
   MSetDomainNode l1 attrs l2 dom -> do
     l1 `isA` TtType
-    putTypeDoc "mset" l1
+    putDocs TypeD "mset" l1
     l2 `isA'` TtSubKeyword
     validateMSetDomain attrs dom
   FunctionDomainNode l1 attrs dom1 l2 dom2 -> do
     l1 `isA` TtType
-    putTypeDoc "function" l1
+    putDocs TypeD "function" l1
     l2 `isA'` TtOperator
     validateFunctionDomain attrs dom1 dom2
   SequenceDomainNode l1 attrs l2 dom -> do
     l1 `isA` TtType
-    putTypeDoc "sequence" l1
+    putDocs TypeD "sequence" l1
     l2 `isA'` TtSubKeyword
     validateSequenceDomain attrs dom
   RelationDomainNode l1 attrs l2 doms -> do
     l1 `isA` TtType
-    putTypeDoc "relation" l1
+    putDocs TypeD "relation" l1
     l2 `isA'` TtSubKeyword
     validateRelationDomain attrs doms
   PartitionDomainNode l1 attrs l2 dom -> do
     l1 `isA` TtType
-    putTypeDoc "partition" l1
+    putDocs TypeD "partition" l1
     l2 `isA'` TtSubKeyword
     validatePartitionDomain attrs dom
   MissingDomainNode lt -> do raiseError $ lt <!> TokenError lt; return $ fallback "Missing Domain"
@@ -890,7 +881,7 @@ validateSizeAttributes attrs = do
   let filtered = sort $ filter (\x -> fst x `elem` sizeAttrs) attrs
   case filtered of
     [] -> return $ SizeAttr_None
-    [(L_size, Just a)] -> return $ (SizeAttr_Size a)
+    [(L_size, Just a)] -> return $ SizeAttr_Size a
     [(L_minSize, Just a)] -> return $ (SizeAttr_MinSize a)
     [(L_maxSize, Just a)] -> return $ (SizeAttr_MaxSize a)
     [(L_minSize, Just a), (L_maxSize, Just b)] -> return $ (SizeAttr_MinMaxSize a b)
@@ -1003,7 +994,7 @@ validateAttributeNode :: Map Lexeme Bool -> AttributeNode -> Validator (Lexeme, 
 validateAttributeNode vs (NamedAttributeNode t Nothing) = do
   flagSToken t TtAttribute
   name <- validateSToken t
-  putAttrDoc (T.pack $ show name) t
+  putDocs AttributeD (T.pack $ show name) t
   case M.lookup name vs of
     Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
     Just True -> invalid $ t <!> CustomError "Argument required"
@@ -1013,7 +1004,7 @@ validateAttributeNode vs (NamedAttributeNode t (Just e)) = do
   setContextFrom e
   expr <- validateExpression e ?=> exactly tInt
   name <- validateSToken t
-  putAttrDoc (T.pack $ show name) t
+  putDocs AttributeD (T.pack $ show name) t
   case M.lookup name vs of
     Nothing -> invalid $ t <!> CustomError "Not a valid attribute in this context"
     Just False -> invalid $ t <!> SemanticError "attribute %name% does not take an argument"
@@ -1184,7 +1175,7 @@ validateQuantificationExpression q@(QuantificationExpressionNode name pats over 
           ?=> iType
       let qBody = Comprehension body (over' ++ g')
       let result = Typed rType (mkOp (translateQnName name') [qBody])
-      putKeywordDocs (T.pack $ show name') name
+      putDocs KeywordD (T.pack $ show name') name
       wrapRegion q q (SQuantification (lexemeText name') (simple rType)) (mapM_ addRegion (gDec ++ genDec ++ bDecl))
       return result
   where
@@ -1197,7 +1188,7 @@ validateQuantificationExpression q@(QuantificationExpressionNode name pats over 
     validateQuantificationOver :: Sequence AbstractPatternNode -> QuantificationOverNode -> ValidatorS [GeneratorOrCondition]
     validateQuantificationOver lpats (QuantifiedSubsetOfNode lt en) = do
       lt `isA` TtKeyword
-      putKeywordDocs "powerset_projection" lt
+      putDocs KeywordD "powerset_projection" lt
       ps <- sequenceElems lpats
       exp <- validateExpression en
       let (t, e) = typeSplit exp
@@ -1610,7 +1601,7 @@ validateComprehensionBody (CompBodyCondition en) = wrapRegion en en SGuard $ do
 -- x in dom
 validateComprehensionBody c@(CompBodyDomain apn l1 dom) = wrapRegion c apn SGen $ do
   l1 `isA` TtKeyword
-  putKeywordDocs "expr_in_domain_projection" l1
+  putDocs KeywordD "expr_in_domain_projection" l1
   (td, domain) <- typeSplit <$> validateDomain dom
   td' <- projectionTypeDomain (symbolRegion dom) td
   pats <- validateSequence_ (flip unifyPattern td' . Just) apn
@@ -1619,7 +1610,7 @@ validateComprehensionBody c@(CompBodyDomain apn l1 dom) = wrapRegion c apn SGen 
 -- x <- expr
 validateComprehensionBody c@(CompBodyGenExpr apn lt en) = wrapRegion c apn SGen $ do
   lt `isA` TtKeyword
-  putKeywordDocs "expr_projection" lt
+  putDocs KeywordD "expr_projection" lt
   e <- validateExpression en
   let (t, exp) = typeSplit e
   t' <- projectionType (symbolRegion en) t
