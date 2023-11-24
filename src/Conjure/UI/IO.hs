@@ -141,7 +141,12 @@ readModelInfoFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel Parser.parseModel Nothing pair
+            model0 <- readModel Parser.parseModel Nothing pair
+            return model0 { mStatements = [ Declaration (FindOrGiven Given nm (forgetRepr dom))
+                                          | nm <- model0 |> mInfo |> miGivens
+                                          , (nm', dom) <- model0 |> mInfo |> miRepresentations
+                                          , nm == nm'
+                                          ] }
 
 
 readModel ::
