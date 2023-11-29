@@ -355,12 +355,10 @@ A record domain is denoted by the keyword ``record``, followed by a list of name
 Records are very similar to tuples; except they use labels for their components instead of positions.
 When needed, domains inside a record are referred to using their labels.
 
-To explicitly specify a record, use a list of values inside round brackets, preceded by the keyword ``tuple``.
-
 .. code-block:: essence
 
    letting s be record{}
-   letting t be record{A : int(0..1), B : int(0..2)}
+   letting t be domain record{A : int(0..1), B : int(0..2)}
 
 
 Variant domains
