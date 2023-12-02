@@ -99,7 +99,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                         then do
                             (c, cTyMaybe) <- case v of
                                 TypedConstant c cTy
-                                    | elem TypeAny (universe cTy)       -- we may be able to do better!
+                                    | TypeAny `elem` universe cTy       -- we may be able to do better!
                                         -> return (c, Just cTy)
                                     | otherwise
                                         -> return (v, Nothing)          -- already sufficiently typed
@@ -110,7 +110,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                     -- calculate the type of the domain, unify with the type we already have
                                     cTy2 <- typeOfDomain d
                                     let cTy = mostDefined [cTy1, cTy2]
-                                    if elem TypeAny (universe cTy)
+                                    if TypeAny `elem` universe cTy
                                         then userErr1 $ vcat
                                             [ "Cannot fully determine the type of parameter" <+> pretty n
                                             , "Domain:" <+> pretty d
@@ -171,7 +171,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                         _ -> []
                                     | row <- rows ]
                                 _ -> []
-                        DomainRelation _ _ ([DomainInt{}, DomainInt{}, _]) ->
+                        DomainRelation _ _ [DomainInt{}, DomainInt{}, _] ->
                             case c of
                                 (viewConstantRelation -> Just rows) ->
                                     [ case row of
@@ -215,7 +215,7 @@ translateParameter graphSolver eprimeModel0 essenceParam0 = do
                                                       ]
 
     return $ languageEprime def
-        { mStatements = transformBi (\ _ -> TagInt) $
+        { mStatements = transformBi (const TagInt) $
             [ Declaration (Letting n (Constant x))
             | (n, _, x) <- eprimeLettings
             ] ++

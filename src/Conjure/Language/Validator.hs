@@ -465,7 +465,7 @@ validateLanguageVersion (Just lv@(LangVersionNode l1 n v)) = do
                                | T.toLower nm == "essence'" = do
                                                     raiseError (symbolRegion lv /!\ UnclassifiedWarning "Essence prime file detected, type checking is off")
                                                     modify (\s->s{typeChecking=False})
-                               | otherwise = (raiseError $ symbolRegion  n <!> SyntaxError "Not a valid language name")
+                               | otherwise = raiseError $ symbolRegion  n <!> SyntaxError "Not a valid language name"
 
 
 validateStatement :: StatementNode -> ValidatorS [Statement]
