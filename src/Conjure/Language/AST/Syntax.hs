@@ -165,7 +165,7 @@ data LettingAssignmentNode
         LToken -- lType
         LToken -- lEnum
         (ListNode NameNode) -- nameList
-    | LettingAnon
+    | LettingUnnamed
         LToken -- lNew
         LToken -- lType
         LToken -- lOf
@@ -178,13 +178,13 @@ instance Pretty LettingAssignmentNode where
         LettingExpr en -> pretty en
         LettingDomain lt dn -> pretty lt <+> pretty dn
         LettingEnum lt lt' lt2 ln -> pretty lt <+> pretty lt' <+> pretty lt2 <+> pretty ln
-        LettingAnon lt lt' lt2 lt3 en -> pretty lt <+> pretty lt' <+> pretty lt2 <+> pretty lt3 <+> pretty en
+        LettingUnnamed lt lt' lt2 lt3 en -> pretty lt <+> pretty lt' <+> pretty lt2 <+> pretty lt3 <+> pretty en
 instance Null LettingAssignmentNode where
     isMissing x = case x of
         LettingExpr en -> isMissing en
         LettingDomain lt dn -> isMissing lt && isMissing dn
         LettingEnum l1 l2 l3 ln -> all isMissing [l1, l2, l3] && isMissing ln
-        LettingAnon l1 l2 l3 l4 en -> all isMissing [l1, l2, l3, l4] && isMissing en
+        LettingUnnamed l1 l2 l3 l4 en -> all isMissing [l1, l2, l3, l4] && isMissing en
 
 -- Branching on
 

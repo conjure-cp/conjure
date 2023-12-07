@@ -51,7 +51,7 @@ instance HighLevelTree LettingAssignmentNode where
         LettingExpr d ->  makeTree d
         LettingDomain d e -> makeTree d <> makeTree e
         LettingEnum d e f g -> mconcat [makeTree d, makeTree e, makeTree f, makeTree g]
-        LettingAnon d e f g h -> mconcat [makeTree d, makeTree e, makeTree f, makeTree g, makeTree h]
+        LettingUnnamed d e f g h -> mconcat [makeTree d, makeTree e, makeTree f, makeTree g, makeTree h]
 
 instance HighLevelTree FindStatementNode where
     makeTree (FindStatementNode a b c) = mconcat  [makeTree a, makeTree b, makeTree c]

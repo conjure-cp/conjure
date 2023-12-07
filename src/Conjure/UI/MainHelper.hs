@@ -867,7 +867,7 @@ solverExecutables =
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
     , ( "open-wbo"        , "open-wbo" )
-    , ( "or-tools"        , "fzn-ortools" )
+    , ( "or-tools"        , "fzn-cp-sat" )
     , ( "coin-or"         , "minizinc" )
     , ( "cplex"           , "minizinc" )
     , ( "yices"           , "yices-smt2" )
