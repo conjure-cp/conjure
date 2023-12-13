@@ -22,7 +22,7 @@ cmake -S . -B build -DBUILD_DEPS=ON
 cmake --build build --config Release --target all -j${PROCESSES}
 cp build/bin/fzn-cp-sat ${BIN_DIR}/fzn-cp-sat
 # .dylib or .a depending on OS
-cp build/lib/libortools* ${BIN_DIR}
+cp build/lib*/libortools* ${BIN_DIR}
 echo "ortools executable is at ${BIN_DIR}/fzn-cp-sat"
 ls -l ${BIN_DIR}/fzn-cp-sat
 popd
