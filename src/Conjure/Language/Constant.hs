@@ -104,7 +104,11 @@ instance SimpleJSON Constant where
     fromSimpleJSON _ (JSON.Bool b) = return (ConstantBool b)
 
     fromSimpleJSON t@TypeInt{} x@JSON.Number{} = ConstantInt TagInt <$> fromSimpleJSON t x
-    fromSimpleJSON t@TypeInt{} x@JSON.String{} = ConstantInt TagInt <$> fromSimpleJSON t x
+    fromSimpleJSON t@(TypeInt TagInt) x@JSON.String{} = ConstantInt TagInt <$> fromSimpleJSON t x
+
+
+    -- fromSimpleJSON (TypeInt (TagEnum enum_type_name)) (JSON.String value) =
+    --     return (ConstantEnum (Name enum_type_name) [] (Name value))
 
     fromSimpleJSON (TypeEnum enum_type_name) (JSON.String value) =
         return (ConstantEnum enum_type_name [] (Name value))

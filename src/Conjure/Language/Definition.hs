@@ -111,17 +111,26 @@ fromSimpleJSONModel essence json =
                               , nm == name
                               ]
                 -- traceM $ show $ "mdomain " <+> vcat (map pretty mdomain)
-                case mdomain of
-                    [domain] -> do
+                let givenEnum = Name name `elem` (essence |> mInfo |> miEnumGivens)
+                -- traceM $ show $ "givenEnum " <+> pretty givenEnum
+                case (mdomain, givenEnum) of
+                    ([domain], _) -> do
                         -- traceM $ show $ "domain  " <+> pretty domain
                         typ <- typeOfDomain domain
                         -- traceM $ show $ "typ     " <+> pretty typ
                         value <- fromSimpleJSON typ valueJSON
                         -- traceM $ show $ "value   " <+> pretty value
                         return $ Just $ Declaration (Letting (Name name) value)
+                    (_, True) -> do
+                        case valueJSON of
+                            JSON.Array values -> return $ Just $ Declaration (LettingDomainDefnEnum (Name name) [Name n | JSON.String n <- V.toList values])
+                            _ -> do
+                                logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
+                                return Nothing
                     _ -> do
                         logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
                         return Nothing
+
             return def { mStatements = catMaybes stmts }
         _ -> noFromSimpleJSON "Model" TypeAny json
 

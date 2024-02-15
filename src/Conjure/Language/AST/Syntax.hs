@@ -294,8 +294,8 @@ instance Pretty NamedDomainNode where
     pretty (NameDomainNode nn (Just (e, d))) = pretty nn <> pretty e <> pretty d
 
 instance Null NamedDomainNode where
-    isMissing (NameDomainNode (a) Nothing) = isMissing a
-    isMissing (NameDomainNode (a) (Just (b, c))) = isMissing a && isMissing b && isMissing c
+    isMissing (NameDomainNode a Nothing) = isMissing a
+    isMissing (NameDomainNode a (Just (b, c))) = isMissing a && isMissing b && isMissing c
 
 -- Common Statements
 data NameNodeS = NameNodeS SToken 
