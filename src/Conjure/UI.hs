@@ -1367,9 +1367,7 @@ ui = modes
             &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "autoig"
             &= explicit
-            &= help "Generate an Essence model describing the instances of the problem class \
-                    \defined in the input Essence model.\n\
-                    \An error will be printed if the model has infinitely many instances."
+            &= help "Functionality to support the AutoIG workflow."
     , Boost
         { essence
             = def
