@@ -5,6 +5,7 @@ SHELL := /bin/bash
 # override by calling the makefile like so: "GHC_VERSION=9.2 make"
 export GHC_VERSION?=9.4
 export BIN_DIR?=${HOME}/.local/bin
+export LIB_DIR?=${BIN_DIR}/lib
 export PATH := $(BIN_DIR):$(PATH)
 export CI?=false
 export BUILD_TESTS?=false
@@ -20,10 +21,15 @@ install:
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."
-	@echo "Set the environment variable BIN_DIR to change this location"
-	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
+	@echo ""
+	@echo "Installing shared libraries to ${LIB_DIR}"
+	@echo "Add this directory to your LD_LIBRARY_PATH."
+	@echo ""
+	@echo "You can set the environment variables BIN_DIR and LIB_DIR to change these locations"
+	@echo "For example: \"BIN_DIR=your/preferred/path LIB_DIR=/usr/local/lib make install\""
 	@echo ""
 	@mkdir -p ${BIN_DIR}
+	@mkdir -p ${LIB_DIR}
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi
