@@ -33,11 +33,11 @@ echo ""
 echo ""
 echo "========================================"
 
-# echo "or-tools"
-# conjure solve test.essence --solver or-tools
-# echo ""
-# echo ""
-# echo "========================================"
+echo "or-tools"
+conjure solve test.essence --solver or-tools
+echo ""
+echo ""
+echo "========================================"
 
 # SAT solvers
 
