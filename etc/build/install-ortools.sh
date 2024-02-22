@@ -10,7 +10,10 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export LIB_DIR=${LIB_DIR:-${BIN_DIR}/lib}
 export PROCESSES=${PROCESSES:-1}
+
+mkdir -p ${LIB_DIR}
 
 rm -rf tmp-install-ortools
 mkdir tmp-install-ortools
