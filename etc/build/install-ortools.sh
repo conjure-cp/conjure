@@ -22,12 +22,7 @@ cmake -S . -B build -DBUILD_DEPS=ON
 cmake --build build --config Release --target all -j${PROCESSES}
 cp build/bin/fzn-cp-sat ${BIN_DIR}/fzn-cp-sat
 # .dylib or .a depending on OS
-if test -z "${LD_LIBRARY_PATH}"; then
-    cp build/lib*/libortools* ${BIN_DIR}
-    echo "shared libraries path not found. Copying ortools librarites are in the ${BIN_DIR} folder. Please consider setting up a shared libraries folder"
-else
-    cp build/lib*/libortools* ${LD_LIBRARY_PATH}
-fi
+cp build/lib*/libortools* ${LIB_DIR}
 echo "ortools executable is at ${BIN_DIR}/fzn-cp-sat"
 ls -l ${BIN_DIR}/fzn-cp-sat
 popd
