@@ -70,6 +70,7 @@ RUN tests/allsolvers/test.sh
 FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
+ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN mkdir -p /root/.local/bin/lib
