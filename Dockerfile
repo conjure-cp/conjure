@@ -14,6 +14,7 @@ WORKDIR /conjure/
 # All binaries will end up in /root/.local/bin
 RUN mkdir -p /root/.local/bin
 ENV PATH /root/.local/bin:$PATH
+ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
 
 # Dependencies
 RUN apt-get update
