@@ -16,6 +16,8 @@ cd build
 cmake ..
 cmake --build .
 cp minizinc ${BIN_DIR}/minizinc
+mkdir -p ${BIN_DIR}/share
+cp -r ../share/minizinc ${BIN_DIR}/share/minizinc
 echo "minizinc executable is at ${BIN_DIR}/minizinc"
 ls -l ${BIN_DIR}/minizinc
 popd
