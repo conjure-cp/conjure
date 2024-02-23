@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# version as of 16 November 2023
+# version as of 23 February 2024
+VERSION=2.8.3
 set -o errexit
 set -o nounset
 
@@ -11,6 +12,7 @@ mkdir tmp-install-minizinc
 pushd tmp-install-minizinc
 git clone https://github.com/MiniZinc/libminizinc.git
 cd libminizinc
+git checkout $VERSION
 mkdir build
 cd build
 cmake ..
