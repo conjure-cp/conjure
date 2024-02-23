@@ -10,6 +10,7 @@ on:
       - Makefile
       - src/**
       - etc/build/**
+      - etc/hs-deps/**
       - .github/workflows/build.yml
   pull_request:             # and for PRs
     paths:
@@ -17,6 +18,7 @@ on:
       - Makefile
       - src/**
       - etc/build/**
+      - etc/hs-deps/**
       - .github/workflows/build.yml
                             # other branches that want testing must create a PR
 
