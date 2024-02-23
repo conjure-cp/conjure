@@ -45,6 +45,7 @@ RUN PROCESSES=2 etc/build/install-glucose.sh
 RUN PROCESSES=2 etc/build/install-kissat.sh
 RUN PROCESSES=2 etc/build/install-lingeling.sh
 RUN PROCESSES=2 etc/build/install-minion.sh
+RUN PROCESSES=2 etc/build/install-minizinc.sh
 RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-open-wbo.sh
 RUN PROCESSES=2 etc/build/install-ortools.sh
