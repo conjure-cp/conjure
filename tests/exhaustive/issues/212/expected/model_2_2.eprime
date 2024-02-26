@@ -1,0 +1,20 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
+given fin2: int
+given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..6)] of int(0..6)
+branching on [x_ExplicitVarSizeWithDummy]
+such that
+    and([x_ExplicitVarSizeWithDummy[q6] != 6 ->
+         or([a_Explicit[q8] = x_ExplicitVarSizeWithDummy[q6]
+                 | q8 : int(1..fin1), or([b_Explicit[q10] = a_Explicit[q8] | q10 : int(1..fin2)])])
+             | q6 : int(1..6)]),
+    and([or([x_ExplicitVarSizeWithDummy[q14] != 6 /\ x_ExplicitVarSizeWithDummy[q14] = a_Explicit[q12]
+                 | q14 : int(1..6)])
+             | q12 : int(1..fin1), or([b_Explicit[q16] = a_Explicit[q12] | q16 : int(1..fin2)])]),
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 6
+             | q1 : int(1..5)]),
+    and([x_ExplicitVarSizeWithDummy[q2] = 6 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..5)])
+

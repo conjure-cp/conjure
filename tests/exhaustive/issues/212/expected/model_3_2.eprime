@@ -1,0 +1,36 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
+given fin2: int
+given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
+find x_ExplicitVarSizeWithMarker_Marker: int(0..6)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..6)] of int(0..5)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..6)] of int(0..6)
+branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
+such that
+    and([q17 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([a_Explicit[q19] = x_ExplicitVarSizeWithMarker_Values[q17]
+                 | q19 : int(1..fin1), or([b_Explicit[q21] = a_Explicit[q19] | q21 : int(1..fin2)])])
+             | q17 : int(1..6)]),
+    and([or([q25 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q25] = a_Explicit[q23]
+                 | q25 : int(1..6)])
+             | q23 : int(1..fin1), or([b_Explicit[q27] = a_Explicit[q23] | q27 : int(1..fin2)])]),
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+             | q1 : int(1..5)]),
+    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 0 | q2 : int(1..6)]),
+    and([x_ExplicitVarSizeWithDummy[q4] < x_ExplicitVarSizeWithDummy[q4 + 1] \/ x_ExplicitVarSizeWithDummy[q4] = 6
+             | q4 : int(1..5)]),
+    and([x_ExplicitVarSizeWithDummy[q5] = 6 -> x_ExplicitVarSizeWithDummy[q5 + 1] = 6 | q5 : int(1..5)]),
+    and([x_ExplicitVarSizeWithDummy[q9] != 6 ->
+         or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q11] = x_ExplicitVarSizeWithDummy[q9]
+                 | q11 : int(1..6)])
+             | q9 : int(1..6)]),
+    and([q13 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithDummy[q15] != 6 /\
+             x_ExplicitVarSizeWithDummy[q15] = x_ExplicitVarSizeWithMarker_Values[q13]
+                 | q15 : int(1..6)])
+             | q13 : int(1..6)])
+

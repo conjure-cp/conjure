@@ -6,14 +6,6 @@ find quasigroup_Explicit: matrix indexed by [int(1..5)] of int(0..4)
 find quasigroup_Occurrence: matrix indexed by [int(0..4)] of bool
 branching on [quasigroup_Occurrence, quasigroup_Explicit]
 such that
-<<<<<<< HEAD
-    and([quasigroup_Occurrence[a] /\ quasigroup_Occurrence[b] -> a * b * (b * a) = a
-             | a : int(0..4), b : int(0..4), b > a]),
-    5 = sum([toInt(quasigroup_Occurrence[q1]) | q1 : int(0..4)]),
-    and([[quasigroup_Explicit[q2]; int(1)] <lex [quasigroup_Explicit[q2 + 1]; int(1)] | q2 : int(1..4)]),
-    and([quasigroup_Occurrence[quasigroup_Explicit[q5]] | q5 : int(1..5)]),
-    and([quasigroup_Occurrence[q6] -> or([quasigroup_Explicit[q8] = q6 | q8 : int(1..5)]) | q6 : int(0..4)])
-=======
     and([quasigroup_Explicit[q11] * quasigroup_Explicit[q12] * (quasigroup_Explicit[q12] * quasigroup_Explicit[q11]) =
          quasigroup_Explicit[q11]
              | q11 : int(1..5), q12 : int(1..5), q12 > q11]),
@@ -21,5 +13,4 @@ such that
     5 = sum([toInt(quasigroup_Occurrence[q3]) | q3 : int(0..4)]),
     and([quasigroup_Occurrence[q4] -> or([quasigroup_Explicit[q6] = q4 | q6 : int(1..5)]) | q4 : int(0..4)]),
     and([quasigroup_Occurrence[quasigroup_Explicit[q8]] | q8 : int(1..5)])
->>>>>>> main
 

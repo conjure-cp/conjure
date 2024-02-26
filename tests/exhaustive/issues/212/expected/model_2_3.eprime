@@ -1,0 +1,36 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
+given fin2: int
+given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..6)] of int(0..6)
+find x_ExplicitVarSizeWithMarker_Marker: int(0..6)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..6)] of int(0..5)
+branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithDummy]
+such that
+    and([x_ExplicitVarSizeWithDummy[q17] != 6 ->
+         or([a_Explicit[q19] = x_ExplicitVarSizeWithDummy[q17]
+                 | q19 : int(1..fin1), or([b_Explicit[q21] = a_Explicit[q19] | q21 : int(1..fin2)])])
+             | q17 : int(1..6)]),
+    and([or([x_ExplicitVarSizeWithDummy[q25] != 6 /\ x_ExplicitVarSizeWithDummy[q25] = a_Explicit[q23]
+                 | q25 : int(1..6)])
+             | q23 : int(1..fin1), or([b_Explicit[q27] = a_Explicit[q23] | q27 : int(1..fin2)])]),
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 6
+             | q1 : int(1..5)]),
+    and([x_ExplicitVarSizeWithDummy[q2] = 6 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..5)]),
+    and([q5 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values[q5] < x_ExplicitVarSizeWithMarker_Values[q5 + 1]
+             | q5 : int(1..5)]),
+    and([q6 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q6] = 0 | q6 : int(1..6)]),
+    and([q9 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithDummy[q11] != 6 /\
+             x_ExplicitVarSizeWithDummy[q11] = x_ExplicitVarSizeWithMarker_Values[q9]
+                 | q11 : int(1..6)])
+             | q9 : int(1..6)]),
+    and([x_ExplicitVarSizeWithDummy[q13] != 6 ->
+         or([q15 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q15] = x_ExplicitVarSizeWithDummy[q13]
+                 | q15 : int(1..6)])
+             | q13 : int(1..6)])
+
