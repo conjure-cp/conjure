@@ -15,7 +15,7 @@ WORKDIR /conjure/
 RUN mkdir -p /root/.local/bin
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-
+ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc/
 # Dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
@@ -45,6 +45,7 @@ RUN PROCESSES=2 etc/build/install-glucose.sh
 RUN PROCESSES=2 etc/build/install-kissat.sh
 RUN PROCESSES=2 etc/build/install-lingeling.sh
 RUN PROCESSES=2 etc/build/install-minion.sh
+RUN PROCESSES=2 etc/build/install-minizinc.sh
 RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-open-wbo.sh
 RUN PROCESSES=2 etc/build/install-ortools.sh
@@ -72,6 +73,7 @@ FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc/
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN mkdir -p /root/.local/bin/lib
