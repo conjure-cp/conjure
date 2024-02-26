@@ -12,10 +12,9 @@ export PROCESSES=${PROCESSES:-1}
 rm -rf tmp-install-glucose
 mkdir tmp-install-glucose
 pushd tmp-install-glucose
-git clone git@github.com:audemard/glucose.git
+git clone https://github.com/audemard/glucose.git
 cd glucose
 git checkout $VERSION
-ls -l
 (
     cd simp
     make -j${PROCESSES} r
