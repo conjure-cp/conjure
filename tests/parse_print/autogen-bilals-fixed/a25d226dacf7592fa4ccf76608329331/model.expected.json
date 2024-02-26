@@ -1,0 +1,60 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1_ExplicitVarSizeWithFlags_Flags"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Op": {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}}]}]]},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Op":
+                                         {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}}]}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Op": {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}}]}]]},
+                       {"DomainMatrix":
+                            [{"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}]]},
+                             {"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Op": {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}}]}]]},
+                       {"DomainMatrix":
+                            [{"DomainInt":
+                                  [{"TagInt": []},
+                                   [{"RangeBounded":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]}]]},
+                             {"DomainBool": []}]}]}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var2"}, {"DomainBool": []}]}},
+      {"SuchThat": [{"Reference": [{"Name": "var2"}, null]}]}]}

@@ -14,26 +14,27 @@ import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.Representations ( up )
 
 -- text
-import Data.Text as T ( pack )
+import qualified Data.Text as T ( pack, stripPrefix )
 
 -- unordered-containers
 import qualified Data.HashMap.Strict as M
 
 
 translateSolution ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
+    MonadIO m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model ->      -- eprime model
     Model ->      -- essence param
     Model ->      -- eprime solution
     m Model       -- essence solution
 
-translateSolution eprimeModel essenceParam' eprimeSolution = do
+translateSolution (undoUnderscores -> eprimeModel) (undoUnderscores -> essenceParam') (undoUnderscores -> eprimeSolution) = do
 
-    eprimeParam <- translateParameter eprimeModel essenceParam'
+    eprimeParam <- translateParameter False eprimeModel essenceParam'
     (_, essenceParam) <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =
@@ -100,7 +101,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                           | i <- [1 .. size]
                           ]
                 in  Declaration (LettingDomainDefnEnum n nms)
-            _ -> fail $ vcat [ "Expecting an integer value for" <+> pretty n
+            _ -> failDoc $ vcat [ "Expecting an integer value for" <+> pretty n
                              , "But got:" <+> pretty s
                              ]
 
@@ -126,3 +127,20 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
             , ""
             , pretty $ def { mStatements = outStmts }
             ]
+
+undoUnderscores :: Model -> Model
+undoUnderscores model =
+    let
+        -- SR doesn't support identifiers that start with _
+        -- we replaced them with UNDERSCORE__ in prologue
+        -- undo that here
+        onName :: Name -> Name
+        onName (Name t) =
+            case T.stripPrefix "UNDERSCORE__" t of
+                Nothing -> Name t
+                Just t' -> Name (mappend "_" t')
+        onName n = n
+
+    in
+        transformBi onName model
+

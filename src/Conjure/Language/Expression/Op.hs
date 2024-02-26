@@ -2,6 +2,7 @@ module Conjure.Language.Expression.Op
     ( module Conjure.Language.Expression.Op.Internal.Generated
     , module Conjure.Language.Expression.Op.Internal.Common
     , mkBinOp, mkOp
+    , OpType (..)
     ) where
 
 -- conjure
@@ -65,24 +66,35 @@ mkBinOp op a b =
             in
                 f a b
 
+data OpType
+    = PrefixOp Lexeme
+    | FactorialOp
+    | TwoBarOp
+    | FunctionOp Lexeme
 
-mkOp :: (Op x :< x, ReferenceContainer x, ExpressionLike x) => Text -> [x] -> x
-mkOp op xs =
-    case textToLexeme op of
-        Nothing -> case op of
-            "and"       -> inject $ MkOpAnd       $ OpAnd     (arg xs 0 "and")
-            "or"        -> inject $ MkOpOr        $ OpOr      (arg xs 0 "or")
-            "xor"       -> inject $ MkOpXor       $ OpXor     (arg xs 0 "xor")
-            "sum"       -> inject $ MkOpSum       $ OpSum     (arg xs 0 "sum")
-            "product"   -> inject $ MkOpProduct   $ OpProduct (arg xs 0 "product")
-            "not"       -> inject $ MkOpNot       $ OpNot     (arg xs 0 "not")
-            "negate"    -> inject $ MkOpNegate    $ OpNegate  (arg xs 0 "negate")
-            "twoBars"   -> inject $ MkOpTwoBars   $ OpTwoBars (arg xs 0 "twoBars")
-            _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
+
+mkOp :: (Op x :< x, ReferenceContainer x, ExpressionLike x) => OpType -> [x] -> x
+mkOp op xs = case op of
+  PrefixOp lex -> case lex of
+        L_ExclamationMark -> inject $ MkOpNot       $ OpNot     (arg xs 0 "not")
+        L_Minus    -> inject $ MkOpNegate    $ OpNegate  (arg xs 0 "negate")
+        _ -> bug $ "Unexpected Prefix operator :" <+> pretty (show lex)
+  FactorialOp -> inject $ MkOpFactorial    $ OpFactorial    (arg xs 0 "factorial")
+  TwoBarOp -> inject $ MkOpTwoBars   $ OpTwoBars (arg xs 0 "twoBars")
+  FunctionOp lex -> case lex of
+            L_fAnd       -> inject $ MkOpAnd       $ OpAnd     (arg xs 0 "and")
+            L_fOr       -> inject $ MkOpOr        $ OpOr      (arg xs 0 "or")
+            L_fXor       -> inject $ MkOpXor       $ OpXor     (arg xs 0 "xor")
+            L_Sum       -> inject $ MkOpSum       $ OpSum     (arg xs 0 "sum")
+            L_Product   -> inject $ MkOpProduct   $ OpProduct (arg xs 0 "product")
             -- _     -> opImage (fromName (Name op)) xs
-        Just l -> case l of
             L_true         -> inject $ MkOpTrue         $ OpTrue         (arg xs 0 "true")
             L_toInt        -> inject $ MkOpToInt        $ OpToInt        (arg xs 0 "toInt")
+            L_makeTable    -> inject $ MkOpMakeTable    $ OpMakeTable    (arg xs 0 "makeTable")
+            L_table        -> inject $ MkOpTable        $ OpTable        (arg xs 0 "table") (arg xs 1 "table")
+            L_gcc          -> inject $ MkOpGCC          $ OpGCC          (arg xs 0 "gcc") (arg xs 1 "gcc") (arg xs 2 "gcc")
+            L_atleast      -> inject $ MkOpAtLeast      $ OpAtLeast      (arg xs 0 "atleast") (arg xs 1 "atleast") (arg xs 2 "atleast")
+            L_atmost       -> inject $ MkOpAtMost       $ OpAtMost       (arg xs 0 "atmost" ) (arg xs 1 "atmost" ) (arg xs 2 "atmost" )
             L_defined      -> inject $ MkOpDefined      $ OpDefined      (arg xs 0 "defined")
             L_range        -> inject $ MkOpRange        $ OpRange        (arg xs 0 "range")
             L_restrict     -> inject $ MkOpRestrict     $ OpRestrict     (arg xs 0 "restrict") (arg xs 1 "restrict")
@@ -138,7 +150,8 @@ mkOp op xs =
                           let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut "flatten" n)
                           in  inject $ MkOpFlatten      $ OpFlatten      (Just n') m
                      _     -> bug "flatten takes 1 or 2 arguments."
-            _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
+            _ -> bug ("Unknown lexeme for function type operator:" <+> pretty (show lex))
+
 
 arg :: [a] -> Int -> Doc -> a
 arg xs n op =

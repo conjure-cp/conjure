@@ -33,7 +33,9 @@ data Type
     | TypeUnnamed Name
     | TypeTuple [Type]
     | TypeRecord [(Name, Type)]
+    | TypeRecordMember Name [(Name, Type)]
     | TypeVariant [(Name, Type)]
+    | TypeVariantMember Name [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -44,6 +46,7 @@ data Type
     | TypePartition Type
     | TypePermutation Type
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
 
 instance Serialize Type
 instance Hashable  Type
@@ -63,8 +66,10 @@ instance Pretty Type where
                          <> prettyList prParens "," xs
     pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeRecordMember n ts) = "member" <+> pretty n <+> "of" <+> pretty (TypeRecord ts)
     pretty (TypeVariant xs) = "variant" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeVariantMember n ts) = "member" <+> pretty n <+> "of" <+> pretty (TypeVariant ts)
     pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices
@@ -134,6 +139,17 @@ typeUnify (TypeRecord as) (TypeRecord bs)
                              Just b -> typeUnify a b
                       | (n,a) <- as
                       ]
+--special cases for when one is an instance
+-- TODO: Not the best solution so might need looking at
+typeUnify (TypeVariant as) (TypeVariant [(n,a)])
+    = case lookup n as of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+typeUnify (TypeVariant [(n,a)]) (TypeVariant as)
+    = case lookup n as of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+
 typeUnify (TypeVariant as) (TypeVariant bs)
     | length as /= length bs = False
     | otherwise = and [ case lookup n bs of
@@ -219,18 +235,18 @@ matrixNumDims (TypeList     t) = 1 + matrixNumDims t
 matrixNumDims _ = 0
 
 homoType ::
-    MonadFail m =>
+    MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Doc -> [Type] -> m Type
-homoType msg [] = fail $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
+homoType msg [] = failDoc $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
 homoType msg xs =
     if typesUnify xs
         then return (mostDefined xs)
-        else fail $ vcat [ "Not uniformly typed:" <+> msg
+        else failDoc $ vcat [ "Not uniformly typed:" <+> msg
                          , "Involved types are:" <+> vcat (map pretty xs)
                          ]
 
-innerTypeOf :: MonadFail m => Type -> m Type
+innerTypeOf :: MonadFailDoc m => Type -> m Type
 innerTypeOf (TypeList t) = return t
 innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
@@ -240,7 +256,7 @@ innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt TagInt,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf (TypePermutation t) = return (TypeTuple [t,t])
-innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
+innerTypeOf t = failDoc ("innerTypeOf:" <+> pretty (show t))
 
 isPrimitiveType :: Type -> Bool
 isPrimitiveType TypeBool{} = True
@@ -294,10 +310,9 @@ unifiesOrContains container containee =
 
 -- as in "this homomorphism is morphing"
 morphing :: (?typeCheckerMode :: TypeCheckerMode)
-         => (MonadFail m)
+         => (MonadFailDoc m)
          => Type -> m Type
 morphing (TypeFunction a _) = return a
 morphing (TypeSequence a)   = return a 
 morphing (TypePermutation a) = return a
-morphing t = fail ("morphing:" <+> pretty (show t))
-
+morphing t = failDoc ("morphing:" <+> pretty (show t))

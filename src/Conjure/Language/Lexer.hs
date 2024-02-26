@@ -1,617 +1,366 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Language.Lexer
     ( Lexeme(..)
     , LexemePos(..)
-    , runLexer
-    , textToLexeme
+    , textToLexeme,
+    ETok(..),
+    Offsets(..),
+    Reformable(..),
+    prettySplitComments,
+    eLex,
+    reformList,
+    tokenSourcePos,
+    sourcePosAfter,
+    totalLength,
+    trueLength,
+    trueStart,
+    tokenOffset,
+    tokenStartOffset,
+    sourcePos0,
+    nullBefore,
+    LexerError(..),
+    runLexer,
+    ETokenStream(..)
     , lexemeText
-    , lexemeFace
     ) where
 
-import Conjure.Prelude
+import Conjure.Language.Lexemes
+import Conjure.Prelude hiding (many, some,Text)
+import Data.Char (isAlpha, isAlphaNum)
+import Data.Void
 
-import Data.Char ( isAlpha, isAlphaNum )
-import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
-import qualified Data.Text.Read as T
-import qualified Text.PrettyPrint as Pr
+import qualified Data.Text.Lazy as L
+import Text.Megaparsec hiding (State)
+import Text.Megaparsec.Char
 
-import Text.Megaparsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
-import Text.Megaparsec.ShowToken ( ShowToken(..) )
+import Data.List (splitAt)
+import qualified Data.List.NonEmpty as NE
+import qualified Text.Megaparsec as L
+import Prelude (read)
+import qualified Prettyprinter as Pr
+import Conjure.Prelude hiding (some,many)
+
+
+import Text.Megaparsec.Stream ()
 
 
 data LexemePos = LexemePos
                     Lexeme          -- the lexeme
                     SourcePos       -- source position, the beginning of this lexeme
                     SourcePos       -- source position, just after this lexeme, including whitespace after the lexeme
-    deriving Show
-
-data Lexeme
-    = LIntLiteral Integer
-    | LIdentifier T.Text
-    | LMetaVar T.Text
-    | LComment T.Text
-
-    -- general
-    | L_be
-    | L_from
-    | L_of
-    | L_domain
-
-    | L_language
-    | L_dim
-    | L_find
-    | L_given
-    | L_letting
-    | L_where
-    | L_such
-    | L_that
-    | L_minimising
-    | L_maximising
-    | L_branching
-    | L_on
-    | L_heuristic
-
-    -- type: boolean
-    | L_bool
-    | L_false
-    | L_true
-
-    -- type: integer
-    | L_int
-
-    -- creating a new type
-    | L_new
-    | L_type
-    | L_enum
-
-    -- type tuple
-    | L_tuple
-
-    -- type record
-    | L_record
-
-    -- type variant
-    | L_variant
-    | L_active
-
-    -- type: matrix
-    | L_matrix
-    | L_indexed
-    | L_by
-
-    -- type set
-    | L_set
-    | L_size
-    | L_minSize
-    | L_maxSize
-
-    -- type: mset
-    | L_mset
-    | L_minOccur
-    | L_maxOccur
-
-    -- type: function
-    | L_function
-    | L_total
-    | L_partial
-    | L_injective
-    | L_surjective
-    | L_bijective
-
-    -- type: sequence
-    | L_sequence
-
-    -- type: relation
-    | L_relation
-
-    -- type: partition
-    | L_partition
-    | L_regular
-    | L_partSize
-    | L_minPartSize
-    | L_maxPartSize
-    | L_numParts
-    | L_minNumParts
-    | L_maxNumParts
-
-    -- type: permutation
-    | L_permutation
-    | L_compose
-
-    -- operators, page 21 of the holy paper
-    | L_union
-    | L_intersect
-    | L_subset
-    | L_subsetEq
-    | L_supset
-    | L_supsetEq
-    | L_in
-    | L_max
-    | L_min
-    | L_toSet
-    | L_toMSet
-    | L_toRelation
-    | L_defined
-    | L_range
-    | L_restrict
-    | L_image
-    | L_imageSet
-    | L_preImage
-    | L_inverse
-    | L_together
-    | L_apart
-    | L_party
-    | L_participants
-    | L_parts
-    | L_freq
-    | L_hist
-
-    | L_toInt
-
-    -- global constraints
-    | L_allDiff
-    | L_alldifferent_except
-
-    | L_dontCare
-
-    | L_catchUndef
-
-    -- matrix only operators
-    | L_flatten
-    | L_concatenate
-    | L_normIndices
-
-    -- in the rule language
-    -- | L_lambda
-    -- | L_quantifier
-    -- | L_representation
-
-    -- arithmetic operators
-
-    | L_Plus                --    +           -- sum, infix : (int,int) -> int
-    | L_Minus               --    -           -- (subtraction, infix : (int,int) -> int) OR (unary minus : int -> int)
-    | L_Times               --    *           -- multiplication, infix : (int,int) -> int
-    | L_Div                 --    /           -- integer division, infix
-    | L_Mod                 --    %           -- modulo, infix
-    | L_Pow                 --    **          -- exponentiation, infix : (int,int) -> int
-    | L_factorial
-
-    -- equality
-
-    | L_Eq                  --    =           -- equals, infix.
-    | L_Neq                 --    !=          -- not-equals, infix
-
-    -- comparison
-
-    | L_Lt                  --    <           -- less-than, infix.
-    | L_Leq                 --    <=          -- less-than-or-eq, infix.
-    | L_Gt                  --    >           -- greater-than, infix.
-    | L_Geq                 --    >=          -- greater-than-or-eq, infix.
-
-    -- logical operators
-
-    | L_And                 --    /\          -- logical-and, infix
-    | L_Or                  --    \/          -- logical-or, infix.
-    | L_Imply               --    ->          -- implication, infix
-    | L_Iff                 --    <->         -- iff, infix.
-    -- | L_Not                 --    !           -- negation, prefix
-    | L_ExclamationMark     -- for poth L_Factorial and L_ExclamationMark
-
-    -- the function arrow
-
-    | L_LongArrow           --    -->         -- function domains and constants
-
-    -- in rule language
-
-    | L_Colon               --    :           -- has-domain, infix, (expr,domain) -> bool. also does pattern matching.
-    | L_DoubleColon         --    ::          -- has-type, infix, (expr,type) -> bool. also does pattern matching.
-    | L_At                  --    @           -- bubble operator.
-
-    -- lex operators
-
-    | L_LexGeq              --    >=lex
-    | L_LexGt               --    >lex
-    | L_LexLt               --    <=lex
-    | L_LexLeq              --    <lex
-
-    -- for "abs" and "card"
-    | L_Bar                 --    |
-
-    -- attaching a type to an expression
-    | L_BackTick            --    `
-
-    -- others
-    | L_Dot
-    | L_Comma
-    | L_SemiColon
-
-    | L_OpenParen
-    | L_CloseParen
-    | L_OpenBracket
-    | L_CloseBracket
-    | L_OpenCurly
-    | L_CloseCurly
-
-    | L_Newline
-    | L_Carriage
-    | L_Space
-    | L_Tab
-
-    | L_SquigglyArrow
-    | L_CaseSeparator
-
-    | L_HasRepr
-    | L_HasType
-    | L_HasDomain
-    | L_indices
-
-    | L_DotLt
-    | L_DotLeq
-    | L_DotGt
-    | L_DotGeq
-
-    | L_TildeLt
-    | L_TildeLeq
-    | L_TildeGt
-    | L_TildeGeq
-
-    | L_LeftArrow
-
-    | L_subsequence
-    | L_substring
-    | L_powerSet
-
-    | L_pred
-    | L_succ
-
-    | L_tagged
-    -- type functional
-    | L_transform
-
-    deriving (Eq, Ord, Show, Generic)
-
-instance Hashable Lexeme
-
-lexemeText :: Lexeme -> T.Text
-lexemeText l = T.pack $ show (lexemeFace l)
-
-textToLexeme :: T.Text -> Maybe Lexeme
-textToLexeme t = M.lookup t mapTextToLexeme
-
-lexemeFace :: Lexeme -> Pr.Doc
-lexemeFace L_Newline = "new line"
-lexemeFace L_Carriage = "\\r"
-lexemeFace L_Space   = "space character"
-lexemeFace L_Tab     = "tab character"
-lexemeFace (LIntLiteral i) = Pr.integer i
-lexemeFace (LIdentifier i) = Pr.text (T.unpack i)
-lexemeFace (LComment    i) = Pr.text (T.unpack i)
-lexemeFace l =
-    case M.lookup l mapLexemeToText of
-        Nothing -> Pr.text (show l)
-        Just t  -> Pr.text (T.unpack t)
-
-lexemeWidth :: Lexeme -> Int
-lexemeWidth L_Carriage = 0
-lexemeWidth L_Tab = 4
-lexemeWidth (LIntLiteral i) = length (show i)
-lexemeWidth (LIdentifier i) = T.length i
-lexemeWidth (LComment    i) = T.length i
-lexemeWidth l =
-    case lookup l (map swap lexemes) of
-        Nothing -> 0
-        Just t  -> T.length t
-
-mapTextToLexeme :: M.HashMap T.Text Lexeme
-mapTextToLexeme = M.fromList lexemes
-
-mapLexemeToText :: M.HashMap Lexeme T.Text
-mapLexemeToText = M.fromList $ map swap lexemes
-
-lexemes :: [(T.Text, Lexeme)]
-lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
-    [ ( L_be         , "be"         )
-    , ( L_from       , "from"       )
-    , ( L_of         , "of"         )
-    , ( L_domain     , "domain"     )
-    , ( L_language   , "language"   )
-    , ( L_dim        , "dim"        )
-    , ( L_find       , "find"       )
-    , ( L_given      , "given"      )
-    , ( L_letting    , "letting"    )
-    , ( L_where      , "where"      )
-    , ( L_such       , "such"       )
-    , ( L_that       , "that"       )
-    , ( L_minimising , "minimising" )
-    , ( L_maximising , "maximising" )
-    , ( L_minimising , "minimizing" )
-    , ( L_maximising , "maximizing" )
-    , ( L_branching  , "branching"  )
-    , ( L_on         , "on"         )
-    , ( L_heuristic  , "heuristic"  )
-
-    , ( L_bool, "bool" )
-    , ( L_false, "false" )
-    , ( L_true, "true" )
-    , ( L_int, "int" )
-    , ( L_new, "new" )
-    , ( L_type, "type" )
-    , ( L_enum, "enum" )
-    , ( L_tuple, "tuple" )
-    , ( L_record, "record" )
-    , ( L_variant, "variant" )
-    , ( L_active, "active" )
-    , ( L_matrix, "matrix" )
-    , ( L_indexed, "indexed" )
-    , ( L_by, "by" )
-    , ( L_set, "set" )
-    -- , ( L_size, "size" )
-    -- , ( L_minSize, "minSize" )
-    -- , ( L_maxSize, "maxSize" )
-    , ( L_mset, "mset" )
-    -- , ( L_minOccur, "minOccur" )
-    -- , ( L_maxOccur, "maxOccur" )
-    , ( L_function, "function" )
-    -- , ( L_total, "total" )
-    -- , ( L_partial, "partial" )
-    -- , ( L_injective, "injective" )
-    -- , ( L_surjective, "surjective" )
-    -- , ( L_bijective, "bijective" )
-    , ( L_sequence, "sequence" )
-    , ( L_relation, "relation" )
-    , ( L_partition, "partition" )
-
-    , ( L_permutation, "permutation" )
-    , ( L_compose, "compose")
-    -- , ( L_regular, "regular" )
-    -- , ( L_partSize, "partSize" )
-    -- , ( L_minPartSize, "minPartSize" )
-    -- , ( L_maxPartSize, "maxPartSize" )
-    -- , ( L_numParts, "numParts" )
-    -- , ( L_minNumParts, "minNumParts" )
-    -- , ( L_maxNumParts, "maxNumParts" )
-    , ( L_union, "union" )
-    , ( L_intersect, "intersect" )
-    , ( L_subset, "subset" )
-    , ( L_subsetEq, "subsetEq" )
-    , ( L_supset, "supset" )
-    , ( L_supsetEq, "supsetEq" )
-    , ( L_in, "in" )
-    , ( L_max, "max" )
-    , ( L_min, "min" )
-    , ( L_toSet, "toSet" )
-    , ( L_toMSet, "toMSet" )
-    , ( L_toRelation, "toRelation" )
-    , ( L_defined, "defined" )
-    , ( L_range, "range" )
-    , ( L_restrict, "restrict" )
-    , ( L_image, "image" )
-    , ( L_imageSet, "imageSet" )
-    , ( L_preImage, "preImage" )
-    , ( L_inverse, "inverse" )
-    , ( L_together, "together" )
-    , ( L_apart, "apart" )
-    , ( L_party, "party" )
-    , ( L_participants, "participants" )
-    , ( L_parts, "parts" )
-    , ( L_freq, "freq" )
-    , ( L_hist, "hist" )
-    , ( L_toInt, "toInt" )
-
-    , ( L_allDiff, "allDiff" )
-    , ( L_alldifferent_except, "alldifferent_except" )
-
-    , ( L_dontCare, "dontCare" )
-    , ( L_catchUndef, "catchUndef" )
-
-    , ( L_flatten, "flatten" )
-    , ( L_concatenate, "concatenate" )
-    , ( L_normIndices, "normIndices" )
-    -- , ( L_lambda, "lambda" )
-    -- , ( L_quantifier, "quantifier" )
-    -- , ( L_representation, "representation" )
-    , ( L_Plus            , "+"     )
-    , ( L_Minus           , "-"     )
-    , ( L_Times           , "*"     )
-    , ( L_Div             , "/"     )
-    , ( L_Mod             , "%"     )
-    , ( L_Pow             , "**"    )
-    , ( L_factorial       , "factorial" )
-    , ( L_Eq              , "="     )
-    , ( L_Neq             , "!="    )
-    , ( L_Lt              , "<"     )
-    , ( L_Leq             , "<="    )
-    , ( L_Gt              , ">"     )
-    , ( L_Geq             , ">="    )
-    , ( L_And             , "/\\"   )
-    , ( L_Or              , "\\/"   )
-    , ( L_Imply           , "->"    )
-    , ( L_Iff             , "<->"   )
-    , ( L_ExclamationMark , "!"     )
-    , ( L_LongArrow       , "-->"   )
-    , ( L_Colon           , ":"     )
-    , ( L_DoubleColon     , "::"    )
-    , ( L_At              , "@"     )
-    , ( L_LexGeq          , ">=lex" )
-    , ( L_LexGt           , ">lex"  )
-    , ( L_LexLeq          , "<=lex" )
-    , ( L_LexLt           , "<lex"  )
-    , ( L_Bar             , "|"     )
-    , ( L_BackTick        , "`"     )
-    , ( L_Dot             , "."     )
-    , ( L_Comma           , ","     )
-    , ( L_SemiColon       , ";"     )
-    , ( L_OpenParen       , "("     )
-    , ( L_CloseParen      , ")"     )
-    , ( L_OpenBracket     , "["     )
-    , ( L_CloseBracket    , "]"     )
-    , ( L_OpenCurly       , "{"     )
-    , ( L_CloseCurly      , "}"     )
-
-    , ( L_Newline         , "\n"    )
-    , ( L_Carriage        , "\r"    )
-    , ( L_Space           , " "     )
-    , ( L_Tab             , "\t"    )
-
-    , ( L_SquigglyArrow   , "~~>"   )
-    , ( L_CaseSeparator   , "***"   )
-
-    , ( L_HasRepr         , "hasRepr"   )
-    , ( L_HasType         , "hasType"   )
-    , ( L_HasDomain       , "hasDomain" )
-    , ( L_indices         , "indices"   )
-
-    , ( L_DotLt           , ".<"    )
-    , ( L_DotLeq          , ".<="   )
-    , ( L_DotGt           , ".>"    )
-    , ( L_DotGeq          , ".>="   )
-
-    , ( L_TildeLt         , "~<"    )
-    , ( L_TildeLeq        , "~<="   )
-    , ( L_TildeGt         , "~>"    )
-    , ( L_TildeGeq        , "~>="   )
-
-    , ( L_LeftArrow       , "<-"   )
-
-    , ( L_subsequence     , "subsequence"  )
-    , ( L_substring       , "substring"    )
-    , ( L_powerSet        , "powerSet"     )
-
-    , ( L_pred, "pred" )
-    , ( L_succ, "succ" )
-
-    , ( L_tagged, "tagged" )
-
-    , ( L_transform, "transform")
-    ]
-
-runLexer :: MonadFail m => T.Text -> m [LexemePos]
-runLexer text = do
-    ls <- go text
-    let lsPaired = calcPos (initialPos "") ls
-    return lsPaired
-    where
-        go t = do
-            let results = catMaybes $  tryLexMetaVar t
-                                    :  map (tryLex t) lexemes
-                                    ++ [ tryLexIntLiteral t
-                                       , tryLexIden t
-                                       , tryLexQuotedIden t
-                                       , tryLexComment t
-                                       ]
-            if T.null t
-                then return []
-                else case results of
-                        [] -> fail ("Lexing error:" Pr.<+> Pr.text (T.unpack t))
-                        ((rest,lexeme):_) -> (lexeme:) <$> go rest
-
-        -- attach source positions to lexemes
-        -- discard whitespace, but calculate their contribution to source positions
-        calcPos :: SourcePos -> [Lexeme] -> [LexemePos]
-        calcPos _pos [] = []
-        calcPos  pos (this:rest) | isLexemeSpace this                   -- skip if this one is whitespace
-                                 = calcPos (nextPos pos this) rest      -- can only happen at the beginning
-        calcPos  pos (this:rest) =
-            let (restSpaces, restNonSpace) = span isLexemeSpace rest    -- eat up all the whitespace after "this"
-                pos' = foldl nextPos pos (this:restSpaces)
-            in
-                if null restNonSpace
-                    then [LexemePos this pos (nextPos pos this)]        -- if this is the last non-whitespace lexeme
-                                                                        -- do not include the whitespace after it
-                    else LexemePos this pos pos' : calcPos pos' restNonSpace
-
-        nextPos :: SourcePos -> Lexeme -> SourcePos
-        nextPos pos L_Newline  = incSourceLine (setSourceColumn pos 1) 1
-        nextPos pos L_Carriage = pos -- just ignore '\r's
-        nextPos pos l          = incSourceColumn pos (lexemeWidth l)
-
-isLexemeSpace :: Lexeme -> Bool
-isLexemeSpace L_Newline {} = True
-isLexemeSpace L_Carriage{} = True
-isLexemeSpace L_Tab     {} = True
-isLexemeSpace L_Space   {} = True
-isLexemeSpace LComment  {} = True
-isLexemeSpace _            = False
-
-tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
-tryLex running (face,lexeme) = do
-    rest <- T.stripPrefix face running
-    if T.all isIdentifierLetter face
-        then
-            case T.uncons rest of
-                Just (ch, _) | isIdentifierLetter ch -> Nothing
-                _                                    -> Just (rest, lexeme)
-        else Just (rest, lexeme)
-
-tryLexIntLiteral :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIntLiteral t =
-    case T.decimal t of
-        Left _ -> Nothing
-        Right (x, rest) -> Just (rest, LIntLiteral x)
+    deriving (Show,Eq, Ord)
+
+sourcePos0 :: SourcePos
+sourcePos0 = SourcePos "" (mkPos  1) (mkPos 1)
+
+class Reformable a where
+    reform :: a -> L.Text
+
+instance Reformable ETok where
+    reform e | totalLength e == 0 = ""
+    reform (ETok{capture=cap,trivia=triv}) = L.append  (L.concat $ map showTrivia triv) (L.fromStrict cap)
+        where
+            showTrivia :: Trivia -> L.Text
+            showTrivia x = case x of
+              WhiteSpace txt    -> L.fromStrict txt
+              LineComment txt   -> L.fromStrict txt
+              BlockComment txt  -> L.fromStrict txt
+
+reformList :: (Traversable t ,Reformable a) => t a -> L.Text
+reformList =  L.concat  . map reform . toList
+
+emojis :: [Char]
+emojis =
+    concat
+        [ ['\x1f600' .. '\x1F64F']
+        , ['\x1f300' .. '\x1f5ff']
+        , ['\x1f680' .. '\x1f999']
+        , ['\x1f1e0' .. '\x1f1ff']
+        ]
 
 isIdentifierFirstLetter :: Char -> Bool
-isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String)
+isIdentifierFirstLetter ch = isAlpha ch || ch `elem` ("_" :: String) || ch `elem` emojis
 
 isIdentifierLetter :: Char -> Bool
-isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String)
+isIdentifierLetter ch = isAlphaNum ch || ch `elem` ("_'" :: String) || ch `elem` emojis
 
-tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexMetaVar running = do
-    ('&', rest) <- T.uncons running
-    (rest2, LIdentifier iden) <- tryLexIden rest
-    return (rest2, LMetaVar iden)
+data Offsets = Offsets {
+        oStart::Int, -- the starting offset of the token (including whitespace)
+        oTotalLength::Int, -- (the total length of the the token)
+        oTokenLength::Int, -- (the length of the token excluding trivia)
+        oTrueStart :: SourcePos, -- start pos of the token
+        oSourcePos::SourcePos, -- start pos of the lexeme
+        oEndPos::SourcePos}
+    deriving (Show, Eq, Ord , Data)
+type Lexer = Parsec Void Text
 
-tryLexIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIden running = do
-    let (iden,rest) = T.span isIdentifierLetter running
-    (ch, _) <- T.uncons running
-    if isIdentifierFirstLetter ch
-        then
-            if T.null iden
-                then Nothing
-                else Just (rest, LIdentifier iden)
-        else Nothing
+-- type Lexer = Parsec Void Text ETokenStream
 
-tryLexQuotedIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexQuotedIden running = do
-    let
-        go inp = do
-            ('\"', rest) <- T.uncons inp
-            go2 "\"" rest
+data Trivia = WhiteSpace Text | LineComment Text | BlockComment Text
+    deriving (Show, Eq, Ord , Data)
 
-        -- after the first "
-        go2 sofar inp = do
-            (ch, rest) <- T.uncons inp
-            case ch of
-                -- end
-                '\"'
-                    | sofar /= "\""         -- so we don't allow empty strings
-                    -> Just (rest, LIdentifier (T.pack (reverse ('\"' : sofar))))
-                -- escaped
-                '\\' -> do
-                    (ch2, rest2) <- T.uncons rest
-                    case ch2 of
-                        '\"' -> go2 ('\"':sofar) rest2
-                        '\\' -> go2 ('\\':sofar) rest2
-                        _ -> Nothing
-                _ -> go2 (ch:sofar) rest
-    go running
+data ETok = ETok
+    { offsets :: Offsets
+    , trivia :: [Trivia]
+    , lexeme :: Lexeme
+    , capture :: Text
+    }
+    deriving (Eq, Ord,Show , Data)
 
-tryLexComment :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexComment running = let (dollar,rest1) = T.span (=='$') running
-                        in  if T.null dollar
-                                then Nothing
-                                else let (commentLine,rest2) = T.span (/='\n') rest1
-                                     in  Just (rest2, LComment commentLine)
+instance Pr.Pretty ETok where
+    pretty = Pr.unAnnotate . uncurry (Pr.<>) .  prettySplitComments
+
+prettySplitComments :: ETok -> (Pr.Doc ann, Pr.Doc ann)
+prettySplitComments (ETok _ tr _ capture) = (Pr.hcat [Pr.pretty t Pr.<> Pr.hardline | LineComment t <- tr],Pr.pretty capture)
 
 
-instance ShowToken [LexemePos] where
-    showToken = intercalate ", " . map showToken
+totalLength :: ETok -> Int
+totalLength = oTotalLength . offsets
 
-instance ShowToken LexemePos where
-    showToken (LexemePos tok _ _) = showToken tok
+trueLength :: ETok -> Int
+trueLength = oTokenLength . offsets
 
-instance ShowToken Lexeme where
-    showToken = show . lexemeFace
+-- tokenStart :: ETok -> Int
+-- tokenStart (ETok{offsets = (Offsets _  s _ _ _)}) = s
+tokenOffset :: ETok -> Int
+tokenOffset = oStart . offsets
+tokenStartOffset :: ETok -> Int
+tokenStartOffset t = oStart o + (oTotalLength o - oTokenLength o)
+    where o = offsets t
+
+trueStart :: ETok -> SourcePos
+trueStart = oTrueStart . offsets
+
+tokenSourcePos :: ETok -> SourcePos
+tokenSourcePos = oSourcePos . offsets
+
+sourcePosAfter :: ETok -> SourcePos
+sourcePosAfter = oEndPos . offsets
+
+makeToken :: Offsets -> [Trivia] -> Lexeme -> Text -> ETok
+makeToken = ETok
+
+--make an empty token that precedes the given token with the given lexeme
+nullBefore :: Lexeme -> ETok -> ETok
+nullBefore lex tok = ETok offs [] lex ""
+    where
+        sp = tokenSourcePos tok
+        offs =  Offsets (tokenStartOffset tok) 0 0 sp sp sp
+newtype LexerError = LexerError String
+    deriving (Show)
+
+runLexer :: Text -> Maybe FilePath -> Either LexerError ETokenStream
+runLexer txt fp = case runParser eLex (fromMaybe "Lexer" fp) txt of
+  Left peb -> Left $ LexerError $ errorBundlePretty peb
+  Right ets -> Right $ ETokenStream txt ets
+
+
+eLex :: Lexer [ETok]
+eLex =
+    do
+        main <- many $ try aToken
+        end <- pEOF
+        return $ main ++ [end]
+
+aToken :: Lexer ETok
+aToken = do
+    start <- getOffset
+    startPos <- getSourcePos
+    whitespace <- pTrivia
+    tokenOffset_ <- getOffset
+    tokenStart <- getSourcePos
+    (tok,cap) <- aLexeme
+    tokenEnd <- getOffset
+    endPos <- getSourcePos
+    return $ makeToken (Offsets start (tokenEnd - start) (tokenEnd - tokenOffset_) startPos tokenStart endPos) whitespace tok cap
+
+pEOF :: Lexer ETok
+pEOF = do
+    start <- getOffset
+    startPos <- getSourcePos
+    whitespace <- pTrivia
+    wse <- getOffset
+    tokenStart <- getSourcePos
+    eof
+    tokenEnd <- getOffset
+    endPos <- getSourcePos
+    return $ makeToken (Offsets start (tokenEnd - start) (tokenEnd - wse) startPos tokenStart endPos) whitespace L_EOF ""
+
+
+aLexeme :: Lexer (Lexeme,Text)
+aLexeme = aLexemeStrict <|> pFallback
+
+aLexemeStrict :: Lexer (Lexeme,Text)
+aLexemeStrict =
+    try
+        pNumber
+        <|> try  (choice (map pLexeme lexemes) <?> "Lexeme")
+        <|> try pIdentifier
+        <|> try pQuotedIdentifier
+        <|> try pMetaVar
+
+
+pNumber :: Lexer (Lexeme,Text)
+pNumber = do
+    v <- takeWhile1P Nothing (`elem` ['1','2','3','4','5','6','7','8','9','0'])
+    let n = read $ T.unpack v
+    return (LIntLiteral n,v)
+    <?> "Numeric Literal"
+
+pMetaVar :: Lexer (Lexeme,Text)
+pMetaVar = do
+    amp <- chunk "&"
+    (_,cap) <- pIdentifier
+    return (LMetaVar cap,amp `T.append` cap)
+
+pIdentifier :: Lexer (Lexeme,Text)
+pIdentifier = do
+    firstLetter <- takeWhile1P Nothing isIdentifierFirstLetter
+    rest <- takeWhileP Nothing isIdentifierLetter
+    let ident = T.append firstLetter rest
+    -- traceM $ T.unpack . T.pack $ map chr $ map ord $ T.unpack ident
+    return ( LIdentifier ident, ident)
+    <?> "Identifier"
+
+pQuotedIdentifier :: Lexer (Lexeme,Text)
+pQuotedIdentifier = do
+    l <- quoted
+    return (LIdentifier l,l)
+
+pFallback :: Lexer (Lexeme,Text)
+pFallback = do
+    q <- T.pack <$> someTill anySingle (lookAhead $ try somethingValid)
+    return (LUnexpected  q,q)
+  where
+    somethingValid :: Lexer ()
+    somethingValid = void pTrivia <|> void aLexemeStrict <|> eof
+
+pLexeme :: (Text, Lexeme) -> Lexer (Lexeme,Text)
+pLexeme (s, l) = do
+    tok <- string s
+    notFollowedBy $ if isIdentifierLetter $ T.last tok then nonIden else empty
+    return (l,tok)
+    <?> "Lexeme :" ++ show l
+    where
+        nonIden = takeWhile1P Nothing isIdentifierLetter
+
+pTrivia :: Lexer [Trivia]
+pTrivia = many (whiteSpace <|> lineComment <|> blockComment)
+
+whiteSpace :: Lexer Trivia
+whiteSpace = do
+    s <- some spaceChar
+    return $ WhiteSpace $ T.pack s
+
+quoted :: Lexer Text
+quoted = do
+    open <- char '\"'
+    (body,end) <- manyTill_ anySingle $ char '\"'
+    return $ T.pack  $ open:body++[end]
+
+lineEnd :: Lexer [Char]
+lineEnd = T.unpack <$> eol <|> ( eof >> return [])
+
+lineComment :: Lexer Trivia
+lineComment = do
+    _ <- try (chunk "$")
+    (text,end) <- manyTill_ anySingle lineEnd
+    return $ LineComment $ T.pack ('$' : text++end)
+
+blockComment :: Lexer Trivia
+blockComment = do
+    _ <- try (chunk "/*")
+    text <- manyTill L.anySingle (lookAhead (void(chunk "*/") <|>eof))
+    cl <- optional $ chunk "*/"
+    let cl' = fromMaybe "" cl
+    return $ BlockComment $ T.concat ["/*",T.pack text ,cl' ]
+
+
+data ETokenStream = ETokenStream
+    { streamSourceText :: Text
+    , streamTokens :: [ETok]
+    }
+instance Stream ETokenStream where
+    type Token ETokenStream = ETok
+    type Tokens ETokenStream = [ETok]
+    tokenToChunk _ x = [x]
+    tokensToChunk _ xs = xs
+    chunkToTokens _ = id
+    chunkLength _ = length
+    chunkEmpty _ [] = True
+    chunkEmpty _ _ = False
+    take1_ :: ETokenStream -> Maybe (Token ETokenStream, ETokenStream)
+    take1_ (ETokenStream _ (x : xs)) = Just (x, buildStream xs)
+    take1_ (ETokenStream _ []) = Nothing
+    takeN_ :: Int -> ETokenStream -> Maybe (Tokens ETokenStream, ETokenStream)
+    takeN_ n xs | n <= 0 = Just ([], xs)
+    takeN_ _ (ETokenStream _ []) = Nothing
+    takeN_ n (ETokenStream _ xs) = Just (take n xs, buildStream $ drop n xs)
+    takeWhile_ :: (Token ETokenStream -> Bool) -> ETokenStream -> (Tokens ETokenStream, ETokenStream)
+    takeWhile_ p (ETokenStream _ xs) =
+        (a, buildStream b)
+      where
+        (a, b) = span p xs
+
+-- (takeWhile p xs,ETokenStream $ dropWhile p xs)
+
+buildStream :: [ETok] -> ETokenStream
+buildStream xs = case NE.nonEmpty xs of
+    Nothing -> ETokenStream "" xs
+    Just _ -> ETokenStream (T.pack "showTokens pxy s") xs
+
+instance VisualStream ETokenStream where
+    showTokens _ =  L.unpack . reformList
+    tokensLength _ = sum . fmap trueLength
+
+-- https://markkarpov.com/tutorial/megaparsec.html#working-with-custom-input-streams
+instance TraversableStream ETokenStream where
+    reachOffset o PosState{..} =
+        ( Just (prefix ++ restOfLine)
+        , PosState
+            { pstateInput = buildStream post
+            , pstateOffset = max pstateOffset o
+            , pstateSourcePos = newSourcePos
+            , pstateTabWidth = pstateTabWidth
+            , pstateLinePrefix = prefix
+            }
+        )
+      where
+        prefix =
+            if sameLine
+                then pstateLinePrefix ++ preLine
+                else preLine
+        sameLine = sourceLine newSourcePos == sourceLine pstateSourcePos
+        newSourcePos =
+            case post of
+                [] -> pstateSourcePos
+                (x : _) -> tokenSourcePos x
+        (pre, post) :: ([ETok], [ETok]) = splitAt (o - pstateOffset) (streamTokens pstateInput)
+        (preStr, postStr) = (maybe "" (showTokens pxy) (NE.nonEmpty pre), maybe "" (showTokens pxy) (NE.nonEmpty post))
+        preLine = reverse . takeWhile (/= '\n') . reverse $ preStr
+        restOfLine = takeWhile (/= '\n') postStr
+
+pxy :: Proxy ETokenStream
+pxy = Proxy
+
+
+
+-- instance Show ETok where
+--     show (ETok _ _ _ q) = show q
+
+
+
+-- instance TraversableStream ETokenStream where
+--     reachOffset i s = (Nothing, s)
+--     reachOffsetNoLine i s = s 

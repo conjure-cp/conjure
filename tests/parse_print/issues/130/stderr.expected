@@ -1,1 +1,12 @@
-Error: Undefined reference to a domain: Looper
+Error:
+    tests/parse_print/issues/130/130.essence:3:33:
+  |
+3 | letting Looper be domain (bool, Looper)
+  |                                 ^^^^^^
+Error: Symbol not found "Looper"
+
+tests/parse_print/issues/130/130.essence:6:16:
+  |
+6 | such that loop[0] = true
+  |                ^
+Error: Tuple index 0 out of bounds

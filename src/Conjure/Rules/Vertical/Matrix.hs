@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Rules.Vertical.Matrix where
 
@@ -70,6 +69,7 @@ rule_Comprehension = "matrix-comprehension" `namedRule` theRule where
         indexDom:_ <- indexDomainsOf expr
         case indexDom of
             DomainAny{} -> na "rule_Comprehension"
+            DomainInt _ [RangeLowerBounded _] -> na "rule_Comprehension"
             _ -> return ()
         return
             ( "Comprehension on a matrix"
@@ -421,8 +421,8 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
                                 _ -> na "rule_Matrix_Lt_Primitive"
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
-        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
-        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ failDoc ("not a primitive type:" <+> pretty tx)
+        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ failDoc ("not a primitive type:" <+> pretty ty)
         let x' = flattenIfNeeded (matrixNumDims tx) x
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
@@ -440,8 +440,8 @@ rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
                                 _ -> na "rule_Matrix_Leq_Primitive"
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
-        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
-        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ failDoc ("not a primitive type:" <+> pretty tx)
+        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ failDoc ("not a primitive type:" <+> pretty ty)
         let x' = flattenIfNeeded (matrixNumDims tx) x
         let y' = flattenIfNeeded (matrixNumDims ty) y
         return
@@ -456,8 +456,8 @@ rule_Matrix_Lt_Decompose = "matrix-Lt-tuple" `namedRule` theRule where
         (x,y)           <- match opLt p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        when (isPrimitiveType tx) $ failDoc ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ failDoc ("this is a primitive type:" <+> pretty ty)
         xs              <- downX1 x
         ys              <- downX1 y
         return
@@ -472,8 +472,8 @@ rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
         (x,y)           <- match opLeq p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        when (isPrimitiveType tx) $ failDoc ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ failDoc ("this is a primitive type:" <+> pretty ty)
         xs              <- downX1 x
         ys              <- downX1 y
         return
@@ -581,4 +581,21 @@ rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
         return ( "Expanding a matrix slice"
                , return $ Comprehension (make opMatrixIndexingSlicing m is') (concat gocs)
                )
+
+
+-- freq(matrix,arg) ~~> sum([ toInt(arg = i) | i in matrix ])
+rule_Freq :: Rule
+rule_Freq = "matrix-freq" `namedRule` theRule where
+    theRule p = do
+        (m, arg) <- match opFreq p
+        TypeMatrix{}  <- typeOf m
+        [indexDom] <- indexDomainsOf m
+        return
+            ( "Horizontal rule for matrix-freq."
+            , do
+                (iPat, i) <- quantifiedVar
+                let mis = (make opMatrixIndexing m [i])
+                return $ make opSum $ Comprehension [essence| toInt(&mis = &arg) |]
+                            [Generator (GenDomainNoRepr iPat indexDom)]
+            )
 

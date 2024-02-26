@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.AllDiffExcept where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -39,7 +40,7 @@ instance Pretty x => Pretty (OpAllDiffExcept x) where
     prettyPrec _ (OpAllDiffExcept a b) = "alldifferent_except" <> prettyList prParens "," [a, b]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpAllDiffExcept x) where
-    varSymBreakingDescription (OpAllDiffExcept x y) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpAllDiffExcept x y) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpAllDiffExcept")
         , ("children", JSON.Array $ V.fromList [ varSymBreakingDescription x
                                                , varSymBreakingDescription y

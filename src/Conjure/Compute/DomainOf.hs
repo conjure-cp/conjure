@@ -8,7 +8,6 @@ import Conjure.Prelude
 import Conjure.Bug
 
 import Conjure.Language
-import Conjure.Language.Domain ( HasRepresentation(..) )
 import Conjure.Language.RepresentationOf ( RepresentationOf(..) )
 import Conjure.Compute.DomainUnion
 
@@ -19,7 +18,7 @@ class DomainOf a where
 
     -- | calculate the domain of `a`
     domainOf ::
-        MonadFail m =>
+        MonadFailDoc m =>
         NameGen m =>
         (?typeCheckerMode :: TypeCheckerMode) =>
         a -> m Dom
@@ -30,7 +29,7 @@ class DomainOf a where
     --   has a default implementation in terms of domainOf, so doesn't need to be implemented specifically.
     --   but sometimes it is better to implement this directly.
     indexDomainsOf ::
-        MonadFail m =>
+        MonadFailDoc m =>
         NameGen m =>
         Pretty a =>
         (?typeCheckerMode :: TypeCheckerMode) =>
@@ -41,7 +40,7 @@ class DomainOf a where
 domainOfR ::
     DomainOf a =>
     RepresentationOf a =>
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     a -> m (Domain HasRepresentation Expression)
@@ -52,7 +51,7 @@ domainOfR inp = do
 
 
 defIndexDomainsOf ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     DomainOf a =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -69,11 +68,11 @@ instance DomainOf ReferenceTo where
     domainOf (InComprehension (GenDomainNoRepr Single{} dom)) = return dom
     domainOf (InComprehension (GenDomainHasRepr _ dom)) = return (forgetRepr dom)
     domainOf (InComprehension (GenInExpr Single{} x)) = domainOf x >>= innerDomainOf
-    domainOf x@InComprehension{} = fail $ vcat [ "domainOf-ReferenceTo-InComprehension", pretty x, pretty (show x) ]
+    domainOf x@InComprehension{} = failDoc $ vcat [ "domainOf-ReferenceTo-InComprehension", pretty x, pretty (show x) ]
     domainOf (DeclNoRepr  _ _ dom _) = return dom
     domainOf (DeclHasRepr _ _ dom  ) = return (forgetRepr dom)
-    domainOf RecordField{}  = fail "domainOf-ReferenceTo-RecordField"
-    domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
+    domainOf RecordField{}  = failDoc "domainOf-ReferenceTo-RecordField"
+    domainOf VariantField{} = failDoc "domainOf-ReferenceTo-VariantField"
 
 
 instance DomainOf Expression where
@@ -82,7 +81,10 @@ instance DomainOf Expression where
     domainOf (AbstractLiteral x) = domainOf x
     domainOf (Op x) = domainOf x
     domainOf (WithLocals h _) = domainOf h
-    domainOf x = fail ("domainOf{Expression}:" <+> pretty (show x))
+    domainOf (Comprehension h _) = do
+        domH <- domainOf h
+        return $ DomainMatrix (DomainInt TagInt [RangeLowerBounded 1]) domH
+    domainOf x = failDoc ("domainOf{Expression}:" <+> pretty (show x))
 
     -- if an empty matrix literal has a type annotation
     indexDomainsOf (Typed lit ty) | emptyCollectionX lit =
@@ -97,7 +99,7 @@ instance DomainOf Expression where
     indexDomainsOf (AbstractLiteral x) = indexDomainsOf x
     indexDomainsOf (Op x) = indexDomainsOf x
     indexDomainsOf (WithLocals h _) = indexDomainsOf h
-    indexDomainsOf x = fail ("indexDomainsOf{Expression}:" <+> pretty (show x))
+    indexDomainsOf x = failDoc ("indexDomainsOf{Expression}:" <+> pretty (show x))
 
 -- this should be better implemented by some ghc-generics magic
 instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Dom :< x) => DomainOf (Op x) where
@@ -107,6 +109,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpAnd x) = domainOf x
     domainOf (MkOpApart x) = domainOf x
     domainOf (MkOpCompose x) = domainOf x
+    domainOf (MkOpAtLeast x) = domainOf x
+    domainOf (MkOpAtMost x) = domainOf x
     domainOf (MkOpAttributeAsConstraint x) = domainOf x
     domainOf (MkOpCatchUndef x) = domainOf x
     domainOf (MkOpDefined x) = domainOf x
@@ -118,6 +122,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpFactorial x) = domainOf x
     domainOf (MkOpFlatten x) = domainOf x
     domainOf (MkOpFreq x) = domainOf x
+    domainOf (MkOpGCC x) = domainOf x
     domainOf (MkOpGeq x) = domainOf x
     domainOf (MkOpGt x) = domainOf x
     domainOf (MkOpHist x) = domainOf x
@@ -133,6 +138,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpLexLeq x) = domainOf x
     domainOf (MkOpLexLt x) = domainOf x
     domainOf (MkOpLt x) = domainOf x
+    domainOf (MkOpMakeTable x) = domainOf x
     domainOf (MkOpMax x) = domainOf x
     domainOf (MkOpMin x) = domainOf x
     domainOf (MkOpMinus x) = domainOf x
@@ -161,6 +167,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpSum x) = domainOf x
     domainOf (MkOpSupset x) = domainOf x
     domainOf (MkOpSupsetEq x) = domainOf x
+    domainOf (MkOpTable x) = domainOf x
     domainOf (MkOpTildeLeq x) = domainOf x
     domainOf (MkOpTildeLt x) = domainOf x
     domainOf (MkOpTogether x) = domainOf x
@@ -180,6 +187,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpAnd x) = indexDomainsOf x
     indexDomainsOf (MkOpApart x) = indexDomainsOf x
     indexDomainsOf (MkOpCompose x) = indexDomainsOf x
+    indexDomainsOf (MkOpAtLeast x) = indexDomainsOf x
+    indexDomainsOf (MkOpAtMost x) = indexDomainsOf x
     indexDomainsOf (MkOpAttributeAsConstraint x) = indexDomainsOf x
     indexDomainsOf (MkOpCatchUndef x) = indexDomainsOf x
     indexDomainsOf (MkOpDefined x) = indexDomainsOf x
@@ -191,6 +200,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpFactorial x) = indexDomainsOf x
     indexDomainsOf (MkOpFlatten x) = indexDomainsOf x
     indexDomainsOf (MkOpFreq x) = indexDomainsOf x
+    indexDomainsOf (MkOpGCC x) = indexDomainsOf x
     indexDomainsOf (MkOpGeq x) = indexDomainsOf x
     indexDomainsOf (MkOpGt x) = indexDomainsOf x
     indexDomainsOf (MkOpHist x) = indexDomainsOf x
@@ -206,6 +216,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpLexLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpLexLt x) = indexDomainsOf x
     indexDomainsOf (MkOpLt x) = indexDomainsOf x
+    indexDomainsOf (MkOpMakeTable x) = indexDomainsOf x
     indexDomainsOf (MkOpMax x) = indexDomainsOf x
     indexDomainsOf (MkOpMin x) = indexDomainsOf x
     indexDomainsOf (MkOpMinus x) = indexDomainsOf x
@@ -234,6 +245,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpSum x) = indexDomainsOf x
     indexDomainsOf (MkOpSupset x) = indexDomainsOf x
     indexDomainsOf (MkOpSupsetEq x) = indexDomainsOf x
+    indexDomainsOf (MkOpTable x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLt x) = indexDomainsOf x
     indexDomainsOf (MkOpTogether x) = indexDomainsOf x
@@ -251,11 +263,11 @@ instance DomainOf Constant where
     domainOf ConstantBool{}             = return DomainBool
     domainOf i@(ConstantInt t _)        = return $ DomainInt t [RangeSingle (Constant i)]
     domainOf (ConstantEnum defn _ _ )   = return (DomainEnum defn Nothing Nothing)
-    domainOf ConstantField{}            = fail "DomainOf-Constant-ConstantField"
+    domainOf ConstantField{}            = failDoc "DomainOf-ConstantField"
     domainOf (ConstantAbstract x)       = domainOf (fmap Constant x)
     domainOf (DomainInConstant dom)     = return (fmap Constant dom)
     domainOf (TypedConstant x ty)       = domainOf (Typed (Constant x) ty)
-    domainOf ConstantUndefined{}        = fail "DomainOf-Constant-ConstantUndefined"
+    domainOf ConstantUndefined{}        = failDoc "DomainOf-ConstantUndefined"
 
     indexDomainsOf ConstantBool{}       = return []
     indexDomainsOf ConstantInt{}        = return []
@@ -273,7 +285,7 @@ instance DomainOf (AbstractLiteral Expression) where
     domainOf (AbsLitRecord       xs) = DomainRecord <$> sequence [ do t <- domainOf x ; return (n,t)
                                                                  | (n,x) <- xs ]
 
-    domainOf (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the domain of variant literal."
+    domainOf (AbsLitVariant Nothing  _ _) = failDoc "Cannot calculate the domain of variant literal."
     domainOf (AbsLitVariant (Just t) _ _) = return (DomainVariant t)
 
     domainOf (AbsLitMatrix ind inn ) = DomainMatrix ind <$> (domainUnions =<< mapM domainOf inn)
@@ -357,7 +369,7 @@ instance DomainOf x => DomainOf (OpDefined x) where
         fDom <- domainOf f
         case fDom of
             DomainFunction _ _ fr _ -> return $ DomainSet def def fr
-            _ -> fail "domainOf, OpDefined, not a function"
+            _ -> failDoc "domainOf, OpDefined, not a function"
 
 instance DomainOf x => DomainOf (OpDiv x) where
     domainOf (OpDiv x y) = do
@@ -414,7 +426,7 @@ instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpImage x) where
             DomainFunction _ _ _ to -> return to
             DomainSequence _ _ to -> return to
             DomainPermutation _ _ ov -> return ov
-            _ -> fail "domainOf, OpImage, not a function or sequence"
+            _ -> failDoc "domainOf, OpImage, not a function, sequence or permutation"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where
     domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op
@@ -431,24 +443,24 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndex
         case iType of
             TypeBool{} -> return ()
             TypeInt{} -> return ()
-            _ -> fail "domainOf, OpIndexing, not a bool or int index"
+            _ -> failDoc "domainOf, OpIndexing, not a bool or int index"
         mDom <- domainOf m
         case mDom of
             DomainMatrix _ inner -> return inner
             DomainTuple inners -> do
                 iInt <- intOut "domainOf OpIndexing" i
                 return $ atNote "domainOf" inners (fromInteger (iInt-1))
-            _ -> fail "domainOf, OpIndexing, not a matrix or tuple"
+            _ -> failDoc "domainOf, OpIndexing, not a matrix or tuple"
 
     indexDomainsOf p@(OpIndexing m i) = do
         iType <- typeOf i
         case iType of
             TypeBool{} -> return ()
             TypeInt{} -> return ()
-            _ -> fail "domainOf, OpIndexing, not a bool or int index"
+            _ -> failDoc "domainOf, OpIndexing, not a bool or int index"
         is <- indexDomainsOf m
         case is of
-            [] -> fail ("indexDomainsOf{OpIndexing}, not a matrix domain:" <++> pretty p)
+            [] -> failDoc ("indexDomainsOf{OpIndexing}, not a matrix domain:" <++> pretty p)
             (_:is') -> return is'
 
 instance (Pretty x, TypeOf x) => DomainOf (OpIntersect x) where
@@ -467,6 +479,9 @@ instance DomainOf (OpLexLt x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpLt x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpMakeTable x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMax x) where
@@ -536,7 +551,7 @@ instance DomainOf x => DomainOf (OpParts x) where
         dom <- domainOf p
         case dom of
             DomainPartition _ _ inner -> return $ DomainSet def def $ DomainSet def def inner
-            _ -> fail "domainOf, OpParts, not a partition"
+            _ -> failDoc "domainOf, OpParts, not a partition"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpParty x) where
     domainOf op = mkDomainAny ("OpParty:" <++> pretty op) <$> typeOf op
@@ -578,7 +593,7 @@ instance DomainOf x => DomainOf (OpRange x) where
         fDom <- domainOf f
         case fDom of
             DomainFunction _ _ _ to -> return $ DomainSet def def to
-            _ -> fail "domainOf, OpRange, not a function"
+            _ -> failDoc "domainOf, OpRange, not a function"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpRelationProj x) where
     domainOf op = mkDomainAny ("OpRelationProj:" <++> pretty op) <$> typeOf op
@@ -589,14 +604,14 @@ instance (DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
         fDom <- domainOf f
         case fDom of
             DomainFunction fRepr a _ to -> return (DomainFunction fRepr a d to)
-            _ -> fail "domainOf, OpRestrict, not a function"
+            _ -> failDoc "domainOf, OpRestrict, not a function"
 
 instance (Pretty x, DomainOf x) => DomainOf (OpSlicing x) where
     domainOf (OpSlicing x _ _) = domainOf x
     indexDomainsOf (OpSlicing x _ _) = indexDomainsOf x
 
 instance DomainOf (OpSubsequence x) where
-    domainOf _ = fail "domainOf{OpSubsequence}"
+    domainOf _ = failDoc "domainOf{OpSubsequence}"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpSubset x) where
     domainOf op = mkDomainAny ("OpSubset:" <++> pretty op) <$> typeOf op
@@ -605,7 +620,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpSubsetEq x) where
     domainOf op = mkDomainAny ("OpSubsetEq:" <++> pretty op) <$> typeOf op
 
 instance DomainOf (OpSubstring x) where
-    domainOf _ = fail "domainOf{OpSubstring}"
+    domainOf _ = failDoc "domainOf{OpSubstring}"
 
 instance DomainOf x => DomainOf (OpSucc x) where
     domainOf (OpSucc x) = domainOf x        -- TODO: improve
@@ -629,6 +644,18 @@ instance DomainOf (OpSupset x) where
 instance DomainOf (OpSupsetEq x) where
     domainOf _ = return DomainBool
 
+instance DomainOf (OpTable x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpAtLeast x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpAtMost x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpGCC x) where
+    domainOf _ = return DomainBool
+
 instance DomainOf (OpTildeLeq x) where
     domainOf _ = return DomainBool
 
@@ -644,8 +671,11 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpToRelation x) where
     domainOf op = mkDomainAny ("OpToRelation:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
-    domainOf op = mkDomainAny ("OpToSet:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpToSet x) where
+    domainOf (OpToSet _ x) = do
+        domX <- domainOf x
+        innerDomX <- innerDomainOf domX
+        return $ DomainSet () def innerDomX
 
 instance DomainOf (OpTogether x) where
     domainOf _ = return DomainBool

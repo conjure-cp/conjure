@@ -1,30 +1,37 @@
 language ESSENCE' 1.0
 
-find x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker: int(0..3)
-find x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1: matrix indexed by [int(1..3)] of int(1..2)
-find x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit:
-        matrix indexed by [int(1..3), int(1..2)] of int(1..3)
+find x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker: int(0..3)
+find x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1: matrix indexed by [int(1..3)] of int(1..2)
+find x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence: matrix indexed by [int(1..3), int(1..3)] of bool
 branching on
-    [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker, x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1,
-     x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit]
+    [x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker, x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1,
+     x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence]
 such that
-    and([q1 + 1 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
-         flatten([[x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1[q1]; int(1)],
-                  [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q1, q6] | q6 : int(1..2)];
+    and([q1 + 1 <= x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker ->
+         flatten([[x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q1]; int(1)],
+                  [-toInt(x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1, q5]) | q5 : int(1..3)];
                       int(1..2)])
          <lex
-         flatten([[x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1[q1 + 1]; int(1)],
-                  [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q1 + 1, q7] | q7 : int(1..2)];
+         flatten([[x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q1 + 1]; int(1)],
+                  [-toInt(x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1 + 1, q6])
+                       | q6 : int(1..3)];
                       int(1..2)])
              | q1 : int(1..2)]),
-    and([q2 > x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
-         x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_1[q2] = 1 /\
-         and([x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q2, q8] = 1 | q8 : int(1..2)])
+    and([q2 > x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker ->
+         x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q2] = 1 /\
+         and([x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q2, q7] = false | q7 : int(1..3)])
              | q2 : int(1..3)]),
+<<<<<<< HEAD
     2 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker,
     x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker <= 3,
     and([q3 <= x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Marker ->
          [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 1]; int(1)] <lex
          [x_RelationAsSetR3_ExplicitVarSizeWithMarkerR3_Values_2_Explicit[q3, 2]; int(1)]
+=======
+    2 <= x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker,
+    x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker <= 3,
+    and([q3 <= x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker ->
+         2 = sum([toInt(x_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q3, q4]) | q4 : int(1..3)])
+>>>>>>> main
              | q3 : int(1..3)])
 

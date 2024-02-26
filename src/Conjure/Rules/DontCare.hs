@@ -124,7 +124,7 @@ rule_Abstract = "dontCare-abstract" `namedRule` theRule where
 
 
 handleDontCares ::
-    MonadFail m =>
+    MonadFailDoc m =>
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -174,7 +174,7 @@ handleDontCares p =
                         _ -> bug ("dontCare on domain, expecting matrix, but got:" <+> pretty domX)
                 _ -> do
                     case representationOf x of
-                        Nothing -> fail "doesn't seem to have a representation, during handleDontCares"
+                        Nothing -> failDoc "doesn't seem to have a representation, during handleDontCares"
                         Just _  -> do
                             xs  <- downX1 x
                             xs' <- mapM (handleDontCares . make opDontCare) xs

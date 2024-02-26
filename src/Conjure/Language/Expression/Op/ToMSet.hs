@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.ToMSet where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -37,7 +38,7 @@ instance Pretty x => Pretty (OpToMSet x) where
     prettyPrec _ (OpToMSet a) = "toMSet" <> prParens (pretty a)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpToMSet x) where
-    varSymBreakingDescription (OpToMSet a) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpToMSet a) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpToMSet")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

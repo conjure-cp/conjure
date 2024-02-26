@@ -34,25 +34,20 @@ It comes with a Makefile which will use Stack by default.
 The default target in the Makefile will install Stack using the standard procedures (which involves downloading and running a script).
 For more precise control, you might want to consider installing the Haskell tools beforehand instead of using the Makefile.
 
-Installation is known to work with
-`GHC-8.0.2 <http://www.haskell.org/ghc/download_ghc_8_0_2.html>`_,
-`GHC-8.2.2 <http://www.haskell.org/ghc/download_ghc_8_2_2.html>`_,
-`GHC-8.4.4 <http://www.haskell.org/ghc/download_ghc_8_4_4.html>`_, and
-`GHC-8.6.5 <http://www.haskell.org/ghc/download_ghc_8_6_5.html>`_.
-
 In addition, a number of supported backend solvers can be compiled using the `make solvers` target.
-This target also takes a BIN_DIR environment variable to control the location of the solver executables.
+This target also takes a BIN_DIR environment variable to control the location of the solver executables,
+and a PROCESSES environment variable to control how many processes to use when building solvers
 
 .. code-block:: bash
 
-    BIN_DIR=/somewhere/in/your/path make solvers
+    BIN_DIR=/somewhere/in/your/path PROCESSES=4 make solvers
 
 Installing Savile Row
 ---------------------
 
 Since Conjure works by generating an Essence' model, Savile Row is a vital tool when using it.
-Savile Row can be downloaded from `its website <http://savilerow.cs.st-andrews.ac.uk>`_.
-
 You do not need to download Savile Row separately when you compile Conjure from source.
 An up-to-date version of Savile Row is also copied next to the Conjure executable.
+
+A standalone version of Savile Row and user documentation for Savile Row can be downloaded from `its website <http://savilerow.cs.st-andrews.ac.uk>`_.
 

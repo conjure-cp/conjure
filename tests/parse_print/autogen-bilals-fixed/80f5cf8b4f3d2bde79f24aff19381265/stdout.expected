@@ -1,0 +1,20 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..0)] of int(0)
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..0)] of bool
+find var3_RelationAsMatrix: matrix indexed by [bool, bool, bool, bool] of bool
+find var4_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..3)] of int(0..2)
+find var4_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..3)] of bool
+such that
+    var1,
+    5 =
+    sum([sum([sum([sum([var3_RelationAsMatrix[q7, q8, q9, q10] | q10 : bool]) | q9 : bool]) | q8 : bool]) | q7 : bool]),
+    and([var4_ExplicitVarSizeWithFlags_Flags[q11 + 1] > 0 ->
+         var4_ExplicitVarSizeWithFlags_Values[q11] < var4_ExplicitVarSizeWithFlags_Values[q11 + 1]
+             | q11 : int(1..2)]),
+    and([var4_ExplicitVarSizeWithFlags_Flags[q12] = 0 -> var4_ExplicitVarSizeWithFlags_Values[q12] = false
+             | q12 : int(1..3)]),
+    and([var4_ExplicitVarSizeWithFlags_Flags[q13 + 1] > 0 -> var4_ExplicitVarSizeWithFlags_Flags[q13] > 0
+             | q13 : int(1..2)]),
+    sum([var4_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..3)]) <= 3

@@ -1,6 +1,0 @@
-[useChannelling] True
-[removedDecl] find x: matrix indexed by [int(1..2)] of (int(3, 5), int(6, 7))
-[matrixToTuple] x
-[simplified] x[2] = (5, 7)
-             ~~>
-             x[2, 1] = 5 /\ x[2, 2] = 7

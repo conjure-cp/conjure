@@ -133,6 +133,8 @@ This allows Conjure to produce a model independent of the values of the enumerat
 
 The letting-enum syntax can be used to declare an enumerated type directly in a problem specification as well.
 
+Values of an enumerated type cannot contain spaces.
+
 .. code-block:: essence
 
     letting direction be new type enum {North, East, South, West}
@@ -346,11 +348,17 @@ Record domains
 
 Record is a domain constructor, it takes a list of name-domain pairs as arguments.
 Records can be of arbitrary arity.
+(A name-domain pair is a name, followed by a colon, followed by a domain.)
 
 A record domain is denoted by the keyword ``record``, followed by a list of name-domain pairs separated by commas inside curly brackets.
 
 Records are very similar to tuples; except they use labels for their components instead of positions.
 When needed, domains inside a record are referred to using their labels.
+
+.. code-block:: essence
+
+   letting s be record{}
+   letting t be domain record{A : int(0..1), B : int(0..2)}
 
 
 Variant domains
@@ -385,13 +393,17 @@ They are used when the decision variable or the problem parameter does not have 
 Using another kind of domain is more appropriate for most problem specifications in Essence.
 
 Matrix domains are not ordered, but matrices can be compared using the equality operators.
+Note that two matrices are only equal if their indices are the same.
 
 To explicitly specify a matrix, use a list of values inside square brackets.
+Optionally, the domain used to index the elements can be specified also.
 
 .. code-block:: essence
 
    letting M be [0,1,0,-1]
    letting N be [[0,1],[0,-1]]
+
+The matrix ``[0,1]`` is the same as ``[0,1; int(1..2)]``, but distinct from ``[0,1; int(0..1)]``.
 
 
 Set domains
@@ -481,6 +493,7 @@ Cardinality attributes take arguments, but the rest of the arguments do not.
 Sequence domains are total by default, hence they do not take a separate ``total`` attribute.
 
 Sequences are indexed by a contiguous list of increasing integers, beginning at 1.
+The first value in a sequence ``s`` is ``s(1)``.
 
 To explicitly specify a sequence, use a list of values inside round brackets, preceded by the keyword ``sequence``.
 
@@ -601,6 +614,7 @@ Tuple indexing
 ~~~~~~~~~~~~~~
 
 Tuples are indexed by a constant integer, starting at 1.
+The first value in a tuple ``t`` is ``t[1]``.
 Attempting to access a tuple element via an index that is negative, zero, or too large for the tuple, results in an error.
 
 .. code-block:: essence
@@ -719,6 +733,11 @@ The inline binary comparison operators
 
 test whether their arguments have the specified relative lexicographic order.
 
+.. code-block:: essence
+
+    find v : matrix indexed by [int(1..2)] of int(1..2)
+    such that v <lex [ v[3-i] | i : int(1..2) ] $ v = [1,2]
+
 
 Logical operators
 ~~~~~~~~~~~~~~~~~
@@ -823,6 +842,13 @@ Enumerated types are ordered, so they support comparisons and the operators `max
    letting D be new type enum { North, East, South, West }
    find a : D such that a = succ(East) $ South
    find b : bool such that b = (max([North, South]) > East) $ true
+
+The number of elements in an enumerated type can be obtained by using the backtick operator to turn the domain into a list, and then using the cardinality operator:
+
+.. code-block:: essence
+
+   given directions new type enum
+   letting numberOfDirections be |`directions`|
 
 
 Multiset operators
@@ -1049,6 +1075,10 @@ An alternative quantifier-like syntax
 
  | ``sum i in I . f(i)``
 
+where ``I`` is a set, or for domains
+
+ | ``sum i : int(0..3) . f(i)``
+
 is supported for the ``sum`` and ``product`` operators.
 
 
@@ -1078,4 +1108,27 @@ Examples of list comprehensions:
    find b : bool such that b =
        or([ (x=y) | i : I, letting x be i, letting y be M[i] ]) $ true
 
+
+Miscellaneous examples
+~~~~~~~~~~~~~~~~~~~~~~
+
+Some common design patterns are used frequently by experienced modellers.
+
+An often used pattern (also occurring in mixed-integer programming) is to count the number of times a Boolean expression holds across a list.
+This involves the ``toInt`` operator used in a quantification or sum.
+As an example, the following snippet counts the number of entries in a matrix that are each at least as large as the sum of its indices.
+
+.. code-block:: essence
+
+   letting D be domain int(1..3)
+   letting M be [[5,4,3],[3,4,5],[4,3,5]]
+   find k : int(1..100) such that
+     k = sum i,j : D . toInt(M[i,j] >= i+j) $ 6
+
+The ``letting`` command can be used to define macros to more succinctly express constraints.
+The final line of the preceding snippet could be replaced by:
+
+.. code-block:: essence
+
+     k = sum( [ toInt(x) : | i, j : D, letting x be (M[i,j] >= i+j) ] )
 

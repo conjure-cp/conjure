@@ -1,0 +1,32 @@
+language Essence 1.3
+
+letting _binary be 1 + 2
+letting _unaryNot be !true
+letting _doubleUnaryNot be !!true
+letting _unaryNegage be -1
+letting _doubleUnaryNegate be --1
+letting _paren be 1
+letting _aac be minSize({1, 2, 3, 4}, 2)
+letting _postFixFactorial be factorial(4)
+letting _doublePostFixFactorial be factorial(factorial(2))
+letting a be [1, 2, 3, 4, 5; int(1..5)]
+letting _indexing be a[1]
+letting b be [[[1; int(1)]; int(1)], [[1; int(1)]; int(1)], [[1; int(1)]; int(1)]; int(1..3)]
+$ Visualisation for b
+$ 1
+$ 
+$ 1
+$ 
+$ 1
+$ 
+
+letting _multiIndex be b[1, 2, 3]
+letting f be function(1 --> function(1 --> 2))
+$ Visualisation for f
+$ 2
+
+letting _functionUser be image(f, 1)
+letting _functionUserMulti be image(image(f, 1), 2)
+letting x be 1
+letting _functionFactorial be factorial(x)
+letting _functionInbuilt be allDiff([1, 2, 3; int(1..3)])

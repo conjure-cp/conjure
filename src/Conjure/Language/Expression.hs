@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Expression
     ( Statement(..), SearchOrder(..), Objective(..)
@@ -17,6 +16,7 @@ module Conjure.Language.Expression
     , emptyCollectionX
     , nbUses
     , reDomExp
+    , isDomainExpr
     ) where
 
 -- conjure
@@ -38,11 +38,12 @@ import Conjure.Language.RepresentationOf
 
 -- aeson
 import qualified Data.Aeson as JSON
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 -- pretty
-import qualified Text.PrettyPrint as Pr ( cat )
+import Conjure.Language.Pretty as Pr ( cat )
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -63,6 +64,19 @@ instance Hashable  Statement
 instance ToJSON    Statement where toJSON = genericToJSON jsonOptions
 instance FromJSON  Statement where parseJSON = genericParseJSON jsonOptions
 
+instance SimpleJSON Statement where
+    toSimpleJSON st =
+        case st of
+            Declaration d -> toSimpleJSON d
+            _ -> noToSimpleJSON st
+    fromSimpleJSON = noFromSimpleJSON "Statement"
+
+instance ToFromMiniZinc Statement where
+    toMiniZinc st =
+        case st of
+            Declaration d -> toMiniZinc d
+            _ -> noToMiniZinc st
+
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
     pretty (SearchOrder nms) = "branching on" <++> prettyList prBrackets "," nms
@@ -72,22 +86,22 @@ instance Pretty Statement where
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
 
 instance VarSymBreakingDescription Statement where
-    varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Declaration x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Declaration")
         , ("children", varSymBreakingDescription x)
         ]
     varSymBreakingDescription SearchOrder{} = JSON.Null
     varSymBreakingDescription SearchHeuristic{} = JSON.Null
-    varSymBreakingDescription (Where xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Where xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Where")
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (Objective obj x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Objective obj x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String $ "Objective-" `mappend` stringToText (show obj))
         , ("children", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (SuchThat xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (SuchThat xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "SuchThat")
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
@@ -144,6 +158,23 @@ instance Serialize Declaration
 instance Hashable  Declaration
 instance ToJSON    Declaration where toJSON = genericToJSON jsonOptions
 instance FromJSON  Declaration where parseJSON = genericParseJSON jsonOptions
+
+instance SimpleJSON Declaration where
+    toSimpleJSON d =
+        case d of
+            Letting nm x -> do
+                x' <- toSimpleJSON x
+                return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), x')]
+            _ -> noToSimpleJSON d
+    fromSimpleJSON = noFromSimpleJSON "Declaration"
+
+instance ToFromMiniZinc Declaration where
+    toMiniZinc st =
+        case st of
+            Letting nm x -> do
+                x' <- toMiniZinc x
+                return $ MZNNamed [(nm, x')]
+            _ -> noToSimpleJSON st
 
 -- this is only used in the instance below
 type Prim = Either Bool (Either Integer Constant)
@@ -255,27 +286,27 @@ instance Pretty Declaration where
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 instance VarSymBreakingDescription Declaration where
-    varSymBreakingDescription (FindOrGiven forg name domain) = JSON.Object $ M.fromList
+    varSymBreakingDescription (FindOrGiven forg name domain) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "FindOrGiven")
         , ("forg", toJSON forg)
         , ("name", toJSON name)
         , ("domain", toJSON domain)
         ]
-    varSymBreakingDescription (Letting name x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Letting name x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Letting")
         , ("name", toJSON name)
         , ("value", toJSON x)
         ]
-    varSymBreakingDescription (GivenDomainDefnEnum name) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GivenDomainDefnEnum name) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GivenDomainDefnEnum")
         , ("name", toJSON name)
         ]
-    varSymBreakingDescription (LettingDomainDefnEnum name xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (LettingDomainDefnEnum name xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GivenDomainDefnEnum")
         , ("name", toJSON name)
         , ("values", JSON.Array $ V.fromList $ map toJSON xs)
         ]
-    varSymBreakingDescription (LettingDomainDefnUnnamed name x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (LettingDomainDefnUnnamed name x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "LettingDomainDefnUnnamed")
         , ("name", toJSON name)
         , ("value", toJSON x)
@@ -321,6 +352,36 @@ instance Hashable  Expression
 instance ToJSON    Expression where toJSON = genericToJSON jsonOptions
 instance FromJSON  Expression where parseJSON = genericParseJSON jsonOptions
 
+instance SimpleJSON Expression where
+    toSimpleJSON x =
+        case x of
+            Reference nm _ -> return $ JSON.String $ stringToText $ show $ pretty nm
+            Constant c -> toSimpleJSON c
+            AbstractLiteral lit -> toSimpleJSON lit
+            Typed y _ -> toSimpleJSON y
+            Op (MkOpMinus (OpMinus a b)) -> do
+                a' <- toSimpleJSON a
+                b' <- toSimpleJSON b
+                case (a', b') of
+                    (JSON.Number a'', JSON.Number b'') -> return (JSON.Number (a'' - b''))
+                    _ -> noToSimpleJSON x
+            _ -> noToSimpleJSON x
+    fromSimpleJSON t x = Constant <$> fromSimpleJSON t x
+
+instance ToFromMiniZinc Expression where
+    toMiniZinc x =
+        case x of
+            Constant c -> toMiniZinc c
+            AbstractLiteral lit -> toMiniZinc lit
+            Typed y _ -> toMiniZinc y
+            Op (MkOpMinus (OpMinus a b)) -> do
+                a' <- toMiniZinc a
+                b' <- toMiniZinc b
+                case (a', b') of
+                    (MZNInt a'', MZNInt b'') -> return (MZNInt (a'' - b''))
+                    _ -> noToMiniZinc x
+            _ -> noToMiniZinc x
+
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
     let this = pretty i
@@ -364,27 +425,27 @@ instance VarSymBreakingDescription Expression where
     varSymBreakingDescription (Constant x) = toJSON x
     varSymBreakingDescription (AbstractLiteral x) = varSymBreakingDescription x
     varSymBreakingDescription (Domain domain) = varSymBreakingDescription domain
-    varSymBreakingDescription (Reference name _) = JSON.Object $ M.singleton "Reference" (toJSON name)
-    varSymBreakingDescription (WithLocals h (AuxiliaryVars locs)) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Reference name _) = JSON.Object $ KM.singleton "Reference" (toJSON name)
+    varSymBreakingDescription (WithLocals h (AuxiliaryVars locs)) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "WithLocals")
         , ("head", varSymBreakingDescription h)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (WithLocals h (DefinednessConstraints locs)) = JSON.Object $ M.fromList
+    varSymBreakingDescription (WithLocals h (DefinednessConstraints locs)) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "WithLocals")
         , ("head", varSymBreakingDescription h)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (Comprehension h gocs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Comprehension h gocs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Comprehension")
         , ("head", varSymBreakingDescription h)
         , ("gocs", JSON.Array $ V.fromList $ map varSymBreakingDescription gocs)
         ]
     varSymBreakingDescription (Typed x _) = varSymBreakingDescription x
     varSymBreakingDescription (Op op) = varSymBreakingDescription op
-    varSymBreakingDescription (ExpressionMetaVar s) = JSON.Object $ M.fromList
+    varSymBreakingDescription (ExpressionMetaVar s) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "ExpressionMetaVar")
         , ("name", JSON.String (stringToText s))
         ]
@@ -392,8 +453,8 @@ instance VarSymBreakingDescription Expression where
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
-    typeOf (Domain x) = fail ("Expected an expression, but got a domain:" <++> pretty x)
-    typeOf (Reference nm Nothing) = fail ("Type error, identifier not bound:" <+> pretty nm)
+    typeOf (Domain x) = failDoc ("Expected an expression, but got a domain:" <++> pretty x)
+    typeOf (Reference nm Nothing) = failDoc ("Type error, identifier not bound:" <+> pretty nm)
     typeOf (Reference nm (Just refTo)) =
         case refTo of
             Alias x -> typeOf x
@@ -414,7 +475,7 @@ instance TypeOf Expression where
                         GenDomainHasRepr pat domain -> typeOfDomain domain >>= lu (Single pat)
                         GenInExpr        pat expr   ->
                             case project expr of
-                                Just (d :: Domain () Expression) -> fail $ vcat
+                                Just (d :: Domain () Expression) -> failDoc $ vcat
                                     [ "Expected an expression, but got a domain:" <++> pretty d
                                     , "In the generator of a comprehension or a quantified expression"
                                     , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
@@ -423,7 +484,7 @@ instance TypeOf Expression where
                                     tyExpr <- typeOf expr
                                     case innerTypeOf tyExpr of
                                         Just tyExprInner -> lu pat tyExprInner
-                                        Nothing -> fail $ vcat
+                                        Nothing -> failDoc $ vcat
                                             [ "Type error in the generator of a comprehension or a quantified expression"
                                             , "Consider using" <+> pretty pat <+> ":" <+> pretty expr
                                             ]
@@ -434,7 +495,7 @@ instance TypeOf Expression where
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
-            unless (typeUnify TypeBool ty) $ fail $ vcat
+            unless (typeUnify TypeBool ty) $ failDoc $ vcat
                     [ "Local constraint is not boolean."
                     , "Condition:" <+> pretty c
                     , "In:" <+> pretty p
@@ -448,11 +509,11 @@ instance TypeOf Expression where
                     ty <- typeOf x
                     case ty of
                         TypeBool{} -> return ()
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                             [ "Inside a bubble, in a 'such that' statement:" <++> pretty x
                             , "Expected type `bool`, but got:" <++> pretty ty
                             ]
-                _ -> fail $ vcat
+                _ -> failDoc $ vcat
                     [ "Unexpected statement inside a bubble."
                     , "Expected type `find` or `such that`, but got:" <++> pretty stmt
                     , "The complete expression:" <+> pretty p
@@ -463,7 +524,7 @@ instance TypeOf Expression where
             Generator{} -> return ()                    -- TODO: do this properly
             Condition c -> do
                 ty <- typeOf c
-                unless (typeUnify TypeBool ty) $ fail $ vcat
+                unless (typeUnify TypeBool ty) $ failDoc $ vcat
                     [ "Condition is not boolean."
                     , "Condition:" <+> pretty c
                     , "In:" <+> pretty p
@@ -481,27 +542,27 @@ instance RepresentationOf Expression where
         case iType of
             TypeBool{} -> return ()
             TypeInt{} -> return ()
-            _ -> fail "representationOf, OpIndexing, not a bool or int index"
+            _ -> failDoc "representationOf, OpIndexing, not a bool or int index"
         mTree <- representationTreeOf m
         case mTree of
             Tree _ [r] -> return r
-            _ -> fail "domainOf, OpIndexing, not a matrix"
-    representationTreeOf _ = fail "doesn't seem to have a representation"
+            _ -> failDoc "domainOf, OpIndexing, not a matrix"
+    representationTreeOf _ = failDoc "doesn't seem to have a representation"
 
 instance Domain () Expression :< Expression where
     inject = Domain
     project (Domain x) = return x
     project (Reference _ (Just (Alias x))) = project x
-    project x = fail ("projecting Domain out of Expression:" <+> pretty x)
+    project x = failDoc ("projecting Domain out of Expression:" <+> pretty x)
 
 instance Op Expression :< Expression where
     inject = Op
     project (Op x) = return x
-    project x = fail ("projecting Op out of Expression:" <+> pretty x)
+    project x = failDoc ("projecting Op out of Expression:" <+> pretty x)
 
 instance Op Constant :< Constant where
     inject x = bug ("injecting Op into a Constant:" <+> pretty x)
-    project x = fail ("projecting Op out of a Constant:" <+> pretty x)
+    project x = failDoc ("projecting Op out of a Constant:" <+> pretty x)
 
 instance CanBeAnAlias Expression where
     isAlias (Reference _ (Just (Alias x))) = Just x
@@ -511,25 +572,25 @@ instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
     nameOut (Reference nm _) = return nm
     nameOut (Constant (ConstantField nm _)) = return nm
-    nameOut p = fail ("This expression isn't a 'name':" <+> pretty p)
+    nameOut p = failDoc ("This expression isn't a 'name':" <+> pretty p)
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
     fromIntWithTag i t = Constant $ fromIntWithTag i t
     intOut doc (Constant c) = intOut ("intOut{Expression}" <+> doc) c
-    intOut doc x = fail $ vcat [ "Expecting a constant, but got:" <++> pretty x
+    intOut doc x = failDoc $ vcat [ "Expecting a constant, but got:" <++> pretty x
                                , "Called from:" <+> doc
                                ]
 
     fromBool = Constant . fromBool
     boolOut (Constant c) = boolOut c
-    boolOut x = fail ("Expecting a constant, but got:" <++> pretty x)
+    boolOut x = failDoc ("Expecting a constant, but got:" <++> pretty x)
 
     -- fromList [x] = x -- TODO: what would break if I do this?
     fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (AbstractLiteral (AbsLitMatrix _ xs)) = return xs
     listOut (Constant (ConstantAbstract (AbsLitMatrix _ xs))) = return (map Constant xs)
-    listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
+    listOut c = failDoc ("Expecting a matrix literal, but found:" <+> pretty c)
 
 instance Num Expression where
     x + y = Op $ MkOpSum     $ OpSum     $ fromList [x,y]
@@ -583,11 +644,11 @@ instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
 --   is refusing to believe that it is one.
 --   Remind it where it comes from!
 --   (Srsly: Can be useful after parsing a solution file, for example.)
-e2c :: MonadFail m => Expression -> m Constant
+e2c :: MonadFailDoc m => Expression -> m Constant
 e2c (Constant c) = return c
 e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
 e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt t x))))) = return $ ConstantInt t $ negate x
-e2c x = fail ("e2c, not a constant:" <+> pretty x)
+e2c x = failDoc ("e2c, not a constant:" <+> pretty x)
 
 -- | generate a fresh name for a quantified variable.
 --   fst: the pattern to be used inside a generator
@@ -667,7 +728,7 @@ lambdaToFunction (AbsPatSet ts) body = \ p ->
 
         ps :: [Expression]
         ps = case p of
-            Constant (ConstantAbstract (AbsLitSet xs)) -> map Constant xs
+            Constant (viewConstantSet -> Just xs) -> map Constant xs
             AbstractLiteral (AbsLitSet xs) -> xs
             _ -> bug $ "lambdaToFunction, AbsPatSet" <++> vcat [pretty p, pretty (show p)]
     in
@@ -696,12 +757,12 @@ instance ToJSON    ReferenceTo where toJSON = genericToJSON jsonOptions
 instance FromJSON  ReferenceTo where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty ReferenceTo where
-    pretty (Alias x) = "Alias" <+> prParens (pretty x)
-    pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
-    pretty (DeclNoRepr  forg nm dom _) = "DeclNoRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (DeclHasRepr forg nm dom  ) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (RecordField  nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
-    pretty (VariantField nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (Alias x) = "an alias for" <++> pretty x
+    pretty (InComprehension gen) = "a comprehension generator" <++> pretty gen
+    pretty (DeclNoRepr  forg nm dom _) = "declaration of" <++> pretty forg <+> pretty nm <> ":" <+> pretty dom
+    pretty (DeclHasRepr forg nm dom  ) = "declaration of" <++> pretty forg <+> pretty nm <> ":" <+> pretty dom
+    pretty (RecordField  nm ty) = "record field"  <++> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (VariantField nm ty) = "variant field" <++> prParens (pretty nm <+> ":" <+> pretty ty)
 
 data Region
     = NoRegion
@@ -748,20 +809,20 @@ instance Pretty AbstractPattern where
 
 instance VarSymBreakingDescription AbstractPattern where
     varSymBreakingDescription (Single nm) = toJSON nm
-    varSymBreakingDescription (AbsPatTuple xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsPatTuple xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsPatTuple")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (AbsPatMatrix xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsPatMatrix xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsPatMatrix")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (AbsPatSet xs) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbsPatSet xs) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbsPatSet")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (AbstractPatternMetaVar s) = JSON.Object $ M.fromList
+    varSymBreakingDescription (AbstractPatternMetaVar s) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "AbstractPatternMetaVar")
         , ("name", JSON.String (stringToText s))
         ]
@@ -792,15 +853,15 @@ instance Pretty GeneratorOrCondition where
     pretty (ComprehensionLetting n x) = "letting" <+> pretty n <+> "be" <+> pretty x
 
 instance VarSymBreakingDescription GeneratorOrCondition where
-    varSymBreakingDescription (Generator x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Generator x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Generator")
         , ("child", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (Condition x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (Condition x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "Condition")
         , ("child", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (ComprehensionLetting n x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (ComprehensionLetting n x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "ComprehensionLetting")
         , ("children", JSON.Array $ V.fromList [toJSON n, varSymBreakingDescription x])
         ]
@@ -823,17 +884,17 @@ instance Pretty Generator where
     pretty (GenInExpr        pat x) = pretty pat <+> "<-" <+> pretty x
 
 instance VarSymBreakingDescription Generator where
-    varSymBreakingDescription (GenDomainNoRepr  pat x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GenDomainNoRepr  pat x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GenDomainNoRepr")
         , ("pattern", varSymBreakingDescription pat)
         , ("generator", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (GenDomainHasRepr pat x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GenDomainHasRepr pat x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GenDomainHasRepr")
         , ("pattern", toJSON pat)
         , ("generator", varSymBreakingDescription x)
         ]
-    varSymBreakingDescription (GenInExpr        pat x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (GenInExpr        pat x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "GenInExpr")
         , ("pattern", varSymBreakingDescription pat)
         , ("generator", varSymBreakingDescription x)
@@ -874,3 +935,6 @@ reDomExp exp = case exp of
                  DomainInt t _ -> reTag t exp
                  _ -> exp
 
+isDomainExpr :: MonadFailDoc m => Expression -> m ()
+isDomainExpr Domain{} = return ()
+isDomainExpr x = na ("Not a domain expression: " <+> pretty x)

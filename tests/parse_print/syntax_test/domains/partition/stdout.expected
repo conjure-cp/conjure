@@ -1,0 +1,13 @@
+language Essence 1.3
+
+letting simple be domain partition from bool
+letting sized be domain partition (partSize 1) from bool
+letting sized2 be domain partition (minPartSize 1) from bool
+letting sized3 be domain partition (maxPartSize 2) from bool
+letting sized4 be domain partition (minPartSize 1, maxPartSize 2) from bool
+letting numpart be domain partition (numParts 1) from bool
+letting numpart2 be domain partition (minNumParts 1) from bool
+letting numpart3 be domain partition (maxNumParts 2) from bool
+letting numpart4 be domain partition (minNumParts 1, maxNumParts 2) from bool
+letting reg be domain partition (regular) from int(1..5)
+letting all be domain partition (minNumParts 1, maxNumParts 2, minPartSize 1, maxPartSize 2, regular) from int

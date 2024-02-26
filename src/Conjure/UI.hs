@@ -36,6 +36,7 @@ data UI
         , logRuleAttempts            :: Bool
         , logChoices                 :: Bool
         -- flags related to modelling decisions
+        , portfolio                  :: Maybe Int
         , strategyQ                  :: String
         , strategyA                  :: String
         , representations            :: Maybe String        -- (def: strategyA)
@@ -47,12 +48,15 @@ data UI
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
         , unnamedSymmetryBreaking    :: String
+        , followModel                :: FilePath            -- this is a model to be followed
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , savedChoices               :: Maybe FilePath
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        -- streamlining
+        , generateStreamliners       :: String
         }
     | TranslateParameter
         { eprime                     :: FilePath            -- eprime, mandatory
@@ -105,6 +109,7 @@ data UI
         , logRuleAttempts            :: Bool
         , logChoices                 :: Bool
         -- flags related to modelling decisions
+        , portfolio                  :: Maybe Int
         , strategyQ                  :: String
         , strategyA                  :: String
         , representations            :: Maybe String
@@ -116,20 +121,24 @@ data UI
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
         , unnamedSymmetryBreaking    :: String
+        , followModel                :: FilePath            -- this is a model to be followed
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
-        -- flags for SR and Minion/Lingeling
+        -- flags for SR and the selected solver
         , savilerowOptions           :: [String]
         , solverOptions              :: [String]
         , solver                     :: String
+        , graphSolver                :: Bool
         , cgroups                    :: Bool
         , nbSolutions                :: String              -- a number, or "all". by default 1
         , copySolutions              :: Bool
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        -- streamlining
+        , generateStreamliners       :: String
         }
     | IDE
         { essence                    :: FilePath            -- Optional, will read from stdin if not provided
@@ -179,7 +188,6 @@ data UI
         }
     | ParameterGenerator
         { essence                    :: FilePath
-        , essenceOut                 :: FilePath
         , minInt                     :: Integer
         , maxInt                     :: Integer
         , logLevel                   :: LogLevel
@@ -187,14 +195,34 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    | ModelStrengthening
+    | AutoIG
         { essence                    :: FilePath
-        , essenceOut                 :: FilePath
+        , outputFilepath             :: FilePath
+        , generatorToIrace           :: Bool
+        , removeAux                  :: Bool
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
+        }
+    | Boost
+        { essence                    :: FilePath
         , logLevel                   :: LogLevel
         , logRuleSuccesses           :: Bool
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        }
+    | Streamlining
+        { essence                    :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
+        }
+    | LSP
+        { logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
         }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -204,7 +232,7 @@ instance ToJSON    UI where toJSON = genericToJSON jsonOptions
 instance FromJSON  UI where parseJSON = genericParseJSON jsonOptions
 
 
-data OutputFormat = Plain | Binary | JSON
+data OutputFormat = Plain | Binary | ASTJSON | JSON | JSONStream | MiniZinc
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize OutputFormat
@@ -314,6 +342,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Store the choices in a way that can be reused by -al"
+        , portfolio
+            = Nothing
+            &= typ "PORTFOLIO"
+            &= name "portfolio"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Portfolio size. When it is set to N, Conjure will try to generate up to N models."
         , strategyQ
             = "f"
             &= typ "STRATEGY"
@@ -339,7 +374,6 @@ ui = modes
                     \ s picks the 'sparsest' option \
                     \at every decision point: \
                     \useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: ai"
         , representations
             = Nothing
@@ -412,6 +446,13 @@ ui = modes
             &= help "Level to use for breaking symmetries arising from unnamed types. \
                     \Options: none / fast-consecutive / fast-allpairs / complete-independently / complete.\n\
                     \Default: none"
+        , followModel
+            = ""
+            &= name "follow-model"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Provide a Conjure-generated Essence Prime model to be used as a guide during model generation. \
+                    \Conjure will try to imitate the modelling decisions from this file."
         , seed
             = Nothing
             &= name "seed"
@@ -444,16 +485,27 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
+        , generateStreamliners
+            = ""
+            &= name "generate-streamliners"
+            &= groupname "Streamlining"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\n\
+                    \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "modelling"
             &= explicit
             &= help "The main act. Given a problem specification in Essence, \
@@ -498,10 +550,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -560,10 +615,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -610,10 +668,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -730,6 +791,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Store the choices in a way that can be reused by -al"
+        , portfolio
+            = Nothing
+            &= typ "PORTFOLIO"
+            &= name "portfolio"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Portfolio size. When it is set to N, Conjure will try to generate up to N models."
         , strategyQ
             = "f"
             &= typ "STRATEGY"
@@ -755,7 +823,6 @@ ui = modes
                     \ s picks the 'sparsest' option \
                     \at every decision point: \
                     \useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: c"
         , representations
             = Nothing
@@ -828,6 +895,13 @@ ui = modes
             &= help "Level to use for breaking symmetries arising from unnamed types. \
                     \Options: none / fast-consecutive / fast-allpairs / complete-independently / complete.\n\
                     \Default: none"
+        , followModel
+            = ""
+            &= name "follow-model"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Provide a Conjure-generated Essence Prime model to be used as a guide during model generation. \
+                    \Conjure will try to imitate the modelling decisions from this file."
         , seed
             = Nothing
             &= name "seed"
@@ -877,14 +951,30 @@ ui = modes
                     \ - minion (CP solver)\n\
                     \ - gecode (CP solver)\n\
                     \ - chuffed (CP solver)\n\
+                    \ - or-tools (CP solver)\n\
                     \ - glucose (SAT solver)\n\
                     \ - glucose-syrup (SAT solver)\n\
-                    \ - lingeling (SAT solver)\n\
+                    \ - lingeling/plingeling/treengeling (SAT solver)\n\
+                    \ - cadical (SAT solver)\n\
+                    \ - kissat (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
-                    \Default: minion"
+                    \ - coin-or (MIP solver, implemented via MiniZinc)\n\
+                    \ - cplex (MIP solver, implemented via MiniZinc)\n\
+                    \ - boolector (SMT solver, supported logics: bv)\n\
+                    \ - yices (SMT solver, supported logics: bv, lia, idl)\n\
+                    \ - z3 (SMT solver, supported logics: bv, lia, nia, idl)\n\
+                    \Default: minion\n\n\
+                    \Default logic for SMT solvers is bitvector (bv).\n\
+                    \Append a dash and the name of a logic to the solver name to choose a different logic. For example yices-idl."
+        , graphSolver
+            = False
+            &= name "graph-solver"
+            &= groupname "General"
+            &= explicit
+            &= help "Create input files for the Glasgow graph solver."
         , cgroups
             = False
             &= name "cgroups"
@@ -912,16 +1002,27 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
+        , generateStreamliners
+            = ""
+            &= name "generate-streamliners"
+            &= groupname "Streamlining"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\n\
+                    \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "solve"
             &= explicit
             &= help "A combined mode for convenience.\n\
@@ -1001,10 +1102,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1042,10 +1146,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1107,10 +1214,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1152,10 +1262,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1170,14 +1283,6 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , essenceOut
-            = def
-            &= typ "ESSENCE_FILE"
-            &= typFile
-            &= name "essence-out"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Output file path."
         , minInt
             = 0
             &= typ "INT"
@@ -1210,10 +1315,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Format to use for output.\n\
-                    \    plain : default\n\
-                    \    binary: can be read by Conjure\n\
-                    \    json  : use to avoid parsing\n"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
         , lineWidth
             = 120
             &= name "line-width"
@@ -1225,19 +1333,64 @@ ui = modes
             &= help "Generate an Essence model describing the instances of the problem class \
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
-    , ModelStrengthening
+    , AutoIG
         { essence
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , essenceOut
+        , outputFilepath
             = def
-            &= typ "ESSENCE_FILE"
-            &= typFile
-            &= name "essence-out"
+            &= typ "OUTPUT_FILE"
+            &= argPos 1
+        , generatorToIrace
+            = False
+            &= name "generator-to-irace"
+            &= explicit
+            &= help "Convert the givens in a hand written generator model to irace syntax."
+        , removeAux
+            = False
+            &= name "remove-aux"
+            &= explicit
+            &= help "Remove lettings whose name start with Aux"
+        , logLevel
+            = def
+            &= name "log-level"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Output file path."
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Limit in seconds of real time."
+        , outputFormat
+            = def
+            &= name "output-format"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= typ "FORMAT"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
+        , lineWidth
+            = 120
+            &= name "line-width"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Line width for pretty printing.\nDefault: 120"
+        }   &= name "autoig"
+            &= explicit
+            &= help "Functionality to support the AutoIG workflow."
+    , Boost
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
         , logLevel
             = def
             &= name "log-level"
@@ -1250,6 +1403,47 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Generate logs for rule applications."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Time limit in seconds (real time)."
+        , outputFormat
+            = def
+            &= name "output-format"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= typ "FORMAT"
+            &= help "Format to use for output. All output formats can also be used for input.\n\
+                    \    plain: default\n\
+                    \    binary: a binary encoding\n\
+                    \    astjson: a JSON dump of the internal data structures, quite verbose\n\
+                    \    json: a simplified JSON format, only used for parameters and solutions\n\
+                    \    jsonstream: same as JSON, except in one special case. when multiple solutions are saved in a single file as json, this mode prints one solution per line\n\
+                    \    minizinc: minizinc format for data files, only used for solutions\n"
+        , lineWidth
+            = 120
+            &= name "line-width"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Line width to use during pretty printing.\nDefault: 120"
+        }   &= name "boost"
+            &= explicit
+            &= help "Strengthen an Essence model as described in \"Reformulating \
+                    \Essence Specifications for Robustness\",\n\
+                    \which aims to make search faster."
+    , Streamlining
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
         , limitTime
             = Nothing
             &= name "limit-time"
@@ -1275,11 +1469,13 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width to use during pretty printing.\nDefault: 120"
-        }   &= name "model-strengthening"
+        }   &= name "streamlining"
             &= explicit
-            &= help "Strengthen an Essence model as described in \"Reformulating \
-                    \Essence Specifications for Robustness\",\n\
-                    \which aims to make search faster."
+            &= help "Generate streamlined Essence models."
+    , LSP {
+        logLevel = def,
+        limitTime = Nothing
+    } &= name "lsp"
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]

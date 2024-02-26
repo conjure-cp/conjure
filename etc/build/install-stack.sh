@@ -4,7 +4,6 @@ set -o errexit
 set -o nounset
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
-source ${SCRIPT_DIR}/default_envvars.sh
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export CI=${CI:-false}

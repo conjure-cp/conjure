@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 import Conjure.Language.ZeroVal ( EnumerateDomain, zeroVal )
 
 
-variant :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+variant :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
 variant = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -92,21 +92,21 @@ variant = Representation chck downD structuralCons downC up symmetryOrdering
                         iName = mkName name iTag
                     in  case lookup iName ctxt of
                             Just val -> return (name, ConstantAbstract $ AbsLitVariant (Just dsForgotten) iTag val)
-                            Nothing -> fail $ vcat $
+                            Nothing -> failDoc $ vcat $
                                 [ "(in Variant up 1)"
                                 , "No value for:" <+> pretty iName
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainRecord ds)
                                 ] ++
                                 ("Bindings in context:" : prettyContext ctxt)
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in Variant up 2)"
                     , "No value for:" <+> pretty (mkName name "_tag")
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty (DomainRecord ds)
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                Just val -> fail $ vcat $
+                Just val -> failDoc $ vcat $
                     [ "Expecting an integer value for:" <+> pretty (mkName name "_tag")
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty (DomainRecord ds)

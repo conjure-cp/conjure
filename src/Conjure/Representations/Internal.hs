@@ -1,5 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE KindSignatures #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Representations.Internal
     ( Representation(..)
@@ -15,7 +17,7 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
-
+import qualified Data.Kind  as T (Type)
 
 type DomainX x = Domain HasRepresentation x
 type DomainC = Domain HasRepresentation Constant
@@ -30,7 +32,7 @@ type DomainC = Domain HasRepresentation Constant
 --   It takes in a instance level domain for the high level object.
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
-data Representation (m :: * -> *) = Representation
+data Representation (m :: T.Type -> T.Type) = Representation
     { rCheck            :: TypeOf_ReprCheck        m
     , rDownD            :: TypeOf_DownD            m
     , rStructural       :: TypeOf_Structural       m
@@ -39,24 +41,24 @@ data Representation (m :: * -> *) = Representation
     , rSymmetryOrdering :: TypeOf_SymmetryOrdering m
     }
 
-type TypeOf_ReprCheck (m :: * -> *) =
-       forall x . (Pretty x, ExpressionLike x)
+type TypeOf_ReprCheck (m :: T.Type -> T.Type) = 
+       forall x . (Data x, Pretty x, ExpressionLike x)
     => (Domain () x -> m [DomainX x])               -- other checkers for inner domains
     -> Domain () x                                  -- this domain
     -> m [DomainX x]                                -- with all repr options
 
-type TypeOf_DownD (m :: * -> *) =
-                 (Name, DomainX Expression)
+type TypeOf_DownD (m :: T.Type -> T.Type) = 
+                (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
 
-type TypeOf_SymmetryOrdering (m :: * -> *) =
+type TypeOf_SymmetryOrdering (m :: T.Type -> T.Type) = 
        ((Expression -> m [Expression]) -> Expression -> DomainX Expression -> m Expression) -- inner S.O.
     -> (Expression -> m [Expression])               -- general downX1
     -> Expression                                   -- this as an expression
     -> DomainX Expression                           -- name and domain
     -> m Expression                                 -- output, of type [int]
 
-type TypeOf_Structural (m :: * -> *) =
+type TypeOf_Structural (m :: T.Type -> T.Type) = 
        (DomainX Expression -> m (Expression -> m [Expression]))
                                                     -- other structural constraints for inner domains
     -> (Expression -> m [Expression])               -- general downX1
@@ -65,34 +67,37 @@ type TypeOf_Structural (m :: * -> *) =
           -> m [Expression]                         -- structural constraints
          )
 
-type TypeOf_DownC (m :: * -> *) =
+type TypeOf_DownC (m :: T.Type -> T.Type) = 
                  (Name, DomainC, Constant)          -- the input name, domain and constant
     -> m (Maybe [(Name, DomainC, Constant)])        -- the outputs names, domains, and constants
 
-type TypeOf_Up (m :: * -> *) =
-       [(Name, Constant)]                           -- all known constants, representing a solution at the low level
-    -> (Name, DomainC)                              -- the name and domain we are working on
-    -> m (Name, Constant)                           -- the output constant, at the high level
+type TypeOf_Up (m :: T.Type -> T.Type) = 
+        [(Name, Constant)] ->                       -- all known constants, representing a solution at the low level
+        (Name, DomainC) ->                          -- the name and domain we are working on
+        m (Name, Constant)                          -- the output constant, at the high level
 
 
-type DispatchFunction m x
-        =  Pretty x
-        => Domain HasRepresentation x
-        -> Representation m
+type DispatchFunction m x =
+        Data x =>
+        Pretty x =>
+        Domain HasRepresentation x ->
+        Representation m
 
-type ReprOptionsFunction m r x
-        =  (Pretty x, ExpressionLike x)
-        => Domain () x
-        -> m [Domain HasRepresentation x]
+type ReprOptionsFunction m r x =
+        Data x =>
+        Pretty x =>
+        ExpressionLike x =>
+        Domain () x ->
+        m [Domain HasRepresentation x]
 
 
-rDownToX
-    :: Monad m
-    => Representation m                                 -- for a given representation
-    -> FindOrGiven                                      -- and a declaration: forg
-    -> Name                                             --                  : name
-    -> Domain HasRepresentation Expression              --                  : domain
-    -> m [Expression]                                   -- expressions referring to the representation
+rDownToX ::
+    (Monad m,MonadFail m) =>
+    Representation m ->                             -- for a given representation
+    FindOrGiven ->                                  -- and a declaration: forg
+    Name ->                                         --                  : name
+    Domain HasRepresentation Expression ->          --                  : domain
+    m [Expression]                                  -- expressions referring to the representation
 rDownToX repr forg name domain = do
     pairs <- rDownD repr (name, domain)
     return [ Reference n (Just (DeclHasRepr forg n d))

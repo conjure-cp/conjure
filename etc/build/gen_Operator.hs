@@ -59,7 +59,7 @@ main = do
                 [ [ "instance Op" ++ m ++ " x :< Op x where"
                   , "    inject = MkOp" ++ m
                   , "    project (MkOp" ++ m ++ " x) = return x"
-                  , "    project _ = fail \"projecting Op" ++ m ++ "\""
+                  , "    project _ = failDoc \"projecting Op" ++ m ++ "\""
                   ]
                 | m <- operators
                 ]

@@ -1,0 +1,3 @@
+language Essence 1.3
+find mx : set (size 2) of partition from int(0..9)
+such that forAll x in mx . forAll i in parts(x) . |i| <= 3

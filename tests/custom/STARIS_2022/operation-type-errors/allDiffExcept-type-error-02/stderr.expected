@@ -1,0 +1,17 @@
+Error:
+    allDiffExcept-type-error.essence:2:35:
+  |
+2 | such that b = alldifferent_except(false, [1, 2, 3, 4])
+  |                                   ^^^^^
+Type error:
+	Expected: "Matrix or list"
+	Got: bool
+
+allDiffExcept-type-error.essence:2:42:
+  |
+2 | such that b = alldifferent_except(false, [1, 2, 3, 4])
+  |                                          ^^^^^^^^^^^^
+Type error:
+	Expected: "int enum or bool"
+	Got: matrix indexed by [int] of int
+

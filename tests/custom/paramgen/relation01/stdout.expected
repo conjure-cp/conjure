@@ -1,0 +1,169 @@
+$ conjure parameter-generator problem.essence
+File: problem-instanceGenerator.essence
+language Essence 1.3
+
+given r2_cardMin: int(-2..100)
+given r2_cardMax: int(-2..100)
+given r2_relation1_min: int(-2..10)
+given r2_relation1_max: int(-2..10)
+given r2_relation2_min: int(-2..10)
+given r2_relation2_max: int(-2..10)
+find r2: relation (maxSize 100) of (int(-2..10) * int(-2..10))
+such that
+    |r2| >= r2_cardMin /\ |r2| <= r2_cardMax,
+    and([q1[1] >= r2_relation1_min | q1 <- r2]),
+    and([q1[1] <= r2_relation1_max | q1 <- r2]),
+    and([q1[2] >= r2_relation2_min | q1 <- r2]),
+    and([q1[2] <= r2_relation2_max | q1 <- r2])
+given r3_cardMin: int(-2..1000)
+given r3_cardMax: int(-2..1000)
+given r3_relation1_min: int(-2..10)
+given r3_relation1_max: int(-2..10)
+given r3_relation2_min: int(-2..10)
+given r3_relation2_max: int(-2..10)
+given r3_relation3_min: int(-2..10)
+given r3_relation3_max: int(-2..10)
+find r3: relation (maxSize 1000) of (int(-2..10) * int(-2..10) * int(-2..10))
+such that
+    |r3| >= r3_cardMin /\ |r3| <= r3_cardMax,
+    and([q2[1] >= r3_relation1_min | q2 <- r3]),
+    and([q2[1] <= r3_relation1_max | q2 <- r3]),
+    and([q2[2] >= r3_relation2_min | q2 <- r3]),
+    and([q2[2] <= r3_relation2_max | q2 <- r3]),
+    and([q2[3] >= r3_relation3_min | q2 <- r3]),
+    and([q2[3] <= r3_relation3_max | q2 <- r3])
+given r4_cardMin: int(-2..10000)
+given r4_cardMax: int(-2..10000)
+given r4_relation1_min: int(-2..10)
+given r4_relation1_max: int(-2..10)
+given r4_relation2_min: int(-2..10)
+given r4_relation2_max: int(-2..10)
+given r4_relation3_min: int(-2..10)
+given r4_relation3_max: int(-2..10)
+given r4_relation4_min: int(-2..10)
+given r4_relation4_max: int(-2..10)
+find r4: relation (maxSize 10000) of (int(-2..10) * int(-2..10) * int(-2..10) * int(-2..10))
+such that
+    |r4| >= r4_cardMin /\ |r4| <= r4_cardMax,
+    and([q3[1] >= r4_relation1_min | q3 <- r4]),
+    and([q3[1] <= r4_relation1_max | q3 <- r4]),
+    and([q3[2] >= r4_relation2_min | q3 <- r4]),
+    and([q3[2] <= r4_relation2_max | q3 <- r4]),
+    and([q3[3] >= r4_relation3_min | q3 <- r4]),
+    and([q3[3] <= r4_relation3_max | q3 <- r4]),
+    and([q3[4] >= r4_relation4_min | q3 <- r4]),
+    and([q3[4] <= r4_relation4_max | q3 <- r4])
+
+--------------------
+
+
+File: problem-instanceGenerator.essence.irace
+r2_cardMin "-r2_cardMin " i (-2, 100)
+r2_cardMax "-r2_cardMax " i (-2, 100)
+r2_relation1_min "-r2_relation1_min " i (-2, 10)
+r2_relation1_max "-r2_relation1_max " i (-2, 10)
+r2_relation2_min "-r2_relation2_min " i (-2, 10)
+r2_relation2_max "-r2_relation2_max " i (-2, 10)
+r3_cardMin "-r3_cardMin " i (-2, 1000)
+r3_cardMax "-r3_cardMax " i (-2, 1000)
+r3_relation1_min "-r3_relation1_min " i (-2, 10)
+r3_relation1_max "-r3_relation1_max " i (-2, 10)
+r3_relation2_min "-r3_relation2_min " i (-2, 10)
+r3_relation2_max "-r3_relation2_max " i (-2, 10)
+r3_relation3_min "-r3_relation3_min " i (-2, 10)
+r3_relation3_max "-r3_relation3_max " i (-2, 10)
+r4_cardMin "-r4_cardMin " i (-2, 10000)
+r4_cardMax "-r4_cardMax " i (-2, 10000)
+r4_relation1_min "-r4_relation1_min " i (-2, 10)
+r4_relation1_max "-r4_relation1_max " i (-2, 10)
+r4_relation2_min "-r4_relation2_min " i (-2, 10)
+r4_relation2_max "-r4_relation2_max " i (-2, 10)
+r4_relation3_min "-r4_relation3_min " i (-2, 10)
+r4_relation3_max "-r4_relation3_max " i (-2, 10)
+r4_relation4_min "-r4_relation4_min " i (-2, 10)
+r4_relation4_max "-r4_relation4_max " i (-2, 10)
+
+--------------------
+
+
+File: problem-instanceRepair.essence
+language Essence 1.3
+
+given r2_cardMin: int(-2..100)
+given r2_cardMax: int(-2..100)
+given r2_relation1_min: int(-2..10)
+given r2_relation1_max: int(-2..10)
+given r2_relation2_min: int(-2..10)
+given r2_relation2_max: int(-2..10)
+find repaired_r2_cardMin: int(-2..100)
+find repaired_r2_cardMax: int(-2..100)
+find repaired_r2_relation1_min: int(-2..10)
+find repaired_r2_relation1_max: int(-2..10)
+find repaired_r2_relation2_min: int(-2..10)
+find repaired_r2_relation2_max: int(-2..10)
+such that
+    repaired_r2_relation1_min <= repaired_r2_relation1_max,
+    repaired_r2_relation2_min <= repaired_r2_relation2_max
+given r3_cardMin: int(-2..1000)
+given r3_cardMax: int(-2..1000)
+given r3_relation1_min: int(-2..10)
+given r3_relation1_max: int(-2..10)
+given r3_relation2_min: int(-2..10)
+given r3_relation2_max: int(-2..10)
+given r3_relation3_min: int(-2..10)
+given r3_relation3_max: int(-2..10)
+find repaired_r3_cardMin: int(-2..1000)
+find repaired_r3_cardMax: int(-2..1000)
+find repaired_r3_relation1_min: int(-2..10)
+find repaired_r3_relation1_max: int(-2..10)
+find repaired_r3_relation2_min: int(-2..10)
+find repaired_r3_relation2_max: int(-2..10)
+find repaired_r3_relation3_min: int(-2..10)
+find repaired_r3_relation3_max: int(-2..10)
+such that
+    repaired_r3_relation1_min <= repaired_r3_relation1_max,
+    repaired_r3_relation2_min <= repaired_r3_relation2_max,
+    repaired_r3_relation3_min <= repaired_r3_relation3_max
+given r4_cardMin: int(-2..10000)
+given r4_cardMax: int(-2..10000)
+given r4_relation1_min: int(-2..10)
+given r4_relation1_max: int(-2..10)
+given r4_relation2_min: int(-2..10)
+given r4_relation2_max: int(-2..10)
+given r4_relation3_min: int(-2..10)
+given r4_relation3_max: int(-2..10)
+given r4_relation4_min: int(-2..10)
+given r4_relation4_max: int(-2..10)
+find repaired_r4_cardMin: int(-2..10000)
+find repaired_r4_cardMax: int(-2..10000)
+find repaired_r4_relation1_min: int(-2..10)
+find repaired_r4_relation1_max: int(-2..10)
+find repaired_r4_relation2_min: int(-2..10)
+find repaired_r4_relation2_max: int(-2..10)
+find repaired_r4_relation3_min: int(-2..10)
+find repaired_r4_relation3_max: int(-2..10)
+find repaired_r4_relation4_min: int(-2..10)
+find repaired_r4_relation4_max: int(-2..10)
+such that
+    repaired_r4_relation1_min <= repaired_r4_relation1_max,
+    repaired_r4_relation2_min <= repaired_r4_relation2_max,
+    repaired_r4_relation3_min <= repaired_r4_relation3_max,
+    repaired_r4_relation4_min <= repaired_r4_relation4_max
+minimising
+    sum([|repaired_r2_cardMin - r2_cardMin|, |repaired_r2_cardMax - r2_cardMax|,
+         |repaired_r2_relation1_min - r2_relation1_min|, |repaired_r2_relation1_max - r2_relation1_max|,
+         |repaired_r2_relation2_min - r2_relation2_min|, |repaired_r2_relation2_max - r2_relation2_max|,
+         |repaired_r3_cardMin - r3_cardMin|, |repaired_r3_cardMax - r3_cardMax|,
+         |repaired_r3_relation1_min - r3_relation1_min|, |repaired_r3_relation1_max - r3_relation1_max|,
+         |repaired_r3_relation2_min - r3_relation2_min|, |repaired_r3_relation2_max - r3_relation2_max|,
+         |repaired_r3_relation3_min - r3_relation3_min|, |repaired_r3_relation3_max - r3_relation3_max|,
+         |repaired_r4_cardMin - r4_cardMin|, |repaired_r4_cardMax - r4_cardMax|,
+         |repaired_r4_relation1_min - r4_relation1_min|, |repaired_r4_relation1_max - r4_relation1_max|,
+         |repaired_r4_relation2_min - r4_relation2_min|, |repaired_r4_relation2_max - r4_relation2_max|,
+         |repaired_r4_relation3_min - r4_relation3_min|, |repaired_r4_relation3_max - r4_relation3_max|,
+         |repaired_r4_relation4_min - r4_relation4_min|, |repaired_r4_relation4_max - r4_relation4_max|;
+             int(1..24)])
+
+--------------------
+
+

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.Range where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -33,7 +34,7 @@ instance Pretty x => Pretty (OpRange x) where
     prettyPrec _ (OpRange a) = "range" <> prParens (pretty a)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRange x) where
-    varSymBreakingDescription (OpRange a) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpRange a) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpRange")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

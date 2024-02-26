@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Conjure.Rules.Definition
@@ -28,6 +28,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, fromZipper, zipperBi )
 
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 
 type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
@@ -47,7 +49,9 @@ data QuestionType
     | ChooseRepr_Quantified
     | ChooseRepr_Cut Name
     | ExpressionRefinement
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
+
+instance Hashable QuestionType
 
 data Answer = Answer
     { aText      :: Doc
@@ -90,6 +94,8 @@ data Config = Config
     , logRuleSuccesses           :: Bool
     , logRuleAttempts            :: Bool
     , logChoices                 :: Bool
+    , followTrail                :: M.HashMap Int -- Question hash
+                                              Int -- Answer hash
     , strategyQ                  :: Strategy
     , strategyA                  :: Strategy
     , representations            :: Strategy
@@ -108,6 +114,7 @@ data Config = Config
     , lineWidth                  :: Int
     , responses                  :: Maybe [Int]
     , responsesRepresentation    :: Maybe [(Name, Int)]
+    , generateStreamliners       :: Maybe [Int]
     , estimateNumberOfModels     :: Bool
     }
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -121,6 +128,7 @@ instance Default Config where
         , logRuleSuccesses           = False
         , logRuleAttempts            = False
         , logChoices                 = False
+        , followTrail                = M.empty
         , strategyQ                  = Interactive
         , strategyA                  = Interactive
         , representations            = Interactive
@@ -139,6 +147,7 @@ instance Default Config where
         , lineWidth                  = 120
         , responses                  = Nothing
         , responsesRepresentation    = Nothing
+        , generateStreamliners       = Nothing
         , estimateNumberOfModels     = False
         }
 
@@ -178,12 +187,12 @@ data Rule = Rule
     { rName  :: Doc
     , rApply
         :: forall n m a .
-            ( MonadFail n, MonadUserError n, MonadLog n
+            ( MonadFailDoc n, MonadUserError n, MonadLog n
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
                 -- a fail in {n} means that the rule isn't applicable
-            , MonadFail m, MonadUserError m, MonadLog m
+            , MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
-                -- a fail in {m} means a bug
+                -- a failDoc in {m} means a bug
             , ?typeCheckerMode :: TypeCheckerMode
             )
         => Zipper a Expression            -- to query context
@@ -194,9 +203,9 @@ data Rule = Rule
 namedRule
     :: Doc
     -> (forall n m a .
-            ( MonadFail n, MonadUserError n, MonadLog n
+            ( MonadFailDoc n, MonadUserError n, MonadLog n
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
-            , MonadFail m, MonadUserError m, MonadLog m
+            ,  MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
             , ?typeCheckerMode :: TypeCheckerMode
             ) => Expression -> n (Doc, m Expression))
@@ -211,9 +220,9 @@ namedRule nm f = Rule
 namedRuleZ
     :: Doc
     -> (forall n m a .
-            ( MonadFail n, MonadUserError n, MonadLog n
+            ( MonadFailDoc  n, MonadUserError n, MonadLog n
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
-            , MonadFail m, MonadUserError m, MonadLog m
+            , MonadFailDoc m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
             , ?typeCheckerMode :: TypeCheckerMode
             ) => Zipper a Expression -> Expression -> n (Doc, m Expression))
@@ -232,7 +241,7 @@ isAtomic _ = False
 
 
 matchFirst
-    :: MonadFail m
+    :: MonadFailDoc m
     => [a]                  -- list of things to try matching on
     -> (a -> Maybe b)       -- the matcher
     -> m ( [a]              -- befores

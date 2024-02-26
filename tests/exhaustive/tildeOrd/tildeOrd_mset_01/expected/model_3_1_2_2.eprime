@@ -1,0 +1,94 @@
+language ESSENCE' 1.0
+
+find a_MOccurrence: matrix indexed by [int(1..2)] of int(0..3)
+find a_ExplicitWithRepetition_Flag: int(3)
+find a_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
+find b_ExplicitWithFlags_Flags: matrix indexed by [int(1..3)] of int(0..3)
+find b_ExplicitWithFlags_Values: matrix indexed by [int(1..3)] of int(1..2)
+find b_ExplicitWithRepetition_Flag: int(3)
+find b_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
+branching on
+    [a_ExplicitWithRepetition_Flag, a_ExplicitWithRepetition_Values, a_MOccurrence, b_ExplicitWithRepetition_Flag,
+     b_ExplicitWithRepetition_Values, b_ExplicitWithFlags_Flags, b_ExplicitWithFlags_Values]
+such that
+    or([a_MOccurrence[q45] > 0 /\
+        (a_MOccurrence[q45] <
+         sum([toInt(b_ExplicitWithFlags_Values[q37] = q45) * catchUndef(b_ExplicitWithFlags_Flags[q37], 0)
+                  | q37 : int(1..3)])
+         /\
+         (and([a_MOccurrence[q41] > 0 ->
+               a_MOccurrence[q41] =
+               sum([toInt(b_ExplicitWithFlags_Values[q38] = q41) * catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                        | q38 : int(1..3)])
+                   | q41 : int(1..2), q41 < q45])
+          /\
+          and([and([b_ExplicitWithFlags_Flags[q42] > 0,
+                    !or([a_MOccurrence[q40] > 0 /\ q40 = b_ExplicitWithFlags_Values[q42] | q40 : int(1..2)]),
+                    b_ExplicitWithFlags_Values[q42] < q45;
+                        int(1..3)])
+               ->
+               a_MOccurrence[b_ExplicitWithFlags_Values[q42]] =
+               sum([toInt(b_ExplicitWithFlags_Values[q38] = b_ExplicitWithFlags_Values[q42]) *
+                    catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                        | q38 : int(1..3)])
+                   | q42 : int(1..3)])))
+            | q45 : int(1..2)])
+    \/
+    or([b_ExplicitWithFlags_Flags[q46] > 0 /\
+        !or([a_MOccurrence[q44] > 0 /\ q44 = b_ExplicitWithFlags_Values[q46] | q44 : int(1..2)])
+        /\
+        (a_MOccurrence[b_ExplicitWithFlags_Values[q46]] <
+         sum([toInt(b_ExplicitWithFlags_Values[q37] = b_ExplicitWithFlags_Values[q46]) *
+              catchUndef(b_ExplicitWithFlags_Flags[q37], 0)
+                  | q37 : int(1..3)])
+         /\
+         (and([q41 < b_ExplicitWithFlags_Values[q46] ->
+               (a_MOccurrence[q41] > 0 ->
+                a_MOccurrence[q41] =
+                sum([toInt(b_ExplicitWithFlags_Values[q38] = q41) * catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                         | q38 : int(1..3)]))
+                   | q41 : int(1..2)])
+          /\
+          and([and([b_ExplicitWithFlags_Flags[q42] > 0,
+                    !or([a_MOccurrence[q40] > 0 /\ q40 = b_ExplicitWithFlags_Values[q42] | q40 : int(1..2)]),
+                    b_ExplicitWithFlags_Values[q42] < b_ExplicitWithFlags_Values[q46];
+                        int(1..3)])
+               ->
+               a_MOccurrence[b_ExplicitWithFlags_Values[q42]] =
+               sum([toInt(b_ExplicitWithFlags_Values[q38] = b_ExplicitWithFlags_Values[q42]) *
+                    catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                        | q38 : int(1..3)])
+                   | q42 : int(1..3)])))
+            | q46 : int(1..3)]),
+    3 = sum([a_MOccurrence[q1] | q1 : int(1..2)]),
+    and([b_ExplicitWithFlags_Flags[q2 + 1] > 0 -> b_ExplicitWithFlags_Values[q2] < b_ExplicitWithFlags_Values[q2 + 1]
+             | q2 : int(1..2)]),
+    and([b_ExplicitWithFlags_Flags[q3] = 0 -> b_ExplicitWithFlags_Values[q3] = 1 | q3 : int(1..3)]),
+    and([b_ExplicitWithFlags_Flags[q4 + 1] > 0 -> b_ExplicitWithFlags_Flags[q4] > 0 | q4 : int(1..2)]),
+    3 = sum([b_ExplicitWithFlags_Flags[q7] | q7 : int(1..3)]),
+    and([a_ExplicitWithRepetition_Values[q9] <= a_ExplicitWithRepetition_Values[q9 + 1] | q9 : int(1..2), q9 + 1 <= 3]),
+    and([sum([toInt(a_ExplicitWithRepetition_Values[q17] = a_ExplicitWithRepetition_Values[q15])
+                  | q17 : int(1..3), q17 <= 3])
+         = a_MOccurrence[a_ExplicitWithRepetition_Values[q15]]
+             | q15 : int(1..3), q15 <= 3]),
+    and([a_MOccurrence[q18] > 0 ->
+         sum([toInt(a_ExplicitWithRepetition_Values[q20] = q18) | q20 : int(1..3), q20 <= 3]) = a_MOccurrence[q18]
+             | q18 : int(1..2)]),
+    and([b_ExplicitWithRepetition_Values[q21] <= b_ExplicitWithRepetition_Values[q21 + 1]
+             | q21 : int(1..2), q21 + 1 <= 3]),
+    and([sum([toInt(b_ExplicitWithRepetition_Values[q30] = b_ExplicitWithRepetition_Values[q27])
+                  | q30 : int(1..3), q30 <= 3])
+         =
+         sum([toInt(b_ExplicitWithFlags_Values[q28] = b_ExplicitWithRepetition_Values[q27]) *
+              catchUndef(b_ExplicitWithFlags_Flags[q28], 0)
+                  | q28 : int(1..3)])
+             | q27 : int(1..3), q27 <= 3]),
+    and([b_ExplicitWithFlags_Flags[q31] > 0 ->
+         sum([toInt(b_ExplicitWithRepetition_Values[q34] = b_ExplicitWithFlags_Values[q31])
+                  | q34 : int(1..3), q34 <= 3])
+         =
+         sum([toInt(b_ExplicitWithFlags_Values[q32] = b_ExplicitWithFlags_Values[q31]) *
+              catchUndef(b_ExplicitWithFlags_Flags[q32], 0)
+                  | q32 : int(1..3)])
+             | q31 : int(1..3)])
+

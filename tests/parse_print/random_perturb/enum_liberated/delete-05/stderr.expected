@@ -1,6 +1,30 @@
 Error:
-    tests/parse_print/random_perturb/enum_liberated/delete-05/delete-05.essence:8:12:
-unexpected (
-expecting end of input, rest of statement, or statement
-    find z : E2(a..c)
-               ^
+    tests/parse_print/random_perturb/enum_liberated/delete-05/delete-05.essence:7:10:
+  |
+7 | find y : E2
+  |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/delete-05/delete-05.essence:8:10:
+  |
+8 | find z : E2(a..c)
+  |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/delete-05/delete-05.essence:9:10:
+  |
+9 | find t : E2(b,d)
+  |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/delete-05/delete-05.essence:13:10:
+   |
+13 | find k : E2
+   |          ^^
+Error: Symbol not found "E2"
+
+tests/parse_print/random_perturb/enum_liberated/delete-05/delete-05.essence:14:20:
+   |
+14 | such that k = max(`E2`)
+   |                    ^^
+Error: Symbol not found "E2"

@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-given a: int(1..30)
-given b: int(1..30)
-given c: int(1..30)
-find f_FunctionIntPair2D: matrix indexed by [int(1..a), int(1..b)] of int(1..c)
-such that
-    forAll v__0 : int(1..a)
-        . (forAll v__1 : int(1..b) . v__0 != f_FunctionIntPair2D[v__0, v__1])

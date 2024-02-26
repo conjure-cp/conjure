@@ -6,7 +6,7 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Vector as V               -- vector
 
 
@@ -38,7 +38,7 @@ instance Pretty x => Pretty (OpCompose x) where
 
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpCompose x) where
-    varSymBreakingDescription (OpCompose a i) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpCompose a i) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpCompose")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

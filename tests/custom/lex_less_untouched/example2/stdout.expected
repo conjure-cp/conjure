@@ -1,0 +1,7 @@
+language ESSENCE' 1.0
+
+given n: int(1..)
+find P: matrix indexed by [int(1..n)] of bool
+branching on [P]
+such that P <=lex [P[n + 1 - i] | i : int(1..n)]
+

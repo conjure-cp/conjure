@@ -1,9 +1,0 @@
-language Essence 2.0
-
-find x : matrix indexed by [int(1..2),int(1,2)] of (set(minSize 1) of int(6..8), int(8,5))
-such that
-    x[1][1] = ({6},8),
-    x[1][2] = ({7},5),
-    x[2][1] = ({7,8},5),
-    x[2][2] = ({8},8)
-

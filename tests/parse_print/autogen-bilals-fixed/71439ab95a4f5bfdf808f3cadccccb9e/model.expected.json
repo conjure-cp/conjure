@@ -1,0 +1,39 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration": {"FindOrGiven": ["Find", {"Name": "var1"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpSubset":
+                      [{"Typed":
+                            [{"Constant": {"ConstantAbstract": {"AbsLitRelation": []}}},
+                             {"TypeRelation":
+                                  [{"TypeMatrix": [{"TypeInt": {"TagInt": []}}, {"TypeBool": []}]}, {"TypeBool": []},
+                                   {"TypeSet": {"TypeBool": []}}, {"TypeRelation": [{"TypeBool": []}]}]}]},
+                       {"AbstractLiteral":
+                            {"AbsLitRelation":
+                                 [[{"AbstractLiteral":
+                                        {"AbsLitMatrix":
+                                             [{"DomainInt":
+                                                   [{"TagInt": []},
+                                                    [{"RangeSingle":
+                                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 8]}}},
+                                                     {"RangeSingle":
+                                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}},
+                                                     {"RangeBounded":
+                                                          [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                                           {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}]]},
+                                              [{"Reference": [{"Name": "var1"}, null]},
+                                               {"Reference": [{"Name": "var1"}, null]},
+                                               {"Reference": [{"Name": "var1"}, null]},
+                                               {"Reference": [{"Name": "var1"}, null]}]]}},
+                                   {"Reference": [{"Name": "var1"}, null]},
+                                   {"AbstractLiteral": {"AbsLitSet": [{"Reference": [{"Name": "var1"}, null]}]}},
+                                   {"AbstractLiteral":
+                                        {"AbsLitRelation":
+                                             [[{"Reference": [{"Name": "var1"}, null]}],
+                                              [{"Reference": [{"Name": "var1"}, null]}]]}}]]}}]}}]}]}

@@ -1,0 +1,11 @@
+language Essence 1.3
+
+letting simple be domain mset of bool
+letting sized be domain mset (size 1) of bool
+letting sized2 be domain mset (minSize 1) of bool
+letting sized3 be domain mset (maxSize 2) of bool
+letting sized4 be domain mset (minSize 1, maxSize 2) of bool
+letting occurs1 be domain mset (minOccur 1) of bool
+letting occurs2 be domain mset (maxOccur 2) of bool
+letting occurs3 be domain mset (minOccur 1, maxOccur 2) of bool
+letting all be domain mset (minSize 3, maxSize 4, minOccur 1, maxOccur 2) of int

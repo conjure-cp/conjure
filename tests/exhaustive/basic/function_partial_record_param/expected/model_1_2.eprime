@@ -1,0 +1,36 @@
+language ESSENCE' 1.0
+
+find x_FunctionNDPartial_Flags: matrix indexed by [int(7..8), bool] of bool
+find x_FunctionNDPartial_Values: matrix indexed by [int(7..8), bool] of int(13, 17)
+find x_FunctionNDPartialDummy: matrix indexed by [int(7..8), bool] of int(13, 17, 12)
+given fin1: int
+given p_FunctionAsRelation_RelationAsSet_Explicit_1_fst: matrix indexed by [int(1..fin1)] of int(7..8)
+given p_FunctionAsRelation_RelationAsSet_Explicit_1_snd: matrix indexed by [int(1..fin1)] of bool
+given p_FunctionAsRelation_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of int(13, 17)
+branching on [x_FunctionNDPartialDummy, x_FunctionNDPartial_Flags, x_FunctionNDPartial_Values]
+such that
+    and([x_FunctionNDPartial_Values
+             [p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q7],
+              p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q7]]
+         = p_FunctionAsRelation_RelationAsSet_Explicit_2[q7]
+         /\
+         x_FunctionNDPartial_Flags
+             [p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q7],
+              p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q7]]
+             | q7 : int(1..fin1)]),
+    and([x_FunctionNDPartial_Flags[q8_fst, q8_snd] ->
+         or([p_FunctionAsRelation_RelationAsSet_Explicit_1_fst[q10] = q8_fst /\
+             p_FunctionAsRelation_RelationAsSet_Explicit_1_snd[q10] = q8_snd
+             /\ p_FunctionAsRelation_RelationAsSet_Explicit_2[q10] = x_FunctionNDPartial_Values[q8_fst, q8_snd]
+                 | q10 : int(1..fin1)])
+             | q8_fst : int(7..8), q8_snd : bool]),
+    and([x_FunctionNDPartial_Flags[q1_fst, q1_snd] = false -> x_FunctionNDPartial_Values[q1_fst, q1_snd] = 13
+             | q1_fst : int(7..8), q1_snd : bool]),
+    and([x_FunctionNDPartialDummy[q12_fst, q12_snd] != 12 ->
+         x_FunctionNDPartial_Values[q12_fst, q12_snd] = x_FunctionNDPartialDummy[q12_fst, q12_snd] /\
+         x_FunctionNDPartial_Flags[q12_fst, q12_snd]
+             | q12_fst : int(7..8), q12_snd : bool]),
+    and([x_FunctionNDPartial_Flags[q13_fst, q13_snd] ->
+         x_FunctionNDPartialDummy[q13_fst, q13_snd] = x_FunctionNDPartial_Values[q13_fst, q13_snd]
+             | q13_fst : int(7..8), q13_snd : bool])
+

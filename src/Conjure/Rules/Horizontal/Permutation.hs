@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
-import Data.Permutation (size, toCycles, fromCycles, toFunction)
+import Conjure.Util.Permutation (size, toCycles, fromCycles, toFunction)
 
 rule_Cardinality_Literal :: Rule
 rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule where
@@ -10,7 +10,7 @@ rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule
     (TypePermutation _, elems) <- match permutationLiteral p 
     let i' = Constant . ConstantInt TagInt . fromIntegral . size <$> fromCycles elems
     case i' of
-      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+      Left er -> failDoc $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right i -> return
         ( "Vertical rule for permutation cardinality, AsFunction representation."
         , do
@@ -24,7 +24,7 @@ rule_Defined_Literal = "permutation-defined-literal" `namedRule` theRule where
     (TypePermutation _, elems) <- match permutationLiteral p
     let i' = (AbstractLiteral . AbsLitSet . nub . join . toCycles) <$> fromCycles elems
     case i' of
-      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+      Left er -> failDoc $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right i -> return
         ( "Vertical rule for permutation defined, AsFunction representation."
         , do
@@ -52,7 +52,7 @@ rule_Comprehension = "permutation-comprehension" `namedRule` theRule where
         DomainPermutation _ _ innerD <- domainOf perm 
         let f' = toFunction <$> fromCycles elems 
         case f' of
-          Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+          Left er -> failDoc $ "Permutation literal invalid." <++> stringToDoc (show er)
           Right f -> do 
             let outLiteral = make matrixLiteral
                     (TypeMatrix (TypeInt TagInt) (TypeTuple [inner,inner])) innerD  
@@ -129,7 +129,7 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
     typeI <- typeOf i
     let f' = toFunction <$> fromCycles elems 
     case f' of
-      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+      Left er -> failDoc $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right f -> do 
         if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
           then do
@@ -147,6 +147,6 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
                  return [essence| &matLit[&indexr] |]
     
                )
-          else fail $ "Permutation applied to a type its inner does not unify with" 
+          else failDoc $ "Permutation applied to a type its inner does not unify with" 
   theRule _ = na "rule_Image_Literal"
 

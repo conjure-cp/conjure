@@ -21,7 +21,7 @@ such that
                               false --> relation((-10 * -9, true = false), (1, -1 = 3), (-6 / 7, false \/ false)),
                               true != false
                                   --> relation((1, true -> true), (-4 % -10, false), (toInt(true), false = true))),
-             var2({-4, -1 * 6})
+             image(var2, {-4, -1 * 6})
                  --> function(true --> relation((-4, true != true), (8, false), (-4, false <-> false)),
                               false != true
                                   --> relation((toInt(false), true /\ false), (-1 / -3, -2 != -4), (-8 + -6, false)),
@@ -66,7 +66,7 @@ such that
                                                (6 * 3, true)),
                               false != false
                                   --> relation((-10, -1 != 0), (-7, true /\ true), (toInt(true), true -> true))),
-             var2(party(toInt(false), partition({-8, -5}))) * 10
+             image(var2, party(toInt(false), partition({-8, -5}))) * 10
                  --> function(true --> relation((-10 % -8, -10 != 6), (-10, true != false), (8, true <-> false)))
                      intersect
                      function(0 != 3 --> relation((-1, true = false), (toInt(true), 5 = -9), (9 % 9, true \/ false)),
@@ -74,22 +74,23 @@ such that
                               false != false --> relation((toInt(false), false -> true), (-10, true), (10, -8 != -10)),
                               false != true
                                   --> relation((7 / -4, false), (-9 * 7, false <-> true), (toInt(false), -9 = 6))),
-             var2({|{true}|, 0})
+             image(var2, {|{true}|, 0})
                  --> function(var4 = var4
                                   --> relation((|{8, -7}|, false), (9, 3 != -3 -> (false <-> true)),
                                                (0, mset(7, 8) = mset(-9))),
                               toInt(false) in mset(-1, 2)
-                                  --> relation((toInt(true) * -8, var4 = var4), (var2(toSet(mset(-3))), var3 = var3),
-                                               (var2(participants(partition({5}))), toInt(true) in mset(-9)))),
+                                  --> relation((toInt(true) * -8, var4 = var4),
+                                               (image(var2, toSet(mset(-3))), var3 = var3),
+                                               (image(var2, participants(partition({5}))), toInt(true) in mset(-9)))),
              -8 / (-8 + toInt(false))
                  --> function(true
                                   --> relation((toInt(false) * toInt(false), var2 = var2),
                                                (-6, (true -> false) \/ -5 = 3), (-8, false)),
                               false
-                                  --> relation((var2(party(toInt(false), partition({2}))), true),
-                                               (var2({-1 % -3, toInt(false), toInt(true)}), true), (9, false)),
+                                  --> relation((image(var2, party(toInt(false), partition({2}))), true),
+                                               (image(var2, {-1 % -3, toInt(false), toInt(true)}), true), (9, false)),
                               true
-                                  --> relation((var2(toSet(mset(-10, -7))), true), (-7 % -7 * 9, var4 != var4),
+                                  --> relation((image(var2, toSet(mset(-10, -7))), true), (-7 % -7 * 9, var4 != var4),
                                                (|{true}|, true)),
                               true --> toRelation(function(5 --> true)),
                               toInt(true) in mset(-3, -6) --> toRelation(function(-5 --> false, -3 --> false)),
@@ -111,7 +112,7 @@ such that
                                   --> relation((toInt(true), true = true), (toInt(true), true \/ true),
                                                (8, false -> false)),
                               -3 = 9 --> relation((6 + -7, false -> false), (-3 / 6, true), (9 + 4, 0 = -10))),
-             var2(participants(partition({-1 % 10, -7 + 7, 6, -1})))
+             image(var2, participants(partition({-1 % 10, -7 + 7, 6, -1})))
                  --> function((true = true) in {false}
                                   --> relation((6, (mset() : `mset of bool`) = mset(false, true)),
                                                (|partition({false}, {false})|, true = (true <-> false)),

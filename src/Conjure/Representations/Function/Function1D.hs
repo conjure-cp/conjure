@@ -22,7 +22,7 @@ import Conjure.Representations.Common
 import qualified Data.HashMap.Strict as M
 
 
-function1D :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
+function1D :: forall m . (MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 function1D = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -134,7 +134,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo)
-              , ConstantAbstract (AbsLitFunction vals_)
+              , viewConstantFunction -> Just vals_
               ) | domainCanIndexMatrix innerDomainFr = do
             let vals = M.fromList vals_
             froms            <- domainValues innerDomainFr
@@ -142,7 +142,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                 [ val
                 | fr <- froms
                 , let val = case M.lookup fr vals of
-                                Nothing -> fail $ vcat [ "No value for" <+> pretty fr
+                                Nothing -> failDoc $ vcat [ "No value for" <+> pretty fr
                                                        , "In:" <+> pretty (AbsLitFunction vals_)
                                                        ]
                                 Just v  -> return v
@@ -159,7 +159,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                                 (FunctionAttr _ PartialityAttr_Total _)
                                 innerDomainFr _)) =
             case lookup (outName domain name) ctxt of
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in Function1D up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
@@ -173,7 +173,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
                             return ( name
                                    , ConstantAbstract $ AbsLitFunction $ zip froms vals
                                    )
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
@@ -186,11 +186,13 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
+            
 
 
-domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
+domainValues :: (MonadFailDoc m, Pretty r) => Domain r Constant -> m [Constant]
 domainValues dom =
     case dom of
         DomainBool -> return [ConstantBool False, ConstantBool True]
         DomainInt t rs -> map (ConstantInt t) <$> valuesInIntDomain rs
-        _ -> fail ("domainValues, not supported:" <+> pretty dom)
+        _ -> failDoc ("domainValues, not supported:" <+> pretty dom)
+

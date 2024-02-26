@@ -3,8 +3,9 @@ language ESSENCE' 1.0
 find var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2)] of int(0..2)
 find var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2), int(1..2)] of bool
-find var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags: matrix indexed by [int(1..2), int(1..0)] of int(0)
-find var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values: matrix indexed by [int(1..2), int(1..0)] of bool
+find var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags:
+        matrix indexed by [int(1..2), int(1..2)] of int(0..2)
+find var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values: matrix indexed by [int(1..2), int(1..2)] of bool
 branching on
     [var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker,
      var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values,
@@ -12,17 +13,31 @@ branching on
      var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values]
 such that
     flatten([flatten([[var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
-                      [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, q12])
-                           | q12 : int(1..2)];
+                      [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, q13])
+                           | q13 : int(1..2)];
                           int(1..2)]),
+<<<<<<< HEAD
              flatten([]);
+=======
+             flatten([flatten([[-var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[1, q14]; int(1)],
+                               [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values[1, q14]); int(1)];
+                                   int(1..2)])
+                          | q14 : int(1..2)]);
+>>>>>>> main
                  int(1..2)])
     <lex
     flatten([flatten([[var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
-                      [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, q14])
-                           | q14 : int(1..2)];
+                      [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, q15])
+                           | q15 : int(1..2)];
                           int(1..2)]),
+<<<<<<< HEAD
              flatten([]);
+=======
+             flatten([flatten([[-var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[2, q16]; int(1)],
+                               [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values[2, q16]); int(1)];
+                                   int(1..2)])
+                          | q16 : int(1..2)]);
+>>>>>>> main
                  int(1..2)]),
     and([2 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[q2] ->
          [-toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 1]); int(1)] <lex
@@ -31,5 +46,25 @@ such that
     and([and([q4 > var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[q2] ->
               var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, q4] = false
                   | q4 : int(1..2)])
+             | q2 : int(1..2)]),
+    and([var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, 2] > 0 ->
+         -toInt(var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values[q2, 1]) <
+         -toInt(var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values[q2, 2])
+             | q2 : int(1..2)]),
+    and([and([var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, q7] = 0 ->
+              var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values[q2, q7] = false
+                  | q7 : int(1..2)])
+             | q2 : int(1..2)]),
+    and([var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, 2] > 0 ->
+         var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, 1] > 0
+             | q2 : int(1..2)]),
+    and([and([or([var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, q10] >= 1 /\
+                  var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Values[q2, q10] = q9
+                      | q10 : int(1..2)])
+                  | q9 : bool])
+             | q2 : int(1..2)]),
+    and([1 <= sum([var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, q11] | q11 : int(1..2)])
+             | q2 : int(1..2)]),
+    and([sum([var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithFlags_Flags[q2, q11] | q11 : int(1..2)]) <= 2
              | q2 : int(1..2)])
 

@@ -125,7 +125,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
             TypeMSet{}     -> return ()
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
-            _              -> fail "type incompatibility in intersect operator"
+            _              -> failDoc "type incompatibility in intersect operator"
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set intersection"
@@ -154,7 +154,7 @@ rule_Union = "set-union" `namedRule` theRule where
             TypeMSet{}     -> return ()
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
-            _              -> fail "type incompatibility in union operator"
+            _              -> failDoc "type incompatibility in union operator"
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set union"
@@ -189,7 +189,7 @@ rule_Difference = "set-difference" `namedRule` theRule where
             TypeMSet{}     -> return ()
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
-            _              -> fail "type incompatibility in difference operator"
+            _              -> failDoc "type incompatibility in difference operator"
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set difference"
@@ -347,6 +347,7 @@ rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
     theRule [essence| min(&s) |] = do
         TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
+        isDomainExpr s
         DomainSet _ _ inner <- domainOf s
         case inner of
             DomainInt _ rs | isInfinite rs -> na "rule_Param_MaxOfSet"
@@ -367,6 +368,7 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
         TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
+        isDomainExpr s
         DomainSet _ _ inner <- domainOf s
         case inner of
             DomainInt _ rs | isInfinite rs -> na "rule_Param_MaxOfSet"

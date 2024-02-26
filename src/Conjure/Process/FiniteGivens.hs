@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Process.FiniteGivens
     ( finiteGivens
@@ -22,6 +21,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
 finiteGivens ::
+    MonadFailDoc m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -45,6 +45,7 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam ::
+    MonadFailDoc  m =>
     NameGen m =>
     MonadLog m =>
     MonadUserError m =>
@@ -52,12 +53,14 @@ finiteGivensParam ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model ->                                -- eprime
     Model ->                                -- essence-param
+    [(Name, Constant)] ->                   -- some additional lettings
     m (Model, [Name])                       -- essence-param
-finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
+finiteGivensParam eprimeModel essenceParam additionalLettings = flip evalStateT 1 $ do
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miOriginalDomains
     let essenceLettings   = extractLettings essenceParam
                          ++ eprimeModel |> mInfo |> miLettings
+                         ++ [ (nm, Constant c) | (nm, c) <- additionalLettings ]
     let nbExtraGivens     = eprimeModel |> mInfo |> miNbExtraGivens
     let expectedExtras    = [ MachineName "fin" extraGiven []
                             | extraGiven <- [1..nbExtraGivens]
@@ -100,6 +103,7 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
 --   for example, this means adding a size attribute at the outer-most level
 --   and adding a maxSize attribute at the inner levels.
 mkFinite ::
+    MonadFailDoc m =>
     MonadState Int m =>
     NameGen m =>
     MonadLog m =>
@@ -125,6 +129,7 @@ mkFinite d = return (d, [], const (return []))
 
 
 mkFiniteOutermost ::
+    MonadFailDoc m =>
     MonadState Int m =>
     NameGen m =>
     MonadLog m =>
@@ -355,6 +360,7 @@ mkFiniteOutermost d = return (d, [], const (return []))
 
 
 mkFiniteInner ::
+    MonadFailDoc m =>
     MonadState Int m =>
     NameGen m =>
     MonadLog m =>

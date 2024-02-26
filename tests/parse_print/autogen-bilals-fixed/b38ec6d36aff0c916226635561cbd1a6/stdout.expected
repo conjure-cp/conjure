@@ -5,8 +5,9 @@ find var1:
             partition (maxNumParts 4 - 1, maxPartSize 0) from (int(1..5, 4), bool, int(4, 5))
 find var2: partition (maxNumParts 5 ** 3, regular) from bool
 find var3:
-        matrix indexed by [int(3, 5)] of mset (minSize 4, maxSize 4, minOccur 4, maxOccur 4) of
-                                             function (maxSize 0, total, surjective) bool --> int(5, 2..5)
+        matrix indexed by [int(3, 5)] of
+            mset (minSize 4, maxSize 4, minOccur 4, maxOccur 4) of
+                function (maxSize 0, total, surjective) bool --> int(5, 2..5)
 such that
     false,
     image(function(false --> tuple (mset(false, false)), false --> tuple (mset(true, false, false))),

@@ -1,44 +1,39 @@
 #!/bin/bash
 
+# version as of 18 November 2022
+VERSION=4.2.1
+
+source "download.sh" 2> /dev/null               # if called from the script dir
+source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
+
 set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
 
-rm -rf ${BIN_DIR}/tmp-install-glucose
-mkdir -p ${BIN_DIR}/tmp-install-glucose
-pushd ${BIN_DIR}/tmp-install-glucose
 
-function download {
-    if which curl 2> /dev/null > /dev/null; then
-        curl -L -O $1
-    elif which wget 2> /dev/null > /dev/null; then
-        wget --no-check-certificate -c $1
-    else
-        echo "You seem to have neither curl nor wget on this computer."
-        echo "Cannot download without one of them."
-        exit 1
-    fi
-}
-export -f download
+rm -rf tmp-install-glucose
+mkdir -p tmp-install-glucose
+pushd tmp-install-glucose
 
-download http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-syrup-4.1.tgz
-tar zxf glucose-syrup-4.1.tgz
-cd glucose-syrup-4.1/
+download http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-$VERSION.zip
+unzip glucose-$VERSION.zip
+cd glucose-$VERSION/sources
 (
     cd simp
-    make -j r
+    make -j${PROCESSES} r
     cp glucose_release ${BIN_DIR}/glucose
     echo "glucose executable is at ${BIN_DIR}/glucose"
     ls -l ${BIN_DIR}/glucose
 )
 (
     cd parallel
-    make -j r
+    make -j${PROCESSES} r
     cp glucose-syrup_release ${BIN_DIR}/glucose-syrup
     echo "glucose-syrup executable is at ${BIN_DIR}/glucose-syrup"
     ls -l ${BIN_DIR}/glucose-syrup
 )
 popd
-rm -rf ${BIN_DIR}/tmp-install-glucose
+rm -rf tmp-install-glucose
 

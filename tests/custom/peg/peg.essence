@@ -1,0 +1,98 @@
+
+letting ROW, COL be domain int(1..9)
+letting BOARD be domain matrix indexed by [ROW, COL] of bool
+
+letting init be [ [0,0,0,1,1,1,0,0,0]
+                , [0,0,0,1,1,1,0,0,0]
+                , [0,0,0,1,1,1,0,0,0]
+                , [1,1,1,1,1,1,1,1,1]
+                , [1,1,1,1,0,1,1,1,1]
+                , [1,1,1,1,1,1,1,1,1]
+                , [0,0,0,1,1,1,0,0,0]
+                , [0,0,0,1,1,1,0,0,0]
+                , [0,0,0,1,1,1,0,0,0]
+                ]
+
+letting nbSteps be sum([i | row <- init, i <- row])
+$ letting nbSteps be 30
+letting STEP be domain int(1..nbSteps)
+
+$ there are 3 locations: peg, victim, hole
+$ all 3 are on the same row (or column)
+$ take peg, move to the hole.
+$ before: peg & victim are full, hole is not
+$ after: peg & victim are empty, hole is full
+find steps  : matrix indexed by [int(1..nbSteps)] of
+                record { pegRow : ROW
+                       , pegCol : COL
+                       , victimRow : ROW
+                       , victimCol : COL
+                       , holeRow : ROW
+                       , holeCol : COL
+                       }
+
+such that forAll s : STEP .
+    or( [
+        $ right
+        and([ steps[s][pegRow] = steps[s][victimRow]
+            , steps[s][pegRow] = steps[s][holeRow]
+            , steps[s][pegCol] + 1 = steps[s][victimCol]
+            , steps[s][pegCol] + 2 = steps[s][holeCol]
+            ]),
+        $ left
+        and([ steps[s][pegRow] = steps[s][victimRow]
+            , steps[s][pegRow] = steps[s][holeRow]
+            , steps[s][pegCol] - 1 = steps[s][victimCol]
+            , steps[s][pegCol] - 2 = steps[s][holeCol]
+            ]),
+        $ down
+        and([ steps[s][pegRow] + 1 = steps[s][victimRow]
+            , steps[s][pegRow] + 2 = steps[s][holeRow]
+            , steps[s][pegCol] = steps[s][victimCol]
+            , steps[s][pegCol] = steps[s][holeCol]
+            ]),
+        $ up
+        and([ steps[s][pegRow] - 1 = steps[s][victimRow]
+            , steps[s][pegRow] - 2 = steps[s][holeRow]
+            , steps[s][pegCol] = steps[s][victimCol]
+            , steps[s][pegCol] = steps[s][holeCol]
+            ]),
+        ])
+
+
+find boards : matrix indexed by [int(0..nbSteps), ROW, COL] of bool
+
+such that forAll r : ROW . forAll c : COL . toInt(boards[0,r,c]) = init[r,c]
+
+$ corners stay empty
+such that forAll s : STEP . forAll r : int(1..3) . forAll c : int(1..3) . boards[s,r,c] = false
+such that forAll s : STEP . forAll r : int(1..3) . forAll c : int(7..9) . boards[s,r,c] = false
+such that forAll s : STEP . forAll r : int(7..9) . forAll c : int(1..3) . boards[s,r,c] = false
+such that forAll s : STEP . forAll r : int(7..9) . forAll c : int(7..9) . boards[s,r,c] = false
+
+such that forAll s : STEP .
+    and([ boards[s-1, steps[s][pegRow], steps[s][pegCol]] = true
+        , boards[s-1, steps[s][victimRow], steps[s][victimCol]] = true
+        , boards[s-1, steps[s][holeRow], steps[s][holeCol]] = false
+        , boards[s, steps[s][pegRow], steps[s][pegCol]] = false
+        , boards[s, steps[s][victimRow], steps[s][victimCol]] = false
+        , boards[s, steps[s][holeRow], steps[s][holeCol]] = true
+        , forAll r : ROW . forAll c : COL .
+             !((r,c) in { ( steps[s][pegRow]    , steps[s][pegCol]    )
+                        , ( steps[s][victimRow] , steps[s][victimCol] )
+                        , ( steps[s][holeRow]   , steps[s][holeCol]   )
+                        }) -> boards[s,r,c] = boards[s-1,r,c]
+        $ , sum([ toInt(boards[s-1,r,c]) | r : ROW , c : COL ]) - 1 = sum([ toInt(boards[s,r,c]) | r : ROW , c : COL ])
+        ])
+
+$ implied, seems to make it worse...
+$ such that forAll s : STEP . sum([ toInt(boards[s,r,c]) | r : ROW , c : COL ]) = 44 - s
+
+$ symmetry breaking
+such that
+    steps[1][pegRow] = 3,
+    steps[1][pegCol] = 5,
+    steps[1][victimRow] = 4,
+    steps[1][victimCol] = 5,
+    steps[1][holeRow] = 5,
+    steps[1][holeCol] = 5,

@@ -8,29 +8,48 @@ src/Conjure/Language/Expression/Op/Internal/Generated.hs
 stack.yaml
 cabal.config
 dist
+dist-newstyle
 cabal.sandbox.config
 .cabal-sandbox
 .stack-work
 stack.yaml.lock
+dist-*/
 
 # test outputs
 tests/exhaustive/**/outputs
 tests/parse_print/**/stdout
 tests/parse_print/**/stderr
+tests/parse_print/**/typecheck
+tests/parse_print/**/model.json
 tests/custom/**/stdout
 tests/custom/**/stderr
+tests/allsolvers/stdout
+
+#parallel tests outputs
+test_results/
+tests/**/*.gz
+conjure-testing
+test_commands
+test_joblog
 
 # docs
 docs/_build
 docs/BNFLexer.pyc
 docs/EssenceLexer.pyc
 docs/__pycache__
+docs/myenv
 
 # to be used during development
 conjure-output
+
+# explicitly ignored
+gitignored
 
 # editor temporary files
 .*.swp
 
 # .MINION files
 .MINION*
+
+# code coverage files
+*.tix

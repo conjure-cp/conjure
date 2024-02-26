@@ -1,0 +1,87 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainSet":
+                      [[], {"SizeAttr_None": []},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Op": {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpOr":
+                      {"Comprehension":
+                           [{"Op":
+                                 {"MkOpEq":
+                                      [{"Constant":
+                                            {"ConstantAbstract":
+                                                 {"AbsLitSet":
+                                                      [{"ConstantAbstract":
+                                                            {"AbsLitFunction":
+                                                                 [[{"ConstantInt": [{"TagInt": []}, 4]},
+                                                                   {"ConstantInt": [{"TagInt": []}, -3]}]]}},
+                                                       {"ConstantAbstract":
+                                                            {"AbsLitFunction":
+                                                                 [[{"ConstantInt": [{"TagInt": []}, 10]},
+                                                                   {"ConstantInt": [{"TagInt": []}, 4]}],
+                                                                  [{"ConstantInt": [{"TagInt": []}, 0]},
+                                                                   {"ConstantInt": [{"TagInt": []}, -4]}]]}}]}}},
+                                       {"Typed":
+                                            [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                                             {"TypeSet":
+                                                  {"TypeFunction":
+                                                       [{"TypeInt": {"TagInt": []}},
+                                                        {"TypeInt": {"TagInt": []}}]}}]}]}},
+                            [{"Generator":
+                                  {"GenInExpr":
+                                       [{"Single": {"Name": "q_4"}}, {"Reference": [{"Name": "var3"}, null]}]}},
+                             {"Condition":
+                                  {"Op":
+                                       {"MkOpLeq":
+                                            [{"Reference": [{"Name": "q_4"}, null]},
+                                             {"Op":
+                                                  {"MkOpPow":
+                                                       [{"Op":
+                                                             {"MkOpSum":
+                                                                  {"AbstractLiteral":
+                                                                       {"AbsLitMatrix":
+                                                                            [{"DomainInt":
+                                                                                  [{"TagInt": []},
+                                                                                   [{"RangeBounded":
+                                                                                         [{"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     1]}},
+                                                                                          {"Constant":
+                                                                                               {"ConstantInt":
+                                                                                                    [{"TagInt": []},
+                                                                                                     2]}}]}]]},
+                                                                             [{"Constant":
+                                                                                   {"ConstantInt":
+                                                                                        [{"TagInt": []}, 6]}},
+                                                                              {"Op":
+                                                                                   {"MkOpPow":
+                                                                                        [{"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    7]}},
+                                                                                         {"Constant":
+                                                                                              {"ConstantInt":
+                                                                                                   [{"TagInt": []},
+                                                                                                    2]}}]}}]]}}}},
+                                                        {"Op":
+                                                             {"MkOpTwoBars":
+                                                                  {"Constant":
+                                                                       {"ConstantAbstract":
+                                                                            {"AbsLitPartition":
+                                                                                 [[{"ConstantBool": true}],
+                                                                                  [{"ConstantBool":
+                                                                                        true}]]}}}}}]}}]}}}]]}}}]}]}

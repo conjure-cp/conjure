@@ -21,15 +21,13 @@ import Conjure.Process.Sanity ( sanityChecks )
 
 
 
-typeCheckModel_StandAlone
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadLog m
-       , NameGen m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => Model
-    -> m Model
+typeCheckModel_StandAlone ::
+    MonadFailDoc m =>
+    MonadUserError m =>
+    MonadLog m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 typeCheckModel_StandAlone model0 = do
     -- for better error messages, type-check and category-check before sanity-checking.
     -- sanity checking will modify the model.
@@ -46,27 +44,31 @@ typeCheckModel_StandAlone model0 = do
     return model1
 
 
-typeCheckModel
-    :: ( MonadFail m
-       , MonadUserError m
-       , ?typeCheckerMode :: TypeCheckerMode
-       )
-    => Model
-    -> m Model
+typeCheckModel ::
+    MonadFail m =>
+    MonadUserError m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 typeCheckModel model1 = do
     let model2 = fixRelationProj model1
     (statements3, errs) <- runWriterT $ forM (mStatements model2) $ \ st ->
         case st of
             Declaration decl -> do
                 case decl of
-                    FindOrGiven _ _ domain -> do
-                        mty <- runExceptT $ typeOfDomain domain
-                        case mty of
-                            Right _ -> return ()
-                            Left err -> tell $ return $ vcat
-                                [ "In a declaration statement:" <++> pretty st
-                                , "Error:" <++> pretty err
-                                ]
+                    FindOrGiven _ _ domain ->
+                        case domain of
+                            DomainReference{} ->
+                                -- no need to raise an error here if this is a reference to another domain
+                                -- because must have already we raised the error in the "letting" of that domain
+                                return ()
+                            _ -> do
+                                mty <- runExceptT $ typeOfDomain domain
+                                case mty of
+                                    Right _ -> return ()
+                                    Left err -> tell $ return $ vcat
+                                        [ "In a declaration statement:" <++> pretty st
+                                        , "Error:" <++> pretty err
+                                        ]
                     Letting _ x -> do
                         mty <- runExceptT $ case x of
                                                 Domain y -> typeOfDomain y
@@ -136,7 +138,7 @@ typeCheckModel model1 = do
                     go (TypeTuple ts) o =
                         fromList <$> sequence [ go t [essence| &o[&i] |]
                                               | (i', t) <- zip allNats ts
-                                              , let i = fromInt i'
+                                              , let i :: Expression = fromInt i'
                                               ]
                     go (TypeMatrix _ t) (AbstractLiteral (AbsLitMatrix _ os)) =
                         fromList <$> sequence [ go t o | o <- os ]
@@ -182,12 +184,12 @@ typeCheckModel model1 = do
     -- now that everything knows its type, we can recover
     -- DomainInt [RangeSingle x] from DomainIntE x, if x has type int
     let
-        domainIntERecover :: forall m . MonadFail m => Domain () Expression -> m (Domain () Expression)
+        domainIntERecover :: forall m . MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         domainIntERecover d@(DomainIntE x) = do
-            ty <- typeOf x
+            ty <- runExceptT $ typeOf x
             return $ case ty of
-                TypeInt t -> DomainInt t [RangeSingle x]
-                _       -> d
+                Right (TypeInt t) -> DomainInt t [RangeSingle x]
+                _ -> d
         domainIntERecover d = return d
     statements4 <- transformBiM domainIntERecover statements3
 

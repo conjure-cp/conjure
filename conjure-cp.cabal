@@ -1,27 +1,26 @@
-
+Cabal-version:  2.4
 Name:           conjure-cp
-Version:        2.3.0
+Version:        2.5.1
 Synopsis:       Conjure: The Automated Constraint Modelling Tool
 Description:    .
 Homepage:       http://github.com/conjure-cp/conjure
-License:        BSD3
+License:        BSD-3-Clause
 License-file:   LICENSE
 Author:         Özgür Akgün
 Maintainer:     ozgurakgun@gmail.com
 Category:       Constraint Programming
 Build-type:     Simple
-Cabal-version:  >= 1.20
-
 Library
     default-language : Haskell2010
     hs-source-dirs   : src
-
     exposed-modules  : Paths_conjure_cp
 
                      , Conjure.Prelude
                      , Conjure.RepositoryVersion
                      , Conjure.Bug
                      , Conjure.UserError
+
+                     , Conjure.Util.Permutation
 
                      -- definitions of language constructs
                      , Conjure.Language
@@ -39,9 +38,17 @@ Library
                      , Conjure.Language.TH
                      , Conjure.Language.Type
 
+                     , Conjure.Language.Lexemes
+                     , Conjure.Language.Attributes
+                     , Conjure.Language.Validator
+                     , Conjure.Language.AST.ASTParser
+                     , Conjure.Language.AST.Helpers
+                     , Conjure.Language.AST.Reformer
+                     , Conjure.Language.AST.Syntax
 
                      , Conjure.Language.Expression.Internal.Generated
                      , Conjure.Language.Expression.DomainSizeOf
+                     , Conjure.Language.Expression.OpTypes
 
                      , Conjure.Language.Expression.Op
                      , Conjure.Language.Expression.Op.Internal.Common
@@ -52,6 +59,8 @@ Library
                      , Conjure.Language.Expression.Op.AllDiffExcept
                      , Conjure.Language.Expression.Op.And
                      , Conjure.Language.Expression.Op.Apart
+                     , Conjure.Language.Expression.Op.AtLeast
+                     , Conjure.Language.Expression.Op.AtMost
                      , Conjure.Language.Expression.Op.Compose
                      , Conjure.Language.Expression.Op.AttributeAsConstraint
                      , Conjure.Language.Expression.Op.CatchUndef
@@ -64,6 +73,7 @@ Library
                      , Conjure.Language.Expression.Op.Factorial
                      , Conjure.Language.Expression.Op.Flatten
                      , Conjure.Language.Expression.Op.Freq
+                     , Conjure.Language.Expression.Op.GCC
                      , Conjure.Language.Expression.Op.Geq
                      , Conjure.Language.Expression.Op.Gt
                      , Conjure.Language.Expression.Op.Hist
@@ -79,6 +89,7 @@ Library
                      , Conjure.Language.Expression.Op.LexLeq
                      , Conjure.Language.Expression.Op.LexLt
                      , Conjure.Language.Expression.Op.Lt
+                     , Conjure.Language.Expression.Op.MakeTable
                      , Conjure.Language.Expression.Op.Max
                      , Conjure.Language.Expression.Op.Min
                      , Conjure.Language.Expression.Op.Minus
@@ -107,6 +118,7 @@ Library
                      , Conjure.Language.Expression.Op.Sum
                      , Conjure.Language.Expression.Op.Supset
                      , Conjure.Language.Expression.Op.SupsetEq
+                     , Conjure.Language.Expression.Op.Table
                      , Conjure.Language.Expression.Op.TildeLeq
                      , Conjure.Language.Expression.Op.TildeLt
                      , Conjure.Language.Expression.Op.Together
@@ -137,6 +149,8 @@ Library
                      , Conjure.Language.ParserC
                      , Conjure.Language.Pretty
                      , Conjure.Language.ZeroVal
+
+
                      , Conjure.Process.AttributeAsConstraints
                      , Conjure.Process.DealWithCuts
                      , Conjure.Process.Enumerate
@@ -144,8 +158,9 @@ Library
                      , Conjure.Process.FiniteGivens
                      , Conjure.Process.InferAttributes
                      , Conjure.Process.LettingsForComplexInDoms
-                     , Conjure.Process.ModelStrengthening
+                     , Conjure.Process.Boost
                      , Conjure.Process.Sanity
+                     , Conjure.Process.Streamlining
                      , Conjure.Process.Unnameds
                      , Conjure.Process.ValidateConstantForDomain
 
@@ -171,6 +186,7 @@ Library
                      , Conjure.Representations.Function.Function1DPartial
                      , Conjure.Representations.Function.FunctionND
                      , Conjure.Representations.Function.FunctionNDPartial
+                     , Conjure.Representations.Function.FunctionNDPartialDummy
                      , Conjure.Representations.Function.FunctionAsRelation
                      , Conjure.Representations.Sequence.ExplicitBounded
                      , Conjure.Representations.Relation.RelationAsMatrix
@@ -205,6 +221,7 @@ Library
                      , Conjure.Rules.Vertical.Function.Function1DPartial
                      , Conjure.Rules.Vertical.Function.FunctionND
                      , Conjure.Rules.Vertical.Function.FunctionNDPartial
+                     , Conjure.Rules.Vertical.Function.FunctionNDPartialDummy
                      , Conjure.Rules.Vertical.Function.FunctionAsRelation
 
                      , Conjure.Rules.Horizontal.Sequence
@@ -240,16 +257,29 @@ Library
                      , Conjure.UI.VarSymBreaking
                      , Conjure.UI.ParameterGenerator
                      , Conjure.UI.NormaliseQuantified
+                     , Conjure.UI.ErrorDisplay
 
-    build-depends    : base
+                     , Conjure.LSP.LanguageServer
+                     , Conjure.LSP.Documentation
+                     , Conjure.LSP.Handlers.File
+                     , Conjure.LSP.Handlers.Initialize
+                     , Conjure.LSP.Handlers.Hover
+                     , Conjure.LSP.Handlers.DocumentSymbol
+                     , Conjure.LSP.Handlers.SemanticTokens
+                     , Conjure.LSP.Handlers.Format
+                     , Conjure.LSP.Handlers.Suggestions
+                     , Conjure.LSP.Util
+
+    build-depends    : base >= 4.12.0
                      -- the export list have changed
                      , aeson >= 1.2.2.0
+                     , aeson-typescript
                      , bytestring
                      , cereal >= 0.5.1.0
                      -- changes in newline handling
                      , cmdargs >= 0.10.14
                      -- a bunch of improvements in 0.5.8.1
-                     , containers >= 0.5.8.1
+                     , containers
                      , data-default
                      , directory
                      , filepath
@@ -257,17 +287,17 @@ Library
                      , integer-gmp
                      -- >= 4.1.1 because of sepEndBy bugfixes
                      -- < 5 because megaparsec-5 is backwards incompatible
-                     , megaparsec >= 4.1.1 && < 5
+                     , megaparsec ^>= 9.3.0
                      , mtl
                      , parallel-io
-                     , permutation-safe
                      , pipes
-                     , pretty > 1.1.1.1
+                     , pretty >=1.1.3.6
+                     , prettyprinter
                      -- >= 2.9 because of the TH fix: https://github.com/nick8325/quickcheck/issues/101
-                     , QuickCheck >= 2.9
+                     , QuickCheck >= 2.14
                      , random
                      , safe
-                     , scientific
+                     , scientific >=0.3.7
                      -- 1.6.7, because of the stderr handling fix
                      , shelly >= 1.6.7
                      , split
@@ -289,23 +319,15 @@ Library
                      -- we do not directly depend on generic-deriving, but we need at least 1.10.6
                      -- see https://github.com/dreixel/generic-deriving/issues/41
                      , generic-deriving >= 1.10.6
-
-    if impl(ghc == 7.8.*)
-        build-depends: template-haskell == 2.9.*
-    if impl(ghc == 7.10.*)
-        build-depends: template-haskell == 2.10.*
-    if impl(ghc == 8.0.*)
-        build-depends: template-haskell == 2.11.*
-        ghc-options: -Wno-redundant-constraints
-    if impl(ghc == 8.2.*)
-        build-depends: template-haskell == 2.12.*
-    if impl(ghc == 8.4.*)
-        build-depends: template-haskell == 2.13.*
-    if impl(ghc == 8.6.*)
-        build-depends: template-haskell == 2.14.*
-
-    if impl(ghc < 8.4)
-        build-depends: semigroups >= 0.18.4
+                     , ansi-terminal >= 0.8.2
+                     , timeit >= 2.0
+                     , primes >= 0.2.1.0
+                     , parser-combinators
+                     , lsp
+                     , lens
+                     , template-haskell
+                     , http-client
+                     , http-client-tls
 
     default-extensions:
         FlexibleContexts
@@ -318,9 +340,10 @@ Library
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        NoMonadFailDesugaring
+        ViewPatterns
+        ImportQualifiedPost
     ghc-options:
-        -O2
+        -O1
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
@@ -355,9 +378,10 @@ Executable conjure
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        NoMonadFailDesugaring
+        ViewPatterns
+        ImportQualifiedPost
     ghc-options:
-        -O2
+        -O1
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
@@ -387,6 +411,7 @@ Test-Suite conjure-testing
                      , Conjure.ModelAllSolveAll
                      , Conjure.TypeCheckAll
                      , Conjure.ParsePrint
+                     , Conjure.ParserFuzz
                      , Conjure.Custom
     main-is          : TestsMain.hs
     build-depends    : conjure-cp
@@ -396,6 +421,8 @@ Test-Suite conjure-testing
                      , containers
                      , Diff
                      , shelly
+                     , aeson 
+                     , aeson-diff
                      , system-filepath
                      -- see https://github.com/feuerbach/tasty/issues/220
                      -- see https://github.com/feuerbach/tasty/issues/221
@@ -414,7 +441,8 @@ Test-Suite conjure-testing
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        NoMonadFailDesugaring
+        ViewPatterns
+        ImportQualifiedPost
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

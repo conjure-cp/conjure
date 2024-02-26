@@ -7,13 +7,13 @@ module Conjure.Representations.Permutation ( permutationAsFunction ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Util.Permutation
 import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Process.Enumerate
-import Data.Permutation
 
 
 permutationAsFunction 
@@ -93,8 +93,7 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
              , outDom
              , ConstantAbstract $ AbsLitFunction $ zip enumDo (toFunction perm <$> enumDo)
              )        
-         Left (PermutationError err) -> fail $ vcat $  
-                                    [ "PermutationError: " <+> stringToDoc err]
+         Left (PermutationError err) -> failDoc $ "PermutationError: " <+> stringToDoc err
 
    downC (name, domain, constant) = na $ vcat [ "{downC} PermutationAsFunction"
                                               , "name:" <+> pretty name
@@ -111,14 +110,14 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
                     case toCyclesCanonical <$> fromRelation f of
                       Right cycles -> 
                         return (name, ConstantAbstract (AbsLitPermutation cycles)) 
-                      Left (PermutationError err) -> fail $ vcat $  
+                      Left (PermutationError err) -> failDoc $ vcat $  
                                     [ "PermutationError: " <+> stringToDoc err
                                     , "No value for:" <+> pretty (outName domain name)
                                     , "When working on:" <+> pretty name
                                     , "With domain:" <+> pretty domain
                                     ] ++
                                     ("Bindings in context:" : prettyContext ctxt)
-                  _ -> fail $ vcat $
+                  _ -> failDoc $ vcat $
                           [ "No value for:" <+> pretty (outName domain name)
                           , "When working on:" <+> pretty name
                           , "With domain:" <+> pretty domain

@@ -1,0 +1,21 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(3, 2), int(1..2)] of bool
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(3, 2), int(1..2)] of bool
+find var3_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0)
+find var3_RelationAsSet_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..0)] of bool
+find var3_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_RelationAsMatrix:
+        matrix indexed by [int(1..0), bool, bool, bool] of bool
+such that
+    var1,
+    and([var2_ExplicitVarSizeWithFlags_Flags[q1, 2] ->
+         var2_ExplicitVarSizeWithFlags_Values[q1, 1] < var2_ExplicitVarSizeWithFlags_Values[q1, 2]
+             | q1 : int(3, 2)]),
+    and([and([var2_ExplicitVarSizeWithFlags_Flags[q1, q3] = false ->
+              var2_ExplicitVarSizeWithFlags_Values[q1, q3] = false
+                  | q3 : int(1..2)])
+             | q1 : int(3, 2)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q1, 2] -> var2_ExplicitVarSizeWithFlags_Flags[q1, 1] | q1 : int(3, 2)]),
+    and([1 <= sum([var2_ExplicitVarSizeWithFlags_Flags[q1, q5] | q5 : int(1..2)]) | q1 : int(3, 2)]),
+    var3_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 0

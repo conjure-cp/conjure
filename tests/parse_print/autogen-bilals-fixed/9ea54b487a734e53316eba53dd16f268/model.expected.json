@@ -1,0 +1,20 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "ESSENCE'"}, "version": [1, 0]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]},
+                        {"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]}]}},
+      {"Objective": ["Maximising", {"Reference": [{"Name": "var1"}, null]}]},
+      {"SuchThat": [{"Constant": {"ConstantBool": true}}]}]}

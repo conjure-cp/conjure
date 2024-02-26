@@ -3,50 +3,25 @@
 # get savilerow installation directory
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-if [ -f "$DIR/bin/minion" ]; then
-    MINION_ARG="-minion-bin $DIR/bin/minion"
-else
-    MINION_ARG=""
-fi
-
-if [ -f "$DIR/bin/fzn-chuffed" ]; then
-    CHUFFED_ARG="-chuffed-bin $DIR/bin/fzn-chuffed"
-else
-    CHUFFED_ARG=""
-fi
-
-if [ -f "$DIR/bin/fzn-gecode" ]; then
-    GECODE_ARG="-gecode-bin $DIR/bin/fzn-gecode"
-else
-    GECODE_ARG=""
-fi
-
-if [ -f "$DIR/bin/glucose" ]; then
-    SATSOLVER_ARG="-glucose-bin $DIR/bin/glucose"
-else
-    SATSOLVER_ARG=""
-fi
-
-if [ -f "$DIR/bin/symmetry_detect" ]; then
-    SYMDETECT_ARG="-symdetect-bin $DIR/bin/symmetry_detect"
-else
-    SYMDETECT_ARG=""
-fi
-
 case "$@" in
     *"-cgroups"*)
-        TIMESTAMP=$(date +%s)
-        GROUP_NAME="savilerow_${TIMESTAMP}_$$"
+        if [ $(uname) = "Darwin" ]; then
+            echo "Ignoring -cgroups on macOS"
+            java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" "$@"
+        else
+            TIMESTAMP=$(date +%s)
+            GROUP_NAME="savilerow_${TIMESTAMP}_$$"
 
-        echo "Using cgroups, group name: $GROUP_NAME"
+            echo "Using cgroups, group name: $GROUP_NAME"
 
-        cgcreate -g cpu:/$GROUP_NAME
-        cgset -r cpu.cfs_quota_us=1000000 $GROUP_NAME
-        cgset -r cpu.cfs_period_us=1000000 $GROUP_NAME
-        cgexec -g cpu:$GROUP_NAME java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
-        cgdelete -g cpu:/$GROUP_NAME
+            cgcreate -g cpu:/$GROUP_NAME
+            cgset -r cpu.cfs_quota_us=1000000 $GROUP_NAME
+            cgset -r cpu.cfs_period_us=1000000 $GROUP_NAME
+            cgexec -g cpu:$GROUP_NAME java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" "$@"
+            cgdelete -g cpu:/$GROUP_NAME
+        fi
     ;;
     *)
-        java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} ${SYMDETECT_ARG} ${SATSOLVER_ARG} "$@"
+        java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" "$@"
     ;;
 esac

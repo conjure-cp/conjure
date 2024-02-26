@@ -1,0 +1,6 @@
+language ESSENCE' 1.0
+
+find f_FunctionNDPartialDummy: matrix indexed by [int(1..2)] of int(2..4)
+branching on [f_FunctionNDPartialDummy]
+such that sum([toInt(f_FunctionNDPartialDummy[q4] != 2) | q4 : int(1..2)]) = 1
+

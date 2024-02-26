@@ -1,0 +1,29 @@
+{"model":
+     {"children":
+          [{"children":
+                {"domain":
+                     {"DomainFunction":
+                          [[], [{"SizeAttr_None": []}, "PartialityAttr_Partial", "JectivityAttr_None"],
+                           {"DomainInt":
+                                [{"TagInt": []},
+                                 [{"RangeBounded":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]},
+                           {"DomainInt":
+                                [{"TagInt": []},
+                                 [{"RangeBounded":
+                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]}]]}]},
+                 "forg": "Find", "name": {"Name": "g"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"children": [{"Reference": {"Name": "g"}}], "type": "OpToRelation"},
+                       {"ConstantAbstract":
+                            {"AbsLitRelation":
+                                 [[{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantInt": [{"TagInt": []}, 0]}],
+                                  [{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantInt": [{"TagInt": []}, 1]}]]}}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["g"]}

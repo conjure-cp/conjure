@@ -1,0 +1,17 @@
+Error:
+    substring-type-error.essence:2:16:
+  |
+2 | such that b = (4 substring false)
+  |                ^
+Type error:
+	Expected: sequence of ?
+	Got: int
+
+substring-type-error.essence:2:28:
+  |
+2 | such that b = (4 substring false)
+  |                            ^^^^^
+Type error:
+	Expected: sequence of ?
+	Got: bool
+

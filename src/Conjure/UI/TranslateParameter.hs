@@ -18,22 +18,33 @@ import Conjure.Representations ( downC )
 
 
 translateParameter ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadLog m =>
     NameGen m =>
     EnumerateDomain m =>
+    MonadIO m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
+    Bool ->      -- Prepare input files for the Glasgow graph solver
     Model ->     -- eprime model
     Model ->     -- essence param
     m Model      -- eprime param
 
-translateParameter eprimeModel0 essenceParam0 = do
+translateParameter graphSolver eprimeModel0 essenceParam0 = do
     logDebug $ "[eprimeModel  0]" <+-> pretty essenceParam0
     logDebug $ "[essenceParam 0]" <+-> pretty essenceParam0
     (eprimeModel, essenceParam1) <- removeEnumsFromParam eprimeModel0 essenceParam0
     logDebug $ "[eprimeModel  1]" <+-> pretty eprimeModel
     logDebug $ "[essenceParam 1]" <+-> pretty essenceParam1
-    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
+
+    let eprimeLettingsForEnums =
+            [ (nm, fromInt (genericLength vals))
+            | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
+            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam0 |> mStatements
+            , nm1 == nm2
+            , let nm = nm1 `mappend` "_EnumSize"
+            ]
+
+    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1 eprimeLettingsForEnums
     logDebug $ "[essenceParam 2]" <+-> pretty essenceParam
 
     let essenceLettings   = extractLettings essenceParam
@@ -59,15 +70,6 @@ translateParameter eprimeModel0 essenceParam0 = do
             (essenceGivenNames ++ generatedLettingNames)
     unless (null extraLettings) $
         userErr1 $ "Too many letting statements in the parameter file:" <++> prettyList id "," extraLettings
-
-
-    let eprimeLettingsForEnums =
-            [ (nm, fromInt (genericLength vals))
-            | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
-            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam0 |> mStatements
-            , nm1 == nm2
-            , let nm = nm1 `mappend` "_EnumSize"
-            ]
 
     let allLettings = (eprimeModel |> mInfo |> miLettings)
                    ++ essenceLettings
@@ -156,6 +158,51 @@ translateParameter eprimeModel0 essenceParam0 = do
             ty <- typeOfDomain domain
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
+
+    when graphSolver $ do
+        forM_ essenceGivensAndLettings' $ \ (n,d,c) -> do
+            let pairs =
+                    case d of
+                        DomainFunction _ _ (DomainTuple [DomainInt{}, DomainInt{}]) _ ->
+                            case c of
+                                (viewConstantFunction -> Just rows) ->
+                                    [ case row of
+                                        (ConstantAbstract (AbsLitTuple [a, b]), _) -> [a,b]
+                                        _ -> []
+                                    | row <- rows ]
+                                _ -> []
+                        DomainRelation _ _ ([DomainInt{}, DomainInt{}, _]) ->
+                            case c of
+                                (viewConstantRelation -> Just rows) ->
+                                    [ case row of
+                                        [a, b, _] -> [a,b]
+                                        _ -> []
+                                    | row <- rows ]
+                                _ -> []
+                        _ -> []
+            let csvLines = [ pretty a <> "," <> pretty b | [a,b] <- sortNub pairs ]
+            unless (null pairs) $
+                liftIO $ writeFile ("given-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+
+        let essenceFindNames = eprimeModel |> mInfo |> miFinds
+        let essenceFinds = eprimeModel |> mInfo |> miRepresentations |> filter (\ (n,_) -> n `elem` essenceFindNames )
+        forM_ essenceFinds $ \ (n, d) -> do
+            case d of
+                DomainFunction _ _ (DomainInt _ [RangeBounded a b]) _ -> do
+                        a' <- instantiateExpression allLettings a
+                        b' <- instantiateExpression allLettings b
+                        case (a', b') of
+                            (ConstantInt _ a'', ConstantInt _ b'') -> do
+                                let csvLines =
+                                        [ pretty i <> "," <> name
+                                        | i <- [a''..b'']
+                                        , let name = pretty n <> "_Function1D_" <> pretty (padLeft 5 '0' (show i))
+                                        ]
+                                unless (null csvLines) $
+                                    liftIO $ writeFile ("find-" ++ show (pretty n) ++ ".csv") (render 100000 (vcat csvLines))
+                            _ -> userErr1 $ "Unsupported domain for --graph-solver:" <+> pretty d
+                _ -> return ()
+
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]

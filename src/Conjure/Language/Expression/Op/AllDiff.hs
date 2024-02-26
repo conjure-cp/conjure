@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.AllDiff where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -27,18 +28,22 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
             _ -> raiseTypeError p
 
 instance SimplifyOp OpAllDiff x where
+    simplifyOp (OpAllDiff x)
+        | Just xs <- listOut x
+        , length xs == 1
+        = return $ fromBool True
     simplifyOp _ = na "simplifyOp{OpAllDiff}"
 
 instance Pretty x => Pretty (OpAllDiff x) where
     prettyPrec _ (OpAllDiff a) = "allDiff" <> prParens (pretty a)
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpAllDiff x) where
-    varSymBreakingDescription (OpAllDiff x) | Just xs <- listOut x = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpAllDiff x) | Just xs <- listOut x = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpAllDiff")
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (OpAllDiff x) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpAllDiff x) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpAllDiff")
         , ("children", varSymBreakingDescription x)
         ]

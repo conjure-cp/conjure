@@ -1,7 +1,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Partition.PartitionAsSet ( partitionAsSet ) where
 
@@ -18,7 +17,7 @@ import Conjure.Representations.Internal
 
 
 partitionAsSet
-    :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
+    :: forall m . (MonadFailDoc m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
@@ -101,7 +100,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         else return $ return $ -- for list
                                 [essence|
                                     forAll &iPat : &innerDomain .
-                                        1  = sum ([ 1
+                                        1  = sum([ 1
                                                   | &jPat <- &rel
                                                   , &i in &j
                                                   ])
@@ -154,7 +153,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         downC :: TypeOf_DownC m
         downC ( name
               , inDom
-              , ConstantAbstract (AbsLitPartition vals)
+              , viewConstantPartition -> Just vals
               ) = do
             outDom <- outDomain inDom
             rDownC
@@ -172,7 +171,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainPartition Partition_AsSet{} _ _)) =
             case lookup (outName domain name) ctxt of
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in PartitionAsSet up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
@@ -181,12 +180,12 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     ("Bindings in context:" : prettyContext ctxt)
                 Just (viewConstantSet -> Just sets) -> do
                     let setOut (viewConstantSet -> Just xs) = return xs
-                        setOut c = fail $ "Expecting a set, but got:" <++> pretty c
+                        setOut c = failDoc $ "Expecting a set, but got:" <++> pretty c
                     vals <- mapM setOut sets
                     return (name, ConstantAbstract (AbsLitPartition vals))
                 Just (ConstantUndefined msg ty) ->        -- undefined propagates
                     return (name, ConstantUndefined ("PartitionAsSet " `mappend` msg) ty)
-                Just constant -> fail $ vcat $
+                Just constant -> failDoc $ vcat $
                     [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain

@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-find a_SetOccurrence: matrix indexed by [int(1..4)] of bool
-find b_SetOccurrence: matrix indexed by [int(1..4)] of bool
-such that
-    a_SetOccurrence[2] = true,
-    b_SetOccurrence[3] = true,
-    (sum v__0 : int(1..4) . a_SetOccurrence[v__0]) = 2,
-    (sum v__0 : int(1..4) . b_SetOccurrence[v__0]) = 2

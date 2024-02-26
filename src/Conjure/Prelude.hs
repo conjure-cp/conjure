@@ -3,6 +3,8 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 
 module Conjure.Prelude
     ( module X
@@ -25,11 +27,13 @@ module Conjure.Prelude
     , decodeFromFile
     , RandomM(..)
     , fst3, snd3, thd3
+    , fst4, snd4, thd4, fourth4
     , (|>)
     , allNats
     , jsonOptions
     , Proxy(..)
-    , MonadFail(..), failCheaply, na
+    , MonadFailDoc(..), na
+    , MonadFail (..)
     , allContexts, ascendants
     , dropExtension, dropDirs
     , MonadLog(..), LogLevel(..), runLoggerPipeIO, ignoreLogs
@@ -45,6 +49,9 @@ module Conjure.Prelude
     , JSONValue
     , isTopMostZ
     , getDirectoryContents
+    , RunStateAsWriter, runStateAsWriterT, sawTell
+    , stripPostfix
+    , Doc
     ) where
 
 import GHC.Err as X ( error )
@@ -54,9 +61,10 @@ import GHC.Stack as X ( HasCallStack )
 import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
 import Data.Int as X ( Int )
 import GHC.Integer as X ( Integer )
+import GHC.Float as X ( sqrt, (**) )
 import GHC.Exts as X ( Double )
-import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^), Real(..) )
-import GHC.Enum as X ( Enum(..) )
+import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^), Real(..), round, odd, even )
+import GHC.Enum as X ( Enum(..), Bounded(..) )
 import Data.Char as X ( Char, toLower, isSpace )
 import Data.String as X ( String, IsString(..) )
 
@@ -72,28 +80,32 @@ import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some, optional )
 import qualified Control.Monad ( fail )
+import Control.Monad.Fail
 
 import Control.Monad                as X ( Monad(return, (>>), (>>=))
                                          , (<=<), (>=>), (=<<), ap, join
                                          , guard, void, when, unless
                                          , zipWithM, zipWithM_, foldM, filterM, replicateM
-                                         , MonadPlus(..), mzero, msum )
+                                         , MonadPlus(..), mzero, msum)
 import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, modify
                                          , evalStateT, runStateT, evalState, runState )
+import Control.Monad.State.Strict ( put ) -- only for defining instances
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
 import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
+
+
 import Control.Arrow                as X ( first, second, (***), (&&&) )
 import Control.Category             as X ( (<<<), (>>>) )
 
 
 import Data.Data         as X ( Data, Typeable )
 import Data.Default      as X ( Default, def )
-import Data.Either       as X ( Either(..), either, lefts, rights, partitionEithers )
+import Data.Either       as X ( Either(..), either, lefts, rights, partitionEithers, fromRight, fromLeft )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy
@@ -112,6 +124,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , inits, tails
                               , findIndex
                               , filter, partition
+                              , cycle
                               )
 import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe
@@ -127,7 +140,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, appendFile, getLine )
-import System.IO.Error ( isDoesNotExistError )
+import System.IO.Error ( isDoesNotExistError, ioeGetErrorType )
 import Control.Exception as X ( catch, throwIO, SomeException )
 
 import Data.Proxy as X ( Proxy(..) )
@@ -152,16 +165,6 @@ import qualified Data.Aeson.Types as JSON
 -- QuickCheck
 import Test.QuickCheck ( Gen )
 
--- megaparsec
-import Text.Megaparsec.Prim ( ParsecT )
-
--- pretty
-import Text.PrettyPrint as X
-    ( Doc
-    , (<>), (<+>), ($$)
-    , hang, nest, punctuate
-    , hcat, vcat, fsep, hsep, sep
-    )
 
 -- uniplate
 import Data.Generics.Uniplate.Data as X
@@ -182,12 +185,15 @@ import qualified Pipes
 -- shelly
 import Shelly ( Sh, shelly, print_stdout, print_stderr )
 
+-- ansi-terminal
+import System.Console.ANSI ( clearScreen, setCursorPosition )
+
 import System.Random ( StdGen, mkStdGen, setStdGen, randomRIO )
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Text.PrettyPrint as Pr
+import qualified Text.PrettyPrint.Annotated.HughesPJ as Pr
 
 -- containers
 import qualified Data.Set as S
@@ -208,7 +214,39 @@ import System.CPUTime ( getCPUTime )
 -- time
 import Data.Time.Clock ( getCurrentTime )
 
+-- timeit
+import System.TimeIt as X ( timeIt, timeItNamed )
+
 import Debug.Trace as X ( trace, traceM )
+import GHC.IO.Exception (IOErrorType(InvalidArgument))
+import Text.PrettyPrint.Annotated.HughesPJ ((<+>))
+-- import Prettyprinter (PageWidth(AvailablePerLine))
+-- import Prettyprinter.Render.String (renderString)
+
+
+
+type EssenceDocAnnotation = ()
+
+type Doc = Pr.Doc EssenceDocAnnotation
+
+-- instance Eq Doc where
+--     a == b = show a == show b
+--compats
+-- hang :: Doc -> Int ->Doc -> Doc
+-- hang a n b = a <+> Pr.hang n b
+
+-- hcat :: [Doc] -> Doc 
+-- hcat = Pr.hcat
+
+-- fsep :: [Doc] -> Doc
+-- fsep = Pr.fillSep
+
+-- cat :: [Doc] -> Doc
+-- cat = Pr.cat
+
+-- nest :: Int -> Doc -> Doc
+-- nest = Pr.nest
+
 
 tracing :: Show a => String -> a -> a
 tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
@@ -321,7 +359,7 @@ padShowInt n i = let s = show i in replicate (n - length s) '0' ++ s
 decodeFromFile :: (Serialize a, MonadFail IO) => FilePath -> IO a
 decodeFromFile path = do
     con <- ByteString.readFile path
-    either (fail . stringToDoc) return (decode con)
+    either (fail) return (decode con)
 
 class Monad m => RandomM m where
     get_stdgen :: m StdGen
@@ -336,6 +374,18 @@ snd3 (_,b,_) = b
 
 thd3 :: (a,b,c) -> c
 thd3 (_,_,c) = c
+
+fst4 :: (a,b,c,d) -> a
+fst4 (a,_,_,_) = a
+
+snd4 :: (a,b,c,d) -> b
+snd4 (_,b,_,_) = b
+
+thd4 :: (a,b,c,d) -> c
+thd4 (_,_,c,_) = c
+
+fourth4 :: (a,b,c,d) -> d
+fourth4 (_,_,_,d) = d
 
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
@@ -352,50 +402,55 @@ jsonOptions = JSON.defaultOptions
     }
 
 
-class (Functor m, Applicative m, Monad m) => MonadFail m where
-    fail :: Doc -> m a
+class (Functor m, Applicative m, Monad m,MonadFail m) => MonadFailDoc m where
+    failDoc :: Doc -> m a
 
-na :: MonadFail m => Doc -> m a
-na message = fail ("N/A:" <+> message)
+na :: MonadFailDoc m => Doc -> m a
+na message = failDoc ("N/A:" <+> message)
 
 instance MonadFail Identity where
-    fail = Control.Monad.fail . show
+    fail = error
+instance MonadFailDoc Identity where
+    failDoc = Control.Monad.fail . show
 
-instance MonadFail Maybe where
-    fail = const Nothing
+instance MonadFailDoc Maybe where
+    failDoc = const Nothing
 
-instance (a ~ Doc) => MonadFail (Either a) where
-    fail = Left
+instance (a ~ Doc) => MonadFailDoc (Either a) where
+    failDoc = Left
 
-instance MonadFail m => MonadFail (IdentityT m) where
-    fail = lift . fail
+instance MonadFail (Either Doc) where
+    fail = failDoc . stringToDoc
 
-instance (Functor m, Monad m) => MonadFail (MaybeT m) where
-    fail = const $ MaybeT $ return Nothing
+instance MonadFailDoc m => MonadFailDoc (IdentityT m) where
+    failDoc = lift . failDoc
 
-instance (Functor m, Monad m) => MonadFail (ExceptT m) where
-    fail = ExceptT . return . Left
+instance (Functor m, Monad m) => MonadFailDoc (MaybeT m) where
+    failDoc = const $ MaybeT $ return Nothing
 
-instance (Functor m, Monad m, MonadFail m) => MonadFail (StateT st m) where
-    fail = lift . fail
+instance (MonadFailDoc m) => MonadFailDoc (ExceptT m) where
+    failDoc = ExceptT . return . Left
 
-instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
-    fail = lift . fail
+instance (MonadFailDoc m) => MonadFailDoc (StateT st m) where
+    failDoc = lift . failDoc
 
-instance MonadFail m => MonadFail (ReaderT r m) where
-    fail = lift . fail
+instance (MonadFailDoc m, Monoid w) => MonadFailDoc (WriterT w m) where
+    failDoc = lift . failDoc
+
+instance MonadFailDoc m => MonadFailDoc (ReaderT r m) where
+    failDoc = lift . failDoc
 
 instance MonadFail Gen where
-    fail = Control.Monad.fail . show
+    fail = error
+instance MonadFailDoc Gen where
+    failDoc = Control.Monad.fail . show
 
-instance MonadFail (ParsecT l m) where
-    fail = Control.Monad.fail . show
 
-instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
-    fail = lift . fail
+instance MonadFailDoc m => MonadFailDoc (Pipes.Proxy a b c d m) where
+    failDoc = lift . failDoc
 
-instance MonadFail TH.Q where
-    fail = Control.Monad.fail . show
+instance MonadFailDoc TH.Q where
+    failDoc = Control.Monad.fail . show
 
 
 newtype ExceptT m a = ExceptT { runExceptT :: m (Either Doc a) }
@@ -404,16 +459,20 @@ instance (Functor m) => Functor (ExceptT m) where
     fmap f = ExceptT . fmap (fmap f) . runExceptT
 
 instance (Functor m, Monad m) => Applicative (ExceptT m) where
-    pure = return
+    pure =  ExceptT . return . Right
     (<*>) = ap
 
 instance (Monad m) => Monad (ExceptT m) where
-    return a = ExceptT $ return (Right a)
+    return = pure
     m >>= k = ExceptT $ do
         a <- runExceptT m
         case a of
             Left e -> return (Left e)
             Right x -> runExceptT (k x)
+    -- fail = ExceptT . return . Left . stringToDoc
+
+
+instance (MonadFailDoc m) => MonadFail (ExceptT m) where
     fail = ExceptT . return . Left . stringToDoc
 
 instance MonadIO m => MonadIO (ExceptT m) where
@@ -426,14 +485,10 @@ instance MonadTrans ExceptT where
         res <- comp
         return (Right res)
 
--- | "failCheaply: premature optimisation at its finest." - Oz
---   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
---   it can be run in any monad that implements MonadFail.
---   Running it in a monad like IO will be a little bit more expensive though.
---   Why not run it in Either and raise the error in the outer monad instead?
---   Notice: this function cannot be eta-reduced.
-failCheaply :: MonadFail m2 => (forall m . MonadFail m => m a) -> m2 a
-failCheaply m = either fail return m
+instance MonadState s m => MonadState s (ExceptT m) where
+    get = lift get
+    put = lift . put
+
 
 
 allContexts :: Data b => Zipper a b -> [Zipper a b]
@@ -514,8 +569,14 @@ ignoreLogs = runIdentityT
 runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Doc) a) m r -> m r
 runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
     where
-        each (Left (lvl, msg)) = when (lvl <= l)
-            (liftIO $ putStrLn $ Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg)
+        each (Left (lvl, msg)) =
+            when (lvl <= l) $ do
+                let txt = Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg
+                -- let txt = renderString $ (Pr.layoutPretty $ Pr.LayoutOptions (AvailablePerLine 200 1.0)) msg
+                when ("[" `isPrefixOf` txt) $ do
+                    liftIO clearScreen
+                    liftIO (setCursorPosition 0 0)
+                liftIO $ putStrLn txt
         each _ = return ()
 
 histogram :: Ord a => [a] -> [(a, Integer)]
@@ -564,8 +625,9 @@ readFileIfExists :: FilePath -> IO (Maybe String)
 readFileIfExists f = (Just <$> readFile f) `catch` handleExists
     where
         handleExists e
+            | ioeGetErrorType e == InvalidArgument = return Nothing -- handle non-text files gracefully
             | isDoesNotExistError e = return Nothing
-            | otherwise = throwIO e
+            | otherwise = trace (show e) $ throwIO e
 
 removeDirectoryIfExists :: FilePath -> IO ()
 removeDirectoryIfExists f = removeDirectoryRecursive f `catch` handleExists
@@ -587,3 +649,29 @@ type JSONValue = JSON.Value
 --   i.e. we cannot go any more up.
 isTopMostZ :: Zipper a b -> Bool
 isTopMostZ = isNothing . up
+
+
+class RunStateAsWriter s where
+    -- | We don't have Writer monads around here, they leak space.
+    runStateAsWriterT :: (Monad m, Default s) => StateT s m a -> m (a, s)
+
+instance RunStateAsWriter [s] where
+    runStateAsWriterT m = do
+        (a, out) <- runStateT m def
+        return (a, reverse out)
+
+instance RunStateAsWriter ([a],[b]) where
+    runStateAsWriterT m = do
+        (x, (a,b)) <- runStateT m def
+        return (x, (reverse a, reverse b))
+
+sawTell :: (MonadState s m, Monoid s) => s -> m ()
+sawTell xs = modify (xs `mappend`)
+
+
+stripPostfix :: Eq a => [a] -> [a] -> Maybe [a]
+stripPostfix postfix list =
+    case stripPrefix (reverse postfix) (reverse list) of
+        Nothing -> Nothing
+        Just rest -> Just (reverse rest)
+

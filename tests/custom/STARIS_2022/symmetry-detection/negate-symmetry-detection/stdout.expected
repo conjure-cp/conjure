@@ -1,0 +1,19 @@
+{"model":
+     {"children":
+          [{"children":
+                {"domain":
+                     {"DomainInt":
+                          [{"TagInt": []},
+                           [{"RangeBounded":
+                                 [{"Op": {"MkOpNegate": {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}}},
+                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]},
+                 "forg": "Find", "name": {"Name": "i"}, "type": "FindOrGiven"},
+            "type": "Declaration"},
+           {"children":
+                [{"children":
+                      [{"Reference": {"Name": "i"}},
+                       {"children": [{"ConstantInt": [{"TagInt": []}, 3]}], "type": "OpNegate"}],
+                  "symmetricChildren": true, "type": "OpEq"}],
+            "symmetricChildren": true, "type": "SuchThat"}],
+      "symmetricChildren": true, "type": "Model"},
+ "nodes_to_swap": ["i"]}

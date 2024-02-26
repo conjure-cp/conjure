@@ -1,10 +1,12 @@
 Error:
-    Lexing error: "hoh hoh hooo}
-find y : E2
-find z : E2(a..c)
-find t : E2(b,d)
+    tests/parse_print/random_perturb/enum_liberated/delete-03/delete-03.essence:6:42:
+  |
+6 | letting E2 be new type enum {a, b, c, d, "hoh hoh hooo}
+  |                                          ^^^^^^^^^^^^^^
+Skipped tokens
 
-such that y = z, z = t
-
-find k : E2
-such that k = max(`E2`)
+tests/parse_print/random_perturb/enum_liberated/delete-03/delete-03.essence:6:42:
+  |
+6 | letting E2 be new type enum {a, b, c, d, "hoh hoh hooo}
+  |                                          ^
+Missing }

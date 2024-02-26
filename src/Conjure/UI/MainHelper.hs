@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 
@@ -15,18 +14,19 @@ import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
-import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
+import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
+
 import Conjure.Language.Name ( Name(..) )
-import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
+import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
-import Conjure.Language.NameGen ( NameGenM, runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render, prParens )
+import Conjure.Language.NameGen ( NameGen, NameGenM, runNameGen )
+import Conjure.Language.Pretty 
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..)
@@ -34,22 +34,29 @@ import Conjure.Rules.Definition ( viewAuto, Strategy(..)
                                 , USBQuickOrComplete(..), USBScope(..), USBIndependentlyOrAltogether(..)
                                 )
 import Conjure.Process.Enumerate ( EnumerateDomain )
-import Conjure.Process.ModelStrengthening ( strengthenModel )
-import Conjure.Language.NameResolution ( resolveNamesMulti )
+import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
+import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
+import Conjure.Process.Boost ( boost )
 import Conjure.Language.ModelStats ( modelDeclarationsJSON )
+import Conjure.Language.AdHoc ( toSimpleJSON )
+
 
 -- base
-import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
+import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..), hPutStrLn, stderr )
+import System.Environment ( getEnvironment )
 import System.Info ( os )
 import GHC.Conc ( numCapabilities )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 import Data.Char ( isDigit )
 
+import qualified Data.Set as S                  -- containers
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
 
 -- system-filepath
-import qualified Filesystem.Path as Sys ( FilePath )
+-- import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile, findExecutable )
@@ -61,163 +68,65 @@ import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
 import qualified Data.Text as T ( unlines, isInfixOf )
 
 -- parallel-io
-import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
+import Control.Concurrent.ParallelIO.Global ( parallel, stopGlobalPool )
+import Conjure.LSP.LanguageServer (startServer, LSPConfig (LSPConfig))
 
 
 mainWithArgs :: forall m .
     MonadIO m =>
     MonadLog m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     EnumerateDomain m =>
+    NameGen m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     UI -> m ()
-mainWithArgs Modelling{..} = do
-    model <- readModelFromFile essence
-    liftIO $ hSetBuffering stdout LineBuffering
-    liftIO $ maybe (return ()) setRandomSeed seed
-    let
-        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
-                                 return
-                                 (parseStrategy s)
-
-    config <- do
-        strategyQ'                  <- parseStrategy_ strategyQ
-        strategyA'                  <- parseStrategy_ strategyA
-        representations'            <- maybe (return strategyA')       parseStrategy_ representations
-        representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
-        representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
-        representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
-        representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
-        representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
-
-        case fst (viewAuto strategyQ') of
-            Compact -> userErr1 "The Compact heuristic isn't supported for questions."
-            _       -> return ()
-
-        responsesList <- do
-            if null responses
-                then return Nothing
-                else do
-                    let parts = splitOn "," responses
-                    let intParts = mapMaybe readMay parts
-                    if length parts == length intParts
-                        then return (Just intParts)
-                        else userErr1 $ vcat [ "Cannot parse the value for --responses."
-                                             , "Expected a comma separated list of integers."
-                                             , "But got:" <+> pretty responses
-                                             ]
-        responsesRepresentationList <- do
-            if null responsesRepresentation
-                then return Nothing
-                else do
-                    let parts =
-                            [ case splitOn ":" pair of
-                                [nm, val] ->
-                                    case readMay val of
-                                        Just i -> Just (Name (stringToText nm), i)
-                                        Nothing -> Nothing
-                                _ -> Nothing
-                            | pair <- splitOn "," responsesRepresentation
-                            ]
-                    let partsJust = catMaybes parts
-                    if length parts == length partsJust
-                        then return (Just partsJust)
-                        else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
-                                             , "Expected a comma separated list of variable name : integer pairs."
-                                             , "But got:" <+> pretty responsesRepresentation
-                                             ]
-
-        unnamedSymmetryBreakingParsed <-
-        -- 1. Quick/Complete. Quick is x .<= p(x)
-        --                    Complete is x .<= y /\ y = p(x)
-        -- 2. Scope.          Consecutive
-        --                    AllPairs
-        --                    AllPermutations
-        -- 3. Independently/Altogether
-        -- in addition, we have
-        --      none
-        --      fast: Quick-Consecutive-Independently
-        --      full: Complete-AllPermutations-Altogether
-            case (unnamedSymmetryBreaking, splitOn "-" unnamedSymmetryBreaking) of
-                ("none", _)  -> return Nothing
-                ("fast", _)  -> return $ Just $ UnnamedSymmetryBreaking USBQuick USBConsecutive USBIndependently
-                ("full", _)  -> return $ Just $ UnnamedSymmetryBreaking USBComplete USBAllPermutations USBAltogether
-                (_, [a,b,c]) -> do
-                    a' <- case a of
-                        "Quick" -> return USBQuick
-                        "Complete" -> return USBComplete
-                        _ -> userErr1 $ vcat
-                            [ "Unrecognised value for the first component of --unnamed-symmetry-breaking"
-                            , "Expected one of: Quick / Complete"
-                            , "But got:" <+> pretty a
-                            ]
-                    b' <- case b of
-                        "Consecutive" -> return USBConsecutive
-                        "AllPairs" -> return USBAllPairs
-                        "AllPermutations" -> return USBAllPermutations
-                        _ -> userErr1 $ vcat
-                            [ "Unrecognised value for the second component of --unnamed-symmetry-breaking"
-                            , "Expected one of: Consecutive / AllPairs / AllPermutations"
-                            , "But got:" <+> pretty b
-                            ]
-                    c' <- case c of
-                        "Independently" -> return USBIndependently
-                        "Altogether" -> return USBAltogether
-                        _ -> userErr1 $ vcat
-                            [ "Unrecognised value for the third component of --unnamed-symmetry-breaking"
-                            , "Expected one of: Independently / Altogether"
-                            , "But got:" <+> pretty c
-                            ]
-                    return $ Just $ UnnamedSymmetryBreaking a' b' c'
-                _ -> userErr1 $ vcat
-                            [ "Unrecognised value for --unnamed-symmetry-breaking"
-                            , "Maybe try one of: none / fast / full"
-                            , "Got:" <+> pretty unnamedSymmetryBreaking
-                            ]
-
-        return Config.Config
-            { Config.outputDirectory            = outputDirectory
-            , Config.logLevel                   = logLevel
-            , Config.verboseTrail               = verboseTrail
-            , Config.rewritesTrail              = rewritesTrail
-            , Config.logRuleFails               = logRuleFails
-            , Config.logRuleSuccesses           = logRuleSuccesses
-            , Config.logRuleAttempts            = logRuleAttempts
-            , Config.logChoices                 = logChoices
-            , Config.strategyQ                  = strategyQ'
-            , Config.strategyA                  = strategyA'
-            , Config.representations            = representations'
-            , Config.representationsFinds       = representationsFinds'
-            , Config.representationsGivens      = representationsGivens'
-            , Config.representationsAuxiliaries = representationsAuxiliaries'
-            , Config.representationsQuantifieds = representationsQuantifieds'
-            , Config.representationsCuts        = representationsCuts'
-            , Config.channelling                = channelling
-            , Config.representationLevels       = representationLevels
-            , Config.unnamedSymmetryBreaking    = unnamedSymmetryBreakingParsed
-            , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
-            , Config.numberingStart             = numberingStart
-            , Config.smartFilenames             = smartFilenames
-            , Config.lineWidth                  = lineWidth
-            , Config.responses                  = responsesList
-            , Config.responsesRepresentation    = responsesRepresentationList
-            , Config.estimateNumberOfModels     = estimateNumberOfModels
-            }
-    runNameGen model $ outputModels config model
+mainWithArgs LSP{} = liftIO $ startServer LSPConfig 
+mainWithArgs mode@Modelling{..} = do
+    essenceM <- readModelFromFile essence
+    doIfNotCached          -- start the show!
+        ( sort (mStatements essenceM)
+        , portfolio
+        -- when the following flags change, invalidate hash
+        -- nested tuples, because :(
+        , ( numberingStart
+          , smartFilenames
+          , strategyQ
+          , strategyA
+          , responses
+          )
+        , ( representations
+          , representationsFinds
+          , representationsGivens
+          , representationsAuxiliaries
+          , representationsQuantifieds
+          , representationsCuts
+          )
+        , ( channelling
+          , representationLevels
+          , seed
+          , limitModels
+          , limitTime
+          , outputFormat
+          )
+        , generateStreamliners
+        )
+        (outputDirectory </> ".conjure-checksum")
+        (pp logLevel "Using cached models.")
+        (void $ mainWithArgs_Modelling "" mode Nothing S.empty)
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- readParamOrSolutionFromFile essenceParam
-    output <- runNameGen () $ translateParameter eprimeF essenceParamF
+    essenceParamF <- readParamOrSolutionFromFile eprimeF essenceParam
+    output <- runNameGen () $ translateParameter False eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- maybe (return def) readParamOrSolutionFromFile essenceParamO
-    eprimeSolutionF <- readParamOrSolutionFromFile eprimeSolution
+    essenceParamF <- maybe (return def) (readParamOrSolutionFromFile eprimeF) essenceParamO
+    eprimeSolutionF <- readParamOrSolutionFromFile eprimeF eprimeSolution
     output <- runNameGen () $ translateSolution eprimeF essenceParamF eprimeSolutionF
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel lineWidth outputFormat (Just outputFilename) output
@@ -225,8 +134,8 @@ mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
     essence2  <- readModelFromFile essence
-    param2    <- maybe (return def) readParamOrSolutionFromFile essenceParamO
-    solution2 <- readParamOrSolutionFromFile essenceSolution
+    param2    <- maybe (return def) (readParamOrSolutionFromFile essence2) essenceParamO
+    solution2 <- readParamOrSolutionFromFile essence2 essenceSolution
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs IDE{..} = do
@@ -241,18 +150,23 @@ mainWithArgs IDE{..} = do
             --TODO default config here for now
             json <- runNameGen () $ modelRepresentationsJSON def essence2
             liftIO $ putStrLn $ render lineWidth json
-        | otherwise           -> writeModel lineWidth JSON Nothing essence2
+        | otherwise           -> writeModel lineWidth ASTJSON Nothing essence2
+-- mainWithArgs Pretty{..} | outputFormat == Plain= do
+--     (_,cts) <- liftIO $ pairWithContents essence
+--     res <- prettyPrintWithChecks cts
+--     liftIO $ putStrLn $ render lineWidth res
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
                 then do
-                    liftIO $ putStrLn "Parsing as a parameter file"
-                    readParamOrSolutionFromFile essence
+                    liftIO $ hPutStrLn stderr "Parsing as a parameter file"
+                    readParamOrSolutionFromFile def essence
                 else readModelFromFile essence
     let model1 = model0
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
     writeModel lineWidth outputFormat Nothing model1
+
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
@@ -268,10 +182,35 @@ mainWithArgs SymmetryDetection{..} = do
     model <- readModelFromFile essence
     outputVarSymBreaking jsonFilePath model
 mainWithArgs ParameterGenerator{..} = do
-    when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
-    model  <- readModelFromFile essence
-    output <- runNameGen () $ parameterGenerator minInt maxInt model
-    writeModel lineWidth outputFormat (Just essenceOut) output
+    model <- readModelFromFile essence
+    ((genModel, repairModel), classes) <- runNameGen () $ parameterGenerator minInt maxInt model
+
+    let genModelOut = dropExtension essence ++ "-instanceGenerator.essence"
+    writeModel lineWidth outputFormat (Just genModelOut) genModel
+
+    let repairModelOut = dropExtension essence ++ "-instanceRepair.essence"
+    writeModel lineWidth outputFormat (Just repairModelOut) repairModel
+
+    let
+        toIrace nm lb ub _ | lb == ub =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" c" <+>
+            prParens (pretty lb)
+        toIrace nm lb ub (Just klass) =
+            pretty nm <+>
+            "\"-" <> pretty nm <> " \" " <> pretty klass <+>
+            prettyList prParens "," [lb, ub]
+        toIrace nm _ _ Nothing = bug ("Missing class for:" <+> pretty nm)
+
+        essenceOutFileContents = render lineWidth $ vcat
+            [ toIrace nm lb ub (lookup nm classes)
+            | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements genModel
+            ]
+    liftIO $ writeFile (genModelOut ++ ".irace") (essenceOutFileContents ++ "\n")
+mainWithArgs Streamlining{..} = runNameGen essence
+    (readModelFromFile essence >>= resolveNames >>= typeCheckModel >>= streamliningToStdout)
+mainWithArgs AutoIG{..} | generatorToIrace = do
+    model <- readModelFromFile essence
     let
         toIrace nm lb ub | lb == ub =
             pretty nm <+>
@@ -281,46 +220,71 @@ mainWithArgs ParameterGenerator{..} = do
             pretty nm <+>
             "\"-" <> pretty nm <> " \" i" <+>
             prettyList prParens "," [lb, ub]
-    liftIO $ writeFile (essenceOut ++ ".irace") $ render lineWidth $ vcat
-        [ toIrace nm lb ub
-        | Declaration (FindOrGiven Given nm (DomainInt _ [RangeBounded lb ub])) <- mStatements output
-        ]
-mainWithArgs ModelStrengthening{..} =
-    readModelFromFile essence >>=
-      strengthenModel logLevel logRuleSuccesses >>=
-        writeModel lineWidth outputFormat (Just essenceOut)
+    let (iraceStmts, errors) = mconcat
+            [ case st of
+                Declaration (FindOrGiven Given nm domain) ->
+                    case domain of
+                        DomainInt _ [RangeBounded lb ub] -> ([toIrace nm lb ub], [])
+                        _ -> ([], ["Unsupported domain for given" <+> pretty nm <> ":" <+> pretty domain])
+                _ -> ([], [])
+            | st <- mStatements model
+            ]
+    if null errors
+        then do
+            let essenceOutFileContents = render lineWidth $ vcat iraceStmts
+            liftIO $ writeFile outputFilepath (essenceOutFileContents ++ "\n")
+        else
+            userErr errors
+mainWithArgs AutoIG{..} | removeAux = do
+    model <- readModelFromFile essence
+    let stmts' = [ case st of
+                    Declaration (FindOrGiven _ nm _) | "Aux" `isPrefixOf` show (pretty nm) -> Nothing
+                                                     | otherwise -> Just st
+                    Declaration (Letting nm _) | "Aux" `isPrefixOf` show (pretty nm) -> Nothing
+                                               | otherwise -> Just st
+                    _ -> Just st
+                 | st <- mStatements model
+                 ]
+    writeModel lineWidth outputFormat (Just outputFilepath) model {mStatements = catMaybes stmts'}
+mainWithArgs AutoIG{} = userErr1 "You must pass one of --generator-to-irace or --remove-aux to this command."
+mainWithArgs Boost{..} = do
+    model <- readModelFromFile essence
+    runNameGen model $ do
+        boosted <- boost logLevel logRuleSuccesses model
+        writeModel lineWidth outputFormat Nothing boosted
 mainWithArgs config@Solve{..} = do
-    let executables = [ ( "minion"          , "minion" )
-                      , ( "gecode"          , "fzn-gecode" )
-                      , ( "chuffed"         , "fzn-chuffed" )
-                      , ( "glucose"         , "glucose" )
-                      , ( "glucose-syrup"   , "glucose-syrup" )
-                      , ( "lingeling"       , "lingeling" )
-                      , ( "minisat"         , "minisat" )
-                      , ( "bc_minisat_all"  , "bc_minisat_all_release" )
-                      , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
-                      , ( "open-wbo"        , "open-wbo" )
-                      ]
     -- some sanity checks
-    case lookup solver executables of
+    (solverName, _smtLogicName) <- splitSolverName solver
+    case lookup solverName solverExecutables of
         Nothing -> userErr1 ("Unsupported solver:" <+> pretty solver)
         Just ex -> do
             fp <- liftIO $ findExecutable ex
             case fp of
                 Nothing -> userErr1 ("Cannot find executable" <+> pretty ex <+> "(for solver" <+> pretty solver <> ")")
                 Just _  -> return ()
+    case solver of
+        "cplex" -> do
+            env <- liftIO getEnvironment
+            case lookup "CPLEX_PATH" env of
+                Nothing -> userErr1 $ vcat
+                    [ "Set environment variable CPLEX_PATH. Something like:"
+                    , "    CPLEX_PATH=/path/to/cplex/library conjure solve"
+                    ]
+                Just{} -> return ()
+        _ -> return ()
     unless (nbSolutions == "all" || all isDigit nbSolutions) $
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
                        ])
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
-        userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
-    essenceM <- readModelFromFile essence
+        userErr1 "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
+    essenceM_beforeNR <- readModelFromFile essence
+    essenceM <- resolveNames essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
         when (nbSolutions == "all" || nbSolutions /= "1") $
             userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
     essenceParamsParsed <- forM essenceParams $ \ f -> do
-        p <- readParamOrSolutionFromFile f
+        p <- readParamOrSolutionFromFile essenceM f
         return (f, p)
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
               ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
@@ -347,7 +311,8 @@ mainWithArgs config@Solve{..} = do
                     then return useExistingModels
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else doIfNotCached          -- start the show!
-                    ( sort (mStatements essenceM)
+                    ( sort (mStatements essenceM_beforeNR)
+                    , portfolio
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
                     , ( numberingStart
@@ -370,6 +335,7 @@ mainWithArgs config@Solve{..} = do
                       , limitTime
                       , outputFormat
                       )
+                    , generateStreamliners
                     )
                     (outputDirectory </> ".conjure-checksum")
                     (pp logLevel "Using cached models." >> getEprimes)
@@ -382,58 +348,92 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
-        Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
-            when validateSolutionsOpt $ liftIO $ validating solutions
+
+            when (null solutions) (pp logLevel "No solutions found.")
+
+            when validateSolutionsOpt $ validating solutions
+
+            let params = nub [ dropExtension p | (_,p,_) <- solutions ]
+
             when copySolutions $ do
                 -- clean-up: move the solutions next to the essence file.
                 -- our intention is that a user intending to just solve something
                 -- should never have to look into outputDirectory.
+
                 let
                     copySolution :: MonadIO m => FilePath -> FilePath -> m ()
                     copySolution old new = do
                         pp logLevel ("Copying solution to:" <+> pretty new)
                         liftIO (copyFile old new)
+
                 let (essenceDir0, essenceFilename) = splitFileName essence
                 let essenceDir = if essenceDir0 == "./" then "" else essenceDir0
                 let essenceBasename = takeBaseName essenceFilename
-                when (length eprimes == 1) $
-                    if null essenceParams
-                        then do
-                            let solutions' = [ solution
-                                             | (_, _, Just solution) <- solutions ]
-                            case solutions' of
-                                [solution] ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                ]
-                                                            <.> ".solution")
-                                _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                , padLeft 6 '0' (show i)
-                                                                                ]
-                                                            <.> ".solution")
-                        else forM_ essenceParams $ \ essenceParam -> do
-                            let (_paramDir, paramFilename) = splitFileName essenceParam
-                            let paramBasename = takeBaseName paramFilename
-                            let solutions' = [ solution
-                                             | (_, essenceParam', Just solution) <- solutions
-                                             , essenceParam == essenceParam' ]
-                            case solutions' of
-                                [solution] ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                , paramBasename
-                                                                                ]
-                                                            <.> ".solution")
-                                _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
-                                    copySolution solution (essenceDir
-                                                            </> intercalate "-" [ essenceBasename
-                                                                                , paramBasename
-                                                                                , padLeft 6 '0' (show i)
-                                                                                ]
-                                                            <.> ".solution")
+
+                let extensions = [ ".solution", ".solution.json", ".solution.minizinc"
+                                 , ".solutions", ".solutions.json"
+                                 ]
+
+                files <- liftIO $ getAllFiles outputDirectory
+
+                unless (length eprimes == 1) $
+                    pp logLevel $ "Multiple eprime models found in the output directory, not copying solutions."
+
+                when (length eprimes == 1) $ do
+                    forM_ (sort files) $ \ file ->
+                        forM_ extensions $ \ ext ->
+                            case stripPostfix ext (snd (splitFileName file)) of
+                                Nothing -> return ()
+                                Just base -> do
+                                    let parts' = splitOn "-" base
+                                    let parts = case (head parts', parts', last parts') of
+                                                    (model, _:paramparts, stripPrefix "solution" -> msolnum) ->
+                                                        case msolnum of
+                                                            Nothing -> [model, intercalate "-" paramparts]
+                                                            Just{}  -> [model, intercalate "-" (init paramparts), last paramparts]
+                                                    _ -> parts'
+                                    case (solutionsInOneFile, null essenceParams, nbSolutions == "1", parts) of
+                                        -- not parameterised, but no solution numbers. must be using solutionsInOneFile.
+                                        (True, True, _singleSolution, [_model, ""]) ->
+                                            copySolution file $ essenceDir
+                                                                </> essenceBasename
+                                                                <.> ext
+                                        -- not parameterised, with solution numbers
+                                        (False, True, singleSolution, [_model, "", (stripPrefix "solution" -> Just solnum)]) ->
+                                            if singleSolution
+                                                then when (solnum == "000001") $ -- only copy the first solution
+                                                     copySolution file $ essenceDir
+                                                                </> essenceBasename
+                                                                <.> ext
+                                                else copySolution file $ essenceDir
+                                                                </> intercalate "-" [essenceBasename, solnum]
+                                                                <.> ext
+                                        -- parameterised, but no solution numbers. must be using solutionsInOneFile.
+                                        (True, False, _singleSolution, [_model, param]) | param `elem` params ->
+                                            copySolution file $ essenceDir
+                                                                </> intercalate "-" [ essenceBasename
+                                                                                    , param
+                                                                                    ]
+                                                                <.> ext
+                                        -- parameterised, with solution numbers
+                                        (False, False, singleSolution, [_model, param, (stripPrefix "solution" -> Just solnum)])
+                                            | or [ param `elem` params
+                                                 , or [('/' : param) `isSuffixOf` p | p <- params] ] ->
+                                                if singleSolution
+                                                    then when (solnum == "000001") $ -- only copy the first solution
+                                                        copySolution file $ essenceDir
+                                                                    </> intercalate "-" [ essenceBasename
+                                                                                        , param
+                                                                                        ]
+                                                                    <.> ext
+                                                    else copySolution file $ essenceDir
+                                                                    </> intercalate "-" [ essenceBasename
+                                                                                        , param
+                                                                                        , solnum
+                                                                                        ]
+                                                                    <.> ext
+                                        _ -> return () -- ignore, we don't know how to handle this file
 
     liftIO stopGlobalPool
 
@@ -441,15 +441,18 @@ mainWithArgs config@Solve{..} = do
         conjuring :: m [FilePath]
         conjuring = do
             pp logLevel $ "Generating models for" <+> pretty essence
-            liftIO $ removeDirectoryIfExists outputDirectory
+            -- remove old eprime files
+            liftIO $ getAllFilesWithSuffix ".eprime" outputDirectory >>= mapM_ removeFileIfExists
             let modelling = let savedChoices = def
                                 estimateNumberOfModels = False
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
-            mainWithArgs modelling
+            n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
+            if (S.size n == 1)
+                then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
+                else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
@@ -473,25 +476,364 @@ mainWithArgs config@Solve{..} = do
                                   , p <- params
                                   ]
 
-        validating :: [(FilePath, FilePath, Maybe FilePath)] -> IO ()
+        -- validating :: [(FilePath, FilePath, Maybe FilePath)] -> IO ()
         validating solutions =
             if null essenceParams
-                then autoParallel_ [ validateSolutionNoParam config sol
-                                   | (_, _, Just sol) <- solutions ]
-                else autoParallel_ [ validateSolutionWithParams config sol p
-                                   | (_, p, Just sol) <- solutions ]
+                then sequence_ [ validateSolutionNoParam config sol
+                               | (_, _, Just sol) <- solutions ]
+                else sequence_ [ validateSolutionWithParams config sol p
+                               | (_, p, Just sol) <- solutions ]
 
+
+mainWithArgs_Modelling :: forall m .
+    MonadIO m =>
+    MonadLog m =>
+    MonadFailDoc m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    String ->                   -- modelNamePrefix
+    UI ->
+    Maybe Int ->                -- portfolioSize for the recursive call
+    S.Set Int ->                -- modelHashesBefore
+    m (S.Set Int)
+mainWithArgs_Modelling _ mode@Modelling{..} _ modelHashesBefore | Just portfolioSize <- portfolio = do
+    pp logLevel $ "Running in portfolio mode, aiming to generate" <+> pretty portfolioSize <+> "models."
+    let
+        go modelsSoFar [] = do
+            pp logLevel $ "Done, no more levels, generated" <+> pretty (S.size modelsSoFar) <+> "models."
+            return modelsSoFar
+        go modelsSoFar (l:ls) = do
+            let nbModelsNeeded = portfolioSize - S.size modelsSoFar
+            if nbModelsNeeded <= 0
+                then return modelsSoFar
+                else do
+                    modelsSoFar' <- l (Just portfolioSize) modelsSoFar
+                    go modelsSoFar' ls
+
+    go modelHashesBefore
+        [ mainWithArgs_Modelling "01_compact"
+            mode { portfolio = Nothing
+                 , strategyA = "c"
+                 , representations = Just "c"
+                 , representationsFinds = Just "c"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "02_compact"
+            mode { portfolio = Nothing
+                 , strategyA = "c"
+                 , representations = Just "c"
+                 , representationsFinds = Just "c"
+                 , representationsGivens = Just "c"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "03_sparse"
+            mode { portfolio = Nothing
+                 , strategyA = "s"
+                 , representations = Just "s"
+                 , representationsFinds = Just "s"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "s"
+                 , representationsQuantifieds = Just "s"
+                 , representationsCuts = Just "s"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "04_nochPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "05_nochAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = False
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "06_chPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = True
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "07_chAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "c"
+                 , representationsQuantifieds = Just "c"
+                 , representationsCuts = Just "c"
+                 , channelling = True
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "08_fullPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "09_fullAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "s"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "10_fullParamsPrunedLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "x"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = True
+                 , smartFilenames = True
+                 }
+        , mainWithArgs_Modelling "11_fullParamsAllLevels"
+            mode { portfolio = Nothing
+                 , strategyA = "x"
+                 , representations = Just "x"
+                 , representationsFinds = Just "x"
+                 , representationsGivens = Just "x"
+                 , representationsAuxiliaries = Just "x"
+                 , representationsQuantifieds = Just "x"
+                 , representationsCuts = Just "x"
+                 , channelling = True
+                 , representationLevels = False
+                 , smartFilenames = True
+                 }
+        ]
+mainWithArgs_Modelling "" mode portfolioSize modelHashesBefore =
+    mainWithArgs_Modelling "model" mode portfolioSize modelHashesBefore
+mainWithArgs_Modelling modelNamePrefix mode@Modelling{..} portfolioSize modelHashesBefore | strategyA == "c" && channelling == True =
+    mainWithArgs_Modelling modelNamePrefix mode{channelling=False} portfolioSize modelHashesBefore
+mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBefore = do
+    unless (modelNamePrefix == "model") $
+        pp logLevel $ "Portfolio level:" <+> pretty modelNamePrefix
+    let
+        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
+                                 return
+                                 (parseStrategy s)
+
+        getConfig = do
+            strategyQ'                  <- parseStrategy_ strategyQ
+            strategyA'                  <- parseStrategy_ strategyA
+            representations'            <- maybe (return strategyA')       parseStrategy_ representations
+            representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
+            representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
+            representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
+            representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
+            representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
+
+            case fst (viewAuto strategyQ') of
+                Compact -> userErr1 "The Compact heuristic isn't supported for questions."
+                _       -> return ()
+
+            let
+                parseCommaSeparated :: Read a => Doc -> String -> m (Maybe [a])
+                parseCommaSeparated flag str =
+                    if null str
+                        then return Nothing
+                        else do
+                            let parts = splitOn "," str
+                            let intParts = mapMaybe readMay parts
+                            if length parts == length intParts
+                                then return (Just intParts)
+                                else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                     , "Expected a comma separated list of integers."
+                                                     , "But got:" <+> pretty str
+                                                     ]
+
+            responsesList <- parseCommaSeparated "--responses" responses
+            generateStreamlinersList <- parseCommaSeparated "--generate-streamliners" generateStreamliners
+
+            responsesRepresentationList <- do
+                if null responsesRepresentation
+                    then return Nothing
+                    else do
+                        let parts =
+                                [ case splitOn ":" pair of
+                                    [nm, val] ->
+                                        case readMay val of
+                                            Just i -> Just (Name (stringToText nm), i)
+                                            Nothing -> Nothing
+                                    _ -> Nothing
+                                | pair <- splitOn "," responsesRepresentation
+                                ]
+                        let partsJust = catMaybes parts
+                        if length parts == length partsJust
+                            then return (Just partsJust)
+                            else userErr1 $ vcat [ "Cannot parse the value for --responses-representation."
+                                                 , "Expected a comma separated list of variable name : integer pairs."
+                                                 , "But got:" <+> pretty responsesRepresentation
+                                                 ]
+
+            unnamedSymmetryBreakingParsed <-
+            -- 1. Quick/Complete. Quick is x .<= p(x)
+            --                    Complete is x .<= y /\ y = p(x)
+            -- 2. Scope.          Consecutive
+            --                    AllPairs
+            --                    AllPermutations
+            -- 3. Independently/Altogether
+            -- in addition, we have
+            --      none
+            --      fast: Quick-Consecutive-Independently
+            --      full: Complete-AllPermutations-Altogether
+                case (unnamedSymmetryBreaking, splitOn "-" unnamedSymmetryBreaking) of
+                    ("none", _)  -> return Nothing
+                    ("fast", _)  -> return $ Just $ UnnamedSymmetryBreaking USBQuick USBConsecutive USBIndependently
+                    ("full", _)  -> return $ Just $ UnnamedSymmetryBreaking USBComplete USBAllPermutations USBAltogether
+                    (_, [a,b,c]) -> do
+                        a' <- case a of
+                            "Quick" -> return USBQuick
+                            "Complete" -> return USBComplete
+                            _ -> userErr1 $ vcat
+                                [ "Unrecognised value for the first component of --unnamed-symmetry-breaking"
+                                , "Expected one of: Quick / Complete"
+                                , "But got:" <+> pretty a
+                                ]
+                        b' <- case b of
+                            "Consecutive" -> return USBConsecutive
+                            "AllPairs" -> return USBAllPairs
+                            "AllPermutations" -> return USBAllPermutations
+                            _ -> userErr1 $ vcat
+                                [ "Unrecognised value for the second component of --unnamed-symmetry-breaking"
+                                , "Expected one of: Consecutive / AllPairs / AllPermutations"
+                                , "But got:" <+> pretty b
+                                ]
+                        c' <- case c of
+                            "Independently" -> return USBIndependently
+                            "Altogether" -> return USBAltogether
+                            _ -> userErr1 $ vcat
+                                [ "Unrecognised value for the third component of --unnamed-symmetry-breaking"
+                                , "Expected one of: Independently / Altogether"
+                                , "But got:" <+> pretty c
+                                ]
+                        return $ Just $ UnnamedSymmetryBreaking a' b' c'
+                    _ -> userErr1 $ vcat
+                                [ "Unrecognised value for --unnamed-symmetry-breaking"
+                                , "Maybe try one of: none / fast / full"
+                                , "Got:" <+> pretty unnamedSymmetryBreaking
+                                ]
+
+            trail <- if (followModel /= "")
+                        then miTrailGeneralised . mInfo <$> readModelInfoFromFile followModel
+                        else return []
+
+            return Config.Config
+                { Config.outputDirectory            = outputDirectory
+                , Config.logLevel                   = logLevel
+                , Config.verboseTrail               = verboseTrail
+                , Config.rewritesTrail              = rewritesTrail
+                , Config.logRuleFails               = logRuleFails
+                , Config.logRuleSuccesses           = logRuleSuccesses
+                , Config.logRuleAttempts            = logRuleAttempts
+                , Config.logChoices                 = logChoices
+                , Config.followTrail                = M.fromList trail
+                , Config.strategyQ                  = strategyQ'
+                , Config.strategyA                  = strategyA'
+                , Config.representations            = representations'
+                , Config.representationsFinds       = representationsFinds'
+                , Config.representationsGivens      = representationsGivens'
+                , Config.representationsAuxiliaries = representationsAuxiliaries'
+                , Config.representationsQuantifieds = representationsQuantifieds'
+                , Config.representationsCuts        = representationsCuts'
+                , Config.unnamedSymmetryBreaking    = unnamedSymmetryBreakingParsed
+                , Config.channelling                = channelling
+                , Config.representationLevels       = representationLevels
+                , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
+                , Config.numberingStart             = numberingStart
+                , Config.smartFilenames             = smartFilenames
+                , Config.lineWidth                  = lineWidth
+                , Config.responses                  = responsesList
+                , Config.responsesRepresentation    = responsesRepresentationList
+                , Config.generateStreamliners       = generateStreamlinersList
+                , Config.estimateNumberOfModels     = estimateNumberOfModels
+                }
+
+    essenceM <- readModelFromFile essence
+    liftIO $ hSetBuffering stdout LineBuffering
+    liftIO $ maybe (return ()) setRandomSeed seed
+    config <- getConfig
+    runNameGen essenceM $ do
+        modelWithStreamliners <-
+            case Config.generateStreamliners config of
+                Nothing -> return essenceM
+                Just ix -> do
+                    streamliners <- pure essenceM >>= resolveNames >>= typeCheckModel >>= streamlining
+                    let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
+                    return essenceM { mStatements = mStatements essenceM ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
+        outputModels portfolioSize modelHashesBefore modelNamePrefix config modelWithStreamliners
+mainWithArgs_Modelling _ _ _ _ = bug "mainWithArgs_Modelling"
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
 pp LogNone = const $ return ()
 pp _       = liftIO . putStrLn . renderNormal
 
 
-savilerowScriptName :: Sys.FilePath
+savilerowScriptName :: FilePath
 savilerowScriptName
     | os `elem` ["darwin", "linux"] = "savilerow"
     | os `elem` ["mingw32"] = "savilerow.bat"
     | otherwise = bug "Cannot detect operating system."
+
+
+quoteMultiWord :: String -> String
+quoteMultiWord s
+    | ' ' `elem` s = "\"" ++ s ++ "\""
+    | otherwise = s
 
 
 savileRowNoParam ::
@@ -507,16 +849,16 @@ savileRowNoParam ::
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
-    let srArgs = srMkArgs ui outBase modelPath
+    srArgs <- liftIO $ srMkArgs ui outBase modelPath
     let tr = translateSolution eprimeModel def
     when (logLevel >= LogDebug) $ do
         liftIO $ putStrLn "Using the following options for Savile Row:"
-        liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
+        liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     (outBase, modelPath, "<no param file>", ui)
                                     tr (1::Int))
-    srCleanUp (stringToText $ unlines stdoutSR) solutions
+    srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
@@ -539,77 +881,189 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
         runTranslateParameter :: IO (Either [Doc] Model)
         runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen () $
-                                    translateParameter eprimeModel essenceParam
+                                    translateParameter graphSolver eprimeModel essenceParam
     eprimeParam' <- liftIO runTranslateParameter
     case eprimeParam' of
         Left err -> return (Left err)
         Right eprimeParam -> do
             liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
+            srArgsBase <- liftIO $ srMkArgs ui outBase modelPath
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
-                       : srMkArgs ui outBase modelPath
+                       : srArgsBase
             let tr = translateSolution eprimeModel essenceParam
             when (logLevel >= LogDebug) $ do
                 liftIO $ putStrLn "Using the following options for Savile Row:"
-                liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
+                liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             (outBase, modelPath, paramPath, ui)
                                             tr (1::Int))
-            srCleanUp (stringToText $ unlines stdoutSR) solutions
+            srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
-srMkArgs :: UI -> FilePath -> FilePath -> [Text]
-srMkArgs Solve{..} outBase modelPath =
-    [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
-    , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
-    , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
-    , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
-    , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
-    , "-run-solver"
-    , "-S0"
-    , "-solutions-to-stdout-one-line"
-    ] ++
-    [ "-cgroups" | cgroups ] ++
-    ( if nbSolutions == "all"
-        then ["-all-solutions"]
-        else ["-num-solutions", stringToText nbSolutions]
-    ) ++
-    ( case solver of
-        "minion"            -> [ "-minion" ]
-        "gecode"            -> [ "-gecode" ]
-        "chuffed"           -> [ "-chuffed"]
-        "glucose"           -> [ "-sat"
-                               , "-sat-family", "glucose"
-                               , "-satsolver-bin", "glucose"
-                               ]
-        "glucose-syrup"     -> [ "-sat"
-                               , "-sat-family", "glucose"
-                               , "-satsolver-bin", "glucose-syrup"
-                               ]
-        "lingeling"         -> [ "-sat"
-                               , "-sat-family", "lingeling"
-                               , "-satsolver-bin", "lingeling"
-                               ]
-        "minisat"           -> [ "-sat"
-                               , "-sat-family", "minisat"
-                               , "-satsolver-bin", "minisat"
-                               ]
-        "bc_minisat_all"    -> [ "-sat"
-                               , "-sat-family", "bc_minisat_all"
-                               , "-satsolver-bin", "bc_minisat_all_release"
-                               ]
-        "nbc_minisat_all"   -> [ "-sat"
-                               , "-sat-family", "nbc_minisat_all"
-                               , "-satsolver-bin", "nbc_minisat_all_release"
-                               ]
-        "open-wbo"          -> [ "-maxsat"
-                               , "-satsolver-bin", "open-wbo"
-                               ]
-        _ -> bug ("Unknown solver:" <+> pretty solver)
-    ) ++ map stringToText (concatMap words savilerowOptions)
-      ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
+
+solverExecutables :: [(String, String)]
+solverExecutables =
+    [ ( "minion"          , "minion" )
+    , ( "gecode"          , "fzn-gecode" )
+    , ( "chuffed"         , "fzn-chuffed" )
+    , ( "cadical"         , "cadical" )
+    , ( "kissat"          , "kissat" )
+    , ( "glucose"         , "glucose" )
+    , ( "glucose-syrup"   , "glucose-syrup" )
+    , ( "lingeling"       , "lingeling" )
+    , ( "plingeling"      , "plingeling" )
+    , ( "treengeling"     , "treengeling" )
+    , ( "minisat"         , "minisat" )
+    , ( "bc_minisat_all"  , "bc_minisat_all_release" )
+    , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
+    , ( "open-wbo"        , "open-wbo" )
+    , ( "or-tools"        , "fzn-cp-sat" )
+    , ( "coin-or"         , "minizinc" )
+    , ( "cplex"           , "minizinc" )
+    , ( "yices"           , "yices-smt2" )
+    , ( "boolector"       , "boolector" )
+    , ( "z3"              , "z3" )
+    ]
+
+
+smtSolvers :: [String]
+smtSolvers = ["boolector", "yices", "z3"]
+
+smtSolversSRFlag :: String -> String
+smtSolversSRFlag "boolector" = "-boolector"
+smtSolversSRFlag "yices" = "-yices2"
+smtSolversSRFlag "z3" = "-z3"
+smtSolversSRFlag _ = bug "smtSolversSRFlag"
+
+smtSupportedLogics :: String -> [String]
+smtSupportedLogics "boolector" = ["bv"]
+smtSupportedLogics "yices" = ["bv", "lia", "idl"]
+smtSupportedLogics "z3" = ["bv", "lia", "nia", "idl"]
+smtSupportedLogics s = bug ("Unrecognised SMT solver:" <+> pretty s)
+
+
+splitSolverName :: MonadUserError m => String -> m (String, String)
+splitSolverName solver = do
+    let
+
+    (solverName, smtLogicName) <-
+            case splitOn "-" solver of
+                [solverName] | solverName `elem` smtSolvers -> return (solverName, "bv")
+                [solverName , logic] | solverName `elem` smtSolvers -> do
+                    unless (logic `elem` smtSupportedLogics solverName) $
+                        userErr1 $ vcat [ "SMT logic not supported by Savile Row:" <+> pretty logic
+                                        , "Supported logics:" <+> prettyList id "," (smtSupportedLogics solverName)
+                                        ]
+                    return (solverName, logic)
+                _ -> return (solver, "") -- not an smt solver
+    return (solverName, smtLogicName)
+
+
+srMkArgs :: UI -> FilePath -> FilePath -> IO [Text]
+srMkArgs Solve{..} outBase modelPath = do
+    let genericOpts =
+            [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
+            , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
+            , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
+            , "-out-smt"        , stringToText $ outputDirectory </> outBase ++ ".eprime-smt"
+            , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
+            , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
+            , "-out-minizinc"   , stringToText $ outputDirectory </> outBase ++ ".eprime.mzn"
+            , "-run-solver"
+            , "-S0"
+            , "-solutions-to-stdout-one-line"
+            ] ++
+            [ "-cgroups" | cgroups ] ++
+            ( if nbSolutions == "all"
+                then ["-all-solutions"]
+                else ["-num-solutions", stringToText nbSolutions]
+            )
+    (solverName, smtLogicName) <- splitSolverName solver
+    solverSelection <- case solverName of
+        "minion"            -> return [ "-minion" ]
+        "gecode"            -> return [ "-gecode" ]
+        "chuffed"           -> return [ "-chuffed"]
+        "or-tools"          -> return [ "-or-tools"]
+        "glucose"           -> return [ "-sat"
+                                      , "-sat-family", "glucose"
+                                      , "-satsolver-bin", "glucose"
+                                      ]
+        "glucose-syrup"     -> return [ "-sat"
+                                      , "-sat-family", "glucose"
+                                      , "-satsolver-bin", "glucose-syrup"
+                                      ]
+        "cadical"           -> return [ "-sat"
+                                      , "-sat-family", "cadical"
+                                      , "-satsolver-bin", "cadical"
+                                      ]
+        "kissat"            -> return [ "-sat"
+                                      , "-sat-family", "cadical"
+                                      , "-satsolver-bin", "kissat"
+                                      ]
+        "lingeling"         -> return [ "-sat"
+                                      , "-sat-family", "lingeling"
+                                      , "-satsolver-bin", "lingeling"
+                                      ]
+        "plingeling"        -> return [ "-sat"
+                                      , "-sat-family", "lingeling"
+                                      , "-satsolver-bin", "plingeling"
+                                      ]
+        "treengeling"       -> return [ "-sat"
+                                      , "-sat-family", "lingeling"
+                                      , "-satsolver-bin", "treengeling"
+                                      ]
+        "minisat"           -> return [ "-sat"
+                                      , "-sat-family", "minisat"
+                                      , "-satsolver-bin", "minisat"
+                                      ]
+        "bc_minisat_all"    -> return [ "-sat"
+                                      , "-sat-family", "bc_minisat_all"
+                                      , "-satsolver-bin", "bc_minisat_all_release"
+                                      ]
+        "nbc_minisat_all"   -> return [ "-sat"
+                                      , "-sat-family", "nbc_minisat_all"
+                                      , "-satsolver-bin", "nbc_minisat_all_release"
+                                      ]
+        "open-wbo"          -> return [ "-maxsat"
+                                      , "-satsolver-bin", "open-wbo"
+                                      ]
+        "coin-or"           -> return [ "-minizinc"
+                                      , "-solver-options", "--solver COIN-BC"
+                                      ]
+        "cplex"             -> do
+            env <- getEnvironment
+            case lookup "CPLEX_PATH" env of
+                Nothing -> userErr1 $ vcat
+                    [ "Set environment variable CPLEX_PATH. Something like:"
+                    , "    CPLEX_PATH=/path/to/cplex/library conjure solve"
+                    ]
+                Just cplex_path ->
+                    return [ "-minizinc"
+                           , "-solver-options", stringToText ("--solver CPLEX --cplex-dll " ++ cplex_path)
+                           ]
+        _ | solverName `elem` smtSolvers
+                            -> return [ "-smt"
+                                      , "-smt-nested" -- alternative is -smt-flat
+                                      , stringToText ("-smt-" ++ smtLogicName)
+                                      , "-smtsolver-bin"
+                                      , case lookup solverName solverExecutables of
+                                          Nothing -> bug ("solverExecutables" <+> pretty solverName)
+                                          Just ex -> stringToText ex
+                                      , stringToText (smtSolversSRFlag solverName)
+                                      ]
+        _ -> userErr1 ("Unknown solver:" <+> pretty solver)
+
+    return $ genericOpts
+          ++ solverSelection
+          ++ map stringToText (concatMap words savilerowOptions)
+          ++ if null solverOptions
+                    then []
+                    else [ "-solver-options"
+                         , stringToText (unwords (concatMap words solverOptions))
+                         ]
 srMkArgs _ _ _ = bug "srMkArgs"
 
 
@@ -629,6 +1083,8 @@ srStdoutHandler
             return []
         else do
             line <- hGetLine h
+            when (logLevel >= LogDebug) $ do
+                pp logLevel ("SR:" <+> pretty line)
             case stripPrefix "Solution: " line of
                 Nothing -> do
                     if isPrefixOf "Created output file for domain filtering" line
@@ -650,8 +1106,12 @@ srStdoutHandler
                             let filenameEssenceSol = mkFilename ".solution"
                             writeModel lineWidth Plain (Just filenameEprimeSol) eprimeSol
                             writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
-                            when (outputFormat == JSON) $
-                                writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
+                            case outputFormat of
+                                JSON -> writeModel lineWidth outputFormat (Just (filenameEssenceSol ++ ".json")) essenceSol
+                                JSONStream -> writeModel 0 outputFormat (Just (filenameEssenceSol ++ ".json")) essenceSol
+                                _ -> return ()
+                            when (outputFormat == MiniZinc) $
+                                writeModel lineWidth outputFormat (Just (filenameEssenceSol ++ ".minizinc")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
                         True -> do
@@ -659,21 +1119,48 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solutions"
                             let filenameEssenceSol = mkFilename ".solutions"
+                            let filenameEssenceSolJSON = mkFilename ".solutions.json"
                             -- remove the solutions files before writing the first solution
-                            when (solutionNumber == 1) $ do
-                                removeFileIfExists filenameEprimeSol
-                                removeFileIfExists filenameEssenceSol
-                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
-                            appendFile filenameEprimeSol  ("\n" ++ render lineWidth eprimeSol  ++ "\n\n")
-                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
-                            appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
+                            if solutionNumber == 1
+                                then do
+                                    removeFileIfExists filenameEprimeSol
+                                    removeFileIfExists filenameEssenceSol
+                                    removeFileIfExists filenameEssenceSolJSON
+                                    case outputFormat of
+                                        JSON -> writeFile filenameEssenceSolJSON "[\n"
+                                        _ -> return ()
+                                else
+                                    case outputFormat of
+                                        JSON -> appendFile filenameEssenceSolJSON ",\n"
+                                        _ -> return ()
+                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                            appendFile filenameEprimeSol  (render lineWidth eprimeSol  ++ "\n\n")
+                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber) ++ "\n")
+                            appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
+                            when (outputFormat `elem` [JSON, JSONStream]) $ do
+                                essenceSol' <- toSimpleJSON essenceSol
+                                appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
+                                appendFile filenameEssenceSolJSON  ("\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
-srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
-srCleanUp stdoutSR solutions = do
+srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
+srCleanUp outBase Solve{..} stdoutSR solutions = do
+
+    -- closing the array in the all solutions json file
+    case outputFormat of
+        JSON -> case solutionsInOneFile of
+            False -> return ()
+            True -> do
+                let mkFilename ext = outputDirectory </> outBase ++ ext
+                let filenameEssenceSolJSON = mkFilename ".solutions.json"
+                case solutions of
+                    [] -> liftIO $ writeFile  filenameEssenceSolJSON "[]\n"
+                    _  -> liftIO $ appendFile filenameEssenceSolJSON "]\n"
+        _ -> return ()
+
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
     let combinedSR = T.unlines [stdoutSR, stderrSR]
@@ -697,28 +1184,37 @@ srCleanUp stdoutSR solutions = do
                                , "Savile Row stderr:"    <+> pretty stderrSR
                                , "Savile Row exit-code:" <+> pretty exitCodeSR
                                ]])
+srCleanUp _ _ _ _ = bug "srCleanUp"
 
 
 validateSolutionNoParam ::
+    MonadIO m =>
+    MonadLog m =>
+    MonadFailDoc m =>
+    EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    UI -> FilePath -> IO ()
+    UI -> FilePath -> m ()
 validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
-    solution <- readParamOrSolutionFromFile solutionPath
+    solution <- readParamOrSolutionFromFile essenceM solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
     failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
 validateSolutionWithParams ::
+    MonadIO m =>
+    MonadLog m =>
+    MonadFailDoc m =>
+    EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    UI -> FilePath -> FilePath -> IO ()
+    UI -> FilePath -> FilePath -> m ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
     pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence
-    param    <- readParamOrSolutionFromFile paramPath
-    solution <- readParamOrSolutionFromFile solutionPath
+    param    <- readParamOrSolutionFromFile essenceM paramPath
+    solution <- readParamOrSolutionFromFile essenceM solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
     failToUserError $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 param2 solution2
 validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
@@ -744,8 +1240,4 @@ doIfNotCached (show . hash -> h) savedHashesFile getResult act = do
 
 autoParallel :: [IO a] -> IO [a]
 autoParallel = if numCapabilities > 1 then parallel else sequence
-
-
-autoParallel_ :: [IO ()] -> IO ()
-autoParallel_ = if numCapabilities > 1 then parallel_ else sequence_
 

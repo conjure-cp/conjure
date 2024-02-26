@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+find A_1: matrix indexed by [int(0..1), int(0..2)] of bool
+find A_2: matrix indexed by [int(0..1), int(0..2)] of int(5..7)
+find B_1: matrix indexed by [int(0..1), int(0..2)] of bool
+find B_2: matrix indexed by [int(0..1), int(0..2)] of int(5..7)
+branching on [A_1, A_2, B_1, B_2]
+such that
+    flatten([flatten([flatten([[-toInt(A_1[q5, q6]); int(1)], [A_2[q5, q6]; int(1)]; int(1..2)]) | q6 : int(0..2)])
+                 | q5 : int(0..1)])
+    <lex
+    flatten([flatten([flatten([[-toInt(B_1[q7, q8]); int(1)], [B_2[q7, q8]; int(1)]; int(1..2)]) | q8 : int(0..2)])
+                 | q7 : int(0..1)])
+

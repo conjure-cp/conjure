@@ -1,0 +1,15 @@
+letting Coord be domain tuple (int(0..5), int(0..5))
+letting Item be new type enum { i1, i2 }
+letting Truck be new type enum { t1, t2 }
+letting State be domain record {
+    trucks : function (total) Truck --> Coord,
+    packages : function (total) Item --> Coord
+}
+letting initialState be record {
+    trucks = function (t1 --> (1,1), t2 --> (2,2)),
+    packages = function ( i1 --> (1,1), i2 --> (2,2))
+}
+
+find s : State
+such that 
+s[trucks] = initialState[trucks]

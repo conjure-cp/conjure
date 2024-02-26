@@ -1,8 +1,0 @@
-language ESSENCE 2.0
-
-letting y be {{{2,3},{2}}}
-find x : set(minSize 0, maxSize 1) of set (minSize 1, maxSize 2) of set (minSize 1, maxSize 2) of int(2..3)
-
-such that
-    y subsetEq x
-

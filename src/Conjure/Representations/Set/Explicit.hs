@@ -8,7 +8,7 @@ import Conjure.Language
 import Conjure.Representations.Internal
 
 
-setExplicit :: forall m . (MonadFail m, NameGen m) => Representation m
+setExplicit :: forall m . (MonadFailDoc m, NameGen m) => Representation m
 setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
@@ -74,7 +74,7 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
         downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain)
-              , ConstantAbstract (AbsLitSet constants)
+              , viewConstantSet -> Just constants
               ) =
             let outIndexDomain = mkDomainIntB 1 size
             in  return $ Just
@@ -87,7 +87,7 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainSet Set_Explicit (SetAttr (SizeAttr_Size _)) _)) =
             case lookup (outName domain name) ctxt of
-                Nothing -> fail $ vcat $
+                Nothing -> failDoc $ vcat $
                     [ "(in Set Explicit up)"
                     , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
@@ -98,7 +98,7 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
                     case viewConstantMatrix constant of
                         Just (_, vals) ->
                             return (name, ConstantAbstract (AbsLitSet vals))
-                        _ -> fail $ vcat
+                        _ -> failDoc $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
@@ -111,4 +111,3 @@ setExplicit = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
-

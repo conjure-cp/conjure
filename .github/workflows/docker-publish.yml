@@ -1,0 +1,85 @@
+name: Publishing Docker image to ghcr.io
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+on:
+  workflow_dispatch:        # can be triggered manually
+  workflow_run:             # run only when all tests pass
+    branches:
+      - main
+    workflows:
+      - Running all tests
+    types:
+      - completed
+  push:                     # for pushes to release tags (v*)
+    tags:
+      - "v*.*.*"
+  pull_request:             # and for PRs that edit the docker files
+    paths:
+      - Dockerfile
+      - .github/workflows/docker-publish.yml
+                            # other branches that want testing must create a PR
+
+
+env:
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+
+jobs:
+
+  Job:
+
+    # if this was triggered through a completed run of "Running all tests", we check if the run completed successfully
+    # if it was triggered through a PR, we just run it
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'pull_request'  || github.event_name == 'workflow_dispatch' }}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up buildx (Docker CLI plugin for extended build capabilities with BuildKit)
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Login against a Docker registry except on PR
+      - name: Log into registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract metadata (tags, labels) for Docker
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # Build and push Docker image with Buildx (don't push on PR)
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }} # do not push if this was triggered by a PR
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

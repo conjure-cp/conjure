@@ -1,6 +1,6 @@
 Error:
-    In a 'such that' statement: and([x <= j | j <- V])
-    Error:
-        Expected an expression, but got a domain: int(1..2)
-        In the generator of a comprehension or a quantified expression
-        Consider using j : V
+    tests/parse_print/issues/361/1/361_1.essence:3:34:
+  |
+3 | find x : V such that forAll j in V . x <= j
+  |                                  ^
+Tried to use a Domain where Value was expected

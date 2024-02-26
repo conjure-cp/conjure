@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
 module Conjure.Language.Expression.Op.Freq where
 
@@ -6,7 +6,8 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
-import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Aeson.KeyMap as KM
+
 import qualified Data.Vector as V               -- vector
 
 
@@ -23,13 +24,25 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
         tyM <- typeOf m
         tyE <- typeOf e
         case tyM of
+            TypeMatrix _ tyE'
+                | tyE `typeUnify` tyE' -> return $ TypeInt TagInt
+                | otherwise            -> raiseTypeError $ vcat
+                    [ "The first argument of freq is expected to be a matrix or a multi-set."
+                    , "We got:" <+> pretty tyM
+                    , "In expression:" <+> pretty p
+                    ]
             TypeMSet tyE'
                 | tyE `typeUnify` tyE' -> return $ TypeInt TagInt
                 | otherwise            -> raiseTypeError $ vcat
-                    [ "The first argument of freq is expected to be a multi-set."
-                    , pretty p
+                    [ "The first argument of freq is expected to be a matrix or a multi-set."
+                    , "We got:" <+> pretty tyM
+                    , "In expression:" <+> pretty p
                     ]
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat
+                    [ "The first argument of freq is expected to be a matrix or a multi-set."
+                    , "We got:" <+> pretty tyM
+                    , "In expression:" <+> pretty p
+                    ]
 
 instance SimplifyOp OpFreq x where
     simplifyOp _ = na "simplifyOp{OpFreq}"
@@ -38,7 +51,7 @@ instance Pretty x => Pretty (OpFreq x) where
     prettyPrec _ (OpFreq a b) = "freq" <> prettyList prParens "," [a,b]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFreq x) where
-    varSymBreakingDescription (OpFreq a b) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpFreq a b) = JSON.Object $ KM.fromList
         [ ("type", JSON.String "OpFreq")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a

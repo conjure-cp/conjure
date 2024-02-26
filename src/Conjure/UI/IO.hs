@@ -3,6 +3,7 @@ module Conjure.UI.IO
     , readModelFromStdin
     , readModelPreambleFromFile
     , readModelInfoFromFile
+    , readParamJSON
     , readParamOrSolutionFromFile
     , writeModel, writeModels
     , readModel
@@ -10,16 +11,16 @@ module Conjure.UI.IO
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI
-import Conjure.Language.Definition
+import Conjure.Language
 import qualified Conjure.Language.Parser as Parser
 import qualified Conjure.Language.ParserC as ParserC
-import Conjure.Language.Pretty
-import Conjure.Language.Parser ( Parser)
+import Conjure.Language.AST.Syntax (ProgramTree)
 
 -- aeson
-import qualified Data.Aeson ( decodeStrict )
+import qualified Data.Aeson ( eitherDecodeStrict )
 
 -- cereal
 import qualified Data.Serialize ( decode, encode )
@@ -34,9 +35,25 @@ import qualified Data.ByteString as BS ( readFile, writeFile )
 import qualified Data.ByteString.Char8 as BS ( putStrLn )
 
 
+readASTJSONFromFile :: 
+    MonadIO m =>
+    -- MonadFailDoc m =>
+    -- MonadUserError m =>
+    FilePath -> m (Either String Model)
+readASTJSONFromFile fp = do
+    (_, contents) <- liftIO $ pairWithContents fp
+    contents
+        |> T.encodeUtf8                     -- convert Text to ByteString
+        |> Data.Aeson.eitherDecodeStrict
+        |> return
+    -- case rawJSON of
+    --     Left err -> userErr1 (pretty err)
+    --     Right m -> return m
+
+
 readModelFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readModelFromFile fp = do
@@ -44,13 +61,17 @@ readModelFromFile fp = do
     case Data.Serialize.decode con of
         Right res -> return res
         Left _ -> do
-            pair <- liftIO $ pairWithContents fp
-            readModel Parser.parseModel (Just id) pair
+            ast_ <- readASTJSONFromFile fp
+            case ast_ of
+                Right res -> return res
+                Left _ -> do
+                    pair <- liftIO $ pairWithContents fp
+                    readModel Parser.parseModel (Just id) pair
 
 
 readModelFromStdin ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     m Model
 readModelFromStdin = do
@@ -59,23 +80,45 @@ readModelFromStdin = do
     readModel Parser.parseModel (Just id) pair
 
 
-readParamOrSolutionFromFile ::
+readParamJSON ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
     MonadIO m =>
     MonadFail m =>
+    MonadLog m =>
     MonadUserError m =>
-    FilePath -> m Model
-readParamOrSolutionFromFile fp = do
-    con <- liftIO $ BS.readFile fp
-    case Data.Serialize.decode con of
-        Right res -> return res
-        Left _ -> do
-            pair <- liftIO $ pairWithContents fp
-            readModel ParserC.parseModel (Just id) pair
+    Model -> FilePath -> m Model
+readParamJSON model fp = do
+    (_, contents) <- liftIO $ pairWithContents fp
+    let paramJSON = contents
+                    |> T.encodeUtf8                     -- convert Text to ByteString
+                    |> Data.Aeson.eitherDecodeStrict
+    case paramJSON of
+        Left err -> userErr1 (pretty err)
+        Right j -> fromSimpleJSONModel model j
+
+
+readParamOrSolutionFromFile ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    MonadIO m =>
+    MonadLog m =>
+    MonadFailDoc m =>
+    MonadUserError m =>
+    Model -> FilePath -> m Model
+readParamOrSolutionFromFile model fp = do
+    if ".json" `isSuffixOf` fp
+        then readParamJSON model fp
+        else do
+            con <- liftIO $ BS.readFile fp
+            case Data.Serialize.decode con of
+                Right res -> return res
+                Left _ -> do
+                    pair <- liftIO $ pairWithContents fp
+                    readModel ParserC.parseModel (Just id) pair
 
 
 readModelPreambleFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readModelPreambleFromFile fp = do
@@ -86,9 +129,10 @@ readModelPreambleFromFile fp = do
             pair <- liftIO $ pairWithContents fp
             readModel Parser.parseModel (Just onlyPreamble) pair
 
+
 readModelInfoFromFile ::
     MonadIO m =>
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
     FilePath -> m Model
 readModelInfoFromFile fp = do
@@ -97,24 +141,30 @@ readModelInfoFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel Parser.parseModel Nothing pair
+            model0 <- readModel Parser.parseModel Nothing pair
+            return model0 { mStatements = [ Declaration (FindOrGiven Given nm (forgetRepr dom))
+                                          | nm <- model0 |> mInfo |> miGivens
+                                          , (nm', dom) <- model0 |> mInfo |> miRepresentations
+                                          , nm == nm'
+                                          ] }
 
 
 readModel ::
-    MonadFail m =>
+    MonadFailDoc m =>
     MonadUserError m =>
-    Parser Model ->
+    Parser.Pipeline ProgramTree Model ->
     Maybe (Text -> Text) ->
     (FilePath, Text) ->
     m Model
 readModel modelParser preprocess (fp, con) = do
-
     model <- case preprocess of
         Nothing -> return def
         Just prep ->
-            case Parser.runLexerAndParser modelParser fp (prep con) of
-                Left  e -> userErr1 e
-                Right x -> return x
+            do 
+                let res = Parser.runLexerAndParser modelParser fp (prep con)
+                case res of
+                    Left  e -> userErr1 e
+                    Right x -> return x
 
     let
         infoBlock = con
@@ -125,17 +175,19 @@ readModel modelParser preprocess (fp, con) = do
             |> T.unlines
         infoJson = infoBlock
             |> T.encodeUtf8                     -- convert Text to ByteString
-            |> Data.Aeson.decodeStrict
+            |> Data.Aeson.eitherDecodeStrict
 
     if T.null (T.filter isSpace infoBlock)
         then return model
         else
             case infoJson of
-                Nothing -> userErr1 $ vcat
+                Left err -> userErr1 $ vcat
                     [ "Malformed JSON in a cached Essence Prime model."
                     , "It could be created by a different version of Conjure or modified by hand."
+                    , ""
+                    , pretty err
                     ]
-                Just i  -> return model { mInfo = i }
+                Right i -> return model { mInfo = i }
 
 
 onlyPreamble :: Text -> Text
@@ -151,24 +203,62 @@ onlyPreamble
         discardAfter t = fst . T.breakOn t
 
 
-writeModel :: MonadIO m => Int -> OutputFormat -> Maybe FilePath -> Model -> m ()
-writeModel  lnWidth Plain  Nothing   spec
-    | lnWidth == 0                        = liftIO $    putStrLn     (show           spec)
-    | otherwise                           = liftIO $    putStrLn     (render lnWidth spec)
-writeModel  lnWidth Plain  (Just fp) spec
-    | lnWidth == 0                        = liftIO $    writeFile fp (show           spec)
-    | otherwise                           = liftIO $    writeFile fp (render lnWidth spec)
-writeModel _lnWidth Binary Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
-writeModel _lnWidth Binary (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
-writeModel  lnWidth JSON   Nothing   spec
-    | lnWidth == 0                        = liftIO $    putStrLn     (show           (toJSON spec))
-    | otherwise                           = liftIO $    putStrLn     (render lnWidth (toJSON spec))
-writeModel  lnWidth JSON   (Just fp) spec
-    | lnWidth == 0                        = liftIO $    writeFile fp (show           (toJSON spec))
-    | otherwise                           = liftIO $    writeFile fp (render lnWidth (toJSON spec))
+writeModel ::
+    MonadFail m =>
+    MonadIO m =>
+    MonadUserError m =>
+    Int ->
+    OutputFormat ->
+    Maybe FilePath ->
+    Model ->
+    m ()
+writeModel  lnWidth Plain   Nothing   spec
+    | lnWidth == 0                         = liftIO $    putStrLn     (show           spec)
+    | otherwise                            = liftIO $    putStrLn     (render lnWidth spec)
+writeModel  lnWidth Plain   (Just fp) spec
+    | lnWidth == 0                         = liftIO $    writeFile fp (show           spec)
+    | otherwise                            = liftIO $    writeFile fp (render lnWidth spec)
+writeModel _lnWidth Binary  Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
+writeModel _lnWidth Binary  (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
+writeModel  lnWidth ASTJSON Nothing   spec
+    | lnWidth == 0                         = liftIO $    putStrLn     (show           (toJSON spec))
+    | otherwise                            = liftIO $    putStrLn     (render lnWidth (toJSON spec))
+writeModel  lnWidth ASTJSON (Just fp) spec
+    | lnWidth == 0                         = liftIO $    writeFile fp (show           (toJSON spec))
+    | otherwise                            = liftIO $    writeFile fp (render lnWidth (toJSON spec))
+writeModel lnWidth fmt Nothing spec | fmt `elem` [JSON, JSONStream] = do
+    spec' <- toSimpleJSON spec
+    if lnWidth == 0
+        then liftIO $ putStrLn (show spec')
+        else liftIO $ putStrLn (render lnWidth spec')
+writeModel lnWidth fmt (Just fp) spec | fmt `elem` [JSON, JSONStream] = do
+    spec' <- toSimpleJSON spec
+    if lnWidth == 0
+        then liftIO $ writeFile fp (show spec')
+        else liftIO $ writeFile fp (render lnWidth spec')
+writeModel lnWidth MiniZinc Nothing spec = do
+    spec' <- toMiniZinc spec
+    if lnWidth == 0
+        then liftIO $ putStrLn (show spec')
+        else liftIO $ putStrLn (render lnWidth spec')
+writeModel lnWidth MiniZinc (Just fp) spec = do
+    spec' <- toMiniZinc spec
+    if lnWidth == 0
+        then liftIO $ writeFile fp (show spec')
+        else liftIO $ writeFile fp (render lnWidth spec')
+writeModel _ _ _ _ = bug "writeModels"
 
 
-writeModels :: MonadIO m => Int -> OutputFormat -> FilePath -> String -> [Model] -> m ()
+writeModels ::
+    MonadFail m =>
+    MonadIO m =>
+    MonadUserError m =>
+    Int ->
+    OutputFormat ->
+    FilePath ->
+    String ->
+    [Model] ->
+    m ()
 writeModels lnWidth mode base tag specs = do
     let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
     let outDirname  = base ++ "-" ++ tag

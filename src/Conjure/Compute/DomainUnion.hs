@@ -51,6 +51,16 @@ instance
     domainUnion (DomainTuple xs) (DomainTuple ys)
         | length xs == length ys
         = DomainTuple <$> zipWithM domainUnion xs ys
+    domainUnion d1@(DomainRecord xs) d2@(DomainRecord ys)
+        | length xs == length ys
+        = DomainRecord <$> sequence [ case mdomY of
+                                        Just domY -> do
+                                            domZ <- domainUnion domX domY
+                                            return (nm, domZ)
+                                        Nothing -> bug $ vcat ["Domain.domainUnion", pretty d1, pretty d2]
+                                    | (nm, domX) <- xs
+                                    , let mdomY = lookup nm ys
+                                    ]
     domainUnion (DomainMatrix x1 x2) (DomainMatrix y1 y2)
         = DomainMatrix <$> domainUnion x1 y1 <*> domainUnion x2 y2
     domainUnion (DomainSet _ xA x) (DomainSet _ yA y)
@@ -155,7 +165,7 @@ instance DomainUnion PartialityAttr where
 
 instance DomainUnion JectivityAttr where
     domainUnion x y | x == y = return x
-    domainUnion _ _ = bug "domainUnion JectivityAttr_Injective"
+    domainUnion _ _ = return JectivityAttr_None
 
 
 instance

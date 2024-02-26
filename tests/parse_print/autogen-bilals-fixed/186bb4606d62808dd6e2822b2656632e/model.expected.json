@@ -1,0 +1,83 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given1"},
+                 {"DomainInt":
+                      [{"TagInt": []},
+                       [{"RangeBounded":
+                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                              {"Constant": {"ConstantInt": [{"TagInt": []}, 1]}}]},
+                        {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}}]]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainTuple":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]},
+                       {"DomainBool": []}]}]}},
+      {"Declaration": {"FindOrGiven": ["Given", {"Name": "given2"}, {"DomainTuple": [{"DomainBool": []}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainPartition":
+                      [[],
+                       {"isRegular": true, "partsNum": {"SizeAttr_None": []},
+                        "partsSize":
+                            {"SizeAttr_MinMaxSize":
+                                 [{"Constant": {"ConstantInt": [{"TagInt": []}, 4]}},
+                                  {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]}},
+                       {"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 3]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]},
+                              {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}}]]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Given", {"Name": "given3"},
+                 {"DomainPartition":
+                      [[],
+                       {"isRegular": false, "partsNum": {"SizeAttr_None": []},
+                        "partsSize": {"SizeAttr_MinSize": {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}}},
+                       {"DomainBool": []}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var3"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]},
+                              {"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]},
+                       {"DomainBool": []}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpIff":
+                      [{"Op":
+                            {"MkOpLeq": [{"Constant": {"ConstantBool": false}}, {"Constant": {"ConstantBool": true}}]}},
+                       {"Constant": {"ConstantBool": false}}]}},
+            {"Constant": {"ConstantBool": true}}, {"Constant": {"ConstantBool": true}},
+            {"Constant": {"ConstantBool": true}},
+            {"Op":
+                 {"MkOpImage":
+                      [{"Constant":
+                            {"ConstantAbstract":
+                                 {"AbsLitFunction":
+                                      [[{"ConstantBool": true}, {"ConstantBool": false}],
+                                       [{"ConstantBool": true}, {"ConstantBool": false}]]}}},
+                       {"Constant": {"ConstantBool": false}}]}},
+            {"Constant": {"ConstantBool": true}}, {"Constant": {"ConstantBool": true}}]},
+      {"Objective": ["Maximising", {"Reference": [{"Name": "given1"}, null]}]}]}

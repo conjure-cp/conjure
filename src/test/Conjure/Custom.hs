@@ -4,7 +4,7 @@ module Conjure.Custom ( tests ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
+import Conjure.Language.Pretty 
 import Conjure.ModelAllSolveAll ( TestTimeLimit(..) )
 
 -- tasty
@@ -16,9 +16,6 @@ import Data.Text.IO as T ( readFile, writeFile )
 
 -- shelly
 import Shelly ( cd, bash, errExit, lastStderr )
-
--- system-filepath
-import Filesystem.Path.CurrentOS as Path ( fromText )
 
 
 tests :: IO (TestTimeLimit -> TestTree)
@@ -68,7 +65,7 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                 step "Running"
                 (stdout, stderr) <- sh $ errExit False $ do
                     -- stdout <- run (tBaseDir </> "run.sh") []
-                    cd (Path.fromText $ stringToText $ tBaseDir)
+                    cd (tBaseDir)
                     stdout <- bash "./run.sh" []
                     stderr <- lastStderr
                     return (stdout, stderr)
@@ -91,7 +88,7 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                 stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
                 unless (stdoutE == stdoutG) $
                     assertFailure $ renderNormal $ vcat
-                        [ "unexpected stderr:" <++> vcat (map pretty (lines stdoutG))
+                        [ "unexpected stdout:" <++> vcat (map pretty (lines stdoutG))
                         , "was expecting:    " <++> vcat (map pretty (lines stdoutE)) ]
             else []
 

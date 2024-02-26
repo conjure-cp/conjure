@@ -6,7 +6,7 @@ conjure solve sbo.essence --number-of-solutions=all --copy-solutions=no --solver
 grep 'letting a' conjure-output/*.solution | cut -d ':' -f 2 | LC_ALL=C sort
 rm -rf conjure-output/*.solution
 
-conjure solve sbo.essence --number-of-solutions=all --copy-solutions=no --solver glucose
+conjure solve sbo.essence --number-of-solutions=all --copy-solutions=no --solver kissat
 
 grep 'letting a' conjure-output/*.solution | cut -d ':' -f 2 | LC_ALL=C sort
 

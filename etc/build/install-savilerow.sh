@@ -1,26 +1,16 @@
 #!/bin/bash
 
+source "download.sh" 2> /dev/null               # if called from the script dir
+source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
+
 set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ${BIN_DIR}/tmp-install-savilerow
-mkdir -p ${BIN_DIR}/tmp-install-savilerow
-pushd ${BIN_DIR}/tmp-install-savilerow
-
-function download {
-    if which curl 2> /dev/null > /dev/null; then
-        curl -L -O $1
-    elif which wget 2> /dev/null > /dev/null; then
-        wget --no-check-certificate -c $1
-    else
-        echo "You seem to have neither curl nor wget on this computer."
-        echo "Cannot download without one of them."
-        exit 1
-    fi
-}
-export -f download
+rm -rf tmp-install-savilerow
+mkdir -p tmp-install-savilerow
+pushd tmp-install-savilerow
 
 OS=$(uname)
 
@@ -47,5 +37,5 @@ else
     exit 1
 fi
 
-rm -rf ${BIN_DIR}/tmp-install-savilerow
+rm -rf tmp-install-savilerow
 

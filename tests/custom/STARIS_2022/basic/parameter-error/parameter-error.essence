@@ -1,0 +1,5 @@
+$ the given parameter of this test doesn't meet the constraint of the where statement, so it tests that the expected error is produced.
+given x : int(1..10)
+where x % 2 = 0
+find y : int(1..10)
+such that y = x

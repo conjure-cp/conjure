@@ -13,4 +13,4 @@ class TypeOf a where
     -- StronglyTyped is used for user input.
     -- RelaxedIntegerTags is for internal use only and it ignores the integer tags during type checking.
 
-    typeOf :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode) => a -> m Type
+    typeOf :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode) => a -> m Type

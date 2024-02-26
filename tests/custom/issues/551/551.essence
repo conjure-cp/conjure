@@ -1,0 +1,4 @@
+find blocks : function (total) int(1..5) --> int(1..5)
+find neighbourhood : variant { None, Some : record {  blocks: function (total) int(1..5) --> int(1..5) } }
+
+such that and([true | b <- blocks])

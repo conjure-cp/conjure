@@ -1,6 +1,0 @@
-language ESSENCE' 1.0
-
-find s_SetOccurrence: matrix indexed by [int(1..4)] of bool
-such that
-    s_SetOccurrence[2] = true,
-    (sum v__0 : int(1..4) . s_SetOccurrence[v__0]) >= 3

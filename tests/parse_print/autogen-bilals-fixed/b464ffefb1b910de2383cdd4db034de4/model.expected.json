@@ -1,0 +1,66 @@
+{"mInfo":
+     {"finds": [], "givens": [], "enumGivens": [], "enumLettings": [], "lettings": [], "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}}, "strategyA": {"Auto": {"Interactive": []}}, "trailCompact": [],
+      "nameGenState": [], "nbExtraGivens": 0, "representations": [], "representationsTree": [], "originalDomains": [],
+      "trailGeneralised": [], "trailVerbose": [], "trailRewrites": []},
+ "mLanguage": {"language": {"Name": "Essence"}, "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var1"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}]},
+                              {"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 5]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 5]}}]}]]},
+                       {"DomainFunction":
+                            [[],
+                             [{"SizeAttr_MaxSize":
+                                   {"Op": {"MkOpFactorial": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}}}},
+                              "PartialityAttr_Total", "JectivityAttr_Bijective"],
+                             {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]},
+                             {"DomainMSet":
+                                  [[],
+                                   [{"SizeAttr_MinMaxSize":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                                    {"OccurAttr_MinMaxOccur":
+                                         [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                          {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}],
+                                   {"DomainBool": []}]}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "var2"},
+                 {"DomainMatrix":
+                      [{"DomainInt":
+                            [{"TagInt": []},
+                             [{"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]},
+                              {"RangeBounded":
+                                   [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                    {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]},
+                       {"DomainRelation":
+                            [[], [{"SizeAttr_None": []}, []],
+                             [{"DomainInt":
+                                   [{"TagInt": []},
+                                    [{"RangeBounded":
+                                          [{"Constant": {"ConstantInt": [{"TagInt": []}, 2]}},
+                                           {"Constant": {"ConstantInt": [{"TagInt": []}, 4]}}]},
+                                     {"RangeSingle": {"Constant": {"ConstantInt": [{"TagInt": []}, 0]}}}]]},
+                              {"DomainTuple": [{"DomainBool": []}, {"DomainBool": []}]},
+                              {"DomainRelation":
+                                   [[], [{"SizeAttr_None": []}, []],
+                                    [{"DomainBool": []}, {"DomainBool": []}, {"DomainBool": []}]]}]]}]}]}},
+      {"Declaration": {"FindOrGiven": ["Find", {"Name": "var3"}, {"DomainBool": []}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpIn":
+                      [{"Reference": [{"Name": "var3"}, null]},
+                       {"Typed":
+                            [{"Constant": {"ConstantAbstract": {"AbsLitSet": []}}},
+                             {"TypeSet": {"TypeBool": []}}]}]}}]}]}

@@ -4,9 +4,9 @@ find var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags:
         matrix indexed by [int(1..2), int(1..2)] of bool
 find var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..2), int(1..2)] of bool
-find var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag: matrix indexed by [int(1..2)] of int(0)
+find var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag: matrix indexed by [int(1..2)] of int(0..2)
 find var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values:
-        matrix indexed by [int(1..2), int(1..0)] of bool
+        matrix indexed by [int(1..2), int(1..2)] of bool
 branching on
     [var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags,
      var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values,
@@ -20,7 +20,8 @@ such that
                                    int(1..2)])
                           | q13 : int(1..2)]),
              flatten([[var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[1]; int(1)],
-                      ([] : `matrix indexed by [int()] of int`);
+                      [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[1, q14])
+                           | q14 : int(1..2)];
                           int(1..2)]);
                  int(1..2)])
     <lex
@@ -31,7 +32,8 @@ such that
                                    int(1..2)])
                           | q15 : int(1..2)]),
              flatten([[var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[2]; int(1)],
-                      ([] : `matrix indexed by [int()] of int`);
+                      [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[2, q16])
+                           | q16 : int(1..2)];
                           int(1..2)]);
                  int(1..2)]),
     and([var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[q2, 2] ->
@@ -45,5 +47,21 @@ such that
     and([var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[q2, 2] ->
          var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[q2, 1]
              | q2 : int(1..2)]),
-    and([0 = var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[q2] | q2 : int(1..2)])
+    and([2 <= var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[q2] ->
+         -toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[q2, 1]) <=
+         -toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[q2, 2])
+             | q2 : int(1..2)]),
+    and([and([q9 > var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[q2] ->
+              var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[q2, q9] = false
+                  | q9 : int(1..2)])
+             | q2 : int(1..2)]),
+    and([and([sum([toInt(q18 <= var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[q2]) *
+                   catchUndef(toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[q2, q18] = q10),
+                              0)
+                       | q18 : int(1..2)])
+              >= 1
+                  | q10 : bool])
+             | q2 : int(1..2)]),
+    and([1 <= var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[q2] | q2 : int(1..2)]),
+    and([var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[q2] <= 2 | q2 : int(1..2)])
 
