@@ -22,6 +22,9 @@ on:
       - .github/workflows/build.yml
                             # other branches that want testing must create a PR
 
+env:
+  SCCACHE_GHA_ENABLED: "true"
+
 jobs:
 
   Job:
@@ -51,11 +54,9 @@ jobs:
           key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ runner.os }}
-  
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
       - name: Setting PATH
         shell: bash
         run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
