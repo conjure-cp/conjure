@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# version as of 18 November 2022
+# version as of 26 Feb 2024
 VERSION=4.2.1
-
-source "download.sh" 2> /dev/null               # if called from the script dir
-source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
 
 set -o errexit
 set -o nounset
@@ -12,14 +9,13 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
-
 rm -rf tmp-install-glucose
-mkdir -p tmp-install-glucose
+mkdir tmp-install-glucose
 pushd tmp-install-glucose
-
-download http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-$VERSION.zip
-unzip glucose-$VERSION.zip
-cd glucose-$VERSION/sources
+git clone git@github.com:audemard/glucose.git
+cd glucose
+git checkout $VERSION
+ls -l
 (
     cd simp
     make -j${PROCESSES} r
@@ -35,5 +31,4 @@ cd glucose-$VERSION/sources
     ls -l ${BIN_DIR}/glucose-syrup
 )
 popd
-rm -rf tmp-install-glucose
-
+# rm -rf tmp-install-glucose
