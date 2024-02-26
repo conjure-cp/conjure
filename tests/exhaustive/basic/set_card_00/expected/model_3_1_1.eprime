@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+find s_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
+find s_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [s_Occurrence, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values]
+such that
+    s_Occurrence[s_ExplicitVarSizeWithMarker_Marker],
+    2 <= s_ExplicitVarSizeWithMarker_Marker ->
+    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
+    and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
+    and([s_Occurrence[q5] ->
+         or([q7 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q7] = q5 | q7 : int(1..2)])
+             | q5 : int(1..2)]),
+    and([q9 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q9]]
+             | q9 : int(1..2)])
+

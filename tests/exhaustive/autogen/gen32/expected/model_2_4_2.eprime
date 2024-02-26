@@ -1,0 +1,40 @@
+language ESSENCE' 1.0
+
+letting let1 be -4
+find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
+find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+branching on [var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values, var2_ExplicitVarSizeWithDummy]
+such that
+    or([var2_ExplicitVarSizeWithDummy[q19] != 6 /\
+        !or([var2_ExplicitVarSizeWithFlags_Flags[q21] /\
+             var2_ExplicitVarSizeWithFlags_Values[q21] = var2_ExplicitVarSizeWithDummy[q19]
+                 | q21 : int(1..11)])
+            | q19 : int(1..11)])
+    \/
+    or([var2_ExplicitVarSizeWithFlags_Flags[q22] /\
+        !or([var2_ExplicitVarSizeWithDummy[q24] != 6 /\
+             var2_ExplicitVarSizeWithDummy[q24] = var2_ExplicitVarSizeWithFlags_Values[q22]
+                 | q24 : int(1..11)])
+            | q22 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithDummy[q1] < var2_ExplicitVarSizeWithDummy[q1 + 1] \/
+         var2_ExplicitVarSizeWithDummy[q1] = 6
+             | q1 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q2] = 6 -> var2_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q5 + 1] ->
+         var2_ExplicitVarSizeWithFlags_Values[q5] < var2_ExplicitVarSizeWithFlags_Values[q5 + 1]
+             | q5 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q6] = false -> var2_ExplicitVarSizeWithFlags_Values[q6] = -4
+             | q6 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> var2_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q11] ->
+         or([var2_ExplicitVarSizeWithDummy[q13] != 6 /\
+             var2_ExplicitVarSizeWithDummy[q13] = var2_ExplicitVarSizeWithFlags_Values[q11]
+                 | q13 : int(1..11)])
+             | q11 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithDummy[q15] != 6 ->
+         or([var2_ExplicitVarSizeWithFlags_Flags[q17] /\
+             var2_ExplicitVarSizeWithFlags_Values[q17] = var2_ExplicitVarSizeWithDummy[q15]
+                 | q17 : int(1..11)])
+             | q15 : int(1..11)])
+

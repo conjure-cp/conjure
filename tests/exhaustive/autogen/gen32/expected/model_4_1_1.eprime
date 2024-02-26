@@ -1,0 +1,28 @@
+language ESSENCE' 1.0
+
+letting let1 be -4
+find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
+branching on [var2_Occurrence, var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values]
+such that
+    or([var2_ExplicitVarSizeWithFlags_Flags[q8] /\ !var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q8]]
+            | q8 : int(1..11)])
+    \/
+    or([var2_Occurrence[q7] /\
+        !or([var2_ExplicitVarSizeWithFlags_Flags[q10] /\ var2_ExplicitVarSizeWithFlags_Values[q10] = q7
+                 | q10 : int(1..11)])
+            | q7 : int(-4..5, 2)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
+         var2_ExplicitVarSizeWithFlags_Values[q1] < var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
+             | q1 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false -> var2_ExplicitVarSizeWithFlags_Values[q2] = -4
+             | q2 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> var2_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..10)]),
+    and([var2_Occurrence[q11] ->
+         or([var2_ExplicitVarSizeWithFlags_Flags[q13] /\ var2_ExplicitVarSizeWithFlags_Values[q13] = q11
+                 | q13 : int(1..11)])
+             | q11 : int(-4..5, 2)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q15] -> var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q15]]
+             | q15 : int(1..11)])
+

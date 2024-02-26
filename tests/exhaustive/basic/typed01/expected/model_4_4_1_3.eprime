@@ -1,0 +1,28 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1)] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1)] of int(1)
+find x_Occurrence: matrix indexed by [int(1)] of bool
+find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1)] of bool
+find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1)] of int(1)
+find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
+find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
+branching on
+    [x_Occurrence, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values,
+     y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values, y_ExplicitVarSizeWithFlags_Flags,
+     y_ExplicitVarSizeWithFlags_Values]
+such that
+    x_ExplicitVarSizeWithFlags_Flags[1] /\
+    (y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithFlags_Values[1])
+    -> false,
+    x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    y_ExplicitVarSizeWithFlags_Flags[1] = false -> y_ExplicitVarSizeWithFlags_Values[1] = 1,
+    x_Occurrence[1] -> x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    x_ExplicitVarSizeWithFlags_Flags[1] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]],
+    1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= y_ExplicitVarSizeWithMarker_Marker ->
+    y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = y_ExplicitVarSizeWithMarker_Values[1],
+    y_ExplicitVarSizeWithFlags_Flags[1] ->
+    1 <= y_ExplicitVarSizeWithMarker_Marker /\
+    y_ExplicitVarSizeWithMarker_Values[1] = y_ExplicitVarSizeWithFlags_Values[1]
+

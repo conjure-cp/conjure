@@ -1,0 +1,18 @@
+language ESSENCE' 1.0
+
+find x_Occurrence: matrix indexed by [int(1)] of bool
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
+find y_Occurrence: matrix indexed by [int(1)] of bool
+find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1)] of bool
+find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1)] of int(1)
+branching on
+    [x_ExplicitVarSizeWithDummy, x_Occurrence, y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values,
+     y_Occurrence]
+such that
+    x_Occurrence[1] /\ y_Occurrence[1] -> false,
+    x_ExplicitVarSizeWithDummy[1] != 2 -> x_Occurrence[x_ExplicitVarSizeWithDummy[1]],
+    x_Occurrence[1] -> x_ExplicitVarSizeWithDummy[1] != 2 /\ x_ExplicitVarSizeWithDummy[1] = 1,
+    y_ExplicitVarSizeWithFlags_Flags[1] = false -> y_ExplicitVarSizeWithFlags_Values[1] = 1,
+    y_ExplicitVarSizeWithFlags_Flags[1] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[1]],
+    y_Occurrence[1] -> y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = 1
+

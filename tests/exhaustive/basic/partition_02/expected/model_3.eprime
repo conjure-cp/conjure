@@ -22,8 +22,8 @@ such that
              [x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, q13] | q13 : int(1..6)];
                  int(1..2)]),
     and([and([q8 + 1 <= x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q7] ->
-              [x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q8]; int(1)] <lex
-              [x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q8 + 1]; int(1)]
+              x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q8] <
+              x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q8 + 1]
                   | q8 : int(1..5)])
              | q7 : int(1..2)]),
     and([and([q9 > x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q7] ->

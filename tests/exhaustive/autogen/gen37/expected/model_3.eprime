@@ -18,16 +18,11 @@ such that
                                [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[1, q15]);
                                     int(1)];
                                    int(1..2)])
-<<<<<<< HEAD
-                          | q14 : int(1..2)]),
-             flatten([]);
-=======
                           | q15 : int(1..2)]),
              flatten([flatten([[-var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags[1, q16]; int(1)],
                                [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values[1, q16]); int(1)];
                                    int(1..2)])
                           | q16 : int(1..2)]);
->>>>>>> main
                  int(1..2)])
     <lex
     flatten([flatten([flatten([[-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, q17]);
@@ -35,20 +30,15 @@ such that
                                [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[2, q17]);
                                     int(1)];
                                    int(1..2)])
-<<<<<<< HEAD
-                          | q16 : int(1..2)]),
-             flatten([]);
-=======
                           | q17 : int(1..2)]),
              flatten([flatten([[-var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags[2, q18]; int(1)],
                                [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values[2, q18]); int(1)];
                                    int(1..2)])
                           | q18 : int(1..2)]);
->>>>>>> main
                  int(1..2)]),
     and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[q2, 2] ->
-         [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, 1]); int(1)] <lex
-         [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, 2]); int(1)]
+         -toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, 1]) <
+         -toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, 2])
              | q2 : int(1..2)]),
     and([and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[q2, q4] = false ->
               var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, q4] = false

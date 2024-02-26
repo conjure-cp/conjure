@@ -13,43 +13,19 @@ branching on
      var2_FunctionAsRelationR8R17_RelationAsSetR8R17_ExplicitVarSizeWithMarkerR8R17_Values_1_ExplicitWithFlags_Values,
      var2_FunctionAsRelationR8R17_RelationAsSetR8R17_ExplicitVarSizeWithMarkerR8R17_Values_2_RelationAsMatrix]
 such that
-<<<<<<< HEAD
-    and([q1 + 1 <= var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Marker ->
-<<<<<<< HEAD
-         flatten([flatten([]),
-=======
-         flatten([([] : `matrix indexed by [int()] of int`),
->>>>>>> master
-                  flatten([[-toInt(var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Values_2_RelationAsMatrix
-                                       [q1, q15, q16])
-                                | q16 : bool]
-                               | q15 : bool]);
-=======
     and([q1 + 1 <= var2_FunctionAsRelationR8R17_RelationAsSetR8R17_ExplicitVarSizeWithMarkerR8R17_Marker ->
          flatten([([] : `matrix indexed by [int()] of int`),
                   flatten([[-toInt(var2_FunctionAsRelationR8R17_RelationAsSetR8R17_ExplicitVarSizeWithMarkerR8R17_Values_2_RelationAsMatrix
                                        [q1, q16, q17])
                                 | q17 : bool]
                                | q16 : bool]);
->>>>>>> main
                       int(1..2)])
          <lex
-<<<<<<< HEAD
-         flatten([flatten([]),
-=======
          flatten([([] : `matrix indexed by [int()] of int`),
-<<<<<<< HEAD
->>>>>>> master
-                  flatten([[-toInt(var2_FunctionAsRelationR8R16_RelationAsSetR8R16_ExplicitVarSizeWithMarkerR8R16_Values_2_RelationAsMatrix
-                                       [q1 + 1, q18, q19])
-                                | q19 : bool]
-                               | q18 : bool]);
-=======
                   flatten([[-toInt(var2_FunctionAsRelationR8R17_RelationAsSetR8R17_ExplicitVarSizeWithMarkerR8R17_Values_2_RelationAsMatrix
                                        [q1 + 1, q19, q20])
                                 | q20 : bool]
                                | q19 : bool]);
->>>>>>> main
                       int(1..2)])
              | q1 : int(1..2)]),
     and([q2 > var2_FunctionAsRelationR8R17_RelationAsSetR8R17_ExplicitVarSizeWithMarkerR8R17_Marker ->

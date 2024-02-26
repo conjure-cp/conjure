@@ -18,17 +18,9 @@ such that
     and([q5 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q11] = false | q11 : int(1..6)])
              | q5 : int(1..6)]),
-<<<<<<< HEAD
-    x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker <= 6,
-    and([q6 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker ->
-         and([[x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit[q6, q7]; int(1)] <lex
-              [x_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit[q6, q7 + 1]; int(1)]
-                  | q7 : int(1..2)])
-=======
     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 6,
     and([q6 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          3 = sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q6, q7]) | q7 : int(1..6)])
->>>>>>> main
              | q6 : int(1..6)]),
     6 = sum([toInt(q12 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) * 3 | q12 : int(1..6)])
 

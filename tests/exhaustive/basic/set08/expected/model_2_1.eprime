@@ -1,0 +1,54 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..16)] of bool
+find x_ExplicitVarSizeWithFlags_Values_1: matrix indexed by [int(1..16)] of int(1..4)
+find x_ExplicitVarSizeWithFlags_Values_2: matrix indexed by [int(1..16)] of int(3..6)
+find x_ExplicitVarSizeWithMarker_Marker: int(0..16)
+find x_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..16)] of int(1..4)
+find x_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1..16)] of int(3..6)
+branching on
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values_1, x_ExplicitVarSizeWithMarker_Values_2,
+     x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values_1, x_ExplicitVarSizeWithFlags_Values_2]
+such that
+    and([x_ExplicitVarSizeWithFlags_Flags[q18] ->
+         x_ExplicitVarSizeWithFlags_Values_1[q18] = x_ExplicitVarSizeWithFlags_Values_2[q18]
+             | q18 : int(1..16)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
+         flatten([[x_ExplicitVarSizeWithFlags_Values_1[q1]; int(1)], [x_ExplicitVarSizeWithFlags_Values_2[q1]; int(1)];
+                      int(1..2)])
+         <lex
+         flatten([[x_ExplicitVarSizeWithFlags_Values_1[q1 + 1]; int(1)],
+                  [x_ExplicitVarSizeWithFlags_Values_2[q1 + 1]; int(1)];
+                      int(1..2)])
+             | q1 : int(1..15)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q2] = false ->
+         x_ExplicitVarSizeWithFlags_Values_1[q2] = 1 /\ x_ExplicitVarSizeWithFlags_Values_2[q2] = 3
+             | q2 : int(1..16)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..15)]),
+    2 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..16)]),
+    and([q6 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         flatten([[x_ExplicitVarSizeWithMarker_Values_1[q6]; int(1)],
+                  [x_ExplicitVarSizeWithMarker_Values_2[q6]; int(1)];
+                      int(1..2)])
+         <lex
+         flatten([[x_ExplicitVarSizeWithMarker_Values_1[q6 + 1]; int(1)],
+                  [x_ExplicitVarSizeWithMarker_Values_2[q6 + 1]; int(1)];
+                      int(1..2)])
+             | q6 : int(1..15)]),
+    and([q7 > x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values_1[q7] = 1 /\ x_ExplicitVarSizeWithMarker_Values_2[q7] = 3
+             | q7 : int(1..16)]),
+    2 <= x_ExplicitVarSizeWithMarker_Marker,
+    and([q10 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q12] /\
+             (x_ExplicitVarSizeWithFlags_Values_1[q12] = x_ExplicitVarSizeWithMarker_Values_1[q10] /\
+              x_ExplicitVarSizeWithFlags_Values_2[q12] = x_ExplicitVarSizeWithMarker_Values_2[q10])
+                 | q12 : int(1..16)])
+             | q10 : int(1..16)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q14] ->
+         or([q16 <= x_ExplicitVarSizeWithMarker_Marker /\
+             (x_ExplicitVarSizeWithMarker_Values_1[q16] = x_ExplicitVarSizeWithFlags_Values_1[q14] /\
+              x_ExplicitVarSizeWithMarker_Values_2[q16] = x_ExplicitVarSizeWithFlags_Values_2[q14])
+                 | q16 : int(1..16)])
+             | q14 : int(1..16)])
+

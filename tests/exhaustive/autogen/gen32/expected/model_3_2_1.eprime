@@ -1,0 +1,53 @@
+language ESSENCE' 1.0
+
+letting let1 be -4
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
+find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
+find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
+branching on
+    [var2_Occurrence, var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values,
+     var2_ExplicitVarSizeWithDummy]
+such that
+    or([q18 <= var2_ExplicitVarSizeWithMarker_Marker /\
+        !or([var2_ExplicitVarSizeWithDummy[q20] != 6 /\
+             var2_ExplicitVarSizeWithDummy[q20] = var2_ExplicitVarSizeWithMarker_Values[q18]
+                 | q20 : int(1..11)])
+            | q18 : int(1..11)])
+    \/
+    or([var2_ExplicitVarSizeWithDummy[q21] != 6 /\
+        !or([q23 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q23] = var2_ExplicitVarSizeWithDummy[q21]
+                 | q23 : int(1..11)])
+            | q21 : int(1..11)]),
+    and([q1 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_ExplicitVarSizeWithMarker_Values[q1] < var2_ExplicitVarSizeWithMarker_Values[q1 + 1]
+             | q1 : int(1..10)]),
+    and([q2 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q2] = -4
+             | q2 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithDummy[q4] < var2_ExplicitVarSizeWithDummy[q4 + 1] \/
+         var2_ExplicitVarSizeWithDummy[q4] = 6
+             | q4 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q5] = 6 -> var2_ExplicitVarSizeWithDummy[q5 + 1] = 6 | q5 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q9] != 6 ->
+         or([q11 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q11] = var2_ExplicitVarSizeWithDummy[q9]
+                 | q11 : int(1..11)])
+             | q9 : int(1..11)]),
+    and([q13 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         or([var2_ExplicitVarSizeWithDummy[q15] != 6 /\
+             var2_ExplicitVarSizeWithDummy[q15] = var2_ExplicitVarSizeWithMarker_Values[q13]
+                 | q15 : int(1..11)])
+             | q13 : int(1..11)]),
+    and([var2_Occurrence[q24] ->
+         or([q26 <= var2_ExplicitVarSizeWithMarker_Marker /\ var2_ExplicitVarSizeWithMarker_Values[q26] = q24
+                 | q26 : int(1..11)])
+             | q24 : int(-4..5, 2)]),
+    and([q28 <= var2_ExplicitVarSizeWithMarker_Marker -> var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q28]]
+             | q28 : int(1..11)]),
+    and([var2_Occurrence[q29] ->
+         or([var2_ExplicitVarSizeWithDummy[q31] != 6 /\ var2_ExplicitVarSizeWithDummy[q31] = q29 | q31 : int(1..11)])
+             | q29 : int(-4..5, 2)]),
+    and([var2_ExplicitVarSizeWithDummy[q33] != 6 -> var2_Occurrence[var2_ExplicitVarSizeWithDummy[q33]]
+             | q33 : int(1..11)])
+

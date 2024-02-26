@@ -1,0 +1,30 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitVarSizeWithMarker_Values]
+such that
+    or([q18 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q18] = 1 | q18 : int(1..2)]),
+    2 <= x_ExplicitVarSizeWithMarker_Marker ->
+    x_ExplicitVarSizeWithMarker_Values[1] < x_ExplicitVarSizeWithMarker_Values[2],
+    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
+    x_ExplicitVarSizeWithMarker_Marker <= 2,
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
+    and([x_ExplicitVarSizeWithFlags_Flags[q5] = false -> x_ExplicitVarSizeWithFlags_Values[q5] = 1 | q5 : int(1..2)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..2)]) <= 2,
+    and([x_ExplicitVarSizeWithFlags_Flags[q10] ->
+         or([q12 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q12] = x_ExplicitVarSizeWithFlags_Values[q10]
+                 | q12 : int(1..2)])
+             | q10 : int(1..2)]),
+    and([q14 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q16] /\
+             x_ExplicitVarSizeWithFlags_Values[q16] = x_ExplicitVarSizeWithMarker_Values[q14]
+                 | q16 : int(1..2)])
+             | q14 : int(1..2)])
+

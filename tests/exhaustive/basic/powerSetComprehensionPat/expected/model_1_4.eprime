@@ -1,0 +1,20 @@
+language ESSENCE' 1.0
+
+find x_Occurrence: matrix indexed by [int(1..7)] of bool
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..7)] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..7)] of int(1..7)
+branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence]
+such that
+    and([x_Occurrence[i] /\ x_Occurrence[j] -> |i - j| >= 3 | i : int(1..7), j : int(1..7), j > i]),
+    3 <= sum([toInt(x_Occurrence[q1]) | q1 : int(1..7)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
+         x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
+             | q2 : int(1..6)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q3] = false -> x_ExplicitVarSizeWithFlags_Values[q3] = 1 | q3 : int(1..7)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..6)]),
+    3 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q5]) | q5 : int(1..7)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q8] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q8]] | q8 : int(1..7)]),
+    and([x_Occurrence[q9] ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q11] /\ x_ExplicitVarSizeWithFlags_Values[q11] = q9 | q11 : int(1..7)])
+             | q9 : int(1..7)])
+

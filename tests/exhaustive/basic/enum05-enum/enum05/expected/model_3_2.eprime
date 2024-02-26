@@ -7,10 +7,9 @@ branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_
 such that
     or([q17 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q17] = 1 | q17 : int(1..2)]),
     2 <= x_ExplicitVarSizeWithMarker_Marker ->
-    [x_ExplicitVarSizeWithMarker_Values[1]; int(1)] <lex [x_ExplicitVarSizeWithMarker_Values[2]; int(1)],
+    x_ExplicitVarSizeWithMarker_Values[1] < x_ExplicitVarSizeWithMarker_Values[2],
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
-    [x_ExplicitVarSizeWithDummy[1]; int(1)] <lex [x_ExplicitVarSizeWithDummy[2]; int(1)] \/
-    x_ExplicitVarSizeWithDummy[1] = 3,
+    x_ExplicitVarSizeWithDummy[1] < x_ExplicitVarSizeWithDummy[2] \/ x_ExplicitVarSizeWithDummy[1] = 3,
     x_ExplicitVarSizeWithDummy[1] = 3 -> x_ExplicitVarSizeWithDummy[2] = 3,
     and([x_ExplicitVarSizeWithDummy[q9] != 3 ->
          or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
