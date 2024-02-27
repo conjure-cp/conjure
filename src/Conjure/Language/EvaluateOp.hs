@@ -221,9 +221,7 @@ instance EvaluateOp OpIn where
         return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract $ AbsLitTuple [i,j] ) cs
     evaluateOp (OpIn c (viewConstantRelation -> Just cs)) =
         return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
-    evaluateOp (OpIn c coll) = do
-        vals <- enumerateInConstant coll
-        return $ ConstantBool $ elem c vals
+    evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
 instance EvaluateOp OpIndexing where
     evaluateOp p@(OpIndexing m i) | isUndef i = do
