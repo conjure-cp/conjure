@@ -16,16 +16,8 @@ module Conjure.Language.Parser
   )
 where
 
--- conjure
-
--- text
-
 import Conjure.Language.AST.ASTParser (ParserError, parseProgram, runASTParser)
 import Conjure.Language.AST.ASTParser qualified as P
--- containers
--- import qualified Data.Set as S ( null, fromList, toList )
-
--- import Conjure.Language.AST.Helpers (ParserState)
 import Conjure.Language.AST.Helpers qualified as P
 import Conjure.Language.AST.Reformer (HighLevelTree (..), flatten)
 import Conjure.Language.AST.Syntax (DomainNode, ProgramTree)
