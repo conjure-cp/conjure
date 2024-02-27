@@ -10,8 +10,6 @@ import qualified Data.Aeson.KeyMap as KM
 
 import qualified Data.Vector as V               -- vector
 
---import Data.Permutation
-
 
 data OpToSet x = OpToSet
                     Bool       -- True means we can assume there won't be any duplicates
