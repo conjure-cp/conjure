@@ -19,6 +19,9 @@ on:
 permissions:
   contents: write
 
+env:
+  SCCACHE_GHA_ENABLED: "true"
+
 jobs:
 
   Job:
@@ -53,11 +56,9 @@ jobs:
           key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ runner.os }}
-  
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
       - name: Setting PATH
         shell: bash
         run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
@@ -70,8 +71,6 @@ jobs:
         shell: bash
         run: |
           echo "${HOME}/solver-binaries" >> ${GITHUB_PATH}
-          echo "/usr/lib/ccache" >> ${GITHUB_PATH}
-          echo "/usr/local/opt/ccache/libexec" >> ${GITHUB_PATH}
 
       - name: Installing dependencies (gperf) on Linux
         shell: bash

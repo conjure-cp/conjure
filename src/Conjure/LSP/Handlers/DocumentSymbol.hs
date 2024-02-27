@@ -95,18 +95,21 @@ symbolKindFromDeclaration (LiteralDecl t) = Just $ case t of
     TypeEnum _ -> SkEnum
     TypeUnnamed _ -> SkEnum
     _ -> SkConstant
-symbolKindFromDeclaration (Structural st) = Just $ case st of
-  SSuchThat -> SkInterface
-  SGiven -> SkProperty
-  SFind -> SkField
-  SLetting -> SkField
-  SBranching -> SkClass
-  SEnum _ -> SkEnum
-  SQuantification _ _ -> SkOperator
-  SComprehension _ -> SkArray
-  SGuard -> SkBoolean
-  SGen -> SkEvent
-  SBody -> SkNamespace
-  SGoal _ -> SkVariable
-  SWhere -> SkObject
+symbolKindFromDeclaration (Structural st) =
+  Just
+    $ ( case st of
+          SSuchThat -> SkInterface
+          SGiven -> SkProperty
+          SFind -> SkField
+          SLetting -> SkField
+          SBranching -> SkClass
+          SEnum _ -> SkEnum
+          SQuantification _ _ -> SkOperator
+          SComprehension _ -> SkArray
+          SGuard -> SkBoolean
+          SGen -> SkEvent
+          SBody -> SkNamespace
+          SGoal _ -> SkVariable
+          SWhere -> SkObject
+      )
 symbolKindFromDeclaration _ = Nothing

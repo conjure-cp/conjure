@@ -6,6 +6,7 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
 
 rm -rf tmp-install-minizinc
 mkdir tmp-install-minizinc
@@ -16,7 +17,7 @@ git checkout $VERSION
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . -j${PROCESSES}
 cp minizinc ${BIN_DIR}/minizinc
 mkdir -p ${BIN_DIR}/share
 cp -r ../share/minizinc ${BIN_DIR}/share/minizinc

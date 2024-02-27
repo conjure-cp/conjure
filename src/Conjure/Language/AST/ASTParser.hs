@@ -684,6 +684,14 @@ parseFunctionDomain = do
   toDom <- parseDomain
   return $ FunctionDomainNode lFunction attributes fromDom arrow toDom
 
+--   where
+--     parseFunctionAttributes :: Parser (ListNode AttributeNode)
+--     parseFunctionAttributes = try $ do
+--         openB <- want L_OpenParen
+--         lst <- commaList1 parseAttribute
+--         closeB <- want L_CloseParen
+--         return $ ListNode openB lst closeB
+
 parseSequenceDomain :: Parser DomainNode
 parseSequenceDomain = do
   lSequence <- need L_sequence
