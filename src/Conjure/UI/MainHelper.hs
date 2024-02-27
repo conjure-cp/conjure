@@ -9,7 +9,7 @@ import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON )
+import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON, prologue )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -279,7 +279,7 @@ mainWithArgs config@Solve{..} = do
     when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM_beforeNR <- readModelFromFile essence
-    essenceM <- resolveNames essenceM_beforeNR
+    essenceM <- prologue def essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
         when (nbSolutions == "all" || nbSolutions /= "1") $
             userErr1 ("Not supported for optimisation problems: --number-of-solutions=" <> pretty nbSolutions)
