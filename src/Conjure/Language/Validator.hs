@@ -730,7 +730,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
     l1 `isA` TtType
     putDocs TypeD "permutation" l1
     l2 `isA'` TtSubKeyword
-    validateSequenceDomain attrs dom
+    validatePermutationDomain attrs dom
   RelationDomainNode l1 attrs l2 doms -> do
     l1 `isA` TtType
     putDocs TypeD "relation" l1
@@ -854,6 +854,16 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
         Nothing -> return def
       (t, dom') <- typeSplit <$> validateDomain dom
       return . Typed (TypeSequence t) $ DomainSequence repr attrs' dom'
+
+    validatePermutationDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> ValidatorS TypedDomain
+    validatePermutationDomain attrs dom = do
+      let repr = ()
+      attrs' <- case attrs of
+        Just a -> validatePermutationAttributes a
+        Nothing -> return def
+      (t, dom') <- typeSplit <$> validateDomain dom
+      return . Typed (TypePermutation t) $ DomainPermutation repr attrs' dom'
+
     validateRelationDomain :: Maybe (ListNode AttributeNode) -> ListNode DomainNode -> ValidatorS TypedDomain
     validateRelationDomain attrs doms = do
       let repr = ()
@@ -863,6 +873,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
 
       (ts, doms') <- unzip . map typeSplit <$> validateList_ validateDomain doms
       return . Typed (TypeRelation ts) $ DomainRelation repr attrs' doms'
+
     validatePartitionDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> ValidatorS TypedDomain
     validatePartitionDomain attrs dom = do
       let repr = ()
@@ -970,6 +981,12 @@ validateSeqAttributes atts = do
   size <- validateSizeAttributes attrs
   jectivity <- validateJectivityAttributes attrs
   return $ SequenceAttr size jectivity
+
+validatePermutationAttributes :: ListNode AttributeNode -> ValidatorS (PermutationAttr Expression)
+validatePermutationAttributes atts = do
+  attrs <- catMaybes <$> validateList_ (validateAttributeNode setValidAttrs) atts
+  size <- validateSizeAttributes attrs
+  return $ PermutationAttr size
 
 validateRelationAttributes :: ListNode AttributeNode -> ValidatorS (RelationAttr Expression)
 validateRelationAttributes atts = do
@@ -1458,6 +1475,7 @@ validateLiteral litNode = case litNode of
   MSetLiteral lt ls -> lt `isA` TtType >> validateMSetLiteral ls
   FunctionLiteral lt ln -> lt `isA` TtType >> validateFunctionLiteral ln
   SequenceLiteral lt ln -> lt `isA` TtType >> validateSequenceLiteral ln
+  PermutationLiteral lt ln -> lt `isA` TtType >> validatePermutationLiteral ln
   RelationLiteral lt ln -> lt `isA` TtType >> validateRelationLiteral ln
   PartitionLiteral lt ln -> lt `isA` TtType >> validatePartitionLiteral ln
 
@@ -1466,6 +1484,18 @@ validateSequenceLiteral x = do
   (t, ss) <- typeSplit <$> (sameType =<< validateExprList x)
   let lType = TypeSequence t
   return . Typed lType $ mkAbstractLiteral $ AbsLitSequence ss
+
+validatePermutationLiteral :: ListNode PermutationElemNode -> ValidatorS (Typed Expression)
+validatePermutationLiteral x = do
+  members <- validateList validatePermutationElem x
+  (t, xs) <- typeSplit <$> sameType members
+  let eType = TypePermutation t
+  return $ Typed eType (mkAbstractLiteral $ AbsLitPermutation xs)
+  where
+    validatePermutationElem :: PermutationElemNode -> ValidatorS (Typed [Expression])
+    validatePermutationElem (PermutationElemNode exprs) = do
+      xs <- validateExprList exprs
+      sameType xs
 
 validateRelationLiteral :: ListNode RelationElemNode -> ValidatorS (Typed Expression)
 validateRelationLiteral ln = do

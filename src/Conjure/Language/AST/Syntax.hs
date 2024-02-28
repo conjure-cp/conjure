@@ -393,6 +393,7 @@ data LiteralNode
     | MSetLiteral SToken (ListNode ExpressionNode)
     | FunctionLiteral SToken (ListNode ArrowPairNode)
     | SequenceLiteral SToken (ListNode ExpressionNode)
+    | PermutationLiteral SToken (ListNode PermutationElemNode)
     | RelationLiteral SToken (ListNode RelationElemNode)
     | PartitionLiteral SToken (ListNode PartitionElemNode)
     deriving (Show, Data)
@@ -410,6 +411,7 @@ instance Pretty LiteralNode where
         MSetLiteral lt ln -> pretty lt <> pretty ln
         FunctionLiteral lt ln -> pretty lt <> pretty ln
         SequenceLiteral lt ln -> pretty lt <> pretty ln
+        PermutationLiteral lt ln  -> pretty lt <> pretty ln
         RelationLiteral lt ln -> pretty lt <> pretty ln
         PartitionLiteral lt ln -> pretty lt <> pretty ln
 
@@ -466,6 +468,13 @@ instance Pretty RelationElemNode where
 instance Null RelationElemNode where
     isMissing (RelationElemNodeLabeled lt) = isMissing lt
     isMissing (RelationElemNodeShort st) = isMissing st
+
+newtype PermutationElemNode = PermutationElemNode (ListNode ExpressionNode)
+    deriving (Show, Data)
+instance Pretty PermutationElemNode where
+    pretty (PermutationElemNode l) = pretty l
+instance Null PermutationElemNode where
+    isMissing (PermutationElemNode l) = isMissing l
 
 newtype PartitionElemNode = PartitionElemNode (ListNode ExpressionNode)
     deriving (Show, Data)
@@ -589,6 +598,7 @@ instance Pretty PostfixOpNode where
 data IndexerNode
     = Indexer
     deriving (Show, Data)
+
 data ListNode itemType = ListNode
     { lOpBracket :: LToken
     , items :: Sequence itemType
@@ -596,13 +606,6 @@ data ListNode itemType = ListNode
     }
     deriving (Show, Data)
 
--- prettyList :: Pretty a => ListNode a > Doc
--- prettyList (ListNode start es end) = group $ align $ cat $
---         [
---             pretty start ,
---             flatAlt (indent 4 $ pretty es) (pretty es) ,
---             pretty end
---         ]
 instance Pretty a => Pretty (ListNode a) where
     pretty (ListNode start es end) =
         group $
@@ -615,6 +618,7 @@ instance Pretty a => Pretty (ListNode a) where
 
 instance (Null a) => Null (ListNode a) where
     isMissing (ListNode l1 s l2) = isMissing l1 && isMissing s && isMissing l2
+
 newtype Sequence itemType = Seq
     { elems :: [SeqElem itemType]
     }

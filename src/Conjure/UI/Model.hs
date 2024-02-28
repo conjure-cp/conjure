@@ -2884,7 +2884,6 @@ addUnnamedSymmetryBreaking mode model = do
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
                                 thisAuxTuple = mkAuxTuple auxSuffix
-                             
                                 dVars = map fst (allDecVarsAux auxSuffix)
                              in nestInBubbles varsTuple 1 (zip dVars newDecls) 
                                               [essence| &thisAuxTuple = &applied |]

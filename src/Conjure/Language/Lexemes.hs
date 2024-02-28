@@ -359,6 +359,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_surjective, "surjective" )
     , ( L_bijective, "bijective" )
     , ( L_sequence, "sequence" )
+    , ( L_permutation, "permutation" )
     , ( L_relation, "relation")
     , ( L_reflexive, "reflexive")
     , ( L_irreflexive, "irreflexive")

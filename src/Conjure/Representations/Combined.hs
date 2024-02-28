@@ -36,11 +36,11 @@ import Conjure.Representations.Function.FunctionNDPartial
 import Conjure.Representations.Function.FunctionNDPartialDummy
 import Conjure.Representations.Function.FunctionAsRelation
 import Conjure.Representations.Sequence.ExplicitBounded
+import Conjure.Representations.Permutation.PermutationAsFunction
 import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
-import Conjure.Representations.Permutation
 
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
