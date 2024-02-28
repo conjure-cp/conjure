@@ -718,10 +718,10 @@ parseSequenceDomain = do
 parsePermutationDomain :: Parser DomainNode
 parsePermutationDomain = do
   lPermutation <- need L_permutation
-  --   attributes <- optional parseAttributes
+  attributes <- optional parseAttributes
   lOf <- want L_of
   domain <- parseDomain
-  return $ PermutationDomainNode lPermutation Nothing lOf domain
+  return $ PermutationDomainNode lPermutation attributes lOf domain
 
 parseRelation :: Parser DomainNode
 parseRelation = do

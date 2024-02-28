@@ -1102,9 +1102,10 @@ validateExpression expr = do
       TypeMSet {} -> return ()
       TypeFunction {} -> return ()
       TypeSequence {} -> return ()
+      TypePermutation {} -> return ()
       TypeRelation {} -> return ()
       TypePartition {} -> return ()
-      _ -> contextTypeError $ ComplexTypeError "Int or collection" t
+      _ -> contextTypeError $ ComplexTypeError "integer or collection" t
 
 validateFlexibleExpression :: ExpressionNode -> ValidatorS (Kind, Expression)
 validateFlexibleExpression (IdentifierNode name) = do
