@@ -22,6 +22,6 @@ case "$@" in
         fi
     ;;
     *)
-        java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -jar "$DIR/savilerow.jar" "$@"
+        java -ea -XX:ParallelGCThreads=1 -Djava.library.path=$DIR/lib/ -Xmx8G -Xms8G -Xss1G -jar "$DIR/savilerow.jar" "$@"
     ;;
 esac
