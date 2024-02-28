@@ -33,7 +33,7 @@ validateConstantForDomain _ (viewConstantBool -> Just _) DomainBool{} = return (
 
 validateConstantForDomain _ _ (DomainInt _ []) = return ()              -- no restrictions
 
-validateConstantForDomain name c@(viewConstantIntWithTag -> Just (cTag, i)) d@(DomainInt dTag rs) | cTag == dTag =
+validateConstantForDomain name c@(viewConstantIntWithTag -> Just (_cTag, i)) d@(DomainInt _dTag rs) =
     let
         intInRange RangeOpen                                          = True
         intInRange (RangeSingle (ConstantInt _ a))                    = i == a
