@@ -1665,6 +1665,7 @@ projectionType r t = case t of
   TypeSet ty -> return ty
   TypeMSet ty -> return ty
   TypeSequence ty -> return $ TypeTuple [tInt, ty]
+  TypePermutation ty -> return $ TypeTuple [ty, ty]
   TypeRelation ts -> return $ TypeTuple ts
   TypePartition ty -> return $ TypeSet ty
   TypeFunction fr to -> return $ TypeTuple [fr, to]
@@ -1677,7 +1678,8 @@ projectionTypeDomain _ t = case t of -- TODO check and do properly
   TypeUnnamed (Name n) -> return $ TypeInt $ TagUnnamed n
   _ -> return t
 
---   _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Domain of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
+-- _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Domain of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
+
 mkAbstractLiteral :: AbstractLiteral Expression -> Expression
 mkAbstractLiteral x = case e2c (AbstractLiteral x) of
   Nothing -> AbstractLiteral x
@@ -2408,10 +2410,15 @@ functionOps l = case l of
             (TypeFunction fi fo, TypeFunction gi go) -> (mostDefinedS [fi, go], mostDefinedS [fo, gi])
             (TypeFunction fi fo, _) -> (fi, fo)
             (_, TypeFunction gi go) -> (gi, go)
+            (TypePermutation ta, TypePermutation tb) -> (mostDefinedS [ta, tb], mostDefinedS [ta, tb])
+            (TypePermutation ta, _) -> (ta, ta)
+            (_, TypePermutation ta) -> (ta, ta)
             _ -> (TypeAny, TypeAny)
-      a' <- unifyTypesFailing (TypeFunction fIn fOut) (r1, a)
-      b' <- unifyTypesFailing (TypeFunction fOut fIn) (r2, b)
-      return $ if null a' || null b' then Nothing else Just ()
+      return (Just ())
+      -- a' <- unifyTypesFailing (TypeFunction fIn fOut) (r1, a)
+      -- b' <- unifyTypesFailing (TypeFunction fOut fIn) (r2, b)
+      -- return $ if null a' || null b' then Nothing else Just ()
+
     setPartArgs :: SArg -> SArg -> Validator ()
     setPartArgs (r1, a) (r2, b) = do
       let t = case (typeOf_ a, typeOf_ b) of
@@ -2500,7 +2507,8 @@ functionOps l = case l of
         TypeAny -> return $ Just TypeAny
         TypeFunction a _ -> return $ Just a
         TypeSequence _ -> return $ Just tInt
-        _ -> Nothing <$ raiseTypeError (r1 <!> ComplexTypeError "Function or Sequence" t1)
+        TypePermutation a -> return $ Just a
+        _ -> Nothing <$ raiseTypeError (r1 <!> ComplexTypeError "function, sequence or permutation" t1)
       case from of
         Just f -> unifyTypes f r2 >> return (pure ())
         Nothing -> return Nothing
@@ -2527,8 +2535,9 @@ functionOps l = case l of
     funcSeq (r, typeOf_ -> t') = case t' of
       TypeAny -> return $ pure ()
       TypeSequence _ -> return $ pure ()
+      TypePermutation _ -> return $ pure ()
       TypeFunction _ _ -> return $ pure ()
-      _ -> invalid $ r <!> ComplexTypeError "Function or Sequence" t'
+      _ -> invalid $ r <!> ComplexTypeError "function, sequence or permutation" t'
     funcDomain :: Maybe Type -> Maybe Type
     funcDomain (Just (TypeFunction a _)) = Just a
     funcDomain (Just (TypeSequence _)) = Just tInt
