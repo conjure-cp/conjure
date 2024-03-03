@@ -2405,19 +2405,15 @@ functionOps l = case l of
       return $ if null a' || null b' then Nothing else Just ()
 
     inverseArgs :: SArg -> SArg -> Validator ()
-    inverseArgs (r1, a) (r2, b) = do
-      let (fIn, fOut) = case (typeOf_ a, typeOf_ b) of
-            (TypeFunction fi fo, TypeFunction gi go) -> (mostDefinedS [fi, go], mostDefinedS [fo, gi])
-            (TypeFunction fi fo, _) -> (fi, fo)
-            (_, TypeFunction gi go) -> (gi, go)
-            (TypePermutation ta, TypePermutation tb) -> (mostDefinedS [ta, tb], mostDefinedS [ta, tb])
-            (TypePermutation ta, _) -> (ta, ta)
-            (_, TypePermutation ta) -> (ta, ta)
-            _ -> (TypeAny, TypeAny)
-      return (Just ())
-      -- a' <- unifyTypesFailing (TypeFunction fIn fOut) (r1, a)
-      -- b' <- unifyTypesFailing (TypeFunction fOut fIn) (r2, b)
-      -- return $ if null a' || null b' then Nothing else Just ()
+    inverseArgs (_r1, a) (_r2, b) =
+      case (typeOf_ a, typeOf_ b) of
+            (TypeFunction{}, TypeFunction{}) -> return (Just ())
+            (TypeFunction{}, _) -> return (Just ())
+            (_, TypeFunction{}) -> return (Just ())
+            (TypePermutation{}, TypePermutation{}) -> return (Just ())
+            (TypePermutation{}, _) -> return (Just ())
+            (_, TypePermutation{}) -> return (Just ())
+            _ -> return Nothing
 
     setPartArgs :: SArg -> SArg -> Validator ()
     setPartArgs (r1, a) (r2, b) = do
