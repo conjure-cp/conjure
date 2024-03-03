@@ -219,6 +219,12 @@ instance EvaluateOp OpIn where
     evaluateOp (OpIn c (viewConstantMSet     -> Just cs)) = return $ ConstantBool $ elem c cs
     evaluateOp (OpIn c (viewConstantFunction -> Just cs)) =
         return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract $ AbsLitTuple [i,j] ) cs
+    evaluateOp op@(OpIn (viewConstantTuple -> Just [a,b]) (viewConstantPermutation -> Just xss)) =
+        case fromCycles xss of
+            Right p -> do
+                let f = toFunction p
+                return $ ConstantBool $ f a == b
+            _ -> na $ "evaluateOp{OpIn}:" <++> pretty (show op)
     evaluateOp (OpIn c (viewConstantRelation -> Just cs)) =
         return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
@@ -299,6 +305,10 @@ instance EvaluateOp OpInverse where
         return $ ConstantBool $ and $ concat [ [ (j,i) `elem` ys | (i,j) <- xs ]
                                              , [ (j,i) `elem` xs | (i,j) <- ys ]
                                              ]
+    evaluateOp op@(OpInverse (viewConstantPermutation -> Just xss) (viewConstantPermutation -> Just yss)) =
+        case (fromCycles xss, fromCycles yss) of
+            (Right px, Right py) -> return $ ConstantBool $ px == inverse py
+            _ -> na $ "evaluateOp{OpInverse}:" <++> pretty (show op)
     evaluateOp op = na $ "evaluateOp{OpInverse}:" <++> pretty (show op)
 
 instance EvaluateOp OpLeq where

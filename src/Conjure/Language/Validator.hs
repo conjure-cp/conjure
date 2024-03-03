@@ -1317,6 +1317,9 @@ validatePostfixOp (ApplicationNode args) = return $ \exp -> do
     TypeFunction _ _ -> do
       args' <- validateList (validateExpression >=> \(Typed t' e') -> return (simple t', e')) args
       validateFuncOp L_image ((reg, (simple t, e)) : args')
+    TypePermutation _ -> do
+      args' <- validateList (validateExpression >=> \(Typed t' e') -> return (simple t', e')) args
+      validateFuncOp L_image ((reg, (simple t, e)) : args')
     TypeSequence _ -> do
       args' <- validateList (validateExpression >=> \(Typed t' e') -> return (simple t', e')) args
       validateFuncOp L_image ((reg, (simple t, e)) : args')
@@ -1327,7 +1330,7 @@ validatePostfixOp (ApplicationNode args) = return $ \exp -> do
       iType <- case t of
         TypeRelation ts -> checkProjectionArgs ts ys
         _ -> do
-          raiseTypeError $ symbolRegion exp <!> ComplexTypeError "Relation or function" t
+          raiseTypeError $ symbolRegion exp <!> ComplexTypeError "function, permutation or relation" t
           let ts = map (maybe TypeAny (typeOf_ . snd)) ys
           return $ TypeRelation ts
       let op = Op $ MkOpRelationProj $ OpRelationProj e (map (untype . snd <$>) ys)
