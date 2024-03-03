@@ -38,17 +38,17 @@ import Data.Semigroup ( (<>) )
 
 -- | The Permutation constructor is for internal use only.
 -- To construct a permutation use any of the smart constructors.
-data Permutation a = Permutation [(a, a)] deriving (Show)
+newtype Permutation a = Permutation [(a, a)] deriving (Show)
 
 -- | Equality tests that permutations contain the same permuted values.
 instance (Eq a) => Eq (Permutation a) where
-  (==) (Permutation l) (Permutation r) = all id [e `elem` r | e <- l]
+  (==) (Permutation l) (Permutation r) = and [e `elem` r | e <- l]
 
 -- | Permutations compose as a semigroup in the same way they would compose if you composed them as functions.
 instance (Eq a) => Semigroup (Permutation a) where
   (<>) pl@(Permutation l) pr@(Permutation r) =
-    let flatten z = join $ ((\(x, y) -> [x, y]) <$> z)
-        elemsofp = nub $ (flatten l) ++ (flatten r)
+    let flatten z = (z >>= (\(x, y) -> [x, y]))
+        elemsofp = nub $ flatten l ++ flatten r
         permfunc = toFunction pl . toFunction pr
      in case fromRelation (zip elemsofp (permfunc <$> elemsofp)) of
           Left _ ->
@@ -69,8 +69,7 @@ instance (Eq a) => Monoid (Permutation a) where
 --------------------------Error Type--------------------------------------------------
 
 -- | There may be an error detailing why the permutation computation has failed.
-data PermutationError
-  = PermutationError String
+newtype PermutationError = PermutationError String
   deriving (Eq, Show)
 
 -- | Create a Permutation from disjoint cycles.
@@ -81,7 +80,7 @@ fromCycles c =
       Left $
         PermutationError
           "Data.Permutation.fromCycles: Cycles contain a duplicate element"
-    else Right $ Permutation $ join $ cycleToTuples <$> c
+    else Right $ Permutation $ c >>= cycleToTuples
   where
     cycleToTuples :: [a] -> [(a, a)]
     cycleToTuples [] = []
@@ -93,7 +92,7 @@ fromCycles c =
 -- (e.g. fromRelation [(1,2),(2,1),(3,3)] == fromRelation [(1,2),(2,1)]).
 fromRelation :: (Eq a) => [(a, a)] -> Either PermutationError (Permutation a)
 fromRelation r =
-  let perm = Permutation $ filter (\(x, y) -> x /= y) r
+  let perm = Permutation $ filter (uncurry (/=)) r
    in if isBijective $ Permutation r
         then Right perm
         else
@@ -118,10 +117,7 @@ fromTwoLineForm (t, b) =
 
 -- | Gets the permutation as a function.
 toFunction :: (Eq a) => Permutation a -> (a -> a)
-toFunction (Permutation p) = \v ->
-  case lookup v p of
-    Nothing -> v
-    Just so -> so
+toFunction (Permutation p) v = fromMaybe v (lookup v p)
 
 -- | Convert the permutation to cycle form.
 toCycles :: (Eq a) => Permutation a -> [[a]]
@@ -206,7 +202,7 @@ isBijective (Permutation p) =
   let (l, r) = unzip p
    in (length (nub l) == length (nub r))
         && (length (nub l) == length l)
-        && (l \\ r == [])
+        && (null (l \\ r))
 
 -------------------------CycleFinder Monad---------------------------------------------
 
@@ -244,7 +240,7 @@ mapsOnto i = do
 cyclesFound :: (Eq a) => CycleFinder a Bool
 cyclesFound = do
   (w, _, m) <- get
-  return (w == [] && m == [])
+  return (null w && null m)
 
 -- | Returns the cycles.
 returnCycles :: CycleFinder a [[a]]
@@ -264,7 +260,7 @@ startNewCycle = do
 nextCycleElem :: (Eq a) => CycleFinder a ()
 nextCycleElem = do
   (w, c, m) <- get
-  let w_last = head $ reverse w
+  let w_last = last w
   next <- mapsOnto w_last
   let filt = filter (/= (w_last, next)) m
   if next == head w
