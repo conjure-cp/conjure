@@ -76,10 +76,10 @@ Obtain a commercial or academic license for CPLEX. Use the instructions on `its 
 
 We assume you are on a Linux system here, though steps for macOS are very similar.
 
-- Download the installer. A file called `cplex_studio2211.linux_x86_64.bin`.
+- Download the installer. A file called ``cplex_studio2211.linux_x86_64.bin``.
 - Run the installer and follow the instructions.
-- You can install CPLEX to its default location, however a user-level install is also possible. Assuming you installed it at: `/home/USER/cplex-install` for the remaining instructions
-- Create a file called `/home/USER/cplex-install/Dockerfile` with the following contents
+- You can install CPLEX to its default location, however a user-level install is also possible. Assuming you installed it at: ``/home/USER/cplex-install`` for the remaining instructions
+- Create a file called ``/home/USER/cplex-install/Dockerfile`` with the following contents
 
 .. code-block:: bash
 
@@ -87,9 +87,9 @@ We assume you are on a Linux system here, though steps for macOS are very simila
     COPY cplex /root/.local/
     ENV CPLEX_PATH /root/.local/cplex/bin/x86-64_linux/libcplex2211.so
 
-- In the `/home/USER/cplex-install` directory execute: `podman build -t cplex-image .`
+- In the ``/home/USER/cplex-install`` directory execute: ``podman build -t cplex-image .``
 
-- `podman images` should now list `localhost/cplex-image` as well as a bunch of other images.
+- `podman images` should now list ``localhost/cplex-image`` as well as a bunch of other images.
 
 
 
