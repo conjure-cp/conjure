@@ -89,7 +89,7 @@ We assume you are on a Linux system here, though steps for macOS are very simila
 
 - In the ``/home/USER/cplex-install`` directory execute: ``podman build -t cplex-image .``
 
-- `podman images` should now list ``localhost/cplex-image`` as well as a bunch of other images.
+- ``podman images`` should now list ``localhost/cplex-image`` as well as a bunch of other images.
 
 
 
