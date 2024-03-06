@@ -1107,7 +1107,7 @@ srCleanUp outBase Solve{..} stdoutSR solutions = do
         _ -> return ()
 
     let srInfoFilename = mkFilename ".eprime-info"
-    let statsFilename = mkFilename ".stats"
+    let statsFilename = mkFilename ".stats.json"
     srInfoContent <- liftIO $ readFileIfExists srInfoFilename
 
     stderrSR   <- lastStderr
