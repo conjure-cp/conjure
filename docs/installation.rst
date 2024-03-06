@@ -51,3 +51,54 @@ An up-to-date version of Savile Row is also copied next to the Conjure executabl
 
 A standalone version of Savile Row and user documentation for Savile Row can be downloaded from `its website <http://savilerow.cs.st-andrews.ac.uk>`_.
 
+
+Docker/Podman
+-------------
+
+We release an container image that can be used via Docker or Podman.
+
+- The latest release is always at ghcr.io/conjure-cp/conjure:latest
+
+- The latest commit on main is at ghcr.io/conjure-cp/conjure:main
+
+- You can also use a specific version using the SHA of a particular image: ghcr.io/conjure-cp/conjure@sha256:VERSION
+
+See all available images on `Github <https://github.com/conjure-cp/conjure/pkgs/container/conjure>`_.
+
+Inside the container, you will be able to run conjure, savilerow, and almost all supported solvers.
+
+CPLEX
+=====
+
+CPLEX is a commercial mathemathical programming solver that is supported by Conjure. However we cannot provide CPLEX as part of the container image due to its license. Instead, we include instructions here for building another image that contains CPLEX as well.
+
+Obtain a commercial or academic license for CPLEX. Use the instructions on `its website <https://www.ibm.com/products/ilog-cplex-optimization-studio>`_. Notes on `this post <https://community.ibm.com/community/user/ai-datascience/blogs/xavier-nodet1/2020/07/09/cplex-free-for-students>`_ are helpful too.
+
+We assume you are on a Linux system here, though steps for macOS are very similar.
+
+- Download the installer. A file called `cplex_studio2211.linux_x86_64.bin`.
+- Run the installer and follow the instructions.
+- You can install CPLEX to its default location, however a user-level install is also possible. Assuming you installed it at: `/home/USER/cplex-install` for the remaining instructions
+- Create a file called `/home/USER/cplex-install/Dockerfile` with the following contents
+
+.. code-block:: bash
+
+    FROM ghcr.io/conjure-cp/conjure@sha256:VERSION
+    COPY cplex /root/.local/
+    ENV CPLEX_PATH /root/.local/cplex/bin/x86-64_linux/libcplex2211.so
+
+- In the `/home/USER/cplex-install` directory execute: `podman build -t cplex-image .`
+
+- `podman images` should now list `localhost/cplex-image` as well as a bunch of other images.
+
+
+
+
+
+
+
+
+
+
+
+
