@@ -91,6 +91,8 @@ We assume you are on a Linux system here, though steps for macOS are very simila
 
 - ``podman images`` should now list ``localhost/conjure-cplex`` as well as a bunch of other images.
 
+- You can replace podman with docker in the last 2 commands to use docker instead.
+
 
 
 
