@@ -1091,7 +1091,7 @@ srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
 srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
-srCleanUp outBase Solve{..} stdoutSR solutions = do
+srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
 
     let mkFilename ext = outputDirectory </> outBase ++ ext
 
@@ -1114,7 +1114,7 @@ srCleanUp outBase Solve{..} stdoutSR solutions = do
     exitCodeSR <- lastExitCode
     let combinedSR = T.unlines [stdoutSR, stderrSR]
 
-    let stats = mkSolveStats (fromMaybe "" srInfoContent) combinedSR
+    let stats = mkSolveStats ui (fromMaybe "" srInfoContent) combinedSR
     liftIO $ writeFile statsFilename (render lineWidth $ toJSON stats)
 
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->

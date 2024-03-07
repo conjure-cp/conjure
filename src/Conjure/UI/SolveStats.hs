@@ -4,11 +4,23 @@
 
 module Conjure.UI.SolveStats (mkSolveStats, SolveStats (..), SolveStatus (..)) where
 
+import Conjure.Bug
 import Conjure.Prelude
+import Conjure.UI (UI (..))
 import Data.HashMap.Strict qualified as M -- unordered-containers
 import Data.Text qualified as T (isInfixOf) -- text
 
-data SolveStats = SolveStats {status :: SolveStatus, totalTime :: Maybe Double, savilerowInfo :: M.HashMap String String}
+data SolveStats = SolveStats
+  { status :: SolveStatus,
+    totalTime :: Maybe Double,
+    savilerowInfo :: M.HashMap String String,
+    essence :: FilePath,
+    essenceParams :: [FilePath],
+    useExistingModels :: [FilePath],
+    savilerowOptions :: [String],
+    solverOptions :: [String],
+    solver :: String
+  }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Hashable SolveStats
@@ -26,20 +38,21 @@ instance ToJSON SolveStatus where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStatus where parseJSON = genericParseJSON jsonOptions
 
-mkSolveStats :: String -> Text -> SolveStats
-mkSolveStats raw stdout =
+mkSolveStats :: UI -> String -> Text -> SolveStats
+mkSolveStats Solve {..} raw stdout =
   let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines raw)]
       status
-        | info M.! "SavileRowTimeOut" == "1" = TimeOut
-        | info M.! "SavileRowClauseOut" == "1" = TimeOut
-        | info M.! "SolverTimeOut" == "1" = TimeOut
+        | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
+        | M.lookup "SavileRowClauseOut" info == Just "1" = TimeOut
+        | M.lookup "SolverTimeOut" info == Just "1" = TimeOut
         | T.isInfixOf "Savile Row timed out." stdout = TimeOut
         | T.isInfixOf "java.lang.OutOfMemoryError" stdout = MemOut
         | otherwise = OK
       totalTime
-        | Just srTotalTime <- readMay $ info M.! "SavileRowTotalTime",
-          Just solverTotalTime <- readMay $ info M.! "SolverTotalTime" =
+        | Just srTotalTime <- M.lookup "SavileRowTotalTime" info >>= readMay,
+          Just solverTotalTime <- M.lookup "SolverTotalTime" info >>= readMay =
             Just (srTotalTime + solverTotalTime)
         | otherwise = Nothing
       savilerowInfo = info
    in SolveStats {..}
+mkSolveStats _ _ _ = bug "mkSolveStats"
