@@ -87,9 +87,11 @@ We assume you are on a Linux system here, though steps for macOS are very simila
     COPY cplex /root/.local/
     ENV CPLEX_PATH /root/.local/cplex/bin/x86-64_linux/libcplex2211.so
 
-- In the ``/home/USER/cplex-install`` directory execute: ``podman build -t cplex-image .``
+- In the ``/home/USER/cplex-install`` directory execute: ``podman build -t conjure-cplex .``
 
-- `podman images` should now list ``localhost/cplex-image`` as well as a bunch of other images.
+- ``podman images`` should now list ``localhost/conjure-cplex`` as well as a bunch of other images.
+
+- You can replace podman with docker in the last 2 commands to use docker instead.
 
 
 
