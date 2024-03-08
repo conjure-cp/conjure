@@ -39,6 +39,7 @@ import Conjure.Language.AdHoc ( toSimpleJSON )
 
 
 -- base
+import Control.Exception ( IOException, handle )
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..), hPutStrLn, stderr )
 import System.Environment ( getEnvironment )
 import System.Info ( os )
@@ -298,11 +299,7 @@ mainWithArgs config@Solve{..} = do
         if not (null useExistingModels)
             then do
                 pp logLevel "Using existing models."
-                allEprimes <- getEprimes
-                let missingModels = useExistingModels \\ allEprimes
-                if null missingModels
-                    then return useExistingModels
-                    else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
+                return useExistingModels
             else doIfNotCached          -- start the show!
                     ( sort (mStatements essenceM_beforeNR)
                     , portfolio
@@ -335,8 +332,12 @@ mainWithArgs config@Solve{..} = do
                     conjuring
 
     eprimesParsed <- forM eprimes $ \ f -> do
-        p <- readModelInfoFromFile (outputDirectory </> f)
-        return (f, p)
+        p1 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile f)
+        p2 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile (outputDirectory </> f))
+        case (p1, p2) of
+            (Just p, _) -> return (f, p)
+            (_, Just p) -> return (f, p)
+            _ -> userErr1 $ "Model not found:" <+> pretty f
 
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
