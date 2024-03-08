@@ -37,7 +37,7 @@ instance ToJSON SolveStats where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStats where parseJSON = genericParseJSON jsonOptions
 
-data SolveStatus = OK | TimeOut | MemOut
+data SolveStatus = OK | TimeOut | MemOut | Error Text
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Hashable SolveStatus
@@ -46,15 +46,16 @@ instance ToJSON SolveStatus where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStatus where parseJSON = genericParseJSON jsonOptions
 
-mkSolveStats :: UI -> String -> Text -> IO SolveStats
-mkSolveStats Solve {..} raw stdout = do
-  let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines raw)]
+mkSolveStats :: UI -> Int -> String -> Text -> IO SolveStats
+mkSolveStats Solve {..} exitCodeSR rawInfo stdoutSR = do
+  let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines rawInfo)]
       status
         | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" info == Just "1" = TimeOut
         | M.lookup "SolverTimeOut" info == Just "1" = TimeOut
-        | T.isInfixOf "Savile Row timed out." stdout = TimeOut
-        | T.isInfixOf "java.lang.OutOfMemoryError" stdout = MemOut
+        | T.isInfixOf "Savile Row timed out." stdoutSR = TimeOut
+        | T.isInfixOf "java.lang.OutOfMemoryError" stdoutSR = MemOut
+        | exitCodeSR /= 0 = Error stdoutSR
         | otherwise = OK
       totalTime
         | Just srTotalTime <- M.lookup "SavileRowTotalTime" info >>= readMay,
@@ -67,4 +68,4 @@ mkSolveStats Solve {..} raw stdout = do
   let conjureVersion = repositoryVersion
   savileRowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
   return SolveStats {..}
-mkSolveStats _ _ _ = bug "mkSolveStats"
+mkSolveStats _ _ _ _ = bug "mkSolveStats"
