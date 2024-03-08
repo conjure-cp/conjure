@@ -247,6 +247,7 @@ mainWithArgs Boost{..} = do
         boosted <- boost logLevel logRuleSuccesses model
         writeModel lineWidth outputFormat Nothing boosted
 mainWithArgs config@Solve{..} = do
+    liftIO $ createDirectoryIfMissing True outputDirectory
     -- some sanity checks
     (solverName, _smtLogicName) <- splitSolverName solver
     case lookup solverName solverExecutables of
@@ -332,10 +333,10 @@ mainWithArgs config@Solve{..} = do
                     conjuring
 
     eprimesParsed <- forM eprimes $ \ f -> do
-        p1 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile f)
-        p2 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile (outputDirectory </> f))
+        p1 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile (outputDirectory </> f))
+        p2 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile f)
         case (p1, p2) of
-            (Just p, _) -> return (f, p)
+            (Just p, _) -> return (outputDirectory </> f, p)
             (_, Just p) -> return (f, p)
             _ -> userErr1 $ "Model not found:" <+> pretty f
 
@@ -444,11 +445,11 @@ mainWithArgs config@Solve{..} = do
             n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            if (S.size n == 1)
+            if S.size n == 1
                 then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
                 else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
-            return eprimes
+            return [ outputDirectory </> f | f <- eprimes ]
 
         getEprimes :: m [FilePath]
         getEprimes = sort . filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
@@ -793,7 +794,7 @@ savileRowNoParam ::
        ) ])
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
-    let outBase = dropExtension modelPath
+    let outBase = (dropExtension . snd . splitFileName) modelPath
     srArgs <- liftIO $ srMkArgs ui outBase modelPath
     let tr = translateSolution eprimeModel def
     when (logLevel >= LogDebug) $ do
@@ -820,7 +821,7 @@ savileRowWithParams ::
        ) ])
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
-    let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
+    let outBase = (dropExtension . snd . splitFileName) modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
     let
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
@@ -910,7 +911,7 @@ splitSolverName solver = do
 srMkArgs :: UI -> FilePath -> FilePath -> IO [Text]
 srMkArgs Solve{..} outBase modelPath = do
     let genericOpts =
-            [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
+            [ "-in-eprime"      , stringToText modelPath
             , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
             , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
             , "-out-smt"        , stringToText $ outputDirectory </> outBase ++ ".eprime-smt"
