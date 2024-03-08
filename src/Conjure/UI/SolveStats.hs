@@ -6,9 +6,13 @@ module Conjure.UI.SolveStats (mkSolveStats, SolveStats (..), SolveStatus (..)) w
 
 import Conjure.Bug
 import Conjure.Prelude
+import Conjure.RepositoryVersion (repositoryVersion)
 import Conjure.UI (UI (..))
 import Data.HashMap.Strict qualified as M -- unordered-containers
 import Data.Text qualified as T (isInfixOf) -- text
+import Data.Time (UTCTime, getCurrentTime) -- time
+import Network.HostName (getHostName) -- hostname
+import Shelly (run)
 
 data SolveStats = SolveStats
   { status :: SolveStatus,
@@ -19,7 +23,11 @@ data SolveStats = SolveStats
     useExistingModels :: [FilePath],
     savilerowOptions :: [String],
     solverOptions :: [String],
-    solver :: String
+    solver :: String,
+    computer :: String,
+    timestamp :: UTCTime,
+    conjureVersion :: String,
+    savileRowVersion :: String
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -38,8 +46,8 @@ instance ToJSON SolveStatus where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStatus where parseJSON = genericParseJSON jsonOptions
 
-mkSolveStats :: UI -> String -> Text -> SolveStats
-mkSolveStats Solve {..} raw stdout =
+mkSolveStats :: UI -> String -> Text -> IO SolveStats
+mkSolveStats Solve {..} raw stdout = do
   let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines raw)]
       status
         | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
@@ -54,5 +62,9 @@ mkSolveStats Solve {..} raw stdout =
             Just (srTotalTime + solverTotalTime)
         | otherwise = Nothing
       savilerowInfo = info
-   in SolveStats {..}
+  computer <- getHostName
+  timestamp <- getCurrentTime
+  let conjureVersion = repositoryVersion
+  savileRowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
+  return SolveStats {..}
 mkSolveStats _ _ _ = bug "mkSolveStats"

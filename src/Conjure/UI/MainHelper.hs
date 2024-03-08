@@ -1106,16 +1106,16 @@ srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
                     _  -> liftIO $ appendFile filenameEssenceSolJSON "]\n"
         _ -> return ()
 
-    let srInfoFilename = mkFilename ".eprime-info"
-    let statsFilename = mkFilename ".stats.json"
-    srInfoContent <- liftIO $ readFileIfExists srInfoFilename
-
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
     let combinedSR = T.unlines [stdoutSR, stderrSR]
 
-    let stats = mkSolveStats ui (fromMaybe "" srInfoContent) combinedSR
-    liftIO $ writeFile statsFilename (render lineWidth $ toJSON stats)
+    liftIO $ do
+        let srInfoFilename = mkFilename ".eprime-info"
+        let statsFilename = mkFilename ".stats.json"
+        srInfoContent <- liftIO $ readFileIfExists srInfoFilename
+        stats <- mkSolveStats ui (fromMaybe "" srInfoContent) combinedSR
+        writeFile statsFilename (render lineWidth (toJSON stats))
 
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->
             return (Left ["Savile Row timed out."])
