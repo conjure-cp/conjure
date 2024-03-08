@@ -19,7 +19,7 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
-
+import Conjure.UI.SolveStats ( mkSolveStats )
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
@@ -51,9 +51,6 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
-
--- system-filepath
--- import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile, findExecutable )
@@ -1094,23 +1091,32 @@ srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
 srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
-srCleanUp outBase Solve{..} stdoutSR solutions = do
+srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
+
+    let mkFilename ext = outputDirectory </> outBase ++ ext
 
     -- closing the array in the all solutions json file
     case outputFormat of
         JSON -> case solutionsInOneFile of
             False -> return ()
             True -> do
-                let mkFilename ext = outputDirectory </> outBase ++ ext
                 let filenameEssenceSolJSON = mkFilename ".solutions.json"
                 case solutions of
                     [] -> liftIO $ writeFile  filenameEssenceSolJSON "[]\n"
                     _  -> liftIO $ appendFile filenameEssenceSolJSON "]\n"
         _ -> return ()
 
+    let srInfoFilename = mkFilename ".eprime-info"
+    let statsFilename = mkFilename ".stats.json"
+    srInfoContent <- liftIO $ readFileIfExists srInfoFilename
+
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
     let combinedSR = T.unlines [stdoutSR, stderrSR]
+
+    let stats = mkSolveStats ui (fromMaybe "" srInfoContent) combinedSR
+    liftIO $ writeFile statsFilename (render lineWidth $ toJSON stats)
+
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->
             return (Left ["Savile Row timed out."])
         | T.isInfixOf "where false" combinedSR ->
