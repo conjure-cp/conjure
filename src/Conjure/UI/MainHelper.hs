@@ -1116,7 +1116,7 @@ srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
         let srInfoFilename = mkFilename ".eprime-info"
         let statsFilename = mkFilename ".stats.json"
         srInfoContent <- liftIO $ readFileIfExists srInfoFilename
-        stats <- mkSolveStats ui exitCodeSR (fromMaybe "" srInfoContent) combinedSR
+        stats <- mkSolveStats ui (exitCodeSR, stdoutSR, stderrSR) (fromMaybe "" srInfoContent)
         writeFile statsFilename (render lineWidth (toJSON stats))
 
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->
