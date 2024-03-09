@@ -9,10 +9,10 @@ import Conjure.Prelude
 import Conjure.RepositoryVersion (repositoryVersion)
 import Conjure.UI (UI (..))
 import Data.HashMap.Strict qualified as M -- unordered-containers
-import Data.Text qualified as T (isInfixOf) -- text
+import Data.Text qualified as T (isInfixOf, unlines) -- text
 import Data.Time (UTCTime, getCurrentTime) -- time
 import Network.HostName (getHostName) -- hostname
-import Shelly (run)
+import Shelly (run) -- shelly
 
 data SolveStats = SolveStats
   { status :: SolveStatus,
@@ -28,7 +28,7 @@ data SolveStats = SolveStats
     timestamp :: UTCTime,
     conjureVersion :: String,
     savileRowVersion :: String,
-    logs :: Maybe String
+    savileRowLogs :: M.HashMap String String
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -47,15 +47,16 @@ instance ToJSON SolveStatus where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStatus where parseJSON = genericParseJSON jsonOptions
 
-mkSolveStats :: UI -> Int -> String -> Text -> IO SolveStats
-mkSolveStats Solve {..} exitCodeSR rawInfo stdoutSR = do
+mkSolveStats :: UI -> (Int, Text, Text) -> String -> IO SolveStats
+mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
+  let combinedSR = T.unlines [stdoutSR, stderrSR]
   let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines rawInfo)]
       status
         | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" info == Just "1" = TimeOut
         | M.lookup "SolverTimeOut" info == Just "1" = TimeOut
-        | T.isInfixOf "Savile Row timed out." stdoutSR = TimeOut
-        | T.isInfixOf "java.lang.OutOfMemoryError" stdoutSR = MemOut
+        | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
+        | T.isInfixOf "java.lang.OutOfMemoryError" combinedSR = MemOut
         | exitCodeSR /= 0 = Error
         | otherwise = OK
       totalTime
@@ -68,6 +69,11 @@ mkSolveStats Solve {..} exitCodeSR rawInfo stdoutSR = do
   timestamp <- getCurrentTime
   let conjureVersion = repositoryVersion
   savileRowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
-  let logs = if status == Error then Just (textToString stdoutSR) else Nothing
+  let savileRowLogs =
+        M.fromList
+          [ ("exitCode", show exitCodeSR),
+            ("stdout", textToString stdoutSR),
+            ("stderr", textToString stderrSR)
+          ]
   return SolveStats {..}
-mkSolveStats _ _ _ _ = bug "mkSolveStats"
+mkSolveStats _ _ _ = bug "mkSolveStats"
