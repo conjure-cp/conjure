@@ -56,6 +56,7 @@ RUN PROCESSES=2 etc/build/install-z3.sh
 COPY . .
 
 # Building Conjure and copying Savile Row
+RUN make installdeps
 RUN make install
 
 # List the binaries
