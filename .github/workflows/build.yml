@@ -38,14 +38,14 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
       - name: Stack version
         shell: bash
         run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache stack
         with:
           path: |
