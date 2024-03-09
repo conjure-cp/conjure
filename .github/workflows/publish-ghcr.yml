@@ -19,7 +19,7 @@ on:
       - "v*.*.*"
   pull_request:             # and for PRs that edit the docker files
     paths:
-      - Containerfile
+      - Dockerfile
       - .github/workflows/publish-ghcr.yml
                             # other branches that want testing must create a PR
 
