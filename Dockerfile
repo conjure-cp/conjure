@@ -61,6 +61,7 @@ RUN make installdeps
 # Copy the rest
 COPY etc etc
 COPY src src
+COPY LICENSE LICENSE
 RUN make install
 
 # List the binaries
