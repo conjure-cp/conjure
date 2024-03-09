@@ -68,6 +68,10 @@ RUN make install
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
 
+# Copy the allsolvers test case
+RUN mkdir -p tests
+COPY tests/allsolvers tests/allsolvers
+
 # a test to see if all solvers work as expected
 RUN tests/allsolvers/test.sh
 
