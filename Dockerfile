@@ -55,6 +55,7 @@ RUN PROCESSES=2 etc/build/install-z3.sh
 # An attempt to cache more
 COPY Makefile Makefile
 COPY etc/hs-deps etc/hs-deps
+COPY conjure-cp.cabal conjure-cp.cabal
 RUN make installdeps
 
 # Copy the rest
