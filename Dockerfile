@@ -52,11 +52,13 @@ RUN PROCESSES=2 etc/build/install-ortools.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
 RUN PROCESSES=2 etc/build/install-z3.sh
 
-# Copy everything
-COPY . .
-
-# Building Conjure and copying Savile Row
+# An attempt to cache more
+COPY Makefile Makefile
 RUN make installdeps
+
+# Copy the rest
+COPY etc etc
+COPY src src
 RUN make install
 
 # List the binaries
