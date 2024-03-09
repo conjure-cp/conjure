@@ -27,7 +27,8 @@ data SolveStats = SolveStats
     computer :: String,
     timestamp :: UTCTime,
     conjureVersion :: String,
-    savileRowVersion :: String
+    savileRowVersion :: String,
+    logs :: Maybe String
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -37,7 +38,7 @@ instance ToJSON SolveStats where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStats where parseJSON = genericParseJSON jsonOptions
 
-data SolveStatus = OK | TimeOut | MemOut | Error Text
+data SolveStatus = OK | TimeOut | MemOut | Error
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Hashable SolveStatus
@@ -55,7 +56,7 @@ mkSolveStats Solve {..} exitCodeSR rawInfo stdoutSR = do
         | M.lookup "SolverTimeOut" info == Just "1" = TimeOut
         | T.isInfixOf "Savile Row timed out." stdoutSR = TimeOut
         | T.isInfixOf "java.lang.OutOfMemoryError" stdoutSR = MemOut
-        | exitCodeSR /= 0 = Error stdoutSR
+        | exitCodeSR /= 0 = Error
         | otherwise = OK
       totalTime
         | Just srTotalTime <- M.lookup "SavileRowTotalTime" info >>= readMay,
@@ -67,5 +68,6 @@ mkSolveStats Solve {..} exitCodeSR rawInfo stdoutSR = do
   timestamp <- getCurrentTime
   let conjureVersion = repositoryVersion
   savileRowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
+  let logs = if status == Error then Just (textToString stdoutSR) else Nothing
   return SolveStats {..}
 mkSolveStats _ _ _ _ = bug "mkSolveStats"
