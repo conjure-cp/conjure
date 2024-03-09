@@ -6,8 +6,7 @@ module Conjure.UI.SolveStats (mkSolveStats, SolveStats (..), SolveStatus (..)) w
 
 import Conjure.Bug
 import Conjure.Prelude
-import Conjure.RepositoryVersion (repositoryVersion)
-import Conjure.UI (UI (..))
+import Conjure.UI (UI (..), versionLine)
 import Data.HashMap.Strict qualified as M -- unordered-containers
 import Data.Text qualified as T (isInfixOf, unlines) -- text
 import Data.Time (UTCTime, getCurrentTime) -- time
@@ -67,7 +66,7 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
       savilerowInfo = info
   computer <- getHostName
   timestamp <- getCurrentTime
-  let conjureVersion = repositoryVersion
+  let conjureVersion = versionLine
   savileRowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
   let savileRowLogs =
         M.fromList

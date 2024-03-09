@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-cse #-} -- stupid cmdargs
 
-module Conjure.UI ( UI(..), OutputFormat(..), ui ) where
+module Conjure.UI ( UI(..), OutputFormat(..), ui, versionLine ) where
 
 -- conjure
 import Conjure.Prelude
@@ -1462,8 +1462,7 @@ ui = modes
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
            &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
-                               , "Release version " ++ showVersion version
-                               , "Repository version " ++ repositoryVersion
+                               , versionLine
                                ])
            &= help "The command line interface of Conjure takes a command name as the first argument \
                    \followed by more arguments depending on the command.\n\
@@ -1471,3 +1470,5 @@ ui = modes
                    \For details of a command, pass the --help flag after the command name.\n\
                    \For example: 'conjure translate-solution --help'"
 
+versionLine :: String
+versionLine = "Conjure v" ++ showVersion version ++ " (Repository version " ++ repositoryVersion ++ ")"
