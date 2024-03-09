@@ -56,6 +56,8 @@ install:
 # mainly for CI
 .PHONY: installdeps
 installdeps:
+	bash etc/build/install-stack.sh
+	make stack.yaml
 	stack --local-bin-path ${BIN_DIR} setup;
 	stack build --only-dependencies
 
