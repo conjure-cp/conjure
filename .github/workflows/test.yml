@@ -8,7 +8,7 @@ on:
     paths:
       - conjure-cp.cabal
       - Makefile
-      - Dockerfile          # this is here because the docker-publish.yml depends on successful completion of this action
+      - Containerfile       # this is here because publish-ghcr.yml depends on successful completion of this action
       - src/**
       - tests/**
       - etc/build/**

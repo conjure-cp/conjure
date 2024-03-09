@@ -79,7 +79,7 @@ We assume you are on a Linux system here, though steps for macOS are very simila
 - Download the installer. A file called ``cplex_studio2211.linux_x86_64.bin``.
 - Run the installer and follow the instructions.
 - You can install CPLEX to its default location, however a user-level install is also possible. Assuming you installed it at: ``/home/USER/cplex-install`` for the remaining instructions
-- Create a file called ``/home/USER/cplex-install/Dockerfile`` with the following contents
+- Create a file called ``/home/USER/cplex-install/Containerfile`` with the following contents
 
 .. code-block:: bash
 

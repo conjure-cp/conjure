@@ -1,4 +1,4 @@
-name: Publishing Docker image to ghcr.io
+name: Publishing container on ghcr.io
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -19,8 +19,8 @@ on:
       - "v*.*.*"
   pull_request:             # and for PRs that edit the docker files
     paths:
-      - Dockerfile
-      - .github/workflows/docker-publish.yml
+      - Containerfile
+      - .github/workflows/publish-ghcr.yml
                             # other branches that want testing must create a PR
 
 
