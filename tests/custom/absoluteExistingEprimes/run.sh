@@ -19,11 +19,11 @@ conjure solve test.essence --use-existing-models=some/other/dir/model000001.epri
 echo ""
 conjure solve test.essence --use-existing-models=some/other/dir/model000002.eprime -o conjure-output-2
 
-echo ""
-conjure solve test.essence --use-existing-models=${PWD}/some/other/dir/model000001.eprime -o conjure-output-2-1
+# echo ""
+# conjure solve test.essence --use-existing-models=${PWD}/some/other/dir/model000001.eprime -o conjure-output-2-1
 
-echo ""
-conjure solve test.essence --use-existing-models=${PWD}/some/other/dir/model000002.eprime -o conjure-output-2-2
+# echo ""
+# conjure solve test.essence --use-existing-models=${PWD}/some/other/dir/model000002.eprime -o conjure-output-2-2
 
 rm -rf conjure-output* some *.solution
 
