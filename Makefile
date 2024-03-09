@@ -57,9 +57,6 @@ install:
 .PHONY: installdeps
 installdeps:
 	stack --local-bin-path ${BIN_DIR} setup;
-	bash etc/build/version.sh
-	stack runhaskell etc/build/gen_Operator.hs
-	stack runhaskell etc/build/gen_Expression.hs
 	stack build --only-dependencies
 
 .PHONY: test
