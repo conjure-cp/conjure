@@ -65,6 +65,7 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
   let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines rawInfo)]
       status
         | T.isInfixOf "java.lang.OutOfMemoryError" combinedSR = MemOut
+        | T.isInfixOf "Out of Memory" combinedSR = MemOut
         | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
         | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" info == Just "1" = TimeOut
