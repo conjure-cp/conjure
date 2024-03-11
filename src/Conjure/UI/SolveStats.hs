@@ -67,6 +67,7 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
         | T.isInfixOf "java.lang.OutOfMemoryError" combinedSR = MemOut
         | T.isInfixOf "Out of Memory" combinedSR = MemOut
         | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
+        | T.isInfixOf "type error: undefined identifier" combinedSR = Error
         | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" info == Just "1" = TimeOut
         | M.lookup "SolverTimeOut" info == Just "1" = TimeOut
