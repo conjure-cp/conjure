@@ -83,8 +83,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
   computer <- getHostName
   timestamp <- getCurrentTime
   let conjureVersion = versionLine
-  savileRowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
-  let savileRowLogs =
+  savilerowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
+  let savilerowLogs =
         SavileRowLogs
           { exitCode = exitCodeSR,
             stdout = if T.null stdoutSR then Nothing else Just (lines (textToString stdoutSR)),
