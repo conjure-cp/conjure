@@ -26,8 +26,8 @@ data SolveStats = SolveStats
     computer :: String,
     timestamp :: UTCTime,
     conjureVersion :: String,
-    savileRowVersion :: String,
-    savileRowLogs :: SavileRowLogs
+    savilerowVersion :: String,
+    savilerowLogs :: SavileRowLogs
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
