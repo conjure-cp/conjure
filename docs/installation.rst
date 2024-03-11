@@ -84,7 +84,7 @@ We assume you are on a Linux system here, though steps for macOS are very simila
 .. code-block:: bash
 
     FROM ghcr.io/conjure-cp/conjure@sha256:VERSION
-    COPY cplex /root/.local/
+    COPY cplex /root/.local/cplex
     ENV CPLEX_PATH /root/.local/cplex/bin/x86-64_linux/libcplex2211.so
 
 - In the ``/home/USER/cplex-install`` directory execute: ``podman build -t conjure-cplex .``
