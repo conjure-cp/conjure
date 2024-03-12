@@ -64,8 +64,18 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
   let combinedSR = T.unlines [stdoutSR, stderrSR]
   let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines rawInfo)]
       status
-        | T.isInfixOf "type error: undefined identifier" combinedSR = Error
-        | T.isInfixOf "MiniZinc error" combinedSR = Error
+        | or
+            [ T.isInfixOf msg combinedSR
+              | msg <-
+                  [ "type error: undefined identifier",
+                    "MiniZinc error",
+                    "Check failed: ParseFlatzincFile",
+                    "parse error: unexpected end-of-file after parsing number of clauses",
+                    "error: Cannot open file",
+                    "kissat: error: can not read"
+                  ]
+            ] =
+            Error
         | T.isInfixOf "java.lang.OutOfMemoryError" combinedSR = MemOut
         | T.isInfixOf "Out of Memory" combinedSR = MemOut
         | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
