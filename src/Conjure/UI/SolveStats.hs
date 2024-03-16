@@ -72,7 +72,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
                     "Check failed: ParseFlatzincFile",
                     "parse error: unexpected end-of-file after parsing number of clauses",
                     "error: Cannot open file",
-                    "kissat: error: can not read"
+                    "kissat: error: can not read",
+                    "kissat: fatal error: maximum arena capacity"
                   ]
             ] =
             Error
