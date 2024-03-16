@@ -1537,6 +1537,7 @@ horizontalRules :: [Rule]
 horizontalRules =
     [ Horizontal.Permutation.rule_Cardinality_Literal
     , Horizontal.Permutation.rule_Equality
+    , Horizontal.Permutation.rule_Disequality
     , Horizontal.Permutation.rule_Comprehension
     , Horizontal.Permutation.rule_Compose_Image
 
