@@ -68,12 +68,13 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
             [ T.isInfixOf msg combinedSR
               | msg <-
                   [ "type error: undefined identifier",
-                    "MiniZinc error",
+                    "MiniZinc error", -- minizinc
                     "Check failed: ParseFlatzincFile",
                     "parse error: unexpected end-of-file after parsing number of clauses",
                     "error: Cannot open file",
-                    "kissat: error: can not read",
-                    "kissat: fatal error: maximum arena capacity"
+                    "kissat: error: can not read", -- kissat
+                    "kissat: fatal error: maximum arena capacity", -- kissat
+                    "Error: syntax error, unexpected ]]" -- cplex
                   ]
             ] =
             Error
