@@ -67,8 +67,8 @@ See all available images on `Github <https://github.com/conjure-cp/conjure/pkgs/
 
 Inside the container, you will be able to run conjure, savilerow, and almost all supported solvers.
 
-CPLEX
-=====
+CPLEX with Docker/Podman
+------------------------
 
 CPLEX is a commercial mathemathical programming solver that is supported by Conjure. However we cannot provide CPLEX as part of the container image due to its license. Instead, we include instructions here for building another image that contains CPLEX as well.
 
