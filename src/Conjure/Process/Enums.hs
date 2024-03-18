@@ -15,9 +15,6 @@ import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.Type
 
--- base
-import Data.List ( cycle )
-
 -- text
 import Data.Text as T ( pack )
 
@@ -121,6 +118,7 @@ removeEnumsFromModel =
                         _ -> return [st]
 
             let
+
                 onD :: Domain () Expression -> Domain () Expression
                 onD (DomainEnum nm@(Name nmText) (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
@@ -132,6 +130,7 @@ removeEnumsFromModel =
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
                 onD p = p
+
 
             let model' = model { mStatements = concat statements'
                                     |> transformBi onD
@@ -286,6 +285,10 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                     [ [ helper inner c | c <- line ]
                     | line <- vals ]
 
+            (DomainPermutation _ _ inner, ConstantAbstract (AbsLitPermutation vals)) ->
+                ConstantAbstract $ AbsLitPermutation
+                   [ [helper inner c | c <- line ]
+                   | line <- vals]
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
                                                              , "domain  :" <+> pretty (show domain)

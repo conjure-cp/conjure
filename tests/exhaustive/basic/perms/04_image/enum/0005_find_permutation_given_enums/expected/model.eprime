@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+given i: int(1..7)
+find p_PermutationAsFunction_PermutationFunction_Function1D: matrix indexed by [int(1..7)] of int(1..7)
+given j: int(1..7)
+branching on [p_PermutationAsFunction_PermutationFunction_Function1D]
+such that
+    j =
+    [i, catchUndef(p_PermutationAsFunction_PermutationFunction_Function1D[i], 0); int(1..2)]
+        [toInt(or([q6 = i | q6 : int(1..7)])) + 1],
+    sum([toInt(q13 != p_PermutationAsFunction_PermutationFunction_Function1D[q13]) *
+         catchUndef(toInt(q13 != p_PermutationAsFunction_PermutationFunction_Function1D[q13]), 0)
+             | q13 : int(1..7)])
+    = 3,
+    allDiff(p_PermutationAsFunction_PermutationFunction_Function1D),
+    and([or([p_PermutationAsFunction_PermutationFunction_Function1D[q3] = q2 | q3 : int(1..7)]) | q2 : int(1..7)])
+

@@ -140,8 +140,12 @@ instance HighLevelTree LiteralNode where
         MSetLiteral lt ln -> makeTree lt <> makeTree ln
         FunctionLiteral lt ln -> makeTree lt <> makeTree ln
         SequenceLiteral lt ln -> makeTree lt <> makeTree ln
+        PermutationLiteral lt ln -> makeTree lt <> makeTree ln
         RelationLiteral lt ln -> makeTree lt <> makeTree ln
         PartitionLiteral lt ln -> makeTree lt <> makeTree ln
+
+instance HighLevelTree PermutationElemNode where
+    makeTree (PermutationElemNode ln) = makeTree ln
 
 instance HighLevelTree PartitionElemNode where
     makeTree (PartitionElemNode ln) = makeTree ln
@@ -223,6 +227,7 @@ instance HighLevelTree DomainNode where
         MSetDomainNode a b c d -> [makeTree a , makeTree  b, makeTree c , makeTree d]
         FunctionDomainNode a b c d e -> [makeTree a , makeTree  b , makeTree c , makeTree d,makeTree e]
         SequenceDomainNode a b c d -> [makeTree a , makeTree  b , makeTree c , makeTree d]
+        PermutationDomainNode a b c d -> [makeTree a , makeTree  b , makeTree c , makeTree d]
         RelationDomainNode a b c d -> [makeTree a , makeTree b , makeTree c , makeTree d]
         PartitionDomainNode a b c d -> [makeTree a , makeTree b , makeTree c , makeTree d]
         MissingDomainNode m -> [makeTree m]
@@ -335,6 +340,8 @@ instance HighLevelTree (ListNode RecordMemberNode) where
 instance HighLevelTree (ListNode ArrowPairNode) where
     makeTree = taggedList ICIdentifier
 instance HighLevelTree (ListNode RelationElemNode) where
+    makeTree = taggedList ICIdentifier
+instance HighLevelTree (ListNode PermutationElemNode) where
     makeTree = taggedList ICIdentifier
 instance HighLevelTree (ListNode PartitionElemNode) where
     makeTree = taggedList ICIdentifier

@@ -132,6 +132,9 @@ mkOp op xs = case op of
             L_party        -> inject $ MkOpParty        $ OpParty        (arg xs 0 "party")
                                                                          (arg xs 1 "party")
             L_participants -> inject $ MkOpParticipants $ OpParticipants (arg xs 0 "participants")
+            L_compose      -> inject $ MkOpCompose      $ OpCompose      (arg xs 0 "compose")
+                                                                         (arg xs 1 "compose")
+
             L_active       -> inject $ MkOpActive       $ OpActive       (arg xs 0 "active")
                                                                          (arg xs 1 "active" |> nameOut |> fromMaybe (bug "active"))
             L_pred         -> inject $ MkOpPred         $ OpPred         (arg xs 0 "pred")

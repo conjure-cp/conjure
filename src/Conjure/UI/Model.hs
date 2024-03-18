@@ -29,6 +29,8 @@ import Conjure.Compute.DomainOf
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
+import Conjure.Language.Expression ( reDomExp )
+import Conjure.Language.Constant   ( reDomConst )
 import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )
@@ -100,6 +102,9 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 import qualified Conjure.Rules.Transform as Transform
+
+import qualified Conjure.Rules.Vertical.Permutation as Vertical.Permutation
+import qualified Conjure.Rules.Horizontal.Permutation as Horizontal.Permutation
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -273,7 +278,7 @@ toCompletion :: forall m .
     Model ->
     Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue config m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
@@ -306,9 +311,9 @@ modelRepresentationsJSON ::
     EnumerateDomain m =>
     MonadLog m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m JSONValue
-modelRepresentationsJSON model = do
-    reprs <- modelRepresentations model
+    Config -> Model -> m JSONValue
+modelRepresentationsJSON config model = do
+    reprs <- modelRepresentations config model
     return $ JSON.Array $ V.fromList
         [ JSON.Object $ KM.fromList
             [ "name" ~~ r name
@@ -335,9 +340,9 @@ modelRepresentations ::
     EnumerateDomain m =>
     MonadLog m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m [(Name, [Domain HasRepresentation Expression])]
-modelRepresentations model0 = do
-    model <- prologue model0
+    Config -> Model -> m [(Name, [Domain HasRepresentation Expression])]
+modelRepresentations config model0 = do
+    model <- prologue config model0
     concatForM (mStatements model) $ \case
         Declaration (FindOrGiven _ name domain) -> do
             domOpts <- reprOptions reprsStandardOrderNoLevels domain
@@ -863,7 +868,6 @@ inlineDecVarLettings model =
     in
         model { mStatements = statements }
 
-
 dropTagForSR ::
     MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -979,6 +983,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
+                              <+> stringToDoc(show (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
@@ -989,6 +994,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                         | not (isPrimitiveDomain dom) ->
                         return $ ""
                                : ("Not refined:" <+> pretty (hole x))
+                                                 <+> stringToDoc(show (hole x))
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | (i, c) <- zip allNats (tail (ascendants x))
@@ -1029,9 +1035,11 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                            | (i, c) <- zip allNats (tail (ascendants x))
                                            ]
                     [essence| &_ .< &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))]
+                        return ["", ("Not refined:" <+> pretty (hole x))
+                                                    <+> stringToDoc(show (hole x))]
                     [essence| &_ .<= &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))]
+                        return ["", ("Not refined:" <+> pretty (hole x))
+                                                    <+> stringToDoc(show (hole x))]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -1229,10 +1237,13 @@ prologue ::
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m Model
-prologue model = do
+    Config ->
+    Model ->
+    m Model
+prologue config model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
+    >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
     >>= removeUnderscores             >>= logDebugIdModel "[removeUnderscores]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
     >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
@@ -1241,6 +1252,8 @@ prologue model = do
     >>= lettingsForComplexInDoms      >>= logDebugIdModel "[lettingsForComplexInDoms]"
     >>= distinctQuantifiedVars        >>= logDebugIdModel "[distinctQuantifiedVars]"
     >>= return . initInfo             >>= logDebugIdModel "[initInfo]"
+    >>= addUnnamedSymmetryBreaking (unnamedSymmetryBreaking config)
+                                      >>= logDebugIdModel "[addUnnamedSymmetryBreaking]"
     >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugIdModel "[finiteGivens]"
@@ -1249,13 +1262,15 @@ prologue model = do
     >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= return . initInfo_Lettings    >>= logDebugIdModel "[initInfo_Lettings]"
     >>= removeDomainLettings          >>= logDebugIdModel "[removeDomainLettings]"
-    >>= typeCheckModel                >>= logDebugIdModel "[typeCheckModel]"
+    >>= (let ?typeCheckerMode = RelaxedIntegerTags in typeCheckModel)
+                                      >>= logDebugIdModel "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugIdModel "[categoryChecking]"
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
     -- >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
+    >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
 
 
 epilogue ::
@@ -1394,13 +1409,21 @@ paramRules =
 
 verticalRules :: [Rule]
 verticalRules =
-    [ Vertical.Tuple.rule_Tuple_Eq
+    [ Vertical.Permutation.rule_Image
+    , Vertical.Permutation.rule_Cardinality
+    , Vertical.Permutation.rule_Defined
+    , Vertical.Permutation.rule_Comprehension
+
+
+    , Vertical.Tuple.rule_Tuple_Eq
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
+
+
 
     , Vertical.Record.rule_Record_Eq
     , Vertical.Record.rule_Record_Neq
@@ -1512,7 +1535,24 @@ verticalRules =
 
 horizontalRules :: [Rule]
 horizontalRules =
-    [ Horizontal.Set.rule_Comprehension_Literal
+    [ Horizontal.Permutation.rule_Cardinality_Literal
+    , Horizontal.Permutation.rule_Equality
+    , Horizontal.Permutation.rule_Comprehension
+    , Horizontal.Permutation.rule_Compose_Image
+
+
+
+
+    , Horizontal.Permutation.rule_Defined_Literal
+    , Horizontal.Permutation.rule_Image_Literal
+    , Horizontal.Permutation.rule_In
+    , Horizontal.Permutation.rule_Permutation_Inverse 
+
+
+
+
+
+    , Horizontal.Set.rule_Comprehension_Literal
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
     , Horizontal.Set.rule_Subset
@@ -1621,6 +1661,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
 
+
     ]
 
 
@@ -1655,6 +1696,7 @@ otherRules =
         , DontCare.rule_Tuple
         , DontCare.rule_Record
         , DontCare.rule_Variant
+        , DontCare.rule_Permutation
         , DontCare.rule_Matrix
         , DontCare.rule_Abstract
         ]
@@ -1697,6 +1739,7 @@ delayedRules =
         , Vertical.Matrix.rule_Comprehension_SingletonDomain
         , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
+
         ]
     ,   [ rule_ReducerToComprehension
         ]
@@ -2753,6 +2796,189 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) % 2 |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
+
+
+enforceTagConsistency :: MonadFail m => Model -> m Model
+enforceTagConsistency model = do
+  let statements' = transformBi reDomExp $ transformBi reDomConst (mStatements model)
+  return model { mStatements = statements' }
+
+
+addUnnamedSymmetryBreaking ::
+    NameGen m =>
+    Maybe UnnamedSymmetryBreaking ->
+    Model ->
+    m Model
+addUnnamedSymmetryBreaking mode model = do
+
+    let
+        allUnnamedTypes :: [(Domain () Expression, Expression)]
+        allUnnamedTypes =
+            [ reTag (TagUnnamed nm') (DomainReference nm Nothing,  x) --x is a TagInt at this point so we must reTag it
+            | Declaration (LettingDomainDefnUnnamed nm@(Name nm') x) <- mStatements model
+            ]
+
+        allDecVars =
+            [ (Reference nm Nothing, domain)
+            | Declaration (FindOrGiven Find nm domain) <- mStatements model
+            ]
+
+        allDecVarsAux auxSuffix =
+            [ (Reference (mconcat [nm, "_auxFor_", auxSuffix]) Nothing, domain)
+            | Declaration (FindOrGiven Find nm domain) <- mStatements model
+            ]
+
+        varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
+        mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
+
+--    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
+--    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
+
+    -- 3 axis of doom
+    -- 1. Quick/Complete. Quick is x .<= p(x)
+    --                    Complete is x .<= y /\ y = p(x)
+    -- 2. Scope.          Consecutive
+    --                    AllPairs
+    --                    AllPermutations
+    -- 3. Independently/Altogether
+
+    case mode of
+        Nothing -> return model
+        Just (UnnamedSymmetryBreaking quickOrComplete usbScope independentlyOrAltogether) -> do
+            let newDecls =
+                    case quickOrComplete of
+                        USBQuick -> []
+                        USBComplete ->
+                            case independentlyOrAltogether of
+                                USBIndependently ->
+                                    [ Declaration (FindOrGiven LocalFind nm' domain)
+                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                                    , (DomainReference uName _, _) <- allUnnamedTypes
+                                    , let nm' = mconcat [nm, "_auxFor_", uName]
+                                    ]
+                                USBAltogether ->
+                                    [ Declaration (FindOrGiven LocalFind nm' domain)
+                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+                                    , let nm' = mconcat [nm, "_auxFor_all"]
+                                    ]
+
+            let
+
+                buildPermutationChain [] vars = vars
+                buildPermutationChain (p:ps) vars =
+                        let applied = buildPermutationChain ps vars
+                        in  [essence| image(&p, &applied) |]
+
+                nestInBubbles :: Expression -> Int -> [(Expression,Statement)] -> Expression -> Expression 
+                nestInBubbles _ _ [] expr = expr
+                nestInBubbles modl i (fv:auxVars) expr =
+                  let v = fst fv
+                      ii = fromInt (fromIntegral i)
+                   in WithLocals [essence| &modl[&ii] .<= &v |] (AuxiliaryVars ((snd fv):[SuchThat [nestInBubbles modl (i + 1) auxVars expr]]))
+
+                combinedPermApply auxSuffix perms =
+                    case quickOrComplete of
+                        USBQuick ->
+                            let applied = buildPermutationChain perms varsTuple
+                            in  [essence| &varsTuple .<= &applied |]
+                        USBComplete ->
+                            let applied = buildPermutationChain perms varsTuple
+                                thisAuxTuple = mkAuxTuple auxSuffix
+                                dVars = map fst (allDecVarsAux auxSuffix)
+                             in nestInBubbles varsTuple 1 (zip dVars newDecls) 
+                                              [essence| &thisAuxTuple = &applied |]
+
+                mkGenerator_Consecutive _ _ [] = bug "must have at least one unnamed type"
+                mkGenerator_Consecutive auxSuffix perms [(u, uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = [essence| permutation((&i, succ(&i))) |]
+                    let applied = combinedPermApply auxSuffix (perm:perms)
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &i < &uSize
+                                    ])
+                           |]
+                mkGenerator_Consecutive auxSuffix perms ((u, uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = [essence| permutation((&i, succ(&i))) |]
+                    applied <- mkGenerator_Consecutive auxSuffix (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &i < &uSize
+                                    ])
+                           |]
+
+
+                mkGenerator_AllPairs _ _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPairs auxSuffix perms [(u, _uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &j)) |]
+                    let applied = combinedPermApply auxSuffix (perm:perms)
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &jPat : &u
+                                    , &i < &j
+                                    ])
+                           |]
+                mkGenerator_AllPairs auxSuffix perms ((u, _uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &j)) |]
+                    applied <- mkGenerator_AllPairs auxSuffix (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &jPat : &u
+                                    , &i < &j
+                                    ])
+                           |]
+
+                mkGenerator_AllPermutations _ _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPermutations auxSuffix perms [(u, _uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = i
+                    let applied = combinedPermApply auxSuffix (perm:perms)
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : sequence of &u
+                                    ])
+                           |]
+                mkGenerator_AllPermutations auxSuffix perms ((u, _uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = i
+                    applied <- mkGenerator_AllPermutations auxSuffix (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : sequence of &u
+                                    ])
+                           |]
+
+                mkGenerator auxSuffix perms us =
+                    case usbScope of
+                        USBConsecutive -> mkGenerator_Consecutive auxSuffix perms us
+                        USBAllPairs -> mkGenerator_AllPairs auxSuffix perms us
+                        USBAllPermutations -> mkGenerator_AllPermutations auxSuffix perms us
+            newCons <-
+                case independentlyOrAltogether of
+                    USBIndependently -> do
+                      xs <- (sequence
+                            [ mkGenerator uName [] [(u, uSize)]
+                            | (u@(DomainReference uName _), uSize) <- allUnnamedTypes
+                            ])
+                      return [SuchThat xs]
+                    USBAltogether -> do
+                        cons <- mkGenerator "all" [] allUnnamedTypes
+                        return [SuchThat [cons]]
+
+            let stmts = newCons
+            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
+                                 : map (nest 4 . pretty) stmts
+            return model { mStatements = mStatements model ++ stmts}
+
 
 
 rule_Comprehension_Cardinality :: Rule

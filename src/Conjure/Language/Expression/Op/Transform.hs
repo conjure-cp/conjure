@@ -25,6 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTransform x) where
         (from, to) <- case tyF of
             TypeFunction from to   -> return (from, to)
             TypeSequence      to   -> return (TypeInt TagInt, to)
+            TypePermutation   ov   -> return (ov, ov)
             _ -> raiseTypeError $ "(transform first argument not a morphism)"
                                <+> pretty p
         if typesUnify [from, to]

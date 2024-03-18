@@ -726,6 +726,11 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
     putDocs TypeD "sequence" l1
     l2 `isA'` TtSubKeyword
     validateSequenceDomain attrs dom
+  PermutationDomainNode l1 attrs l2 dom -> do
+    l1 `isA` TtType
+    putDocs TypeD "permutation" l1
+    l2 `isA'` TtSubKeyword
+    validatePermutationDomain attrs dom
   RelationDomainNode l1 attrs l2 doms -> do
     l1 `isA` TtType
     putDocs TypeD "relation" l1
@@ -849,6 +854,16 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
         Nothing -> return def
       (t, dom') <- typeSplit <$> validateDomain dom
       return . Typed (TypeSequence t) $ DomainSequence repr attrs' dom'
+
+    validatePermutationDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> ValidatorS TypedDomain
+    validatePermutationDomain attrs dom = do
+      let repr = ()
+      attrs' <- case attrs of
+        Just a -> validatePermutationAttributes a
+        Nothing -> return def
+      (t, dom') <- typeSplit <$> validateDomain dom
+      return . Typed (TypePermutation t) $ DomainPermutation repr attrs' dom'
+
     validateRelationDomain :: Maybe (ListNode AttributeNode) -> ListNode DomainNode -> ValidatorS TypedDomain
     validateRelationDomain attrs doms = do
       let repr = ()
@@ -858,6 +873,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
 
       (ts, doms') <- unzip . map typeSplit <$> validateList_ validateDomain doms
       return . Typed (TypeRelation ts) $ DomainRelation repr attrs' doms'
+
     validatePartitionDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> ValidatorS TypedDomain
     validatePartitionDomain attrs dom = do
       let repr = ()
@@ -965,6 +981,12 @@ validateSeqAttributes atts = do
   size <- validateSizeAttributes attrs
   jectivity <- validateJectivityAttributes attrs
   return $ SequenceAttr size jectivity
+
+validatePermutationAttributes :: ListNode AttributeNode -> ValidatorS (PermutationAttr Expression)
+validatePermutationAttributes atts = do
+  attrs <- catMaybes <$> validateList_ (validateAttributeNode setValidAttrs) atts
+  size <- validateSizeAttributes attrs
+  return $ PermutationAttr size
 
 validateRelationAttributes :: ListNode AttributeNode -> ValidatorS (RelationAttr Expression)
 validateRelationAttributes atts = do
@@ -1080,9 +1102,10 @@ validateExpression expr = do
       TypeMSet {} -> return ()
       TypeFunction {} -> return ()
       TypeSequence {} -> return ()
+      TypePermutation {} -> return ()
       TypeRelation {} -> return ()
       TypePartition {} -> return ()
-      _ -> contextTypeError $ ComplexTypeError "Int or collection" t
+      _ -> contextTypeError $ ComplexTypeError "integer or collection" t
 
 validateFlexibleExpression :: ExpressionNode -> ValidatorS (Kind, Expression)
 validateFlexibleExpression (IdentifierNode name) = do
@@ -1294,6 +1317,9 @@ validatePostfixOp (ApplicationNode args) = return $ \exp -> do
     TypeFunction _ _ -> do
       args' <- validateList (validateExpression >=> \(Typed t' e') -> return (simple t', e')) args
       validateFuncOp L_image ((reg, (simple t, e)) : args')
+    TypePermutation _ -> do
+      args' <- validateList (validateExpression >=> \(Typed t' e') -> return (simple t', e')) args
+      validateFuncOp L_image ((reg, (simple t, e)) : args')
     TypeSequence _ -> do
       args' <- validateList (validateExpression >=> \(Typed t' e') -> return (simple t', e')) args
       validateFuncOp L_image ((reg, (simple t, e)) : args')
@@ -1304,7 +1330,7 @@ validatePostfixOp (ApplicationNode args) = return $ \exp -> do
       iType <- case t of
         TypeRelation ts -> checkProjectionArgs ts ys
         _ -> do
-          raiseTypeError $ symbolRegion exp <!> ComplexTypeError "Relation or function" t
+          raiseTypeError $ symbolRegion exp <!> ComplexTypeError "function, permutation or relation" t
           let ts = map (maybe TypeAny (typeOf_ . snd)) ys
           return $ TypeRelation ts
       let op = Op $ MkOpRelationProj $ OpRelationProj e (map (untype . snd <$>) ys)
@@ -1453,6 +1479,7 @@ validateLiteral litNode = case litNode of
   MSetLiteral lt ls -> lt `isA` TtType >> validateMSetLiteral ls
   FunctionLiteral lt ln -> lt `isA` TtType >> validateFunctionLiteral ln
   SequenceLiteral lt ln -> lt `isA` TtType >> validateSequenceLiteral ln
+  PermutationLiteral lt ln -> lt `isA` TtType >> validatePermutationLiteral ln
   RelationLiteral lt ln -> lt `isA` TtType >> validateRelationLiteral ln
   PartitionLiteral lt ln -> lt `isA` TtType >> validatePartitionLiteral ln
 
@@ -1461,6 +1488,18 @@ validateSequenceLiteral x = do
   (t, ss) <- typeSplit <$> (sameType =<< validateExprList x)
   let lType = TypeSequence t
   return . Typed lType $ mkAbstractLiteral $ AbsLitSequence ss
+
+validatePermutationLiteral :: ListNode PermutationElemNode -> ValidatorS (Typed Expression)
+validatePermutationLiteral x = do
+  members <- validateList validatePermutationElem x
+  (t, xs) <- typeSplit <$> sameType members
+  let eType = TypePermutation t
+  return $ Typed eType (mkAbstractLiteral $ AbsLitPermutation xs)
+  where
+    validatePermutationElem :: PermutationElemNode -> ValidatorS (Typed [Expression])
+    validatePermutationElem (PermutationElemNode exprs) = do
+      xs <- validateExprList exprs
+      sameType xs
 
 validateRelationLiteral :: ListNode RelationElemNode -> ValidatorS (Typed Expression)
 validateRelationLiteral ln = do
@@ -1629,6 +1668,7 @@ projectionType r t = case t of
   TypeSet ty -> return ty
   TypeMSet ty -> return ty
   TypeSequence ty -> return $ TypeTuple [tInt, ty]
+  TypePermutation ty -> return $ TypeTuple [ty, ty]
   TypeRelation ts -> return $ TypeTuple ts
   TypePartition ty -> return $ TypeSet ty
   TypeFunction fr to -> return $ TypeTuple [fr, to]
@@ -1641,7 +1681,8 @@ projectionTypeDomain _ t = case t of -- TODO check and do properly
   TypeUnnamed (Name n) -> return $ TypeInt $ TagUnnamed n
   _ -> return t
 
---   _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Domain of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
+-- _ -> (raiseTypeError $ r <!> SemanticError  (pack $ "Domain of type " ++ (show $pretty t) ++ " cannot be projected in a comprehension")) >> return TypeAny
+
 mkAbstractLiteral :: AbstractLiteral Expression -> Expression
 mkAbstractLiteral x = case e2c (AbstractLiteral x) of
   Nothing -> AbstractLiteral x
@@ -2026,6 +2067,7 @@ getDomainMembers t = case t of
   TypeAny -> t
   TypeBool -> t
   TypeInt it -> case it of
+    TaggedInt {} -> t
     TagInt -> t
     TagEnum _ -> error "Domain should use typeEnum instead"
     TagUnnamed _ -> error "Domain should use typeUnamed instead"
@@ -2046,6 +2088,7 @@ getDomainMembers t = case t of
   TypeMSet ty -> TypeMSet $ getDomainMembers ty
   TypeFunction ty ty' -> TypeFunction (getDomainMembers ty) (getDomainMembers ty')
   TypeSequence ty -> TypeSequence $ getDomainMembers ty
+  TypePermutation ty -> TypePermutation $ getDomainMembers ty
   TypeRelation tys -> TypeRelation $ map getDomainMembers tys
   TypePartition ty -> TypePartition $ getDomainMembers ty
   _ -> bug $ "Unknown domain type" <+> pretty t
@@ -2055,6 +2098,7 @@ getDomainFromValue t = case t of
   TypeAny -> t
   TypeBool -> t
   TypeInt it -> case it of
+    TaggedInt {} -> t
     TagInt -> t
     TagEnum n -> TypeEnum (Name n)
     TagUnnamed n -> TypeUnnamed (Name n)
@@ -2069,6 +2113,7 @@ getDomainFromValue t = case t of
   TypeMSet ty -> TypeMSet $ getDomainFromValue ty
   TypeFunction ty ty' -> TypeFunction (getDomainFromValue ty) (getDomainFromValue ty')
   TypeSequence ty -> TypeSequence $ getDomainFromValue ty
+  TypePermutation ty -> TypePermutation $ getDomainFromValue ty
   TypeRelation tys -> TypeRelation $ map getDomainFromValue tys
   TypePartition ty -> TypePartition $ getDomainFromValue ty
   _ -> bug $ "Unknown member type" <+> pretty t
@@ -2150,6 +2195,7 @@ functionOps l = case l of
   L_image -> biFuncV imageArgs (const . funcRange)
   L_transform -> biFuncV transformArgs (const id)
   L_imageSet -> biFuncV imSetArgs (\a -> const $ TypeSet <$> funcRange a)
+  L_compose -> biFuncV composeArgs (const . funcRange)
   L_preImage -> biFuncV preImageArgs (\a -> const $ TypeSet <$> funcDomain a)
   L_inverse -> biFuncV inverseArgs (const2 TypeBool)
   L_freq -> biFuncV freqArgs (const2 tInt)
@@ -2362,15 +2408,16 @@ functionOps l = case l of
       return $ if null a' || null b' then Nothing else Just ()
 
     inverseArgs :: SArg -> SArg -> Validator ()
-    inverseArgs (r1, a) (r2, b) = do
-      let (fIn, fOut) = case (typeOf_ a, typeOf_ b) of
-            (TypeFunction fi fo, TypeFunction gi go) -> (mostDefinedS [fi, go], mostDefinedS [fo, gi])
-            (TypeFunction fi fo, _) -> (fi, fo)
-            (_, TypeFunction gi go) -> (gi, go)
-            _ -> (TypeAny, TypeAny)
-      a' <- unifyTypesFailing (TypeFunction fIn fOut) (r1, a)
-      b' <- unifyTypesFailing (TypeFunction fOut fIn) (r2, b)
-      return $ if null a' || null b' then Nothing else Just ()
+    inverseArgs (_r1, a) (_r2, b) =
+      case (typeOf_ a, typeOf_ b) of
+            (TypeFunction{}, TypeFunction{}) -> return (Just ())
+            (TypeFunction{}, _) -> return (Just ())
+            (_, TypeFunction{}) -> return (Just ())
+            (TypePermutation{}, TypePermutation{}) -> return (Just ())
+            (TypePermutation{}, _) -> return (Just ())
+            (_, TypePermutation{}) -> return (Just ())
+            _ -> return Nothing
+
     setPartArgs :: SArg -> SArg -> Validator ()
     setPartArgs (r1, a) (r2, b) = do
       let t = case (typeOf_ a, typeOf_ b) of
@@ -2459,10 +2506,15 @@ functionOps l = case l of
         TypeAny -> return $ Just TypeAny
         TypeFunction a _ -> return $ Just a
         TypeSequence _ -> return $ Just tInt
-        _ -> Nothing <$ raiseTypeError (r1 <!> ComplexTypeError "Function or Sequence" t1)
+        TypePermutation a -> return $ Just a
+        _ -> Nothing <$ raiseTypeError (r1 <!> ComplexTypeError "function, sequence or permutation" t1)
       case from of
         Just f -> unifyTypes f r2 >> return (pure ())
         Nothing -> return Nothing
+
+    composeArgs :: SArg -> SArg -> Validator ()
+    composeArgs _ _ = return (pure ())
+    -- TODO: validate compose
 
     sumArgs :: SArg -> Validator ()
     sumArgs (r, typeOf_ -> t') = do
@@ -2482,8 +2534,9 @@ functionOps l = case l of
     funcSeq (r, typeOf_ -> t') = case t' of
       TypeAny -> return $ pure ()
       TypeSequence _ -> return $ pure ()
+      TypePermutation _ -> return $ pure ()
       TypeFunction _ _ -> return $ pure ()
-      _ -> invalid $ r <!> ComplexTypeError "Function or Sequence" t'
+      _ -> invalid $ r <!> ComplexTypeError "function, sequence or permutation" t'
     funcDomain :: Maybe Type -> Maybe Type
     funcDomain (Just (TypeFunction a _)) = Just a
     funcDomain (Just (TypeSequence _)) = Just tInt
