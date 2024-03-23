@@ -68,7 +68,7 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
             [ T.isInfixOf msg combinedSR
               | msg <-
                   [ "type error: undefined identifier",
-                    "MiniZinc error: Memory violation detected and error message", -- minizinc
+                    "MiniZinc error: Memory violation detected", -- minizinc
                     "Check failed: ParseFlatzincFile",
                     "parse error: unexpected end-of-file after parsing number of clauses", -- kissat
                     "error: Cannot open file",
