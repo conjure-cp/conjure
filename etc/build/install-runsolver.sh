@@ -10,18 +10,22 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
+OS=$(uname)
 
-rm -rf tmp-install-runsolver
-mkdir tmp-install-runsolver
-pushd tmp-install-runsolver
-git clone https://github.com/utpalbora/runsolver.git
-cd runsolver
-git checkout $VERSION
-cd src
-make -j${PROCESSES}
-cp runsolver
-echo "runsolver executable is at ${BIN_DIR}/runsolver"
-ls -l ${BIN_DIR}/runsolver
-popd
-rm -rf tmp-install-runsolver
-
+if [ "$OS" == "Linux" ]; then
+    rm -rf tmp-install-runsolver
+    mkdir tmp-install-runsolver
+    pushd tmp-install-runsolver
+    git clone https://github.com/utpalbora/runsolver.git
+    cd runsolver
+    git checkout $VERSION
+    cd src
+    make -j${PROCESSES}
+    cp runsolver
+    echo "runsolver executable is at ${BIN_DIR}/runsolver"
+    ls -l ${BIN_DIR}/runsolver
+    popd
+    rm -rf tmp-install-runsolver
+else
+    echo "Your OS is (according to uname): ${OS} -- runsolver only works on linux."
+fi
