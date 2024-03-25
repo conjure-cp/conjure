@@ -752,8 +752,7 @@ ui = modes
             &= name "runsolver-memory-limit"
             &= groupname "runsolver"
             &= explicit
-            &= help "Use runsolver to limit total memory usage (in megabytes). \n\
-                    \This is the total memory usage: both RAM and swap space."
+            &= help "Use runsolver to limit total memory usage (Maximum RSS - in megabytes)."
         , logLevel
             = def
             &= name "log-level"

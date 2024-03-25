@@ -263,8 +263,7 @@
                                               The models should be inside the output directory (See -o).
  runsolver:
       --runsolver-cpu-time-limit=INT          Use runsolver to limit total CPU time (in seconds)
-      --runsolver-memory-limit=INT            Use runsolver to limit total memory usage (in megabytes).
-                                              This is the total memory usage: both RAM and swap space.
+      --runsolver-memory-limit=INT            Use runsolver to limit total memory usage (Maximum RSS - in megabytes).
  Options for other tools:
       --savilerow-options=ITEM                Options passed to Savile Row.
       --solver-options=ITEM                   Options passed to the backend solver.
