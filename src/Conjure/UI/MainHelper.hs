@@ -808,7 +808,10 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     (stdoutSR, solutions) <- partitionEithers <$>
         if null runsolverArgs
             then runHandle savilerowScriptName srArgs handler
-            else runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
+            else
+                if os /= "linux"
+                    then return [Left "runsolver is only supported on linux"]
+                    else runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
     srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
@@ -854,7 +857,10 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             (stdoutSR, solutions) <- partitionEithers <$>
                 if null runsolverArgs
                     then runHandle savilerowScriptName srArgs handler
-                    else runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
+                    else
+                        if os /= "linux"
+                            then return [Left "runsolver is only supported on linux"]
+                            else  runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
 
             srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
