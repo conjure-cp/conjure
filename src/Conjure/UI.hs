@@ -99,6 +99,8 @@ data UI
         , responses                  :: String
         , responsesRepresentation    :: String
         , solutionsInOneFile         :: Bool
+        , runsolverCPUTimeLimit      :: Maybe Int
+        , runsolverMemoryLimit       :: Maybe Int
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -739,6 +741,19 @@ ui = modes
             &= explicit
             &= help "Place all solutions in a single file instead of generating a separate file per solution.\n\
                     \Off by default."
+        , runsolverCPUTimeLimit
+            = def
+            &= name "runsolver-cpu-time-limit"
+            &= groupname "runsolver"
+            &= explicit
+            &= help "Use runsolver to limit total CPU time (in seconds)"
+        , runsolverMemoryLimit
+            = def
+            &= name "runsolver-memory-limit"
+            &= groupname "runsolver"
+            &= explicit
+            &= help "Use runsolver to limit total memory usage (in megabytes). \n\
+                    \This is the total memory usage: both RAM and swap space."
         , logLevel
             = def
             &= name "log-level"
