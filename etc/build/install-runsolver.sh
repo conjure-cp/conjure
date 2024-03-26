@@ -27,7 +27,7 @@ if [ "$OS" == "Linux" ]; then
     else
         echo "Build failed, trying again with a local patch"
         echo "This might happen when building with an old version of libnuma-dev"
-        patch runsolver.cc ${DIR}/etc/build/runsolver.patch
+        patch runsolver.cc ${DIR}/runsolver.patch
         make -j${PROCESSES}
     fi
     cp runsolver ${BIN_DIR}/runsolver
