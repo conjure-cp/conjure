@@ -7,6 +7,8 @@ VERSION='3f923c08285bdc5186f995296e1c6bffa0588710'
 set -o errexit
 set -o nounset
 
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
@@ -25,7 +27,7 @@ if [ "$OS" == "Linux" ]; then
     else
         echo "Build failed, trying again with a local patch"
         echo "This might happen when building with an old version of libnuma-dev"
-        patch runsolver.cc ../../runsolver.patch
+        patch runsolver.cc ${DIR}/etc/build/runsolver.patch
         make -j${PROCESSES}
     fi
     cp runsolver ${BIN_DIR}/runsolver
