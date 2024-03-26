@@ -24,19 +24,11 @@ else
     echo "        Exit code: ${EXITCODE}"
     echo "        Outputs saved to: make-solvers-${PID}.stdout and make-solvers-${PID}.stderr"
     echo ""
-    if [ -z ${GITHUB_ACTIONS} ]; then
-        echo "stdout was:"
-        cat make-solvers-${PID}.stdout
-        echo ""
-        echo "stderr was:"
-        cat make-solvers-${PID}.stderr
-    else
-        echo "Last 10 lines of the stdout was:"
-        tail -n10 make-solvers-${PID}.stdout
-        echo ""
-        echo "Last 10 lines of the stderr was:"
-        tail -n10 make-solvers-${PID}.stderr
-    fi
+    echo "stdout was:"
+    cat make-solvers-${PID}.stdout
+    echo ""
+    echo "stderr was:"
+    cat make-solvers-${PID}.stderr
     echo ""
     echo ""
     echo ""
