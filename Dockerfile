@@ -30,6 +30,7 @@ RUN apt-get install -y --no-install-recommends autoconf                 # needed
 RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
 RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
+RUN apt-get install -y --no-install-recommends libnuma-dev              # runsolver
 
 # Only copying the install*.sh scripts
 RUN mkdir -p etc
@@ -51,6 +52,7 @@ RUN PROCESSES=2 etc/build/install-open-wbo.sh
 RUN PROCESSES=2 etc/build/install-ortools.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
 RUN PROCESSES=2 etc/build/install-z3.sh
+RUN PROCESSES=2 etc/build/install-runsolver.sh
 
 # An attempt to cache more
 COPY Makefile Makefile

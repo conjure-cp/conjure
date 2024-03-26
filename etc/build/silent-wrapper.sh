@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# set -o errexit
-# set -o nounset
+set -o errexit
+set -o nounset
 
 if [ $# -ne 1 ]; then
     echo "Only provide a single argument, the path to a bash script."
     exit 1
 fi
+
+export CI=${CI:-false}
 
 echo "Running $1"
 
@@ -24,11 +26,19 @@ else
     echo "        Exit code: ${EXITCODE}"
     echo "        Outputs saved to: make-solvers-${PID}.stdout and make-solvers-${PID}.stderr"
     echo ""
-    echo "Last 10 lines of the stdout was:"
-    tail -n10 make-solvers-${PID}.stdout
-    echo ""
-    echo "Last 10 lines of the stderr was:"
-    tail -n10 make-solvers-${PID}.stderr
+    if ${CI}; then
+        echo "stdout was:"
+        cat make-solvers-${PID}.stdout
+        echo ""
+        echo "stderr was:"
+        cat make-solvers-${PID}.stderr
+    else
+        echo "Last 10 lines of the stdout was:"
+        tail -n10 make-solvers-${PID}.stdout
+        echo ""
+        echo "Last 10 lines of the stderr was:"
+        tail -n10 make-solvers-${PID}.stderr
+    fi
     echo ""
     echo ""
     echo ""

@@ -57,6 +57,11 @@ jobs:
         run: brew install gperf
         if: runner.os == 'macOS'
 
+      - name: Installing dependencies (libnuma-dev) on Linux - needed for runsolver
+        shell: bash
+        run: sudo apt-get install -y libnuma-dev
+        if: runner.os == 'Linux'
+
       - name: Building solvers
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers

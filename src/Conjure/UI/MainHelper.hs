@@ -800,10 +800,18 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     when (logLevel >= LogDebug) $ do
         liftIO $ putStrLn "Using the following options for Savile Row:"
         liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
-    (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
-                                (liftIO . srStdoutHandler
-                                    (outBase, modelPath, "<no param file>", ui)
-                                    tr (1::Int))
+    let handler = liftIO . srStdoutHandler
+                    (outBase, modelPath, "<no param file>", ui)
+                    tr (1::Int)
+    let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
+                        maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit
+    (stdoutSR, solutions) <- partitionEithers <$>
+        if null runsolverArgs
+            then runHandle savilerowScriptName srArgs handler
+            else
+                if os /= "linux"
+                    then return [Left "runsolver is only supported on linux"]
+                    else runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
     srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
@@ -841,10 +849,19 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             when (logLevel >= LogDebug) $ do
                 liftIO $ putStrLn "Using the following options for Savile Row:"
                 liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
-            (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
-                                        (liftIO . srStdoutHandler
-                                            (outBase, modelPath, paramPath, ui)
-                                            tr (1::Int))
+            let handler = liftIO . srStdoutHandler
+                            (outBase, modelPath, paramPath, ui)
+                            tr (1::Int)
+            let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
+                                maybe [] (\ limit -> ["-V", show limit]) runsolverMemoryLimit
+            (stdoutSR, solutions) <- partitionEithers <$>
+                if null runsolverArgs
+                    then runHandle savilerowScriptName srArgs handler
+                    else
+                        if os /= "linux"
+                            then return [Left "runsolver is only supported on linux"]
+                            else  runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
+
             srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
