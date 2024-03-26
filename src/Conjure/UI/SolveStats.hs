@@ -75,7 +75,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
                     "kissat: error: can not read", -- kissat
                     "kissat: fatal error: maximum arena capacity", -- kissat
                     "Error: syntax error, unexpected ]]", -- cplex
-                    "*** Check failure stack trace: ***" -- or-tools
+                    "*** Check failure stack trace: ***", -- or-tools
+                    "Error: evaluation error: Index set mismatch."
                   ]
             ] =
             Error
