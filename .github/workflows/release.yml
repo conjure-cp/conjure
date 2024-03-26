@@ -84,7 +84,7 @@ jobs:
 
       - name: Installing dependencies (libnuma-dev) on Linux - needed for runsolver
         shell: bash
-        run: sudo apt-get install -y libnuma-dev=2.0.16-1
+        run: sudo apt-get install -y libnuma-dev
         if: runner.os == 'Linux'
 
       - name: Build solvers

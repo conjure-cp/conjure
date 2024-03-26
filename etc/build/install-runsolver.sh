@@ -20,7 +20,14 @@ if [ "$OS" == "Linux" ]; then
     cd runsolver
     git checkout $VERSION
     cd src
-    make -j${PROCESSES}
+    if make -j${PROCESSES} ; then
+        echo "Built."
+    else
+        echo "Build failed, trying again with a local patch"
+        echo "This might happen when building with an old version of libnuma-dev"
+        patch runsolver.cc ../../runsolver.patch
+        make -j${PROCESSES}
+    fi
     cp runsolver ${BIN_DIR}/runsolver
     echo "runsolver executable is at ${BIN_DIR}/runsolver"
     ls -l ${BIN_DIR}/runsolver
