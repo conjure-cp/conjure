@@ -804,11 +804,12 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                     (outBase, modelPath, "<no param file>", ui)
                     tr (1::Int)
     let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
-                        maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit
+                        maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit  ++
+                        ["-v", outputDirectory </> outBase ++ ".runsolver.logs"]
     (stdoutSR, solutions) <- partitionEithers <$>
-        if null runsolverArgs
-            then runHandle savilerowScriptName srArgs handler
-            else
+        case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
+            (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
+            _ ->
                 if os /= "linux"
                     then return [Left "runsolver is only supported on linux"]
                     else runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
@@ -853,11 +854,12 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                             (outBase, modelPath, paramPath, ui)
                             tr (1::Int)
             let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
-                                maybe [] (\ limit -> ["-V", show limit]) runsolverMemoryLimit
+                                maybe [] (\ limit -> ["-V", show limit]) runsolverMemoryLimit  ++
+                        ["-v", outputDirectory </> outBase ++ ".runsolver.logs"]
             (stdoutSR, solutions) <- partitionEithers <$>
-                if null runsolverArgs
-                    then runHandle savilerowScriptName srArgs handler
-                    else
+                case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
+                    (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
+                    _ ->
                         if os /= "linux"
                             then return [Left "runsolver is only supported on linux"]
                             else  runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
