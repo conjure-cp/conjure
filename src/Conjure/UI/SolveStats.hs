@@ -93,6 +93,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
         | M.lookup "SavileRowTimeOut" savilerowInfo == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" savilerowInfo == Just "1" = TimeOut
         | M.lookup "SolverTimeOut" savilerowInfo == Just "1" = TimeOut
+        | M.lookup "MEMOUT" runsolverInfo == Just "true" = MemOut
+        | M.lookup "TIMEOUT" runsolverInfo == Just "true" = TimeOut
         | exitCodeSR /= 0 = Error
         | otherwise = OK
 
