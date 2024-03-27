@@ -9,13 +9,13 @@
 # Setting up
 FROM ubuntu:23.10 AS builder
 ENV DEBIAN_FRONTEND noninteractive
-WORKDIR /conjure/
+WORKDIR /conjure
 
 # All binaries will end up in /root/.local/bin
 RUN mkdir -p /root/.local/bin
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc/
+ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc
 # Dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
@@ -85,10 +85,9 @@ FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc/
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
-RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
-RUN apt-get install -y --no-install-recommends libnuma-dev              # runsolver
+ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
+RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
+RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev              # runsolver
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin
