@@ -19,7 +19,6 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
-import Conjure.UI.SolveStats ( mkSolveStats )
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
@@ -805,7 +804,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                     tr (1::Int)
     let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
                         maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit  ++
-                        ["-v", outputDirectory </> outBase ++ ".runsolver.logs"]
+                        ["-v", outputDirectory </> outBase ++ ".runsolver-info"]
     (stdoutSR, solutions) <- partitionEithers <$>
         case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
             (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
@@ -855,7 +854,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                             tr (1::Int)
             let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
                                 maybe [] (\ limit -> ["-V", show limit]) runsolverMemoryLimit  ++
-                        ["-v", outputDirectory </> outBase ++ ".runsolver.logs"]
+                        ["-v", outputDirectory </> outBase ++ ".runsolver-info"]
             (stdoutSR, solutions) <- partitionEithers <$>
                 case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
                     (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
@@ -1132,10 +1131,12 @@ srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
     let combinedSR = T.unlines [stdoutSR, stderrSR]
 
     liftIO $ do
-        let srInfoFilename = mkFilename ".eprime-info"
+        let savilerowInfoFilename = mkFilename ".eprime-info"
+        let runsolverInfoFilename = mkFilename ".runsolver-info"
         let statsFilename = mkFilename ".stats.json"
-        srInfoContent <- liftIO $ readFileIfExists srInfoFilename
-        stats <- mkSolveStats ui (exitCodeSR, stdoutSR, stderrSR) (fromMaybe "" srInfoContent)
+        savilerowInfoContent <- liftIO $ readFileIfExists savilerowInfoFilename
+        runsolverInfoContent <- liftIO $ readFileIfExists runsolverInfoFilename
+        stats <- mkSolveStats ui (exitCodeSR, stdoutSR, stderrSR) (fromMaybe "" savilerowInfoContent) (fromMaybe "" runsolverInfoContent)
         writeFile statsFilename (render lineWidth (toJSON stats))
 
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->

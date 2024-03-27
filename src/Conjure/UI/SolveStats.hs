@@ -17,6 +17,7 @@ data SolveStats = SolveStats
   { status :: SolveStatus,
     totalTime :: Maybe Double,
     savilerowInfo :: M.HashMap String String,
+    runsolverInfo :: M.HashMap String String,
     essence :: FilePath,
     essenceParams :: [FilePath],
     useExistingModels :: [FilePath],
@@ -59,10 +60,15 @@ instance ToJSON SavileRowLogs where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SavileRowLogs where parseJSON = genericParseJSON jsonOptions
 
-mkSolveStats :: UI -> (Int, Text, Text) -> String -> IO SolveStats
-mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
-  let combinedSR = T.unlines [stdoutSR, stderrSR]
-  let info = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines rawInfo)]
+mkSolveStats :: UI -> (Int, Text, Text) -> String -> String -> IO SolveStats
+mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runsolverInfoText = do
+  let
+      combinedSR = T.unlines [stdoutSR, stderrSR]
+
+      savilerowInfo = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines savilerowInfoText)]
+
+      runsolverInfo = M.fromList [(k, v) | [k, v] <- map (splitOn "=") (lines runsolverInfoText)]
+
       status
         | or
             [ T.isInfixOf msg combinedSR
@@ -84,17 +90,18 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
         | T.isInfixOf "Out of Memory" combinedSR = MemOut
         | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
         | T.isInfixOf "time out: time limit reached" combinedSR = TimeOut
-        | M.lookup "SavileRowTimeOut" info == Just "1" = TimeOut
-        | M.lookup "SavileRowClauseOut" info == Just "1" = TimeOut
-        | M.lookup "SolverTimeOut" info == Just "1" = TimeOut
+        | M.lookup "SavileRowTimeOut" savilerowInfo == Just "1" = TimeOut
+        | M.lookup "SavileRowClauseOut" savilerowInfo == Just "1" = TimeOut
+        | M.lookup "SolverTimeOut" savilerowInfo == Just "1" = TimeOut
         | exitCodeSR /= 0 = Error
         | otherwise = OK
+
       totalTime
-        | Just srTotalTime <- M.lookup "SavileRowTotalTime" info >>= readMay,
-          Just solverTotalTime <- M.lookup "SolverTotalTime" info >>= readMay =
+        | Just srTotalTime <- M.lookup "SavileRowTotalTime" savilerowInfo >>= readMay,
+          Just solverTotalTime <- M.lookup "SolverTotalTime" savilerowInfo >>= readMay =
             Just (srTotalTime + solverTotalTime)
         | otherwise = Nothing
-      savilerowInfo = info
+
   computer <- getHostName
   timestamp <- getCurrentTime
   let conjureVersion = versionLine
@@ -106,4 +113,4 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) rawInfo = do
             stderr = if T.null stderrSR then Nothing else Just (lines (textToString stderrSR))
           }
   return SolveStats {..}
-mkSolveStats _ _ _ = bug "mkSolveStats"
+mkSolveStats _ _ _ _ = bug "mkSolveStats"
