@@ -1,13 +1,13 @@
 diff --git a/src/runsolver.cc b/src/runsolver.cc
-index f42c9a1..312c985 100644
+index e2a7902..5696a34 100644
 --- a/src/runsolver.cc
 +++ b/src/runsolver.cc
-@@ -906,7 +906,7 @@ void numaInfo() {
+@@ -916,7 +916,7 @@ void numaInfo() {
      return;
  
    int nbNodes = numa_num_configured_nodes();
 -  long mem, memFree;
 +  long long mem, memFree;
  
+   if (!quiet_progress) {
    cout << "NUMA information:\n";
-   cout << "  number of nodes: " << nbNodes << endl;

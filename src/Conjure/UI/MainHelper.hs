@@ -805,7 +805,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                     tr (1::Int)
     let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
                         maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit  ++
-                        ["-v", outputDirectory </> outBase ++ ".runsolver-info"]
+                        ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
     (stdoutSR, solutions) <- partitionEithers <$>
         case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
             (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
@@ -855,7 +855,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                             tr (1::Int)
             let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
                                 maybe [] (\ limit -> ["-V", show limit]) runsolverMemoryLimit  ++
-                        ["-v", outputDirectory </> outBase ++ ".runsolver-info"]
+                        ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
             (stdoutSR, solutions) <- partitionEithers <$>
                 case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
                     (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler

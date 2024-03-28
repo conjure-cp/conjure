@@ -2,7 +2,7 @@
 
 # version as of 25 March 2024
 # alas, none of the published releases compile correctly
-VERSION='3f923c08285bdc5186f995296e1c6bffa0588710'
+VERSION='add1db71b5ecbeb9d2b1329d242dff0ada18809f'
 
 set -o errexit
 set -o nounset
@@ -18,7 +18,7 @@ if [ "$OS" == "Linux" ]; then
     rm -rf tmp-install-runsolver
     mkdir tmp-install-runsolver
     pushd tmp-install-runsolver
-    git clone https://github.com/utpalbora/runsolver.git
+    git clone https://github.com/ozgurakgun/runsolver.git
     cd runsolver
     git checkout $VERSION
     cd src
