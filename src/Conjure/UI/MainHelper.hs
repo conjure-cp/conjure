@@ -804,11 +804,12 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                     (outBase, modelPath, "<no param file>", ui)
                     tr (1::Int)
     let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
-                        maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit  ++
+                        maybe [] (\ limit -> ["-W", show limit]) runsolverWallTimeLimit ++
+                        maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit ++
                         ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
     (stdoutSR, solutions) <- partitionEithers <$>
-        case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
-            (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
+        case (runsolverCPUTimeLimit, runsolverWallTimeLimit, runsolverMemoryLimit) of
+            (Nothing, Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
             _ ->
                 if os /= "linux"
                     then return [Left "runsolver is only supported on linux"]
@@ -854,11 +855,12 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                             (outBase, modelPath, paramPath, ui)
                             tr (1::Int)
             let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
-                                maybe [] (\ limit -> ["-V", show limit]) runsolverMemoryLimit  ++
-                        ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
+                                maybe [] (\ limit -> ["-W", show limit]) runsolverWallTimeLimit ++
+                                maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit ++
+                                ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
             (stdoutSR, solutions) <- partitionEithers <$>
-                case (runsolverCPUTimeLimit, runsolverMemoryLimit) of
-                    (Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
+                case (runsolverCPUTimeLimit, runsolverWallTimeLimit, runsolverMemoryLimit) of
+                    (Nothing, Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
                     _ ->
                         if os /= "linux"
                             then return [Left "runsolver is only supported on linux"]

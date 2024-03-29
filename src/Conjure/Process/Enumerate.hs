@@ -144,6 +144,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , copySolutions                 = False
             , solutionsInOneFile            = False
             , runsolverCPUTimeLimit         = Nothing
+            , runsolverWallTimeLimit        = Nothing
             , runsolverMemoryLimit          = Nothing
             , logLevel                      = LogNone
             -- default values for the rest

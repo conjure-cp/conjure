@@ -100,6 +100,7 @@ data UI
         , responsesRepresentation    :: String
         , solutionsInOneFile         :: Bool
         , runsolverCPUTimeLimit      :: Maybe Int
+        , runsolverWallTimeLimit     :: Maybe Int
         , runsolverMemoryLimit       :: Maybe Int
         -- flags related to logging
         , logLevel                   :: LogLevel
@@ -747,6 +748,12 @@ ui = modes
             &= groupname "runsolver"
             &= explicit
             &= help "Use runsolver to limit total CPU time (in seconds)"
+        , runsolverWallTimeLimit
+            = def
+            &= name "runsolver-wall-time-limit"
+            &= groupname "runsolver"
+            &= explicit
+            &= help "Use runsolver to limit total elapsed time (in seconds)"
         , runsolverMemoryLimit
             = def
             &= name "runsolver-memory-limit"
