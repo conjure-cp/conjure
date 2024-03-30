@@ -818,7 +818,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                         when (logLevel >= LogDebug) $ do
                             liftIO $ putStrLn "Using the following options for Savile Row:"
                             liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
-                                                 ++ "savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                                                 ++ " savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
                         runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
     srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
@@ -875,7 +875,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                                 when (logLevel >= LogDebug) $ do
                                     liftIO $ putStrLn "Using the following options for Savile Row:"
                                     liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
-                                                        ++ "savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                                                        ++ " savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
                                 runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
 
             srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
