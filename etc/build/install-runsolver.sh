@@ -2,7 +2,7 @@
 
 # version as of 25 March 2024
 # alas, none of the published releases compile correctly
-VERSION='add1db71b5ecbeb9d2b1329d242dff0ada18809f'
+VERSION='42f77c75fc511341f475f378f7bc1e5b3d708afb'
 
 set -o errexit
 set -o nounset
