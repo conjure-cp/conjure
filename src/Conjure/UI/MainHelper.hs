@@ -797,9 +797,6 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     let outBase = (dropExtension . snd . splitFileName) modelPath
     srArgs <- liftIO $ srMkArgs ui outBase modelPath
     let tr = translateSolution eprimeModel def
-    when (logLevel >= LogDebug) $ do
-        liftIO $ putStrLn "Using the following options for Savile Row:"
-        liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
     let handler = liftIO . srStdoutHandler
                     (outBase, modelPath, "<no param file>", ui)
                     tr (1::Int)
@@ -809,11 +806,20 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                         ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
     (stdoutSR, solutions) <- partitionEithers <$>
         case (runsolverCPUTimeLimit, runsolverWallTimeLimit, runsolverMemoryLimit) of
-            (Nothing, Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
+            (Nothing, Nothing, Nothing) -> do
+                when (logLevel >= LogDebug) $ do
+                    liftIO $ putStrLn "Using the following options for Savile Row:"
+                    liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                runHandle savilerowScriptName srArgs handler
             _ ->
                 if os /= "linux"
                     then return [Left "runsolver is only supported on linux"]
-                    else runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
+                    else do
+                        when (logLevel >= LogDebug) $ do
+                            liftIO $ putStrLn "Using the following options for Savile Row:"
+                            liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
+                                                 ++ "savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                        runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
     srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
@@ -848,9 +854,6 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srArgsBase
             let tr = translateSolution eprimeModel essenceParam
-            when (logLevel >= LogDebug) $ do
-                liftIO $ putStrLn "Using the following options for Savile Row:"
-                liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
             let handler = liftIO . srStdoutHandler
                             (outBase, modelPath, paramPath, ui)
                             tr (1::Int)
@@ -860,11 +863,20 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                                 ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
             (stdoutSR, solutions) <- partitionEithers <$>
                 case (runsolverCPUTimeLimit, runsolverWallTimeLimit, runsolverMemoryLimit) of
-                    (Nothing, Nothing, Nothing) -> runHandle savilerowScriptName srArgs handler
+                    (Nothing, Nothing, Nothing) -> do
+                        when (logLevel >= LogDebug) $ do
+                            liftIO $ putStrLn "Using the following options for Savile Row:"
+                            liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                        runHandle savilerowScriptName srArgs handler
                     _ ->
                         if os /= "linux"
                             then return [Left "runsolver is only supported on linux"]
-                            else  runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
+                            else do
+                                when (logLevel >= LogDebug) $ do
+                                    liftIO $ putStrLn "Using the following options for Savile Row:"
+                                    liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
+                                                        ++ "savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                                runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
 
             srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
