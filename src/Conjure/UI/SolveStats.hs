@@ -86,7 +86,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
                     "kissat: fatal error: maximum arena capacity", -- kissat
                     "Error: syntax error, unexpected ]]", -- cplex
                     "*** Check failure stack trace: ***", -- or-tools
-                    "Error: evaluation error: Index set mismatch."
+                    "Error: evaluation error: Index set mismatch.",
+                    "Maximum memory exceeded" -- for when runsolver prints this message but won't set MEMOUT=true for some reason
                   ]
             ] =
             Error
