@@ -38,7 +38,11 @@ instance ToJSON SolveStats where toJSON = genericToJSON jsonOptions
 
 instance FromJSON SolveStats where parseJSON = genericParseJSON jsonOptions
 
-data SolveStatus = OK | TimeOut | MemOut | Error
+-- OK: solved, can be sat or unsat.
+-- Invalid: instance is not valid.
+-- TimeOut/MemOut: what they sound like.
+-- Error: could be a bug, but could also be to do with a very large encoding.
+data SolveStatus = OK | Invalid | TimeOut | MemOut | Error
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Hashable SolveStatus
@@ -90,6 +94,7 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
         | T.isInfixOf "Out of Memory" combinedSR = MemOut
         | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
         | T.isInfixOf "time out: time limit reached" combinedSR = TimeOut
+        | T.isInfixOf "ERROR: In statement: where false" combinedSR = Invalid
         | M.lookup "SavileRowTimeOut" savilerowInfo == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" savilerowInfo == Just "1" = TimeOut
         | M.lookup "SolverTimeOut" savilerowInfo == Just "1" = TimeOut
