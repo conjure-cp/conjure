@@ -285,7 +285,10 @@ data Lexeme
 
     -- type functional
     | L_transform
+
     | L_fromSolution
+    | L_dominanceRelation
+    | L_incomparabilityFunction
 
     -- helper
     | L_Missing MissingStructuralElements
@@ -509,9 +512,11 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_pred, "pred" )
     , ( L_succ, "succ" )
 
-
     , ( L_transform, "transform")
+
     , ( L_fromSolution, "fromSolution" )
+    , ( L_dominanceRelation, "dominanceRelation" )
+    , ( L_incomparabilityFunction, "incomparabilityFunction" )
 
     , ( L_SpecialCase, "?#")
     ]

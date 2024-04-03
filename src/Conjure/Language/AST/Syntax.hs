@@ -61,6 +61,8 @@ data StatementNode
     | WhereStatement WhereStatementNode
     | ObjectiveStatement ObjectiveStatementNode
     | HeuristicStatement SToken ExpressionNode
+    | DominanceRelationStatement SToken ExpressionNode
+    | IncomparabilityFunction SToken ExpressionNode
     | UnexpectedToken LToken
     deriving (Show, Data , Typeable)
 instance Pretty StatementNode where
@@ -71,6 +73,8 @@ instance Pretty StatementNode where
         WhereStatement wsn -> pretty wsn
         ObjectiveStatement osn -> pretty osn
         HeuristicStatement lt en -> pretty lt <+> pretty en
+        DominanceRelationStatement t ex -> pretty t <+> pretty ex
+        IncomparabilityFunction t ex -> pretty t <+> pretty ex
         UnexpectedToken _ -> emptyDoc
 
 data SuchThatStatementNode

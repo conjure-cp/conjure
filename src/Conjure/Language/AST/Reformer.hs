@@ -34,6 +34,8 @@ instance HighLevelTree StatementNode where
         WhereStatement wsn -> makeTree wsn
         ObjectiveStatement osn -> makeTree osn
         HeuristicStatement l1 ex -> makeTree l1 <> makeTree ex
+        DominanceRelationStatement s ex -> makeTree s <> makeTree ex
+        IncomparabilityFunction s ex -> makeTree s <> makeTree ex
         UnexpectedToken tok -> makeTree tok
 
 instance HighLevelTree DeclarationStatementNode where

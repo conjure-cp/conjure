@@ -305,6 +305,8 @@ functionals =
     , L_powerSet
 
     , L_fromSolution
+    , L_dominanceRelation
+    , L_incomparabilityFunction
 
     ]
 

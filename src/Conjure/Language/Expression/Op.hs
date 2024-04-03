@@ -123,7 +123,6 @@ mkOp op xs = case op of
                                                                          (arg xs 1 "inverse")
             L_freq         -> inject $ MkOpFreq         $ OpFreq         (arg xs 0 "freq")
                                                                          (arg xs 1 "freq")
-            L_fromSolution -> inject $ MkOpFromSolution $ OpFromSolution (arg xs 0 "fromSolution")
             L_hist         -> inject $ MkOpHist         $ OpHist         (arg xs 0 "hist")
             L_parts        -> inject $ MkOpParts        $ OpParts        (arg xs 0 "parts")
             L_together     -> inject $ MkOpTogether     $ OpTogether     (arg xs 0 "together")
@@ -148,6 +147,9 @@ mkOp op xs = case op of
                           let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut "flatten" n)
                           in  inject $ MkOpFlatten      $ OpFlatten      (Just n') m
                      _     -> bug "flatten takes 1 or 2 arguments."
+
+            L_fromSolution -> inject $ MkOpFromSolution $ OpFromSolution (arg xs 0 "fromSolution")
+
             _ -> bug ("Unknown lexeme for function type operator:" <+> pretty (show lex))
 
 

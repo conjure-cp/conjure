@@ -65,6 +65,7 @@ parseTopLevel =
         <|> parseWhere
         <|> parseObjective
         <|> parseHeuristic
+        <|> parseDominanceRelation
         <|> UnexpectedToken <$> makeUnexpected
 
 
@@ -182,6 +183,12 @@ parseObjectiveStatement = do
         (ETok {lexeme=L_minimising}) -> ObjectiveMin (StrictToken [] s) e
         _ -> ObjectiveMax (StrictToken [] s) e
     <?> "Objective Statement"
+
+parseDominanceRelation :: Parser StatementNode
+parseDominanceRelation =  do
+    lDomRel <- need L_dominanceRelation
+    expr <- parseExpression
+    return $ DominanceRelationStatement lDomRel expr
 
 
 pEnding :: Parser SToken
