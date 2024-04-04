@@ -31,7 +31,7 @@ streamliningToStdout model = do
 
         showStr :: String -> Doc
         showStr = pretty . show
-        
+
     streamliners <- streamlining model
 
     liftIO $ print $ prettyList prBraces ","
@@ -371,7 +371,7 @@ setAll innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -397,7 +397,7 @@ setAtMostOne innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -421,7 +421,7 @@ setHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -446,7 +446,7 @@ setApproxHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -474,7 +474,7 @@ setMoreThanHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -501,7 +501,7 @@ setLessThanHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -569,8 +569,8 @@ binRelAttributes x = do
                                 , ( BinRelAttr_Equivalence   , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
                                 , ( BinRelAttr_PartialOrder  , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
                                 ]
-            , softness <- [Nothing, Just 2, Just 4, Just 8, Just 16, Just 32]
             , let grp = show attr
+            , softness <- [Nothing, Just 2, Just 4, Just 8, Just 16, Just 32]
             ]
         _ -> noStreamliner
 
