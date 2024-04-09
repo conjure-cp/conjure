@@ -41,6 +41,16 @@ rule_Equality = "permutation-equality" `namedRule` theRule where
            , return [essence| toSet(&p) = toSet(&q) |]
            )
 
+rule_Disequality :: Rule
+rule_Disequality = "permutation-disequality" `namedRule` theRule where
+  theRule e = do
+    (p,q)  <- match opNeq e
+    TypePermutation{} <- typeOf p
+    TypePermutation{} <- typeOf q
+    return ( "Horizontal rule for permutation disequality"
+           , return [essence| toSet(&p) != toSet(&q) |]
+           )
+
 
 rule_Comprehension :: Rule
 rule_Comprehension = "permutation-comprehension" `namedRule` theRule where
