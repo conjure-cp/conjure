@@ -88,7 +88,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
                     "*** Check failure stack trace: ***", -- or-tools
                     "Error: evaluation error: Index set mismatch.",
                     "Maximum memory exceeded", -- for when runsolver prints this message but won't set MEMOUT=true for some reason
-                    "Savile Row killed by: java.lang.AssertionError"
+                    "Savile Row killed by: java.lang.AssertionError",
+                    "java.lang.ClassCastException"
                   ]
             ] =
             Error
