@@ -66,8 +66,7 @@ instance FromJSON SavileRowLogs where parseJSON = genericParseJSON jsonOptions
 
 mkSolveStats :: UI -> (Int, Text, Text) -> String -> String -> IO SolveStats
 mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runsolverInfoText = do
-  let
-      combinedSR = T.unlines [stdoutSR, stderrSR]
+  let combinedSR = T.unlines [stdoutSR, stderrSR]
 
       savilerowInfo = M.fromList [(k, v) | [k, v] <- map (splitOn ":") (lines savilerowInfoText)]
 
@@ -87,22 +86,34 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
                     "Error: syntax error, unexpected ]]", -- cplex
                     "*** Check failure stack trace: ***", -- or-tools
                     "Error: evaluation error: Index set mismatch.",
-                    "Maximum memory exceeded", -- for when runsolver prints this message but won't set MEMOUT=true for some reason
                     "Savile Row killed by: java.lang.AssertionError",
                     "java.lang.ClassCastException"
                   ]
             ] =
             Error
-        | T.isInfixOf "java.lang.OutOfMemoryError" combinedSR = MemOut
-        | T.isInfixOf "Out of Memory" combinedSR = MemOut
-        | T.isInfixOf "Savile Row timed out." combinedSR = TimeOut
-        | T.isInfixOf "time out: time limit reached" combinedSR = TimeOut
+        | or
+            [ T.isInfixOf msg combinedSR
+              | msg <-
+                  [ "java.lang.OutOfMemoryError",
+                    "ERROR: Out of Memory",
+                    "Maximum memory exceeded" -- for when runsolver prints this message but won't set MEMOUT=true for some reason
+                  ]
+            ] =
+            MemOut
+        | or
+            [ T.isInfixOf msg combinedSR
+              | msg <-
+                  [ "Savile Row timed out.",
+                    "time out: time limit reached"
+                  ]
+            ] =
+            TimeOut
         | T.isInfixOf "ERROR: In statement: where false" combinedSR = Invalid
+        | M.lookup "MEMOUT" runsolverInfo == Just "true" = MemOut
+        | M.lookup "TIMEOUT" runsolverInfo == Just "true" = TimeOut
         | M.lookup "SavileRowTimeOut" savilerowInfo == Just "1" = TimeOut
         | M.lookup "SavileRowClauseOut" savilerowInfo == Just "1" = TimeOut
         | M.lookup "SolverTimeOut" savilerowInfo == Just "1" = TimeOut
-        | M.lookup "MEMOUT" runsolverInfo == Just "true" = MemOut
-        | M.lookup "TIMEOUT" runsolverInfo == Just "true" = TimeOut
         | exitCodeSR /= 0 = Error
         | otherwise = OK
 
