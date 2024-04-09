@@ -27,7 +27,7 @@ followAliases m (isAlias -> Just x) = followAliases m x
 followAliases m x = m x
 
 tryMatch :: (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
-tryMatch f = match f
+tryMatch = match
 
 matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
 matchOr defOut f inp = fromMaybe defOut (match f inp)
@@ -1374,7 +1374,7 @@ functionLiteral _ =
 
 permutationLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
-    => Proxy (m :: * -> *)
+    => Proxy (m :: T.Type -> T.Type )
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
        )
