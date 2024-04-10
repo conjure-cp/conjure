@@ -2868,7 +2868,7 @@ addUnnamedSymmetryBreaking mode model = do
                 buildPermutationChain [] vars = vars
                 buildPermutationChain (p:ps) vars =
                         let applied = buildPermutationChain ps vars
-                        in  [essence| image(&p, &applied) |]
+                        in  [essence| transform(&p, &applied) |]
 
                 nestInBubbles :: Expression -> Int -> [(Expression,Statement)] -> Expression -> Expression 
                 nestInBubbles _ _ [] expr = expr
