@@ -2945,7 +2945,7 @@ addUnnamedSymmetryBreaking mode model = do
                     let applied = combinedPermApply auxSuffix (perm:perms)
                     return [essence|
                                 and([ &applied
-                                    | &iPat : sequence of &u
+                                    | &iPat : permutation of &u
                                     ])
                            |]
                 mkGenerator_AllPermutations auxSuffix perms ((u, _uSize):us) = do
@@ -2954,7 +2954,7 @@ addUnnamedSymmetryBreaking mode model = do
                     applied <- mkGenerator_AllPermutations auxSuffix (perm:perms) us
                     return [essence|
                                 and([ &applied
-                                    | &iPat : sequence of &u
+                                    | &iPat : permutation of &u
                                     ])
                            |]
 
