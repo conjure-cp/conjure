@@ -2,6 +2,7 @@
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Conjure.Util.Permutation (size, toCycles, fromCycles, toFunction)
+import Conjure.Rules.DontCare
 
 rule_Cardinality_Literal :: Rule
 rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule where
@@ -151,10 +152,11 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
                                       (fromInt (fromIntegral (length srtdel)))
                 matLit = make matrixLiteral (TypeMatrix (TypeInt TagInt) inner)
                                              matIdx ([ [essence| &i |] ] ++ (f <$> srtdel))
+            minval <- minimum_int_value_in_domain i
             return
                ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                , do
-                 return [essence| &matLit[&indexr] |]
+                 return [essence| catchUndef(&matLit[&indexr], &minval) |]
     
                )
           else failDoc $ "Permutation applied to a type its inner does not unify with" 
