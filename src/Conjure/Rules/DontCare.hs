@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Rules.DontCare where
 
@@ -17,23 +19,33 @@ rule_Bool = "dontCare-bool" `namedRule` theRule where
             )
 
 
+minimum_int_value_in_domain ::
+    MonadFail m =>
+    MonadFailDoc m =>
+    NameGen m =>
+    (?typeCheckerMode::TypeCheckerMode) =>
+    Expression -> m Expression
+minimum_int_value_in_domain x = do
+    TypeInt t <- typeOf x
+    xDomain <- domainOf x
+    let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
+    return $ reTag t $ case xDomain of
+            DomainInt _ [] -> raiseBug
+            DomainInt _ (r:_) -> case r of
+                RangeOpen -> raiseBug
+                RangeSingle v -> v
+                RangeLowerBounded v -> v
+                RangeUpperBounded v -> v
+                RangeBounded v _ -> v
+            DomainIntE v -> [essence| min(&v) |]
+            _ -> raiseBug
+
+
 rule_Int :: Rule
 rule_Int = "dontCare-int" `namedRule` theRule where
     theRule p = do
-        x         <- match opDontCare p
-        TypeInt t <- typeOf x
-        xDomain   <- domainOf x
-        let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
-        let val = reTag t $ case xDomain of
-                DomainInt _ [] -> raiseBug
-                DomainInt _ (r:_) -> case r of
-                    RangeOpen -> raiseBug
-                    RangeSingle v -> v
-                    RangeLowerBounded v -> v
-                    RangeUpperBounded v -> v
-                    RangeBounded v _ -> v
-                DomainIntE v -> [essence| min(&v) |]
-                _ -> raiseBug
+        x <- match opDontCare p
+        val <- minimum_int_value_in_domain x
         return
             ( "dontCare value for this integer is" <+> pretty val
             , return $ make opEq x val
