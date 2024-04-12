@@ -104,7 +104,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
             [ T.isInfixOf msg combinedSR
               | msg <-
                   [ "Savile Row timed out.",
-                    "time out: time limit reached"
+                    "time out: time limit reached",
+                    "Received SIGTERM or SIGINT, killing child" -- for when runsolver prints this message but won't set MEMOUT=true or TIMEOUT=true for some reason
                   ]
             ] =
             TimeOut
