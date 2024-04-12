@@ -363,9 +363,7 @@ remainingWIP ::
     ModelWIP ->
     m [Question]
 remainingWIP config (StartOver model)
-    | Just modelZipper <- mkModelZipper model = do
-        qs <- remaining config modelZipper (mInfo model)
-        return qs
+    | Just modelZipper <- mkModelZipper model = remaining config modelZipper (mInfo model)
     | otherwise = return []
 remainingWIP config wip@(TryThisFirst modelZipper info) = do
     qs <- remaining config modelZipper info
@@ -927,7 +925,7 @@ updateDeclarations model = do
                     let
                         usedAfter :: Bool
                         usedAfter = nbUses nm afters > 0
-                    
+
                         nbComplexLiterals :: Int
                         nbComplexLiterals = sum
                                             [ case y of
@@ -983,7 +981,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
-                              <+> stringToDoc(show (hole x))
+                              <+> stringToDoc (show (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
@@ -994,7 +992,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                         | not (isPrimitiveDomain dom) ->
                         return $ ""
                                : ("Not refined:" <+> pretty (hole x))
-                                                 <+> stringToDoc(show (hole x))
+                                                 <+> stringToDoc (show (hole x))
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | (i, c) <- zip allNats (tail (ascendants x))
@@ -1036,10 +1034,10 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                            ]
                     [essence| &_ .< &_ |] ->
                         return ["", ("Not refined:" <+> pretty (hole x))
-                                                    <+> stringToDoc(show (hole x))]
+                                                    <+> stringToDoc (show (hole x))]
                     [essence| &_ .<= &_ |] ->
                         return ["", ("Not refined:" <+> pretty (hole x))
-                                                    <+> stringToDoc(show (hole x))]
+                                                    <+> stringToDoc (show (hole x))]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -1212,12 +1210,12 @@ lexSingletons model = do
         case (matchSingleton l, matchSingleton r) of
           (Nothing, Nothing) -> return [essence| &l <lex &r |]
           (Just ls, Just rs) -> return [essence| &ls < &rs |]
-          _ -> bug $ "lexSingleton: match inconsistent" 
+          _ -> bug $ "lexSingleton: match inconsistent"
       onExpr [essence| &l <=lex &r |] =
         case (matchSingleton l, matchSingleton r) of
           (Nothing, Nothing) -> return [essence| &l <=lex &r |]
           (Just ls, Just rs) -> return [essence| &ls <= &rs |]
-          _ -> bug $ "lexSingleton: match inconsistent" 
+          _ -> bug $ "lexSingleton: match inconsistent"
       onExpr x = return x
       matchSingleton ::  (?typeCheckerMode :: TypeCheckerMode)
               => Expression -> Maybe Expression
@@ -1547,7 +1545,7 @@ horizontalRules =
     , Horizontal.Permutation.rule_Defined_Literal
     , Horizontal.Permutation.rule_Image_Literal
     , Horizontal.Permutation.rule_In
-    , Horizontal.Permutation.rule_Permutation_Inverse 
+    , Horizontal.Permutation.rule_Permutation_Inverse
 
 
 
@@ -2126,7 +2124,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
       return ( "Flatten Lex Lt"
              , return [essence| &fa <=lex &fb |]
              )
-    theRule _ = na "rule_Flatten_Lex"  
+    theRule _ = na "rule_Flatten_Lex"
     reject_flat a b = do
       ta <- typeOf a
       tb <- typeOf b
@@ -2136,14 +2134,14 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
         (TypeMatrix TypeBool TypeBool, _) ->
           na "rule_Flatten_Lex"
         (TypeList TypeInt{}, _) ->
-          na "rule_Flatten_Lex" 
+          na "rule_Flatten_Lex"
         (TypeMatrix TypeInt{} TypeInt{}, _) ->
           na "rule_Flatten_Lex"
         (TypeList TypeBool, _) ->
-          na "rule_Flatten_Lex" 
+          na "rule_Flatten_Lex"
         (TypeMatrix TypeInt{} TypeBool, _) ->
           na "rule_Flatten_Lex"
-        _ -> return () 
+        _ -> return ()
 
     flatten a = do
       ta <- typeOf a
@@ -2870,13 +2868,6 @@ addUnnamedSymmetryBreaking mode model = do
                         let applied = buildPermutationChain ps vars
                         in  [essence| transform(&p, &applied) |]
 
-                nestInBubbles :: Expression -> Int -> [(Expression,Statement)] -> Expression -> Expression 
-                nestInBubbles _ _ [] expr = expr
-                nestInBubbles modl i (fv:auxVars) expr =
-                  let v = fst fv
-                      ii = fromInt (fromIntegral i)
-                   in WithLocals [essence| &modl[&ii] .<= &v |] (AuxiliaryVars ((snd fv):[SuchThat [nestInBubbles modl (i + 1) auxVars expr]]))
-
                 combinedPermApply auxSuffix perms =
                     case quickOrComplete of
                         USBQuick ->
@@ -2885,9 +2876,7 @@ addUnnamedSymmetryBreaking mode model = do
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
                                 thisAuxTuple = mkAuxTuple auxSuffix
-                                dVars = map fst (allDecVarsAux auxSuffix)
-                             in nestInBubbles varsTuple 1 (zip dVars newDecls) 
-                                              [essence| &thisAuxTuple = &applied |]
+                             in WithLocals [essence| &varsTuple .<= &thisAuxTuple |] $ AuxiliaryVars (newDecls ++ [ SuchThat [ [essence| &thisAuxTuple = &applied |] ] ])
 
                 mkGenerator_Consecutive _ _ [] = bug "must have at least one unnamed type"
                 mkGenerator_Consecutive auxSuffix perms [(u, uSize)] = do
@@ -2966,10 +2955,10 @@ addUnnamedSymmetryBreaking mode model = do
             newCons <-
                 case independentlyOrAltogether of
                     USBIndependently -> do
-                      xs <- (sequence
+                      xs <- sequence
                             [ mkGenerator uName [] [(u, uSize)]
                             | (u@(DomainReference uName _), uSize) <- allUnnamedTypes
-                            ])
+                            ]
                       return [SuchThat xs]
                     USBAltogether -> do
                         cons <- mkGenerator "all" [] allUnnamedTypes
