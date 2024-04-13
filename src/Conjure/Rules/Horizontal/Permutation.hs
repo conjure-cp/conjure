@@ -152,7 +152,8 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
                                       (fromInt (fromIntegral (length srtdel)))
                 matLit = make matrixLiteral (TypeMatrix (TypeInt TagInt) inner)
                                              matIdx ([ [essence| &i |] ] ++ (f <$> srtdel))
-            minval <- minimum_int_value_in_domain i
+            iDomain <- domainOf i
+            minval <- minOfDomain iDomain
             return
                ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                , do
