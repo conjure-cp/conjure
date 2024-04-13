@@ -1,5 +1,12 @@
 Quick-Consecutive-Independently
-Using cached models.
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([tuple (i) .<=
+             transform(permutation((q1, succ(q1))), tuple (i))
+                 | q1 : e, q1 < 4])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
 Savile Row: model000001.eprime
 Running minion for domain filtering.
 Running solver: minion
