@@ -80,7 +80,7 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             TypeBool -> na "rule_NotBoolYet"
             _        -> return ()
 
-        forM_ gensOrConds $ \ goc -> case goc of
+        forM_ gensOrConds $ \case
             Generator GenDomainHasRepr{} -> return ()
             Generator {}                 -> na "rule_NotBoolYet"        -- no other generators, only GenDomainHasRepr
             Condition {}                 -> return ()
@@ -131,7 +131,7 @@ rule_ConditionInsideGeneratorDomain :: Rule
 rule_ConditionInsideGeneratorDomain = "bubble-up-ConditionInsideGeneratorDomain" `namedRule` theRule where
 
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (goc', newConditions), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (goc', newConditions), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenDomainHasRepr pat domain@DomainInt{}) -> do
                 let
                     f (WithLocals x (DefinednessConstraints cons)) = do
@@ -208,7 +208,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         let declsLifted =
                 [ Declaration (FindOrGiven LocalFind nm domLifted)
                 | (nm, dom) <- decls
-                , let domLifted = foldr (\ i j -> DomainMatrix (forgetRepr i) j ) dom indexDomains
+                , let domLifted = foldr (DomainMatrix . forgetRepr) dom indexDomains
                 ]
 
         let consLifted =
