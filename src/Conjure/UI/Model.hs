@@ -1328,11 +1328,7 @@ applicableRules Config{..} rulesAtLevel x = do
                 , "          on:" <+> pretty (hole x)
                 , "     message:" <+> failed
                 ]
-            Right ys     -> logSuccess $ vcat
-                [ "rule applied:" <+> rule
-                , "          on:" <+> pretty (hole x)
-                , "     message:" <+> vcat (map ruleResultDescr ys)
-                ]
+            Right _ -> return ()
     return [ (name, res {ruleResult = ruleResult'})
            | (name, Right ress) <- mys
            , res <- ress
@@ -1361,7 +1357,13 @@ applicableRules Config{..} rulesAtLevel x = do
                             , "Rule output (show):" <+> pretty (show rResult)
                             , "The error         :" <+> err
                             ]
-                        Right r  -> return r
+                        Right r  -> do
+                            logSuccess $ vcat
+                                [ "rule applied:" <+> name
+                                , "          on:" <+> pretty (hole x)
+                                , "      output:" <+> pretty r
+                                ]
+                            return r
            ]
 
 
