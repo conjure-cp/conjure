@@ -2,7 +2,6 @@
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Conjure.Util.Permutation (size, toCycles, fromCycles, toFunction)
-import Conjure.Rules.DontCare
 
 rule_Cardinality_Literal :: Rule
 rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule where
