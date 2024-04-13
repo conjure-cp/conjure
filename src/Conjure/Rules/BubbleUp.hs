@@ -192,13 +192,12 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         -- discard for now
         (_conditions, generators) <- fmap mconcat $ forM gensOrConds $ \ goc -> case goc of
             Condition{} -> return ([goc], [])
-            ComprehensionLetting{} -> return ([goc], [])
-            Generator (GenDomainHasRepr patName domain) -> return ([], [(patName, domain)])
+            ComprehensionLetting{} -> return ([], [goc])
+            Generator (GenDomainHasRepr _ _) -> return ([], [goc])
             _ -> na "rule_LiftVars"
 
-
-        let patRefs = [ Reference patName Nothing | (patName, _) <- generators ]
-        let indexDomains = map snd generators
+        let patRefs = [ Reference patName Nothing | Generator (GenDomainHasRepr patName _domain) <- generators ]
+        let indexDomains = [domain | Generator (GenDomainHasRepr _patName domain) <- generators ]
 
         let upd (Reference nm _) | nm `elem` map fst decls
                 = let r = Reference nm Nothing
@@ -212,7 +211,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                 ]
 
         let consLifted =
-                [ make opAnd $ Comprehension c [Generator (GenDomainHasRepr n d) | (n,d) <- generators]
+                [ make opAnd $ Comprehension c generators
                 | c <- transformBi upd cons
                 ]
 
