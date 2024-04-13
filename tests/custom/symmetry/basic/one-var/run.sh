@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+rm -rf conjure-output *solutions*
+
 for sym in Quick Complete; do
     for amount in Consecutive AllPairs AllPermutations; do
         for combine in Independently Altogether; do
