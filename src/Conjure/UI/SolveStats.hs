@@ -87,7 +87,8 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
                     "*** Check failure stack trace: ***", -- or-tools
                     "Error: evaluation error: Index set mismatch.",
                     "Savile Row killed by: java.lang.AssertionError",
-                    "java.lang.ClassCastException"
+                    "java.lang.ClassCastException",
+                    "ERROR: File not found" -- savilerow
                   ]
             ] =
             Error
