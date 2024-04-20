@@ -35,10 +35,10 @@ streamliningToStdout model = do
     streamliners <- streamlining model
 
     liftIO $ print $ prettyList prBraces ","
-        [ (showStr $ show i) <> ":" <+> prBraces (vcat
+        [ showStr (show i) <> ":" <+> prBraces (vcat
             [ showStr "onVariable" <> ":" <+> showStr (show (pretty nm)) <> ","
-            , showStr "groups"     <> ":" <+> prettyList prBrackets "," (map showStr groups) <> ","
-            , showStr "constraint" <> ":" <+> (showStr $ map whitespace $ show $ pretty cons)
+            , showStr "groups"     <> ":" <+> prettyList prBrackets "," (map showStr (nub groups)) <> ","
+            , showStr "constraint" <> ":" <+> showStr (map whitespace $ show $ pretty cons)
             ])
         | (i, (nm, (cons, groups))) <- zip allNats streamliners
         ]
@@ -53,16 +53,15 @@ streamlining ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m [(Name, Streamliner)]
 streamlining model = do
-    concatForM (mStatements model) $ \ statement ->
-        case statement of
-            Declaration (FindOrGiven Find nm domain) -> do
-                let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
-                streamliners <- streamlinersForSingleVariable ref
-                -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
-                --                      , vcat [ nest 4 (vcat (pretty x : map pretty gs)) | (x,gs) <- streamliners ]
-                --                      ]
-                return [ (nm, s) | s <- streamliners ]
-            _ -> noStreamliner
+    concatForM (mStatements model) $ \case
+        Declaration (FindOrGiven Find nm domain) -> do
+            let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
+            streamliners <- streamlinersForSingleVariable ref
+            -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
+            --                      , vcat [ nest 4 (vcat (pretty x : map pretty gs)) | (x,gs) <- streamliners ]
+            --                      ]
+            return [ (nm, s) | s <- streamliners ]
+        _ -> noStreamliner
 
 
 type StreamlinerGroup = String
