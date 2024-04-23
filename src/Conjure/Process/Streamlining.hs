@@ -379,7 +379,7 @@ matrixByRowBucket innerStreamliner x = do
             concatForM [0..9] $ \ (bucketInt :: Integer) -> let bucket = fromInt bucketInt in
                 forM innerConstraints $ \ (innerConstraint, grps) ->
                     attachGroup (("MatrixByRowBucket-" ++ show bucketInt) : grps) [essence|
-                        forAll &pat : int(&lb + &bucket * &bucketSize .. &lb + (&bucket+1) * &bucketSize) . &innerConstraint
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. min([&ub, &lb + (&bucket+1) * &bucketSize])) . &innerConstraint
                         |]
         _ -> noStreamliner
 
@@ -413,7 +413,7 @@ matrixByColBucket innerStreamliner x = do
                 forM innerConstraints $ \ (innerConstraint, grps) ->
                     attachGroup (("MatrixByColBucket-" ++ show bucketInt) : grps) [essence|
                         forAll &patO : &outerIndex .
-                        forAll &pat : int(&lb + &bucket * &bucketSize .. &lb + (&bucket+1) * &bucketSize) .
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. min([&ub, &lb + (&bucket+1) * &bucketSize])) .
                         &innerConstraint
                         |]
         _ -> noStreamliner
