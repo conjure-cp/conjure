@@ -1,0 +1,2 @@
+
+conjure streamlining *.essence

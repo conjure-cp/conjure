@@ -105,6 +105,9 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , onTuple 3 streamlinersForSingleVariable
     , onTuple 4 streamlinersForSingleVariable
 
+    , matrixByRowBucket streamlinersForSingleVariable
+    , matrixByColBucket streamlinersForSingleVariable
+
     , matrixAll streamlinersForSingleVariable
     , matrixHalf streamlinersForSingleVariable
     , matrixAtMostOne streamlinersForSingleVariable
@@ -351,6 +354,68 @@ matrixLessThanHalf innerStreamliner x = do
                 attachGroup ("MatrixCardinality": grps) [essence|
                     (&size/2) >= (sum &pat : &indexDom . toInt(&innerConstraint))
                     |]
+        _ -> noStreamliner
+
+
+matrixByRowBucket ::
+    MonadFailDoc m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+matrixByRowBucket innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    case dom of
+        DomainMatrix (DomainInt _ [RangeBounded lb ub]) innerDom@(DomainMatrix _ DomainInt{}) -> do
+            let size = [essence| &ub - &lb + 1 |]
+            let bucketSize = [essence| &size / 10 |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            concatForM [0..9] $ \ (bucketInt :: Integer) -> let bucket = fromInt bucketInt in
+                forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup (("MatrixByRowBucket-" ++ show bucketInt) : grps) [essence|
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. &lb + (&bucket+1) * &bucketSize) . &innerConstraint
+                        |]
+        _ -> noStreamliner
+
+
+
+matrixByColBucket ::
+    MonadFailDoc m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+matrixByColBucket innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    case dom of
+        DomainMatrix outerIndex (DomainMatrix (DomainInt _ [RangeBounded lb ub]) innerDom) -> do
+            let size = [essence| &ub - &lb + 1 |]
+            let bucketSize = [essence| &size / 10 |]
+
+            nmO <- nextName "q"
+            let patO = Single nmO
+            let refO = Reference nmO Nothing
+
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&refO, &ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            concatForM [0..9] $ \ (bucketInt :: Integer) -> let bucket = fromInt bucketInt in
+                forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup (("MatrixByColBucket-" ++ show bucketInt) : grps) [essence|
+                        forAll &patO : &outerIndex .
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. &lb + (&bucket+1) * &bucketSize) .
+                        &innerConstraint
+                        |]
         _ -> noStreamliner
 
 
