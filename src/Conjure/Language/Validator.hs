@@ -2343,14 +2343,15 @@ functionOps l = case l of
       b' <- unifyTypesFailing t (r2, b)
       return $ if null a' || null b' then Nothing else Just ()
     preImageArgs :: SArg -> SArg -> Validator ()
-    preImageArgs (r1, a) (r2, b) = do
-      let t = case (typeOf_ a, typeOf_ b) of
-            (TypeFunction _ i, tb) -> mostDefinedS [i, tb]
-            (TypeSequence i, _) -> i
-            (_, tb) -> tb
-      a' <- unifyTypesFailing (TypeFunction TypeAny t) (r1, a)
-      b' <- unifyTypesFailing t (r2, b)
-      return $ if null a' || null b' then Nothing else Just ()
+    preImageArgs _ _ = return $ Just ()
+    -- preImageArgs (r1, a) (r2, b) = do
+    --   let t = case (typeOf_ a, typeOf_ b) of
+    --         (TypeFunction _ i, tb) -> mostDefinedS [i, tb]
+    --         (TypeSequence i, _) -> i
+    --         (_, tb) -> tb
+    --   a' <- unifyTypesFailing (TypeFunction TypeAny t) (r1, a)
+    --   b' <- unifyTypesFailing t (r2, b)
+    --   return $ if null a' || null b' then Nothing else Just ()
 
     partyArgs :: SArg -> SArg -> Validator ()
     partyArgs (r1, a) (r2, b) = do
