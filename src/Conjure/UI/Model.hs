@@ -1575,9 +1575,6 @@ horizontalRules =
     , Horizontal.Function.rule_DefinedOrRange_Difference
 
     , Horizontal.Sequence.rule_Comprehension_Literal
-    , Horizontal.Sequence.rule_Image_Bool
-    , Horizontal.Sequence.rule_Image_Int
-    , Horizontal.Sequence.rule_Comprehension_Image
     , Horizontal.Sequence.rule_Image_Literal_Bool
     , Horizontal.Sequence.rule_Image_Literal_Int
     , Horizontal.Sequence.rule_Eq_Literal
