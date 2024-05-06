@@ -10,7 +10,11 @@ fi
 
 export CI=${CI:-false}
 
-echo "Running $1"
+if ${CI}; then
+    echo "Running $1 in CI"
+else
+    echo "Running $1"
+fi
 
 PID=$$
 export STARTTIME=$(date +%s)
