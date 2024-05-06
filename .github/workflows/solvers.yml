@@ -10,12 +10,12 @@ on:
     branches:
       - main                # run for the main branch
     paths:
-      - etc/build/install*.sh
+      - etc/build/*.sh
       - Makefile
       - .github/workflows/solvers.yml
   pull_request:             # and for PRs
     paths:
-      - etc/build/install*.sh
+      - etc/build/*.sh
       - Makefile
       - .github/workflows/solvers.yml
                             # other branches that want testing must create a PR
