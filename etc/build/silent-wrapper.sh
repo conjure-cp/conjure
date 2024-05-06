@@ -22,7 +22,7 @@ if ${CI}; then
     EXITCODE=$?
     export ELAPSED=$(($(date +%s) - ${STARTTIME}))
     echo "        Done (took ${ELAPSED} seconds)"
-    echo "        Exit code: ${EXIT_CODE}"
+    echo "        Exit code: ${EXITCODE}"
     exit ${EXIT_CODE}
 else
 
