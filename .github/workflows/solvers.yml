@@ -47,20 +47,18 @@ jobs:
         run: |
           echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
 
-      - name: Installing dependencies (gperf) on Linux
+      # libnuma-dev for runsolver
+      # autoconf, cmake, gmp for yices
+
+      - name: Installing dependencies on Linux
         shell: bash
-        run: sudo apt-get install -y gperf
+        run: sudo apt-get install -y gperf libnuma-dev
         if: runner.os == 'Linux'
 
-      - name: Installing dependencies (gperf) on macOS
+      - name: Installing dependencies on macOS
         shell: bash
-        run: brew install gperf
+        run: brew install autoconf cmake gmp gperf
         if: runner.os == 'macOS'
-
-      - name: Installing dependencies (libnuma-dev) on Linux - needed for runsolver
-        shell: bash
-        run: sudo apt-get install -y libnuma-dev
-        if: runner.os == 'Linux'
 
       - name: Building solvers
         shell: bash
