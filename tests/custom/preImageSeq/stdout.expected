@@ -1,0 +1,20 @@
+language ESSENCE' 1.0
+
+given k: int(2..)
+given n: int(1..)
+letting seqLength be k * n
+find seq_ExplicitBounded_Length: int(seqLength)
+find seq_ExplicitBounded_Values: matrix indexed by [int(1..seqLength)] of int(1..n)
+branching on [seq_ExplicitBounded_Length, seq_ExplicitBounded_Values]
+such that
+    seq_ExplicitBounded_Values[1] < seq_ExplicitBounded_Values[seqLength],
+    1 <= seqLength,
+    and([sum([toInt(seq_ExplicitBounded_Values[q4] = i) | q4 : int(1..seqLength), q4 <= seqLength]) = k
+             | i : int(1..n)]),
+    and([or([and([seq_ExplicitBounded_Values[start + (i - 1) * (number + 1)] = number /\
+                  start + (i - 1) * (number + 1) <= seqLength
+                      | i : int(1..k)])
+                 | start : int(1..seqLength)])
+             | number : int(1..n)])
+
+$ Conjure's
