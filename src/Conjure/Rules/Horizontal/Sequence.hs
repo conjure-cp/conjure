@@ -379,6 +379,36 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
+rule_Comprehension_Image :: Rule
+rule_Comprehension_Image = "sequence-image-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Image"
+        (mkModifier, expr2) <- match opModifier expr
+        (func, arg) <- match opImage expr2
+        TypeSequence{} <- typeOf func
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the image of a sequence"
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                return $ Comprehension
+                        (upd j body)
+                        $  gofBefore
+                        ++ [ Generator (GenInExpr iPat (mkModifier func))
+                           , Condition [essence| &i[1] = &arg |]
+                           , Generator (GenInExpr jPat [essence| &i[2] |])
+                           ]
+                        ++ transformBi (upd j) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Image"
+
+
 rule_Substring :: Rule
 rule_Substring = "substring" `namedRule` theRule where
     theRule [essence| &a substring &b |] = do
