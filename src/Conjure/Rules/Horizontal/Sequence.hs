@@ -379,6 +379,104 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
+
+rule_Image_Bool :: Rule
+rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
+    theRule Reference{} = na "rule_Image_Bool"
+    theRule p = do
+        let
+            onChildren
+                :: MonadState (Maybe (Expression, Expression)) m
+                => Expression
+                -> m (Expression -> Expression)
+            onChildren ch = do
+                let
+                    try = do
+                        (func, arg) <- match opImage ch
+                        case match opRestrict func of
+                            Nothing -> return ()
+                            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences
+                        TypeSequence TypeBool <- typeOf func
+                        return (func, arg)
+                case try of
+                    Nothing -> return (const ch)        -- do not failDoc if a child is not of proper form
+                    Just (func, arg) -> do              -- just return it back unchanged
+                        seenBefore <- gets id
+                        case seenBefore of
+                            Nothing -> do
+                                modify $ const $ Just (func, arg)
+                                return id
+                            Just{}  ->
+                                return (const ch)
+
+        let (children_, gen) = uniplate p
+        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
+        let
+            mkP :: Expression -> Expression
+            mkP new = gen $ fmap ($ new) genChildren
+        (func, arg) <- maybe (na "rule_Image_Bool") return mFunc        -- Nothing signifies no relevant children
+        return
+            ( "Sequence image, bool."
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ mkP $ make opOr $ Comprehension [essence| &i[2] |]
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+            )
+
+
+rule_Image_Int :: Rule
+rule_Image_Int = "sequence-image-int" `namedRule` theRule where
+    theRule Reference{} = na "rule_Image_Int"
+    theRule p = do
+        let
+            onChildren
+                :: MonadState (Maybe (Expression, Expression)) m
+                => Expression
+                -> m (Expression -> Expression)
+            onChildren ch = do
+                let
+                    try = do
+                        (func, arg) <- match opImage ch
+                        case match opRestrict func of
+                            Nothing -> return ()
+                            Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted sequences
+                        case func of
+                            Reference{} -> na "rule_Image_Int"      -- do not use this rule for a direct reference
+                            _ -> return ()
+                        TypeSequence (TypeInt _) <- typeOf func
+                        return (func, arg)
+                case try of
+                    Nothing -> return (const ch)        -- do not failDoc if a child is not of proper form
+                    Just (func, arg) -> do              -- just return it back unchanged
+                        seenBefore <- gets id
+                        case seenBefore of
+                            Nothing -> do
+                                modify $ const $ Just (func, arg)
+                                return id
+                            Just{}  ->
+                                return (const ch)
+
+        let (children_, gen) = uniplate p
+        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
+        let
+            mkP :: Expression -> Expression
+            mkP new = gen $ fmap ($ new) genChildren
+        (func, arg) <- maybe (na "rule_Image_Int") return mFunc         -- Nothing signifies no relevant children
+        return
+            ( "Sequence image, int."
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = make opSum $ Comprehension [essence| &i[2] |]
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+                    isDefined = [essence| &arg in defined(&func) |]
+                return $ mkP $ WithLocals val (DefinednessConstraints [isDefined])
+            )
+
+
 rule_Comprehension_Image :: Rule
 rule_Comprehension_Image = "sequence-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
