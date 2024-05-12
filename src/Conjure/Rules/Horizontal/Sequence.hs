@@ -396,6 +396,9 @@ rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences
+                        case match opTransform func of
+                            Nothing -> na "rule_Image_Bool"          -- only use this rule for restricted sequences
+                            Just{}  -> return ()
                         TypeSequence TypeBool <- typeOf func
                         return (func, arg)
                 case try of
@@ -442,9 +445,9 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted sequences
-                        case func of
-                            Reference{} -> na "rule_Image_Int"      -- do not use this rule for a direct reference
-                            _ -> return ()
+                        case match opTransform func of
+                            Nothing -> na "rule_Image_Int"          -- only use this rule for restricted sequences
+                            Just{}  -> return ()
                         TypeSequence (TypeInt _) <- typeOf func
                         return (func, arg)
                 case try of
