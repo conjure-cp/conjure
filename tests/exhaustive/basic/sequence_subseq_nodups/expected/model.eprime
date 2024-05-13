@@ -15,10 +15,11 @@ such that
     b_ExplicitBounded_Length = conjure_aux1_ExplicitBounded_Length,
     and([q6 <= b_ExplicitBounded_Length ->
          and([b_ExplicitBounded_Values[q6] =
-              sum([toInt(q8 = conjure_aux1_ExplicitBounded_Values[q6]) * catchUndef([3, 1, 2; int(1..3)][q8], 0)
-                       | q8 : int(1..3)]),
-              or([q10 = conjure_aux1_ExplicitBounded_Values[q6] | q10 : int(1..3), q10 <= 3]),
-              q6 <= conjure_aux1_ExplicitBounded_Length;
+              sum([toInt(1 = conjure_aux1_ExplicitBounded_Values[q6]) * 3,
+                   toInt(2 = conjure_aux1_ExplicitBounded_Values[q6]),
+                   toInt(3 = conjure_aux1_ExplicitBounded_Values[q6]) * 2;
+                       int(1..3)]),
+              conjure_aux1_ExplicitBounded_Values[q6] <= 3, q6 <= conjure_aux1_ExplicitBounded_Length;
                   int(1..3)])
              | q6 : int(1..2)]),
     and([q1 > b_ExplicitBounded_Length -> b_ExplicitBounded_Values[q1] = 1 | q1 : int(1..2)]),

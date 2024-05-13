@@ -379,16 +379,10 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
--- | image(f,x) can be nasty for non-total sequences.
---   1.   if f is a total sequence, it can readily be replaced by a set expression.
---   2.1. if f isn't total, and if the return type is right, it will always end up as a generator for a comprehension.
---      a vertical rule is needed for such cases.
---   2.2. if the return type is not "right", i.e. it is a bool or an int, i.e. sth we cannot quantify over,
---        the vertical rule is harder.
 
 rule_Image_Bool :: Rule
 rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
-    theRule Reference{} = na "rule_Image_Int"
+    theRule Reference{} = na "rule_Image_Bool"
     theRule p = do
         let
             onChildren
@@ -402,6 +396,9 @@ rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences
+                        case match opTransform func of
+                            Nothing -> na "rule_Image_Bool"          -- only use this rule for transformed sequences
+                            Just{}  -> return ()
                         TypeSequence TypeBool <- typeOf func
                         return (func, arg)
                 case try of
@@ -448,6 +445,9 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted sequences
+                        case match opTransform func of
+                            Nothing -> na "rule_Image_Int"          -- only use this rule for transformed sequences
+                            Just{}  -> return ()
                         TypeSequence (TypeInt _) <- typeOf func
                         return (func, arg)
                 case try of
