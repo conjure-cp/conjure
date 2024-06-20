@@ -186,7 +186,7 @@ intLowerHalf x = do
         DomainInt _ [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
             if typeUnify ty (TypeInt TagInt)
-                then mkStreamliner "IntLowHigh" [essence| &x < 1 + (&upper -1) /2 |]
+                then mkStreamliner "IntLowHigh" [essence| &x <= 1 + (&upper -1) /2 |]
                 else noStreamliner
         _ -> noStreamliner
 
