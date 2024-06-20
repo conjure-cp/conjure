@@ -16,6 +16,16 @@ It may be useful to save the binary under a directory that is in your search PAT
 For Windows, please use the Linux binaries with the
 `Windows Subsystem for Linux <https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux>`_.
 
+To Install into wsl2 on Windows then use the following commands 
+
+.. code-block:: bash
+
+     cd 
+     wget https://github.com/conjure-cp/conjure/releases/download/v2.5.1/conjure-v2.5.1-linux-with-solvers.zip
+     unzip conjure-v2.5.1-linux-with-solvers.zip
+     echo 'export PATH="$HOME/conjure-v2.5.1-linux-with-solvers:$PATH"' >> ~/.zshrc
+     
+Then restart your shell !
 
 Compiling from source
 ---------------------
