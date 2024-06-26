@@ -1,0 +1,30 @@
+language ESSENCE' 1.0
+
+find p_PermutationAsFunction_PermutationFunction_Function1D: matrix indexed by [int(1..4)] of int(1..4)
+find q_PermutationAsFunction_PermutationFunction_Function1D: matrix indexed by [int(1..4)] of int(1..4)
+branching on
+    [p_PermutationAsFunction_PermutationFunction_Function1D, q_PermutationAsFunction_PermutationFunction_Function1D]
+such that
+    and([q17 != p_PermutationAsFunction_PermutationFunction_Function1D[q17] ->
+         [p_PermutationAsFunction_PermutationFunction_Function1D[q17],
+          catchUndef(q_PermutationAsFunction_PermutationFunction_Function1D
+                         [p_PermutationAsFunction_PermutationFunction_Function1D[q17]],
+                     0);
+              int(1..2)]
+             [toInt(or([q15 = p_PermutationAsFunction_PermutationFunction_Function1D[q17] | q15 : int(1..4)])) + 1]
+         = q17
+             | q17 : int(1..4)]),
+    and([q25 != q_PermutationAsFunction_PermutationFunction_Function1D[q25] ->
+         [q_PermutationAsFunction_PermutationFunction_Function1D[q25],
+          catchUndef(p_PermutationAsFunction_PermutationFunction_Function1D
+                         [q_PermutationAsFunction_PermutationFunction_Function1D[q25]],
+                     0);
+              int(1..2)]
+             [toInt(or([q23 = q_PermutationAsFunction_PermutationFunction_Function1D[q25] | q23 : int(1..4)])) + 1]
+         = q25
+             | q25 : int(1..4)]),
+    allDiff(p_PermutationAsFunction_PermutationFunction_Function1D),
+    and([or([p_PermutationAsFunction_PermutationFunction_Function1D[q3] = q2 | q3 : int(1..4)]) | q2 : int(1..4)]),
+    allDiff(q_PermutationAsFunction_PermutationFunction_Function1D),
+    and([or([q_PermutationAsFunction_PermutationFunction_Function1D[q7] = q6 | q7 : int(1..4)]) | q6 : int(1..4)])
+

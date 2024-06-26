@@ -27,7 +27,7 @@ followAliases m (isAlias -> Just x) = followAliases m x
 followAliases m x = m x
 
 tryMatch :: (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
-tryMatch f = match f
+tryMatch = match
 
 matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
 matchOr defOut f inp = fromMaybe defOut (match f inp)
@@ -279,6 +279,7 @@ opToSet _ =
                 MkOpToSet (OpToSet _ x) -> return x
                 _ -> na ("Lenses.opToSet:" <++> pretty p)
     )
+
 
 
 opToSetWithFlag
@@ -1244,6 +1245,7 @@ constantInt _ =
     )
 
 
+
 matrixLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: T.Type -> T.Type)
@@ -1368,6 +1370,32 @@ functionLiteral _ =
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
+
+
+permutationLiteral
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
+    => Proxy (m :: T.Type -> T.Type )
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
+       )
+permutationLiteral _ =
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitPermutation elems)) ty
+            else        AbstractLiteral (AbsLitPermutation elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
+    )
+    where
+        extract (Constant (ConstantAbstract (AbsLitPermutation xs))) = return [ [Constant z | z <- x] | x <- xs ]
+        extract (AbstractLiteral (AbsLitPermutation xs)) = return xs
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.permutationLiteral:" <+> pretty p)
+
+
 
 
 sequenceLiteral
@@ -1572,13 +1600,15 @@ fixRelationProj= transformBi f
             case match opRelationProj p of
                 Just (func, [Just arg]) ->
                     case typeOf func of
-                        Just TypeFunction{} -> make opImage func arg
-                        Just TypeSequence{} -> make opImage func arg
+                        Just TypeFunction{}    -> make opImage func arg
+                        Just TypeSequence{}    -> make opImage func arg
+                        Just TypePermutation{} -> make opImage func arg
                         _                   -> p
                 Just (func, args) | arg <- catMaybes args, length arg == length args ->
                     case typeOf func of
-                        Just TypeFunction{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
-                        Just TypeSequence{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypeFunction{}    -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypeSequence{}    -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypePermutation{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
                         _                   -> p
                 _ -> p
 
