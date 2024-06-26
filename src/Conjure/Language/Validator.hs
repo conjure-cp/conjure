@@ -2186,6 +2186,7 @@ functionOps l = case l of
   L_allDiff -> unFuncV listOrMatrix (const $ pure TypeBool)
   L_alldifferent_except -> biFuncV (indep listOrMatrix enumerable) (const2 TypeBool)
   L_catchUndef -> biFuncV unifies (\a b -> pure $ mostDefinedS $ catMaybes [a, b])
+  L_quickPermutationOrder -> biFunc quickPermutationOrderArgs quickPermutationOrderTypes
   L_dontCare -> unFunc anyType (const $ pure TypeBool)
   L_toSet -> unFuncV toSetArgs typeToSet
   L_toMSet -> unFuncV toMSetArgs typeToMSet
@@ -2379,6 +2380,14 @@ functionOps l = case l of
           Just (Kind ValueType {} (TypeFunction _ to')) -> to'
           _ -> TypeAny
 
+    -- TODO: validate
+    quickPermutationOrderArgs :: Arg -> Arg -> Validator ()
+    quickPermutationOrderArgs _ _ = return (pure ())
+
+    -- TODO
+    quickPermutationOrderTypes :: Maybe (Kind, Expression) -> Maybe (Kind, Expression) -> Maybe Type
+    quickPermutationOrderTypes _ _ = Just TypeBool
+
     imSetArgs :: SArg -> SArg -> Validator ()
     imSetArgs (r1, a) (r2, b) = do
       let t = case (typeOf_ a, typeOf_ b) of
@@ -2388,6 +2397,7 @@ functionOps l = case l of
       a' <- unifyTypesFailing (TypeFunction t TypeAny) (r1, a)
       b' <- unifyTypesFailing t (r2, b)
       return $ if null a' || null b' then Nothing else Just ()
+
     preImageArgs :: SArg -> SArg -> Validator ()
     preImageArgs (r1, a) (r2, b) = do
       let t = case (typeOf_ a, typeOf_ b) of
@@ -2410,13 +2420,13 @@ functionOps l = case l of
     inverseArgs :: SArg -> SArg -> Validator ()
     inverseArgs (_r1, a) (_r2, b) =
       case (typeOf_ a, typeOf_ b) of
-            (TypeFunction{}, TypeFunction{}) -> return (Just ())
-            (TypeFunction{}, _) -> return (Just ())
-            (_, TypeFunction{}) -> return (Just ())
-            (TypePermutation{}, TypePermutation{}) -> return (Just ())
-            (TypePermutation{}, _) -> return (Just ())
-            (_, TypePermutation{}) -> return (Just ())
-            _ -> return Nothing
+        (TypeFunction {}, TypeFunction {}) -> return (Just ())
+        (TypeFunction {}, _) -> return (Just ())
+        (_, TypeFunction {}) -> return (Just ())
+        (TypePermutation {}, TypePermutation {}) -> return (Just ())
+        (TypePermutation {}, _) -> return (Just ())
+        (_, TypePermutation {}) -> return (Just ())
+        _ -> return Nothing
 
     setPartArgs :: SArg -> SArg -> Validator ()
     setPartArgs (r1, a) (r2, b) = do
@@ -2436,6 +2446,7 @@ functionOps l = case l of
             Just (TypePartition t) -> t
             _ -> TypeAny
       return $ TypeSet $ mostDefinedS [at', bt]
+
     partsType :: Maybe Type -> Maybe Type
     partsType (Just (TypePartition a)) = Just $ TypeSet $ TypeSet a
     partsType (Just TypeAny) = Just $ TypeSet $ TypeSet TypeAny
@@ -2464,6 +2475,7 @@ functionOps l = case l of
         TypeEnum {} -> valid
         TypeAny -> valid
         _ -> invalid $ r <!> ComplexTypeError "Domain of int-like or matrix of int-like" t
+
     minMaxType :: Maybe (Kind, a) -> Maybe Type
     minMaxType (Just (Kind DomainType t@(TypeInt {}), _)) = Just t
     minMaxType (Just (Kind DomainType (TypeEnum (Name nm)), _)) = Just . TypeInt $ TagEnum nm
@@ -2483,9 +2495,11 @@ functionOps l = case l of
     typeToSet :: Maybe Type -> Maybe Type
     typeToSet (Just t) = Just . TypeSet $ fromMaybe TypeAny (tMembers t)
     typeToSet _ = Just $ TypeSet TypeAny
+
     typeToMSet :: Maybe Type -> Maybe Type
     typeToMSet (Just t) = Just . TypeMSet $ fromMaybe TypeAny (tMembers t)
     typeToMSet _ = Just $ TypeMSet TypeAny
+
     typeToRelation :: Maybe Type -> Maybe Type
     typeToRelation (Just (TypeFunction i j)) = Just $ TypeRelation [i, j]
     typeToRelation (Just TypeAny) = Just $ TypeRelation [TypeAny, TypeAny]
@@ -2512,9 +2526,9 @@ functionOps l = case l of
         Just f -> unifyTypes f r2 >> return (pure ())
         Nothing -> return Nothing
 
+    -- TODO: validate
     composeArgs :: SArg -> SArg -> Validator ()
     composeArgs _ _ = return (pure ())
-    -- TODO: validate compose
 
     sumArgs :: SArg -> Validator ()
     sumArgs (r, typeOf_ -> t') = do
@@ -2525,11 +2539,11 @@ functionOps l = case l of
         TypeSet t -> return t
         TypeMSet t -> return t
         _ -> TypeAny <$ raiseTypeError (r <!> ComplexTypeError "Matrix or Set" t')
-
       case t of
         TypeAny -> return $ pure ()
         TypeInt TagInt -> return $ pure ()
         _ -> Nothing <$ raiseTypeError (r <!> ComplexTypeError "Integer elements" t)
+
     funcSeq :: SArg -> Validator ()
     funcSeq (r, typeOf_ -> t') = case t' of
       TypeAny -> return $ pure ()
@@ -2537,14 +2551,17 @@ functionOps l = case l of
       TypePermutation _ -> return $ pure ()
       TypeFunction _ _ -> return $ pure ()
       _ -> invalid $ r <!> ComplexTypeError "function, sequence or permutation" t'
+
     funcDomain :: Maybe Type -> Maybe Type
     funcDomain (Just (TypeFunction a _)) = Just a
     funcDomain (Just (TypeSequence _)) = Just tInt
     funcDomain _ = Just TypeAny
+
     funcRange :: Maybe Type -> Maybe Type
     funcRange (Just (TypeFunction _ b)) = Just b
     funcRange (Just ((TypeSequence b))) = Just b
     funcRange _ = Just TypeAny
+
     part :: SArg -> Validator ()
     part (r, typeOf_ -> t) = case t of
       TypeAny -> valid
@@ -2558,11 +2575,13 @@ functionOps l = case l of
       TypeMatrix _ _ -> return $ pure ()
       TypeAny -> return $ pure ()
       _ -> invalid $ r <!> ComplexTypeError "Matrix, List or MSet" a
+
     histType :: Maybe Type -> Maybe Type
     histType (Just ((TypeMSet a))) = Just $ TypeMatrix tInt $ TypeTuple [a, tInt]
     histType (Just ((TypeMatrix _ a))) = Just $ TypeMatrix tInt $ TypeTuple [a, tInt]
     histType (Just ((TypeList a))) = Just $ TypeMatrix tInt $ TypeTuple [a, tInt]
     histType _ = Just $ TypeMatrix tInt $ TypeTuple [TypeAny, tInt]
+
     enumerable :: SArg -> Validator ()
     enumerable (r, typeOf_ -> t) = case t of
       TypeAny -> return $ pure ()
@@ -2571,6 +2590,7 @@ functionOps l = case l of
       TypeEnum {} -> return $ pure ()
       TypeBool -> return $ pure ()
       _ -> invalid $ r <!> ComplexTypeError "int enum or bool" t
+
     enumerableType :: Maybe Type -> Maybe Type
     enumerableType (Just t@(TypeInt TagInt)) = Just t
     enumerableType (Just t@(TypeInt (TagEnum _))) = Just t

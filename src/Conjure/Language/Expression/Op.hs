@@ -104,6 +104,7 @@ mkOp op xs = case op of
                                                                          (arg xs 1 "allDiffExcept")
             L_catchUndef   -> inject $ MkOpCatchUndef   $ OpCatchUndef   (arg xs 0 "catchUndef")
                                                                          (arg xs 1 "catchUndef")
+            L_quickPermutationOrder -> inject $ MkOpQuickPermutationOrder $ OpQuickPermutationOrder (arg xs 0 "quickPermutationOrder") (arg xs 1 "quickPermutationOrder")
             L_dontCare     -> inject $ MkOpDontCare     $ OpDontCare     (arg xs 0 "dontCare")
             L_toSet        -> inject $ MkOpToSet        $ OpToSet        False (arg xs 0 "toSet")
             L_toMSet       -> inject $ MkOpToMSet       $ OpToMSet       (arg xs 0 "toMSet")

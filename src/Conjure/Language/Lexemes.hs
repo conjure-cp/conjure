@@ -166,6 +166,8 @@ data Lexeme
 
     | L_catchUndef
 
+    | L_quickPermutationOrder
+
     -- matrix only operators
     | L_flatten
     | L_concatenate
@@ -427,6 +429,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_dontCare, "dontCare" )
     , ( L_catchUndef, "catchUndef" )
+
+    , ( L_quickPermutationOrder, "quickPermutationOrder" )
 
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )

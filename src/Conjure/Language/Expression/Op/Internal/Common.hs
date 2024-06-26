@@ -292,6 +292,7 @@ functionals =
     , L_atleast
     , L_atmost
     , L_catchUndef
+    , L_quickPermutationOrder
     , L_dontCare
     , L_hist
     , L_factorial

@@ -837,6 +837,8 @@ instance EvaluateOp OpXor where
     evaluateOp (OpXor x) = ConstantBool . xor <$> boolsOut x
         where xor xs = odd (length [ () | True <- xs ])
 
+instance EvaluateOp OpQuickPermutationOrder where
+    evaluateOp op = na $ "evaluateOp{OpQuickPermutationOrder}:" <++> pretty (show op)
 
 boolsOut :: MonadFailDoc m => Constant -> m [Bool]
 boolsOut (viewConstantMatrix -> Just (_, cs)) = concatMapM boolsOut cs
@@ -1030,4 +1032,4 @@ instance EvaluateOp Op where
     evaluateOp (MkOpTwoBars x) = evaluateOp x
     evaluateOp (MkOpUnion x) = evaluateOp x
     evaluateOp (MkOpXor x) = evaluateOp x
-
+    evaluateOp (MkOpQuickPermutationOrder x) = evaluateOp x

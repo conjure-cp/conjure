@@ -1743,7 +1743,8 @@ delayedRules =
         ]
     ,   [ rule_ReducerToComprehension
         ]
-    ,   [ rule_DotLtLeq
+    ,   [ rule_QuickPermutationOrder
+        , rule_DotLtLeq
         , rule_Flatten_Lex
         ]
     ]
@@ -2082,6 +2083,28 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             )
 
 
+rule_QuickPermutationOrder :: Rule
+rule_QuickPermutationOrder = "generic-QuickPermutationOrder" `namedRule` theRule where
+    theRule p@[essence| quickPermutationOrder(&x, &ps) |] = do
+        case listOut ps of
+            Just [perm] ->
+                return
+                    ( "Generic vertical rule for quickPermutationOrder:" <+> pretty perm
+                    , return [essence| &x .<= transform(&perm, &x) |]
+                    )
+            _ -> na "rule_QuickPermutationOrder - not implemented for multiple permutations yet"
+        -- traceM $ show $ "HERE x " <+> pretty x
+        -- traceM $ show $ "HERE ps" <+> pretty ps
+        -- x_ord <- symmetryOrdering x
+        -- x_perm <- symmetryOrdering [essence| transform(&ps, &x) |]
+        -- traceM $ show $ "HERE x_perm" <+> pretty x_perm
+        -- return
+        --     ( "Generic vertical rule for quickPermutationOrder:" <+> pretty p
+        --     , return [essence| &x_ord <=lex &x_perm |]
+        --     )
+    theRule _ = na "rule_QuickPermutationOrder"
+
+
 rule_DotLtLeq :: Rule
 rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
     theRule p = do
@@ -2156,7 +2179,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
             AbstractLiteral x -> do
               case x of
                 AbsLitTuple xs -> do
-                  fxs <- sequence (flatten <$> xs)
+                  fxs <- mapM flatten xs
                   let flatxs = fromList fxs
                   return [essence| flatten(&flatxs) |]
                 _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
@@ -2166,7 +2189,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
                 ConstantAbstract ca ->
                   case ca of
                     AbsLitTuple xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      fxs <- mapM flatten (Constant <$> xs)
                       let flatxs = fromList fxs
                       return [essence| flatten(&flatxs) |]
                     _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
@@ -2177,9 +2200,9 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
               (oName, o) <- quantifiedVar
               flatten $ Comprehension o [ComprehensionLetting oName a]
             _ -> do
-              ps <- sequence $ (\(i,_) -> do
+              ps <- mapM (\(i,_) -> do
                                   (Single nm, tm) <- quantifiedVar
-                                  return (i,nm,tm)) <$> (zip [1..] ts)
+                                  return (i,nm,tm)) (zip [1..] ts)
               let lts = (\(i,nm,_tm) -> ComprehensionLetting (Single nm) [essence| &a[&i] |]) <$> ps
                   tup = AbstractLiteral $ AbsLitTuple $ (\(_,_,tm) -> tm) <$> ps
               flatten $ Comprehension tup lts
@@ -2188,7 +2211,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
             AbstractLiteral x -> do
               case x of
                 AbsLitMatrix _ xs -> do
-                  fxs <- sequence (flatten <$> xs)
+                  fxs <- mapM flatten xs
                   let flatxs = fromList fxs
                   return [essence| flatten(&flatxs) |]
                 _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
@@ -2200,7 +2223,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
                     AbsLitMatrix _ [] ->
                       return [essence| ([] : `matrix indexed by [int()] of int`) |]
                     AbsLitMatrix _ xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      fxs <- mapM flatten (Constant <$> xs)
                       let flatxs = fromList fxs
                       return [essence| flatten(&flatxs) |]
                     _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
@@ -2592,7 +2615,7 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
 
 
 timedF :: MonadIO m => String -> (a -> m b) -> a -> m b
-timedF name comp = \ a -> timeItNamed name (comp a)
+timedF name comp a = timeItNamed name (comp a)
 
 
 evaluateModel ::
@@ -2823,20 +2846,20 @@ addUnnamedSymmetryBreaking mode model = do
             | Declaration (FindOrGiven Find nm domain) <- mStatements model
             ]
 
-        allDecVarsAux auxSuffix =
-            [ (Reference (mconcat [nm, "_auxFor_", auxSuffix]) Nothing, domain)
-            | Declaration (FindOrGiven Find nm domain) <- mStatements model
-            ]
+        -- allDecVarsAux auxSuffix =
+        --     [ (Reference (mconcat [nm, "_auxFor_", auxSuffix]) Nothing, domain)
+        --     | Declaration (FindOrGiven Find nm domain) <- mStatements model
+        --     ]
 
         varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
-        mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
+        -- mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
 
 --    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
 --    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
 
     -- 3 axis of doom
-    -- 1. Quick/Complete. Quick is x .<= p(x)
-    --                    Complete is x .<= y /\ y = p(x)
+    -- 1. Quick/Complete. Quick is quickPermutationOrder(x, p)   -- this is an efficient subset of x .<= p(x)
+    --                    Complete is x .<= p(x)
     -- 2. Scope.          Consecutive
     --                    AllPairs
     --                    AllPermutations
@@ -2845,22 +2868,22 @@ addUnnamedSymmetryBreaking mode model = do
     case mode of
         Nothing -> return model
         Just (UnnamedSymmetryBreaking quickOrComplete usbScope independentlyOrAltogether) -> do
-            let newDecls =
-                    case quickOrComplete of
-                        USBQuick -> []
-                        USBComplete ->
-                            case independentlyOrAltogether of
-                                USBIndependently ->
-                                    [ Declaration (FindOrGiven LocalFind nm' domain)
-                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
-                                    , (DomainReference uName _, _) <- allUnnamedTypes
-                                    , let nm' = mconcat [nm, "_auxFor_", uName]
-                                    ]
-                                USBAltogether ->
-                                    [ Declaration (FindOrGiven LocalFind nm' domain)
-                                    | Declaration (FindOrGiven Find nm  domain) <- mStatements model
-                                    , let nm' = mconcat [nm, "_auxFor_all"]
-                                    ]
+            -- let newDecls =
+            --         case quickOrComplete of
+            --             USBQuick -> []
+            --             USBComplete ->
+            --                 case independentlyOrAltogether of
+            --                     USBIndependently ->
+            --                         [ Declaration (FindOrGiven LocalFind nm' domain)
+            --                         | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+            --                         , (DomainReference uName _, _) <- allUnnamedTypes
+            --                         , let nm' = mconcat [nm, "_auxFor_", uName]
+            --                         ]
+            --                     USBAltogether ->
+            --                         [ Declaration (FindOrGiven LocalFind nm' domain)
+            --                         | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+            --                         , let nm' = mconcat [nm, "_auxFor_all"]
+            --                         ]
 
             let
 
@@ -2869,31 +2892,33 @@ addUnnamedSymmetryBreaking mode model = do
                         let applied = buildPermutationChain ps vars
                         in  [essence| transform(&p, &applied) |]
 
-                combinedPermApply auxSuffix perms =
+                        -- x .<= transform(p1, transform(p2, x))
+                        -- quickPermutationOrder(x, p) to mean s subset of `x .<= transform(p,x)`
+
+                combinedPermApply perms =
                     case quickOrComplete of
                         USBQuick ->
-                            let applied = buildPermutationChain perms varsTuple
-                            in  [essence| &varsTuple .<= &applied |]
+                            let p = fromList perms
+                            in [essence| quickPermutationOrder(&varsTuple, &p) |]
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
-                                thisAuxTuple = mkAuxTuple auxSuffix
-                             in WithLocals [essence| &varsTuple .<= &thisAuxTuple |] $ AuxiliaryVars (newDecls ++ [ SuchThat [ [essence| &thisAuxTuple = &applied |] ] ])
+                            in [essence| &varsTuple .<= &applied |]
 
-                mkGenerator_Consecutive _ _ [] = bug "must have at least one unnamed type"
-                mkGenerator_Consecutive auxSuffix perms [(u, uSize)] = do
+                mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
+                mkGenerator_Consecutive perms [(u, uSize)] = do
                     (iPat, i) <- quantifiedVar
                     let perm = [essence| permutation((&i, succ(&i))) |]
-                    let applied = combinedPermApply auxSuffix (perm:perms)
+                    let applied = combinedPermApply (perm:perms)
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
                                     , &i < &uSize
                                     ])
                            |]
-                mkGenerator_Consecutive auxSuffix perms ((u, uSize):us) = do
+                mkGenerator_Consecutive perms ((u, uSize):us) = do
                     (iPat, i) <- quantifiedVar
                     let perm = [essence| permutation((&i, succ(&i))) |]
-                    applied <- mkGenerator_Consecutive auxSuffix (perm:perms) us
+                    applied <- mkGenerator_Consecutive (perm:perms) us
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
@@ -2902,12 +2927,12 @@ addUnnamedSymmetryBreaking mode model = do
                            |]
 
 
-                mkGenerator_AllPairs _ _ [] = bug "must have at least one unnamed type"
-                mkGenerator_AllPairs auxSuffix perms [(u, _uSize)] = do
+                mkGenerator_AllPairs _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPairs perms [(u, _uSize)] = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let perm = [essence| permutation((&i, &j)) |]
-                    let applied = combinedPermApply auxSuffix (perm:perms)
+                    let applied = combinedPermApply (perm:perms)
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
@@ -2915,11 +2940,11 @@ addUnnamedSymmetryBreaking mode model = do
                                     , &i < &j
                                     ])
                            |]
-                mkGenerator_AllPairs auxSuffix perms ((u, _uSize):us) = do
+                mkGenerator_AllPairs perms ((u, _uSize):us) = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let perm = [essence| permutation((&i, &j)) |]
-                    applied <- mkGenerator_AllPairs auxSuffix (perm:perms) us
+                    applied <- mkGenerator_AllPairs (perm:perms) us
                     return [essence|
                                 and([ &applied
                                     | &iPat : &u
@@ -2928,41 +2953,41 @@ addUnnamedSymmetryBreaking mode model = do
                                     ])
                            |]
 
-                mkGenerator_AllPermutations _ _ [] = bug "must have at least one unnamed type"
-                mkGenerator_AllPermutations auxSuffix perms [(u, _uSize)] = do
+                mkGenerator_AllPermutations _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPermutations perms [(u, _uSize)] = do
                     (iPat, i) <- quantifiedVar
                     let perm = i
-                    let applied = combinedPermApply auxSuffix (perm:perms)
+                    let applied = combinedPermApply (perm:perms)
                     return [essence|
                                 and([ &applied
                                     | &iPat : permutation of &u
                                     ])
                            |]
-                mkGenerator_AllPermutations auxSuffix perms ((u, _uSize):us) = do
+                mkGenerator_AllPermutations perms ((u, _uSize):us) = do
                     (iPat, i) <- quantifiedVar
                     let perm = i
-                    applied <- mkGenerator_AllPermutations auxSuffix (perm:perms) us
+                    applied <- mkGenerator_AllPermutations (perm:perms) us
                     return [essence|
                                 and([ &applied
                                     | &iPat : permutation of &u
                                     ])
                            |]
 
-                mkGenerator auxSuffix perms us =
+                mkGenerator perms us =
                     case usbScope of
-                        USBConsecutive -> mkGenerator_Consecutive auxSuffix perms us
-                        USBAllPairs -> mkGenerator_AllPairs auxSuffix perms us
-                        USBAllPermutations -> mkGenerator_AllPermutations auxSuffix perms us
+                        USBConsecutive -> mkGenerator_Consecutive perms us
+                        USBAllPairs -> mkGenerator_AllPairs perms us
+                        USBAllPermutations -> mkGenerator_AllPermutations perms us
             newCons <-
                 case independentlyOrAltogether of
                     USBIndependently -> do
                       xs <- sequence
-                            [ mkGenerator uName [] [(u, uSize)]
-                            | (u@(DomainReference uName _), uSize) <- allUnnamedTypes
+                            [ mkGenerator [] [(u, uSize)]
+                            | (u@DomainReference{}, uSize) <- allUnnamedTypes
                             ]
                       return [SuchThat xs]
                     USBAltogether -> do
-                        cons <- mkGenerator "all" [] allUnnamedTypes
+                        cons <- mkGenerator [] allUnnamedTypes
                         return [SuchThat [cons]]
 
             let stmts = newCons
