@@ -19,11 +19,11 @@ pushd tmp-install-minion
 OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
-    download https://savilerow.cs.st-andrews.ac.uk/savilerow-$VERSION-mac.tgz
+    download https://www-users.york.ac.uk/peter.nightingale/savilerow/savilerow-$VERSION-mac.tgz
     tar zxf savilerow-$VERSION-mac.tgz
     mv savilerow-$VERSION-mac/bin/minion ${BIN_DIR}/minion
 elif [ "$OS" == "Linux" ]; then
-    download https://savilerow.cs.st-andrews.ac.uk/savilerow-$VERSION-linux.tgz
+    download https://www-users.york.ac.uk/peter.nightingale/savilerow/savilerow-$VERSION-linux.tgz
     tar zxf savilerow-$VERSION-linux.tgz
     mv savilerow-$VERSION-linux/bin/minion ${BIN_DIR}/minion
 else

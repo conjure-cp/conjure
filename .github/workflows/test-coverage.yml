@@ -29,14 +29,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout repository
 
       - name: Stack version
         shell: bash
         run: make stack.yaml
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache stack
         with:
           path: |

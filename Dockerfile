@@ -9,13 +9,13 @@
 # Setting up
 FROM ubuntu:23.10 AS builder
 ENV DEBIAN_FRONTEND noninteractive
-WORKDIR /conjure/
+WORKDIR /conjure
 
 # All binaries will end up in /root/.local/bin
 RUN mkdir -p /root/.local/bin
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc/
+ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc
 # Dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
@@ -30,6 +30,7 @@ RUN apt-get install -y --no-install-recommends autoconf                 # needed
 RUN apt-get install -y --no-install-recommends gperf                    # needed when building some solvers (for example yices)
 RUN apt-get install -y --no-install-recommends python3                  # needed when building some solvers (for example z3)
 RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
+RUN apt-get install -y --no-install-recommends libnuma-dev              # runsolver
 
 # Only copying the install*.sh scripts
 RUN mkdir -p etc
@@ -51,16 +52,27 @@ RUN PROCESSES=2 etc/build/install-open-wbo.sh
 RUN PROCESSES=2 etc/build/install-ortools.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
 RUN PROCESSES=2 etc/build/install-z3.sh
+RUN PROCESSES=2 etc/build/install-runsolver.sh
 
-# Copy everything
-COPY . .
+# An attempt to cache more
+COPY Makefile Makefile
+COPY etc/hs-deps etc/hs-deps
+COPY conjure-cp.cabal conjure-cp.cabal
+RUN make installdeps
 
-# Building Conjure and copying Savile Row
+# Copy the rest
+COPY etc etc
+COPY src src
+COPY LICENSE LICENSE
 RUN make install
 
 # List the binaries
 RUN ls -l /root/.local/bin
 RUN du -sh /root/.local/bin
+
+# Copy the allsolvers test case
+RUN mkdir -p tests
+COPY tests/allsolvers tests/allsolvers
 
 # a test to see if all solvers work as expected
 RUN tests/allsolvers/test.sh
@@ -73,8 +85,9 @@ FROM ubuntu:23.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc/
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends default-jre-headless     # savilerow
+ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
+RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
+RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev              # runsolver
 RUN mkdir -p /root/.local/bin/lib
 COPY --from=builder /root/.local/bin /root/.local/bin

@@ -53,6 +53,14 @@ install:
 	@echo
 	@echo
 
+# mainly for CI
+.PHONY: installdeps
+installdeps:
+	bash etc/build/install-stack.sh
+	make stack.yaml
+	stack --local-bin-path ${BIN_DIR} setup;
+	stack build --only-dependencies
+
 .PHONY: test
 test:
 	@if ${COVERAGE}; then \
@@ -150,4 +158,5 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-minizinc.sh
 	@etc/build/silent-wrapper.sh etc/build/install-yices.sh
 	@etc/build/silent-wrapper.sh etc/build/install-z3.sh
+	@etc/build/silent-wrapper.sh etc/build/install-runsolver.sh
 	@if ls make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null; then echo "At least one solver didn't build successfully."; exit 1; fi

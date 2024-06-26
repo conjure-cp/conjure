@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-cse #-} -- stupid cmdargs
 
-module Conjure.UI ( UI(..), OutputFormat(..), ui ) where
+module Conjure.UI ( UI(..), OutputFormat(..), ui, versionLine ) where
 
 -- conjure
 import Conjure.Prelude
@@ -100,6 +100,9 @@ data UI
         , responses                  :: String
         , responsesRepresentation    :: String
         , solutionsInOneFile         :: Bool
+        , runsolverCPUTimeLimit      :: Maybe Int
+        , runsolverWallTimeLimit     :: Maybe Int
+        , runsolverMemoryLimit       :: Maybe Int
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -749,6 +752,24 @@ ui = modes
             &= explicit
             &= help "Place all solutions in a single file instead of generating a separate file per solution.\n\
                     \Off by default."
+        , runsolverCPUTimeLimit
+            = def
+            &= name "runsolver-cpu-time-limit"
+            &= groupname "runsolver"
+            &= explicit
+            &= help "Use runsolver to limit total CPU time (in seconds)"
+        , runsolverWallTimeLimit
+            = def
+            &= name "runsolver-wall-time-limit"
+            &= groupname "runsolver"
+            &= explicit
+            &= help "Use runsolver to limit total elapsed time (in seconds)"
+        , runsolverMemoryLimit
+            = def
+            &= name "runsolver-memory-limit"
+            &= groupname "runsolver"
+            &= explicit
+            &= help "Use runsolver to limit total memory usage (Maximum RSS - in megabytes)."
         , logLevel
             = def
             &= name "log-level"
@@ -1480,8 +1501,7 @@ ui = modes
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
            &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
-                               , "Release version " ++ showVersion version
-                               , "Repository version " ++ repositoryVersion
+                               , versionLine
                                ])
            &= help "The command line interface of Conjure takes a command name as the first argument \
                    \followed by more arguments depending on the command.\n\
@@ -1489,3 +1509,5 @@ ui = modes
                    \For details of a command, pass the --help flag after the command name.\n\
                    \For example: 'conjure translate-solution --help'"
 
+versionLine :: String
+versionLine = "Conjure v" ++ showVersion version ++ " (Repository version " ++ repositoryVersion ++ ")"

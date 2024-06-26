@@ -19,7 +19,7 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
-
+import Conjure.UI.SolveStats ( mkSolveStats )
 
 import Conjure.Language.Name ( Name(..) )
 import Conjure.Language.Definition ( Model(..), ModelInfo(..), Statement(..), Declaration(..), FindOrGiven(..) )
@@ -42,6 +42,7 @@ import Conjure.Language.AdHoc ( toSimpleJSON )
 
 
 -- base
+import Control.Exception ( IOException, handle )
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..), hPutStrLn, stderr )
 import System.Environment ( getEnvironment )
 import System.Info ( os )
@@ -54,9 +55,6 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
-
--- system-filepath
--- import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile, findExecutable )
@@ -253,6 +251,7 @@ mainWithArgs Boost{..} = do
         boosted <- boost logLevel logRuleSuccesses model
         writeModel lineWidth outputFormat Nothing boosted
 mainWithArgs config@Solve{..} = do
+    liftIO $ createDirectoryIfMissing True outputDirectory
     -- some sanity checks
     (solverName, _smtLogicName) <- splitSolverName solver
     case lookup solverName solverExecutables of
@@ -305,11 +304,7 @@ mainWithArgs config@Solve{..} = do
         if not (null useExistingModels)
             then do
                 pp logLevel "Using existing models."
-                allEprimes <- getEprimes
-                let missingModels = useExistingModels \\ allEprimes
-                if null missingModels
-                    then return useExistingModels
-                    else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
+                return useExistingModels
             else doIfNotCached          -- start the show!
                     ( sort (mStatements essenceM_beforeNR)
                     , portfolio
@@ -342,8 +337,12 @@ mainWithArgs config@Solve{..} = do
                     conjuring
 
     eprimesParsed <- forM eprimes $ \ f -> do
-        p <- readModelInfoFromFile (outputDirectory </> f)
-        return (f, p)
+        p1 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile (outputDirectory </> f))
+        p2 <- liftIO $ handle (\(_ :: IOException) -> return Nothing) (Just <$> readModelInfoFromFile f)
+        case (p1, p2) of
+            (Just p, _) -> return (outputDirectory </> f, p)
+            (_, Just p) -> return (f, p)
+            _ -> userErr1 $ "Model not found:" <+> pretty f
 
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
@@ -450,11 +449,11 @@ mainWithArgs config@Solve{..} = do
             n <- mainWithArgs_Modelling "" modelling Nothing S.empty
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            if (S.size n == 1)
+            if S.size n == 1
                 then pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
                 else pp logLevel $ "Generated" <+> pretty (S.size n) <+> "models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
-            return eprimes
+            return [ outputDirectory </> f | f <- eprimes ]
 
         getEprimes :: m [FilePath]
         getEprimes = sort . filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
@@ -848,16 +847,32 @@ savileRowNoParam ::
        ) ])
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
-    let outBase = dropExtension modelPath
+    let outBase = (dropExtension . snd . splitFileName) modelPath
     srArgs <- liftIO $ srMkArgs ui outBase modelPath
     let tr = translateSolution eprimeModel def
-    when (logLevel >= LogDebug) $ do
-        liftIO $ putStrLn "Using the following options for Savile Row:"
-        liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
-    (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
-                                (liftIO . srStdoutHandler
-                                    (outBase, modelPath, "<no param file>", ui)
-                                    tr (1::Int))
+    let handler = liftIO . srStdoutHandler
+                    (outBase, modelPath, "<no param file>", ui)
+                    tr (1::Int)
+    let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
+                        maybe [] (\ limit -> ["-W", show limit]) runsolverWallTimeLimit ++
+                        maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit ++
+                        ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
+    (stdoutSR, solutions) <- partitionEithers <$>
+        case (runsolverCPUTimeLimit, runsolverWallTimeLimit, runsolverMemoryLimit) of
+            (Nothing, Nothing, Nothing) -> do
+                when (logLevel >= LogDebug) $ do
+                    liftIO $ putStrLn "Using the following options for Savile Row:"
+                    liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                runHandle savilerowScriptName srArgs handler
+            _ ->
+                if os /= "linux"
+                    then return [Left "runsolver is only supported on linux"]
+                    else do
+                        when (logLevel >= LogDebug) $ do
+                            liftIO $ putStrLn "Using the following options for Savile Row:"
+                            liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
+                                                 ++ " savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                        runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
     srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
@@ -875,7 +890,7 @@ savileRowWithParams ::
        ) ])
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
-    let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
+    let outBase = (dropExtension . snd . splitFileName) modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
     let
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
@@ -892,13 +907,30 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srArgsBase
             let tr = translateSolution eprimeModel essenceParam
-            when (logLevel >= LogDebug) $ do
-                liftIO $ putStrLn "Using the following options for Savile Row:"
-                liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
-            (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
-                                        (liftIO . srStdoutHandler
-                                            (outBase, modelPath, paramPath, ui)
-                                            tr (1::Int))
+            let handler = liftIO . srStdoutHandler
+                            (outBase, modelPath, paramPath, ui)
+                            tr (1::Int)
+            let runsolverArgs = maybe [] (\ limit -> ["-C", show limit]) runsolverCPUTimeLimit ++
+                                maybe [] (\ limit -> ["-W", show limit]) runsolverWallTimeLimit ++
+                                maybe [] (\ limit -> ["-R", show limit]) runsolverMemoryLimit ++
+                                ["--quiet", "-v", outputDirectory </> outBase ++ ".runsolver-info"]
+            (stdoutSR, solutions) <- partitionEithers <$>
+                case (runsolverCPUTimeLimit, runsolverWallTimeLimit, runsolverMemoryLimit) of
+                    (Nothing, Nothing, Nothing) -> do
+                        when (logLevel >= LogDebug) $ do
+                            liftIO $ putStrLn "Using the following options for Savile Row:"
+                            liftIO $ putStrLn $ "    savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                        runHandle savilerowScriptName srArgs handler
+                    _ ->
+                        if os /= "linux"
+                            then return [Left "runsolver is only supported on linux"]
+                            else do
+                                when (logLevel >= LogDebug) $ do
+                                    liftIO $ putStrLn "Using the following options for Savile Row:"
+                                    liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
+                                                        ++ " savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
+                                runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
+
             srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
@@ -965,7 +997,7 @@ splitSolverName solver = do
 srMkArgs :: UI -> FilePath -> FilePath -> IO [Text]
 srMkArgs Solve{..} outBase modelPath = do
     let genericOpts =
-            [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
+            [ "-in-eprime"      , stringToText modelPath
             , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
             , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
             , "-out-smt"        , stringToText $ outputDirectory </> outBase ++ ".eprime-smt"
@@ -1147,14 +1179,15 @@ srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
 srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
-srCleanUp outBase Solve{..} stdoutSR solutions = do
+srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
+
+    let mkFilename ext = outputDirectory </> outBase ++ ext
 
     -- closing the array in the all solutions json file
     case outputFormat of
         JSON -> case solutionsInOneFile of
             False -> return ()
             True -> do
-                let mkFilename ext = outputDirectory </> outBase ++ ext
                 let filenameEssenceSolJSON = mkFilename ".solutions.json"
                 case solutions of
                     [] -> liftIO $ writeFile  filenameEssenceSolJSON "[]\n"
@@ -1164,6 +1197,16 @@ srCleanUp outBase Solve{..} stdoutSR solutions = do
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
     let combinedSR = T.unlines [stdoutSR, stderrSR]
+
+    liftIO $ do
+        let savilerowInfoFilename = mkFilename ".eprime-info"
+        let runsolverInfoFilename = mkFilename ".runsolver-info"
+        let statsFilename = mkFilename ".stats.json"
+        savilerowInfoContent <- liftIO $ readFileIfExists savilerowInfoFilename
+        runsolverInfoContent <- liftIO $ readFileIfExists runsolverInfoFilename
+        stats <- mkSolveStats ui (exitCodeSR, stdoutSR, stderrSR) (fromMaybe "" savilerowInfoContent) (fromMaybe "" runsolverInfoContent)
+        writeFile statsFilename (render lineWidth (toJSON stats))
+
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->
             return (Left ["Savile Row timed out."])
         | T.isInfixOf "where false" combinedSR ->

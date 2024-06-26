@@ -31,14 +31,14 @@ streamliningToStdout model = do
 
         showStr :: String -> Doc
         showStr = pretty . show
-        
+
     streamliners <- streamlining model
 
     liftIO $ print $ prettyList prBraces ","
-        [ (showStr $ show i) <> ":" <+> prBraces (vcat
+        [ showStr (show i) <> ":" <+> prBraces (vcat
             [ showStr "onVariable" <> ":" <+> showStr (show (pretty nm)) <> ","
-            , showStr "groups"     <> ":" <+> prettyList prBrackets "," (map showStr groups) <> ","
-            , showStr "constraint" <> ":" <+> (showStr $ map whitespace $ show $ pretty cons)
+            , showStr "groups"     <> ":" <+> prettyList prBrackets "," (map showStr (nub groups)) <> ","
+            , showStr "constraint" <> ":" <+> showStr (map whitespace $ show $ pretty cons)
             ])
         | (i, (nm, (cons, groups))) <- zip allNats streamliners
         ]
@@ -53,16 +53,15 @@ streamlining ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m [(Name, Streamliner)]
 streamlining model = do
-    concatForM (mStatements model) $ \ statement ->
-        case statement of
-            Declaration (FindOrGiven Find nm domain) -> do
-                let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
-                streamliners <- streamlinersForSingleVariable ref
-                -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
-                --                      , vcat [ nest 4 (vcat (pretty x : map pretty gs)) | (x,gs) <- streamliners ]
-                --                      ]
-                return [ (nm, s) | s <- streamliners ]
-            _ -> noStreamliner
+    concatForM (mStatements model) $ \case
+        Declaration (FindOrGiven Find nm domain) -> do
+            let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
+            streamliners <- streamlinersForSingleVariable ref
+            -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
+            --                      , vcat [ nest 4 (vcat (pretty x : map pretty gs)) | (x,gs) <- streamliners ]
+            --                      ]
+            return [ (nm, s) | s <- streamliners ]
+        _ -> noStreamliner
 
 
 type StreamlinerGroup = String
@@ -105,6 +104,9 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , onTuple 2 streamlinersForSingleVariable
     , onTuple 3 streamlinersForSingleVariable
     , onTuple 4 streamlinersForSingleVariable
+
+    , matrixByRowBucket streamlinersForSingleVariable
+    , matrixByColBucket streamlinersForSingleVariable
 
     , matrixAll streamlinersForSingleVariable
     , matrixHalf streamlinersForSingleVariable
@@ -184,7 +186,7 @@ intLowerHalf x = do
         DomainInt _ [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
             if typeUnify ty (TypeInt TagInt)
-                then mkStreamliner "IntLowHigh" [essence| &x < 1 + (&upper -1) /2 |]
+                then mkStreamliner "IntLowHigh" [essence| &x <= 1 + (&upper -1) /2 |]
                 else noStreamliner
         _ -> noStreamliner
 
@@ -355,6 +357,68 @@ matrixLessThanHalf innerStreamliner x = do
         _ -> noStreamliner
 
 
+matrixByRowBucket ::
+    MonadFailDoc m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+matrixByRowBucket innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    case dom of
+        DomainMatrix (DomainInt _ [RangeBounded lb ub]) innerDom@(DomainMatrix _ DomainInt{}) -> do
+            let size = [essence| &ub - &lb + 1 |]
+            let bucketSize = [essence| &size / 10 |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            concatForM [0..9] $ \ (bucketInt :: Integer) -> let bucket = fromInt bucketInt in
+                forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup (("MatrixByRowBucket-" ++ show bucketInt) : grps) [essence|
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. min([&ub, &lb + (&bucket+1) * &bucketSize])) . &innerConstraint
+                        |]
+        _ -> noStreamliner
+
+
+
+matrixByColBucket ::
+    MonadFailDoc m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    StreamlinerGen m -> StreamlinerGen m
+matrixByColBucket innerStreamliner x = do
+    dom <- expandDomainReference <$> domainOf x
+    case dom of
+        DomainMatrix outerIndex (DomainMatrix (DomainInt _ [RangeBounded lb ub]) innerDom) -> do
+            let size = [essence| &ub - &lb + 1 |]
+            let bucketSize = [essence| &size / 10 |]
+
+            nmO <- nextName "q"
+            let patO = Single nmO
+            let refO = Reference nmO Nothing
+
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&refO, &ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            concatForM [0..9] $ \ (bucketInt :: Integer) -> let bucket = fromInt bucketInt in
+                forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup (("MatrixByColBucket-" ++ show bucketInt) : grps) [essence|
+                        forAll &patO : &outerIndex .
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. min([&ub, &lb + (&bucket+1) * &bucketSize])) .
+                        &innerConstraint
+                        |]
+        _ -> noStreamliner
+
+
 ------------------------------------------------------------------------------
 -- Sets and MSets
 ------------------------------------------------------------------------------
@@ -371,7 +435,7 @@ setAll innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -397,7 +461,7 @@ setAtMostOne innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -421,7 +485,7 @@ setHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -446,7 +510,7 @@ setApproxHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -474,7 +538,7 @@ setMoreThanHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -501,7 +565,7 @@ setLessThanHalf innerStreamliner x = do
             case dom of
                 DomainSet _ _ innerDom -> Just (innerDom, "SetCardinality")
                 DomainMSet _ _ innerDom -> Just (innerDom, "MSetCardinality")
-                DomainRelation _ _ innerDoms -> Just ((DomainTuple innerDoms), "RelationCardinality")
+                DomainRelation _ _ innerDoms -> Just (DomainTuple innerDoms, "RelationCardinality")
                 _ -> Nothing
     case minnerDom of
         Just (innerDom, newTag) -> do
@@ -569,8 +633,8 @@ binRelAttributes x = do
                                 , ( BinRelAttr_Equivalence   , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
                                 , ( BinRelAttr_PartialOrder  , [essence| |`&inner`| * |`&inner`| * |`&inner`| |] )
                                 ]
-            , softness <- [Nothing, Just 2, Just 4, Just 8, Just 16, Just 32]
             , let grp = show attr
+            , softness <- [Nothing, Just 2, Just 4, Just 8, Just 16, Just 32]
             ]
         _ -> noStreamliner
 
