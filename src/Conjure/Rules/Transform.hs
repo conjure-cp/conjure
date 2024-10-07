@@ -371,6 +371,7 @@ rule_Transform_Sequence_Literal = "transform-sequence-literal" `namedRule` theRu
   theRule p = do
    _ <- match opTransform p 
    let (x, rx) = matchManyTransforms p
+   TypeSequence{} <- typeOf x
    (_, as) <- match sequenceLiteral x  
    return ( "Horizontal rule for transform sequence literal"
           , return $ AbstractLiteral $ AbsLitSequence $ rx <$> as
