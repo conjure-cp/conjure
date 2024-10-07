@@ -194,6 +194,12 @@ removeEnumsFromParam model param = do
             = return (fromIntWithTag i (TagEnum ename))
         onX p = return p
 
+        onC :: Monad m => Constant -> m Constant
+        onC (ConstantEnum _ _ nm)
+            | Just (Name ename, i) <- M.lookup nm nameToIntMapping
+            = return (fromIntWithTag i (TagEnum ename))
+        onC p = return p
+
         onD :: MonadFailDoc m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm@(Name nmText) (Just ranges) _)
             | Just _ <- M.lookup nm enumDomainNames
@@ -207,7 +213,7 @@ removeEnumsFromParam model param = do
         onD p = return p
 
     let param' = param { mStatements = catMaybes statements' }
-    let f = transformBiM onD >=> transformBiM onX
+    let f = transformBiM onD >=> transformBiM onX >=> transformBiM onC
     (,) <$> f model <*> f param'
 
 

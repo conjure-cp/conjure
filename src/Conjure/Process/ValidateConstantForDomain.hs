@@ -4,41 +4,10 @@ module Conjure.Process.ValidateConstantForDomain ( validateConstantForDomain ) w
 
 import Conjure.Prelude
 import Conjure.Language.Constant
-    ( viewConstantBool,
-      viewConstantFunction,
-      viewConstantIntWithTag,
-      viewConstantMSet,
-      viewConstantMatrix,
-      viewConstantPartition,
-      viewConstantRecord,
-      viewConstantRelation,
-      viewConstantSequence,
-      viewConstantSet,
-      viewConstantTuple,
-      viewConstantVariant,
-      Constant(ConstantEnum, TypedConstant, ConstantInt, ConstantBool) )
 import Conjure.Language.Definition
-    ( Name,
-      NameGen, forgetRepr )
 import Conjure.Language.Domain
-    ( Domain(DomainBool, DomainUnnamed, DomainEnum, DomainPartition,
-             DomainTuple, DomainRecord, DomainVariant, DomainMatrix, DomainInt,
-             DomainSet, DomainMSet, DomainFunction, DomainSequence,
-             DomainRelation),
-      Range(RangeBounded, RangeOpen, RangeSingle, RangeLowerBounded,
-            RangeUpperBounded),
-      BinaryRelationAttrs(BinaryRelationAttrs),
-      RelationAttr(RelationAttr),
-      OccurAttr(OccurAttr_MinMaxOccur, OccurAttr_None,
-                OccurAttr_MinOccur, OccurAttr_MaxOccur),
-      MSetAttr(MSetAttr),
-      SizeAttr(SizeAttr_MinMaxSize, SizeAttr_None, SizeAttr_Size,
-               SizeAttr_MinSize, SizeAttr_MaxSize),
-      SetAttr(SetAttr),
-      binRelToAttrName, SequenceAttr (SequenceAttr), JectivityAttr (JectivityAttr_Surjective, JectivityAttr_Bijective) )
+import Conjure.Language.Type
 import Conjure.Language.Pretty 
-import Conjure.Language.Type ( TypeCheckerMode )
-import Conjure.Language.Expression
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
 import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
@@ -63,6 +32,9 @@ validateConstantForDomain ::
 validateConstantForDomain _ (viewConstantBool -> Just _) DomainBool{} = return ()
 
 validateConstantForDomain _ _ (DomainInt _ []) = return ()              -- no restrictions
+
+-- enums, always ok
+validateConstantForDomain _ (ConstantEnum (Name ty1) _ _) (DomainInt (TagEnum ty2) _) | ty1 == ty2 = return ()
 
 validateConstantForDomain name c@(viewConstantIntWithTag -> Just (cTag, i)) d@(DomainInt dTag rs) | cTag == dTag =
     let
