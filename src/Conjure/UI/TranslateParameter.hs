@@ -30,7 +30,7 @@ translateParameter ::
     m Model      -- eprime param
 
 translateParameter graphSolver eprimeModel0 essenceParam0 = do
-    logDebug $ "[eprimeModel  0]" <+-> pretty essenceParam0
+    logDebug $ "[eprimeModel  0]" <+-> pretty eprimeModel0
     logDebug $ "[essenceParam 0]" <+-> pretty essenceParam0
     (eprimeModel, essenceParam1) <- removeEnumsFromParam eprimeModel0 essenceParam0
     logDebug $ "[eprimeModel  1]" <+-> pretty eprimeModel
