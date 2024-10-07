@@ -105,20 +105,29 @@ fromSimpleJSONModel essence json =
     case json of
         JSON.Object inners -> do
             stmts <- forM (KM.toList inners) $ \ (toText->name, valueJSON) -> do
-                -- traceM $ show $ "name    " <+> pretty name
                 let mdomain = [ dom
                               | Declaration (FindOrGiven Given (Name nm) dom) <- mStatements essence
                               , nm == name
                               ]
-                -- traceM $ show $ "mdomain " <+> vcat (map pretty mdomain)
-                case mdomain of
-                    [domain] -> do
-                        -- traceM $ show $ "domain  " <+> pretty domain
+                let enums = [ nm
+                            | Name nm <- essence |> mInfo |> miEnumGivens
+                            , nm == name
+                            ]
+                case (mdomain, enums) of
+                    ([domain], _) -> do
                         typ <- typeOfDomain domain
-                        -- traceM $ show $ "typ     " <+> pretty typ
                         value <- fromSimpleJSON typ valueJSON
-                        -- traceM $ show $ "value   " <+> pretty value
                         return $ Just $ Declaration (Letting (Name name) value)
+                    (_, [enum]) -> do
+                        case valueJSON of
+                            JSON.Array v -> do
+                                    let vals = [ case str of
+                                                    JSON.String t -> Name t
+                                                    _ -> bug ("fromSimpleJSONModel not name: " <+> pretty (show str))
+                                               | str <- V.toList v
+                                               ]
+                                    return $ Just $ Declaration (LettingDomainDefnEnum (Name enum) vals)
+                            _ -> bug "fromSimpleJSONModel"
                     _ -> do
                         logWarn $ "Ignoring" <+> pretty name <+> "from the JSON file."
                         return Nothing

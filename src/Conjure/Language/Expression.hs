@@ -164,6 +164,9 @@ instance SimpleJSON Declaration where
             Letting nm x -> do
                 x' <- toSimpleJSON x
                 return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), x')]
+            LettingDomainDefnEnum nm xs -> do
+                let xs' = map (fromString . renderNormal) xs
+                return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), JSON.Array (V.fromList xs'))]
             _ -> noToSimpleJSON d
     fromSimpleJSON = noFromSimpleJSON "Declaration"
 

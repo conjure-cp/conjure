@@ -115,7 +115,7 @@ instance SimpleJSON Integer where
                     Nothing -> noFromSimpleJSON "Integer" t text
             _ -> noFromSimpleJSON "Integer" t x
 
-data AsDictionary a b = AsDictionary [(a,b)]
+newtype AsDictionary a b = AsDictionary [(a,b)]
 
 instance (Pretty x, SimpleJSON x, SimpleJSON y) => SimpleJSON (AsDictionary x y) where
     toSimpleJSON (AsDictionary xs) = do
