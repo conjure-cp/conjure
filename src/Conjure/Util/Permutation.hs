@@ -202,7 +202,7 @@ isBijective (Permutation p) =
   let (l, r) = unzip p
    in (length (nub l) == length (nub r))
         && (length (nub l) == length l)
-        && (null (l \\ r))
+        && null (l \\ r)
 
 -------------------------CycleFinder Monad---------------------------------------------
 

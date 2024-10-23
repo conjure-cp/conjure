@@ -767,7 +767,7 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                                 , "Got:" <+> pretty unnamedSymmetryBreaking
                                 ]
 
-            trail <- if (followModel /= "")
+            trail <- if followModel /= ""
                         then miTrailGeneralised . mInfo <$> readModelInfoFromFile followModel
                         else return []
 
