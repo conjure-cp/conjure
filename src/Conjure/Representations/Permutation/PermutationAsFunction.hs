@@ -18,7 +18,7 @@ import Conjure.Util.Permutation
 
 permutationAsFunction ::
   forall m.
-  (MonadFail m, NameGen m, EnumerateDomain m) =>
+  (MonadFailDoc m, NameGen m, EnumerateDomain m) =>
   (forall x. DispatchFunction m x) ->
   Representation m
 permutationAsFunction dispatch = Representation chck downD structuralCons downC up symmetryOrdering
@@ -29,8 +29,11 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
           map (DomainPermutation Permutation_AsFunction s) <$> f innerDomain
     chck _ _ = return []
 
-    outName :: Domain HasRepresentation x -> Name -> Name
-    outName = mkOutName (Just "PermutationFunction")
+    outNameF :: Domain HasRepresentation x -> Name -> Name
+    outNameF = mkOutName (Just "PermutationFunction_forwards")
+
+    outNameB :: Domain HasRepresentation x -> Name -> Name
+    outNameB = mkOutName (Just "PermutationFunction_backwards")
 
     outDomain :: (DomainSizeOf x x, Pretty x) => Domain HasRepresentation x -> m (Domain HasRepresentation x)
     outDomain (DomainPermutation Permutation_AsFunction _ innerDomain) = do
@@ -43,8 +46,8 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
             innerDomain
         )
     outDomain domain =
-      na $
-        vcat
+      na
+        $ vcat
           [ "{outDomain} PermutationAsFunction",
             "domain:" <+> pretty domain
           ]
@@ -53,9 +56,16 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
     downD (name, domain@(DomainPermutation Permutation_AsFunction _ innerDomain))
       | domainCanIndexMatrix innerDomain = do
           m <- domainSizeOf innerDomain
-          return $
-            Just
-              [ ( outName domain name,
+          return
+            $ Just
+              [ ( outNameF domain name,
+                  DomainFunction
+                    Function_1D
+                    (FunctionAttr (SizeAttr_Size m) PartialityAttr_Total JectivityAttr_Bijective)
+                    innerDomain
+                    innerDomain
+                ),
+                ( outNameB domain name,
                   DomainFunction
                     Function_1D
                     (FunctionAttr (SizeAttr_Size m) PartialityAttr_Total JectivityAttr_Bijective)
@@ -70,29 +80,27 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
       return $ \inpFun -> do
         refs <- downX1 inpFun
         case refs of
-          [fun] -> do
+          [forw, back] -> do
             outDom <- outDomain inDom
             innerStructuralConsGen <- f outDom
             (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDom)
             concat
               <$> sequence
-                [ innerStructuralConsGen fun,
-                  return $
-                    mkSizeCons
-                      s
-                      [essence|
-                          sum([ toInt(&i != image(&fun, &i)) | &iPat : &innerDom ])
-                                                |]
+                [ innerStructuralConsGen forw,
+                  innerStructuralConsGen back,
+                  return $ mkSizeCons s [essence| sum([ toInt(&i != image(&forw, &i)) | &iPat : &innerDom ]) |],
+                  return [[essence| forAll &iPat : &innerDom . &back(&forw(&i)) = &i |]],
+                  return [[essence| forAll &iPat : &innerDom . &forw(&back(&i)) = &i |]]
                 ]
           _ ->
-            na $
-              vcat
+            na
+              $ vcat
                 [ "{structuralCons} PermutationAsFunction",
                   pretty inDom
                 ]
     structuralCons _ _ inDom =
-      na $
-        vcat
+      na
+        $ vcat
           [ "{structuralCons} PermutationAsFunction",
             pretty inDom
           ]
@@ -105,18 +113,28 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
         ) = do
         outDom <- outDomain inDom
         enumDo <- enumerateDomain $ forgetRepr innerDom
-        case fromCycles vals of
-          Right perm ->
-            rDownC
-              (dispatch outDom)
-              ( outName inDom name,
-                outDom,
-                ConstantAbstract $ AbsLitFunction $ zip enumDo (toFunction perm <$> enumDo)
-              )
-          Left (PermutationError err) -> failDoc $ "PermutationError: " <+> stringToDoc err
+        case (fromCycles vals, inverse <$> fromCycles vals) of
+          (Right perm1, Right perm2) -> do
+            out1 <-
+              rDownC
+                (dispatch outDom)
+                ( outNameF inDom name,
+                  outDom,
+                  ConstantAbstract $ AbsLitFunction $ zip enumDo (toFunction perm1 <$> enumDo)
+                )
+            out2 <-
+              rDownC
+                (dispatch outDom)
+                ( outNameB inDom name,
+                  outDom,
+                  ConstantAbstract $ AbsLitFunction $ zip enumDo (toFunction perm2 <$> enumDo)
+                )
+            return $ Just (fromMaybe [] out1 ++ fromMaybe [] out2)
+          (Left (PermutationError err), _) -> failDoc $ "PermutationError: " <+> stringToDoc err
+          (_, Left (PermutationError err)) -> failDoc $ "PermutationError: " <+> stringToDoc err
     downC (name, domain, constant) =
-      na $
-        vcat
+      na
+        $ vcat
           [ "{downC} PermutationAsFunction",
             "name:" <+> pretty name,
             "domain:" <+> pretty domain,
@@ -129,31 +147,31 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
       ( name,
         domain@(DomainPermutation Permutation_AsFunction {} _ _)
         ) = do
-        case lookup (outName domain name) ctxt of
+        case lookup (outNameF domain name) ctxt of
           (Just (ConstantAbstract (AbsLitFunction f))) -> do
             case toCyclesCanonical <$> fromRelation f of
               Right cycles ->
                 return (name, ConstantAbstract (AbsLitPermutation cycles))
               Left (PermutationError err) ->
-                failDoc $
-                  vcat $
-                    [ "PermutationError: " <+> stringToDoc err,
-                      "No value for:" <+> pretty (outName domain name),
+                failDoc
+                  $ vcat
+                  $ [ "PermutationError: " <+> stringToDoc err,
+                      "No value for:" <+> pretty (outNameF domain name),
                       "When working on:" <+> pretty name,
                       "With domain:" <+> pretty domain
                     ]
-                      ++ ("Bindings in context:" : prettyContext ctxt)
+                  ++ ("Bindings in context:" : prettyContext ctxt)
           _ ->
-            failDoc $
-              vcat $
-                [ "No value for:" <+> pretty (outName domain name),
+            failDoc
+              $ vcat
+              $ [ "No value for:" <+> pretty (outNameF domain name),
                   "When working on:" <+> pretty name,
                   "With domain:" <+> pretty domain
                 ]
-                  ++ ("Bindings in context:" : prettyContext ctxt)
+              ++ ("Bindings in context:" : prettyContext ctxt)
     up _ (name, domain) =
-      na $
-        vcat
+      na
+        $ vcat
           [ "{up} PermutationAsFunction",
             "name:" <+> pretty name,
             "domain:" <+> pretty domain

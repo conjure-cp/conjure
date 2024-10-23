@@ -9,7 +9,7 @@ rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
         TypePermutation{}              <- typeOf p
         Permutation_AsFunction         <- representationOf p
         DomainPermutation _ _ innerDom <- domainOf p
-        [fun]                          <- downX1 p
+        [fun, _]                       <- downX1 p
         return
             ( "Vertical rule for permutation cardinality, AsFunction representation."
             , do
@@ -25,7 +25,7 @@ rule_Defined = "permutation-defined" `namedRule` theRule where
         p                              <- match opDefined po
         TypePermutation{}              <- typeOf p
         Permutation_AsFunction         <- representationOf p
-        [fun]                          <- downX1 p
+        [fun, _]                       <- downX1 p
         return
             ( "Vertical rule for permutation defined, AsFunction representation."
             , do
@@ -37,12 +37,12 @@ rule_Defined = "permutation-defined" `namedRule` theRule where
 rule_Comprehension :: Rule
 rule_Comprehension = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) =  do
-        (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat expr) -> return (pat, matchDefs [opToSet] expr)
             _ -> na "rule_Comprehension"
-        TypePermutation{}                 <- typeOf perm
+        TypePermutation{} <- typeOf perm
         Permutation_AsFunction <- representationOf perm
-        [f] <- downX1 perm
+        [f, _] <- downX1 perm
         return
             ( "Vertical rule for permutation-comprehension"
             , do
