@@ -102,8 +102,8 @@ import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Par
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 import qualified Conjure.Rules.Transform as Transform
 
-import qualified Conjure.Rules.Vertical.Permutation as Vertical.Permutation
 import qualified Conjure.Rules.Horizontal.Permutation as Horizontal.Permutation
+import qualified Conjure.Rules.Vertical.Permutation.PermutationAsFunction as Vertical.Permutation.PermutationAsFunction
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1408,10 +1408,10 @@ paramRules =
 
 verticalRules :: [Rule]
 verticalRules =
-    [ Vertical.Permutation.rule_Image
-    , Vertical.Permutation.rule_Cardinality
-    , Vertical.Permutation.rule_Defined
-    , Vertical.Permutation.rule_Comprehension
+    [ Vertical.Permutation.PermutationAsFunction.rule_Image
+    , Vertical.Permutation.PermutationAsFunction.rule_Cardinality
+    , Vertical.Permutation.PermutationAsFunction.rule_Defined
+    , Vertical.Permutation.PermutationAsFunction.rule_Comprehension
 
 
     , Vertical.Tuple.rule_Tuple_Eq
@@ -2085,7 +2085,7 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
 
 rule_QuickPermutationOrder :: Rule
 rule_QuickPermutationOrder = "generic-QuickPermutationOrder" `namedRule` theRule where
-    theRule p@[essence| quickPermutationOrder(&x, &ps) |] = do
+    theRule [essence| quickPermutationOrder(&x, &ps) |] = do
         case listOut ps of
             Just [perm] ->
                 return
