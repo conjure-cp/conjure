@@ -51,6 +51,7 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitVariant _ nm x -> do
                 x' <- toSimpleJSON x
                 return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), x')]
+            AbsLitSequence xs -> toSimpleJSON xs
             AbsLitMatrix index xs ->
                 case index of
                     DomainInt _ ranges -> do
@@ -60,7 +61,6 @@ instance (SimpleJSON x, Pretty x, ExpressionLike x) => SimpleJSON (AbstractLiter
             AbsLitSet xs -> toSimpleJSON xs
             AbsLitMSet xs -> toSimpleJSON xs
             AbsLitFunction xs -> toSimpleJSON (AsDictionary xs)
-            AbsLitSequence xs -> toSimpleJSON xs
             AbsLitRelation xs -> toSimpleJSON xs
             AbsLitPartition xs -> toSimpleJSON xs
             AbsLitPermutation xs -> toSimpleJSON xs

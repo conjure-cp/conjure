@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Conjure.Rules.Transform (rules_Transform) where
 
@@ -49,11 +48,12 @@ rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
                 return
                   ( Comprehension body
                       $ gocBefore
-                      ++ [Generator (GenInExpr dPat [essence| &y |])]
-                      ++ ( ComprehensionLetting
-                             (Single pat)
-                             [essence|
+                      ++ [Generator (GenInExpr dPat y)]
+                      ++ ( ( ComprehensionLetting
+                               (Single pat)
+                               [essence|
                               transform(&morphism, &d) |]
+                           )
                              : gocAfter
                          )
                   )
@@ -73,12 +73,10 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule
           return
             ( "Horizontal rule for transform comprehension",
               do
-                gox <- mapM (transformOverGenOrCond morphism) gensOrConds
+                gox <- sequence (transformOverGenOrCond morphism <$> gensOrConds)
                 return
                   $ Comprehension
-                    [essence|
-                                        transform(&morphism, &body)
-                                                  |]
+                    [essence| transform(&morphism, &body) |]
                     (join gox)
             )
         else na "rule_Transform_Comprehension"
@@ -99,33 +97,33 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule
     transformOverGenerator m (GenDomainNoRepr absPat d) = do
       (rPat, ns) <- clonePattern absPat
       return
-        $ Generator (GenDomainNoRepr rPat d)
-        : ( ( \(pat, exp) ->
-                ComprehensionLetting (Single pat) [essence| transform(&m,&exp) |]
-            )
-              <$> ns
-          )
+        $ [Generator (GenDomainNoRepr rPat d)]
+        ++ ( ( \(pat, exp) ->
+                 ComprehensionLetting (Single pat) [essence| transform(&m,&exp) |]
+             )
+               <$> ns
+           )
 
     clonePattern (Single name) = do
       (nPat, n) <- quantifiedVar
       return (nPat, [(name, n)])
     clonePattern (AbsPatTuple pats) = do
-      rec <- mapM clonePattern pats
+      rec <- sequence (clonePattern <$> pats)
       return
         ( AbsPatTuple $ fst <$> rec,
-          snd =<< rec
+          join $ snd <$> rec
         )
     clonePattern (AbsPatMatrix pats) = do
-      rec <- mapM clonePattern pats
+      rec <- sequence (clonePattern <$> pats)
       return
         ( AbsPatMatrix $ fst <$> rec,
-          snd =<< rec
+          join $ snd <$> rec
         )
     clonePattern (AbsPatSet pats) = do
-      rec <- mapM clonePattern pats
+      rec <- sequence (clonePattern <$> pats)
       return
         ( AbsPatSet $ fst <$> rec,
-          snd =<< rec
+          join $ snd <$> rec
         )
     clonePattern _ =
       bug "rule_Transform_Comprehension: clonePattern: unsupported Abstract Pattern"
@@ -145,8 +143,7 @@ rule_Transform_Product_Types = "transform-product-types" `namedRule` theRule
                 tupleExpression =
                   AbstractLiteral
                     $ AbsLitTuple
-                    $ tupleIndexTransform
-                    <$> [1 .. (fromIntegral $ length tint)]
+                    $ (tupleIndexTransform <$> [1 .. (fromIntegral $ length tint)])
             return
               ( "Horizontal rule for transform of tuple",
                 return tupleExpression
@@ -252,11 +249,12 @@ rule_Transform_Sequence = "transform-sequence" `namedRule` theRule
                 return
                   ( Comprehension body
                       $ gocBefore
-                      ++ [Generator (GenInExpr dPat [essence| &y |])]
-                      ++ ( ComprehensionLetting
-                             (Single pat)
-                             [essence|
+                      ++ [Generator (GenInExpr dPat y)]
+                      ++ ( ( ComprehensionLetting
+                               (Single pat)
+                               [essence|
                    (&d[1], transform(&morphism, &d[2])) |]
+                           )
                              : gocAfter
                          )
                   )
@@ -415,8 +413,7 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
             else
               return
                 ( "Horizontal rule for transform shortcut",
-                  do
-                    return [essence| &i |]
+                  return i
                 )
     theRule _ = na "rule_Transform_Unifying"
 
@@ -426,6 +423,7 @@ rule_Transform_Sequence_Literal = "transform-sequence-literal" `namedRule` theRu
     theRule p = do
       _ <- match opTransform p
       let (x, rx) = matchManyTransforms p
+      TypeSequence {} <- typeOf x
       (_, as) <- match sequenceLiteral x
       return
         ( "Horizontal rule for transform sequence literal",

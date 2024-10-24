@@ -29,6 +29,7 @@ instance (TypeOf x, Pretty x, Domain () x :< x) => TypeOf (OpTwoBars x) where
                 case ty of
                     TypeInt _       -> return ()
                     TypeList{}      -> return ()
+                    TypeMatrix{}    -> return ()
                     TypeSet{}       -> return ()
                     TypeMSet{}      -> return ()
                     TypeFunction{}  -> return ()

@@ -8,6 +8,8 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty 
 import Conjure.Language.Type ( TypeCheckerMode )
+import Conjure.Language.Type
+import Conjure.Language.Pretty 
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
 import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
@@ -33,7 +35,10 @@ validateConstantForDomain _ (viewConstantBool -> Just _) DomainBool{} = return (
 
 validateConstantForDomain _ _ (DomainInt _ []) = return ()              -- no restrictions
 
-validateConstantForDomain name c@(viewConstantIntWithTag -> Just (_cTag, i)) d@(DomainInt _dTag rs) =
+-- enums, always ok
+validateConstantForDomain _ (ConstantEnum (Name ty1) _ _) (DomainInt (TagEnum ty2) _) | ty1 == ty2 = return ()
+
+validateConstantForDomain name c@(viewConstantIntWithTag -> Just (cTag, i)) d@(DomainInt dTag rs) | cTag == dTag =
     let
         intInRange RangeOpen                                          = True
         intInRange (RangeSingle (ConstantInt _ a))                    = i == a

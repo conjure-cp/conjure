@@ -105,6 +105,9 @@ instance SimpleJSON Constant where
 
     fromSimpleJSON _ (JSON.Bool b) = return (ConstantBool b)
 
+    fromSimpleJSON (TypeInt (TagEnum enum_type_name)) (JSON.String value) =
+        return (ConstantEnum (Name enum_type_name) [] (Name value))
+
     fromSimpleJSON t@TypeInt{} x@JSON.Number{} = ConstantInt TagInt <$> fromSimpleJSON t x
     fromSimpleJSON t@TypeInt{} x@JSON.String{} = ConstantInt TagInt <$> fromSimpleJSON t x
 
@@ -177,8 +180,7 @@ instance SimpleJSON Constant where
         return $ ConstantAbstract $ AbsLitFunction ys
 
     fromSimpleJSON ty@(TypeFunction fr to) value@(JSON.Array xs) = do
-        mys <- forM (V.toList xs) $ \ x ->
-                case x of
+        mys <- forM (V.toList xs) $ \case
                     JSON.Array x' ->
                         case V.toList x' of
                             [a', b'] -> do
@@ -191,6 +193,17 @@ instance SimpleJSON Constant where
         if length ys == length mys
             then return $ ConstantAbstract $ AbsLitFunction ys
             else noFromSimpleJSON "Constant" ty value
+
+    fromSimpleJSON (TypeSequence inner) (JSON.Object m) = do
+        ys :: [(Integer, Constant)] <- forM (KM.toList m) $ \ (toText->name, value) -> do
+            -- the name must be an integer
+            a <- fromSimpleJSON (TypeInt TagInt) (JSON.String name)
+            b <- fromSimpleJSON inner value
+            return (a, b)
+
+        let ys_sorted = sort ys
+
+        return $ ConstantAbstract $ AbsLitSequence (map snd ys_sorted)
 
     fromSimpleJSON (TypeSequence t) (JSON.Array xs) =
         ConstantAbstract . AbsLitSequence <$> mapM (fromSimpleJSON t) (V.toList xs)
@@ -458,7 +471,7 @@ viewConstantMatrix constant =
                 indices_as_int = [ i | ConstantInt _ i <- indices ]
             if length indices == length indices_as_int
                 then
-                    if length indices > 0
+                    if not (null indices)
                         then
                             if maximum indices_as_int - minimum indices_as_int + 1 == genericLength indices
                                 then return (DomainInt TagInt [RangeBounded (fromInt (minimum indices_as_int)) (fromInt (maximum indices_as_int))], values)
@@ -496,6 +509,7 @@ viewConstantFunction constant = do
 
 viewConstantSequence :: MonadFailDoc m => Constant -> m [Constant]
 viewConstantSequence (ConstantAbstract (AbsLitSequence xs)) = return xs
+viewConstantSequence (ConstantAbstract (AbsLitMatrix _ xs)) = return xs
 viewConstantSequence (TypedConstant c _) = viewConstantSequence c
 viewConstantSequence constant = failDoc ("Expecting a sequence, but got:" <++> pretty constant)
 
