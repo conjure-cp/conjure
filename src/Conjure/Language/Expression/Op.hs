@@ -104,6 +104,7 @@ mkOp op xs = case op of
                                                                          (arg xs 1 "allDiffExcept")
             L_catchUndef   -> inject $ MkOpCatchUndef   $ OpCatchUndef   (arg xs 0 "catchUndef")
                                                                          (arg xs 1 "catchUndef")
+            L_quickPermutationOrder -> inject $ MkOpQuickPermutationOrder $ OpQuickPermutationOrder (arg xs 0 "quickPermutationOrder") (arg xs 1 "quickPermutationOrder")
             L_dontCare     -> inject $ MkOpDontCare     $ OpDontCare     (arg xs 0 "dontCare")
             L_toSet        -> inject $ MkOpToSet        $ OpToSet        False (arg xs 0 "toSet")
             L_toMSet       -> inject $ MkOpToMSet       $ OpToMSet       (arg xs 0 "toMSet")
@@ -132,6 +133,9 @@ mkOp op xs = case op of
             L_party        -> inject $ MkOpParty        $ OpParty        (arg xs 0 "party")
                                                                          (arg xs 1 "party")
             L_participants -> inject $ MkOpParticipants $ OpParticipants (arg xs 0 "participants")
+            L_compose      -> inject $ MkOpCompose      $ OpCompose      (arg xs 0 "compose")
+                                                                         (arg xs 1 "compose")
+
             L_active       -> inject $ MkOpActive       $ OpActive       (arg xs 0 "active")
                                                                          (arg xs 1 "active" |> nameOut |> fromMaybe (bug "active"))
             L_pred         -> inject $ MkOpPred         $ OpPred         (arg xs 0 "pred")

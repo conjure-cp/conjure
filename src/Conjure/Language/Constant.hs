@@ -19,6 +19,8 @@ module Conjure.Language.Constant
     , viewConstantSequence
     , viewConstantRelation
     , viewConstantPartition
+    , viewConstantPermutation
+    , reDomConst
     ) where
 
 -- conjure
@@ -520,4 +522,15 @@ viewConstantPartition :: MonadFailDoc m => Constant -> m [[Constant]]
 viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
 viewConstantPartition (TypedConstant c _) = viewConstantPartition c
 viewConstantPartition constant = failDoc ("Expecting a partition, but got:" <++> pretty constant)
+
+viewConstantPermutation :: MonadFailDoc m => Constant -> m [[Constant]]
+viewConstantPermutation (ConstantAbstract (AbsLitPermutation xs)) = return xs
+viewConstantPermutation (TypedConstant c _) = viewConstantPermutation c
+viewConstantPermutation constant = failDoc ("Expecting a permutation, but got:" <++> pretty constant)
+
+
+reDomConst :: Domain () Constant -> Domain () Constant 
+reDomConst cns = case cns of
+                   DomainInt t _ -> reTag t cns
+                   _ -> cns
 

@@ -89,6 +89,24 @@ rule_Tuple_TildeLeq = "tuple-TildeLeq" `namedRule` theRule where
             )
 
 
+decomposeLexLexLt :: Expression -> [Expression] -> [Expression] -> Expression
+decomposeLexLexLt p = unroll
+    where
+        unroll [a]    [b]    = [essence| &a <lex &b |]
+        unroll (a:as) (b:bs) = let rest = unroll as bs
+                               in  [essence| (&a <lex &b) /\ &rest |]
+        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+
+decomposeLexLexLeq :: Expression -> [Expression] -> [Expression] -> Expression
+decomposeLexLexLeq p = unroll
+    where
+        unroll [a]    [b]    = [essence| &a <=lex &b |]
+        unroll (a:as) (b:bs) = let rest = unroll as bs
+                               in  [essence| (&a <=lex &b) /\ &rest |]
+        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+
+
+
 decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
 decomposeLexLt p = unroll
     where

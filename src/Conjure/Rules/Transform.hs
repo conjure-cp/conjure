@@ -32,7 +32,7 @@ rule_Transform_Functorially :: Rule
 rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr (Single pat) expr) ->
           return (pat, matchDefs [opToSet, opToMSet] expr)
         _ -> na "rule_Transform_Functorially"
@@ -153,12 +153,13 @@ rule_Transform_Product_Types = "transform-product-types" `namedRule` theRule
                   let indexexpr =
                         Reference (fst indx)
                           $ Just
-                          $ RecordField (fst indx) (snd indx)
+                          $ uncurry RecordField indx
                    in (fst indx, [essence| transform(&morphism, &i[&indexexpr]) |])
                 recordExpression =
                   AbstractLiteral
                     $ AbsLitRecord
-                    $ (recordIndexTransform <$> namet)
+                    $ recordIndexTransform
+                    <$> namet
             return
               ( "Horizontal rule for transform of record",
                 return recordExpression
@@ -171,7 +172,7 @@ rule_Transform_Matrix :: Rule
 rule_Transform_Matrix = "transform-matrix" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
         _ -> na "rule_Transform_Matrix"
       (morphism, matexp) <- match opTransform exp
@@ -203,7 +204,7 @@ rule_Transform_Partition :: Rule
 rule_Transform_Partition = "transform-partition" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
         _ -> na "rule_Transform_Partition"
       z <- match opParts x
@@ -221,7 +222,7 @@ rule_Transform_Partition = "transform-partition" `namedRule` theRule
                   ( Comprehension body
                       $ gocBefore
                       ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
-                      ++ ((ComprehensionLetting (Single pat) [essence| transform(&morphism, &d) |]) : gocAfter)
+                      ++ (ComprehensionLetting (Single pat) [essence| transform(&morphism, &d) |] : gocAfter)
                   )
             )
         else na "rule_Transform_Partition"
@@ -231,7 +232,7 @@ rule_Transform_Sequence :: Rule
 rule_Transform_Sequence = "transform-sequence" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr (Single pat) expr) ->
           return (pat, matchDefs [opToSet, opToMSet] expr)
         _ -> na "rule_Transform_Sequence"
@@ -265,7 +266,7 @@ rule_Transform_Sequence_Defined :: Rule
 rule_Transform_Sequence_Defined = "transform-sequence-defined" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr pat@Single {} expr) ->
           return (pat, matchDefs [opToSet, opToMSet] expr)
         _ -> na "rule_Transform_Sequence_Defined"
@@ -293,7 +294,7 @@ rule_Transformed_Indexing :: Rule
 rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, exp), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
         _ -> na "rule_Transformed_Indexing"
       (matexp, indexer) <- match opIndexing exp
@@ -353,7 +354,7 @@ rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule
       case matched of
         [] -> na "rule_Lift_Transformed_Indexing: nothing to lift"
         _ -> do
-          replacements <- sequence (liftIndexing <$> matched)
+          replacements <- mapM liftIndexing matched
           return
             ( "Horizontal rule for lift transformed indexing",
               return
@@ -368,7 +369,7 @@ rule_Transform_Indexing :: Rule
 rule_Transform_Indexing = "transform-indexing" `namedRule` theRule
   where
     theRule (Comprehension body gensOrConds) = do
-      (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \goc -> case goc of
+      (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
         Generator (GenInExpr pat expr) -> return (pat, expr)
         _ -> na "rule_Transform_Indexing"
       (morphism, matexp) <- match opTransform expr
@@ -601,5 +602,5 @@ rule_Transformed_Variant_Active = "transformed-variant-active" `namedRule` theRu
         Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
       return
         ( "Variant active on:" <+> pretty p,
-          return $ [essence| &xWhich = &argInt |]
+          return [essence| &xWhich = &argInt |]
         )

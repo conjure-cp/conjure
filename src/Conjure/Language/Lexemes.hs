@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Language.Lexemes where
 
@@ -109,6 +108,7 @@ data Lexeme
     | L_strictPartialOrder
     | L_leftTotal
     | L_rightTotal
+
     -- type: partition
     | L_partition
     | L_regular
@@ -118,6 +118,10 @@ data Lexeme
     | L_numParts
     | L_minNumParts
     | L_maxNumParts
+
+    -- type: permutation
+    | L_permutation
+    | L_compose
 
     -- operators, page 21 of the holy paper
     | L_union
@@ -161,6 +165,8 @@ data Lexeme
     | L_dontCare
 
     | L_catchUndef
+
+    | L_quickPermutationOrder
 
     -- matrix only operators
     | L_flatten
@@ -354,6 +360,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_surjective, "surjective" )
     , ( L_bijective, "bijective" )
     , ( L_sequence, "sequence" )
+    , ( L_permutation, "permutation" )
     , ( L_relation, "relation")
     , ( L_reflexive, "reflexive")
     , ( L_irreflexive, "irreflexive")
@@ -411,6 +418,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_makeTable, "makeTable" )
     , ( L_table, "table" )
 
+    , ( L_compose, "compose" )
+
 
     , ( L_allDiff, "allDiff" )
     , ( L_alldifferent_except, "alldifferent_except" )
@@ -420,6 +429,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_dontCare, "dontCare" )
     , ( L_catchUndef, "catchUndef" )
+
+    , ( L_quickPermutationOrder, "quickPermutationOrder" )
 
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )
