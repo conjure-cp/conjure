@@ -132,6 +132,7 @@ mkOp op xs = case op of
                                                                          (arg xs 1 "apart")
             L_party        -> inject $ MkOpParty        $ OpParty        (arg xs 0 "party")
                                                                          (arg xs 1 "party")
+            L_permInverse  -> inject $ MkOpPermInverse  $ OpPermInverse  (arg xs 0 "permInverse")
             L_participants -> inject $ MkOpParticipants $ OpParticipants (arg xs 0 "participants")
             L_compose      -> inject $ MkOpCompose      $ OpCompose      (arg xs 0 "compose")
                                                                          (arg xs 1 "compose")

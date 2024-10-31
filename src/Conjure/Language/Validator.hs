@@ -860,7 +860,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
       let repr = ()
       attrs' <- case attrs of
         Just a -> validatePermutationAttributes a
-        Nothing -> return def
+        Nothing -> return (PermutationAttr SizeAttr_None)
       (t, dom') <- typeSplit <$> validateDomain dom
       return . Typed (TypePermutation t) $ DomainPermutation repr attrs' dom'
 
@@ -901,6 +901,18 @@ validateSizeAttributes attrs = do
     [(L_maxSize, Just a)] -> return (SizeAttr_MaxSize a)
     [(L_minSize, Just a), (L_maxSize, Just b)] -> return (SizeAttr_MinMaxSize a b)
     as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes size:" ++ show as
+
+validatePermAttributes :: [(Lexeme, Maybe Expression)] -> ValidatorS (SizeAttr Expression)
+validatePermAttributes attrs = do
+  let permAttrNames = [L_numMoved, L_minNumMoved, L_maxNumMoved]
+  let filtered = sort $ filter (\x -> fst x `elem` permAttrNames) attrs
+  case filtered of
+    [] -> return SizeAttr_None
+    [(L_numMoved, Just a)] -> return $ SizeAttr_Size a
+    [(L_minNumMoved, Just a)] -> return (SizeAttr_MinSize a)
+    [(L_maxNumMoved, Just a)] -> return (SizeAttr_MaxSize a)
+    [(L_minNumMoved, Just a), (L_maxNumMoved, Just b)] -> return (SizeAttr_MinMaxSize a b)
+    as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes numMoved:" ++ show as
 
 validatePartSizeAttributes :: [(Lexeme, Maybe Expression)] -> ValidatorS (SizeAttr Expression)
 validatePartSizeAttributes attrs = do
@@ -984,8 +996,8 @@ validateSeqAttributes atts = do
 
 validatePermutationAttributes :: ListNode AttributeNode -> ValidatorS (PermutationAttr Expression)
 validatePermutationAttributes atts = do
-  attrs <- catMaybes <$> validateList_ (validateAttributeNode setValidAttrs) atts
-  size <- validateSizeAttributes attrs
+  attrs <- catMaybes <$> validateList_ (validateAttributeNode permValidAttrs) atts
+  size <- validatePermAttributes attrs
   return $ PermutationAttr size
 
 validateRelationAttributes :: ListNode AttributeNode -> ValidatorS (RelationAttr Expression)
@@ -2205,6 +2217,7 @@ functionOps l = case l of
   L_together -> biFuncV setPartArgs (const2 TypeBool)
   L_apart -> biFuncV setPartArgs (const2 TypeBool)
   L_party -> biFuncV partyArgs partyType
+  L_permInverse -> unFuncV permInverseArgs id
   L_participants -> unFuncV part partInner
   L_active -> biFuncV activeArgs (const2 TypeBool)
   L_pred -> unFuncV enumerable enumerableType
@@ -2222,26 +2235,42 @@ functionOps l = case l of
     valueOnly f (r, (k, e)) = do
       t <- getValueType k
       f (r, Typed t e)
+
     valueOnly2 :: (SArg -> SArg -> Validator a) -> Arg -> Arg -> Validator a
     valueOnly2 f (r1, (k1, e1)) (r2, (k2, e2)) = do
       t1 <- getValueType k1
       t2 <- getValueType k2
       f (r1, Typed t1 e1) (r2, Typed t2 e2)
+
     typeOnly :: Maybe (Kind, Expression) -> Maybe Type
     typeOnly (Just (Kind ValueType {} t, _)) = Just t
     typeOnly _ = Nothing
+
+    unFuncV ::
+      (SArg -> Validator a0) ->
+      (Maybe Type -> Maybe Type) ->
+      ([Expression] -> Expression) ->
+      [Arg] ->
+      ValidatorS (Typed Expression)
     unFuncV a t = unFunc (valueOnly a) (t . typeOnly)
+
     biFuncV :: (SArg -> SArg -> Validator ()) -> (Maybe Type -> Maybe Type -> Maybe Type) -> ([Expression] -> Expression) -> [Arg] -> ValidatorS (Typed Expression)
     biFuncV a t = biFunc (valueOnly2 a) (\t1 t2 -> t (typeOnly t1) (typeOnly t2))
+
     valid = return $ pure ()
+
     const2 = const . const . pure
+
     const3 = const . const . const . pure
+
     getNum :: Maybe (Kind, Expression) -> Maybe Int
     getNum (Just (_, x)) = case intOut "" x of
       Nothing -> Nothing
       Just n -> pure $ fromInteger n
     getNum _ = Nothing
+
     each3 f a b c = f a >> f b >> f c
+
     anyType = const . return $ Just ()
 
     indep :: (SArg -> Validator ()) -> (SArg -> Validator ()) -> (SArg -> SArg -> Validator ())
@@ -2249,6 +2278,7 @@ functionOps l = case l of
       v1 <- f1 a
       v2 <- f2 b
       if not . null $ catMaybes [v1, v2] then return $ pure () else return Nothing
+
     binaryFlattenArgs :: SArg -> SArg -> Validator ()
     binaryFlattenArgs (r1, d) b = do
       off <- case intOut "" (untype d) of
@@ -2258,6 +2288,7 @@ functionOps l = case l of
       let ref' = foldr id TypeAny ref
       r <- unifyTypesFailing ref' b
       return $ if null off || null r then Nothing else Just ()
+
     unaryFlattenArgs :: SArg -> Validator ()
     unaryFlattenArgs (_, typeOf_ -> (TypeMatrix _ _)) = valid
     unaryFlattenArgs (_, typeOf_ -> (TypeList _)) = valid
@@ -2272,6 +2303,7 @@ functionOps l = case l of
     concatType _ = Just $ TypeList TypeAny
     concatArgs :: SArg -> Validator ()
     concatArgs s@(r, _) = binaryFlattenArgs (r, Typed tInt $ Constant $ ConstantInt TagInt 1) s
+
     tableArgs :: SArg -> SArg -> Validator ()
     tableArgs (r1, typeOf_ -> t1) (r2, typeOf_ -> t2) = do
       a <- case t1 of
@@ -2303,6 +2335,7 @@ functionOps l = case l of
       TypeFunction {} -> return $ pure ()
       TypeRelation {} -> return $ pure ()
       _ -> invalid $ r <!> ComplexTypeError "Matrix ,list,function,relation,mset,set " a
+
     toSetArgs :: SArg -> Validator ()
     toSetArgs (r, typeOf_ -> a) = case a of
       TypeAny -> return $ pure ()
@@ -2312,12 +2345,14 @@ functionOps l = case l of
       TypeFunction {} -> return $ pure ()
       TypeRelation {} -> return $ pure ()
       _ -> invalid $ r <!> ComplexTypeError "Matrix ,list,function,relation,mset " a
+
     listOrMatrix :: SArg -> Validator ()
     listOrMatrix (r, typeOf_ -> a) = case a of
       TypeAny -> return $ pure ()
       TypeList _ -> return $ pure ()
       TypeMatrix {} -> return $ pure ()
       _ -> invalid $ r <!> ComplexTypeError "Matrix or list" a
+
     freqArgs :: SArg -> SArg -> Validator ()
     freqArgs (r1, a) (r2, b) = do
       let tb = typeOf_ b
@@ -2335,10 +2370,12 @@ functionOps l = case l of
       a' <- unifyTypesFailing md a
       b' <- unifyTypesFailing md b
       return $ if null a' || null b' then Nothing else Just ()
+
     func :: SArg -> Validator ()
     func (_, Typed (TypeFunction _ _) _) = valid
     func (_, Typed TypeAny _) = valid
     func (r, Typed t _) = invalid $ r <!> TypeError (TypeFunction TypeAny TypeAny) t
+
     set :: SArg -> Validator Type
     set (_, Typed (TypeSet t) _) = return $ pure t
     set (_, Typed TypeAny _) = return $ pure TypeAny
@@ -2347,13 +2384,18 @@ functionOps l = case l of
     powerSetType (Just ((TypeSet i))) = Just $ TypeSet (TypeSet i)
     powerSetType _ = Just $ TypeSet $ TypeSet TypeAny
 
-    only t (r, typeOf_ -> t') = do setContext r; if t' == TypeAny || t == t' then return $ Just t else invalid $ r <!> TypeError t t'
+    only t (r, typeOf_ -> t') = do
+      setContext r
+      if t' == TypeAny || t == t'
+        then return $ Just t
+        else invalid $ r <!> TypeError t t'
 
     listInt (r, typeOf_ -> t') = case t' of
       TypeAny -> return $ Just t'
       TypeList TypeInt {} -> return $ Just t'
       TypeMatrix _ TypeInt {} -> return $ Just t'
       _ -> invalid $ r <!> ComplexTypeError "Matrix or list of int or enum" t'
+
     partInner :: Maybe Type -> Maybe Type
     partInner (Just (TypePartition a)) = Just $ TypeSet a
     partInner _ = Just $ TypeSet TypeAny
@@ -2383,6 +2425,10 @@ functionOps l = case l of
     -- TODO: validate
     quickPermutationOrderArgs :: Arg -> Arg -> Validator ()
     quickPermutationOrderArgs _ _ = return (pure ())
+
+    -- TODO
+    permInverseArgs :: SArg -> Validator ()
+    permInverseArgs _ = return (pure ())
 
     -- TODO
     quickPermutationOrderTypes :: Maybe (Kind, Expression) -> Maybe (Kind, Expression) -> Maybe Type

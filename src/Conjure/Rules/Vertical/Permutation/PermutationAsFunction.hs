@@ -85,8 +85,34 @@ rule_Image = "permutation-image{AsFunction}" `namedRule` theRule
                 else
                   return
                     ( "Vertical rule for permutation application to a type the permutation doesn't care about",
-                      do
-                        return [essence| &i |]
+                      return i
                     )
         _ -> na "rule_Image"
     theRule _ = na "rule_Image"
+
+rule_Image_permInverse :: Rule
+rule_Image_permInverse = "permutation-image-permInverse{AsFunction}" `namedRule` theRule
+  where
+    theRule [essence| image(permInverse(&p), &i) |] = do
+      TypePermutation inner <- typeOf p
+      case match permutationLiteral p of
+        Nothing -> do
+          typeI <- typeOf i
+          if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI]
+            then do
+              [_, f] <- downX1 p
+              return
+                ( "Vertical rule for permutation application to a single value",
+                  do
+                    return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
+                )
+            else
+              if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
+                then na "rule_Image_permInverse"
+                else
+                  return
+                    ( "Vertical rule for permutation application to a type the permutation doesn't care about",
+                      return i
+                    )
+        _ -> na "rule_Image_permInverse"
+    theRule _ = na "rule_Image_permInverse"

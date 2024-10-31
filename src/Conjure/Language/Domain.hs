@@ -331,6 +331,9 @@ data AttrName
     | AttrName_surjective
     | AttrName_bijective
     | AttrName_regular
+    | AttrName_numMoved
+    | AttrName_minNumMoved
+    | AttrName_maxNumMoved
     -- bin rel ones
     | AttrName_reflexive
     | AttrName_irreflexive
@@ -374,6 +377,9 @@ instance Pretty AttrName where
     pretty AttrName_surjective = "surjective"
     pretty AttrName_bijective = "bijective"
     pretty AttrName_regular = "regular"
+    pretty AttrName_numMoved = "numMoved"
+    pretty AttrName_minNumMoved = "minNumMoved"
+    pretty AttrName_maxNumMoved = "maxNumMoved"
     pretty AttrName_reflexive = "reflexive"
     pretty AttrName_irreflexive = "irreflexive"
     pretty AttrName_coreflexive = "coreflexive"
@@ -754,14 +760,16 @@ instance Pretty a => Pretty (PartitionAttr a) where
 
 
 
-data PermutationAttr x
-    = PermutationAttr (SizeAttr x)
+data PermutationAttr a = PermutationAttr
+    {
+        numMoved :: SizeAttr a
+    }
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (PermutationAttr a)
 instance Hashable  a => Hashable  (PermutationAttr a)
 instance ToJSON    a => ToJSON    (PermutationAttr a) where toJSON = genericToJSON jsonOptions
 instance FromJSON  a => FromJSON  (PermutationAttr a) where parseJSON = genericParseJSON jsonOptions
-instance Default (PermutationAttr a) where def = PermutationAttr def
+instance Default a => Default (PermutationAttr a) where def = PermutationAttr def
 instance Pretty a => Pretty (PermutationAttr a) where
     pretty (PermutationAttr a ) =
         let inside = filter (/=prEmpty) [pretty a]

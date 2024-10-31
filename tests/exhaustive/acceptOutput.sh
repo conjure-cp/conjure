@@ -12,7 +12,9 @@ for TESTCASE in $*; do
             echo "Accepting the output of ${TESTCASE}"
             rm -rf "${TESTCASE}"/expected
             mkdir -p "${TESTCASE}"/expected
-            cp "${TESTCASE}"/outputs/*.eprime "${TESTCASE}"/outputs/*.solution "${TESTCASE}"/outputs/*.eprime-param "${TESTCASE}"/expected/
+            for file in "${TESTCASE}"/outputs/*.eprime "${TESTCASE}"/outputs/*.solution "${TESTCASE}"/outputs/*.eprime-param ; do
+                cp $file "${TESTCASE}"/expected/
+            done
             parallel --no-notice "[ -f {} ] && (cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {})" \
                 ::: "${TESTCASE}"/expected/*.eprime
         fi

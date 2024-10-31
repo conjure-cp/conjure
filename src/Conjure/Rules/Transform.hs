@@ -49,11 +49,9 @@ rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
                   ( Comprehension body
                       $ gocBefore
                       ++ [Generator (GenInExpr dPat y)]
-                      ++ ( ( ComprehensionLetting
-                               (Single pat)
-                               [essence|
-                              transform(&morphism, &d) |]
-                           )
+                      ++ ( ComprehensionLetting
+                             (Single pat)
+                             [essence| transform(&morphism, &d) |]
                              : gocAfter
                          )
                   )

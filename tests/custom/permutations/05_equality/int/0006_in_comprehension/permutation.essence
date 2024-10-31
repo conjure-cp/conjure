@@ -1,5 +1,5 @@
-find p : permutation (size 4) of int(1..4)
-find q : permutation (size 4) of int(1..4)
+find p : permutation (numMoved 4) of int(1..4)
+find q : permutation (numMoved 4) of int(1..4)
 
 such that 
   [pt != qt | pt <- p, qt <- q]

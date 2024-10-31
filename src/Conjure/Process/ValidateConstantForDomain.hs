@@ -7,9 +7,7 @@ import Conjure.Language.Constant
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty 
-import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Type
-import Conjure.Language.Pretty 
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.AttributeAsConstraints ( mkAttributeToConstraint )
 import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )

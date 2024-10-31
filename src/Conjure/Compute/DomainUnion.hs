@@ -33,6 +33,7 @@ domainUnions [] = return $ DomainAny "domainUnions []" TypeAny
 domainUnions [a] = return a
 domainUnions (a:as) = do b <- domainUnions as ; domainUnion a b
 
+
 instance
     ( Eq x
     , ExpressionLike x
@@ -90,13 +91,16 @@ instance
     ) => DomainUnion (SetAttr x) where
     domainUnion (SetAttr a) (SetAttr b) = SetAttr <$> domainUnion a b
 
+
 instance
     ( ExpressionLike x
     , Op x :< x
     , Pretty x
+    , Eq x
     ) => DomainUnion (PermutationAttr x) where
-    domainUnion (PermutationAttr a) (PermutationAttr b) = PermutationAttr <$> domainUnion a b
-
+    domainUnion (PermutationAttr a) (PermutationAttr b)
+        | a == b = return (PermutationAttr a)
+        | otherwise = bug "DomainUnion PermutationAttr"
 
 
 instance

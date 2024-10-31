@@ -522,6 +522,12 @@ instance EvaluateOp OpParty where
                                                                                                 <++> pretty op
     evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
 
+instance EvaluateOp OpPermInverse where
+    evaluateOp (OpPermInverse (viewConstantPermutation -> Just xss))
+        | Right perm <- fromCycles xss
+        = return $ ConstantAbstract $ AbsLitPermutation $ toCyclesCanonical $ inverse perm
+    evaluateOp op = na $ "evaluateOp{OpPermInverse}:" <++> pretty (show op)
+
 instance EvaluateOp OpPow where
     evaluateOp p | any isUndef (childrenBi p) =
         return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
@@ -1002,6 +1008,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpParticipants x) = evaluateOp x
     evaluateOp (MkOpParts x) = evaluateOp x
     evaluateOp (MkOpParty x) = evaluateOp x
+    evaluateOp (MkOpPermInverse x) = evaluateOp x
     evaluateOp (MkOpPow x) = evaluateOp x
     evaluateOp (MkOpPowerSet x) = evaluateOp x
     evaluateOp (MkOpPred x) = evaluateOp x

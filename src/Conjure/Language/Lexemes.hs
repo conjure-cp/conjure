@@ -112,6 +112,9 @@ data Lexeme
     -- type: partition
     | L_partition
     | L_regular
+    | L_numMoved
+    | L_minNumMoved
+    | L_maxNumMoved
     | L_partSize
     | L_minPartSize
     | L_maxPartSize
@@ -146,6 +149,7 @@ data Lexeme
     | L_together
     | L_apart
     | L_party
+    | L_permInverse
     | L_participants
     | L_parts
     | L_freq
@@ -382,6 +386,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_rightTotal , "rightTotal")
     , ( L_partition, "partition" )
     , ( L_regular, "regular" )
+    , ( L_numMoved, "numMoved" )
+    , ( L_minNumMoved, "minNumMoved" )
+    , ( L_maxNumMoved, "maxNumMoved" )
     , ( L_partSize, "partSize" )
     , ( L_minPartSize, "minPartSize" )
     , ( L_maxPartSize, "maxPartSize" )
@@ -410,6 +417,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_together, "together" )
     , ( L_apart, "apart" )
     , ( L_party, "party" )
+    , ( L_permInverse, "permInverse" )
     , ( L_participants, "participants" )
     , ( L_parts, "parts" )
     , ( L_freq, "freq" )

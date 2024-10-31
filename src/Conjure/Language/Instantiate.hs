@@ -391,17 +391,14 @@ instantiatePartitionAttr (PartitionAttr a b r) =
                   <*> pure r
 
 
-instantiatePermutationAttr
-    :: MonadFail m =>
-       MonadUserError m =>
-       MonadState [(Name, Expression)] m =>
-       EnumerateDomain m =>
-       NameGen m =>
-       (?typeCheckerMode :: TypeCheckerMode) =>
-       PermutationAttr Expression -> m (PermutationAttr Constant)
-instantiatePermutationAttr (PermutationAttr s) =
-    PermutationAttr <$> instantiateSizeAttr s
-
+instantiatePermutationAttr ::
+    MonadFailDoc m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    PermutationAttr Expression -> m (PermutationAttr Constant)
+instantiatePermutationAttr (PermutationAttr x) = PermutationAttr <$> instantiateSizeAttr x
 
 
 instantiateR ::

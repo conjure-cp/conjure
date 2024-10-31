@@ -310,6 +310,7 @@ functionals =
     , L_together
     , L_apart
     , L_party
+    , L_permInverse
     , L_participants
     , L_parts
     , L_image
