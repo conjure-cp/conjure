@@ -319,48 +319,12 @@ rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule
 rule_Lift_Transformed_Indexing :: Rule
 rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule
   where
-    matchIndexing ::
-      (?typeCheckerMode :: TypeCheckerMode) =>
-      Expression ->
-      Maybe (Expression, Expression, Expression, Expression)
-    matchIndexing exp = do
-      (matexp, indexer) <- match opIndexing exp
-      (morphism, mat) <- match opTransform matexp
-      return (exp, morphism, mat, indexer)
-
-    liftIndexing (exp, morphism, mat, indexer) = do
-      (Single nm, m) <- quantifiedVar
+    theRule [essence| transform(&p, &x)[&i] |] = do
+      TypePermutation {} <- typeOf p
       return
-        ( (exp, [essence| transform(&morphism, &m) |]),
-          ComprehensionLetting (Single nm) [essence| &mat[&indexer] |]
+        ( "transformed indexing",
+          return [essence| transform(&p, &x[transform(permInverse(&p), &i)]) |]
         )
-
-    transformBody bdy [] = bdy
-    transformBody bdy ((orig, repl) : rest) =
-      let nbdy =
-            transformBi
-              ( \e ->
-                  if e == orig
-                    then repl
-                    else e
-              )
-              bdy
-       in transformBody nbdy rest
-
-    theRule (Comprehension body gensOrConds) = do
-      let matched = catMaybes [matchIndexing exp | exp <- universeBi body]
-      case matched of
-        [] -> na "rule_Lift_Transformed_Indexing: nothing to lift"
-        _ -> do
-          replacements <- mapM liftIndexing matched
-          return
-            ( "Horizontal rule for lift transformed indexing",
-              return
-                ( Comprehension (transformBody body (fst <$> replacements))
-                    $ gensOrConds
-                    ++ (snd <$> replacements)
-                )
-            )
     theRule _ = na "rule_Lift_Transformed_Indexing"
 
 rule_Transform_Indexing :: Rule
