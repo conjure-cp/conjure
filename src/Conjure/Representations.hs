@@ -191,7 +191,6 @@ symmetryOrdering inp' = do
 
             Op op -> case op of
                 MkOpIndexing (OpIndexing m _) -> do
-
                     ty <- typeOf m
                     case ty of
                         TypeMatrix{} -> return ()
