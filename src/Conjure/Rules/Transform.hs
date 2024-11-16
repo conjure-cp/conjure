@@ -86,7 +86,7 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule
           return
             ( "Horizontal rule for transform comprehension",
               do
-                gox <- sequence (transformOverGenOrCond morphism <$> gensOrConds)
+                gox <- mapM (transformOverGenOrCond morphism) gensOrConds
                 return
                   $ Comprehension
                     [essence| transform(&morphism, &body) |]
@@ -110,33 +110,33 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule
     transformOverGenerator m (GenDomainNoRepr absPat d) = do
       (rPat, ns) <- clonePattern absPat
       return
-        $ [Generator (GenDomainNoRepr rPat d)]
-        ++ ( ( \(pat, exp) ->
-                 ComprehensionLetting (Single pat) [essence| transform(&m,&exp) |]
-             )
-               <$> ns
-           )
+        $ Generator (GenDomainNoRepr rPat d)
+        : ( ( \(pat, exp) ->
+                ComprehensionLetting (Single pat) [essence| transform(&m,&exp) |]
+            )
+              <$> ns
+          )
 
     clonePattern (Single name) = do
       (nPat, n) <- quantifiedVar
       return (nPat, [(name, n)])
     clonePattern (AbsPatTuple pats) = do
-      rec <- sequence (clonePattern <$> pats)
+      rec <- mapM clonePattern pats
       return
         ( AbsPatTuple $ fst <$> rec,
-          join $ snd <$> rec
+          snd =<< rec
         )
     clonePattern (AbsPatMatrix pats) = do
-      rec <- sequence (clonePattern <$> pats)
+      rec <- mapM clonePattern pats
       return
         ( AbsPatMatrix $ fst <$> rec,
-          join $ snd <$> rec
+          snd =<< rec
         )
     clonePattern (AbsPatSet pats) = do
-      rec <- sequence (clonePattern <$> pats)
+      rec <- mapM clonePattern pats
       return
         ( AbsPatSet $ fst <$> rec,
-          join $ snd <$> rec
+          snd =<< rec
         )
     clonePattern _ =
       bug "rule_Transform_Comprehension: clonePattern: unsupported Abstract Pattern"
@@ -155,8 +155,7 @@ rule_Transform_Product_Types = "transform-product-types" `namedRule` theRule
                    in [essence| transform(&morphism, &i[&indexexpr]) |]
                 tupleExpression =
                   AbstractLiteral
-                    $ AbsLitTuple
-                    $ (tupleIndexTransform <$> [1 .. (fromIntegral $ length tint)])
+                    $ AbsLitTuple (tupleIndexTransform <$> [1 .. (fromIntegral $ length tint)])
             return
               ( "Horizontal rule for transform of tuple",
                 return tupleExpression
@@ -263,11 +262,9 @@ rule_Transform_Sequence = "transform-sequence" `namedRule` theRule
                   ( Comprehension body
                       $ gocBefore
                       ++ [Generator (GenInExpr dPat y)]
-                      ++ ( ( ComprehensionLetting
-                               (Single pat)
-                               [essence|
-                   (&d[1], transform(&morphism, &d[2])) |]
-                           )
+                      ++ ( ComprehensionLetting
+                             (Single pat)
+                             [essence| (&d[1], transform(&morphism, &d[2])) |]
                              : gocAfter
                          )
                   )
