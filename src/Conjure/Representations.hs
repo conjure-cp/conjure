@@ -168,7 +168,7 @@ symmetryOrdering inp' = do
                     AbsLitMatrix _ xs -> do
                         soVals <- mapM symmetryOrdering (Constant <$> xs)
                         return $ fromList soVals
-                    _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty inp)
+                    _ -> na ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty inp)
 
             AbstractLiteral x -> do
                 case x of
@@ -178,16 +178,16 @@ symmetryOrdering inp' = do
                     AbsLitMatrix d xs -> do
                         soVals <- mapM symmetryOrdering xs
                         return $ AbstractLiteral $ AbsLitMatrix d soVals
-                    _ -> bug ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty inp)
+                    _ -> na ("symmetryOrdering: AbstractLiteral:" <++> pretty (show inp) <++> pretty inp)
 
             Reference _ (Just refTo) -> do
                 case refTo of
                     Alias x                        -> symmetryOrdering x
-                    InComprehension{}              -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
-                    DeclNoRepr{}                   -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
+                    InComprehension{}              -> na ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
+                    DeclNoRepr{}                   -> na ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
                     DeclHasRepr _forg _name domain -> symmetryOrderingDispatch downX1 inp domain
-                    RecordField{}                  -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
-                    VariantField{}                 -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
+                    RecordField{}                  -> na ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
+                    VariantField{}                 -> na ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
 
             Op op -> case op of
                 MkOpIndexing (OpIndexing m _) -> do
@@ -195,18 +195,18 @@ symmetryOrdering inp' = do
                     case ty of
                         TypeMatrix{} -> return ()
                         TypeList{}   -> return ()
-                        _ -> bug $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
+                        _ -> na $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
                     mDom <- domainOfR m
                     case mDom of
                         DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
-                        _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
+                        _ -> na ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
                 MkOpImage (OpImage p x) -> do
                     so <- symmetryOrdering x
                     return [essence| image(&p, &so) |]
-                _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
+                _ -> na ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
 
             Comprehension body stmts -> do
                 xs <- symmetryOrdering body
                 return $ make opFlatten $ Comprehension xs stmts
 
-            _ -> bug ("symmetryOrdering:" <++> pretty (show inp) <++> pretty inp)
+            _ -> na ("symmetryOrdering:" <++> pretty (show inp) <++> pretty inp)
