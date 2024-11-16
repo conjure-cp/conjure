@@ -7,7 +7,8 @@ import Conjure.Rules.Vertical.Variant (onTagged)
 
 rules_Transform :: [Rule]
 rules_Transform =
-  [ rule_Transform_Sequence_Literal,
+  [ rule_Transform_DotLess,
+    rule_Transform_Sequence_Literal,
     rule_Transform_Functorially,
     rule_Transform_Comprehension,
     rule_Transform_Product_Types,
@@ -27,6 +28,20 @@ rules_Transform =
     rule_Transformed_Variant_Index,
     rule_Transformed_Variant_Active
   ]
+
+rule_Transform_DotLess :: Rule
+rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
+  where
+    theRule [essence| &x .<= transform(&p, &y) |] | x == y = do
+      TypeMatrix {} <- typeOf x
+      (xInd : _) <- indexDomainsOf x
+      return
+        ( "",
+          do
+            (iPat, i) <- quantifiedVar
+            return [essence| &x .<= [ transform(&p, &x[transform(permInverse(&p), &i)]) | &iPat : &xInd ] |]
+        )
+    theRule _ = na "rule_Transform_DotLess"
 
 rule_Transform_Functorially :: Rule
 rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
