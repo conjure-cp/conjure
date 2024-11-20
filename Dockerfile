@@ -7,7 +7,7 @@
 # First stage: Building
 
 # Setting up
-FROM ubuntu:23.10 AS builder
+FROM ubuntu:24.10 AS builder
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /conjure
 
@@ -81,7 +81,7 @@ RUN tests/allsolvers/test.sh
 ################################################################################
 # Second stage: Copying the binaries
 
-FROM ubuntu:23.10
+FROM ubuntu:24.10
 WORKDIR /conjure
 ENV PATH /root/.local/bin:$PATH
 ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
