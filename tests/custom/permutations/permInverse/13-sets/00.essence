@@ -1,0 +1,7 @@
+letting A be new type of size 3
+find x : set of A
+
+find p : permutation (numMoved 3) of A
+$ such that x .<= transform(p, x)
+
+such that x .<= toSet([ transform(p, i) | i <- x])
