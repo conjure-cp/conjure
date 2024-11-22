@@ -41,6 +41,15 @@ rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
             (iPat, i) <- quantifiedVar
             return [essence| &x .<= [ transform(&p, &x[transform(permInverse(&p), &i)]) | &iPat : &xInd ] |]
         )
+    theRule [essence| &x .< transform(&p, &y) |] | x == y = do
+      TypeMatrix {} <- typeOf x
+      (xInd : _) <- indexDomainsOf x
+      return
+        ( "",
+          do
+            (iPat, i) <- quantifiedVar
+            return [essence| &x .< [ transform(&p, &x[transform(permInverse(&p), &i)]) | &iPat : &xInd ] |]
+        )
     theRule _ = na "rule_Transform_DotLess"
 
 rule_Transform_Functorially :: Rule
