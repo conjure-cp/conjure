@@ -104,7 +104,7 @@ mkOp op xs = case op of
                                                                          (arg xs 1 "allDiffExcept")
             L_catchUndef   -> inject $ MkOpCatchUndef   $ OpCatchUndef   (arg xs 0 "catchUndef")
                                                                          (arg xs 1 "catchUndef")
-            L_quickPermutationOrder -> inject $ MkOpQuickPermutationOrder $ OpQuickPermutationOrder (arg xs 0 "quickPermutationOrder") (arg xs 1 "quickPermutationOrder")
+            L_quickPermutationOrder -> inject $ MkOpQuickPermutationOrder $ OpQuickPermutationOrder (arg xs 0 "quickPermutationOrder") (arg xs 1 "quickPermutationOrder" |> listOut |> fromMaybe (bug ""))
             L_dontCare     -> inject $ MkOpDontCare     $ OpDontCare     (arg xs 0 "dontCare")
             L_toSet        -> inject $ MkOpToSet        $ OpToSet        False (arg xs 0 "toSet")
             L_toMSet       -> inject $ MkOpToMSet       $ OpToMSet       (arg xs 0 "toMSet")
@@ -113,7 +113,7 @@ mkOp op xs = case op of
             L_min          -> inject $ MkOpMin          $ OpMin          (arg xs 0 "min")
             L_image        -> inject $ MkOpImage        $ OpImage        (arg xs 0 "image")
                                                                          (arg xs 1 "image")
-            L_transform    -> inject $ MkOpTransform    $ OpTransform    (arg xs 0 "transform")
+            L_transform    -> inject $ MkOpTransform    $ OpTransform    (arg xs 0 "transform" |> listOut |> fromMaybe (bug ""))
                                                                          (arg xs 1 "transform")
 
             L_imageSet     -> inject $ MkOpImageSet     $ OpImageSet     (arg xs 0 "imageSet")

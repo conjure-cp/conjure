@@ -439,8 +439,8 @@ opTransform
        , MonadFailDoc m
        )
     => Proxy (m :: T.Type -> T.Type)
-    -> ( x -> x -> x
-       , x -> m (x, x)
+    -> ( [x] -> x -> x
+       , x -> m ([x], x)
        )
 opTransform _ =
     ( \ x y -> inject $ MkOpTransform $ OpTransform x y
