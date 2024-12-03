@@ -1032,11 +1032,13 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                            | (i, c) <- zip allNats (tail (ascendants x))
                                            ]
                     [essence| &_ .< &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))
-                                                    <+> stringToDoc (show (hole x))]
+                        return ["", "Not refined:" <+> vcat [ pretty (hole x)
+                                                            , stringToDoc (show (hole x))
+                                                            ]]
                     [essence| &_ .<= &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))
-                                                    <+> stringToDoc (show (hole x))]
+                        return ["", "Not refined:" <+> vcat [ pretty (hole x)
+                                                            , stringToDoc (show (hole x))
+                                                            ]]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -2087,23 +2089,23 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
 
 rule_QuickPermutationOrder :: Rule
 rule_QuickPermutationOrder = "generic-QuickPermutationOrder" `namedRule` theRule where
-    theRule [essence| quickPermutationOrder(&x, &ps) |] = do
-        case listOut ps of
-            Just [perm] ->
-                return
-                    ( "Generic vertical rule for quickPermutationOrder:" <+> pretty perm
-                    , return [essence| &x .<= transform(&perm, &x) |]
-                    )
-            _ -> na "rule_QuickPermutationOrder - not implemented for multiple permutations yet"
-        -- traceM $ show $ "HERE x " <+> pretty x
-        -- traceM $ show $ "HERE ps" <+> pretty ps
-        -- x_ord <- symmetryOrdering x
-        -- x_perm <- symmetryOrdering [essence| transform(&ps, &x) |]
-        -- traceM $ show $ "HERE x_perm" <+> pretty x_perm
-        -- return
-        --     ( "Generic vertical rule for quickPermutationOrder:" <+> pretty p
-        --     , return [essence| &x_ord <=lex &x_perm |]
-        --     )
+    -- theRule p@[essence| quickPermutationOrder(&x, &ps) |] = do
+    --     -- case listOut ps of
+    --     --     Just [perm] ->
+    --     --         return
+    --     --             ( "Generic vertical rule for quickPermutationOrder:" <+> pretty perm
+    --     --             , return [essence| &x .<= transform(&perm, &x) |]
+    --     --             )
+    --     --     _ -> na "rule_QuickPermutationOrder - not implemented for multiple permutations yet"
+    --     traceM $ show $ "HERE x " <+> pretty x
+    --     traceM $ show $ "HERE ps" <+> pretty ps
+    --     x_ord <- symmetryOrdering x
+    --     -- x_perm <- symmetryOrdering [essence| transform(&ps, &x) |]
+    --     traceM $ show $ "HERE x_ord" <+> pretty x_ord
+    --     return
+    --         ( "Generic vertical rule for quickPermutationOrder:" <+> pretty p
+    --         , return [essence| &x_ord .<= transform(&ps, &x_ord) |]
+    --         )
     theRule _ = na "rule_QuickPermutationOrder"
 
 
@@ -2892,7 +2894,7 @@ addUnnamedSymmetryBreaking mode model = do
                 buildPermutationChain [] vars = vars
                 buildPermutationChain (p:ps) vars =
                         let applied = buildPermutationChain ps vars
-                        in  [essence| transform(&p, &applied) |]
+                        in  [essence| transform([&p], &applied) |]
 
                         -- x .<= transform(p1, transform(p2, x))
                         -- quickPermutationOrder(x, p) to mean s subset of `x .<= transform(p,x)`
@@ -2901,7 +2903,7 @@ addUnnamedSymmetryBreaking mode model = do
                     case quickOrComplete of
                         USBQuick ->
                             let p = fromList perms
-                            in [essence| quickPermutationOrder(&varsTuple, &p) |]
+                            in [essence| quickPermutationOrder(&varsTuple, [&p]) |]
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
                             in [essence| &varsTuple .<= &applied |]
