@@ -3,12 +3,12 @@
 module Conjure.Rules.Transform (rules_Transform) where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Variant (onTagged)
+-- import Conjure.Rules.Vertical.Variant (onTagged)
 
 rules_Transform :: [Rule]
 rules_Transform =
   [ rule_Transform_DotLess,
-    rule_Transform_Sequence_Literal,
+    -- rule_Transform_Sequence_Literal,
     rule_Transform_Functorially,
     rule_Transform_Comprehension,
     rule_Transform_Product_Types,
@@ -19,14 +19,14 @@ rules_Transform =
     rule_Transformed_Indexing,
     rule_Lift_Transformed_Indexing,
     rule_Transform_Indexing,
-    rule_Transform_Unifying,
-    rule_Transform_Variant_Literal,
-    rule_Transform_Variant_Eq,
-    rule_Transform_Variant_Neq,
-    rule_Transform_Variant_Lt,
-    rule_Transform_Variant_Leq,
-    rule_Transformed_Variant_Index,
-    rule_Transformed_Variant_Active
+    rule_Transform_Unifying
+    -- rule_Transform_Variant_Literal,
+    -- rule_Transform_Variant_Eq,
+    -- rule_Transform_Variant_Neq,
+    -- rule_Transform_Variant_Lt,
+    -- rule_Transform_Variant_Leq,
+    -- rule_Transformed_Variant_Index,
+    -- rule_Transformed_Variant_Active
   ]
 
 rule_Transform_DotLess :: Rule
@@ -422,191 +422,191 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
                 )
     theRule _ = na "rule_Transform_Unifying"
 
-rule_Transform_Sequence_Literal :: Rule
-rule_Transform_Sequence_Literal = "transform-sequence-literal" `namedRule` theRule
-  where
-    theRule p = do
-      _ <- match opTransform p
-      let (x, rx) = matchManyTransforms p
-      TypeSequence {} <- typeOf x
-      (_, as) <- match sequenceLiteral x
-      return
-        ( "Horizontal rule for transform sequence literal",
-          return $ AbstractLiteral $ AbsLitSequence $ rx <$> as
-        )
+-- rule_Transform_Sequence_Literal :: Rule
+-- rule_Transform_Sequence_Literal = "transform-sequence-literal" `namedRule` theRule
+--   where
+--     theRule p = do
+--       _ <- match opTransform p
+--       let (x, rx) = matchManyTransforms p
+--       TypeSequence {} <- typeOf x
+--       (_, as) <- match sequenceLiteral x
+--       return
+--         ( "Horizontal rule for transform sequence literal",
+--           return $ AbstractLiteral $ AbsLitSequence $ rx <$> as
+--         )
 
-rule_Transform_Variant_Literal :: Rule
-rule_Transform_Variant_Literal = "transform-variant-literal" `namedRule` theRule
-  where
-    theRule p = do
-      _ <- match opTransform p
-      let (x, rx) = matchManyTransforms p
-      case x of
-        AbstractLiteral (AbsLitVariant d n a) ->
-          return
-            ( "Horizontal rule for transform variant literal",
-              return $ AbstractLiteral $ AbsLitVariant d n $ rx a
-            )
-        _ -> na "rule_Transform_Variant_Literal"
+-- rule_Transform_Variant_Literal :: Rule
+-- rule_Transform_Variant_Literal = "transform-variant-literal" `namedRule` theRule
+--   where
+--     theRule p = do
+--       _ <- match opTransform p
+--       let (x, rx) = matchManyTransforms p
+--       case x of
+--         AbstractLiteral (AbsLitVariant d n a) ->
+--           return
+--             ( "Horizontal rule for transform variant literal",
+--               return $ AbstractLiteral $ AbsLitVariant d n $ rx a
+--             )
+--         _ -> na "rule_Transform_Variant_Literal"
 
-atLeastOneTransform :: (MonadFailDoc m) => (Expression, Expression) -> m ()
-atLeastOneTransform (l, r) = do
-  case (match opTransform l, match opTransform r) of
-    (Nothing, Nothing) -> na "no transforms on either side"
-    _ -> return ()
+-- atLeastOneTransform :: (MonadFailDoc m) => (Expression, Expression) -> m ()
+-- atLeastOneTransform (l, r) = do
+--   case (match opTransform l, match opTransform r) of
+--     (Nothing, Nothing) -> na "no transforms on either side"
+--     _ -> return ()
 
-matchManyTransforms ::
-  Expression ->
-  (Expression, Expression -> Expression)
-matchManyTransforms exp =
-  case match opTransform exp of
-    Nothing -> (exp, id)
-    Just ([morphism], so) ->
-      let (nexp, ntrans) = matchManyTransforms so
-       in ( nexp,
-            \x -> let nx = ntrans x in [essence| transform([&morphism], &nx) |]
-          )
-    _ -> bug "matchManyTransforms"
+-- matchManyTransforms ::
+--   Expression ->
+--   (Expression, Expression -> Expression)
+-- matchManyTransforms exp =
+--   case match opTransform exp of
+--     Nothing -> (exp, id)
+--     Just ([morphism], so) ->
+--       let (nexp, ntrans) = matchManyTransforms so
+--        in ( nexp,
+--             \x -> let nx = ntrans x in [essence| transform([&morphism], &nx) |]
+--           )
+--     _ -> bug "matchManyTransforms"
 
-rule_Transform_Variant_Eq :: Rule
-rule_Transform_Variant_Eq = "transform-variant-eq" `namedRule` theRule
-  where
-    theRule p = do
-      (l, r) <- match opEq p
-      atLeastOneTransform (l, r)
-      let (x, rx) = matchManyTransforms l
-      let (y, ry) = matchManyTransforms r
-      TypeVariant {} <- typeOf x
-      TypeVariant {} <- typeOf y
-      (xWhich : xs) <- downX1 x
-      (yWhich : ys) <- downX1 y
-      return
-        ( "Vertical rule for right transformed variant equality",
-          return
-            $ make opAnd
-            $ fromList
-              [ [essence| &xWhich = &yWhich |],
-                onTagged (make opEq) xWhich (rx <$> xs) (ry <$> ys)
-              ]
-        )
+-- rule_Transform_Variant_Eq :: Rule
+-- rule_Transform_Variant_Eq = "transform-variant-eq" `namedRule` theRule
+--   where
+--     theRule p = do
+--       (l, r) <- match opEq p
+--       atLeastOneTransform (l, r)
+--       let (x, rx) = matchManyTransforms l
+--       let (y, ry) = matchManyTransforms r
+--       TypeVariant {} <- typeOf x
+--       TypeVariant {} <- typeOf y
+--       (xWhich : xs) <- downX1 x
+--       (yWhich : ys) <- downX1 y
+--       return
+--         ( "Vertical rule for right transformed variant equality",
+--           return
+--             $ make opAnd
+--             $ fromList
+--               [ [essence| &xWhich = &yWhich |],
+--                 onTagged (make opEq) xWhich (rx <$> xs) (ry <$> ys)
+--               ]
+--         )
 
-rule_Transform_Variant_Neq :: Rule
-rule_Transform_Variant_Neq = "transform-variant-neq" `namedRule` theRule
-  where
-    theRule p = do
-      (l, r) <- match opNeq p
-      atLeastOneTransform (l, r)
-      let (x, rx) = matchManyTransforms l
-      let (y, ry) = matchManyTransforms r
-      TypeVariant {} <- typeOf x
-      TypeVariant {} <- typeOf y
-      (xWhich : xs) <- downX1 x
-      (yWhich : ys) <- downX1 y
-      return
-        ( "Vertical rule for right transformed variant nequality",
-          return
-            $ make opOr
-            $ fromList
-              [ [essence| &xWhich != &yWhich |],
-                make opAnd
-                  $ fromList
-                    [ [essence| &xWhich = &yWhich |],
-                      onTagged (make opNeq) xWhich (rx <$> xs) (ry <$> ys)
-                    ]
-              ]
-        )
+-- rule_Transform_Variant_Neq :: Rule
+-- rule_Transform_Variant_Neq = "transform-variant-neq" `namedRule` theRule
+--   where
+--     theRule p = do
+--       (l, r) <- match opNeq p
+--       atLeastOneTransform (l, r)
+--       let (x, rx) = matchManyTransforms l
+--       let (y, ry) = matchManyTransforms r
+--       TypeVariant {} <- typeOf x
+--       TypeVariant {} <- typeOf y
+--       (xWhich : xs) <- downX1 x
+--       (yWhich : ys) <- downX1 y
+--       return
+--         ( "Vertical rule for right transformed variant nequality",
+--           return
+--             $ make opOr
+--             $ fromList
+--               [ [essence| &xWhich != &yWhich |],
+--                 make opAnd
+--                   $ fromList
+--                     [ [essence| &xWhich = &yWhich |],
+--                       onTagged (make opNeq) xWhich (rx <$> xs) (ry <$> ys)
+--                     ]
+--               ]
+--         )
 
-rule_Transform_Variant_Lt :: Rule
-rule_Transform_Variant_Lt = "transform-variant-lt" `namedRule` theRule
-  where
-    theRule p = do
-      (l, r) <- match opLt p
-      atLeastOneTransform (l, r)
-      let (x, rx) = matchManyTransforms l
-      let (y, ry) = matchManyTransforms r
-      TypeVariant {} <- typeOf x
-      TypeVariant {} <- typeOf y
-      (xWhich : xs) <- downX1 x
-      (yWhich : ys) <- downX1 y
-      return
-        ( "Vertical rule for right transformed variant less than",
-          return
-            $ make opOr
-            $ fromList
-              [ [essence| &xWhich < &yWhich |],
-                make opAnd
-                  $ fromList
-                    [ [essence| &xWhich = &yWhich |],
-                      onTagged (make opLt) xWhich (rx <$> xs) (ry <$> ys)
-                    ]
-              ]
-        )
+-- rule_Transform_Variant_Lt :: Rule
+-- rule_Transform_Variant_Lt = "transform-variant-lt" `namedRule` theRule
+--   where
+--     theRule p = do
+--       (l, r) <- match opLt p
+--       atLeastOneTransform (l, r)
+--       let (x, rx) = matchManyTransforms l
+--       let (y, ry) = matchManyTransforms r
+--       TypeVariant {} <- typeOf x
+--       TypeVariant {} <- typeOf y
+--       (xWhich : xs) <- downX1 x
+--       (yWhich : ys) <- downX1 y
+--       return
+--         ( "Vertical rule for right transformed variant less than",
+--           return
+--             $ make opOr
+--             $ fromList
+--               [ [essence| &xWhich < &yWhich |],
+--                 make opAnd
+--                   $ fromList
+--                     [ [essence| &xWhich = &yWhich |],
+--                       onTagged (make opLt) xWhich (rx <$> xs) (ry <$> ys)
+--                     ]
+--               ]
+--         )
 
-rule_Transform_Variant_Leq :: Rule
-rule_Transform_Variant_Leq = "transform-variant-leq" `namedRule` theRule
-  where
-    theRule p = do
-      (l, r) <- match opLeq p
-      atLeastOneTransform (l, r)
-      let (x, rx) = matchManyTransforms l
-      let (y, ry) = matchManyTransforms r
-      TypeVariant {} <- typeOf x
-      TypeVariant {} <- typeOf y
-      (xWhich : xs) <- downX1 x
-      (yWhich : ys) <- downX1 y
-      return
-        ( "Vertical rule for right transformed variant less than eq",
-          return
-            $ make opOr
-            $ fromList
-              [ [essence| &xWhich < &yWhich |],
-                make opAnd
-                  $ fromList
-                    [ [essence| &xWhich = &yWhich |],
-                      onTagged (make opLeq) xWhich (rx <$> xs) (ry <$> ys)
-                    ]
-              ]
-        )
+-- rule_Transform_Variant_Leq :: Rule
+-- rule_Transform_Variant_Leq = "transform-variant-leq" `namedRule` theRule
+--   where
+--     theRule p = do
+--       (l, r) <- match opLeq p
+--       atLeastOneTransform (l, r)
+--       let (x, rx) = matchManyTransforms l
+--       let (y, ry) = matchManyTransforms r
+--       TypeVariant {} <- typeOf x
+--       TypeVariant {} <- typeOf y
+--       (xWhich : xs) <- downX1 x
+--       (yWhich : ys) <- downX1 y
+--       return
+--         ( "Vertical rule for right transformed variant less than eq",
+--           return
+--             $ make opOr
+--             $ fromList
+--               [ [essence| &xWhich < &yWhich |],
+--                 make opAnd
+--                   $ fromList
+--                     [ [essence| &xWhich = &yWhich |],
+--                       onTagged (make opLeq) xWhich (rx <$> xs) (ry <$> ys)
+--                     ]
+--               ]
+--         )
 
-rule_Transformed_Variant_Index :: Rule
-rule_Transformed_Variant_Index = "transformed-variant-index" `namedRule` theRule
-  where
-    theRule p = do
-      (l, arg) <- match opIndexing p
-      atLeastOneTransform (l, l)
-      let (x, rx) = matchManyTransforms l
-      TypeVariant ds <- typeOf x
-      (xWhich : xs) <- downX1 x
-      name <- nameOut arg
-      argInt <-
-        case elemIndex name (map fst ds) of
-          Nothing -> failDoc "Variant indexing, not a member of the type."
-          Just argInt -> return argInt
-      return
-        ( "Variant indexing on:" <+> pretty p,
-          return
-            $ WithLocals
-              (rx (atNote "Variant indexing" xs argInt))
-              ( DefinednessConstraints
-                  [ [essence| &xWhich = &argInt2 |]
-                    | let argInt2 = fromInt (fromIntegral (argInt + 1))
-                  ]
-              )
-        )
+-- rule_Transformed_Variant_Index :: Rule
+-- rule_Transformed_Variant_Index = "transformed-variant-index" `namedRule` theRule
+--   where
+--     theRule p = do
+--       (l, arg) <- match opIndexing p
+--       atLeastOneTransform (l, l)
+--       let (x, rx) = matchManyTransforms l
+--       TypeVariant ds <- typeOf x
+--       (xWhich : xs) <- downX1 x
+--       name <- nameOut arg
+--       argInt <-
+--         case elemIndex name (map fst ds) of
+--           Nothing -> failDoc "Variant indexing, not a member of the type."
+--           Just argInt -> return argInt
+--       return
+--         ( "Variant indexing on:" <+> pretty p,
+--           return
+--             $ WithLocals
+--               (rx (atNote "Variant indexing" xs argInt))
+--               ( DefinednessConstraints
+--                   [ [essence| &xWhich = &argInt2 |]
+--                     | let argInt2 = fromInt (fromIntegral (argInt + 1))
+--                   ]
+--               )
+--         )
 
-rule_Transformed_Variant_Active :: Rule
-rule_Transformed_Variant_Active = "transformed-variant-active" `namedRule` theRule
-  where
-    theRule p = do
-      (l, name) <- match opActive p
-      atLeastOneTransform (l, l)
-      let (x, _) = matchManyTransforms l
-      TypeVariant ds <- typeOf x
-      (xWhich : _) <- downX1 x
-      argInt <- case elemIndex name (map fst ds) of
-        Nothing -> failDoc "Variant indexing, not a member of the type."
-        Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
-      return
-        ( "Variant active on:" <+> pretty p,
-          return [essence| &xWhich = &argInt |]
-        )
+-- rule_Transformed_Variant_Active :: Rule
+-- rule_Transformed_Variant_Active = "transformed-variant-active" `namedRule` theRule
+--   where
+--     theRule p = do
+--       (l, name) <- match opActive p
+--       atLeastOneTransform (l, l)
+--       let (x, _) = matchManyTransforms l
+--       TypeVariant ds <- typeOf x
+--       (xWhich : _) <- downX1 x
+--       argInt <- case elemIndex name (map fst ds) of
+--         Nothing -> failDoc "Variant indexing, not a member of the type."
+--         Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
+--       return
+--         ( "Variant active on:" <+> pretty p,
+--           return [essence| &xWhich = &argInt |]
+--         )
