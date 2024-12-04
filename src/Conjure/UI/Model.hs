@@ -2855,7 +2855,9 @@ addUnnamedSymmetryBreaking mode model = do
         --     | Declaration (FindOrGiven Find nm domain) <- mStatements model
         --     ]
 
-        varsTuple = AbstractLiteral $ AbsLitTuple $ map fst allDecVars
+        varsTuple = case allDecVars of
+                        [v] -> fst v
+                        _ -> AbstractLiteral $ AbsLitTuple $ map fst allDecVars
         -- mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
 
 --    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
@@ -2891,13 +2893,7 @@ addUnnamedSymmetryBreaking mode model = do
 
             let
 
-                buildPermutationChain [] vars = vars
-                buildPermutationChain (p:ps) vars =
-                        let applied = buildPermutationChain ps vars
-                        in  [essence| transform([&p], &applied) |]
-
-                        -- x .<= transform(p1, transform(p2, x))
-                        -- quickPermutationOrder(x, p) to mean s subset of `x .<= transform(p,x)`
+                buildPermutationChain = make opTransform
 
                 combinedPermApply perms =
                     case quickOrComplete of
