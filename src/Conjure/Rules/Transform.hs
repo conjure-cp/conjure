@@ -3,6 +3,7 @@
 module Conjure.Rules.Transform (rules_Transform) where
 
 import Conjure.Rules.Import
+
 -- import Conjure.Rules.Vertical.Variant (onTagged)
 
 rules_Transform :: [Rule]
@@ -32,40 +33,46 @@ rules_Transform =
 rule_Transform_DotLess :: Rule
 rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
   where
-    theRule [essence| &x .<= transform([&p], &y) |] | x == y = do
-      TypeMatrix {} <- typeOf x
-      xIndices <- indexDomainsOf x
-      case xIndices of
-        [xInd] ->
-          return
-            ( "",
-              do
-                (iPat, i) <- quantifiedVar
-                return [essence| &x .<= [ transform([&p], &x[transform([permInverse(&p)], &i)]) | &iPat : &xInd ] |]
-            )
-        [xInd1, xInd2] ->
-          return
-            ( "",
-              do
-                (iPat1, i1) <- quantifiedVar
-                (iPat2, i2) <- quantifiedVar
-                return
-                  [essence|
+    theRule [essence| &x .<= &rhs |]
+      | Just (ps, y) <- match opTransform rhs,
+        x == y = do
+          TypeMatrix {} <- typeOf x
+          -- traceM $ show $ "rule_Transform_DotLess 1" <+> pretty x
+          xIndices <- indexDomainsOf x
+          -- traceM $ show $ "rule_Transform_DotLess 2" <+> vcat (map pretty xIndices)
+          case xIndices of
+            [xInd] ->
+              return
+                ( "",
+                  do
+                    (iPat, i) <- quantifiedVar
+                    let transformed_i = make opTransform (map (make opPermInverse) ps) i
+                    let transformed_x_i = make opTransform ps [essence| &x[&transformed_i] |]
+                    return [essence| &x .<= [ &transformed_x_i | &iPat : &xInd ] |]
+                )
+            [xInd1, xInd2] ->
+              return
+                ( "",
+                  do
+                    (iPat1, i1) <- quantifiedVar
+                    (iPat2, i2) <- quantifiedVar
+                    let transformed_i1 = make opTransform (map (make opPermInverse) ps) i1
+                    let transformed_i2 = make opTransform (map (make opPermInverse) ps) i2
+                    let transformed_x_i1_i2 = make opTransform ps [essence| &x[&transformed_i1, &transformed_i2] |]
+                    return
+                      [essence|
                     [ &x[&i1, &i2]
                     | &iPat1 : &xInd1
                     , &iPat2 : &xInd2
                     ]
                     .<=
-                    [ transform( [&p]
-                               , &x[ transform([permInverse(&p)], &i1)
-                                   , transform([permInverse(&p)], &i2)
-                                   ])
+                    [ &transformed_x_i1_i2
                     | &iPat1 : &xInd1
                     , &iPat2 : &xInd2
                     ]
                   |]
-            )
-        _ -> na "rule_Transform_DotLess"
+                )
+            _ -> na "rule_Transform_DotLess"
     theRule [essence| &x .< transform([&p], &y) |] | x == y = do
       TypeMatrix {} <- typeOf x
       (xInd : _) <- indexDomainsOf x
@@ -85,27 +92,22 @@ rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
         Generator (GenInExpr (Single pat) expr) ->
           return (pat, matchDefs [opToSet, opToMSet] expr)
         _ -> na "rule_Transform_Functorially"
-      ([morphism], y) <- match opTransform x
-      ty <- typeOf y
-      inn <- morphing =<< typeOf morphism
-      if let ?typeCheckerMode = StronglyTyped in ty `containsTypeFunctorially` inn
-        then
-          return
-            ( "Horizontal rule for transform of functorially",
-              do
-                (dPat, d) <- quantifiedVar
-                return
-                  ( Comprehension body
-                      $ gocBefore
-                      ++ [Generator (GenInExpr dPat y)]
-                      ++ ( ComprehensionLetting
-                             (Single pat)
-                             [essence| transform([&morphism], &d) |]
-                             : gocAfter
-                         )
-                  )
-            )
-        else na "rule_Transform_Functorially"
+      (morphisms, y) <- match opTransform x
+      return
+        ( "Horizontal rule for transform of functorially",
+          do
+            (dPat, d) <- quantifiedVar
+            return
+              ( Comprehension body
+                  $ gocBefore
+                  ++ [Generator (GenInExpr dPat y)]
+                  ++ ( ComprehensionLetting
+                         (Single pat)
+                         (make opTransform morphisms d)
+                         : gocAfter
+                     )
+              )
+        )
     theRule _ = na "rule_Transform_Functorially"
 
 rule_Transform_Comprehension :: Rule
@@ -406,19 +408,33 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
     theRule [essence| transform([&morphism], &i) |] = do
       inner <- morphing =<< typeOf morphism
       typeI <- typeOf i
-      if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI]
+      if typesUnify [inner, typeI]
         then
           return
             ( "Horizontal rule for transform unifying",
               return [essence| image(&morphism, &i) |]
             )
+        else na "rule_Transform_Unifying"
+    theRule p | Just (morphisms :: [Expression], i) <- match opTransform p = do
+      typeI <- typeOf i
+      morphisms' <- fmap catMaybes $ forM morphisms $ \morphism -> do
+        inner <- morphing =<< typeOf morphism
+        if containsType typeI inner
+          then return (Just morphism)
+          else return Nothing
+      if length morphisms' == length morphisms
+        then na "rule_Transform_Unifying" -- didn't drop anything
         else
-          if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
-            then na "rule_Transform_Unifying"
+          if null morphisms'
+            then
+              return
+                ( "Horizontal rule for transform unifying",
+                  return i
+                )
             else
               return
-                ( "Horizontal rule for transform shortcut",
-                  return i
+                ( "Horizontal rule for transform unifying",
+                  return $ make opTransform morphisms' i
                 )
     theRule _ = na "rule_Transform_Unifying"
 
