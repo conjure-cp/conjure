@@ -471,6 +471,25 @@ opRelationProj _ =
     )
 
 
+opPermInverse
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFailDoc m
+       )
+    => Proxy (m :: T.Type -> T.Type)
+    -> ( x -> x
+       , x -> m x
+       )
+opPermInverse _ =
+    ( inject . MkOpPermInverse . OpPermInverse
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpPermInverse (OpPermInverse x) -> return x
+                _ -> na ("Lenses.opPermInverse:" <++> pretty p)
+    )
+
+
 opRelationImage
     :: ( Op x :< x
        , Pretty x
