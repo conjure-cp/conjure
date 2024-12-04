@@ -45,7 +45,7 @@ instance SimplifyOp OpTransform x where
   simplifyOp _ = na "simplifyOp{OpTransform}"
 
 instance (Pretty x) => Pretty (OpTransform x) where
-  prettyPrec _ (OpTransform a b) = "transform" <> prettyList prParens "," (a ++ [b])
+  prettyPrec _ (OpTransform a b) = "transform" <> prettyListDoc prParens "," [prettyList prBrackets "," a, pretty b]
 
 instance (VarSymBreakingDescription x) => VarSymBreakingDescription (OpTransform x) where
   varSymBreakingDescription (OpTransform a b) =
