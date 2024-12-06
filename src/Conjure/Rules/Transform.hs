@@ -34,9 +34,11 @@ rules_Transform =
 rule_Transform_DotLess :: Rule
 rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
   where
-    theRule [essence| &x .<= &rhs |]
-      | Just (ps, y) <- match opTransform rhs,
+    theRule p
+      | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
+        Just (ps, y) <- match opTransform rhs,
         x == y = do
+          let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
           TypeMatrix {} <- typeOf x
           -- traceM $ show $ "rule_Transform_DotLess 1" <+> pretty x
           xIndices <- indexDomainsOf x
@@ -49,7 +51,7 @@ rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
                     (iPat, i) <- quantifiedVar
                     let transformed_i = make opTransform (map (make opPermInverse) ps) i
                     let transformed_x_i = make opTransform ps [essence| &x[&transformed_i] |]
-                    return [essence| &x .<= [ &transformed_x_i | &iPat : &xInd ] |]
+                    return $ mk x [essence| [ &transformed_x_i | &iPat : &xInd ] |]
                 )
             [xInd1, xInd2] ->
               return
@@ -61,28 +63,11 @@ rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
                     let transformed_i2 = make opTransform (map (make opPermInverse) ps) i2
                     let transformed_x_i1_i2 = make opTransform ps [essence| &x[&transformed_i1, &transformed_i2] |]
                     return
-                      [essence|
-                    [ &x[&i1, &i2]
-                    | &iPat1 : &xInd1
-                    , &iPat2 : &xInd2
-                    ]
-                    .<=
-                    [ &transformed_x_i1_i2
-                    | &iPat1 : &xInd1
-                    , &iPat2 : &xInd2
-                    ]
-                  |]
+                      $ mk
+                        [essence| [ &x[&i1, &i2] | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
+                        [essence| [ &transformed_x_i1_i2 | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
                 )
             _ -> na "rule_Transform_DotLess"
-    theRule [essence| &x .< transform([&p], &y) |] | x == y = do
-      TypeMatrix {} <- typeOf x
-      (xInd : _) <- indexDomainsOf x
-      return
-        ( "",
-          do
-            (iPat, i) <- quantifiedVar
-            return [essence| &x .< [ transform([&p], &x[transform([permInverse(&p)], &i)]) | &iPat : &xInd ] |]
-        )
     theRule _ = na "rule_Transform_DotLess"
 
 rule_Transform_Functorially :: Rule
