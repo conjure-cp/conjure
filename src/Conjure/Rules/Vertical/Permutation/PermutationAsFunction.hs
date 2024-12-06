@@ -48,18 +48,18 @@ rule_Comprehension = "permutation-comprehension-tuples{AsFunction}" `namedRule` 
           do
             (lPat, l) <- quantifiedVar
             (rPat, r) <- quantifiedVar
-            return $
-              Comprehension body $
-                gocBefore
-                  ++ [ Generator
-                         ( GenInExpr
-                             pat
-                             [essence| [(&l,&r) 
+            return
+              $ Comprehension body
+              $ gocBefore
+              ++ [ Generator
+                     ( GenInExpr
+                         pat
+                         [essence| [(&l,&r) 
                                                                 | (&lPat, &rPat) <- &f
                                                                 , &l != &r] |]
-                         )
-                     ]
-                  ++ gocAfter
+                     )
+                 ]
+              ++ gocAfter
         )
     theRule _ = na "rule_Comprehension"
 
@@ -114,5 +114,10 @@ rule_Image_permInverse = "permutation-image-permInverse{AsFunction}" `namedRule`
                     ( "Vertical rule for permutation application to a type the permutation doesn't care about",
                       return i
                     )
-        _ -> na "rule_Image_permInverse"
+        Just (_, [[_, _]]) ->
+          return
+            ( "Vertical rule for permutation application, where the permutation is a literal and contains 2 objects",
+              return [essence| image(&p, &i) |]
+            )
+        _ -> na "rule_Image_permInverse" -- TODO: missing case for permutation literal
     theRule _ = na "rule_Image_permInverse"
