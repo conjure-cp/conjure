@@ -33,6 +33,7 @@ domainUnions [] = return $ DomainAny "domainUnions []" TypeAny
 domainUnions [a] = return a
 domainUnions (a:as) = do b <- domainUnions as ; domainUnion a b
 
+
 instance
     ( Eq x
     , ExpressionLike x
@@ -78,6 +79,8 @@ instance
         = DomainRelation def <$> domainUnion xA yA <*> zipWithM domainUnion xs ys
     domainUnion (DomainPartition _ xA x) (DomainPartition _ yA y)
         = DomainPartition def <$> domainUnion xA yA <*> domainUnion x y
+    domainUnion (DomainPermutation _ xA x) (DomainPermutation _ yA y)
+        = DomainPermutation def <$> domainUnion xA yA <*> domainUnion x y 
     domainUnion d1 d2 = bug $ vcat ["Domain.domainUnion", pretty d1, pretty d2]
 
 
@@ -87,6 +90,17 @@ instance
     , Pretty x
     ) => DomainUnion (SetAttr x) where
     domainUnion (SetAttr a) (SetAttr b) = SetAttr <$> domainUnion a b
+
+
+instance
+    ( ExpressionLike x
+    , Op x :< x
+    , Pretty x
+    , Eq x
+    ) => DomainUnion (PermutationAttr x) where
+    domainUnion (PermutationAttr a) (PermutationAttr b)
+        | a == b = return (PermutationAttr a)
+        | otherwise = bug "DomainUnion PermutationAttr"
 
 
 instance
