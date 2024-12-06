@@ -129,6 +129,8 @@ typeUnify (TypeInt t1) (TypeInt t2) = case ?typeCheckerMode of
                                          RelaxedIntegerTags -> True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
+typeUnify (TypeUnnamed (Name a)) (TypeInt (TagUnnamed b)) = a == b
+typeUnify (TypeInt (TagUnnamed b)) (TypeUnnamed (Name a)) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
 typeUnify TypeTuple{} (TypeTuple [TypeAny]) = True
 typeUnify (TypeTuple as) (TypeTuple bs) = (length as == length bs) && and (zipWith typeUnify as bs)
