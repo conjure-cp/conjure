@@ -20,6 +20,7 @@ rules_Transform =
     rule_Transformed_Indexing,
     rule_Lift_Transformed_Indexing,
     rule_Transform_Indexing,
+    rule_TransformToImage,
     rule_Transform_Unifying
     -- rule_Transform_Variant_Literal,
     -- rule_Transform_Variant_Eq,
@@ -402,9 +403,10 @@ rule_Transform_Indexing = "transform-indexing" `namedRule` theRule
         else na "rule_Transform_Indexing"
     theRule _ = na "rule_Transform_Indexing"
 
-rule_Transform_Unifying :: Rule
-rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
+rule_TransformToImage :: Rule
+rule_TransformToImage = "transform-to-image" `namedRule` theRule
   where
+    -- transform([f], i) ~~> image(f, i) if the types match
     theRule [essence| transform([&morphism], &i) |] = do
       inner <- morphing =<< typeOf morphism
       typeI <- typeOf i
@@ -415,6 +417,12 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
               return [essence| image(&morphism, &i) |]
             )
         else na "rule_Transform_Unifying"
+    theRule _ = na "rule_Transform_Unifying"
+
+rule_Transform_Unifying :: Rule
+rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
+  where
+    -- drop transforms that do not apply
     theRule p | Just (morphisms :: [Expression], i) <- match opTransform p = do
       typeI <- typeOf i
       morphisms' <- fmap catMaybes $ forM morphisms $ \morphism -> do
@@ -428,12 +436,12 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
           if null morphisms'
             then
               return
-                ( "Horizontal rule for transform unifying",
+                ( "Horizontal rule for transform unifying -- none of them apply",
                   return i
                 )
             else
               return
-                ( "Horizontal rule for transform unifying",
+                ( "Horizontal rule for transform unifying -- some of the apply",
                   return $ make opTransform morphisms' i
                 )
     theRule _ = na "rule_Transform_Unifying"
