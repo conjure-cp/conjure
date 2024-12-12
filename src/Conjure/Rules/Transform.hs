@@ -8,8 +8,13 @@ import Conjure.Rules.Import
 
 rules_Transform :: [Rule]
 rules_Transform =
-  [ rule_Transform_DotLess,
+  [ rule_Transform_DotLess_matrix,
+    rule_Transform_DotLess_function,
+    rule_Transform_DotLess_set,
+    rule_Transform_DotLess_relation,
     -- rule_Transform_Sequence_Literal,
+    rule_Transform_FunctionImage,
+    rule_Transform_Tuple,
     rule_Transform_Functorially,
     rule_Transform_Comprehension,
     rule_Transform_Product_Types,
@@ -31,8 +36,8 @@ rules_Transform =
     -- rule_Transformed_Variant_Active
   ]
 
-rule_Transform_DotLess :: Rule
-rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
+rule_Transform_DotLess_matrix :: Rule
+rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
   where
     theRule p
       | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
@@ -69,6 +74,270 @@ rule_Transform_DotLess = "transform-dotless" `namedRule` theRule
                 )
             _ -> na "rule_Transform_DotLess"
     theRule _ = na "rule_Transform_DotLess"
+
+rule_Transform_DotLess_function :: Rule
+rule_Transform_DotLess_function = "transform-dotless-function" `namedRule` theRule
+  where
+    theRule p
+      | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
+        Just (ps, y) <- match opTransform rhs,
+        x == y = do
+          let mk :: Expression -> Expression -> Expression = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
+          TypeFunction {} <- typeOf x
+          -- traceM $ show $ "rule_Transform_DotLess 1 x" <+> pretty x
+          domain_x@(DomainFunction _ _ _fr _to) <- domainOf x
+          -- traceM $ show $ "rule_Transform_DotLess 2 fr" <+> pretty fr
+          -- traceM $ show $ "rule_Transform_DotLess 2 to" <+> pretty to
+
+          return
+            ( "",
+              do
+                (auxName, x') <- auxiliaryVar
+                (iPat, i) <- quantifiedVar
+
+                let lhs1_inner = make opTransform ps [essence| &i[1] |]
+                let lhs1 = make opImage x' lhs1_inner
+                let rhs1 = make opTransform ps [essence| &i[2] |]
+
+                let lhs2_inner = make opTransform (map (make opPermInverse) ps) [essence| &i[1] |]
+                let lhs2 = make opImage x lhs2_inner
+                let rhs2 = make opTransform (map (make opPermInverse) ps) [essence| &i[2] |]
+
+                return
+                  $ WithLocals
+                    (mk x x')
+                    ( AuxiliaryVars
+                        [ Declaration (FindOrGiven LocalFind auxName domain_x),
+                          SuchThat
+                            [ [essence| forAll &iPat in &x . &lhs1 = &rhs1 |],
+                              [essence| forAll &iPat in &x' . &lhs2 = &rhs2 |]
+                            ]
+                        ]
+                    )
+            )
+    -- na ""
+
+    -- x : function T --> U
+    -- x' : function T --> U
+    -- such that forAll (t,u) in x . x'(transform(ps, t)) = transform(ps, u)
+    -- such that forAll (t,u) in x' . x(transform(permInverse(ps), t)) = transform(permInverse(ps), u)
+
+    -- x: set/mset/func...
+    -- forAll i : innerDomainOf(x) . INSIDE-LHS = INSIDE-RHS
+
+    -- INSIDE-LHS
+    -- set: i in x
+    -- mset: freq(i, x)
+    -- function: i in x -- same as (x[i[0]] = i[1])
+    -- partition: i in parts(x)
+
+    -- INSIDE-RHS
+    -- set: transform(ps, i) in x'
+    -- mset: freq(transform(ps, i), x')
+    -- function: transform(ps, i) in x'
+    -- relation: same as func
+    -- partition: transform(ps, i) in parts(x')
+
+    -- x, x' : set of T
+    -- set: forAll i :  . i in x <-> transform(ps, i) in x'
+    -- mset: forAll i : T . i in x <-> transform(ps, i) in x'
+
+    -- such that forAll t in x . transform(ps, t) in x'
+    -- such that forAll t in x' . transform(permInverse(ps), t) in x
+
+    -- x, x' : mset of T
+    -- such that forAll t in x . freq(transform(ps, t), x') = freq(t, x)
+    -- such that forAll t in x' . freq(transform(permInverse(ps), t), x) = freq(t, x')
+
+    -- x, x' : relation (A,B,C)
+    -- such that forAll entry in x . transform(ps, entry) in x'
+    -- such that forAll entry in x' . transform(permInverse(ps), entry) in x
+
+    -- x, x' : partition of set of T
+    -- such that forAll i1, i2 : set of T . together({i1, i2}, x) <-> together({transform(ps, x), transform(ps, y)}, x')
+
+    theRule _ = na "rule_Transform_DotLess"
+
+rule_Transform_DotLess_set :: Rule
+rule_Transform_DotLess_set = "transform-dotless-set" `namedRule` theRule
+  where
+    theRule p
+      | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
+        Just (ps, y) <- match opTransform rhs,
+        x == y = do
+          let mk :: Expression -> Expression -> Expression = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
+          TypeSet {} <- typeOf x
+          domain_x@DomainSet {} <- domainOf x
+
+          return
+            ( "",
+              do
+                (auxName, x') <- auxiliaryVar
+                (iPat, i) <- quantifiedVar
+
+                let transform_i = make opTransform ps i
+                let transform_i' = make opTransform (map (make opPermInverse) ps) i
+
+                return
+                  $ WithLocals
+                    (mk x x')
+                    ( AuxiliaryVars
+                        [ Declaration (FindOrGiven LocalFind auxName domain_x),
+                          SuchThat
+                            [ [essence| forAll &iPat in &x . &transform_i in &x' |],
+                              [essence| forAll &iPat in &x' . &transform_i' in &x |]
+                            ]
+                        ]
+                    )
+            )
+    theRule _ = na "rule_Transform_DotLess"
+
+rule_Transform_DotLess_relation :: Rule
+rule_Transform_DotLess_relation = "transform-dotless-relation" `namedRule` theRule
+  where
+    theRule p
+      | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
+        Just (ps, y) <- match opTransform rhs,
+        x == y = do
+          let mk :: Expression -> Expression -> Expression = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
+          TypeRelation {} <- typeOf x
+          domain_x@DomainRelation {} <- domainOf x
+
+          return
+            ( "",
+              do
+                (auxName, x') <- auxiliaryVar
+                (iPat, i) <- quantifiedVar
+
+                let transform_i = make opTransform ps i
+                let transform_i' = make opTransform (map (make opPermInverse) ps) i
+
+                return
+                  $ WithLocals
+                    (mk x x')
+                    ( AuxiliaryVars
+                        [ Declaration (FindOrGiven LocalFind auxName domain_x),
+                          SuchThat
+                            [ [essence| forAll &iPat in &x . &transform_i in &x' |],
+                              [essence| forAll &iPat in &x' . &transform_i' in &x |]
+                            ]
+                        ]
+                    )
+            )
+    theRule _ = na "rule_Transform_DotLess"
+
+rule_Transform_DotLess_rest :: Rule
+rule_Transform_DotLess_rest = "transform-dotless" `namedRule` theRule
+  where
+    theRule p
+      | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
+        Just (ps, y) <- match opTransform rhs,
+        x == y = do
+          let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
+          TypeFunction {} <- typeOf x
+          -- traceM $ show $ "rule_Transform_DotLess 1" <+> pretty x
+          xIndices <- indexDomainsOf x
+          -- traceM $ show $ "rule_Transform_DotLess 2" <+> vcat (map pretty xIndices)
+          case xIndices of
+            [xInd] ->
+              -- x .<= transform(ps, x)
+
+              -- x .<= [ transform(ps, x[transform(permInverse(ps), i)]) | i : indexOf(x) ]
+
+              -- x : function T --> U
+              -- x' : function T --> U
+              -- such that forAll (t,u) in x . x'(transform(ps, t)) = transform(ps, u)
+              -- such that forAll (t,u) in x' . x(transform(permInverse(ps), t)) = transform(permInverse(ps), u)
+
+              -- x: set/mset/func...
+              -- forAll i : innerDomainOf(x) . INSIDE-LHS = INSIDE-RHS
+
+              -- INSIDE-LHS
+              -- set: i in x
+              -- mset: freq(i, x)
+              -- function: i in x -- same as (x[i[0]] = i[1])
+              -- partition: i in parts(x)
+
+              -- INSIDE-RHS
+              -- set: transform(ps, i) in x'
+              -- mset: freq(transform(ps, i), x')
+              -- function: transform(ps, i) in x'
+              -- relation: same as func
+              -- partition: transform(ps, i) in parts(x')
+
+              -- x, x' : set of T
+              -- set: forAll i :  . i in x <-> transform(ps, i) in x'
+              -- mset: forAll i : T . i in x <-> transform(ps, i) in x'
+
+              -- such that forAll t in x . transform(ps, t) in x'
+              -- such that forAll t in x' . transform(permInverse(ps), t) in x
+
+              -- x, x' : mset of T
+              -- such that forAll t in x . freq(transform(ps, t), x') = freq(t, x)
+              -- such that forAll t in x' . freq(transform(permInverse(ps), t), x) = freq(t, x')
+
+              -- x, x' : relation (A,B,C)
+              -- such that forAll entry in x . transform(ps, entry) in x'
+              -- such that forAll entry in x' . transform(permInverse(ps), entry) in x
+
+              -- x, x' : partition of set of T
+              -- such that forAll i1, i2 : set of T . together({i1, i2}, x) <-> together({transform(ps, x), transform(ps, y)}, x')
+
+              return
+                ( "",
+                  do
+                    (iPat, i) <- quantifiedVar
+                    let transformed_i = make opTransform (map (make opPermInverse) ps) i
+                    let transformed_x_i = make opTransform ps [essence| &x[&transformed_i] |]
+                    return $ mk x [essence| [ &transformed_x_i | &iPat : &xInd ] |]
+                )
+            [xInd1, xInd2] ->
+              return
+                ( "",
+                  do
+                    (iPat1, i1) <- quantifiedVar
+                    (iPat2, i2) <- quantifiedVar
+                    let transformed_i1 = make opTransform (map (make opPermInverse) ps) i1
+                    let transformed_i2 = make opTransform (map (make opPermInverse) ps) i2
+                    let transformed_x_i1_i2 = make opTransform ps [essence| &x[&transformed_i1, &transformed_i2] |]
+                    return
+                      $ mk
+                        [essence| [ &x[&i1, &i2] | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
+                        [essence| [ &transformed_x_i1_i2 | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
+                )
+            _ -> na "rule_Transform_DotLess"
+    theRule _ = na "rule_Transform_DotLess"
+
+-- transform(p, x)[i] ~~> transform(p, x[transform(permInverse(p), i)])
+-- transform(p, f)[x] ~~> transform(p, f[transform(permInverse(p), x)])
+-- image(transform(p, f), x) ~~> transform(p, image(f, transform(permInverse(p), x)))
+rule_Transform_FunctionImage :: Rule
+rule_Transform_FunctionImage = "transform-function-image" `namedRule` theRule
+  where
+    theRule [essence| image(transform([&p], &f), &x)  |] = do
+      return ("", return [essence| transform([&p], image(&f, transform([permInverse(&p)], &x))) |])
+    theRule _ = na "rule_Transform_FunctionImage"
+
+-- transform(p, x)[i] ~~> transform(p, x[transform(permInverse(p), i)])
+-- transform(p, f)[x] ~~> transform(p, f[transform(permInverse(p), x)])
+-- image(transform(p, f), x) ~~> transform(p, image(f, transform(permInverse(p), x)))
+rule_Transform_Tuple :: Rule
+rule_Transform_Tuple = "transform-tuple" `namedRule` theRule
+  where
+    theRule p
+      | Just (ps, tup) <- match opTransform p,
+        Just (TypeTuple tup_types) <- typeOf tup =
+          return
+            ( "",
+              return
+                $ AbstractLiteral
+                $ AbsLitTuple
+                  [ make opTransform ps [essence| &tup[&i] |]
+                    | iInt <- take (length tup_types) allNats,
+                      let i = fromInt iInt
+                  ]
+            )
+    theRule _ = na "rule_Transform_Tuple"
 
 rule_Transform_Functorially :: Rule
 rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
@@ -327,6 +596,7 @@ rule_Transformed_Indexing = "transformed-indexing" `namedRule` theRule
         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
         _ -> na "rule_Transformed_Indexing"
       (matexp, indexer) <- match opIndexing exp
+      TypeMatrix {} <- typeOf matexp
       ([morphism], mat) <- match opTransform matexp
       ty <- typeOf mat
       inn <- morphing =<< typeOf morphism
@@ -367,6 +637,7 @@ rule_Transform_Indexing = "transform-indexing" `namedRule` theRule
         _ -> na "rule_Transform_Indexing"
       ([morphism], matexp) <- match opTransform expr
       (mat, indexer) <- match opIndexing matexp
+      TypeMatrix {} <- typeOf mat
       ty <- typeOf mat
       inn <- morphing =<< typeOf morphism
       if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
