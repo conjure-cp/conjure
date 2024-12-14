@@ -697,7 +697,7 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
                 )
             else
               return
-                ( "Horizontal rule for transform unifying -- some of the apply",
+                ( "Horizontal rule for transform unifying -- some of them apply",
                   return $ make opTransform morphisms' i
                 )
     theRule _ = na "rule_Transform_Unifying"
