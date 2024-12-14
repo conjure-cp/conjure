@@ -31,6 +31,20 @@ rule_Int = "dontCare-int" `namedRule` theRule where
             )
 
 
+rule_Unnamed :: Rule
+rule_Unnamed = "dontCare-unnamed" `namedRule` theRule where
+    theRule p = do
+        x <- match opDontCare p
+        ty <- typeOf x
+        case ty of
+            TypeInt (TagUnnamed _) -> return ()
+            _ -> na "rule_Unnamed"
+        return
+            ( "dontCare value for this unnamed integer is 1"
+            , return $ make opEq x 1
+            )
+
+
 rule_Tuple :: Rule
 rule_Tuple = "dontCare-tuple" `namedRule` theRule where
     theRule p = do
@@ -71,12 +85,15 @@ rule_Matrix :: Rule
 rule_Matrix = "dontCare-matrix" `namedRule` theRule where
     theRule p = do
         x                    <- match opDontCare p
-        DomainMatrix index _ <- domainOf x
+        indices <- indexDomainsOf x
         return
             ( "dontCare handling for matrix"
             , do
-                (iPat, i) <- quantifiedVar
-                return [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
+                triplets <- forM indices $ \ index -> do
+                    (iPat, i) <- quantifiedVar
+                    return (iPat, i, index)
+                let gens = [Generator (GenDomainNoRepr iPat index) | (iPat, _, index) <- triplets]
+                return $ make opAnd $ Comprehension (make opDontCare (make opMatrixIndexing x [i | (_, i, _) <- triplets])) gens
             )
 
 rule_Permutation :: Rule

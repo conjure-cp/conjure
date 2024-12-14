@@ -1697,6 +1697,7 @@ otherRules =
     ,
         [ DontCare.rule_Bool
         , DontCare.rule_Int
+        , DontCare.rule_Unnamed
         , DontCare.rule_Tuple
         , DontCare.rule_Record
         , DontCare.rule_Variant
