@@ -209,11 +209,41 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                 | (nm, dom) <- decls
                 , let domLifted = foldr (DomainMatrix . forgetRepr) dom indexDomains
                 ]
+        let declsLiftedNames =
+                [ nm
+                | (nm, _dom) <- decls
+                ]
+
+        -- traceM $ show $ "declsLifted" <+> vcat (map pretty declsLifted)
 
         let consLifted =
                 [ make opAnd $ Comprehension c generators
                 | c <- transformBi upd cons
                 ]
+
+        -- traceM $ show $ "consLifted" <+> vcat (map pretty consLifted)
+        -- traceM $ show $ "head lifted 1" <+> pretty body
+        -- traceM $ show $ "head lifted 2" <+> pretty (transform upd body)
+
+        let referencesInCons = nub [ r | r@(Reference _ (Just (DeclHasRepr {}))) <- concatMap universe cons]
+        let referencesInBody = nub [ r | r@(Reference _ (Just (DeclHasRepr {}))) <- universe body]
+        -- traceM $ show $ "referencesInBody" <+> vcat (map pretty referencesInBody)
+
+        let pr :: Name -> String = show . pretty
+
+        -- the name is a prefix of a name that's defined in the decls, but not identical
+        let unrefinedInBody = [ name | Reference name _ <- referencesInBody
+                                     , or [ pr name `isPrefixOf` pr declName && pr declName /= pr name | declName <- declsLiftedNames ]
+                                     ]
+
+        let unrefinedInCons = [ name | Reference name _ <- referencesInCons
+                                     , or [ pr name `isPrefixOf` pr declName && pr declName /= pr name | declName <- declsLiftedNames ]
+                                     ]
+
+        -- traceM $ show $ "unrefinedInBody" <+> vcat (map pretty unrefinedInBody)
+        -- traceM $ show $ "unrefinedInCons" <+> vcat (map pretty unrefinedInCons)
+
+        when (not (null unrefinedInBody) || not (null unrefinedInCons)) $ na "rule_LiftVars"
 
         return
             ( "Bubbling up auxiliary variables through a comprehension."
@@ -247,6 +277,9 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
             )
 
     theRule p = do
+        case p of
+            Comprehension{} -> na "rule_LiftVars"
+            _ -> return ()
         let
             f (WithLocals y (AuxiliaryVars locals@(_:_))) = do
                 tell locals
