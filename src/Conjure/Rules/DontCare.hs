@@ -86,6 +86,7 @@ rule_Matrix = "dontCare-matrix" `namedRule` theRule where
     theRule p = do
         x                    <- match opDontCare p
         indices <- indexDomainsOf x
+        when (null indices) $ na "rule_Matrix"
         return
             ( "dontCare handling for matrix"
             , do
