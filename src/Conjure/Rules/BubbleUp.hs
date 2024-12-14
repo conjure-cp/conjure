@@ -187,14 +187,17 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
         let cons  = concat [ xs | SuchThat xs <- locals ]
 
-        -- TODO: what to do with the conditions?
-        -- should we `dontCare unless condition`?
-        -- discard for now
         (_conditions, generators) <- fmap mconcat $ forM gensOrConds $ \ goc -> case goc of
             Condition{} -> return ([goc], [])
             ComprehensionLetting{} -> return ([], [goc])
             Generator (GenDomainHasRepr _ _) -> return ([], [goc])
             _ -> na "rule_LiftVars"
+
+        let gensOrConds_dontCare = [ case goc of
+                                        Condition c -> Condition (make opNot c)
+                                        _ -> goc
+                                   | goc <- gensOrConds
+                                   ]
 
         let patRefs = [ Reference patName Nothing | Generator (GenDomainHasRepr patName _domain) <- generators ]
         let indexDomains = [domain | Generator (GenDomainHasRepr _patName domain) <- generators ]
@@ -217,7 +220,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         -- traceM $ show $ "declsLifted" <+> vcat (map pretty declsLifted)
 
         let consLifted =
-                [ make opAnd $ Comprehension c generators
+                [ make opAnd $ Comprehension c gensOrConds
                 | c <- transformBi upd cons
                 ]
 
@@ -240,6 +243,8 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                                      , or [ pr name `isPrefixOf` pr declName && pr declName /= pr name | declName <- declsLiftedNames ]
                                      ]
 
+        let dontCareCons = make opAnd $ fromList [ make opDontCare (Reference r Nothing) | r <- declsLiftedNames ]
+
         -- traceM $ show $ "unrefinedInBody" <+> vcat (map pretty unrefinedInBody)
         -- traceM $ show $ "unrefinedInCons" <+> vcat (map pretty unrefinedInCons)
 
@@ -247,7 +252,9 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
 
         return
             ( "Bubbling up auxiliary variables through a comprehension."
-            , return $ WithLocals (Comprehension (transform upd body) (transformBi upd gensOrConds))
+            , return $ WithLocals (make opConcatenate $ fromList [ Comprehension (transform upd body) (transformBi upd gensOrConds)
+                                                                 , Comprehension dontCareCons (transformBi upd gensOrConds_dontCare)
+                                                                 ])
                                   (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
             )
     theRule WithLocals{} = na "rule_LiftVars"
