@@ -12,6 +12,7 @@ module Conjure.Language.Domain
     , SequenceAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..), binRelNames
     , PartitionAttr(..)
+    , PermutationAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , textToRepresentation, representationToShortText, representationToFullText
@@ -71,6 +72,7 @@ data Domain r x
     | DomainSequence  r (SequenceAttr x) (Domain r x)
     | DomainRelation  r (RelationAttr x) [Domain r x]
     | DomainPartition r (PartitionAttr x) (Domain r x)
+    | DomainPermutation r (PermutationAttr x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
@@ -160,6 +162,7 @@ typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOfDomain x <*> t
 typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOfDomain x
 typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOfDomain xs
 typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOfDomain x
+typeOfDomain (DomainPermutation _ _ x )  = TypePermutation <$> typeOfDomain x
 typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
@@ -198,8 +201,8 @@ changeRepr rep = go
             DomainSequence rep attr (go d)
         go (DomainRelation _   attr ds) =
             DomainRelation rep attr (map go ds)
-        go (DomainPartition _   attr d) =
-            DomainPartition rep attr (go d)
+        go (DomainPartition _   attr d) = DomainPartition rep attr (go d)
+        go (DomainPermutation _ attr d) = DomainPermutation rep attr (go d)
         go (DomainOp op ds) = DomainOp op (map go ds)
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
@@ -250,6 +253,7 @@ reprTree (DomainFunction  r _ a b) = Tree (Just r) [reprTree a, reprTree b]
 reprTree (DomainSequence  r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainRelation  r _ as ) = Tree (Just r) (map reprTree as)
 reprTree (DomainPartition r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainPermutation r _ a)   = Tree (Just r) [reprTree a]
 reprTree DomainOp{}        = Tree Nothing []
 reprTree DomainReference{} = Tree Nothing []
 reprTree DomainMetaVar{}   = Tree Nothing []
@@ -276,6 +280,7 @@ applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = Doma
 applyReprTree (DomainSequence  _ attr a  ) (Tree (Just r) [aRepr]) = DomainSequence r attr <$> applyReprTree a aRepr
 applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
+applyReprTree (DomainPermutation _ attr a ) (Tree (Just r) [aRepr]) = DomainPermutation r attr <$> applyReprTree a aRepr
 applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
@@ -326,6 +331,9 @@ data AttrName
     | AttrName_surjective
     | AttrName_bijective
     | AttrName_regular
+    | AttrName_numMoved
+    | AttrName_minNumMoved
+    | AttrName_maxNumMoved
     -- bin rel ones
     | AttrName_reflexive
     | AttrName_irreflexive
@@ -369,6 +377,9 @@ instance Pretty AttrName where
     pretty AttrName_surjective = "surjective"
     pretty AttrName_bijective = "bijective"
     pretty AttrName_regular = "regular"
+    pretty AttrName_numMoved = "numMoved"
+    pretty AttrName_minNumMoved = "minNumMoved"
+    pretty AttrName_maxNumMoved = "maxNumMoved"
     pretty AttrName_reflexive = "reflexive"
     pretty AttrName_irreflexive = "irreflexive"
     pretty AttrName_coreflexive = "coreflexive"
@@ -748,6 +759,27 @@ instance Pretty a => Pretty (PartitionAttr a) where
                 else prettyList prParens "," inside
 
 
+
+data PermutationAttr a = PermutationAttr
+    {
+        numMoved :: SizeAttr a
+    }
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize a => Serialize (PermutationAttr a)
+instance Hashable  a => Hashable  (PermutationAttr a)
+instance ToJSON    a => ToJSON    (PermutationAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (PermutationAttr a) where parseJSON = genericParseJSON jsonOptions
+instance Default a => Default (PermutationAttr a) where def = PermutationAttr def
+instance Pretty a => Pretty (PermutationAttr a) where
+    pretty (PermutationAttr a ) =
+        let inside = filter (/=prEmpty) [pretty a]
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
+
+
+
+
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
@@ -842,6 +874,7 @@ data HasRepresentation
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
     | Partition_Occurrence
+    | Permutation_AsFunction
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -872,9 +905,11 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     -- pretty (DomainInt (TagUnnamed nm) _) = pretty nm
 
     pretty (DomainInt _ []) = "int"
+
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
 
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
+
     pretty (DomainEnum name _             _) = pretty name
 
     pretty (DomainUnnamed name _) = pretty name
@@ -914,6 +949,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainPartition r attrs inner)
         = "partition" <+> prettyAttrs r attrs <+> "from" <++> pretty inner
+
+    pretty (DomainPermutation r attrs inner) = hang ("permutation" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
 
     pretty d@DomainOp{} = pretty (show d)
 
@@ -992,6 +1029,7 @@ representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
 representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
+representationToShortText Permutation_AsFunction        = "PermutationAsFunction"
 representationToShortText r = bug ("representationToShortText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text
@@ -1074,3 +1112,4 @@ singletonDomainInt _ = Nothing
 matrixNumDimsD :: Domain r x -> Int
 matrixNumDimsD (DomainMatrix _ t) = 1 + matrixNumDimsD t
 matrixNumDimsD _ = 0
+

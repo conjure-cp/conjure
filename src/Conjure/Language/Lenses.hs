@@ -27,7 +27,7 @@ followAliases m (isAlias -> Just x) = followAliases m x
 followAliases m x = m x
 
 tryMatch :: (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
-tryMatch f = match f
+tryMatch = match
 
 matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
 matchOr defOut f inp = fromMaybe defOut (match f inp)
@@ -281,6 +281,7 @@ opToSet _ =
     )
 
 
+
 opToSetWithFlag
     :: ( Op x :< x
        , Pretty x
@@ -438,8 +439,8 @@ opTransform
        , MonadFailDoc m
        )
     => Proxy (m :: T.Type -> T.Type)
-    -> ( x -> x -> x
-       , x -> m (x, x)
+    -> ( [x] -> x -> x
+       , x -> m ([x], x)
        )
 opTransform _ =
     ( \ x y -> inject $ MkOpTransform $ OpTransform x y
@@ -467,6 +468,25 @@ opRelationProj _ =
             case op of
                 MkOpRelationProj (OpRelationProj x ys) -> return (x,ys)
                 _ -> na ("Lenses.opRelationProj:" <++> pretty p)
+    )
+
+
+opPermInverse
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFailDoc m
+       )
+    => Proxy (m :: T.Type -> T.Type)
+    -> ( x -> x
+       , x -> m x
+       )
+opPermInverse _ =
+    ( inject . MkOpPermInverse . OpPermInverse
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpPermInverse (OpPermInverse x) -> return x
+                _ -> na ("Lenses.opPermInverse:" <++> pretty p)
     )
 
 
@@ -1244,6 +1264,7 @@ constantInt _ =
     )
 
 
+
 matrixLiteral
     :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: T.Type -> T.Type)
@@ -1368,6 +1389,32 @@ functionLiteral _ =
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
+
+
+permutationLiteral
+    :: (MonadFailDoc m, ?typeCheckerMode :: TypeCheckerMode)
+    => Proxy (m :: T.Type -> T.Type )
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
+       )
+permutationLiteral _ =
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitPermutation elems)) ty
+            else        AbstractLiteral (AbsLitPermutation elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
+    )
+    where
+        extract (Constant (ConstantAbstract (AbsLitPermutation xs))) = return [ [Constant z | z <- x] | x <- xs ]
+        extract (AbstractLiteral (AbsLitPermutation xs)) = return xs
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.permutationLiteral:" <+> pretty p)
+
+
 
 
 sequenceLiteral
@@ -1572,13 +1619,15 @@ fixRelationProj= transformBi f
             case match opRelationProj p of
                 Just (func, [Just arg]) ->
                     case typeOf func of
-                        Just TypeFunction{} -> make opImage func arg
-                        Just TypeSequence{} -> make opImage func arg
+                        Just TypeFunction{}    -> make opImage func arg
+                        Just TypeSequence{}    -> make opImage func arg
+                        Just TypePermutation{} -> make opImage func arg
                         _                   -> p
                 Just (func, args) | arg <- catMaybes args, length arg == length args ->
                     case typeOf func of
-                        Just TypeFunction{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
-                        Just TypeSequence{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypeFunction{}    -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypeSequence{}    -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
+                        Just TypePermutation{} -> make opImage func $ AbstractLiteral $ AbsLitTuple arg
                         _                   -> p
                 _ -> p
 
