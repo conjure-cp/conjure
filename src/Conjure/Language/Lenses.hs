@@ -1633,7 +1633,11 @@ fixRelationProj= transformBi f
 
 
 
-maxOfDomain :: (MonadFailDoc m, Pretty r) => Domain r Expression -> m Expression
+maxOfDomain ::
+    MonadFailDoc m =>
+    Pretty r =>
+    Domain r Expression -> m Expression
+maxOfDomain (DomainIntE x) = return $ make opMax x
 maxOfDomain (DomainInt _ [] ) = failDoc "rule_DomainMinMax.maxOfDomain []"
 maxOfDomain (DomainInt _ [r]) = maxOfRange r
 maxOfDomain (DomainInt _ rs ) = do
@@ -1648,7 +1652,12 @@ maxOfRange (RangeBounded _ x) = return x
 maxOfRange (RangeUpperBounded x) = return x
 maxOfRange r = failDoc ("rule_DomainMinMax.maxOfRange" <+> pretty (show r))
 
-minOfDomain :: (MonadFailDoc m, Pretty r) => Domain r Expression -> m Expression
+minOfDomain ::
+    (?typeCheckerMode::TypeCheckerMode) =>
+    MonadFailDoc m =>
+    Pretty r =>
+    Domain r Expression -> m Expression
+minOfDomain (DomainIntE x) = return $ make opMin x
 minOfDomain (DomainInt _ [] ) = failDoc "rule_DomainMinMax.minOfDomain []"
 minOfDomain (DomainInt _ [r]) = minOfRange r
 minOfDomain (DomainInt _ rs ) = do
@@ -1657,7 +1666,9 @@ minOfDomain (DomainInt _ rs ) = do
 minOfDomain (DomainReference _ (Just d)) = minOfDomain d
 minOfDomain d = failDoc ("rule_DomainMinMax.minOfDomain" <+> pretty d)
 
-minOfRange :: MonadFailDoc m => Range Expression -> m Expression
+minOfRange ::
+    MonadFailDoc m =>
+    Range Expression -> m Expression
 minOfRange (RangeSingle x) = return x
 minOfRange (RangeBounded x _) = return x
 minOfRange (RangeLowerBounded x) = return x
