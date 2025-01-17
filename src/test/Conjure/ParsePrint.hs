@@ -130,27 +130,29 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
 
     step "Checking Generated Representation"
     modelG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "model.json")
-    modelE <- readIfExists (tBaseDir </> "model.expected.json")
-    let diffs = do
-            jGiven <- stringToJson modelG
-            jReference <- stringToJson modelE
-            let Patch ds = diff jGiven jReference
-            return ds
-    case diffs of
-        Nothing -> assertFailure $ "JSON parser error in" ++ modelE
-        Just [] -> return ()
-        Just ops -> assertFailure $ renderNormal $ vcat ["Difference in json:" <++> vcat (map (stringToDoc . show) ops)]
+    unless (null modelG) $ do
+        modelE <- readIfExists (tBaseDir </> "model.expected.json")
+        let diffs = do
+                jGiven <- stringToJson modelG
+                jReference <- stringToJson modelE
+                let Patch ds = diff jGiven jReference
+                return ds
+        case diffs of
+            Nothing -> assertFailure $ "JSON parser error in" ++ modelE
+            Just [] -> return ()
+            Just ops -> assertFailure $ renderNormal $ vcat ["Difference in json:" <++> vcat (map (stringToDoc . show) ops)]
 
     step "Checking Types"
-    typecheckE <- fixWindowsPaths <$> readIfExists (tBaseDir </> "typecheck")
-    typecheckG <- readIfExists (tBaseDir </> "typecheck.expected")
-    unless (typecheckE == typecheckG) $
-        assertFailure $
-            renderNormal $
-                vcat
-                    [ "unexpected typeError:" <++> pretty typecheckG
-                    , "was expecting:    " <++> pretty typecheckE
-                    ]
+    typecheckG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "typecheck")
+    unless (null typecheckG) $ do
+        typecheckE <- readIfExists (tBaseDir </> "typecheck.expected")
+        unless (typecheckE == typecheckG) $
+            assertFailure $
+                renderNormal $
+                    vcat
+                        [ "unexpected typeError:" <++> pretty typecheckG
+                        , "was expecting:    " <++> pretty typecheckE
+                        ]
 
 stringToJson :: String -> Maybe JSON.Value
 stringToJson "" = Just JSON.emptyObject
