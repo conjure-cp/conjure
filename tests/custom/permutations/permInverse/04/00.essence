@@ -1,12 +1,12 @@
 
-$ transform(p, x)[i] ~~> transform(p, x[transform(permInverse(p), i)])
+$ transform([p], x)[i] ~~> transform([p], x[transform([permInverse(p)], i)])
 
 find p : permutation (numMoved 3) of int(1..3)
 
 find x : matrix [int(1..3)] of bool
 find y : matrix [int(1..3)] of bool
 
-such that y = transform(p, x)
+such that y = transform([p], x)
 
 
 

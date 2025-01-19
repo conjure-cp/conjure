@@ -5,5 +5,5 @@ find t : (n,n,n)
 find q : (n,n,n)
 
 
-such that (q = transform(p, t)) /\ (4 = sum([toInt(l != r) | (l,r) <- p])) 
+such that (q = transform([p], t)) /\ (4 = sum([toInt(l != r) | (l,r) <- p])) 
 

@@ -7,5 +7,5 @@ given s : set of int(1..n)
 find sn : set of int(1..n)
 
 
-such that sn = transform(p,s) /\ (3 = sum([ toInt(l != r) | (l, r) <- p])) 
+such that sn = transform([p],s) /\ (3 = sum([ toInt(l != r) | (l, r) <- p])) 
 

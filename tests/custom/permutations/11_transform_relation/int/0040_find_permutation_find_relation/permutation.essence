@@ -7,4 +7,4 @@ find sn : relation of (int(1..n) * int(1..n))
 
 
 
-such that sn = transform(p,s) /\ (3 = sum([ toInt(l!=r) | (l,r) <- p]) /\ |s| = 4)
+such that sn = transform([p],s) /\ (3 = sum([ toInt(l!=r) | (l,r) <- p]) /\ |s| = 4)
