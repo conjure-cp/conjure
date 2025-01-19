@@ -257,6 +257,22 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                                                                  ])
                                   (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
             )
+
+    -- this is to deal with when an AuxiliaryVars expression is in the generator
+    theRule (Comprehension body gensOrConds) = do
+
+        (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \case
+                Generator (GenInExpr pat (WithLocals expr (AuxiliaryVars locals))) ->
+                    return (pat, expr, locals)
+                _ -> na "rule_LiftVars"
+
+        return
+            ( "Bubbling up auxiliary variables through a comprehension's generator."
+            , return $ WithLocals
+                (Comprehension body (gocBefore ++ [Generator (GenInExpr pat expr)] ++ gocAfter))
+                (AuxiliaryVars locals)
+            )
+
     theRule WithLocals{} = na "rule_LiftVars"
     theRule Reference{} = na "rule_LiftVars"
 
@@ -284,9 +300,6 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
             )
 
     theRule p = do
-        case p of
-            Comprehension{} -> na "rule_LiftVars"
-            _ -> return ()
         let
             f (WithLocals y (AuxiliaryVars locals@(_:_))) = do
                 tell locals

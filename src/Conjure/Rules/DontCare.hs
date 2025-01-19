@@ -156,7 +156,7 @@ handleDontCares p =
                                 RangeLowerBounded v -> v
                                 RangeUpperBounded v -> v
                                 RangeBounded v _ -> v
-                            DomainIntE v -> [essence| min(&v) |]
+                            DomainIntE _ v -> [essence| min(&v) |]
                             _ -> raiseBug
                     return $ make opEq x val
                 TypeTuple{} -> do

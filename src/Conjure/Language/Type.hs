@@ -101,6 +101,12 @@ instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
 reTag :: Data a => IntTag -> a -> a
 reTag t = transformBi (const t)
 
+instance Pretty IntTag where
+    pretty TagInt = ""
+    pretty (TaggedInt t) = ":" <> pretty t
+    pretty (TagEnum t) = ":" <> pretty t
+    pretty (TagUnnamed t) = ":" <> pretty t
+
 
 -- This parameter will decide the mode of the type checker.
 -- There are two modes: StronglyTyped and RelaxedIntegerTags.

@@ -265,7 +265,7 @@ instance TypeOf Constant where
 
 instance DomainSizeOf Constant Integer where
     domainSizeOf DomainBool{} = return 2
-    domainSizeOf (DomainIntE x) = bug ("not implemented, domainSizeOf DomainIntE" <+> pretty (show x))
+    domainSizeOf (DomainIntE _ x) = bug ("not implemented, domainSizeOf DomainIntE" <+> pretty (show x))
     domainSizeOf (DomainInt _ rs) = domainSizeOfRanges rs
     domainSizeOf DomainEnum{} = failDoc  "domainSizeOf: Unknown for given enum."
     domainSizeOf (DomainTuple ds) = product <$> mapM domainSizeOf ds

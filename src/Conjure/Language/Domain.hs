@@ -54,7 +54,7 @@ import Data.Data ( toConstr, constrIndex )
 data Domain r x
     = DomainAny Text Type
     | DomainBool
-    | DomainIntE x
+    | DomainIntE IntTag x
     | DomainInt IntTag [Range x]
     | DomainEnum
         Name
@@ -127,17 +127,17 @@ typeOfDomain ::
     Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
-typeOfDomain d@(DomainIntE x)          = do
+typeOfDomain d@(DomainIntE t x)          = do
     ty <- typeOf x
     case ty of
-        TypeInt TagInt                -> return ()       -- pre recoverDomainInt
-        TypeList     (TypeInt TagInt) -> return ()
-        TypeMatrix _ (TypeInt TagInt) -> return ()
-        TypeSet      (TypeInt TagInt) -> return ()
+        TypeInt _                -> return ()       -- pre recoverDomainInt
+        TypeList     (TypeInt _) -> return ()
+        TypeMatrix _ (TypeInt _) -> return ()
+        TypeSet      (TypeInt _) -> return ()
         _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
-                         , "In domain:" <+> pretty d
-                         ]
-    return (TypeInt TagInt)
+                            , "In domain:" <+> pretty d
+                            ]
+    return (TypeInt t)
 typeOfDomain d@(DomainInt t rs)        = do
     forM_ rs $ \ r -> forM_ r $ \ x -> do
         ty <- typeOf x
@@ -183,7 +183,7 @@ changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
-        go (DomainIntE x) = DomainIntE x
+        go (DomainIntE t x) = DomainIntE t x
         go (DomainInt t rs) = DomainInt t rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
@@ -898,15 +898,15 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty DomainBool = "bool"
 
-    pretty (DomainIntE x) = "int" <> prParens (pretty x)
+    pretty (DomainIntE t x) = "int" <> pretty t <> pretty t <> prParens (pretty x)
 
     -- print them like integers even when they are tagged
     -- pretty (DomainInt (TagEnum nm) _) = pretty nm
     -- pretty (DomainInt (TagUnnamed nm) _) = pretty nm
 
-    pretty (DomainInt _ []) = "int"
+    pretty (DomainInt t []) = "int" <> pretty t
 
-    pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
+    pretty (DomainInt t ranges) = "int" <> pretty t <> prettyList prParens "," ranges
 
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
 

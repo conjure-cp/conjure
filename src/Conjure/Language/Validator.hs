@@ -683,9 +683,9 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
   ParenDomainNode _ dom rt -> do checkSymbols [rt]; validateDomain dom
   MetaVarDomain lt -> do mv <- validateMetaVar lt; return . Typed TypeAny $ DomainMetaVar mv
   BoolDomainNode lt -> lt `isA` TtType >> (return . Typed TypeBool) DomainBool
-  RangedIntDomainNode l1 rs -> do
+  RangedIntDomainNode l1 rs maybe_tag -> do
     l1 `isA` TtType
-    validateRangedInt rs
+    validateRangedInt maybe_tag rs
   RangedEnumNode nn ranges -> validateEnumRange nn ranges
   ShortTupleDomainNode lst -> validateTupleDomain lst
   TupleDomainNode l1 doms -> do
@@ -743,25 +743,25 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
     validatePartitionDomain attrs dom
   MissingDomainNode lt -> do raiseError $ lt <!> TokenError lt; return $ fallback "Missing Domain"
   where
-    validateRangedInt :: Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
-    validateRangedInt (Just (ListNode _ (Seq [SeqElem a _]) _)) = do
+    validateRangedInt :: Maybe ETok -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
+    validateRangedInt maybe_tag (Just (ListNode _ (Seq [SeqElem a _]) _)) = do
       d <- case a of
         SingleRangeNode en -> do
           (t, e) <- typeSplit <$> validateExpression en
           case t of
-            TypeInt TagInt -> return $ DomainInt TagInt [RangeSingle e]
-            TypeMatrix _ _ -> return $ DomainIntE e
-            TypeList _ -> return $ DomainIntE e
-            TypeSet _ -> return $ DomainIntE e
-            _ -> DomainIntE e <$ raiseTypeError (symbolRegion en <!> ComplexTypeError "Set/List of int or Int" t)
+            TypeInt _ -> return $ DomainInt (mkIntTag maybe_tag) [RangeSingle e]
+            TypeMatrix _ _ -> return $ DomainIntE (mkIntTag maybe_tag) e
+            TypeList _ -> return $ DomainIntE (mkIntTag maybe_tag) e
+            TypeSet _ -> return $ DomainIntE (mkIntTag maybe_tag) e
+            _ -> DomainIntE (mkIntTag maybe_tag) e <$ raiseTypeError (symbolRegion en <!> ComplexTypeError "Set/List of int or Int" t)
         _ -> do
           r <- validateRange tInt a
-          return $ DomainInt TagInt [r]
+          return $ DomainInt (mkIntTag maybe_tag) [r]
       return $ Typed tInt d
-    validateRangedInt (Just ranges) = do
+    validateRangedInt maybe_tag (Just ranges) = do
       ranges' <- catMaybes <$> validateList_ (f2n (validateRange tInt)) ranges
-      return . Typed tInt $ DomainInt TagInt ranges'
-    validateRangedInt Nothing = return . Typed tInt $ DomainInt TagInt []
+      return . Typed tInt $ DomainInt (mkIntTag maybe_tag) ranges'
+    validateRangedInt maybe_tag Nothing = return . Typed tInt $ DomainInt (mkIntTag maybe_tag) []
     validateEnumRange :: NameNodeS -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
     validateEnumRange name@(NameNodeS n) ranges = do
       flagSToken n TtEnum
@@ -882,6 +882,13 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
         Nothing -> return def
       (t, dom') <- typeSplit <$> validateDomain dom
       return . Typed (TypePartition t) $ DomainPartition repr attrs' dom'
+
+mkIntTag :: Maybe ETok -> IntTag
+mkIntTag Nothing = TagInt
+mkIntTag (Just t) =
+  case lexeme t of
+    LIdentifier i -> TaggedInt i
+    _ -> bug $ "mkIntTag" <+> pretty (show t)
 
 validateIndexedByNode :: Maybe IndexedByNode -> ValidatorS ()
 validateIndexedByNode Nothing = return ()
@@ -1476,7 +1483,7 @@ getIndexedType _ _ = return TypeAny
 
 validateLiteral :: LiteralNode -> ValidatorS (Typed Expression)
 validateLiteral litNode = case litNode of
-  IntLiteral lt -> validateIntLiteral lt >>= \x -> return $ Typed tInt $ Constant x
+  IntLiteral lt maybe_tag -> validateIntLiteral lt maybe_tag >>= \x -> return $ Typed tInt $ Constant x
   BoolLiteral lt -> validateBoolLiteral lt >>= \x -> return $ Typed TypeBool $ Constant x
   MatrixLiteral mln -> validateMatrixLiteral mln
   TupleLiteralNode (LongTuple lt xs) -> do
@@ -1723,12 +1730,17 @@ makeTupleLiteral members = do
   let eType = TypeTuple (fst memberTypes)
   return . Typed eType . mkAbstractLiteral . AbsLitTuple $ snd memberTypes
 
-validateIntLiteral :: SToken -> ValidatorS Constant
-validateIntLiteral t = do
+validateIntLiteral :: SToken -> Maybe ETok -> ValidatorS Constant
+validateIntLiteral t maybe_tag = do
   flagSToken t TtNumber
   l <- validateSToken t
+  let tag = case maybe_tag of
+        Just ta -> case lexeme ta of
+          LIdentifier ta_i -> TaggedInt ta_i
+          _ -> TagInt
+        Nothing -> TagInt
   case l of
-    (LIntLiteral x) -> return $ ConstantInt TagInt x
+    (LIntLiteral x) -> return $ ConstantInt tag x
     _ -> error "Bad int literal"
 
 validateBoolLiteral :: SToken -> ValidatorS Constant

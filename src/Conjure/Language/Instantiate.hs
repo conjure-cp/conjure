@@ -237,14 +237,14 @@ instantiateD ::
     Domain r Expression -> m (Domain r Constant)
 instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
-instantiateD (DomainIntE x) = do
+instantiateD (DomainIntE maybe_tag x) = do
     x' <- instantiateE x
     let vals = case (x', viewConstantMatrix x', viewConstantSet x') of
                 (ConstantInt{}, _, _) -> [x']
                 (_, Just (_, xs), _) -> xs
                 (_, _, Just xs) -> xs
                 _ -> []
-    return (DomainInt TagInt (map RangeSingle vals))
+    return (DomainInt maybe_tag (map RangeSingle vals))
 instantiateD (DomainInt t ranges) = DomainInt t <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id

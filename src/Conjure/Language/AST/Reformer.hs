@@ -129,7 +129,7 @@ instance HighLevelTree QuantificationPattern where
 
 instance HighLevelTree LiteralNode where
     makeTree x = case x of
-        IntLiteral lt -> makeTree lt
+        IntLiteral lt _ -> makeTree lt -- TODO: should the tag be represented here?
         BoolLiteral lt -> makeTree lt
         MatrixLiteral mln -> makeTree mln
         TupleLiteralNode lt -> makeTree lt
@@ -214,7 +214,7 @@ instance HighLevelTree DomainNode where
     makeTree x = HLTagged (TIDomain x) $ case x of
         ParenDomainNode a b c -> [makeTree a, makeTree b, makeTree c]
         BoolDomainNode lt -> [makeTree lt]
-        RangedIntDomainNode lt ln -> [makeTree lt,makeTree ln]
+        RangedIntDomainNode lt ln _maybe_tag -> [makeTree lt,makeTree ln] -- TODO: should the tag be represented here?
         MetaVarDomain a -> [makeTree a]
         RangedEnumNode nn ln -> [makeTree nn ,  makeTree ln]
         -- EnumDomainNode nn -> makeTree nn

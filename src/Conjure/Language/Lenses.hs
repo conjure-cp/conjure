@@ -1637,7 +1637,7 @@ maxOfDomain ::
     MonadFailDoc m =>
     Pretty r =>
     Domain r Expression -> m Expression
-maxOfDomain (DomainIntE x) = return $ make opMax x
+maxOfDomain (DomainIntE _ x) = return $ make opMax x
 maxOfDomain (DomainInt _ [] ) = failDoc "rule_DomainMinMax.maxOfDomain []"
 maxOfDomain (DomainInt _ [r]) = maxOfRange r
 maxOfDomain (DomainInt _ rs ) = do
@@ -1657,7 +1657,7 @@ minOfDomain ::
     MonadFailDoc m =>
     Pretty r =>
     Domain r Expression -> m Expression
-minOfDomain (DomainIntE x) = return $ make opMin x
+minOfDomain (DomainIntE _ x) = return $ make opMin x
 minOfDomain (DomainInt _ [] ) = failDoc "rule_DomainMinMax.minOfDomain []"
 minOfDomain (DomainInt _ [r]) = minOfRange r
 minOfDomain (DomainInt _ rs ) = do

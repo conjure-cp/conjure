@@ -296,7 +296,12 @@ parseShortTupleLiteral = try $ do
   return $ TupleLiteralNodeShort $ ShortTuple (ListNode lOpen exprs lClose)
 
 parseIntLiteral :: Parser LiteralNode
-parseIntLiteral = IntLiteral . StrictToken [] <$> intLiteral
+parseIntLiteral = do
+  lit <- intLiteral
+  maybe_tag <- optional $ do
+    _ <- want L_Colon
+    identifier
+  return $ IntLiteral (StrictToken [] lit) maybe_tag
 
 parseBoolLiteral :: Parser LiteralNode
 parseBoolLiteral = BoolLiteral <$> (need L_true <|> need L_false)
@@ -631,8 +636,11 @@ parseSpecialCase = do
 parseIntDomain :: Parser DomainNode
 parseIntDomain = do
   lInt <- need L_int
+  maybe_tag <- optional $ do
+    _ <- want L_Colon
+    identifier
   ranges <- optional $ parenListStrict $ commaList parseRange
-  return $ RangedIntDomainNode lInt ranges
+  return $ RangedIntDomainNode lInt ranges maybe_tag
 
 parseTuple :: Parser DomainNode
 parseTuple = do
