@@ -2898,9 +2898,7 @@ addUnnamedSymmetryBreaking mode model = do
 
                 combinedPermApply perms =
                     case quickOrComplete of
-                        USBQuick ->
-                            let p = fromList perms
-                            in [essence| quickPermutationOrder(&varsTuple, [&p]) |]
+                        USBQuick -> make opQuickPermutationOrder perms varsTuple
                         USBComplete ->
                             let applied = buildPermutationChain perms varsTuple
                             in [essence| &varsTuple .<= &applied |]

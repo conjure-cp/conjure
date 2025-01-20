@@ -11,10 +11,10 @@ import Data.Aeson qualified as JSON -- aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.Vector qualified as V -- vector
 
--- first argument: the value (x)
--- second argument: the tuple of permutations to apply (ps)
+-- first argument: the tuple of permutations to apply (ps)
+-- second argument: the value (x)
 -- the effect is a subset of: x .<= transform(ps, x)
-data OpQuickPermutationOrder x = OpQuickPermutationOrder x [x]
+data OpQuickPermutationOrder x = OpQuickPermutationOrder [x] x
   deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance (Serialize x) => Serialize (OpQuickPermutationOrder x)
@@ -28,7 +28,7 @@ instance (ToJSON x) => ToJSON (OpQuickPermutationOrder x) where
 instance (FromJSON x) => FromJSON (OpQuickPermutationOrder x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpQuickPermutationOrder x) where
-  typeOf p@(OpQuickPermutationOrder x perms) = do
+  typeOf p@(OpQuickPermutationOrder perms x) = do
     _tyX <- typeOf x
     forM_ perms $ \pe -> do
       tyP <- typeOf pe
@@ -41,14 +41,14 @@ instance SimplifyOp OpQuickPermutationOrder x where
   simplifyOp _ = na "simplifyOp{OpQuickPermutationOrder}"
 
 instance (Pretty x) => Pretty (OpQuickPermutationOrder x) where
-  prettyPrec _ (OpQuickPermutationOrder a bs) = "quickPermutationOrder" <> prettyList prParens "," (a : bs)
+  prettyPrec _ (OpQuickPermutationOrder as b) = "quickPermutationOrder" <> prettyList prParens "," (as ++ [b])
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpQuickPermutationOrder x) where
-  varSymBreakingDescription (OpQuickPermutationOrder x ys) =
+  varSymBreakingDescription (OpQuickPermutationOrder xs y) =
     JSON.Object
       $ KM.fromList
         [ ("type", JSON.String "OpQuickPermutationOrder"),
           ( "children",
-            JSON.Array $ V.fromList (varSymBreakingDescription x : map varSymBreakingDescription ys)
+            JSON.Array $ V.fromList (map varSymBreakingDescription xs ++ [varSymBreakingDescription y])
           )
         ]

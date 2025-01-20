@@ -452,6 +452,24 @@ opTransform _ =
     )
 
 
+opQuickPermutationOrder
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFailDoc m
+       )
+    => Proxy (m :: T.Type -> T.Type)
+    -> ( [x] -> x -> x
+       , x -> m ([x], x)
+       )
+opQuickPermutationOrder _ =
+    ( \ x y -> inject $ MkOpQuickPermutationOrder $ OpQuickPermutationOrder x y
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpQuickPermutationOrder (OpQuickPermutationOrder x y) -> return (x,y)
+                _ -> na ("Lenses.opTransform:" <++> pretty p)
+    )
+
 opRelationProj
     :: ( Op x :< x
        , Pretty x
