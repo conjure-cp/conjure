@@ -760,7 +760,7 @@ instance Pretty a => Pretty (PartitionAttr a) where
 
 
 
-data PermutationAttr a = PermutationAttr
+newtype PermutationAttr a = PermutationAttr
     {
         numMoved :: SizeAttr a
     }
