@@ -130,10 +130,10 @@ typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE t x)          = do
     ty <- typeOf x
     case ty of
-        TypeInt _                -> return ()       -- pre recoverDomainInt
-        TypeList     (TypeInt _) -> return ()
-        TypeMatrix _ (TypeInt _) -> return ()
-        TypeSet      (TypeInt _) -> return ()
+        TypeInt TagInt                -> return ()       -- pre recoverDomainInt
+        TypeList     (TypeInt TagInt) -> return ()
+        TypeMatrix _ (TypeInt TagInt) -> return ()
+        TypeSet      (TypeInt TagInt) -> return ()
         _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
                             , "In domain:" <+> pretty d
                             ]
@@ -142,11 +142,11 @@ typeOfDomain d@(DomainInt t rs)        = do
     forM_ rs $ \ r -> forM_ r $ \ x -> do
         ty <- typeOf x
         case ty of
-            TypeInt{} -> return ()
+            TypeInt _ -> return ()
             _ -> failDoc $ vcat [ "Expected an integer, but got:" <++> pretty ty
-                             , "For:" <+> pretty x
-                             , "In domain:" <+> pretty d
-                             ]
+                                , "For:" <+> pretty x
+                                , "In domain:" <+> pretty d
+                                ]
     return (TypeInt t)
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
