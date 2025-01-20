@@ -338,7 +338,7 @@ instance Pretty Constant where
 
     pretty (ConstantBool False)          = "false"
     pretty (ConstantBool True )          = "true"
-    pretty (ConstantInt _ x   )          = pretty x
+    pretty (ConstantInt t x)             = pretty x <> pretty t
     pretty (ConstantEnum _ _ x)          = pretty x
     pretty (ConstantField n _)           = pretty n
     pretty (ConstantAbstract x)          = pretty x
