@@ -179,6 +179,8 @@ permutationAsFunction dispatch = Representation chck downD structuralCons downC 
 
     symmetryOrdering :: TypeOf_SymmetryOrdering m
     symmetryOrdering innerSO downX1 inp domain = do
-      [x] <- downX1 inp
-      Just [(_, xDomain)] <- downD ("SO", domain)
-      innerSO downX1 x xDomain
+      [x, y] <- downX1 inp
+      Just [(_, xDomain), (_, yDomain)] <- downD ("SO", domain)
+      xs <- innerSO downX1 x xDomain
+      ys <- innerSO downX1 y yDomain
+      return [essence| concatenate([&xs, &ys]) |]

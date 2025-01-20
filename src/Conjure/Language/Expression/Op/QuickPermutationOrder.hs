@@ -41,7 +41,7 @@ instance SimplifyOp OpQuickPermutationOrder x where
   simplifyOp _ = na "simplifyOp{OpQuickPermutationOrder}"
 
 instance (Pretty x) => Pretty (OpQuickPermutationOrder x) where
-  prettyPrec _ (OpQuickPermutationOrder as b) = "quickPermutationOrder" <> prettyList prParens "," (as ++ [b])
+  prettyPrec _ (OpQuickPermutationOrder as b) = "quickPermutationOrder" <> prettyListDoc prParens "," [prettyList prBrackets "," as, pretty b]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpQuickPermutationOrder x) where
   varSymBreakingDescription (OpQuickPermutationOrder xs y) =

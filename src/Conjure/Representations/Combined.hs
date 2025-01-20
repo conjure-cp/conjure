@@ -220,8 +220,7 @@ dispatch domain = do
                                                     (bug "useLevels inside dispatch")
             _ -> nope
         DomainPermutation r _ _ -> case r of
-            Permutation_AsFunction          -> permutationAsFunction dispatch
-
+            Permutation_AsFunction            -> permutationAsFunction dispatch
             _ -> nope
         _ -> nope
 

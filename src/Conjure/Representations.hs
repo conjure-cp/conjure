@@ -153,7 +153,7 @@ symmetryOrdering inp' = do
      TypeInt{} -> return [essence| [&inp] |]
      TypeList TypeInt{} -> return inp
      TypeMatrix TypeInt{} TypeInt{} -> return inp
-     _ -> do
+     _ ->
        case inp of
             -- Constant x -> so_onConstant x
             -- AbstractLiteral _ -> return inp
