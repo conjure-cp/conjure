@@ -13,11 +13,26 @@ Conjure is available as an executable binary for Linux and MacOS.
 If it is available for your platform, you can just `download it <https://www.github.com/conjure-cp/conjure/releases/latest>`_ and run it.
 It may be useful to save the binary under a directory that is in your search PATH, so you do not have to type the full path to the Conjure executable to run it.
 
-You can add a directory into your PATH by executing the following command in the terminal: `export PATH=/path/to/executables:$PATH`
+You can add a directory into your PATH by executing the following command in the terminal
 
-For MacOS, you will have to remove the quarantine attribute from all files and directories inside the downloaded directory. To do this, navigate to the directory and run `xattr -dr com.apple.quarantine .`
+.. code-block:: bash
 
-You will also need to install Java for Savile Row. In macOS, we recommend using Homebrew and Amazon Corretto. Install Homebrew if you don't have it, then run `brew install --cask corretto`.
+    export PATH=/path/to/executables:$PATH`
+
+
+For MacOS, you will have to remove the quarantine attribute from all files and directories inside the downloaded directory. To do this, navigate to the directory and run the following command.
+
+.. code-block:: bash
+
+    xattr -dr com.apple.quarantine .`
+
+
+You will also need to install Java for Savile Row. In macOS, we recommend using Homebrew and Amazon Corretto. Install Homebrew if you don't have it, then run the following command.
+
+.. code-block:: bash
+
+    brew install --cask corretto
+
 
 For Windows, please use the Linux binaries with the
 `Windows Subsystem for Linux <https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux>`_.
