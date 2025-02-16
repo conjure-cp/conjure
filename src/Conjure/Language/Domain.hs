@@ -285,7 +285,7 @@ isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
 isPrimitiveDomain DomainIntE{} = True
 isPrimitiveDomain DomainInt{} = True
-isPrimitiveDomain (DomainMatrix index inner) = and [isPrimitiveDomain index, isPrimitiveDomain inner]
+isPrimitiveDomain (DomainMatrix index inner) = isPrimitiveDomain index && isPrimitiveDomain inner
 isPrimitiveDomain _ = False
 
 getIndices :: Domain r x -> ([Domain () x], Domain r x)
@@ -298,6 +298,7 @@ domainCanIndexMatrix DomainBool{} = True
 domainCanIndexMatrix DomainInt {} = True
 domainCanIndexMatrix DomainIntE{} = True
 domainCanIndexMatrix DomainEnum{} = True
+domainCanIndexMatrix (DomainMatrix index inner) = domainCanIndexMatrix index && domainCanIndexMatrix inner
 domainCanIndexMatrix _            = False
 
 expandDomainReference :: Data r => Data x => Domain r x -> Domain r x
@@ -613,7 +614,7 @@ instance Semigroup BinaryRelationAttrs where
     (<>) (BinaryRelationAttrs a) (BinaryRelationAttrs b) = BinaryRelationAttrs (S.union a b)
 instance Monoid BinaryRelationAttrs where
     mempty = BinaryRelationAttrs def
-    
+
 
 
 data BinaryRelationAttr
