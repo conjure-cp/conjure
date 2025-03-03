@@ -289,38 +289,36 @@ typeComplex TypeList{}      = True
 typeComplex TypeMatrix{}    = True
 typeComplex _ = False
 
-containsTypeFunctorially :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool 
+containsTypeFunctorially :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 containsTypeFunctorially container containee =
-  if typesUnify [container, containee] || typeComplex containee
-    then False 
-    else case innerTypeOf container of
+  not (typesUnify [container, containee] || typeComplex containee)
+    && ( case innerTypeOf container of
            Nothing -> False
-           Just so -> unifiesOrContains so containee 
-
+           Just so -> unifiesOrContains so containee
+       )
 
 containsProductType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 containsProductType ot@(TypeTuple ts) t =
-  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains x t) <$> ts))
+  not (typesUnify [ot, t]) && any (`unifiesOrContains` t) ts
 containsProductType ot@(TypeRecord ts) t =
-  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
+  not (typesUnify [ot, t]) && any (\x -> unifiesOrContains (snd x) t) ts
 containsProductType _ _ = False
-
 
 -- Is the type
 containsType :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
-containsType container containee = containee `elem` universeBi container
-
+containsType container containee = or [True | x <- universeBi container, typeUnify x containee]
 
 unifiesOrContains :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 unifiesOrContains container containee =
   typesUnify [container, containee] || containsType container containee
 
-
 -- as in "this homomorphism is morphing"
-morphing :: (?typeCheckerMode :: TypeCheckerMode)
-         => (MonadFailDoc m)
-         => Type -> m Type
+morphing ::
+  (?typeCheckerMode :: TypeCheckerMode) =>
+  (MonadFailDoc m) =>
+  Type ->
+  m Type
 morphing (TypeFunction a _) = return a
-morphing (TypeSequence a)   = return a 
+morphing (TypeSequence a) = return a
 morphing (TypePermutation a) = return a
 morphing t = failDoc ("morphing:" <+> pretty (show t))

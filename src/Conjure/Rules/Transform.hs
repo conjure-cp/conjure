@@ -41,13 +41,15 @@ rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
   where
     theRule p
       | Just (x, rhs) <- match opDotLeq p <|> match opDotLt p,
-        Just (ps, y) <- match opTransform rhs,
-        x == y = do
+        Just (ps, y) <- match opTransform rhs = do
           let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
-          TypeMatrix {} <- typeOf x
-          -- traceM $ show $ "rule_Transform_DotLess 1" <+> pretty x
-          xIndices <- indexDomainsOf x
-          -- traceM $ show $ "rule_Transform_DotLess 2" <+> vcat (map pretty xIndices)
+          ty_x <- typeOf x
+          xIndices <- case ty_x of
+            TypeMatrix {} -> indexDomainsOf y
+            TypeList {} -> case x of
+              Comprehension _ [Generator (GenDomainHasRepr _ d)] -> return [forgetRepr d]
+              _ -> na "rule_Transform_DotLess_matrix"
+            _ -> na "rule_Transform_DotLess_matrix"
           case xIndices of
             [xInd] ->
               return
@@ -55,8 +57,8 @@ rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
                   do
                     (iPat, i) <- quantifiedVar
                     let transformed_i = make opTransform (map (make opPermInverse) ps) i
-                    let transformed_x_i = make opTransform ps [essence| &x[&transformed_i] |]
-                    return $ mk x [essence| [ &transformed_x_i | &iPat : &xInd ] |]
+                    let transformed_y_i = make opTransform ps [essence| &y[&transformed_i] |]
+                    return $ mk x [essence| [ &transformed_y_i | &iPat : &xInd ] |]
                 )
             [xInd1, xInd2] ->
               return
@@ -66,11 +68,11 @@ rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
                     (iPat2, i2) <- quantifiedVar
                     let transformed_i1 = make opTransform (map (make opPermInverse) ps) i1
                     let transformed_i2 = make opTransform (map (make opPermInverse) ps) i2
-                    let transformed_x_i1_i2 = make opTransform ps [essence| &x[&transformed_i1, &transformed_i2] |]
+                    let transformed_y_i1_i2 = make opTransform ps [essence| &y[&transformed_i1, &transformed_i2] |]
                     return
                       $ mk
                         [essence| [ &x[&i1, &i2] | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
-                        [essence| [ &transformed_x_i1_i2 | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
+                        [essence| [ &transformed_y_i1_i2 | &iPat1 : &xInd1 , &iPat2 : &xInd2 ] |]
                 )
             _ -> na "rule_Transform_DotLess"
     theRule _ = na "rule_Transform_DotLess"

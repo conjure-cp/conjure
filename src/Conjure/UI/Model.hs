@@ -2090,23 +2090,13 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
 
 rule_QuickPermutationOrder :: Rule
 rule_QuickPermutationOrder = "generic-QuickPermutationOrder" `namedRule` theRule where
-    -- theRule p@[essence| quickPermutationOrder(&x, &ps) |] = do
-    --     -- case listOut ps of
-    --     --     Just [perm] ->
-    --     --         return
-    --     --             ( "Generic vertical rule for quickPermutationOrder:" <+> pretty perm
-    --     --             , return [essence| &x .<= transform(&perm, &x) |]
-    --     --             )
-    --     --     _ -> na "rule_QuickPermutationOrder - not implemented for multiple permutations yet"
-    --     traceM $ show $ "HERE x " <+> pretty x
-    --     traceM $ show $ "HERE ps" <+> pretty ps
-    --     x_ord <- symmetryOrdering x
-    --     -- x_perm <- symmetryOrdering [essence| transform(&ps, &x) |]
-    --     traceM $ show $ "HERE x_ord" <+> pretty x_ord
-    --     return
-    --         ( "Generic vertical rule for quickPermutationOrder:" <+> pretty p
-    --         , return [essence| &x_ord .<= transform(&ps, &x_ord) |]
-    --         )
+    theRule p@(match opQuickPermutationOrder -> Just (ps, x)) = do
+        x_ord <- symmetryOrdering x
+        let rhs = make opTransform ps x_ord
+        return
+            ( "Generic vertical rule for quickPermutationOrder:" <+> pretty p
+            , return [essence| &x_ord .<= &rhs |]
+            )
     theRule _ = na "rule_QuickPermutationOrder"
 
 
