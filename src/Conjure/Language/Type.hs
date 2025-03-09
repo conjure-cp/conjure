@@ -147,8 +147,6 @@ typeUnify (TypeRecord as) (TypeRecord bs)
                              Just b -> typeUnify a b
                       | (n,a) <- as
                       ]
---special cases for when one is an instance
--- TODO: Not the best solution so might need looking at
 typeUnify (TypeVariant as) (TypeVariant [(n,a)])
     = case lookup n as of
                              Nothing -> False

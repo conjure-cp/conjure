@@ -668,7 +668,7 @@ rule_TransformToImage = "transform-to-image" `namedRule` theRule
     theRule [essence| transform([&morphism], &i) |] = do
       inner <- morphing =<< typeOf morphism
       typeI <- typeOf i
-      if typesUnify [inner, typeI]
+      if (let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI])
         then
           return
             ( "Horizontal rule for transform unifying",
@@ -685,7 +685,7 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
       typeI <- typeOf i
       morphisms' <- fmap catMaybes $ forM morphisms $ \morphism -> do
         inner <- morphing =<< typeOf morphism
-        if containsType typeI inner
+        if (let ?typeCheckerMode = StronglyTyped in containsType typeI inner)
           then return (Just morphism)
           else return Nothing
       if length morphisms' == length morphisms

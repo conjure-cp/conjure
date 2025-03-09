@@ -1615,6 +1615,8 @@ opOrdering _ =
     , \ p -> case project p of
         Just (MkOpLt       (OpLt       x y)) -> return (\ x' y' -> inject (MkOpLt       (OpLt       x' y')), (x,y) )
         Just (MkOpLeq      (OpLeq      x y)) -> return (\ x' y' -> inject (MkOpLeq      (OpLeq      x' y')), (x,y) )
+        Just (MkOpDotLt    (OpDotLt    x y)) -> return (\ x' y' -> inject (MkOpDotLt    (OpDotLt    x' y')), (x,y) )
+        Just (MkOpDotLeq   (OpDotLeq   x y)) -> return (\ x' y' -> inject (MkOpDotLeq   (OpDotLeq   x' y')), (x,y) )
         Just (MkOpTildeLt  (OpTildeLt  x y)) -> return (\ x' y' -> inject (MkOpTildeLt  (OpTildeLt  x' y')), (x,y) )
         Just (MkOpTildeLeq (OpTildeLeq x y)) -> return (\ x' y' -> inject (MkOpTildeLeq (OpTildeLeq x' y')), (x,y) )
         Just (MkOpLexLt    (OpLexLt    x y)) -> return (\ x' y' -> inject (MkOpLexLt    (OpLexLt    x' y')), (x,y) )

@@ -3,7 +3,7 @@ find x : set of A
 
 find p : permutation (numMoved 3) of A
 $ such that x .<= transform([p], x)
-such that quickPermutationOrder(x, [p])
+such that quickPermutationOrder([p], x)
 
 $ should have 2 additional solutions with quick, or more!
 

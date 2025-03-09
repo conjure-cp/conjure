@@ -979,8 +979,9 @@ checkIfAllRefined :: MonadFailDoc m => Model -> m Model
 checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
-            : ("Not refined:" <+> pretty (hole x))
-                              <+> stringToDoc (show (hole x))
+            : ("Not refined:" <+> vcat [ pretty (hole x)
+                                       , stringToDoc (show (hole x))
+                                       ])
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
@@ -990,8 +991,9 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
                         return $ ""
-                               : ("Not refined:" <+> pretty (hole x))
-                                                 <+> stringToDoc (show (hole x))
+                               : ("Not refined:" <+> vcat [ pretty (hole x)
+                                                          , stringToDoc (show (hole x))
+                                                          ])
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | (i, c) <- zip allNats (tail (ascendants x))

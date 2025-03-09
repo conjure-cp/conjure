@@ -533,7 +533,7 @@ instance TypeOf Expression where
         typeOf h
     typeOf p@(Comprehension x gensOrConds) = do
         forM_ gensOrConds $ \ goc -> case goc of
-            Generator{} -> return ()                    -- TODO: do this properly
+            Generator{} -> return ()
             Condition c -> do
                 ty <- typeOf c
                 unless (typeUnify TypeBool ty) $ failDoc $ vcat
@@ -542,7 +542,17 @@ instance TypeOf Expression where
                     , "In:" <+> pretty p
                     ]
             ComprehensionLetting{} -> return ()
-        TypeList <$> typeOf x
+        let generators = [ gen | Generator gen <- gensOrConds ]
+        case generators of
+            [GenDomainNoRepr _ indexDom] -> do
+                indexTy <- typeOfDomain indexDom
+                -- res <- TypeMatrix indexTy <$> typeOf x
+                -- traceM $ show $ "TYPEOF" <+> pretty (res)
+                TypeMatrix indexTy <$> typeOf x
+            [GenDomainHasRepr _ indexDom] -> do
+                indexTy <- typeOfDomain indexDom
+                TypeMatrix indexTy <$> typeOf x
+            _ -> TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
