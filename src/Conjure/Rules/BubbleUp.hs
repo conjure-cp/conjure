@@ -253,7 +253,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         return
             ( "Bubbling up auxiliary variables through a comprehension."
             , return $ WithLocals (make opConcatenate $ fromList [ Comprehension (transform upd body) (transformBi upd gensOrConds)
-                                                                 , Comprehension dontCareCons (transformBi upd gensOrConds_dontCare)
+                                                                 , Comprehension (transform upd dontCareCons) (transformBi upd gensOrConds_dontCare)
                                                                  ])
                                   (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
             )
