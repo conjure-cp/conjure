@@ -1,0 +1,16 @@
+Error:
+    In a 'such that' statement:
+        [[false, true = false; int(1, 0)], [false; int(2)], [l_1 | l_1 : bool], [l_2 | l_2 : bool, false, l_2],
+         [l_3 | l_3 : bool, l_3];
+             int(3..4, 0, 10, 2)]
+            [[5, 1, 3; int(8, 3, 1)][[5, 2, 4, 1; int(2, 0, 9..10)][0]],
+             [2 ** 4 ** 3, 4, 4, 1, [1, 2, 3, 3; int(2, 6, 0..1)][2]; int(14, 9..11, 12)][0]]
+    Error:
+        Not uniformly typed: [[false, true = false; int(1, 0)], [false; int(2)], [l_1 | l_1 : bool],
+                              [l_2 | l_2 : bool, false, l_2], [l_3 | l_3 : bool, l_3];
+                                  int(3..4, 0, 10, 2)]
+        Involved types are: matrix indexed by [int] of bool
+                            matrix indexed by [int] of bool
+                            matrix indexed by [bool] of bool
+                            matrix indexed by [bool] of bool
+                            matrix indexed by [bool] of bool

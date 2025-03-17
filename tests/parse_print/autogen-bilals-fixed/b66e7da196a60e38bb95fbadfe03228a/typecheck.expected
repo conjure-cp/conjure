@@ -1,0 +1,14 @@
+Error:
+    In a 'such that' statement:
+        [var3[[4, 4, 1, 4, 5; int(2, 7, 8, 9)][1024]] | l_1 : bool, l_1]
+            [1 ** [0, 0; int(1, 5)][25] ** ([] : `matrix indexed by [int] of int`)[[4, 2, 2, 1, 3; int(3..7)][0]]]
+        = (and([var3[q2] = [true, false; int(4..5)][q2] | q2 : int(4, 5)]) = var1)
+    Error:
+        Indexing with inappropriate type, matrix:
+            The expression: [var3[[4, 4, 1, 4, 5; int(2, 7, 8, 9)][1024]] | l_1 : bool, l_1]
+                                [1 **
+                                 [0, 0; int(1, 5)][25] **
+                                 ([] : `matrix indexed by [int] of int`)[[4, 2, 2, 1, 3; int(3..7)][0]]]
+            Indexing: [var3[[4, 4, 1, 4, 5; int(2, 7, 8, 9)][1024]] | l_1 : bool, l_1]
+            Expected type of index: bool
+            Actual type of index  : int

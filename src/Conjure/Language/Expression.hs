@@ -548,10 +548,14 @@ instance TypeOf Expression where
                 indexTy <- typeOfDomain indexDom
                 -- res <- TypeMatrix indexTy <$> typeOf x
                 -- traceM $ show $ "TYPEOF" <+> pretty (res)
-                TypeMatrix indexTy <$> typeOf x
+                if typeCanIndexMatrix indexTy
+                    then TypeMatrix indexTy <$> typeOf x
+                    else TypeList <$> typeOf x
             [GenDomainHasRepr _ indexDom] -> do
                 indexTy <- typeOfDomain indexDom
-                TypeMatrix indexTy <$> typeOf x
+                if typeCanIndexMatrix indexTy
+                    then TypeMatrix indexTy <$> typeOf x
+                    else TypeList <$> typeOf x
             _ -> TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op

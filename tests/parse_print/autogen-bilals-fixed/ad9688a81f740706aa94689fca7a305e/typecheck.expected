@@ -34,12 +34,12 @@ Error 1:
                    5 = sum([q1_Function1DPartial_Flags[q18] | q18 : bool])])
     Error:
         Type error in sum([q1_Function1DPartial_Flags[q18] | q18 : bool])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [bool] of bool
 Error 2:
     In a 'such that' statement: 0 <= sum([var2_Function1DPartial_Flags[q4] | q4 : bool])
     Error:
         Type error in sum([var2_Function1DPartial_Flags[q4] | q4 : bool])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [bool] of bool
 Error 3:
     In a 'such that' statement:
         and([var2_Function1DPartial_Flags[q5] ->
@@ -47,4 +47,4 @@ Error 3:
                  | q5 : bool])
     Error:
         Type error in sum([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q11] | q11 : bool])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [bool] of bool

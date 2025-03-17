@@ -31,7 +31,7 @@ Error 1:
                                      [q13, 1, q1_ExplicitVarSizeWithMarker_Values[q21]]
                                      | q21 : int(1..5), q21 <= q1_ExplicitVarSizeWithMarker_Marker]))
                                | q13 : int(1..4)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([q6 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
@@ -42,4 +42,4 @@ Error 2:
     Error:
         Type error in sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q6, 1, q9]
                                | q9 : int(2, 1..2)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

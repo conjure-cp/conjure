@@ -1,0 +1,9 @@
+Error:
+    In a 'such that' statement: [false | l_1 : bool] .< [[false; int(1)]; int(1)][0]
+    Error:
+        When type checking: [false | l_1 : bool] .< [[false; int(1)]; int(1)][0]
+        Cannot unify the types of the following.
+        lhs        : [false | l_1 : bool]
+        type of lhs: matrix indexed by [bool] of bool
+        rhs        : [[false; int(1)]; int(1)][0]
+        type of rhs: matrix indexed by [int] of bool
