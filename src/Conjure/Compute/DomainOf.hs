@@ -338,7 +338,12 @@ instance DomainOf (AbstractLiteral Expression) where
                                    False
     domainOf (AbsLitPermutation [] ) = return $ DomainPermutation def (PermutationAttr SizeAttr_None) (DomainAny "domainOf-AbsLitPermutation-[]" TypeAny)
     domainOf (AbsLitPermutation xss) = DomainPermutation def (PermutationAttr SizeAttr_None) <$> (domainUnions =<< mapM domainOf (concat xss))
-    indexDomainsOf (AbsLitMatrix ind inn) = (ind :) <$> (mapM domainUnions =<< mapM indexDomainsOf inn)
+
+    indexDomainsOf (AbsLitMatrix ind inn) = do
+        innerIndices <- mapM indexDomainsOf inn
+        if all null innerIndices
+            then return [ind]
+            else (ind :) <$> (mapM domainUnions innerIndices)
     indexDomainsOf _ = return []
 
 
