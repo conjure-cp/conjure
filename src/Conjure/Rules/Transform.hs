@@ -36,6 +36,7 @@ rules_Transform =
     -- rule_Transformed_Variant_Active
   ]
 
+
 rule_Transform_DotLess_matrix :: Rule
 rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
   where
@@ -44,12 +45,19 @@ rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
         Just (ps, y) <- match opTransform rhs = do
           let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
           ty_x <- typeOf x
+          -- traceM $ show $ "ty_x" <+> (pretty ty_x)
           xIndices <- case ty_x of
-            TypeMatrix {} -> indexDomainsOf y
-            TypeList {} -> case x of
-              Comprehension _ [Generator (GenDomainHasRepr _ d)] -> return [forgetRepr d]
-              _ -> na "rule_Transform_DotLess_matrix"
+            TypeMatrix {} -> do
+              ind <- indexDomainsOf x
+              -- traceM $ show $ "ty_x indexDomainsOf" <++> "---" <+> (pretty $ show x) <++> "--" <+> prettyList prBrackets "," ind
+              return ind
+            TypeList {} -> do
+              -- traceM $ "ty_x LIST LIST LIST"
+              case x of
+                Comprehension _ [Generator (GenDomainHasRepr _ d)] -> return [forgetRepr d]
+                _ -> na "rule_Transform_DotLess_matrix"
             _ -> na "rule_Transform_DotLess_matrix"
+          -- traceM $ show $ "xIndices" <++> "---" <+> pretty ty_x <++> "---" <+> prettyList prBrackets "," xIndices
           case xIndices of
             [xInd] ->
               return
@@ -668,6 +676,10 @@ rule_TransformToImage = "transform-to-image" `namedRule` theRule
     theRule [essence| transform([&morphism], &i) |] = do
       inner <- morphing =<< typeOf morphism
       typeI <- typeOf i
+      -- traceM $ show $ "rule_TransformToImage inner" <+> pretty inner
+      -- traceM $ show $ "rule_TransformToImage typeI" <+> pretty typeI
+      -- traceM $ show $ "rule_TransformToImage UNIFY" <+> pretty (typesUnify [inner, typeI])
+      -- traceM $ show $ "rule_TransformToImage UNIFY" <+> pretty (let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI])
       if (let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI])
         then
           return
@@ -685,7 +697,13 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
       typeI <- typeOf i
       morphisms' <- fmap catMaybes $ forM morphisms $ \morphism -> do
         inner <- morphing =<< typeOf morphism
+        -- traceM $ show $ "rule_TransformToImage inner" <+> pretty inner
+        -- traceM $ show $ "rule_TransformToImage typeI" <+> pretty typeI
+        -- traceM $ show $ "rule_TransformToImage CONTAIN" <+> pretty (containsType typeI inner)
+        -- traceM $ show $ "rule_TransformToImage CONTAIN" <+> pretty (let ?typeCheckerMode = StronglyTyped in containsType typeI inner)
+
         if (let ?typeCheckerMode = StronglyTyped in containsType typeI inner)
+        -- if containsType typeI inner
           then return (Just morphism)
           else return Nothing
       if length morphisms' == length morphisms
