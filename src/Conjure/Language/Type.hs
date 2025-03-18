@@ -166,6 +166,8 @@ typeUnify (TypeVariant as) (TypeVariant bs)
 typeUnify (TypeList a) (TypeList b) = typeUnify a b
 typeUnify (TypeList a) (TypeMatrix _ b) = typeUnify a b
 typeUnify (TypeList a) (TypeSequence b) = typeUnify a b
+typeUnify (TypeMatrix TypeBool a2) (TypeMatrix TypeInt{} b2) = typeUnify a2 b2
+typeUnify (TypeMatrix TypeInt{} a2) (TypeMatrix TypeBool b2) = typeUnify a2 b2
 typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
 typeUnify (TypeMatrix _ a) (TypeSequence b) = typeUnify a b

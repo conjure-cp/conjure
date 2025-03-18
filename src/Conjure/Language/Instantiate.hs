@@ -135,9 +135,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 "Comprehension contains undefined values inside generator domains."
                 ty
         else
-            return $ ConstantAbstract $ AbsLitMatrix
-                (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength constants))])
-                constants
+            return $ fromList constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
 instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantField name ty
