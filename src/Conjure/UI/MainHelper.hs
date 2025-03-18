@@ -82,10 +82,10 @@ mainWithArgs LSP{} = liftIO $ startServer LSPConfig
 mainWithArgs mode@Modelling{..} = do
     essenceM <- readModelFromFile essence
     doIfNotCached          -- start the show!
-        ( sort (mStatements essenceM)
-        , portfolio
         -- when the following flags change, invalidate hash
         -- nested tuples, because :(
+        ( sort (mStatements essenceM)
+        , portfolio
         , ( numberingStart
           , smartFilenames
           , strategyQ
@@ -106,7 +106,9 @@ mainWithArgs mode@Modelling{..} = do
           , limitTime
           , outputFormat
           )
-        , generateStreamliners
+        , ( generateStreamliners
+          , unnamedSymmetryBreaking
+          )
         )
         (outputDirectory </> ".conjure-checksum")
         (pp logLevel "Using cached models.")
@@ -306,10 +308,10 @@ mainWithArgs config@Solve{..} = do
                 pp logLevel "Using existing models."
                 return useExistingModels
             else doIfNotCached          -- start the show!
-                    ( sort (mStatements essenceM_beforeNR)
-                    , portfolio
                     -- when the following flags change, invalidate hash
                     -- nested tuples, because :(
+                    ( sort (mStatements essenceM_beforeNR)
+                    , portfolio
                     , ( numberingStart
                       , smartFilenames
                       , strategyQ
@@ -330,7 +332,9 @@ mainWithArgs config@Solve{..} = do
                       , limitTime
                       , outputFormat
                       )
-                    , generateStreamliners
+                    , ( generateStreamliners
+                      , unnamedSymmetryBreaking
+                      )
                     )
                     (outputDirectory </> ".conjure-checksum")
                     (pp logLevel "Using cached models." >> getEprimes)
