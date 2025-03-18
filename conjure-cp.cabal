@@ -288,15 +288,12 @@ Library
                      , filepath
                      , hashable
                      , integer-gmp
-                     -- >= 4.1.1 because of sepEndBy bugfixes
-                     -- < 5 because megaparsec-5 is backwards incompatible
                      , megaparsec ^>= 9.3.0
                      , mtl
                      , parallel-io
                      , pipes
                      , pretty >=1.1.3.6
                      , prettyprinter
-                     -- >= 2.9 because of the TH fix: https://github.com/nick8325/quickcheck/issues/101
                      , QuickCheck >= 2.14
                      , random
                      , safe
