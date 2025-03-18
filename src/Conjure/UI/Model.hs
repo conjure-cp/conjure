@@ -3,6 +3,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use <&>" #-}
+{-# HLINT ignore "Use :" #-}
 
 module Conjure.UI.Model
     ( outputModels
@@ -612,10 +614,7 @@ executeStrategy question options@((doc, option):_) (viewAuto -> (strategy, _)) =
                                 ChooseRepr_Given nm -> Just nm
                                 ChooseRepr_Cut nm -> Just nm
                                 _ -> Nothing
-                    let storedReprResponse =
-                            case useStoredReprResponse of
-                                Just nm -> nextRecordedResponseRepresentation nm
-                                Nothing -> Nothing
+                    let storedReprResponse = useStoredReprResponse >>= nextRecordedResponseRepresentation
                     case storedReprResponse of
                         Just recorded -> do
                             putStrLn ("Response: " ++ show recorded)
@@ -897,7 +896,7 @@ dropTagForSR m = do
         replacePredSucc x = return x
 
     st <- transformBiM replacePredSucc (mStatements m)
-    return m { mStatements = transformBi (\ _ -> TagInt) st }
+    return m { mStatements = transformBi (const TagInt) st }
 
 
 updateDeclarations ::
@@ -1005,7 +1004,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                     WithLocals{} -> returnMsg x
                     Comprehension _ stmts -> do
                         decisionConditions <-
-                            fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
+                            fmap catMaybes $ forM stmts $ \case
                                 Condition c ->
                                     if categoryOf c >= CatDecision
                                         then return (Just c)
