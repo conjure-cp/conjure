@@ -532,7 +532,7 @@ instance TypeOf Expression where
                     ]
         typeOf h
     typeOf p@(Comprehension x gensOrConds) = do
-        forM_ gensOrConds $ \ goc -> case goc of
+        forM_ gensOrConds $ \case
             Generator{} -> return ()
             Condition c -> do
                 ty <- typeOf c
@@ -543,15 +543,14 @@ instance TypeOf Expression where
                     ]
             ComprehensionLetting{} -> return ()
         let generators = [ gen | Generator gen <- gensOrConds ]
-        case generators of
-            [GenDomainNoRepr _ indexDom] -> do
+        let conditions = [ cond | cond@Condition{} <- gensOrConds ]
+        case (generators, conditions) of
+            ([GenDomainNoRepr _ indexDom], []) -> do
                 indexTy <- typeOfDomain indexDom
-                -- res <- TypeMatrix indexTy <$> typeOf x
-                -- traceM $ show $ "TYPEOF" <+> pretty (res)
                 if typeCanIndexMatrix indexTy
                     then TypeMatrix indexTy <$> typeOf x
                     else TypeList <$> typeOf x
-            [GenDomainHasRepr _ indexDom] -> do
+            ([GenDomainHasRepr _ indexDom], []) -> do
                 indexTy <- typeOfDomain indexDom
                 if typeCanIndexMatrix indexTy
                     then TypeMatrix indexTy <$> typeOf x
