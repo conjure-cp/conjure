@@ -2109,8 +2109,18 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        ma <- symmetryOrdering a
-        mb <- symmetryOrdering b
+        -- at this point, tuples vs matrix literal shouldn't matter
+        -- replace tuple literals with matrix literals
+        let
+            tupleLitToMatrixLit (AbstractLiteral (AbsLitTuple xs)) = do
+                xs' <- forM xs $ \ x -> do
+                    ty <- typeOf x
+                    let x' = oneDimensionaliser (matrixNumDims ty) x
+                    return x'
+                return (fromList xs')
+            tupleLitToMatrixLit x = return x
+        ma <- symmetryOrdering a >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
+        mb <- symmetryOrdering b >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
