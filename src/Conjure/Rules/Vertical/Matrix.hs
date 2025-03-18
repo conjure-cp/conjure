@@ -204,11 +204,15 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
 rule_Comprehension_ToSet_Matrix :: Rule
 rule_Comprehension_ToSet_Matrix = "matrix-toSet-matrixInside" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet"
         matrix       <- match opToSet expr
         TypeMatrix{} <- typeOf matrix
+        -- matrices, except comprehensions
+        case matrix of
+            Comprehension{} -> na "rule_Comprehension_ToSet"
+            _ -> return ()
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-toSet, matrix inside"
@@ -261,7 +265,9 @@ rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `
             _ -> na "rule_Comprehension_ToSet"
         -- we *can* assume that the list is duplicate-free!
         (True, list) <- match opToSetWithFlag expr
-        TypeList{} <- typeOf list
+        case list of
+            Comprehension{} -> return ()
+            _ -> na "rule_Comprehension_ToSet_List_DuplicateFree"
         return
             ( "Vertical rule for comprehension over matrix-toSet, list inside, assumed no duplicates"
             , return $ Comprehension body
@@ -323,7 +329,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
 rule_Comprehension_Hist :: Rule
 rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Hist"
         matrix               <- match opHist expr
@@ -480,6 +486,7 @@ rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
             ( "Horizontal rule for matrix <=, decomposing"
             , return $ decomposeLexLeq p xs ys
             )
+
 
 rule_Comprehension_SingletonDomain :: Rule
 rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
