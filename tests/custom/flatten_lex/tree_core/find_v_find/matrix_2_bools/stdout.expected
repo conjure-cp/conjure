@@ -6,6 +6,6 @@ find B_1: matrix indexed by [int(0..1)] of bool
 find B_2: matrix indexed by [int(0..1)] of bool
 branching on [A_1, A_2, B_1, B_2]
 such that
-    flatten([flatten([[-toInt(A_1[q3]); int(1)], [-toInt(A_2[q3]); int(1)]; int(1..2)]) | q3 : int(0..1)]) <lex
-    flatten([flatten([[-toInt(B_1[q4]); int(1)], [-toInt(B_2[q4]); int(1)]; int(1..2)]) | q4 : int(0..1)])
+    flatten([[[-toInt(A_1[q3]); int(1)], [-toInt(A_2[q3]); int(1)]; int(1..2)] | q3 : int(0..1)]) <lex
+    flatten([[[-toInt(B_1[q4]); int(1)], [-toInt(B_2[q4]); int(1)]; int(1..2)] | q4 : int(0..1)])
 
