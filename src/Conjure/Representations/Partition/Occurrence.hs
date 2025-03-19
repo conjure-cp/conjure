@@ -31,6 +31,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up symmetry
         chck :: TypeOf_ReprCheck m
         chck f (DomainPartition _ attrs innerDomain)
             | domainCanIndexMatrix innerDomain
+            , case innerDomain of DomainMatrix {} -> False ; _ -> True
             = map (DomainPartition Partition_Occurrence attrs) <$> f innerDomain
         chck _ _ = return []
 

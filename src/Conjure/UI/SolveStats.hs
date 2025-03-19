@@ -111,6 +111,13 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
                   ]
             ] =
             TimeOut
+        | or
+            [ T.isInfixOf msg combinedSR
+              | msg <-
+                  [ "Warning: parallel is beta, Use -solsout to store the solutions"
+                  ]
+            ] =
+            OK -- even though exitCodeSR is 1, this warning is fine
         | T.isInfixOf "ERROR: In statement: where false" combinedSR = Invalid
         | M.lookup "MEMOUT" runsolverInfo == Just "true" = MemOut
         | M.lookup "TIMEOUT" runsolverInfo == Just "true" = TimeOut

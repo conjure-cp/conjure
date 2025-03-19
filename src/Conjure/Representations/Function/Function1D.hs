@@ -186,7 +186,7 @@ function1D = Representation chck downD structuralCons downC up symmetryOrdering
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
-            
+
 
 
 domainValues :: (MonadFailDoc m, Pretty r) => Domain r Constant -> m [Constant]
