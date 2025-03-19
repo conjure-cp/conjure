@@ -45,19 +45,13 @@ rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
         Just (ps, y) <- match opTransform rhs = do
           let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
           ty_x <- typeOf x
-          -- traceM $ show $ "ty_x" <+> (pretty ty_x)
           xIndices <- case ty_x of
-            TypeMatrix {} -> do
-              ind <- indexDomainsOf x
-              -- traceM $ show $ "ty_x indexDomainsOf" <++> "---" <+> (pretty $ show x) <++> "--" <+> prettyList prBrackets "," ind
-              return ind
-            TypeList {} -> do
-              -- traceM $ "ty_x LIST LIST LIST"
+            TypeMatrix {} -> indexDomainsOf x
+            TypeList {} ->
               case x of
                 Comprehension _ [Generator (GenDomainHasRepr _ d)] -> return [forgetRepr d]
                 _ -> na "rule_Transform_DotLess_matrix"
             _ -> na "rule_Transform_DotLess_matrix"
-          -- traceM $ show $ "xIndices" <++> "---" <+> pretty ty_x <++> "---" <+> prettyList prBrackets "," xIndices
           case xIndices of
             [xInd] ->
               return
@@ -94,10 +88,7 @@ rule_Transform_DotLess_function = "transform-dotless-function" `namedRule` theRu
         x == y = do
           let mk :: Expression -> Expression -> Expression = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
           TypeFunction {} <- typeOf x
-          -- traceM $ show $ "rule_Transform_DotLess 1 x" <+> pretty x
           domain_x@(DomainFunction _ _ _fr _to) <- domainOf x
-          -- traceM $ show $ "rule_Transform_DotLess 2 fr" <+> pretty fr
-          -- traceM $ show $ "rule_Transform_DotLess 2 to" <+> pretty to
 
           return
             ( "",
@@ -245,9 +236,7 @@ rule_Transform_DotLess_rest = "transform-dotless" `namedRule` theRule
         x == y = do
           let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
           TypeFunction {} <- typeOf x
-          -- traceM $ show $ "rule_Transform_DotLess 1" <+> pretty x
           xIndices <- indexDomainsOf x
-          -- traceM $ show $ "rule_Transform_DotLess 2" <+> vcat (map pretty xIndices)
           case xIndices of
             [xInd] ->
               -- x .<= transform(ps, x)
@@ -676,10 +665,6 @@ rule_TransformToImage = "transform-to-image" `namedRule` theRule
     theRule [essence| transform([&morphism], &i) |] = do
       inner <- morphing =<< typeOf morphism
       typeI <- typeOf i
-      -- traceM $ show $ "rule_TransformToImage inner" <+> pretty inner
-      -- traceM $ show $ "rule_TransformToImage typeI" <+> pretty typeI
-      -- traceM $ show $ "rule_TransformToImage UNIFY" <+> pretty (typesUnify [inner, typeI])
-      -- traceM $ show $ "rule_TransformToImage UNIFY" <+> pretty (let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI])
       if (let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI])
         then
           return
@@ -697,11 +682,7 @@ rule_Transform_Unifying = "transform-unifying" `namedRule` theRule
       typeI <- typeOf i
       morphisms' <- fmap catMaybes $ forM morphisms $ \morphism -> do
         inner <- morphing =<< typeOf morphism
-        -- traceM $ show $ "rule_TransformToImage inner" <+> pretty inner
-        -- traceM $ show $ "rule_TransformToImage typeI" <+> pretty typeI
-        -- traceM $ show $ "rule_TransformToImage CONTAIN" <+> pretty (containsType typeI inner)
-        -- traceM $ show $ "rule_TransformToImage CONTAIN" <+> pretty (let ?typeCheckerMode = StronglyTyped in containsType typeI inner)
-
+        
         if (let ?typeCheckerMode = StronglyTyped in containsType typeI inner)
         -- if containsType typeI inner
           then return (Just morphism)
