@@ -205,7 +205,7 @@ type MAttributes = Maybe (ListNode AttributeNode)
 data DomainNode
     = ParenDomainNode SToken DomainNode LToken
     | BoolDomainNode SToken
-    | RangedIntDomainNode SToken (Maybe (ListNode RangeNode)) (Maybe ETok) -- the IntTag
+    | RangedIntDomainNode SToken (Maybe (LToken, ETok)) (Maybe (ListNode RangeNode))
     | RangedEnumNode NameNodeS (Maybe (ListNode RangeNode))
     | MetaVarDomain SToken
     | ShortTupleDomainNode (ListNode DomainNode)
@@ -227,8 +227,8 @@ instance Pretty DomainNode where
     pretty x = case x of
         ParenDomainNode op dom cl -> pretty op <> pretty dom <> pretty cl
         BoolDomainNode lt -> pretty lt
-        RangedIntDomainNode lt m_ln Nothing -> pretty lt <> pretty m_ln
-        RangedIntDomainNode lt m_ln (Just tag) -> pretty lt <> ":" <> pretty tag <> pretty m_ln
+        RangedIntDomainNode lt Nothing m_ln  -> pretty lt <> pretty m_ln
+        RangedIntDomainNode lt (Just (_, tag)) m_ln -> pretty lt <> ":" <> pretty tag <> pretty m_ln
         RangedEnumNode nn m_ln -> pretty nn <> pretty m_ln
         MetaVarDomain lt -> pretty lt
         ShortTupleDomainNode ln -> pretty ln
@@ -383,7 +383,7 @@ instance Null LongTuple where
 
 -- Literals
 data LiteralNode
-    = IntLiteral SToken (Maybe ETok) -- the IntTag
+    = IntLiteral SToken (Maybe (LToken, ETok)) -- the IntTag
     | BoolLiteral SToken
     | MatrixLiteral MatrixLiteralNode
     | TupleLiteralNode LongTuple
@@ -402,7 +402,7 @@ data LiteralNode
 instance Pretty LiteralNode where
     pretty l = case l of
         IntLiteral lt Nothing -> pretty lt
-        IntLiteral lt (Just tag) -> pretty lt <> ":" <> pretty tag
+        IntLiteral lt (Just (_, tag)) -> pretty lt <> ":" <> pretty tag
         BoolLiteral lt -> pretty lt
         MatrixLiteral mln -> pretty mln
         TupleLiteralNode lt -> pretty lt

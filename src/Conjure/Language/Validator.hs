@@ -683,7 +683,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
   ParenDomainNode _ dom rt -> do checkSymbols [rt]; validateDomain dom
   MetaVarDomain lt -> do mv <- validateMetaVar lt; return . Typed TypeAny $ DomainMetaVar mv
   BoolDomainNode lt -> lt `isA` TtType >> (return . Typed TypeBool) DomainBool
-  RangedIntDomainNode l1 rs maybe_tag -> do
+  RangedIntDomainNode l1 maybe_tag rs -> do
     l1 `isA` TtType
     validateRangedInt maybe_tag rs
   RangedEnumNode nn ranges -> validateEnumRange nn ranges
@@ -742,9 +742,12 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
     l2 `isA'` TtSubKeyword
     validatePartitionDomain attrs dom
   MissingDomainNode lt -> do raiseError $ lt <!> TokenError lt; return $ fallback "Missing Domain"
+
   where
-    validateRangedInt :: Maybe ETok -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
-    validateRangedInt maybe_tag (Just (ListNode _ (Seq [SeqElem a _]) _)) = do
+
+    validateRangedInt :: Maybe (LToken, ETok) -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
+    validateRangedInt maybe_tag' (Just (ListNode _ (Seq [SeqElem a _]) _)) = do
+      let maybe_tag = case maybe_tag' of Nothing -> Nothing ; Just (_, t) -> Just t
       d <- case a of
         SingleRangeNode en -> do
           (t, e) <- typeSplit <$> validateExpression en
@@ -758,10 +761,14 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
           r <- validateRange tInt a
           return $ DomainInt (mkIntTag maybe_tag) [r]
       return $ Typed tInt d
-    validateRangedInt maybe_tag (Just ranges) = do
+    validateRangedInt maybe_tag' (Just ranges) = do
+      let maybe_tag = case maybe_tag' of Nothing -> Nothing ; Just (_, t) -> Just t
       ranges' <- catMaybes <$> validateList_ (f2n (validateRange tInt)) ranges
       return . Typed tInt $ DomainInt (mkIntTag maybe_tag) ranges'
-    validateRangedInt maybe_tag Nothing = return . Typed tInt $ DomainInt (mkIntTag maybe_tag) []
+    validateRangedInt maybe_tag' Nothing = do
+      let maybe_tag = case maybe_tag' of Nothing -> Nothing ; Just (_, t) -> Just t
+      return . Typed tInt $ DomainInt (mkIntTag maybe_tag) []
+
     validateEnumRange :: NameNodeS -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
     validateEnumRange name@(NameNodeS n) ranges = do
       flagSToken n TtEnum
@@ -790,6 +797,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
     validateTupleDomain doms = do
       (ts, ds) <- unzip . map typeSplit <$> validateList_ validateDomain doms
       return $ Typed (TypeTuple ts) (DomainTuple ds)
+
     validateRecordDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateRecordDomain namedDoms = do
       lst <- validateList (f2n validateNamedDomainInVariant) namedDoms
@@ -799,6 +807,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
       let t n = Kind (ValueType CatConstant) $ TypeRecordMember n ts
       mapM_ (\(r, (a, _)) -> putSymbol (a, (r, False, t a))) ds
       return $ Typed (TypeRecord ts) (DomainRecord (unregion <$> ds))
+
     validateVariantDomain :: ListNode NamedDomainNode -> ValidatorS TypedDomain
     validateVariantDomain namedDoms = do
       lst <- validateList (f2n validateNamedDomainInVariant) namedDoms
@@ -808,6 +817,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
       let t n = Kind (ValueType CatConstant) $ TypeVariantMember n ts
       mapM_ (\(r, (a, _)) -> putSymbol (a, (r, False, t a))) ds
       return $ Typed (TypeVariant ts) (DomainVariant (unregion <$> ds))
+
     validateMatrixDomain :: ListNode DomainNode -> DomainNode -> ValidatorS TypedDomain
     validateMatrixDomain indexes dom = do
       idoms <- validateList_ validateDomain indexes
@@ -834,6 +844,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
         Nothing -> return def
       (t, dom') <- typeSplit <$> validateDomain dom
       return . Typed (TypeMSet t) $ DomainMSet repr attrs' dom'
+
     validateFunctionDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> DomainNode -> ValidatorS TypedDomain
     validateFunctionDomain attrs dom1 dom2 = do
       let _repr = Just () -- placeholder if this gets implemented in future
@@ -845,7 +856,6 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
       let dType = Typed $ TypeFunction t1 t2
       return . dType $ DomainFunction () attrs' d1 d2
 
-    -- attrs <- validateAttributes
     validateSequenceDomain :: Maybe (ListNode AttributeNode) -> DomainNode -> ValidatorS TypedDomain
     validateSequenceDomain attrs dom = do
       let repr = ()
@@ -1730,8 +1740,9 @@ makeTupleLiteral members = do
   let eType = TypeTuple (fst memberTypes)
   return . Typed eType . mkAbstractLiteral . AbsLitTuple $ snd memberTypes
 
-validateIntLiteral :: SToken -> Maybe ETok -> ValidatorS Constant
-validateIntLiteral t maybe_tag = do
+validateIntLiteral :: SToken -> Maybe (LToken, ETok) -> ValidatorS Constant
+validateIntLiteral t maybe_tag' = do
+  let maybe_tag = case maybe_tag' of Nothing -> Nothing ; Just (_, tag) -> Just tag
   flagSToken t TtNumber
   l <- validateSToken t
   let tag = case maybe_tag of

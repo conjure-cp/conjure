@@ -129,7 +129,8 @@ instance HighLevelTree QuantificationPattern where
 
 instance HighLevelTree LiteralNode where
     makeTree x = case x of
-        IntLiteral lt tag -> makeTree lt <> makeTree tag
+        IntLiteral lt Nothing -> makeTree lt
+        IntLiteral lt (Just (cln, tag)) -> makeTree lt <> makeTree cln <> makeTree tag
         BoolLiteral lt -> makeTree lt
         MatrixLiteral mln -> makeTree mln
         TupleLiteralNode lt -> makeTree lt
@@ -217,7 +218,8 @@ instance HighLevelTree DomainNode where
     makeTree x = HLTagged (TIDomain x) $ case x of
         ParenDomainNode a b c -> [makeTree a, makeTree b, makeTree c]
         BoolDomainNode lt -> [makeTree lt]
-        RangedIntDomainNode lt ln maybe_tag -> [makeTree lt,makeTree ln, makeTree maybe_tag]
+        RangedIntDomainNode lt Nothing ln -> [makeTree lt, makeTree ln]
+        RangedIntDomainNode lt (Just (cln, tag)) ln -> [makeTree lt, makeTree cln, makeTree tag, makeTree ln]
         MetaVarDomain a -> [makeTree a]
         RangedEnumNode nn ln -> [makeTree nn ,  makeTree ln]
         -- EnumDomainNode nn -> makeTree nn
