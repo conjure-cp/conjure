@@ -2895,13 +2895,11 @@ addUnnamedSymmetryBreaking mode model = do
 
             let
 
-                buildPermutationChain = make opTransform
-
                 combinedPermApply perms =
                     case quickOrComplete of
                         USBQuick -> make opQuickPermutationOrder perms varsTuple
                         USBComplete ->
-                            let applied = buildPermutationChain perms varsTuple
+                            let applied = make opTransform perms varsTuple
                             in [essence| &varsTuple .<= &applied |]
 
                 mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
