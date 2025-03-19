@@ -86,6 +86,9 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf (DomainPartition _ a inner) =
         domainSizeOf $ DomainSet def (SetAttr (partsNum  a))
                       $ DomainSet def (SetAttr (partsSize a)) inner
+    domainSizeOf (DomainPermutation _ (PermutationAttr SizeAttr_None) inner) = do
+        inner_size <- domainSizeOf inner
+        return $ make opFactorial inner_size
     domainSizeOf (DomainPermutation _ (PermutationAttr sizeAttr) inner) =
         domainSizeOf $ DomainSet def (SetAttr sizeAttr) inner
     domainSizeOf d = bug ("not implemented: domainSizeOf:" <+> vcat [pretty d, pretty (show d)])
