@@ -1,18 +1,14 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module Conjure.LSP.Handlers.Initialize where
-import Language.LSP.Types (SMethod(SInitialized, SWindowShowMessage), ShowMessageParams (ShowMessageParams), MessageType (MtInfo))
-import Language.LSP.Server
+
 import Conjure.Prelude
-
-
--- handleInitialize :: Handlers (LspM ())
--- handleInitialize = requestHandler SInitialize $ \ req res -> do
-
+import Language.LSP.Protocol.Message
+import Language.LSP.Protocol.Types
+import Language.LSP.Server
 
 handleInitialized :: Handlers (LspM ())
-handleInitialized = notificationHandler SInitialized $ \_ -> do
-    sendNotification SWindowShowMessage (ShowMessageParams MtInfo "LSP Started 0.0.2\n")
-    
-
+handleInitialized = notificationHandler SMethod_Initialized $ \_ -> do
+  sendNotification SMethod_WindowShowMessage (ShowMessageParams MessageType_Info "Conjure LSP started\n")

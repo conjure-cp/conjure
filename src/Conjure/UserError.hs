@@ -2,9 +2,10 @@ module Conjure.UserError
     ( MonadUserError(..), userErr1
     , UserErrorT(..), runUserError
     , failToUserError, failToBug
+    , liftUserErrorT
     ) where
 
-import Conjure.Prelude 
+import Conjure.Prelude
 -- import qualified Conjure.Prelude as Prelude ( MonadFail(..) )
 import Conjure.Bug
 import Conjure.Language.Pretty
@@ -89,23 +90,21 @@ instance (MonadFailDoc m) => Monad (UserErrorT m) where
             Left e -> return (Left e)
             Right x -> runUserErrorT (k x)
 
--- instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
---     failDoc = lift . failDoc
 instance (MonadIO m, MonadFailDoc m) => MonadIO (UserErrorT m) where
     liftIO comp = UserErrorT $ do
         res <- liftIO comp
         return (Right res)
 
-instance MonadTrans UserErrorT where
-    lift comp = UserErrorT $ do
-        res <- comp
-        return (Right res)
+-- instance MonadTrans UserErrorT where
 
-instance (MonadFailDoc m) => MonadFailDoc (UserErrorT m) where
-    failDoc = lift . failDoc
+liftUserErrorT :: Monad m => m a -> UserErrorT m a
+liftUserErrorT comp = UserErrorT $ Right <$> comp
+
+instance MonadFailDoc m => MonadFailDoc (UserErrorT m) where
+    failDoc = liftUserErrorT . failDoc
 
 instance MonadFailDoc m => MonadFail (UserErrorT m) where
-    fail = lift . fail
+    fail = liftUserErrorT . fail
 
 instance MonadFailDoc m => MonadUserError (UserErrorT m) where
     userErr msgs = UserErrorT $ return $ Left msgs
