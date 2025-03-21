@@ -451,6 +451,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndex
         case iType of
             TypeBool{} -> return ()
             TypeInt{} -> return ()
+            TypeMatrix{} -> return ()
             _ -> failDoc "domainOf, OpIndexing, not a bool or int index"
         mDom <- domainOf m
         case mDom of
@@ -465,6 +466,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndex
         case iType of
             TypeBool{} -> return ()
             TypeInt{} -> return ()
+            TypeMatrix{} -> return ()
             _ -> failDoc "domainOf, OpIndexing, not a bool or int index"
         is <- indexDomainsOf m
         case is of
