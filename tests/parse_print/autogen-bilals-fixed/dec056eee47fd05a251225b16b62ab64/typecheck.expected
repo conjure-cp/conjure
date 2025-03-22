@@ -25,17 +25,17 @@ Error 1:
                                          | q61 : bool]))
                                    | q58 : int(1..6)])
                                | q49 : int(1..5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement: 2 <= sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)])
     Error:
         Type error in sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 3:
     In a 'such that' statement: sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)]) <= 4
     Error:
         Type error in sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 4:
     In a 'such that' statement:
         and([1 =
@@ -47,7 +47,7 @@ Error 4:
         Type error in sum([q51 <= var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
                            var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[q51, 1] = q30
                                | q51 : int(1..5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 5:
     In a 'such that' statement:
         and([1 =
@@ -59,4 +59,4 @@ Error 5:
         Type error in sum([1 <= var4_3_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q55] /\
                            var4_3_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q55, 1] = q40
                                | q55 : int(1..5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

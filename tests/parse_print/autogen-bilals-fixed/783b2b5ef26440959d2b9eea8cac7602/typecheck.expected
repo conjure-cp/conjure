@@ -2,9 +2,9 @@ Error 1:
     In a 'such that' statement: 3 <= sum([sum([var3_RelationAsMatrix[q4, q5] | q5 : bool]) | q4 : bool])
     Error:
         Type error in sum([var3_RelationAsMatrix[q4, q5] | q5 : bool])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [bool] of bool
 Error 2:
     In a 'such that' statement: sum([sum([var3_RelationAsMatrix[q4, q5] | q5 : bool]) | q4 : bool]) <= 4
     Error:
         Type error in sum([var3_RelationAsMatrix[q4, q5] | q5 : bool])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [bool] of bool
