@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 
 import Control.Applicative ( (<$>) )
 import Data.Maybe ( Maybe(..) )
