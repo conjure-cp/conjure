@@ -585,7 +585,7 @@ histogram :: Ord a => [a] -> [(a, Integer)]
 histogram xs = catMaybes
     [ case grp of
         [] -> Nothing
-        (x:_) -> Just (x, genericLength xs)
+        (x:_) -> Just (x, genericLength grp)
     | grp <- xs |> sort |> group
     ]
 
