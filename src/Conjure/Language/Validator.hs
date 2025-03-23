@@ -2000,26 +2000,19 @@ unifyPattern Nothing _ = return . Single $ fallback "No Pattern"
 
 catRegions :: [RegionTagged a] -> DiagnosticRegion
 catRegions [] = global
-catRegions xs =
+catRegions (x:xs) =
   DiagnosticRegion
-    { drSourcePos = drSourcePos . fst $ head xs,
-      drEndPos = drEndPos . fst $ last xs,
-      drOffset = drOffset . fst $ head xs,
-      drLength = sum $ map (drLength . fst) xs
+    { drSourcePos = drSourcePos $ fst x,
+      drEndPos = drEndPos $ fst $ last xs,
+      drOffset = drOffset $ fst x,
+      drLength = sum $ map (drLength . fst) (x:xs)
     }
 
 getMemberTypes :: Type -> ValidatorS [Type]
 getMemberTypes t = case t of
   TypeAny -> return $ repeat TypeAny
-  --   TypeUnnamed na ->
   TypeTuple tys -> return tys
   _ -> return $ repeat TypeAny
-
--- unifyAbstractPatternOverExpression :: AbstractPatternNode -> Expression -> Validator (Name,Type)
--- unifyAbstractPatternOverExpression pat exp = do
---     t <- typeOf exp
-
---     empty
 
 getDomainMembers :: Type -> Type
 getDomainMembers t = case t of

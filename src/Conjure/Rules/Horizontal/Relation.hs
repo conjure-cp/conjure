@@ -92,7 +92,7 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
                             [ [ Generator (GenInExpr pat rel)
                               , Condition [essence| &beforeX < &patX |]
                               ]
-                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (drop 1 outPats)
                             ]
                         , transformBi (upd val) gocAfter
                         ]

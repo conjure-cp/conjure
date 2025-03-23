@@ -62,7 +62,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
                               , Condition [essence| &patX > &beforeX |]
                               , Condition [essence| &patX <= &marker |]
                               ]
-                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (drop 1 outPats)
                             ]
                         , transformBi (upd val) gocAfter
                         ]
