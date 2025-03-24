@@ -35,6 +35,7 @@ module Conjure.Prelude
     , MonadFail (..)
     , allContexts, ascendants
     , dropExtension, dropDirs
+    , splitOn1
     , MonadLog(..), LogLevel(..), runLoggerPipeIO, ignoreLogs
     , logInfo, logWarn, logDebug, logDebugVerbose
     , histogram
@@ -118,8 +119,9 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , sum, product, unzip, zip, zip3, foldr1, foldl
                               , unzip3, repeat, unwords, intersect
                               , take, drop
+                              , uncons
                               , takeWhile, dropWhile, span
-                              , head, init, tail, last
+                              , init, last
                               , inits, tails
                               , findIndex
                               , filter, partition
@@ -507,6 +509,12 @@ dropExtension = intercalate "." . init . splitOn "."
 dropDirs :: FilePath -> FilePath
 dropDirs = last . splitOn "/"
 
+-- | Same as head . splitOn
+splitOn1 :: String -> String -> String
+splitOn1 sep inp =
+    case splitOn sep inp of
+        [] -> inp
+        (outp:_) -> outp
 
 class (Functor m, Applicative m, Monad m) => MonadLog m where
     log :: LogLevel -> Doc -> m ()
@@ -574,7 +582,12 @@ runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
         each _ = return ()
 
 histogram :: Ord a => [a] -> [(a, Integer)]
-histogram = map (head &&& genericLength) . group . sort
+histogram xs = catMaybes
+    [ case grp of
+        [] -> Nothing
+        (x:_) -> Just (x, genericLength grp)
+    | grp <- xs |> sort |> group
+    ]
 
 sh :: Sh a -> IO a
 sh = shelly . print_stdout False . print_stderr False

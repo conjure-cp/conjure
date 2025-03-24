@@ -60,7 +60,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
                           , Condition [essence| &patX > &beforeX |]
                           , Condition [essence| &m[&patX] |]
                           ]
-                        | (before, pat) <- zip patNames (tail patNames)
+                        | (before, pat) <- zip patNames (drop 1 patNames)
                         , let beforeX = Reference before Nothing
                         , let patX = Reference pat Nothing
                         ]

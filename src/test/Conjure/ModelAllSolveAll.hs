@@ -402,19 +402,19 @@ equalNumberOfSolutions step TestDirFiles{..} = do
                 then
                     [ (Nothing, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
                     | model' <- models
-                    , let model = splitOn "." model' |> head
+                    , let model = splitOn1 "." model'
                     , let solnPrefix = model
                     ]
                 else
                     [ (Just param, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
-                    | model          <- map (head . splitOn ".") models
-                    , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                    | model          <- map (splitOn1 ".") models
+                    , [model2,param] <- map (splitOn "-" . splitOn1 ".") params
                     , model == model2
                     , let solnPrefix = model ++ "-" ++ param
                     ])
             |> sortBy  (comparing fst)
             |> groupBy ((==) `on` fst)
-            |> map (\ grp -> (fst (head grp), map snd grp) )
+            |> mapMaybe (\ grp -> case grp of [] -> Nothing ; ((sol, _):_) -> Just (sol, map snd grp) )
     let
         differentOnes :: [(Maybe String, [(String, Int)])]
         differentOnes =
@@ -455,7 +455,7 @@ noDuplicateSolutions step TestDirFiles{..} = do
                 then
                     [ (Nothing, (model, duplicateSolutions))
                     | model' <- models
-                    , let model = splitOn "." model' |> head
+                    , let model = splitOn1 "." model'
                     , let solnPrefix = model
                     , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
                     , let duplicateSolutions =
@@ -469,8 +469,8 @@ noDuplicateSolutions step TestDirFiles{..} = do
                     ]
                 else
                     [ (Just param, (model, duplicateSolutions))
-                    | model          <- map (head . splitOn ".") models
-                    , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                    | model          <- map (splitOn1 ".") models
+                    , [model2,param] <- map (splitOn "-" . splitOn1 ".") params
                     , model == model2
                     , let solnPrefix = model ++ "-" ++ param
                     , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
@@ -485,7 +485,7 @@ noDuplicateSolutions step TestDirFiles{..} = do
                     ])
             |> sortBy  (comparing fst)
             |> groupBy ((==) `on` fst)
-            |> map (\ grp -> (fst (head grp), map snd grp) )
+            |> mapMaybe (\ grp -> case grp of [] -> Nothing ; ((sol, _):_) -> Just (sol, map snd grp) )
 
     unless (null grouped) $
         assert $ vcat

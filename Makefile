@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=9.2 make"
-export GHC_VERSION?=9.4
+export GHC_VERSION?=9.8
 export BIN_DIR?=${HOME}/.local/bin
 export LIB_DIR?=${BIN_DIR}/lib
 export PATH := $(BIN_DIR):$(PATH)
@@ -16,8 +16,8 @@ export LIMIT_TIME?=10
 install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this location."
-	@echo "For example: \"GHC_VERSION=9.4 make install\""
-	@echo "Supported versions:  9.0, 9.2, 9.4"
+	@echo "For example: \"GHC_VERSION=9.8 make install\""
+	@echo "Supported versions: `(cd etc/hs-deps ; ls -1) | cut -d '-' -f 2 | cut -d '.' -f 1,2 | paste -sd, - | sed 's/,/, /g'`"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."
@@ -71,6 +71,7 @@ test:
 		stack test --test-arguments '--hide-successes --limit-time ${LIMIT_TIME}';\
 	fi
 
+.PHONY: stack.yaml
 stack.yaml: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
 

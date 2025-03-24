@@ -59,7 +59,7 @@ rule_PowerSet_Comprehension = "function-powerSet-comprehension{Function1DPartial
                             [ [ Generator (GenDomainNoRepr pat index)
                               , Condition [essence| &patX > &beforeX |]
                               ]
-                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (drop 1 outPats)
                             ]
                         , transformBi (upd val) gocAfter
                         ]

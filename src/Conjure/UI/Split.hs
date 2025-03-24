@@ -48,7 +48,7 @@ split m = do
             |> concat
             |> sortNub              -- remove duplicates
             |> subsequences         -- generate all subsequences
-            |> tail                 -- drop the first, contains nothing
+            |> drop 1               -- drop the first, contains nothing
           ) $ \ stmts ->
         Pipes.yield $ removeUnusedDecls $ upd $ decls ++ stmts
     forM_ (sortNub decls) $ \ decl ->

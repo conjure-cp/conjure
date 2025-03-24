@@ -56,7 +56,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
                             [ [ Generator (GenDomainNoRepr pat index)
                               , Condition [essence| &patX > &beforeX |]
                               ]
-                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (drop 1 outPats)
                             ]
                         , transformBi (upd val) gocAfter
                         ]

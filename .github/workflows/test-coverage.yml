@@ -23,7 +23,7 @@ jobs:
 
     strategy:
       matrix:
-        GHC_VERSION: [9.4]
+        GHC_VERSION: [9.8]
         os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
