@@ -121,3 +121,14 @@ rule_Image_permInverse = "permutation-image-permInverse{AsFunction}" `namedRule`
             )
         _ -> na "rule_Image_permInverse" -- TODO: missing case for permutation literal
     theRule _ = na "rule_Image_permInverse"
+
+
+rule_double_permInverse :: Rule
+rule_double_permInverse = "permutation-image-permInverse{AsFunction}" `namedRule` theRule
+  where
+    theRule [essence| permInverse(permInverse(&p)) |] =
+      return
+        ( "Double permInverse",
+          return p
+        )
+    theRule _ = na "rule_double_permInverse"
