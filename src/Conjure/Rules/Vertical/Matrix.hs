@@ -3,7 +3,6 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Definition ( RuleResult(..), QuestionType(..) )
 import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
 
 -- uniplate
@@ -12,7 +11,7 @@ import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 
 rule_Comprehension_Literal :: Rule
-rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
+rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRuleZ` theRule where
     theRule z (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat expr) -> return (pat, expr)
@@ -22,26 +21,23 @@ rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
         tyInner <- typeOf body
         let ty = TypeMatrix (TypeInt TagInt) tyInner
         return
-            [ RuleResult
-                { ruleResultDescr = "Vertical rule for matrix-comprehension on matrix literal"
-                , ruleResultType  = ExpressionRefinement
-                , ruleResultHook  = Nothing
-                , ruleResult      = return $
-                    case elems of
-                        []   -> make matrixLiteral ty (mkDomainIntB 1 0) []
-                        [el] -> Comprehension body
+            ( "Vertical rule for matrix-comprehension on matrix literal"
+            , return $
+                case elems of
+                    []   -> make matrixLiteral ty (mkDomainIntB 1 0) []
+                    [el] -> Comprehension body
+                                $  gocBefore
+                                ++ [ComprehensionLetting pat el]
+                                ++ gocAfter
+                    _    -> make opConcatenate $ AbstractLiteral $ AbsLitMatrix
+                                (mkDomainIntB 1 (fromInt $ genericLength elems))
+                                [ Comprehension body
                                     $  gocBefore
                                     ++ [ComprehensionLetting pat el]
                                     ++ gocAfter
-                        _    -> make opConcatenate $ AbstractLiteral $ AbsLitMatrix
-                                    (mkDomainIntB 1 (fromInt $ genericLength elems))
-                                    [ Comprehension body
-                                        $  gocBefore
-                                        ++ [ComprehensionLetting pat el]
-                                        ++ gocAfter
-                                    | el <- elems
-                                    ]
-                } ]
+                                | el <- elems
+                                ]
+            )
     theRule _ _ = na "rule_Comprehension_Literal"
 
     notInsideMinMax z0 =

@@ -18,6 +18,7 @@ module Conjure.Rules.Definition
 
 import Conjure.Prelude
 import Conjure.UserError
+import Conjure.Language.AdHoc ( expressionDepth )
 import Conjure.Language.Definition
 import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Expression.Op
@@ -59,6 +60,7 @@ data Answer = Answer
     , aAnswer    :: Expression
     , aFullModel :: ModelWIP
     , aRuleName  :: Doc
+    , aDepth     :: Int         -- expression depth, precalculated depending on the rule. compact will use this to compare.
     }
 
 type Driver = (forall m . (MonadIO m, MonadLog m) => [Question] -> m [ModelWIP])
@@ -181,6 +183,7 @@ data RuleResult m = RuleResult
     , ruleResultType  :: QuestionType
     , ruleResult      :: m Expression               -- the result
     , ruleResultHook  :: Maybe (Model -> m Model)   -- post-application hook
+    , ruleResultSize  :: m Int                      -- expression depth, precalculated depending on the rule. compact will use this to compare.
     }
 
 data Rule = Rule
@@ -214,7 +217,7 @@ namedRule nm f = Rule
     { rName = nm
     , rApply = \ z x -> do
         (rResultDescr, rResult) <- runReaderT (f x) z
-        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
+        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing (expressionDepth <$> rResult)]
     }
 
 namedRuleZ
@@ -231,7 +234,7 @@ namedRuleZ nm f = Rule
     { rName = nm
     , rApply = \ z x -> do
         (rResultDescr, rResult) <- runReaderT (f z x) z
-        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
+        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing (expressionDepth <$> rResult)]
     }
 
 isAtomic :: Expression -> Bool

@@ -3,7 +3,6 @@
 module Conjure.Rules.Horizontal.Function where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Definition
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper as Zipper ( up, hole )
@@ -12,7 +11,7 @@ import Data.Generics.Uniplate.Zipper as Zipper ( up, hole )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
         (TypeFunction fr to, elems) <- match functionLiteral expr
@@ -227,7 +226,7 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
 
 
 rule_Comprehension_Range :: Rule
-rule_Comprehension_Range = "function-range" `Rule` theRule where
+rule_Comprehension_Range = "function-range" `namedRuleZ` theRule where
 
     theRule z p = do
         should <- shouldRemoveDuplicates z
@@ -258,7 +257,7 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
 
     theRule_shouldRemoveDuplicates (Comprehension body gensOrConds) = do
 
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
@@ -318,36 +317,30 @@ rule_Comprehension_Range = "function-range" `Rule` theRule where
                 na "Cannot compute the domain of range(f)"
 
         return
-            [ RuleResult
-                { ruleResultDescr = "Mapping over range(f)"
-                , ruleResultType  = ExpressionRefinement
-                , ruleResult      = if isInjective
-                                        then caseInjective
-                                        else caseNonInjective
-                , ruleResultHook  = Nothing
-                } ]
+            ( "Mapping over range(f)"
+            , if isInjective
+                then caseInjective
+                else caseNonInjective
+            )
     theRule_shouldRemoveDuplicates _ = na "rule_Comprehension_Range"
 
     theRule_noRemoveDuplicates (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
         TypeFunction{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
-            [ RuleResult
-                { ruleResultDescr = "Mapping over range(f)"
-                , ruleResultType  = ExpressionRefinement
-                , ruleResult      = do
-                    (iPat, i) <- quantifiedVar
-                    let i2 = [essence| &i[2] |]
-                    return $ Comprehension (upd i2 body)
-                                $  gocBefore
-                                ++ [Generator (GenInExpr iPat func)]
-                                ++ transformBi (upd i2) gocAfter
-                , ruleResultHook  = Nothing
-                } ]
+            ( "Mapping over range(f)"
+            , do
+                (iPat, i) <- quantifiedVar
+                let i2 = [essence| &i[2] |]
+                return $ Comprehension (upd i2 body)
+                            $  gocBefore
+                            ++ [Generator (GenInExpr iPat func)]
+                            ++ transformBi (upd i2) gocAfter
+            )
     theRule_noRemoveDuplicates _ = na "rule_Comprehension_Range"
 
 

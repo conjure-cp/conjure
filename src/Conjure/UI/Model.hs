@@ -20,6 +20,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
+import Conjure.Language.AdHoc
 import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -435,6 +436,8 @@ remaining config modelZipper minfo = do
                     let m3 = m2 { mInfo = (mInfo m2) { miNameGenState = namegenst2 } }
                     return (StartOver m3)
 
+            aDepth' <- ruleResultSize
+
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
@@ -442,6 +445,7 @@ remaining config modelZipper minfo = do
                     , aBefore = hole focus
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
+                    , aDepth = aDepth'
                     }
                 , ruleResultType
                 )
@@ -687,10 +691,7 @@ executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) = d
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
-compactCompareAnswer = comparing (expressionDepth . aAnswer)
-    where
-        expressionDepth :: Data a => a -> Int
-        expressionDepth x = 1 + maximum (0 : map expressionDepth (children x))
+compactCompareAnswer = comparing aDepth
 
 
 addToTrail
@@ -1339,7 +1340,7 @@ applicableRules Config{..} rulesAtLevel x = do
                     rResult <- ruleResult res
                     case (hole x, rResult) of
                         (Reference nm1 _, Reference nm2 _)
-                            | show name /= "choose-repr"
+                            | not ("choose-repr" `isPrefixOf` show name)
                             , nm1 == nm2 -> bug $ vcat
                             [ "Rule applied inside a Reference."
                             , "Rule              :" <+> pretty name
@@ -1764,7 +1765,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         let reprsWhichOrder
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
                 | (forg, representationsFinds  config) == (Find , Sparse) = reprsSparseOrder
-                | representationLevels config == False                    = reprsStandardOrderNoLevels
+                | not (representationLevels config)                       = reprsStandardOrderNoLevels
                 | otherwise                                               = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder inpDom
         when (null domOpts) $
@@ -1778,6 +1779,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                     _       -> bug "rule_ChooseRepr ruleResultType"
                              , ruleResult = return out
                              , ruleResultHook = Just hook
+                             , ruleResultSize = return $ expressionDepth $ Reference nm (Just (DeclHasRepr forg nm thisDom))
                              }
                 | thisDom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty thisDom
@@ -1912,13 +1914,13 @@ rule_ChooseReprForComprehension :: Config -> Rule
 rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
 
         let reprsWhichOrder
                 | representationsGivens config == Sparse = reprsSparseOrder
-                | representationLevels config == False   = reprsStandardOrderNoLevels
+                | not (representationLevels config   )   = reprsStandardOrderNoLevels
                 | otherwise                              = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder domain
         when (null domOpts) $
@@ -1945,6 +1947,7 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
                     out <- resolveNamesX out'
                     return out
                 , ruleResultHook = Nothing
+                , ruleResultSize = return $ expressionDepth $ Reference nm (Just (DeclHasRepr Quantified nm thisDom))
                 }
             | thisDom <- domOpts
             ]
@@ -1960,7 +1963,7 @@ rule_ChooseReprForLocals :: Config -> Rule
 rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body (AuxiliaryVars locals)) = do
-        (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
+        (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \case
             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForLocals"
 
@@ -1973,7 +1976,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
 
         let reprsWhichOrder
                 | representationsAuxiliaries config == Sparse   = reprsSparseOrder
-                | representationLevels config == False          = reprsStandardOrderNoLevels
+                | not (representationLevels config)             = reprsStandardOrderNoLevels
                 | otherwise                                     = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder domain
         when (null domOpts) $
@@ -2004,6 +2007,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                     out <- resolveNamesX out'
                     return out
                 , ruleResultHook = Nothing
+                , ruleResultSize = return $ expressionDepth $ Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
                 }
             | thisDom <- domOpts
             ]
@@ -2463,7 +2467,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
 
 -- this rule doesn't use `namedRule` because it need access to ascendants through the zipper
 rule_InlineConditions :: Rule
-rule_InlineConditions = Rule "inline-conditions" theRule where
+rule_InlineConditions = "inline-conditions" `namedRuleZ` theRule where
     theRule z (Comprehension body gensOrConds) = do
         let (toInline, toKeep) = mconcat
                 [ case goc of
@@ -2478,12 +2482,9 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
         (nameQ, opSkip) <- queryQ z
         let bodySkipped = opSkip theGuard body
         return
-            [ RuleResult
-                { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
-                , ruleResultType  = ExpressionRefinement
-                , ruleResult      = return $ Comprehension bodySkipped toKeep
-                , ruleResultHook  = Nothing
-                } ]
+            ( "Inlining conditions, inside" <+> nameQ
+            , return $ Comprehension bodySkipped toKeep
+            )
     theRule _ _ = na "rule_InlineConditions"
 
     -- keep going up, until finding a quantifier
