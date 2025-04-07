@@ -33,6 +33,12 @@ You will also need to install Java for Savile Row. In macOS, we recommend using 
 
     brew install --cask corretto
 
+If you are using a recent Mac, you *might* need to run the following commmand to allow Intel-based applications to tun on your computer.
+
+.. code-block: bash
+
+    /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+
 
 For Windows, please use the Linux binaries with the
 `Windows Subsystem for Linux <https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux>`_.
