@@ -82,6 +82,8 @@ addName ::
     MonadState [(Name, ReferenceTo)] m =>
     MonadUserError m =>
     Name -> ReferenceTo -> m ()
+addName (Name "_") _ = return ()
+addName (Name "UNDERSCORE__") _ = return ()
 addName n thing = do
     ctxt <- gets id
     let
