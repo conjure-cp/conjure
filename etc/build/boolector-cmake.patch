@@ -1,0 +1,21 @@
+diff --color -ru boolector-3.2.4-orig/configure.sh boolector-3.2.4/configure.sh
+--- boolector-3.2.4-orig/configure.sh	2025-05-28 00:03:44
++++ boolector-3.2.4/configure.sh	2025-05-28 00:00:44
+@@ -228,4 +228,4 @@
+ cd $BUILDDIR || exit 1
+ 
+ [ -e CMakeCache.txt ] && rm CMakeCache.txt
+-cmake .. $cmake_opts
++cmake .. -DCMAKE_POLICY_VERSION_MINIMUM=3.10 $cmake_opts
+diff --color -ru boolector-3.2.4-orig/contrib/setup-btor2tools.sh boolector-3.2.4/contrib/setup-btor2tools.sh
+--- boolector-3.2.4-orig/contrib/setup-btor2tools.sh	2025-05-28 00:03:50
++++ boolector-3.2.4/contrib/setup-btor2tools.sh	2025-05-28 00:00:49
+@@ -27,7 +27,7 @@
+ if is_macos; then
+    mkdir build
+    pushd build
+-   cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'
++   cmake .. -DCMAKE_POLICY_VERSION_MINIMUM=3.10 -DBUILD_SHARED_LIBS=OFF -DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'
+    make -j${NPROC}
+    popd
+ else
