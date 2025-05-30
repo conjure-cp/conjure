@@ -87,8 +87,8 @@ addName (Name "UNDERSCORE__") _ = return ()
 addName n thing = do
     ctxt <- gets id
     let
-        allowed (DeclNoRepr _ _ _ _) (Alias _) = True -- needed when instantiating stuff
-        allowed (DeclHasRepr _ _ _) (Alias _) = True -- needed when instantiating stuff
+        allowed DeclNoRepr{} Alias{} = True -- needed when instantiating stuff
+        allowed DeclHasRepr{} Alias{} = True -- needed when instantiating stuff
         allowed old new = old == new
     let mdefined = [ thing' | (n', thing') <- ctxt, n == n' && not (allowed thing' thing) ]
     case mdefined of
@@ -137,18 +137,22 @@ resolveStatement st =
         Declaration decl ->
             case decl of
                 FindOrGiven forg nm dom       -> do
+                    when (nm == Name "_") $ userErr1 "Cannot use _ as the name in a find/given statement."
                     dom' <- resolveD dom
                     addName nm $ DeclNoRepr forg nm dom' NoRegion
                     return (Declaration (FindOrGiven forg nm dom'))
                 Letting nm x                  -> do
+                    when (nm == Name "_") $ userErr1 "Cannot use _ as the name in a letting statement."
                     x' <- resolveX x
                     addName nm $ Alias x'
                     return (Declaration (Letting nm x'))
                 LettingDomainDefnUnnamed nm x -> do
+                    when (nm == Name "_") $ userErr1 "Cannot use _ as the name in a letting statement."
                     x' <- resolveX x
                     addName nm $ Alias (Domain (DomainUnnamed nm x'))
                     return (Declaration (LettingDomainDefnUnnamed nm x'))
                 LettingDomainDefnEnum (Name ename) nms -> do
+                    when (ename == "_") $ userErr1 "Cannot use _ as the name in a letting statement."
                     sequence_ [ addName nm $ Alias (Constant (ConstantInt (TagEnum ename) i))
                               | (nm, i) <- zip nms [1..]
                               ]
@@ -228,7 +232,7 @@ resolveX p@Comprehension{} = scope $ do
     p' <- shadowing p
     case p' of
         Comprehension x is -> do
-            is' <- forM is $ \ i -> case i of
+            is' <- forM is $ \case
                 Generator gen -> do
                     (gen', refto) <- case gen of
                         GenDomainNoRepr pat dom -> do
