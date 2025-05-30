@@ -23,7 +23,6 @@ download https://github.com/Boolector/boolector/archive/$VERSION.tar.gz
 tar xzf $VERSION.tar.gz
 cd boolector-$VERSION
 patch -p1 < ${DIR}/boolector-cmake.patch
-grep cmake -R .
 ./contrib/setup-cadical.sh
 ./contrib/setup-btor2tools.sh
 ./configure.sh
