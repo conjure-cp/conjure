@@ -35,7 +35,7 @@ You will also need to install Java for Savile Row. In macOS, we recommend using 
 
 If you are using a recent Mac, you *might* need to run the following commmand to allow Intel-based applications to tun on your computer.
 
-.. code-block: bash
+.. code-block:: bash
 
     /usr/sbin/softwareupdate --install-rosetta --agree-to-license
 
