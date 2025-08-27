@@ -1,0 +1,7 @@
+find m : matrix [int(1..4), int(1..3)] of int(1..5)
+
+find x : int(0..100000)
+
+such that x = freq(toMSet(flatten(m)), 1)
+
+such that x = 11

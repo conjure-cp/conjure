@@ -1533,6 +1533,7 @@ horizontalRules =
     , Horizontal.Set.rule_MaxMin
 
     , Horizontal.MSet.rule_Comprehension_Literal
+    , Horizontal.MSet.rule_Freq_toMSet_Flatten
     , Horizontal.MSet.rule_Comprehension_ToSet_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
