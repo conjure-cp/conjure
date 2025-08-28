@@ -17,7 +17,7 @@ install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this location."
 	@echo "For example: \"GHC_VERSION=9.10 make install\""
-	@echo "Supported versions: `(cd etc/hs-deps ; ls -1) | cut -d '-' -f 2 | cut -d '.' -f 1,2 | paste -sd, - | sed 's/,/, /g'`"
+	@echo "Supported versions: `(ls -1 etc/hs-deps | sort -V) | cut -d '-' -f 2 | cut -d '.' -f 1,2 | paste -sd, - | sed 's/,/, /g'`"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."
