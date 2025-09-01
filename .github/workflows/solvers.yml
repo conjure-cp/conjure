@@ -57,7 +57,7 @@ jobs:
 
       - name: Installing dependencies on macOS
         shell: bash
-        run: brew install autoconf cmake gmp gperf
+        run: brew install autoconf gmp gperf
         if: runner.os == 'macOS'
 
       - name: Building solvers
