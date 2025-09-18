@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# version as of 18 November 2022
-VERSION=4.11.2
+# version as of 18 September 2025
+VERSION=4.15.3
 
 source "download.sh" 2> /dev/null               # if called from the script dir
 source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
