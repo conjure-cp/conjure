@@ -381,6 +381,22 @@ matrixByRowBucket innerStreamliner x = do
                     attachGroup (("MatrixByRowBucket-" ++ show bucketInt) : grps) [essence|
                         forAll &pat : int(&lb + &bucket * &bucketSize .. min([&ub, &lb + (&bucket+1) * &bucketSize])) . &innerConstraint
                         |]
+        DomainFunction _ _ (DomainInt _ [RangeBounded lb ub]) innerDom -> do
+            let size = [essence| &ub - &lb + 1 |]
+            let bucketSize = [essence| &size / 10 |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+
+                liftMatrix (Reference n _) | n == nm = [essence| &x(&ref) |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            concatForM [0..9] $ \ (bucketInt :: Integer) -> let bucket = fromInt bucketInt in
+                forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup (("FunctionByBucket-" ++ show bucketInt) : grps) [essence|
+                        forAll &pat : int(&lb + &bucket * &bucketSize .. min([&ub, &lb + (&bucket+1) * &bucketSize])) . &innerConstraint
+                        |]
         _ -> noStreamliner
 
 

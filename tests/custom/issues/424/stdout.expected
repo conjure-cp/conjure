@@ -1,5 +1,23 @@
 9 knapsack.essence
-160 conjure-output/model000001.eprime
+152 conjure-output/model000001.eprime
 200008 large.param
 8841 large.eprime-param
-209018 total
+209010 total
+language ESSENCE' 1.0
+
+given items_EnumSize: int
+given fin1: int
+given fin2: int
+given fin3: int
+given weight_Function1D: matrix indexed by [int(1..items_EnumSize)] of int(fin2..fin3)
+given fin4: int
+given fin5: int
+given fin6: int
+given gain_Function1D: matrix indexed by [int(1..items_EnumSize)] of int(fin5..fin6)
+given capacity: int
+find picked_Occurrence: matrix indexed by [int(1..items_EnumSize)] of bool
+branching on [picked_Occurrence]
+maximising sum([toInt(picked_Occurrence[i]) * catchUndef(gain_Function1D[i], 0) | i : int(1..items_EnumSize)])
+such that
+    sum([toInt(picked_Occurrence[i]) * catchUndef(weight_Function1D[i], 0) | i : int(1..items_EnumSize)]) <= capacity
+

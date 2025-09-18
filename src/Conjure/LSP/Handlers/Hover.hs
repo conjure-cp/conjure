@@ -1,34 +1,32 @@
 module Conjure.LSP.Handlers.Hover where
-import Language.LSP.Server (requestHandler, LspM, Handlers)
-import Language.LSP.Types
 
+import Conjure.LSP.Documentation (getDocsForBuiltin)
+import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getRelevantRegions, snippet, withProcessedDoc)
+import Conjure.Language.Pretty qualified as CPr
+import Conjure.Language.Validator (RegionInfo (..), RegionType (..))
 import Conjure.Prelude
 import Data.Text as T (pack)
-import Conjure.LSP.Util (getRelevantRegions, withProcessedDoc, ProcessedFile (ProcessedFile), snippet)
-import Conjure.Language.Validator (RegionInfo (..), RegionType (..))
+import Language.LSP.Protocol.Message
+import Language.LSP.Protocol.Types hiding (Definition)
+import Language.LSP.Server (Handlers, LspM, requestHandler)
 import Prettyprinter
 
-import Conjure.LSP.Documentation ( getDocsForBuiltin)
-import qualified Conjure.Language.Pretty as CPr
-
 hoverHandler :: Handlers (LspM ())
-hoverHandler = requestHandler STextDocumentHover $ \ req res -> do
-    let RequestMessage _ _ _ (HoverParams _doc pos _workDone) = req
-    let Position _l _c' = pos
-    withProcessedDoc _doc $ \(ProcessedFile _ _ st _) -> do
-        let ranges = getRelevantRegions st pos
-        texts <- mapM prettySymbol ranges
-        let ms = HoverContents  $ mconcat (catMaybes texts)
-        let range = Range pos pos
-        let rsp = Hover ms (Just range)
-        res (Right $ Just rsp)
-
+hoverHandler = requestHandler SMethod_TextDocumentHover $ \req res -> do
+  let TRequestMessage _ _ _ (HoverParams _doc pos _workDone) = req
+  let Position _l _c' = pos
+  withProcessedDoc _doc $ \(ProcessedFile _ _ st _) -> do
+    let ranges = getRelevantRegions st pos
+    texts <- mapM prettySymbol ranges
+    let ms = InL $ mconcat (catMaybes texts)
+    let range = Range pos pos
+    let rsp = Hover ms (Just range)
+    res (Right $ InL rsp)
 
 prettySymbol :: RegionInfo -> LspM () (Maybe MarkupContent)
 prettySymbol (RegionInfo _ _ dt _ _) = case dt of
-    Definition nm ty -> return $ Just . snippet . pack.show $ hcat [pretty $ nm ," : ",pretty.show $ CPr.pretty ty]
-    LiteralDecl{} -> return Nothing
-    Ref nm k _ -> return . Just .snippet . pack.show $ hcat [pretty $ nm," : ",pretty.show $ CPr.pretty k] --pack.show $ vcat [hcat [text.unpack $ nm ,":",pretty ty]," Declared : "<> pretty (sourcePosToPosition sp)]
-    Documentation {} -> liftIO $ getDocsForBuiltin dt
-    _ -> return Nothing
-
+  Definition nm ty -> return $ Just . snippet . pack . show $ hcat [pretty nm, " : ", pretty . show $ CPr.pretty ty]
+  LiteralDecl {} -> return Nothing
+  Ref nm k _ -> return . Just . snippet . pack . show $ hcat [pretty nm, " : ", pretty . show $ CPr.pretty k]
+  Documentation {} -> liftIO $ getDocsForBuiltin dt
+  _ -> return Nothing

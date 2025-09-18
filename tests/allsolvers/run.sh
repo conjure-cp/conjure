@@ -6,6 +6,8 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 (
 cd $DIR
 
+rm -rf conjure-output
+
 echo "default, minion"
 conjure solve test.essence
 echo ""
@@ -101,11 +103,12 @@ echo "========================================"
 
 # MaxSAT solvers
 
-echo "open-wbo"
-conjure solve testo.essence --solver open-wbo
-echo ""
-echo ""
-echo "========================================"
+# commenting out, known to not work: https://github.com/savilerow/savilerow-main/issues/310
+# echo "open-wbo"
+# conjure solve testo.essence --solver open-wbo
+# echo ""
+# echo ""
+# echo "========================================"
 
 
 # MIP solvers (via MiniZinc)

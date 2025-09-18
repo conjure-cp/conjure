@@ -2,10 +2,10 @@
 SHELL := /bin/bash
 
 # these are default values
-# override by calling the makefile like so: "GHC_VERSION=9.2 make"
-export GHC_VERSION?=9.4
+# override by calling the makefile like so: "GHC_VERSION=9.10 make"
+export GHC_VERSION?=9.10
 export BIN_DIR?=${HOME}/.local/bin
-export LIB_DIR?=${BIN_DIR}/lib
+export LIB_DIR?=${HOME}/.local/lib
 export PATH := $(BIN_DIR):$(PATH)
 export CI?=false
 export BUILD_TESTS?=false
@@ -16,8 +16,8 @@ export LIMIT_TIME?=10
 install:
 	@echo "Using GHC version ${GHC_VERSION} (major version)"
 	@echo "Set the environment variable GHC_VERSION to change this location."
-	@echo "For example: \"GHC_VERSION=9.4 make install\""
-	@echo "Supported versions:  9.0, 9.2, 9.4"
+	@echo "For example: \"GHC_VERSION=9.10 make install\""
+	@echo "Supported versions: `(ls -1 etc/hs-deps | sort -V) | cut -d '-' -f 2 | cut -d '.' -f 1,2 | paste -sd, - | sed 's/,/, /g'`"
 	@echo ""
 	@echo "Installing executables to ${BIN_DIR}"
 	@echo "Add this directory to your PATH."

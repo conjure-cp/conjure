@@ -7,16 +7,18 @@
 # First stage: Building
 
 # Setting up
-FROM ubuntu:24.10 AS builder
+FROM ubuntu:24.04 AS builder
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /conjure
 
-# All binaries will end up in /root/.local/bin
-RUN mkdir -p /root/.local/bin
-ENV PATH /root/.local/bin:$PATH
-ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc
+# All binaries will end up in /opt/conjure
+RUN mkdir -p /opt/conjure
+ENV BIN_DIR /opt/conjure
+ENV PATH /opt/conjure:$PATH
+ENV LD_LIBRARY_PATH /opt/conjure/lib:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
 # Dependencies
+
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we can download stack (and other things)
@@ -67,8 +69,8 @@ COPY LICENSE LICENSE
 RUN make install
 
 # List the binaries
-RUN ls -l /root/.local/bin
-RUN du -sh /root/.local/bin
+RUN ls -l /opt/conjure
+RUN du -sh /opt/conjure
 
 # Copy the allsolvers test case
 RUN mkdir -p tests
@@ -81,13 +83,13 @@ RUN tests/allsolvers/test.sh
 ################################################################################
 # Second stage: Copying the binaries
 
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 WORKDIR /conjure
-ENV PATH /root/.local/bin:$PATH
-ENV LD_LIBRARY_PATH /root/.local/bin/lib:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /root/.local/bin/share/minizinc
+ENV PATH /opt/conjure:$PATH
+ENV LD_LIBRARY_PATH /opt/conjure/lib:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev              # runsolver
-RUN mkdir -p /root/.local/bin/lib
-COPY --from=builder /root/.local/bin /root/.local/bin
+RUN mkdir -p /opt/conjure
+COPY --from=builder /opt/conjure /opt/conjure

@@ -450,13 +450,16 @@ remaining config modelZipper minfo = do
                 , ruleResultType
                 )
         let qTypes = map snd answers1
-        qType' <- if all (head qTypes ==) (tail qTypes)
-                    then return (head qTypes)
-                    else bug "Rules of different rule kinds applicable, this is a bug."
+        qType' <- case qTypes of
+                        [] -> bug "No applicable rules"
+                        (t:ts) ->
+                            if all (t==) ts
+                                then return t
+                                else bug "Rules of different rule kinds applicable, this is a bug."
         return Question
             { qType = qType'
             , qHole = hole focus
-            , qAscendants = tail (ascendants focus)
+            , qAscendants = drop 1 (ascendants focus)
             , qAnswers = map fst answers1
             }
 
@@ -983,7 +986,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                        , stringToDoc (show (hole x))
                                        ])
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-              | (i, c) <- zip allNats (tail (ascendants x))
+              | (i, c) <- zip allNats (drop 1 (ascendants x))
               ]
 
     fails <- fmap (nubBy (\a b->show a == show b) . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
@@ -996,7 +999,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                                           ])
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                 | (i, c) <- zip allNats (tail (ascendants x))
+                                 | (i, c) <- zip allNats (drop 1 (ascendants x))
                                  ]
                     Constant (ConstantAbstract AbsLitMatrix{}) -> return []
                     Constant ConstantAbstract{} -> returnMsg x
@@ -1031,7 +1034,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                             _  -> return $ [ msg ]
                                         ++ [ nest 4 (pretty (hole x)) ]
                                         ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                           | (i, c) <- zip allNats (tail (ascendants x))
+                                           | (i, c) <- zip allNats (drop 1 (ascendants x))
                                            ]
                     [essence| &_ .< &_ |] ->
                         return ["", "Not refined:" <+> vcat [ pretty (hole x)
@@ -1054,7 +1057,7 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
             $ ""
             : ("Undefined value in the final model:" <+> pretty (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-              | (i, c) <- zip allNats (tail (ascendants x))
+              | (i, c) <- zip allNats (drop 1 (ascendants x))
               ]
 
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
@@ -1577,6 +1580,7 @@ horizontalRules =
     , Horizontal.Set.rule_MaxMin
 
     , Horizontal.MSet.rule_Comprehension_Literal
+    , Horizontal.MSet.rule_Freq_toMSet_Flatten
     , Horizontal.MSet.rule_Comprehension_ToSet_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
@@ -1864,7 +1868,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                         , miRepresentationsTree = (representationsTree ++ [(name, reprTree domain)])
                                                 |> sortBy (comparing fst)
                                                 |> groupBy ((==) `on` fst)
-                                                |> map (\ grp -> (fst (head grp), map snd grp) )
+                                                |> mapMaybe (\ grp -> case grp of [] -> Nothing ; (x:_) -> Just (fst x, map snd grp) )
                         }
                 in  return m { mInfo = newInfo }
 

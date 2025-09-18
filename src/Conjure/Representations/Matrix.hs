@@ -92,10 +92,10 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     if length mids2 == length mids1             -- if all were `Just`s
                         then do
                             let
-                                mids3 :: [(Name, DomainC, [Constant])]
-                                mids3 = [ ( head [ n | (n,_,_) <- line ]
-                                          , head [ d | (_,d,_) <- line ]
-                                          ,      [ c | (_,_,c) <- line ]
+                                mids3 :: [([Name], [DomainC], [Constant])]
+                                mids3 = [ ( take 1 [ n | (n,_,_) <- line ]
+                                          , take 1 [ d | (_,d,_) <- line ]
+                                          ,        [ c | (_,_,c) <- line ]
                                           )
                                         | line <- transpose mids2
                                         ]
@@ -104,7 +104,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                   , DomainMatrix indexDomain d
                                   , ConstantAbstract $ AbsLitMatrix indexDomain cs
                                   )
-                                | (n, d, cs) <- mids3
+                                | ([n], [d], cs) <- mids3
                                 ]
                         else
                             failDoc $ vcat

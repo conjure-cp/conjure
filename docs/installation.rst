@@ -17,14 +17,14 @@ You can add a directory into your PATH by executing the following command in the
 
 .. code-block:: bash
 
-    export PATH=/path/to/executables:$PATH`
+    export PATH=/path/to/executables:$PATH
 
 
 For MacOS, you will have to remove the quarantine attribute from all files and directories inside the downloaded directory. To do this, navigate to the directory and run the following command.
 
 .. code-block:: bash
 
-    xattr -dr com.apple.quarantine .`
+    xattr -dr com.apple.quarantine .
 
 
 You will also need to install Java for Savile Row. In macOS, we recommend using Homebrew and Amazon Corretto. Install Homebrew if you don't have it, then run the following command.
@@ -32,6 +32,12 @@ You will also need to install Java for Savile Row. In macOS, we recommend using 
 .. code-block:: bash
 
     brew install --cask corretto
+
+If you are using a recent Mac, you *might* need to run the following commmand to allow Intel-based applications to tun on your computer.
+
+.. code-block:: bash
+
+    /usr/sbin/softwareupdate --install-rosetta --agree-to-license
 
 
 For Windows, please use the Linux binaries with the
@@ -46,7 +52,7 @@ To Install into wsl2 on Windows then use the following commands
      unzip conjure-v2.5.1-linux-with-solvers.zip
      echo 'export PATH="$HOME/conjure-v2.5.1-linux-with-solvers:$PATH"' >> ~/.zshrc
      
-Then restart your shell !
+Then restart your shell!
 
 Compiling from source
 ---------------------

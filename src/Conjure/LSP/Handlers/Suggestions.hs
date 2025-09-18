@@ -1,6 +1,6 @@
 module Conjure.LSP.Handlers.Suggestions (suggestionHandler) where
 
-import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getNextTokenStart, positionToSourcePos, sourcePosToPosition, withProcessedDoc, getRelevantRegions)
+import Conjure.LSP.Util (ProcessedFile (ProcessedFile), getNextTokenStart, getRelevantRegions, positionToSourcePos, sourcePosToPosition, withProcessedDoc)
 import Conjure.Language (Type (..))
 import Conjure.Language.AST.Reformer
 -- (Class (..), Kind (..), RegionInfo (..), ValidatorState (regionInfo), RegionType (..), StructuralType (..),symbolTable)
@@ -12,15 +12,16 @@ import Conjure.Language.Pretty (prettyT)
 import Conjure.Language.Validator
 import Conjure.Prelude
 import Control.Lens
+import Data.Map.Strict qualified as Map
+import Language.LSP.Protocol.Lens (HasParams (..), HasPosition (position), HasTextDocument (textDocument))
+import Language.LSP.Protocol.Message
+import Language.LSP.Protocol.Types (CompletionItem (..), CompletionItemKind (..), type (|?) (..))
+import Language.LSP.Protocol.Types qualified as T
 import Language.LSP.Server (Handlers, LspM, requestHandler)
-import Language.LSP.Types (SMethod(STextDocumentCompletion),type  (|?) (..), CompletionItem (..), CompletionItemKind (..))
-import qualified Language.LSP.Types as T
-import Language.LSP.Types.Lens (HasParams (..), HasTextDocument (textDocument), HasPosition (position))
-import qualified Data.Map.Strict as Map
 import Text.Megaparsec (SourcePos)
 
 suggestionHandler :: Handlers (LspM ())
-suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
+suggestionHandler = requestHandler SMethod_TextDocumentCompletion $ \req res -> do
   let ps = req ^. params . textDocument
   let context = req ^. params . position
   withProcessedDoc ps $ \(ProcessedFile _ diags valState pt) -> do
@@ -37,16 +38,18 @@ suggestionHandler = requestHandler STextDocumentCompletion $ \req res -> do
           Just (TIExpression _) -> makeExpressionSuggestions innermostSymbolTable
           Just (TIList t) -> makeTagSuggestions innermostSymbolTable t
           _ -> [] -- or for debugging -> [defaultCompletion $ pack . show $ tlSymbol]
-    res $
-      Right $
-        InL . T.List $ nubBy isSameInsertion $
-          concat
-            [ missingTokenBasedHint,
-              tlSymbolSuggestion,
-              keywordCompletions
-            ]
+    res
+      $ Right
+      $ InL
+      . nubBy isSameInsertion
+      $ concat
+        [ missingTokenBasedHint,
+          tlSymbolSuggestion,
+          keywordCompletions
+        ]
+
 isSameInsertion :: CompletionItem -> CompletionItem -> Bool
-isSameInsertion CompletionItem{_label=a} CompletionItem{_label=b} = a == b
+isSameInsertion CompletionItem {_label = a} CompletionItem {_label = b} = a == b
 
 isInRange :: T.Position -> DiagnosticRegion -> Bool
 isInRange p reg = sourcePosToPosition (drSourcePos reg) == p
@@ -88,35 +91,36 @@ symbolToHint (name, (_, _, k)) =
    in (defaultCompletion name) {_detail = Just typeName, _kind = pure $ getCIKind k}
 
 getCIKind :: Kind -> CompletionItemKind
-getCIKind (Kind DomainType _) = CiClass
+getCIKind (Kind DomainType _) = CompletionItemKind_Class
 getCIKind (Kind ValueType {} t) = case t of
-  TypeAny -> CiVariable
-  TypeBool -> CiVariable
-  TypeInt _ -> CiVariable
-  TypeEnum _ -> CiEnum
-  TypeUnnamed _ -> CiVariable
-  TypeTuple _ -> CiVariable
-  TypeRecord _ -> CiVariable
-  TypeRecordMember _ _ -> CiEnumMember
-  TypeVariant _ -> CiVariable
-  TypeVariantMember _ _ -> CiEnumMember
-  TypeList _ -> CiVariable
-  TypeMatrix _ _ -> CiVariable
-  TypeSet _ -> CiVariable
-  TypeMSet _ -> CiVariable
-  TypeFunction _ _ -> CiVariable
-  TypeSequence _ -> CiVariable
-  TypePermutation _ -> CiVariable
-  TypeRelation _ -> CiVariable
-  TypePartition _ -> CiVariable
+  TypeAny -> CompletionItemKind_Variable
+  TypeBool -> CompletionItemKind_Variable
+  TypeInt _ -> CompletionItemKind_Variable
+  TypeEnum _ -> CompletionItemKind_Enum
+  TypeUnnamed _ -> CompletionItemKind_Variable
+  TypeTuple _ -> CompletionItemKind_Variable
+  TypeRecord _ -> CompletionItemKind_Variable
+  TypeRecordMember _ _ -> CompletionItemKind_EnumMember
+  TypeVariant _ -> CompletionItemKind_Variable
+  TypeVariantMember _ _ -> CompletionItemKind_EnumMember
+  TypeList _ -> CompletionItemKind_Variable
+  TypeMatrix _ _ -> CompletionItemKind_Variable
+  TypeSet _ -> CompletionItemKind_Variable
+  TypeMSet _ -> CompletionItemKind_Variable
+  TypeFunction _ _ -> CompletionItemKind_Variable
+  TypeSequence _ -> CompletionItemKind_Variable
+  TypeRelation _ -> CompletionItemKind_Variable
+  TypePartition _ -> CompletionItemKind_Variable
 
 snippetCompletion :: Text -> Text -> CompletionItem
-snippetCompletion label snippet = (defaultCompletion label) {_kind = pure CiSnippet, _insertText = pure snippet, _insertTextFormat = pure T.Snippet}
+snippetCompletion label snippet = (defaultCompletion label) {_kind = pure CompletionItemKind_Snippet, _insertText = pure snippet, _insertTextFormat = pure T.InsertTextFormat_Snippet}
 
 defaultCompletion :: Text -> CompletionItem
 defaultCompletion n =
   CompletionItem
     n
+    Nothing
+    Nothing
     Nothing
     Nothing
     Nothing

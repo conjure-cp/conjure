@@ -29,6 +29,32 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Literal"
 
 
+
+-- freq(toMSet(flatten(m)), arg) ~~> sum([ toInt(arg = i) | i in mset ])
+rule_Freq_toMSet_Flatten :: Rule
+rule_Freq_toMSet_Flatten = "mset-freq-toMSet_Flatten" `namedRule` theRule where
+    theRule p = do
+        (mset, arg) <- match opFreq p
+        m <- match opToMSet mset >>= match opFlatten
+        indexDoms <- indexDomainsOf m
+        forM_ indexDoms $ \case
+            DomainAny{} -> na "rule_Comprehension_Flatten"
+            _ -> return ()
+        when (null indexDoms) $ na "rule_Comprehension_Flatten"
+        return
+            ( "Comprehension on a matrix flatten"
+            , do
+                (gens, is) <- unzip <$> sequence
+                                [ do
+                                    (iPat, i) <- quantifiedVar
+                                    return (Generator (GenDomainNoRepr iPat d), i)
+                                | d <- indexDoms
+                                ]
+                let mis = make opMatrixIndexing m is
+                return $ make opSum $ Comprehension [essence| toInt(&arg = &mis) |] gens
+            )
+
+
 rule_Comprehension_ToSet_Literal :: Rule
 rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
@@ -182,6 +208,9 @@ rule_Freq :: Rule
 rule_Freq = "mset-freq" `namedRule` theRule where
     theRule p = do
         (mset, arg) <- match opFreq p
+        case match opToMSet mset >>= match opFlatten of
+            Nothing -> return ()
+            Just{} -> na "There is a better rule for this: rule_Freq_toMSet_Flatten"
         TypeMSet{}  <- typeOf mset
         -- avoid applying this rule when "mset" is of the form "toMSet of set"
         case mset of

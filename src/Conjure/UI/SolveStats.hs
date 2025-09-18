@@ -136,7 +136,7 @@ mkSolveStats Solve {..} (exitCodeSR, stdoutSR, stderrSR) savilerowInfoText runso
   computer <- getHostName
   timestamp <- getCurrentTime
   let conjureVersion = versionLine
-  savilerowVersion <- head . lines . textToString <$> sh (run "savilerow" ["-help"])
+  savilerowVersion <- concat . take 1 . lines . textToString <$> sh (run "savilerow" ["-help"])
   let savilerowLogs =
         SavileRowLogs
           { exitCode = exitCodeSR,

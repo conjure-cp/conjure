@@ -917,7 +917,9 @@ validateSizeAttributes attrs = do
     [(L_minSize, Just a)] -> return (SizeAttr_MinSize a)
     [(L_maxSize, Just a)] -> return (SizeAttr_MaxSize a)
     [(L_minSize, Just a), (L_maxSize, Just b)] -> return (SizeAttr_MinMaxSize a b)
-    as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes size:" ++ show as
+    as -> do
+      void $ contextError $ SemanticError $ pack $ "Incompatible attributes size:" ++ show as
+      return def
 
 validatePermAttributes :: [(Lexeme, Maybe Expression)] -> ValidatorS (SizeAttr Expression)
 validatePermAttributes attrs = do
@@ -941,7 +943,9 @@ validatePartSizeAttributes attrs = do
     [(L_minPartSize, Just a)] -> return (SizeAttr_MinSize a)
     [(L_maxPartSize, Just a)] -> return (SizeAttr_MaxSize a)
     [(L_minPartSize, Just a), (L_maxPartSize, Just b)] -> return (SizeAttr_MinMaxSize a b)
-    as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
+    as -> do
+      void $ contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
+      return def
 
 validateNumPartAttributes :: [(Lexeme, Maybe Expression)] -> ValidatorS (SizeAttr Expression)
 validateNumPartAttributes attrs = do
@@ -953,7 +957,9 @@ validateNumPartAttributes attrs = do
     [(L_minNumParts, Just a)] -> return (SizeAttr_MinSize a)
     [(L_maxNumParts, Just a)] -> return (SizeAttr_MaxSize a)
     [(L_minNumParts, Just a), (L_maxNumParts, Just b)] -> return (SizeAttr_MinMaxSize a b)
-    as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
+    as -> do
+      void $ contextError $ SemanticError $ pack $ "Incompatible attributes partitionSize :" ++ show as
+      return def
 
 validateJectivityAttributes :: [(Lexeme, Maybe Expression)] -> ValidatorS JectivityAttr
 validateJectivityAttributes attrs = do
@@ -968,7 +974,7 @@ validateJectivityAttributes attrs = do
       contextInfo $ UnclassifiedInfo "Inj and Sur can be combined to bijective"
       return JectivityAttr_Bijective
     as -> do
-      void . contextError $ SemanticError $ pack $ "Incompatible attributes jectivity" ++ show as
+      void $ contextError $ SemanticError $ pack $ "Incompatible attributes jectivity" ++ show as
       return def
 
 validateSetAttributes :: ListNode AttributeNode -> ValidatorS (SetAttr Expression)
@@ -994,7 +1000,9 @@ validateMSetAttributes atts = do
         [(L_minOccur, Just a)] -> return (OccurAttr_MinOccur a)
         [(L_maxOccur, Just a)] -> return (OccurAttr_MaxOccur a)
         [(L_minOccur, Just a), (L_maxOccur, Just b)] -> return (OccurAttr_MinMaxOccur a b)
-        as -> do void . contextError $ SemanticError $ pack $ "Bad args to occurs" ++ show as; return def
+        as -> do
+          void $ contextError $ SemanticError $ pack $ "Bad args to occurs" ++ show as
+          return def
 
 validateFuncAttributes :: ListNode AttributeNode -> ValidatorS (FunctionAttr Expression)
 validateFuncAttributes atts = do
@@ -2076,26 +2084,19 @@ unifyPattern Nothing _ = return . Single $ fallback "No Pattern"
 
 catRegions :: [RegionTagged a] -> DiagnosticRegion
 catRegions [] = global
-catRegions xs =
+catRegions (x:xs) =
   DiagnosticRegion
-    { drSourcePos = drSourcePos . fst $ head xs,
-      drEndPos = drEndPos . fst $ last xs,
-      drOffset = drOffset . fst $ head xs,
-      drLength = sum $ map (drLength . fst) xs
+    { drSourcePos = drSourcePos $ fst x,
+      drEndPos = drEndPos $ fst $ last xs,
+      drOffset = drOffset $ fst x,
+      drLength = sum $ map (drLength . fst) (x:xs)
     }
 
 getMemberTypes :: Type -> ValidatorS [Type]
 getMemberTypes t = case t of
   TypeAny -> return $ repeat TypeAny
-  --   TypeUnnamed na ->
   TypeTuple tys -> return tys
   _ -> return $ repeat TypeAny
-
--- unifyAbstractPatternOverExpression :: AbstractPatternNode -> Expression -> Validator (Name,Type)
--- unifyAbstractPatternOverExpression pat exp = do
---     t <- typeOf exp
-
---     empty
 
 getDomainMembers :: Type -> Type
 getDomainMembers t = case t of

@@ -390,8 +390,8 @@ mainWithArgs config@Solve{..} = do
                                 Nothing -> return ()
                                 Just base -> do
                                     let parts' = splitOn "-" base
-                                    let parts = case (head parts', parts', last parts') of
-                                                    (model, _:paramparts, stripPrefix "solution" -> msolnum) ->
+                                    let parts = case (take 1 parts', parts', last parts') of
+                                                    ([model], _:paramparts, stripPrefix "solution" -> msolnum) ->
                                                         case msolnum of
                                                             Nothing -> [model, intercalate "-" paramparts]
                                                             Just{}  -> [model, intercalate "-" (init paramparts), last paramparts]

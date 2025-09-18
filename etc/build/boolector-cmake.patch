@@ -1,0 +1,17 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -8 +8 @@
+-cmake_minimum_required(VERSION 3.3)
++cmake_minimum_required(VERSION 3.5)
+
+--- a/configure.sh
++++ b/configure.sh
+@@ -228 +228 @@
+-cmake .. $cmake_opts
++cmake .. -DCMAKE_POLICY_VERSION_MINIMUM=3.10 $cmake_opts
+
+--- a/contrib/setup-btor2tools.sh
++++ b/contrib/setup-btor2tools.sh
+@@ -27 +27 @@
+-   cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'
++   cmake .. -DCMAKE_POLICY_VERSION_MINIMUM=3.10 -DBUILD_SHARED_LIBS=OFF -DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'

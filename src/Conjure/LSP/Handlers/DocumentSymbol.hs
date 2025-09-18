@@ -8,16 +8,17 @@ import Conjure.Language.Validator (Class (..), Kind (..), RegionInfo (..), Regio
 import Conjure.Prelude
 import Control.Lens
 import Data.Text (intercalate)
+import Language.LSP.Protocol.Lens (HasParams (..), HasTextDocument (textDocument))
+import Language.LSP.Protocol.Message
+import Language.LSP.Protocol.Types (DocumentSymbol (..), SymbolKind (..), type (|?) (..))
+import Language.LSP.Protocol.Types qualified as T
 import Language.LSP.Server (Handlers, LspM, requestHandler)
-import Language.LSP.Types (DocumentSymbol (..), SMethod (STextDocumentDocumentSymbol), SymbolKind (..), type (|?) (..))
-import Language.LSP.Types qualified as T
-import Language.LSP.Types.Lens (HasParams (..), HasTextDocument (textDocument))
 
 docSymbolHandler :: Handlers (LspM ())
-docSymbolHandler = requestHandler STextDocumentDocumentSymbol $ \req res -> do
+docSymbolHandler = requestHandler SMethod_TextDocumentDocumentSymbol $ \req res -> do
   let ps = req ^. params . textDocument
   withProcessedDoc ps $ \(ProcessedFile _ _ (regionInfo -> ri) _) -> do
-    res $ Right $ InL . T.List $ mapMaybe translate ri
+    res $ Right $ InR $ InL $ mapMaybe translate ri
 
 translate :: RegionInfo -> Maybe T.DocumentSymbol
 translate reg@(RegionInfo r rSel ty cs _) =
@@ -30,7 +31,7 @@ translate reg@(RegionInfo r rSel ty cs _) =
         Nothing
         (regionToRange r)
         (regionToRange (fromMaybe r rSel))
-        (Just . T.List $ mapMaybe translate cs)
+        (Just $ mapMaybe translate cs)
   )
     <$> sk
   where
@@ -79,37 +80,36 @@ getRegionDetail (RegionInfo {rRegionType = rType, rChildren = childDefs}) =
 
 symbolKindFromDeclaration :: RegionType -> Maybe T.SymbolKind
 symbolKindFromDeclaration (Definition _ t) = Just $ case t of
-  Kind ValueType {} (TypeInt TagEnum {}) -> SkEnumMember
-  Kind ValueType {} (TypeRecordMember {}) -> SkField
-  Kind ValueType {} (TypeVariantMember {}) -> SkField
-  Kind ValueType {} _ -> SkVariable
-  Kind DomainType _ -> SkTypeParameter
+  Kind ValueType {} (TypeInt TagEnum {}) -> SymbolKind_EnumMember
+  Kind ValueType {} (TypeRecordMember {}) -> SymbolKind_Field
+  Kind ValueType {} (TypeVariantMember {}) -> SymbolKind_Field
+  Kind ValueType {} _ -> SymbolKind_Variable
+  Kind DomainType _ -> SymbolKind_TypeParameter
 symbolKindFromDeclaration (LiteralDecl t) = Just $ case t of
   Kind _ ty -> case ty of
-    TypeBool -> SkBoolean
+    TypeBool -> SymbolKind_Boolean
     TypeInt it -> case it of
-      TaggedInt {} -> SkNumber
-      TagInt -> SkNumber
-      TagEnum _ -> SkEnumMember
-      TagUnnamed _ -> SkNumber
-    TypeEnum _ -> SkEnum
-    TypeUnnamed _ -> SkEnum
-    _ -> SkConstant
+      TagInt -> SymbolKind_Number
+      TagEnum _ -> SymbolKind_EnumMember
+      TagUnnamed _ -> SymbolKind_Number
+    TypeEnum _ -> SymbolKind_Enum
+    TypeUnnamed _ -> SymbolKind_Enum
+    _ -> SymbolKind_Constant
 symbolKindFromDeclaration (Structural st) =
   Just
-    $ ( case st of
-          SSuchThat -> SkInterface
-          SGiven -> SkProperty
-          SFind -> SkField
-          SLetting -> SkField
-          SBranching -> SkClass
-          SEnum _ -> SkEnum
-          SQuantification _ _ -> SkOperator
-          SComprehension _ -> SkArray
-          SGuard -> SkBoolean
-          SGen -> SkEvent
-          SBody -> SkNamespace
-          SGoal _ -> SkVariable
-          SWhere -> SkObject
-      )
+    ( case st of
+        SSuchThat -> SymbolKind_Interface
+        SGiven -> SymbolKind_Property
+        SFind -> SymbolKind_Field
+        SLetting -> SymbolKind_Field
+        SBranching -> SymbolKind_Class
+        SEnum _ -> SymbolKind_Enum
+        SQuantification _ _ -> SymbolKind_Operator
+        SComprehension _ -> SymbolKind_Array
+        SGuard -> SymbolKind_Boolean
+        SGen -> SymbolKind_Event
+        SBody -> SymbolKind_Namespace
+        SGoal _ -> SymbolKind_Variable
+        SWhere -> SymbolKind_Object
+    )
 symbolKindFromDeclaration _ = Nothing
