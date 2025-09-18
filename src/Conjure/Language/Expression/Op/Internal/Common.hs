@@ -289,6 +289,7 @@ functionals =
     , L_alldifferent_except
     , L_compose
     , L_gcc
+    , L_elementId
     , L_atleast
     , L_atmost
     , L_catchUndef

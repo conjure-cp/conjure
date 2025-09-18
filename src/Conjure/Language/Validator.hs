@@ -31,13 +31,13 @@ import Conjure.Language.Expression qualified as D
 import Conjure.Language.Expression.Op
   ( Op (..),
     OpAttributeAsConstraint (OpAttributeAsConstraint),
-    OpIndexing (OpIndexing),
+    OpIndexing (..),
     OpPowerSet (..),
-    OpRelationProj (OpRelationProj),
+    OpRelationProj (..),
     OpSlicing (..),
     OpType (..),
     mkBinOp,
-    mkOp,
+    mkOp
   )
 import Conjure.Language.Lexemes
 import Conjure.Language.Lexer (ETok (ETok, lexeme), sourcePos0, sourcePosAfter, tokenSourcePos, tokenStartOffset, totalLength, trueLength)
@@ -931,7 +931,9 @@ validatePermAttributes attrs = do
     [(L_minNumMoved, Just a)] -> return (SizeAttr_MinSize a)
     [(L_maxNumMoved, Just a)] -> return (SizeAttr_MaxSize a)
     [(L_minNumMoved, Just a), (L_maxNumMoved, Just b)] -> return (SizeAttr_MinMaxSize a b)
-    as -> return . def <* contextError $ SemanticError $ pack $ "Incompatible attributes numMoved:" ++ show as
+    as -> do
+      void $ contextError $ SemanticError $ pack $ "Incompatible attributes numMoved:" ++ show as
+      return def
 
 validatePartSizeAttributes :: [(Lexeme, Maybe Expression)] -> ValidatorS (SizeAttr Expression)
 validatePartSizeAttributes attrs = do
@@ -2201,7 +2203,7 @@ type FuncOpDec = Int
 funcOpBuilder :: Lexeme -> [Arg] -> ValidatorS (Typed Expression)
 funcOpBuilder l = functionOps l (mkOp $ FunctionOp l)
 
--- functionOps l@L_fAnd = (validateArgList [isLogicalContainer],const TypeBool)
+
 functionOps :: Lexeme -> ([Expression] -> Expression) -> [Arg] -> ValidatorS (Typed Expression)
 functionOps l = case l of
   L_fAnd -> unFuncV isLogicalContainer (pure . const TypeBool)
@@ -2214,6 +2216,7 @@ functionOps l = case l of
   L_makeTable -> unFuncV (only TypeBool) (pure . const TypeBool)
   L_table -> biFuncV tableArgs (const2 TypeBool)
   L_gcc -> triFunc (each3 $ valueOnly listInt) (const3 TypeBool)
+  L_elementId -> biFuncV elementIdArgs elementIdType
   L_atleast -> triFunc (each3 $ valueOnly listInt) (const3 TypeBool)
   L_atmost -> triFunc (each3 $ valueOnly listInt) (const3 TypeBool)
   L_defined -> unFuncV funcSeq (fmap TypeSet . funcDomain)
@@ -2348,6 +2351,24 @@ functionOps l = case l of
           TypeMatrix _ TypeInt {} -> True
           TypeMatrix _ TypeAny -> True
           _ -> False
+
+    elementIdArgs :: SArg -> SArg -> Validator ()
+    elementIdArgs (r1, typeOf_ -> t1) (r2, typeOf_ -> t2) = do
+      let ?typeCheckerMode = RelaxedIntegerTags
+      a <- case t1 of
+        TypeAny -> valid
+        TypeMatrix _ _ -> valid
+        TypeList _ -> valid
+        _ -> invalid $ r1 <!> ComplexTypeError "Matrix or List" t1
+      b <- case (t1, t2) of
+        (TypeMatrix _indexType _, TypeAny) -> valid
+        (TypeMatrix indexType _, actualIndex) | typesUnify [indexType, actualIndex] -> valid
+        (TypeList _, TypeAny) -> valid
+        (TypeList _, TypeInt {}) -> valid
+        (TypeAny, _) -> valid
+        _ -> invalid $ r2 <!> ComplexTypeError "Appropriate index type" t2
+
+      return $ if null a || null b then Nothing else Just ()
 
     toMSetArgs :: SArg -> Validator ()
     toMSetArgs (r, typeOf_ -> a) = case a of
@@ -2632,6 +2653,11 @@ functionOps l = case l of
     funcRange (Just (TypeFunction _ b)) = Just b
     funcRange (Just ((TypeSequence b))) = Just b
     funcRange _ = Just TypeAny
+
+    elementIdType :: Maybe Type -> Maybe Type -> Maybe Type
+    elementIdType (Just (TypeMatrix _ innerType)) _ = Just innerType
+    elementIdType (Just (TypeList innerType)) _ = Just innerType
+    elementIdType _ _ = Just TypeAny
 
     part :: SArg -> Validator ()
     part (r, typeOf_ -> t) = case t of

@@ -119,6 +119,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpDotLeq x) = domainOf x
     domainOf (MkOpDotLt x) = domainOf x
     domainOf (MkOpEq x) = domainOf x
+    domainOf (MkOpElementId x) = domainOf x
     domainOf (MkOpFactorial x) = domainOf x
     domainOf (MkOpFlatten x) = domainOf x
     domainOf (MkOpFreq x) = domainOf x
@@ -199,6 +200,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpDotLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpDotLt x) = indexDomainsOf x
     indexDomainsOf (MkOpEq x) = indexDomainsOf x
+    indexDomainsOf (MkOpElementId x) = indexDomainsOf x
     indexDomainsOf (MkOpFactorial x) = indexDomainsOf x
     indexDomainsOf (MkOpFlatten x) = indexDomainsOf x
     indexDomainsOf (MkOpFreq x) = indexDomainsOf x
@@ -444,6 +446,31 @@ instance DomainOf (OpImply x) where
 
 instance DomainOf (OpIn x) where
     domainOf _ = return DomainBool
+
+instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpElementId x) where
+    domainOf (OpElementId m i) = do
+        iType <- typeOf i
+        case iType of
+            TypeBool{} -> return ()
+            TypeInt{} -> return ()
+            TypeMatrix{} -> return ()
+            _ -> failDoc "domainOf, OpElementId, not a bool or int index"
+        mDom <- domainOf m
+        case mDom of
+            DomainMatrix _ inner -> return inner
+            _ -> failDoc "domainOf, OpElementId, not a matrix or tuple"
+
+    indexDomainsOf p@(OpElementId m i) = do
+        iType <- typeOf i
+        case iType of
+            TypeBool{} -> return ()
+            TypeInt{} -> return ()
+            TypeMatrix{} -> return ()
+            _ -> failDoc "domainOf, OpElementId, not a bool or int index"
+        is <- indexDomainsOf m
+        case is of
+            [] -> failDoc ("indexDomainsOf{OpElementId}, not a matrix domain:" <++> pretty p)
+            (_:is') -> return is'
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndexing x) where
     domainOf (OpIndexing m i) = do

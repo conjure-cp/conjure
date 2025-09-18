@@ -163,6 +163,7 @@ data Lexeme
     | L_allDiff
     | L_alldifferent_except
     | L_gcc
+    | L_elementId
     | L_atleast
     | L_atmost
 
@@ -432,6 +433,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_allDiff, "allDiff" )
     , ( L_alldifferent_except, "alldifferent_except" )
     , ( L_gcc, "gcc" )
+    , ( L_elementId, "elementId" )
     , ( L_atleast, "atleast" )
     , ( L_atmost, "atmost" )
 

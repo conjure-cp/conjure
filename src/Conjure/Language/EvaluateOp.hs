@@ -270,6 +270,28 @@ instance EvaluateOp OpIndexing where
                     ]
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
+instance EvaluateOp OpElementId where
+    evaluateOp p@(OpElementId m i) | isUndef i = do
+        ty   <- typeOf m
+        tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
+                           TypeList tyTo     -> return tyTo
+                           _ -> failDoc "evaluateOp{OpElementId}"
+        return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
+    evaluateOp (OpElementId m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) xExpr@(ConstantInt _ x)) = do
+            ty   <- typeOf m
+            tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
+                               TypeList tyTo     -> return tyTo
+                               _ -> bug "evaluateOp{OpElementId}"
+            indexVals <- valuesInIntDomain index
+            case [ v | (i, v) <- zip indexVals vals, i == x ] of
+                [v] -> return v
+                []  -> return xExpr
+                _   -> return $ mkUndef tyTo $ vcat
+                        [ "Matrix is multiply defined at this point:" <+> pretty x
+                        , "Matrix value:" <+> pretty m
+                        ]
+    evaluateOp op = na $ "evaluateOp{OpElementId}:" <++> pretty (show op)
+
 instance EvaluateOp OpIntersect where
     evaluateOp p | any isUndef (childrenBi p) = do
         ty <- typeOf p
@@ -977,6 +999,7 @@ instance EvaluateOp Op where
     evaluateOp (MkOpDotLeq x) = evaluateOp x
     evaluateOp (MkOpDotLt x) = evaluateOp x
     evaluateOp (MkOpEq x) = evaluateOp x
+    evaluateOp (MkOpElementId x) = evaluateOp x
     evaluateOp (MkOpFactorial x) = evaluateOp x
     evaluateOp (MkOpFlatten x) = evaluateOp x
     evaluateOp (MkOpFreq x) = evaluateOp x

@@ -34,6 +34,8 @@ import Conjure.Prelude
 import Control.Monad.State.Strict ( State, put )
 import Data.Semigroup ( (<>) )
 
+import Data.List ( head )
+
 --------------------------Safe Permutation Type----------------------------------------
 
 -- | The Permutation constructor is for internal use only.
