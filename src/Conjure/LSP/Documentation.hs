@@ -1,6 +1,6 @@
 module Conjure.LSP.Documentation where
 
-import Conjure.Language.Validator (DocType (..), RegionType (Documentation))
+import Conjure.Language.Validator (RegionType (Documentation))
 import Conjure.Prelude
 import Data.ByteString.Lazy qualified as BL
 import Data.Text qualified as T
@@ -10,25 +10,19 @@ import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 
 getDocsForBuiltin :: RegionType -> IO (Maybe MarkupContent)
-getDocsForBuiltin (Documentation prefix (T.unpack -> name)) = do
-  let category = case prefix of
-        OperatorD -> "operator"
-        FunctionD -> "function"
-        KeywordD -> "keyword"
-        TypeD -> "type"
-        AttributeD -> "attribute"
-
+getDocsForBuiltin (Documentation (T.unpack -> name)) = do
+  let
       download = do
         -- create a connection manager
         manager <- newManager tlsManagerSettings
         -- create the request
-        request <- parseRequest (readUrl category name)
+        request <- parseRequest (readUrl name)
         -- make the request
         r <- httpLbs request manager
         -- get the contents (as a lazy ByteString)
         let contents = decodeUtf8 $ BL.toStrict $ responseBody r
         if contents == "404: Not Found"
-          then return $ Just $ fallbackMsg category name
+          then return $ Just $ fallbackMsg name
           else
             return
               $ Just
@@ -37,7 +31,7 @@ getDocsForBuiltin (Documentation prefix (T.unpack -> name)) = do
                 [ contents,
                   "\n\n -- \n\n",
                   "[Edit this doc](",
-                  editURL category name,
+                  editURL name,
                   ")"
                 ]
 
@@ -45,42 +39,37 @@ getDocsForBuiltin (Documentation prefix (T.unpack -> name)) = do
       handler _ = return $ Just $ MarkupContent MarkupKind_Markdown "No internet connection"
 
   download `catch` handler
+
 getDocsForBuiltin _ = pure Nothing
 
-fallbackMsg :: String -> String -> MarkupContent
-fallbackMsg c n = MarkupContent MarkupKind_Markdown $ T.concat ["[Create this doc](", createURL c n, ")"]
+fallbackMsg :: String -> MarkupContent
+fallbackMsg n = MarkupContent MarkupKind_Markdown $ T.concat ["[Create this doc](", createURL n, ")"]
 
 branch :: String
 branch = "main"
 
-readUrl :: String -> String -> String
-readUrl category name =
+readUrl :: String -> String
+readUrl name =
   concat
     [ "https://raw.githubusercontent.com/conjure-cp/conjure/" ++ branch ++ "/docs/bits/",
-      category,
-      "/",
       name,
       ".md"
     ]
 
-createURL :: String -> String -> Text
-createURL category name =
+createURL :: String -> Text
+createURL name =
   T.pack
     $ concat
-      [ "https://github.com/conjure-cp/conjure/new/" ++ branch ++ "/docs/bits/",
-        category,
-        "?filename=",
+      [ "https://github.com/conjure-cp/conjure/new/" ++ branch ++ "/docs/bits?filename=",
         name,
         ".md"
       ]
 
-editURL :: String -> String -> Text
-editURL category name =
+editURL :: String -> Text
+editURL name =
   T.pack
     $ concat
       [ "https://github.com/conjure-cp/conjure/edit/" ++ branch ++ "/docs/bits/",
-        category,
-        "/",
         name,
         ".md"
       ]
