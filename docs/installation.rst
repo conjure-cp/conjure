@@ -61,7 +61,7 @@ In order to compile Conjure on your computer, please download the source code fr
 
 .. code-block:: bash
 
-    git clone git@github.com:conjure-cp/conjure.git
+    git clone https://github.com/conjure-cp/conjure.git
     cd conjure
     BIN_DIR=/somewhere/in/your/path make install
 
