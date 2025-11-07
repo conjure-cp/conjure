@@ -50,7 +50,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up buildx (Docker CLI plugin for extended build capabilities with BuildKit)
       - name: Setup Docker buildx
