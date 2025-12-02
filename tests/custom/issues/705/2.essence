@@ -1,0 +1,16 @@
+language ESSENCE' 1.0
+letting max_n be 38593862
+letting min_n be 38593856
+letting n_digits be 8
+letting midpoint be n_digits/2
+
+find digits: matrix indexed by [int(1..n_digits)] of int(0..9)
+find id: int(min_n..max_n)
+
+branching on [id]
+
+such that
+id = sum([digits[i] * (10**(i-1)) | i: int(1..n_digits)]),
+digits[1] !=0,
+[digits[i] | i: int(1..midpoint)] >=lex [digits[i] | i: int(midpoint+1..n_digits)],
+[digits[i] | i: int(1..midpoint)] <=lex [digits[i] | i: int(midpoint+1..n_digits)]
