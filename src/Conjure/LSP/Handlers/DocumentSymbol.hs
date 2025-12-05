@@ -56,7 +56,7 @@ getRegionName (rRegionType -> rType) = case rType of
     SGen -> "Generator"
     SWhere -> "Parameter validation"
     SGoal dir -> dir
-  Documentation _ _ -> ""
+  Documentation _ -> ""
 
 getRegionDetail :: RegionInfo -> Maybe Text
 getRegionDetail (RegionInfo {rRegionType = rType, rChildren = childDefs}) =

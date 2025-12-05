@@ -1183,7 +1183,7 @@ removeExtraSlices model = do
         -- a slice at the end of a chain of slices & indexings
         -- does no good in Essence and should be removed
         onExpr :: Monad m => Expression -> m Expression
-        onExpr (match opSlicing -> Just (m,_,_)) = onExpr m
+        onExpr (match opSlicing -> Just (m,Nothing,Nothing)) = onExpr m
         onExpr p@(match opIndexing -> Just _) = return p
         onExpr p = descendM onExpr p
 
