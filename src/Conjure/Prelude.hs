@@ -145,6 +145,8 @@ import Control.Exception as X ( catch, throwIO, SomeException )
 
 import Data.Proxy as X ( Proxy(..) )
 
+import Data.Type.Equality ( type (~) )
+
 -- template-haskell
 import qualified Language.Haskell.TH as TH ( Q )
 
