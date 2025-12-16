@@ -17,13 +17,10 @@ pushd tmp-install-gecode
 git clone https://github.com/Gecode/gecode.git
 cd gecode
 git checkout $VERSION
-mkdir build
-cd build
-../configure --disable-qt --disable-gist --enable-static
+./configure --disable-qt --disable-gist --enable-static
 make -j${PROCESSES}
 cp tools/flatzinc/fzn-gecode ${BIN_DIR}/fzn-gecode
 echo "gecode executable is at ${BIN_DIR}/fzn-gecode"
 ls -l ${BIN_DIR}/fzn-gecode
 popd
 rm -rf tmp-install-gecode
-
