@@ -40,7 +40,7 @@ jobs:
         name: Checkout repository
 
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Setting PATH
         shell: bash
