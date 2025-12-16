@@ -25,16 +25,13 @@ module Conjure.Util.Permutation
     inverse,
     size,
     (^^^),
-
-    completedCycles
+    completedCycles,
   )
 where
 
 import Conjure.Prelude
-import Control.Monad.State.Strict ( State, put )
-import Data.Semigroup ( (<>) )
-
-import Data.List ( head )
+import Control.Monad.State.Strict (State, put)
+import Data.Semigroup ((<>))
 
 --------------------------Safe Permutation Type----------------------------------------
 
@@ -54,13 +51,13 @@ instance (Eq a) => Semigroup (Permutation a) where
         permfunc = toFunction pl . toFunction pr
      in case fromRelation (zip elemsofp (permfunc <$> elemsofp)) of
           Left _ ->
-            error $
-              "Data.Permutation.Semigroup: this should only happen "
-                ++ "if you didn't use a smart constructor AND created a "
-                ++ "Permutation object that is not in fact a permutation.\n"
-                ++ "If you did use a smart constructor and you see this "
-                ++ "error then please submit a bug report with a minimal "
-                ++ "failing example."
+            error
+              $ "Data.Permutation.Semigroup: this should only happen "
+              ++ "if you didn't use a smart constructor AND created a "
+              ++ "Permutation object that is not in fact a permutation.\n"
+              ++ "If you did use a smart constructor and you see this "
+              ++ "error then please submit a bug report with a minimal "
+              ++ "failing example."
           Right p -> p
 
 -- | The Monoid identity is the identity permutation. The Monoid plus is semigroup composition.
@@ -79,15 +76,15 @@ fromCycles :: (Eq a) => [[a]] -> Either PermutationError (Permutation a)
 fromCycles c =
   if length (join c) /= length (nub $ join c)
     then
-      Left $
-        PermutationError
+      Left
+        $ PermutationError
           "Data.Permutation.fromCycles: Cycles contain a duplicate element"
     else Right $ Permutation $ c >>= cycleToTuples
   where
     cycleToTuples :: [a] -> [(a, a)]
     cycleToTuples [] = []
     cycleToTuples [_] = []
-    cycleToTuples l = zip (cycle l) (drop 1 l ++ [head l])
+    cycleToTuples l@(lHead : lTail) = zip (cycle l) (lTail ++ [lHead])
 
 -- | Create a permutation from a relation a*a.
 -- Only non identity mappings need be specified
@@ -98,8 +95,8 @@ fromRelation r =
    in if isBijective $ Permutation r
         then Right perm
         else
-          Left $
-            PermutationError
+          Left
+            $ PermutationError
               "Data.Permutation.fromRelation: The relation is not bijective"
 
 -- | Create a permutation from two line form.
@@ -110,8 +107,8 @@ fromTwoLineForm :: (Eq a) => ([a], [a]) -> Either PermutationError (Permutation 
 fromTwoLineForm (t, b) =
   if length t /= length b
     then
-      Left $
-        PermutationError
+      Left
+        $ PermutationError
           "Data.Permutation.fromTwoLineForm: The top and bottom lines have different length"
     else fromRelation (zip t b)
 
@@ -134,7 +131,7 @@ toCycles (Permutation p) = evalState go ([], [], p)
           wc <- workingCycle
           case wc of
             [] -> startNewCycle >> go
-            _  -> nextCycleElem >> go
+            _ -> nextCycleElem >> go
 
 -- | Convert the permutation to canonical cycle form.
 toCyclesCanonical :: (Eq a, Ord a) => Permutation a -> [[a]]
@@ -156,8 +153,8 @@ toRelation from to p@(Permutation pe) =
    in if length [from .. to] == length ([from .. to] \\ (fst <$> pe)) + length pe
         then Right maybep
         else
-          Left $
-            PermutationError
+          Left
+            $ PermutationError
               "Data.Permutation.toRelation: the range used does not cover the permuted elements"
 
 -- | Given a lower and upper bound on a and a permutation within this range
@@ -173,8 +170,8 @@ toTwoLineForm ::
 toTwoLineForm from to p =
   case toRelation from to p of
     Left _ ->
-      Left $
-        PermutationError
+      Left
+        $ PermutationError
           "Data.Permutation.toTwoLineForm: the range used does not cover the permuted elements"
     Right rf -> Right $ unzip rf
 
@@ -229,13 +226,13 @@ mapsOnto i = do
   (_, _, m) <- get
   case lookup i m of
     Nothing ->
-      error $
-        "Data.Permutation.toCycles: this should only happen "
-          ++ "if you didn't use a smart constructor AND created a "
-          ++ "Permutation object that is not in fact a permutation.\n"
-          ++ "If you did use a smart constructor and you see this "
-          ++ "error then please submit a bug report with a minimal "
-          ++ "failing example."
+      error
+        $ "Data.Permutation.toCycles: this should only happen "
+        ++ "if you didn't use a smart constructor AND created a "
+        ++ "Permutation object that is not in fact a permutation.\n"
+        ++ "If you did use a smart constructor and you see this "
+        ++ "error then please submit a bug report with a minimal "
+        ++ "failing example."
     Just so -> return so
 
 -- | The exit condition - whether we have found all the cycles.
@@ -265,6 +262,6 @@ nextCycleElem = do
   let w_last = last w
   next <- mapsOnto w_last
   let filt = filter (/= (w_last, next)) m
-  if next == head w
+  if take 1 w == [next]
     then put ([], w : c, filt)
     else put (w ++ [next], c, filt)
