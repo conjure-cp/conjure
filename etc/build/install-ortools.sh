@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# version as of May 2025
-VERSION=v9.12
+# version as of Dec 2025
+VERSION=v9.14
 
 source "download.sh" 2> /dev/null               # if called from the script dir
 source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
