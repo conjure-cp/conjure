@@ -17,6 +17,7 @@ pushd tmp-install-gecode
 git clone https://github.com/Gecode/gecode.git
 cd gecode
 git checkout $VERSION
+autoreconf -fi
 ./configure --disable-qt --disable-gist --enable-static
 make -j${PROCESSES}
 cp tools/flatzinc/fzn-gecode ${BIN_DIR}/fzn-gecode
