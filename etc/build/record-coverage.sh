@@ -17,6 +17,7 @@ if ${COVERAGE} ; then
     cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/latest
 
     # rename the cryptic directory name for better diffs over time
+    ls -l conjure-code-coverage/latest
     CONJURE_DIR_NAME=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp)
     mv conjure-code-coverage/latest/"${CONJURE_DIR_NAME}" conjure-code-coverage/latest/conjure-cp
 
