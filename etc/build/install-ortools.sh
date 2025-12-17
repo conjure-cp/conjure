@@ -19,7 +19,7 @@ pushd tmp-install-ortools
 git clone https://github.com/google/or-tools.git
 cd or-tools
 git checkout $VERSION
-cmake -S . -B build -DBUILD_DEPS=ON
+cmake -S . -B build -DBUILD_DEPS=ON -DUSE_COINOR=OFF
 cmake --build build --config Release --target all -j${PROCESSES}
 cp build/bin/fzn-cp-sat ${BIN_DIR}/fzn-cp-sat
 # .dylib or .a depending on OS
