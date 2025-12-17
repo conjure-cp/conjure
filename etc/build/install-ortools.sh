@@ -3,9 +3,6 @@
 # version as of Dec 2025
 VERSION=v9.14
 
-source "download.sh" 2> /dev/null               # if called from the script dir
-source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
-
 set -o errexit
 set -o nounset
 
@@ -19,9 +16,9 @@ mkdir -p ${LIB_DIR}
 rm -rf tmp-install-ortools
 mkdir tmp-install-ortools
 pushd tmp-install-ortools
-download https://github.com/google/or-tools/archive/refs/tags/${VERSION}.zip
-unzip ${VERSION}.zip
-cd or-tools-*
+git clone https://github.com/google/or-tools.git
+cd or-tools
+git checkout $VERSION
 cmake -S . -B build -DBUILD_DEPS=ON
 cmake --build build --config Release --target all -j${PROCESSES}
 cp build/bin/fzn-cp-sat ${BIN_DIR}/fzn-cp-sat
