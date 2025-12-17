@@ -54,7 +54,7 @@ jobs:
 
       - name: Install Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true GHC_VERSION=${{ matrix.GHC_VERSION }} make
 
       - name: Install Minion
         shell: bash
