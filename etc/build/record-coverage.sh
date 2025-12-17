@@ -16,13 +16,18 @@ if ${COVERAGE} ; then
     mkdir -p conjure-code-coverage/latest
     cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/latest
 
-    # rename the cryptic directory name for better diffs over time
-    ls -l conjure-code-coverage/latest
-    CONJURE_DIR_NAME=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp)
+    # rename the cryptic directory name for better diffs over time (for the conjure-cp-* directory)
+    CONJURE_DIR_NAME=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp | grep -v conjure-testing)
     mv conjure-code-coverage/latest/"${CONJURE_DIR_NAME}" conjure-code-coverage/latest/conjure-cp
-
     # search & replace to fix links
-    find conjure-code-coverage/latest -type f -exec sed -i "s/${CONJURE_DIR_NAME}/conjure-cp/g" {} \;
+    find conjure-code-coverage/latest/conjure-cp -type f -exec sed -i "s/${CONJURE_DIR_NAME}/conjure-cp/g" {} \;
+
+    # rename the cryptic directory name for better diffs over time (for the conjure-cp-*-conjure-testing directory)
+    CONJURE_DIR_NAME=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp | grep conjure-testing)
+    mv conjure-code-coverage/latest/"${CONJURE_DIR_NAME}" conjure-code-coverage/latest/conjure-cp-testing
+    # search & replace to fix links
+    find conjure-code-coverage/latest/conjure-cp-testing -type f -exec sed -i "s/${CONJURE_DIR_NAME}/conjure-cp-testing/g" {} \;
+
 
     # remove the version for better diffs
     sed -i "s/repositoryVersion = &quot;.*&quot;/repositoryVersion = REMOVED/g" conjure-code-coverage/latest/conjure-cp/Conjure.RepositoryVersion.hs.html
