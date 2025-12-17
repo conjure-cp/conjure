@@ -153,7 +153,7 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minion.sh
 	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
-	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
+	@etc/build/silent-wrapper.sh etc/build/install-wmaxcdcl.sh
 	@etc/build/silent-wrapper.sh etc/build/install-ortools.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minizinc.sh
 	@etc/build/silent-wrapper.sh etc/build/install-yices.sh

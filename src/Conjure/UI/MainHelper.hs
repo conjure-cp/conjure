@@ -898,7 +898,7 @@ solverExecutables =
     , ( "minisat"         , "minisat" )
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
-    , ( "open-wbo"        , "open-wbo" )
+    , ( "wmaxcdcl"        , "wmaxcdcl" )
     , ( "or-tools"        , "fzn-cp-sat" )
     , ( "coin-or"         , "minizinc" )
     , ( "cplex"           , "minizinc" )
@@ -1006,8 +1006,8 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , "-sat-family", "nbc_minisat_all"
                                       , "-satsolver-bin", "nbc_minisat_all_release"
                                       ]
-        "open-wbo"          -> return [ "-maxsat"
-                                      , "-satsolver-bin", "open-wbo"
+        "wmaxcdcl"          -> return [ "-maxsat"
+                                      , "-satsolver-bin", "wmaxcdcl"
                                       ]
         "coin-or"           -> return [ "-minizinc"
                                       , "-solver-options", "--solver COIN-BC"

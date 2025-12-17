@@ -963,7 +963,7 @@ ui = modes
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
-                    \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
+                    \ - wmaxcdcl (MaxSAT solver, only works with optimisation problems)\n\
                     \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \ - cplex (MIP solver, implemented via MiniZinc)\n\
                     \ - boolector (SMT solver, supported logics: bv)\n\
