@@ -11,14 +11,16 @@ FROM ubuntu:24.04 AS builder
 ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /conjure
 
-# All binaries will end up in /opt/conjure
-RUN mkdir -p /opt/conjure
-ENV BIN_DIR /opt/conjure
-ENV PATH /opt/conjure:$PATH
-ENV LD_LIBRARY_PATH /opt/conjure/lib:$LD_LIBRARY_PATH
+# All binaries will end up in /opt/conjure/bin
+ENV BIN_DIR /opt/conjure/bin
+ENV LIB_DIR /opt/conjure/lib
+RUN mkdir -p $BIN_DIR
+RUN mkdir -p $LIB_DIR
+ENV PATH $BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH $LIB_DIR:$LD_LIBRARY_PATH
 ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
-# Dependencies
 
+# Dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get install -y --no-install-recommends curl ca-certificates     # so we can download stack (and other things)
@@ -43,7 +45,7 @@ RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-boolector.sh
 RUN PROCESSES=2 etc/build/install-cadical.sh
 RUN PROCESSES=2 etc/build/install-chuffed.sh
-# RUN PROCESSES=2 etc/build/install-gecode.sh
+RUN PROCESSES=2 etc/build/install-gecode.sh
 RUN PROCESSES=2 etc/build/install-glucose.sh
 RUN PROCESSES=2 etc/build/install-kissat.sh
 RUN PROCESSES=2 etc/build/install-lingeling.sh
@@ -69,7 +71,7 @@ COPY LICENSE LICENSE
 RUN make install
 
 # List the binaries
-RUN ls -l /opt/conjure
+RUN ls -l /opt/conjure/bin
 RUN du -sh /opt/conjure
 
 # Copy the allsolvers test case
@@ -85,8 +87,10 @@ RUN tests/allsolvers/test.sh
 
 FROM ubuntu:24.04
 WORKDIR /conjure
-ENV PATH /opt/conjure:$PATH
-ENV LD_LIBRARY_PATH /opt/conjure/lib:$LD_LIBRARY_PATH
+ENV BIN_DIR /opt/conjure/bin
+ENV LIB_DIR /opt/conjure/lib
+ENV PATH $BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH $LIB_DIR:$LD_LIBRARY_PATH
 ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
