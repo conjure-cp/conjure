@@ -1,0 +1,40 @@
+name: Configure sccache wrappers
+description: Wrap compilers with sccache and set CMake launchers when needed.
+runs:
+  using: composite
+  steps:
+    - id: configure
+      shell: bash
+      run: |
+        set -euo pipefail
+        SCCACHE_BIN=$(command -v sccache || true)
+        if [ -z "${SCCACHE_BIN}" ]; then
+          echo "sccache not found on PATH; skipping wrapper configuration"
+          exit 0
+        fi
+
+        WRAPPED_CC=0
+        WRAPPED_CXX=0
+
+        if command -v cc >/dev/null 2>&1; then
+          echo "CC=${SCCACHE_BIN} $(command -v cc)" >> "${GITHUB_ENV}"
+          WRAPPED_CC=1
+        fi
+        if command -v c++ >/dev/null 2>&1; then
+          echo "CXX=${SCCACHE_BIN} $(command -v c++)" >> "${GITHUB_ENV}"
+          WRAPPED_CXX=1
+        fi
+
+        if command -v ghc >/dev/null 2>&1; then
+          echo "HC=${SCCACHE_BIN} $(command -v ghc)" >> "${GITHUB_ENV}"
+        fi
+        if command -v ghc-pkg >/dev/null 2>&1; then
+          echo "HCPKG=${SCCACHE_BIN} $(command -v ghc-pkg)" >> "${GITHUB_ENV}"
+        fi
+
+        if [ "${WRAPPED_CC}" -eq 0 ]; then
+          echo "CMAKE_C_COMPILER_LAUNCHER=${SCCACHE_BIN}" >> "${GITHUB_ENV}"
+        fi
+        if [ "${WRAPPED_CXX}" -eq 0 ]; then
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=${SCCACHE_BIN}" >> "${GITHUB_ENV}"
+        fi

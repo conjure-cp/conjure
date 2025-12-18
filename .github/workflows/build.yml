@@ -22,9 +22,6 @@ on:
       - .github/workflows/build.yml
                             # other branches that want testing must create a PR
 
-env:
-  SCCACHE_GHA_ENABLED: "true"
-
 jobs:
 
   Job:
@@ -58,6 +55,9 @@ jobs:
 
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Configure compiler wrappers for sccache
+        uses: ./.github/actions/setup-sccache
 
       - name: Setting PATH
         shell: bash
