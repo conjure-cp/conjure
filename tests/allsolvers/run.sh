@@ -103,11 +103,11 @@ echo "========================================"
 
 # MaxSAT solvers
 
-# echo "wmaxcdcl"
-# conjure solve testo.essence --solver wmaxcdcl
-# echo ""
-# echo ""
-# echo "========================================"
+echo "wmaxcdcl"
+conjure solve testo.essence --solver wmaxcdcl
+echo ""
+echo ""
+echo "========================================"
 
 
 # MIP solvers (via MiniZinc)
