@@ -67,7 +67,7 @@ jobs:
       - name: Setting PATH (for solvers)
         shell: bash
         run: |
-          echo "${HOME}/artefacts" >> ${GITHUB_PATH}
+          echo "${HOME}/artefacts/bin" >> ${GITHUB_PATH}
 
       # libnuma-dev for runsolver
       # autoconf, cmake, gmp for yices
