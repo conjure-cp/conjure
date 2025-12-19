@@ -1,11 +1,11 @@
 name: Make a release
 
 on:
-  workflow_dispatch:        # can be triggered manually
+  workflow_dispatch: # can be triggered manually
   push:
     tags:
       - "v*.*.*"
-  pull_request:             # and for PRs
+  pull_request: # and for PRs
     paths:
       - conjure-cp.cabal
       - Makefile
@@ -14,29 +14,26 @@ on:
       - etc/build/**
       - etc/savilerow/**
       - .github/workflows/release.yml
-                            # other branches that want testing must create a PR
+        # other branches that want testing must create a PR
 
 permissions:
   contents: write
 
 jobs:
-
   Job:
-
     strategy:
       matrix:
         GHC_VERSION: ["9.10"]
         os: [ubuntu-latest, macos-latest]
         include:
-        - os: ubuntu-latest
-          release_suffix: linux
-        - os: macos-latest
-          release_suffix: macos-intel
+          - os: ubuntu-latest
+            release_suffix: linux
+          - os: macos-latest
+            release_suffix: macos-intel
 
     runs-on: ${{ matrix.os }}
 
     steps:
-
       - uses: actions/checkout@v6
         name: Checkout repository
 
@@ -129,7 +126,7 @@ jobs:
           cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
           cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
 
-# See https://github.com/softprops/action-gh-release
+      # See https://github.com/softprops/action-gh-release
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2
