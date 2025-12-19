@@ -104,27 +104,20 @@ jobs:
       - name: Create the zip archives
         shell: bash
         run: |
-          pushd ${HOME}/artefacts
+          pushd ${HOME}
 
-          cp ${HOME}/artefacts/bin/conjure ${HOME}/artefacts/bin/savilerow ${HOME}/artefacts/bin/savilerow.jar .
-
-          cd ..
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
           cp -r artefacts conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
-          cd artefacts
-          cp -r ../conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers .
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
-          cp conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          cp -r artefacts/conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
 
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
           popd
 
-          cp ${HOME}/artefacts/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
-          cp ${HOME}/artefacts/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
 
       # See https://github.com/softprops/action-gh-release
       - name: Create Release
