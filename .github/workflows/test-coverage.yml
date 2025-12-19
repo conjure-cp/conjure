@@ -33,6 +33,15 @@ jobs:
         shell: bash
         run: make stack.yaml
 
+      - uses: actions/cache@v4
+        name: Cache stack
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}-${{ github.event.repository.updated_at }}
+          restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
+
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
 
