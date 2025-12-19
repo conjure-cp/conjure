@@ -111,7 +111,7 @@ jobs:
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
-          cp -r artefacts/conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          cp -r artefacts/bin/conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
 
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
