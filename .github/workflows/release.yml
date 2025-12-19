@@ -58,16 +58,16 @@ jobs:
 
       - name: Setting PATH
         shell: bash
-        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+        run: echo "${HOME}/artefacts/bin" >> ${GITHUB_PATH}
 
       - name: Build Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/artefacts/bin LIB_DIR=${HOME}/artefacts/lib GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
       - name: Setting PATH (for solvers)
         shell: bash
         run: |
-          echo "${HOME}/solver-binaries" >> ${GITHUB_PATH}
+          echo "${HOME}/artefacts" >> ${GITHUB_PATH}
 
       # libnuma-dev for runsolver
       # autoconf, cmake, gmp for yices
@@ -85,8 +85,10 @@ jobs:
       - name: Build solvers
         shell: bash
         run: |
-          rm -rf ${HOME}/solver-binaries
-          BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
+          rm -rf ${HOME}/artefacts
+          mkdir -p ${HOME}/artefacts/bin
+          mkdir -p ${HOME}/artefacts/lib
+          BIN_DIR=${HOME}/artefacts/bin LIB_DIR=${HOME}/artefacts/lib PROCESSES=2 make solvers
 
       - name: Set version string to the commit hash
         run: echo "RELEASE_VERSION=${{ github.sha }}" >> "$GITHUB_ENV"
@@ -102,16 +104,14 @@ jobs:
       - name: Create the zip archives
         shell: bash
         run: |
-          pushd ${HOME}/solver-binaries
+          pushd ${HOME}/artefacts
 
-          cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
-          mkdir -p lib
-          cp -r ~/.local/bin/lib/* lib/
+          cp ${HOME}/artefacts/bin/conjure ${HOME}/artefacts/bin/savilerow ${HOME}/artefacts/bin/savilerow.jar .
 
           cd ..
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
-          cp -r solver-binaries conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
-          cd solver-binaries
+          cp -r artefacts conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          cd artefacts
           cp -r ../conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers .
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
@@ -123,8 +123,8 @@ jobs:
 
           popd
 
-          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
-          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
+          cp ${HOME}/artefacts/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
+          cp ${HOME}/artefacts/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
 
       # See https://github.com/softprops/action-gh-release
       - name: Create Release
