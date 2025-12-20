@@ -106,6 +106,9 @@ jobs:
         run: |
           pushd ${HOME}
 
+          ls -l
+          ls -l artefacts
+
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
           cp -r artefacts conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
