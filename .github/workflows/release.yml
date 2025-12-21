@@ -58,16 +58,16 @@ jobs:
 
       - name: Setting PATH
         shell: bash
-        run: echo "${HOME}/artefacts/bin" >> ${GITHUB_PATH}
+        run: echo "${GITHUB_WORKSPACE}/artefacts/bin" >> ${GITHUB_PATH}
 
       - name: Build Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/artefacts/bin LIB_DIR=${HOME}/artefacts/lib GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts/bin LIB_DIR=${GITHUB_WORKSPACE}/artefacts/lib GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
       - name: Setting PATH (for solvers)
         shell: bash
         run: |
-          echo "${HOME}/artefacts/bin" >> ${GITHUB_PATH}
+          echo "${GITHUB_WORKSPACE}/artefacts/bin" >> ${GITHUB_PATH}
 
       # libnuma-dev for runsolver
       # autoconf, cmake, gmp for yices
@@ -85,9 +85,9 @@ jobs:
       - name: Build solvers
         shell: bash
         run: |
-          mkdir -p ${HOME}/artefacts/bin
-          mkdir -p ${HOME}/artefacts/lib
-          BIN_DIR=${HOME}/artefacts/bin LIB_DIR=${HOME}/artefacts/lib PROCESSES=2 make solvers
+          mkdir -p ${GITHUB_WORKSPACE}/artefacts/bin
+          mkdir -p ${GITHUB_WORKSPACE}/artefacts/lib
+          BIN_DIR=${GITHUB_WORKSPACE}/artefacts/bin LIB_DIR=${GITHUB_WORKSPACE}/artefacts/lib PROCESSES=2 make solvers
 
       - name: Set version string to the commit hash
         run: echo "RELEASE_VERSION=${{ github.sha }}" >> "$GITHUB_ENV"
@@ -103,7 +103,7 @@ jobs:
       - name: Create the zip archives
         shell: bash
         run: |
-          pushd ${HOME}
+          pushd ${GITHUB_WORKSPACE}
 
           find artefacts -type f
 
@@ -119,6 +119,14 @@ jobs:
 
           popd
 
+      - name: Upload zip archives as build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          path: |
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
+          if-no-files-found: error
 
       # See https://github.com/softprops/action-gh-release
       - name: Create Release
