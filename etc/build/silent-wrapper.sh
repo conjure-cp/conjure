@@ -18,8 +18,7 @@ fi
 
 PID=$$
 export STARTTIME=$(date +%s)
-bash $1
-# bash $1 > make-solvers-${PID}.stdout 2> make-solvers-${PID}.stderr
+bash $1 > make-solvers-${PID}.stdout 2> make-solvers-${PID}.stderr
 EXITCODE=$?
 export ELAPSED=$(($(date +%s) - ${STARTTIME}))
 
