@@ -100,6 +100,11 @@ echo ""
 echo ""
 echo "========================================"
 
+echo "bdd_minisat_all --number-of-solutions=all"
+conjure solve test.essence --solver bdd_minisat_all --number-of-solutions=all
+echo ""
+echo ""
+echo "========================================"
 
 # MaxSAT solvers
 

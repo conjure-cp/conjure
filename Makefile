@@ -143,7 +143,7 @@ solvers:
 	@echo ""
 	@mkdir -p ${BIN_DIR}
 	@rm -f make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null
-	@etc/build/silent-wrapper.sh etc/build/install-bc_minisat_all.sh
+	@etc/build/silent-wrapper.sh etc/build/install-minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-boolector.sh
 	@etc/build/silent-wrapper.sh etc/build/install-cadical.sh
 	@etc/build/silent-wrapper.sh etc/build/install-chuffed.sh
@@ -152,7 +152,6 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-kissat.sh
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minion.sh
-	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-wmaxcdcl.sh
 	@etc/build/silent-wrapper.sh etc/build/install-ortools.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minizinc.sh
