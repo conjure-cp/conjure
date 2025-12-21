@@ -105,8 +105,6 @@ jobs:
         run: |
           pushd ${HOME}
 
-          ls -l
-          ls -l artefacts
           find artefacts -type f
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
