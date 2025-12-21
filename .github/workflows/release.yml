@@ -85,7 +85,6 @@ jobs:
       - name: Build solvers
         shell: bash
         run: |
-          rm -rf ${HOME}/artefacts
           mkdir -p ${HOME}/artefacts/bin
           mkdir -p ${HOME}/artefacts/lib
           BIN_DIR=${HOME}/artefacts/bin LIB_DIR=${HOME}/artefacts/lib PROCESSES=2 make solvers
