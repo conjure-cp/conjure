@@ -108,6 +108,7 @@ jobs:
 
           ls -l
           ls -l artefacts
+          find artefacts -type f
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
           cp -r artefacts conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
