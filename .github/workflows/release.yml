@@ -1,11 +1,11 @@
 name: Make a release
 
 on:
-  workflow_dispatch: # can be triggered manually
+  workflow_dispatch:        # can be triggered manually
   push:
     tags:
       - "v*.*.*"
-  pull_request: # and for PRs
+  pull_request:             # and for PRs
     paths:
       - conjure-cp.cabal
       - Makefile
@@ -14,7 +14,7 @@ on:
       - etc/build/**
       - etc/savilerow/**
       - .github/workflows/release.yml
-        # other branches that want testing must create a PR
+                            # other branches that want testing must create a PR
 
 permissions:
   contents: write
