@@ -8,17 +8,17 @@
 
 # Setting up
 FROM ubuntu:24.04 AS builder
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /conjure
 
 # All binaries will end up in /opt/conjure/bin
-ENV BIN_DIR /opt/conjure/bin
-ENV LIB_DIR /opt/conjure/lib
+ENV BIN_DIR=/opt/conjure/bin
+ENV LIB_DIR=/opt/conjure/lib
 RUN mkdir -p $BIN_DIR
 RUN mkdir -p $LIB_DIR
-ENV PATH $BIN_DIR:$PATH
-ENV LD_LIBRARY_PATH $LIB_DIR:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
+ENV PATH=$BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 
 # Dependencies
 RUN apt-get update
@@ -86,11 +86,11 @@ RUN tests/allsolvers/test.sh
 
 FROM ubuntu:24.04
 WORKDIR /conjure
-ENV BIN_DIR /opt/conjure/bin
-ENV LIB_DIR /opt/conjure/lib
-ENV PATH $BIN_DIR:$PATH
-ENV LD_LIBRARY_PATH $LIB_DIR:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
+ENV BIN_DIR=/opt/conjure/bin
+ENV LIB_DIR=/opt/conjure/lib
+ENV PATH=$BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev              # runsolver
