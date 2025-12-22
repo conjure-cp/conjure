@@ -117,10 +117,12 @@ jobs:
           mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           cp -r artefacts/bin/conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
 
+          zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+
           pwd
           ls -l
-          du -sh conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
-          du -sh conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          du -sh conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}*
 
           popd
 
