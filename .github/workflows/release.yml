@@ -131,7 +131,7 @@ jobs:
         with:
           name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}
           compression-level: 9
-          path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
+          path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}
           if-no-files-found: error
 
       - name: Upload zip archives as build artefacts (conjure and solvers)
@@ -139,7 +139,7 @@ jobs:
         with:
           name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}
           compression-level: 9
-          path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
+          path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers
           if-no-files-found: error
 
       - name: Create Release
