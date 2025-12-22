@@ -8,23 +8,11 @@ set -o nounset
 set -o pipefail
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
-export LIB_DIR=${LIB_DIR:-${HOME}/.local/lib}
+export LIB_DIR=${LIB_DIR:-${HOME}/.local/bin/lib}
 export PROCESSES=${PROCESSES:-1}
 
 mkdir -p ${BIN_DIR}
 mkdir -p ${LIB_DIR}
-
-BIN_DIR=$(cd "${BIN_DIR}" && pwd)
-LIB_DIR=$(cd "${LIB_DIR}" && pwd)
-BIN_PREFIX=$(dirname "${BIN_DIR}")
-LIB_PREFIX=$(dirname "${LIB_DIR}")
-
-if [[ "${BIN_PREFIX}" != "${LIB_PREFIX}" ]]; then
-  echo "BIN_DIR and LIB_DIR must share the same parent so fzn-cp-sat can find the libraries at runtime." >&2
-  echo "BIN_DIR=${BIN_DIR}" >&2
-  echo "LIB_DIR=${LIB_DIR}" >&2
-  exit 1
-fi
 
 rm -rf tmp-install-ortools
 mkdir tmp-install-ortools

@@ -5,8 +5,9 @@ SHELL := /bin/bash
 # override by calling the makefile like so: "GHC_VERSION=9.10 make"
 export GHC_VERSION?=9.10
 export BIN_DIR?=${HOME}/.local/bin
-export LIB_DIR?=${HOME}/.local/lib
+export LIB_DIR?=${HOME}/.local/bin/lib
 export PATH := $(BIN_DIR):$(PATH)
+export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
 export CI?=false
 export BUILD_TESTS?=false
 export COVERAGE?=false
@@ -26,7 +27,7 @@ install:
 	@echo "Add this directory to your LD_LIBRARY_PATH."
 	@echo ""
 	@echo "You can set the environment variables BIN_DIR and LIB_DIR to change these locations"
-	@echo "For example: \"BIN_DIR=your/preferred/path LIB_DIR=/usr/local/lib make install\""
+	@echo "For example: \"BIN_DIR=your/preferred/binpath LIB_DIR=your/preferred/libpath install\""
 	@echo ""
 	@mkdir -p ${BIN_DIR}
 	@mkdir -p ${LIB_DIR}

@@ -11,8 +11,8 @@ FROM ubuntu:24.04 AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /conjure
 
-# All binaries will end up in /opt/conjure/bin
-ENV BIN_DIR=/opt/conjure/bin
+# All binaries will end up in /opt/conjure
+ENV BIN_DIR=/opt/conjure
 ENV LIB_DIR=/opt/conjure/lib
 RUN mkdir -p $BIN_DIR
 RUN mkdir -p $LIB_DIR
@@ -70,7 +70,7 @@ COPY LICENSE LICENSE
 RUN make install
 
 # List the binaries
-RUN ls -l /opt/conjure/bin
+RUN ls -l /opt/conjure
 RUN du -sh /opt/conjure
 
 # Copy the allsolvers test case
@@ -86,7 +86,7 @@ RUN tests/allsolvers/test.sh
 
 FROM ubuntu:24.04
 WORKDIR /conjure
-ENV BIN_DIR=/opt/conjure/bin
+ENV BIN_DIR=/opt/conjure
 ENV LIB_DIR=/opt/conjure/lib
 ENV PATH=$BIN_DIR:$PATH
 ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH

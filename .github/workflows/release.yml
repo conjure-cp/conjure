@@ -65,7 +65,7 @@ jobs:
 
       - name: Build Conjure
         shell: bash
-        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts/bin LIB_DIR=${GITHUB_WORKSPACE}/artefacts/lib GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
       - name: Setting PATH (for solvers)
         shell: bash
@@ -90,7 +90,7 @@ jobs:
         run: |
           mkdir -p ${GITHUB_WORKSPACE}/artefacts/bin
           mkdir -p ${GITHUB_WORKSPACE}/artefacts/lib
-          BIN_DIR=${GITHUB_WORKSPACE}/artefacts/bin LIB_DIR=${GITHUB_WORKSPACE}/artefacts/lib PROCESSES=2 make solvers
+          BIN_DIR=${GITHUB_WORKSPACE}/artefacts/bin PROCESSES=2 make solvers
 
       - name: Set version string to the commit hash
         run: echo "RELEASE_VERSION=${{ github.sha }}" >> "$GITHUB_ENV"
