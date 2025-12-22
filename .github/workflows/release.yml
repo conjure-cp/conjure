@@ -117,6 +117,9 @@ jobs:
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
+          pwd
+          ls -l
+
           popd
 
       - name: Upload zip archives as build artefacts
