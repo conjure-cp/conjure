@@ -120,12 +120,12 @@ jobs:
           popd
 
       - name: Upload zip archives as build artefacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           path: |
-            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
-            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
+            ${GITHUB_WORKSPACE}/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
+            ${GITHUB_WORKSPACE}/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
           if-no-files-found: error
 
       # See https://github.com/softprops/action-gh-release
