@@ -137,7 +137,7 @@ jobs:
       - name: Upload zip archives as build artefacts (conjure and solvers)
         uses: actions/upload-artifact@v6
         with:
-          name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}
+          name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers
           compression-level: 9
           path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers
           if-no-files-found: error
