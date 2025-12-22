@@ -19,6 +19,9 @@ on:
 permissions:
   contents: write
 
+env:
+  RELEASE_VERSION: ${{ github.sha }} # will be overwritten below depending on PR/tag
+
 jobs:
   Job:
     strategy:
@@ -125,24 +128,22 @@ jobs:
       - name: Upload zip archives as build artefacts
         uses: actions/upload-artifact@v6
         with:
-          name: conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}
           path: |
-            ${GITHUB_WORKSPACE}/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
-            ${GITHUB_WORKSPACE}/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
+            ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
+            ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
           if-no-files-found: error
 
-      # See https://github.com/softprops/action-gh-release
       - name: Create Release
-        id: create_release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${RELEASE_VERSION}
+          name: ${{ env.RELEASE_VERSION }}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
-            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
+            conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
+            conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
