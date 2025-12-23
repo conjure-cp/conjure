@@ -25,6 +25,7 @@ env:
 jobs:
   Job:
     strategy:
+      fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
         GHC_VERSION: ["9.10"]
         os: [ubuntu-latest, macos-latest]
