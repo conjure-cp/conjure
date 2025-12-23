@@ -13,12 +13,13 @@ Conjure is available as an executable binary for Linux and MacOS.
 If it is available for your platform, you can just `download it <https://www.github.com/conjure-cp/conjure/releases/latest>`_ and run it.
 It may be useful to save the binary under a directory that is in your search PATH, so you do not have to type the full path to the Conjure executable to run it.
 
-You can add a directory into your PATH by executing the following command in the terminal
+You can add a directory into your PATH by executing the following commands in the terminal (assuming you extract the zip directory and `mv`` it to `~/work/conjure` - feel free to change the location to fit your workflow better)
 
 .. code-block:: bash
 
-    export PATH=/path/to/executables:$PATH
-    export LD_LIBRARY_PATH=/path/to/executables/lib:$LD_LIBRARY_PATH
+    export PATH=~/work/conjure:$PATH
+    export LD_LIBRARY_PATH=~/work/conjure/lib:$LD_LIBRARY_PATH
+    export MZN_STDLIB_DIR=~/work/conjure/share/minizinc/
 
 
 For MacOS, you will have to remove the quarantine attribute from all files and directories inside the downloaded directory. To do this, navigate to the directory and run the following command.

@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
-export LIB_DIR=${LIB_DIR:-${HOME}/.local/bin/lib}
+export LIB_DIR=${BIN_DIR}/lib
 export CI=${CI:-false}
 export BUILD_TESTS=${BUILD_TESTS:-false}
 export COVERAGE=${COVERAGE:-false}

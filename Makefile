@@ -5,7 +5,7 @@ SHELL := /bin/bash
 # override by calling the makefile like so: "GHC_VERSION=9.10 make"
 export GHC_VERSION?=9.10
 export BIN_DIR?=${HOME}/.local/bin
-export LIB_DIR?=${HOME}/.local/bin/lib
+export LIB_DIR=${BIN_DIR}/lib
 export PATH := $(BIN_DIR):$(PATH)
 export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
 export CI?=false
@@ -143,6 +143,7 @@ solvers:
 	@if [ `uname` == "Darwin" ]; then echo "You can run: 'brew install autoconf cmake gmp' to install them."; fi
 	@echo ""
 	@mkdir -p ${BIN_DIR}
+	@mkdir -p ${LIB_DIR}
 	@rm -f make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null
 	@etc/build/silent-wrapper.sh etc/build/install-minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-boolector.sh

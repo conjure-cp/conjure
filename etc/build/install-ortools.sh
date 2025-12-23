@@ -8,7 +8,7 @@ set -o nounset
 set -o pipefail
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
-export LIB_DIR=${LIB_DIR:-${HOME}/.local/bin/lib}
+export LIB_DIR=${BIN_DIR}/lib
 export PROCESSES=${PROCESSES:-1}
 
 mkdir -p ${BIN_DIR}
