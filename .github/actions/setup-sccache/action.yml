@@ -7,6 +7,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        echo "SCCACHE_GHA_ENABLED=true" >> "${GITHUB_ENV}"
         SCCACHE_BIN=$(command -v sccache || true)
         if [ -z "${SCCACHE_BIN}" ]; then
           echo "sccache not found on PATH; skipping wrapper configuration"
