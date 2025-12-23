@@ -31,7 +31,7 @@ autoconf
 ./configure --prefix ${BIN_DIR}
 make -j${PROCESSES}
 make -j${PROCESSES} install
-cp ${BIN_DIR}/bin/yices* ${BIN_DIR}
+mv ${BIN_DIR}/bin/yices* ${BIN_DIR}
 echo "yices executables are at ${BIN_DIR}/yices*"
 ls -l ${BIN_DIR}/yices*
 popd

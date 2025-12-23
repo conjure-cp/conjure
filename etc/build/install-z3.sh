@@ -26,7 +26,7 @@ $PYTHON scripts/mk_make.py --prefix=${BIN_DIR}
 cd build
 make -j${PROCESSES}
 make -j${PROCESSES} install
-cp ${BIN_DIR}/bin/z3 ${BIN_DIR}
+mv ${BIN_DIR}/bin/z3 ${BIN_DIR}
 echo "z3 executable is at ${BIN_DIR}/z3"
 ls -l ${BIN_DIR}/z3
 popd

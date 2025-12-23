@@ -8,17 +8,17 @@
 
 # Setting up
 FROM ubuntu:24.04 AS builder
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /conjure
 
-# All binaries will end up in /opt/conjure/bin
-ENV BIN_DIR /opt/conjure/bin
-ENV LIB_DIR /opt/conjure/lib
+# All binaries will end up in /opt/conjure
+ENV BIN_DIR=/opt/conjure
+ENV LIB_DIR=/opt/conjure/lib
 RUN mkdir -p $BIN_DIR
 RUN mkdir -p $LIB_DIR
-ENV PATH $BIN_DIR:$PATH
-ENV LD_LIBRARY_PATH $LIB_DIR:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
+ENV PATH=$BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 
 # Dependencies
 RUN apt-get update
@@ -41,7 +41,7 @@ RUN mkdir -p etc
 COPY etc/build etc/build
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
-RUN PROCESSES=2 etc/build/install-bc_minisat_all.sh
+RUN PROCESSES=2 etc/build/install-minisat_all.sh
 RUN PROCESSES=2 etc/build/install-boolector.sh
 RUN PROCESSES=2 etc/build/install-cadical.sh
 RUN PROCESSES=2 etc/build/install-chuffed.sh
@@ -51,7 +51,6 @@ RUN PROCESSES=2 etc/build/install-kissat.sh
 RUN PROCESSES=2 etc/build/install-lingeling.sh
 RUN PROCESSES=2 etc/build/install-minion.sh
 RUN PROCESSES=2 etc/build/install-minizinc.sh
-RUN PROCESSES=2 etc/build/install-nbc_minisat_all.sh
 RUN PROCESSES=2 etc/build/install-wmaxcdcl.sh
 RUN PROCESSES=2 etc/build/install-ortools.sh
 RUN PROCESSES=2 etc/build/install-yices.sh
@@ -71,7 +70,7 @@ COPY LICENSE LICENSE
 RUN make install
 
 # List the binaries
-RUN ls -l /opt/conjure/bin
+RUN ls -l /opt/conjure
 RUN du -sh /opt/conjure
 
 # Copy the allsolvers test case
@@ -87,11 +86,11 @@ RUN tests/allsolvers/test.sh
 
 FROM ubuntu:24.04
 WORKDIR /conjure
-ENV BIN_DIR /opt/conjure/bin
-ENV LIB_DIR /opt/conjure/lib
-ENV PATH $BIN_DIR:$PATH
-ENV LD_LIBRARY_PATH $LIB_DIR:$LD_LIBRARY_PATH
-ENV MZN_STDLIB_DIR /opt/conjure/share/minizinc
+ENV BIN_DIR=/opt/conjure
+ENV LIB_DIR=/opt/conjure/lib
+ENV PATH=$BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH
+ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev              # runsolver
