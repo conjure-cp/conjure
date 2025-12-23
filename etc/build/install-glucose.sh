@@ -30,4 +30,4 @@ git checkout $VERSION
     ls -l ${BIN_DIR}/glucose-syrup
 )
 popd
-# rm -rf tmp-install-glucose
+rm -rf tmp-install-glucose
