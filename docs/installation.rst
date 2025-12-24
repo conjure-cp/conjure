@@ -6,6 +6,8 @@ Installation
 
 Conjure can be installed either by downloading a binary distribution, or by compiling it from source code.
 
+It can also be used directly via a container that we release on GitHub. **This is the suggested way of using Conjure**, see :ref:`docker-podman-apptainer` section below. Make sure you read the entire section including :ref:`shell-wrapper`.
+
 Downloading a binary
 --------------------
 
@@ -91,6 +93,8 @@ An up-to-date version of Savile Row is also copied next to the Conjure executabl
 
 A standalone version of Savile Row and user documentation for Savile Row can be downloaded from `its website <http://savilerow.cs.st-andrews.ac.uk>`_.
 
+
+.. _docker-podman-apptainer:
 
 Docker / Podman / Apptainer
 ---------------------------
@@ -212,6 +216,8 @@ Version pinning
 For fully reproducible experiments, use either a fixed version tag (e.g.
 ``v2.6.0``) or a SHA-based image reference. This guarantees that the same Conjure,
 Savile Row, and solver versions are used across machines and over time.
+
+.. _shell-wrapper:
 
 Shell wrapper (optional, but probably a good idea!)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
