@@ -298,6 +298,52 @@ retrying typically resolves the issue::
 
 Or the same command for `podman`. Apptainer doesn't use the same credential-based system for accessing GHCR and doesn't have a `logout` command.
 
+Testing your installation
+-------------------------
+
+Each release ships a small solver smoke-test bundle called
+``conjure-allsolver-test-v2.6.0.zip``. It is the contents of
+``tests/allsolvers`` and includes ``run.sh``, ``test.sh``,
+``test.essence``, ``testo.essence``, and ``stdout.expected``.
+
+Download the zip from the release page, extract it, and change into the
+extracted directory. If you compiled Conjure yourself, downloaded the
+precompiled executables, or set up the container shell wrapper above, then
+``conjure`` is already on your ``PATH`` and you can run the tests directly.
+If you did not set up the wrapper, use the container commands below.
+
+Direct run (compiling from source, precompiled executables, or wrapper alias):
+
+.. code-block:: bash
+
+   bash test.sh
+
+On success you will see ``Pass!`` and a zero exit code. If you want to see the
+solver output without the diff check, run ``run.sh`` instead.
+
+Container run (no wrapper alias):
+
+.. code-block:: bash
+
+   docker run --rm \
+     -v "$PWD:/work" \
+     -w /work \
+     ghcr.io/conjure-cp/conjure:v2.6.0 \
+     bash test.sh
+
+.. code-block:: bash
+
+   podman run --rm \
+     -v "$PWD:/work" \
+     -w /work \
+     ghcr.io/conjure-cp/conjure:v2.6.0 \
+     bash test.sh
+
+.. code-block:: bash
+
+   apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
+     bash test.sh
+
 
 CPLEX with Docker/Podman
 ------------------------
