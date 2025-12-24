@@ -124,6 +124,14 @@ jobs:
 
           popd
 
+      - name: Create allsolver test zip
+        shell: bash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pushd ${GITHUB_WORKSPACE}/tests/allsolvers
+          zip -r -9 ${GITHUB_WORKSPACE}/conjure-allsolver-test-${RELEASE_VERSION}.zip .
+          popd
+
       - name: Upload zip archives as build artefacts (conjure only)
         uses: actions/upload-artifact@v6
         with:
@@ -140,6 +148,15 @@ jobs:
           path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
           if-no-files-found: error
 
+      - name: Upload zip archive as build artefact (allsolver tests)
+        uses: actions/upload-artifact@v6
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: conjure-allsolver-test-${{ env.RELEASE_VERSION }}
+          compression-level: 9
+          path: ${{ github.workspace }}/conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
+          if-no-files-found: error
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -153,3 +170,12 @@ jobs:
           files: |
             conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
             conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
+
+      - name: Upload allsolver test zip to release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
