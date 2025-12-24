@@ -4,7 +4,7 @@ on:
   workflow_dispatch:        # can be triggered manually
   push:
     branches:
-      - main                # run for the main branch only
+      - main                # run for the main branch
     paths:
       - conjure-cp.cabal
       - Makefile

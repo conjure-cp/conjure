@@ -2,14 +2,9 @@ name: Publishing container on ghcr.io
 
 on:
   workflow_dispatch:        # can be triggered manually
-  workflow_run:             # run only when all tests pass
+  push:
     branches:
-      - main
-    workflows:
-      - Running all tests
-    types:
-      - completed
-  push:                     # for pushes to release tags (v*)
+      - main                # run for the main branch
     tags:
       - "v*.*.*"
   pull_request:             # and for PRs that edit the docker files
@@ -25,9 +20,6 @@ env:
 
 jobs:
   build:
-    # if this was triggered through a completed run of "Running all tests", we check if the run completed successfully
-    # if it was triggered through a PR, we just run it
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
 
     permissions:
