@@ -3,7 +3,6 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Definition ( RuleResult(..), QuestionType(..) )
 import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
 
 -- uniplate
@@ -12,7 +11,7 @@ import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 
 rule_Comprehension_Literal :: Rule
-rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
+rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRuleZ` theRule where
     theRule z (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat expr) -> return (pat, expr)
@@ -22,26 +21,23 @@ rule_Comprehension_Literal = Rule "matrix-comprehension-literal" theRule where
         tyInner <- typeOf body
         let ty = TypeMatrix (TypeInt TagInt) tyInner
         return
-            [ RuleResult
-                { ruleResultDescr = "Vertical rule for matrix-comprehension on matrix literal"
-                , ruleResultType  = ExpressionRefinement
-                , ruleResultHook  = Nothing
-                , ruleResult      = return $
-                    case elems of
-                        []   -> make matrixLiteral ty (mkDomainIntB 1 0) []
-                        [el] -> Comprehension body
+            ( "Vertical rule for matrix-comprehension on matrix literal"
+            , return $
+                case elems of
+                    []   -> make matrixLiteral ty (mkDomainIntB 1 0) []
+                    [el] -> Comprehension body
+                                $  gocBefore
+                                ++ [ComprehensionLetting pat el]
+                                ++ gocAfter
+                    _    -> make opConcatenate $ AbstractLiteral $ AbsLitMatrix
+                                (mkDomainIntB 1 (fromInt $ genericLength elems))
+                                [ Comprehension body
                                     $  gocBefore
                                     ++ [ComprehensionLetting pat el]
                                     ++ gocAfter
-                        _    -> make opConcatenate $ AbstractLiteral $ AbsLitMatrix
-                                    (mkDomainIntB 1 (fromInt $ genericLength elems))
-                                    [ Comprehension body
-                                        $  gocBefore
-                                        ++ [ComprehensionLetting pat el]
-                                        ++ gocAfter
-                                    | el <- elems
-                                    ]
-                } ]
+                                | el <- elems
+                                ]
+            )
     theRule _ _ = na "rule_Comprehension_Literal"
 
     notInsideMinMax z0 =
@@ -204,11 +200,15 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
 rule_Comprehension_ToSet_Matrix :: Rule
 rule_Comprehension_ToSet_Matrix = "matrix-toSet-matrixInside" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet"
         matrix       <- match opToSet expr
         TypeMatrix{} <- typeOf matrix
+        -- matrices, except comprehensions
+        case matrix of
+            Comprehension{} -> na "rule_Comprehension_ToSet"
+            _ -> return ()
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-toSet, matrix inside"
@@ -261,7 +261,9 @@ rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `
             _ -> na "rule_Comprehension_ToSet"
         -- we *can* assume that the list is duplicate-free!
         (True, list) <- match opToSetWithFlag expr
-        TypeList{} <- typeOf list
+        case list of
+            Comprehension{} -> return ()
+            _ -> na "rule_Comprehension_ToSet_List_DuplicateFree"
         return
             ( "Vertical rule for comprehension over matrix-toSet, list inside, assumed no duplicates"
             , return $ Comprehension body
@@ -323,7 +325,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
 rule_Comprehension_Hist :: Rule
 rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Hist"
         matrix               <- match opHist expr
