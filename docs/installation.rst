@@ -72,13 +72,14 @@ After installation, verify that Conjure is available:
 You can also verify that the installed solvers are all operational:
 
 .. code-block:: bash
-    # downlad a small bundle of files, we will use this to test the installation
+
+    # download a small bundle of files, we will use this to test the installation
     wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolver-test-v2.6.0.zip
 
     # run the test
     unzip conjure-allsolver-test-v2.6.0.zip && bash test.sh
 
-`test.sh` should produce a bunch of output and include "Pass!" as the last line.
+``test.sh`` should produce a bunch of output and include "Pass!" as the last line.
 
 Note that this quick start guide is not a replacement for the complete installation instructions; please keep reading to learn more.
 
@@ -149,7 +150,7 @@ It comes with a Makefile which will use Stack by default.
 The default target in the Makefile will install Stack using the standard procedures (which involves downloading and running a script).
 For more precise control, you might want to consider installing the Haskell tools beforehand instead of using the Makefile.
 
-In addition, a number of supported backend solvers can be compiled using the `make solvers` target.
+In addition, a number of supported backend solvers can be compiled using the ``make solvers`` target.
 This target also takes a BIN_DIR environment variable to control the location of the solver executables,
 and a PROCESSES environment variable to control how many processes to use when building solvers
 
