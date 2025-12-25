@@ -63,6 +63,8 @@ Apptainer
     # make it executable
     chmod +x ~/.local/bin/conjure
 
+The container will be downloaded first time you run the ``conjure`` command defined this way.
+
 After installation, verify that Conjure is available:
 
 .. code-block:: bash
