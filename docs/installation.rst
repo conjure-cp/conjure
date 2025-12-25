@@ -65,6 +65,9 @@ Apptainer
 
 The container will be downloaded first time you run the ``conjure`` command defined this way.
 
+Verify the installation
+^^^^^^^^^^^^^^^^^^^^^^^
+
 After installation, verify that Conjure is available:
 
 .. code-block:: bash
