@@ -233,6 +233,8 @@ Podman:
       ghcr.io/conjure-cp/conjure:v2.6.0 \
       conjure solve test.essence sample.param
 
+Note that ``:z`` above is for handling SELinux. A side-effect of this is that you will not be able to run conjure this command inside your home directory. If you try to do so, you will get the following error message: "Error: SELinux relabeling of <your home directory> is not allowed".
+
 Apptainer usage
 ^^^^^^^^^^^^^^^
 
