@@ -1070,14 +1070,17 @@ srStdoutHandler
             when (logLevel >= LogDebug) $ do
                 pp logLevel ("SR:" <+> pretty line)
             case stripPrefix "Solution: " line of
-                Nothing -> do
-                    if isPrefixOf "Created output file for domain filtering" line
-                        then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output" line
-                            then pp logLevel $ hsep ["Running solver:", pretty solver]
-                            else return ()
-                    fmap (Left line :)
-                         (srStdoutHandler args tr solutionNumber h)
+                Nothing ->
+                    if line `elem` ["MaxSAT solver exited with error code:3 and error message:", "[PARSE ERROR! Unexpected char: h]"]
+                        then srStdoutHandler args tr solutionNumber h -- wmaxcdcl produces this warning if it proves optimality...
+                        else do
+                            if isPrefixOf "Created output file for domain filtering" line
+                                then pp logLevel $ hsep ["Running minion for domain filtering."]
+                                else if isPrefixOf "Created output" line
+                                    then pp logLevel $ hsep ["Running solver:", pretty solver]
+                                    else return ()
+                            fmap (Left line :)
+                                (srStdoutHandler args tr solutionNumber h)
                 Just solutionText -> do
                     eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
                     essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
