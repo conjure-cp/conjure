@@ -23,11 +23,11 @@ echo ""
 echo ""
 echo "========================================"
 
-# echo "gecode"
-# conjure solve test.essence --solver gecode
-# echo ""
-# echo ""
-# echo "========================================"
+echo "gecode"
+conjure solve test.essence --solver gecode
+echo ""
+echo ""
+echo "========================================"
 
 echo "chuffed"
 conjure solve test.essence --solver chuffed
@@ -100,15 +100,19 @@ echo ""
 echo ""
 echo "========================================"
 
+echo "bdd_minisat_all --number-of-solutions=all"
+conjure solve test.essence --solver bdd_minisat_all --number-of-solutions=all
+echo ""
+echo ""
+echo "========================================"
 
 # MaxSAT solvers
 
-# commenting out, known to not work: https://github.com/savilerow/savilerow-main/issues/310
-# echo "open-wbo"
-# conjure solve testo.essence --solver open-wbo
-# echo ""
-# echo ""
-# echo "========================================"
+echo "wmaxcdcl"
+conjure solve testo.essence --solver wmaxcdcl
+echo ""
+echo ""
+echo "========================================"
 
 
 # MIP solvers (via MiniZinc)

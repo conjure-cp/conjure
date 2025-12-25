@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# version as of 16 February 2023
+# version as of 10 December 2025
 # alas, none of the published releases compile correctly
-VERSION=f2ce8db2fdb6cf2d357059e8959bb77442826ed6
+VERSION=998aada2a54f868727f64a94955cff142ef18a81
 
 set -o errexit
 set -o nounset
@@ -17,13 +17,11 @@ pushd tmp-install-gecode
 git clone https://github.com/Gecode/gecode.git
 cd gecode
 git checkout $VERSION
-mkdir build
-cd build
-../configure --disable-qt --disable-gist --enable-static
+touch configure  # keep configure newer than configure.ac to prevent config.status rerunning autoconf
+./configure --disable-qt --disable-gist --enable-static
 make -j${PROCESSES}
 cp tools/flatzinc/fzn-gecode ${BIN_DIR}/fzn-gecode
 echo "gecode executable is at ${BIN_DIR}/fzn-gecode"
 ls -l ${BIN_DIR}/fzn-gecode
 popd
 rm -rf tmp-install-gecode
-

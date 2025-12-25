@@ -277,8 +277,8 @@ mainWithArgs config@Solve{..} = do
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
                        ])
-    when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
-        userErr1 "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
+    when (solver `elem` ["bc_minisat_all", "nbc_minisat_all", "bdd_minisat_all"] && nbSolutions /= "all") $
+        userErr1 "The solvers bc_minisat_all, nbc_minisat_all and bdd_minisat_all only work with --number-of-solutions=all"
     essenceM_beforeNR <- readModelFromFile essence
     essenceM <- prologue def essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
@@ -955,7 +955,8 @@ solverExecutables =
     , ( "minisat"         , "minisat" )
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
-    , ( "open-wbo"        , "open-wbo" )
+    , ( "bdd_minisat_all" , "bdd_minisat_all_release" )
+    , ( "wmaxcdcl"        , "wmaxcdcl" )
     , ( "or-tools"        , "fzn-cp-sat" )
     , ( "coin-or"         , "minizinc" )
     , ( "cplex"           , "minizinc" )
@@ -1056,15 +1057,19 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , "-satsolver-bin", "minisat"
                                       ]
         "bc_minisat_all"    -> return [ "-sat"
-                                      , "-sat-family", "bc_minisat_all"
+                                      , "-sat-family", "nbc_minisat_all"
                                       , "-satsolver-bin", "bc_minisat_all_release"
                                       ]
         "nbc_minisat_all"   -> return [ "-sat"
                                       , "-sat-family", "nbc_minisat_all"
                                       , "-satsolver-bin", "nbc_minisat_all_release"
                                       ]
-        "open-wbo"          -> return [ "-maxsat"
-                                      , "-satsolver-bin", "open-wbo"
+        "bdd_minisat_all"   -> return [ "-sat"
+                                      , "-sat-family", "nbc_minisat_all"
+                                      , "-satsolver-bin", "bdd_minisat_all_release"
+                                      ]
+        "wmaxcdcl"          -> return [ "-maxsat"
+                                      , "-satsolver-bin", "wmaxcdcl"
                                       ]
         "coin-or"           -> return [ "-minizinc"
                                       , "-solver-options", "--solver COIN-BC"

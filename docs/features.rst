@@ -162,7 +162,7 @@ Currently the following solvers are supported.
 - minisat (SAT solver)
 - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)
 - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)
-- open-wbo (MaxSAT solver, only works with optimisation problems)
+- wmaxcdcl (MaxSAT solver, only works with optimisation problems)
 - coin-or (MIP solver, implemented via MiniZinc)
 - cplex (MIP solver, implemented via MiniZinc)
 - boolector (SMT solver, supported logics: bv)

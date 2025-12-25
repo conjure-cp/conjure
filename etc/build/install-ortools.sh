@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# version as of May 2025
-VERSION=v9.12
-
-source "download.sh" 2> /dev/null               # if called from the script dir
-source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
+# version as of Dec 2025
+VERSION=v9.14
 
 set -o errexit
 set -o nounset
+set -o pipefail
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
-export LIB_DIR=${LIB_DIR:-${HOME}/.local/lib}
+export LIB_DIR=${BIN_DIR}/lib
 export PROCESSES=${PROCESSES:-1}
 
 mkdir -p ${BIN_DIR}
@@ -19,14 +17,25 @@ mkdir -p ${LIB_DIR}
 rm -rf tmp-install-ortools
 mkdir tmp-install-ortools
 pushd tmp-install-ortools
-download https://github.com/google/or-tools/archive/refs/tags/${VERSION}.zip
-unzip ${VERSION}.zip
-cd or-tools-*
-cmake -S . -B build -DBUILD_DEPS=ON
-cmake --build build --config Release --target all -j${PROCESSES}
-cp build/bin/fzn-cp-sat ${BIN_DIR}/fzn-cp-sat
-# .dylib or .a depending on OS
-cp build/lib*/lib* ${LIB_DIR}
+git clone https://github.com/google/or-tools.git
+cd or-tools
+git checkout $VERSION
+STAGING_PREFIX="$(pwd)/stage-install"
+mkdir -p "${STAGING_PREFIX}"
+cmake -S . -B build \
+  -DBUILD_DEPS=ON \
+  -DUSE_COINOR=OFF \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="${STAGING_PREFIX}" \
+  -DCMAKE_INSTALL_BINDIR=bin \
+  -DCMAKE_INSTALL_LIBDIR=lib
+cmake --build build --config Release --target install -j${PROCESSES}
+cp "${STAGING_PREFIX}/bin/fzn-cp-sat" "${BIN_DIR}/fzn-cp-sat"
+shopt -s nullglob
+for lib_path in "${STAGING_PREFIX}/lib/"*; do
+  cp -a "${lib_path}" "${LIB_DIR}/"
+done
+shopt -u nullglob
 echo "ortools executable is at ${BIN_DIR}/fzn-cp-sat"
 ls -l ${BIN_DIR}/fzn-cp-sat
 popd

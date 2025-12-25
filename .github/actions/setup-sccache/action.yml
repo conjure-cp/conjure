@@ -1,0 +1,51 @@
+name: Configure sccache wrappers
+description: Wrap compilers with sccache and set CMake launchers when needed.
+runs:
+  using: composite
+  steps:
+    - id: configure
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "SCCACHE_GHA_ENABLED=true" >> "${GITHUB_ENV}"
+        SCCACHE_BIN=$(command -v sccache || true)
+        if [ -z "${SCCACHE_BIN}" ]; then
+          echo "sccache not found on PATH; skipping wrapper configuration"
+          exit 0
+        fi
+
+        WRAPPER_DIR="${RUNNER_TEMP:-${HOME}/tmp}/sccache-wrappers"
+        mkdir -p "${WRAPPER_DIR}"
+
+        wrap_tool() {
+          local env_var="$1"
+          local tool="$2"
+          local real_tool
+          if ! real_tool=$(command -v "${tool}" 2>/dev/null); then
+            return 1
+          fi
+          local wrapper_path="${WRAPPER_DIR}/${tool}-sccache"
+          printf '%s\n%s\n' '#!/usr/bin/env bash' "exec \"${SCCACHE_BIN}\" \"${real_tool}\" \"\$@\"" > "${wrapper_path}"
+          chmod +x "${wrapper_path}"
+          echo "${env_var}=${wrapper_path}" >> "${GITHUB_ENV}"
+          return 0
+        }
+
+        WRAPPED_CC=0
+        WRAPPED_CXX=0
+
+        if wrap_tool "CC" "cc"; then
+          WRAPPED_CC=1
+        fi
+        if wrap_tool "CXX" "c++"; then
+          WRAPPED_CXX=1
+        fi
+        wrap_tool "HC" "ghc" || true
+        wrap_tool "HCPKG" "ghc-pkg" || true
+
+        if [ "${WRAPPED_CC}" -eq 0 ]; then
+          echo "CMAKE_C_COMPILER_LAUNCHER=${SCCACHE_BIN}" >> "${GITHUB_ENV}"
+        fi
+        if [ "${WRAPPED_CXX}" -eq 0 ]; then
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=${SCCACHE_BIN}" >> "${GITHUB_ENV}"
+        fi

@@ -20,27 +20,25 @@ permissions:
   contents: write
 
 env:
-  SCCACHE_GHA_ENABLED: "true"
+  RELEASE_VERSION: ${{ github.sha }} # will be overwritten below depending on PR/tag
 
 jobs:
-
   Job:
-
     strategy:
+      fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
         GHC_VERSION: ["9.10"]
         os: [ubuntu-latest, macos-latest]
         include:
-        - os: ubuntu-latest
-          release_suffix: linux
-        - os: macos-latest
-          release_suffix: macos-intel
+          - os: ubuntu-latest
+            release_suffix: linux
+          - os: macos-latest
+            release_suffix: macos
 
     runs-on: ${{ matrix.os }}
 
     steps:
-
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         name: Checkout repository
 
       - name: Stack version
@@ -57,20 +55,23 @@ jobs:
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Configure compiler wrappers for sccache
+        uses: ./.github/actions/setup-sccache
 
       - name: Setting PATH
         shell: bash
-        run: echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+        run: echo "${GITHUB_WORKSPACE}/artefacts" >> ${GITHUB_PATH}
 
       - name: Build Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
+        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts GHC_VERSION=${{ matrix.GHC_VERSION }} BUILD_TESTS=true make
 
       - name: Setting PATH (for solvers)
         shell: bash
         run: |
-          echo "${HOME}/solver-binaries" >> ${GITHUB_PATH}
+          echo "${GITHUB_WORKSPACE}/artefacts" >> ${GITHUB_PATH}
 
       # libnuma-dev for runsolver
       # autoconf, cmake, gmp for yices
@@ -87,9 +88,7 @@ jobs:
 
       - name: Build solvers
         shell: bash
-        run: |
-          rm -rf ${HOME}/solver-binaries
-          BIN_DIR=${HOME}/solver-binaries PROCESSES=2 make solvers
+        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
 
       - name: Set version string to the commit hash
         run: echo "RELEASE_VERSION=${{ github.sha }}" >> "$GITHUB_ENV"
@@ -105,42 +104,78 @@ jobs:
       - name: Create the zip archives
         shell: bash
         run: |
-          pushd ${HOME}/solver-binaries
+          pushd ${GITHUB_WORKSPACE}
 
-          cp ~/.local/bin/conjure ~/.local/bin/savilerow ~/.local/bin/savilerow.jar .
-          mkdir -p lib
-          cp -r ~/.local/bin/lib/* lib/
+          find artefacts -type f
 
-          cd ..
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
-          cp -r solver-binaries conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
-          cd solver-binaries
-          cp -r ../conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers .
+          cp -r artefacts conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
-          cp conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
+          cp -r artefacts/conjure conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
 
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           zip -r -9 conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
+          pwd
+          ls -l
+          du -sh conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}*
+
           popd
 
-          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip .
-          cp ${HOME}/solver-binaries/conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip .
+      - name: Create allsolver test zip
+        shell: bash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pushd ${GITHUB_WORKSPACE}/tests/allsolvers
+          zip -r -9 ${GITHUB_WORKSPACE}/conjure-allsolver-test-${RELEASE_VERSION}.zip .
+          popd
 
-# See https://github.com/softprops/action-gh-release
+      - name: Upload zip archives as build artefacts (conjure only)
+        uses: actions/upload-artifact@v6
+        with:
+          name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}
+          compression-level: 9
+          path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
+          if-no-files-found: error
+
+      - name: Upload zip archives as build artefacts (conjure and solvers)
+        uses: actions/upload-artifact@v6
+        with:
+          name: conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers
+          compression-level: 9
+          path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
+          if-no-files-found: error
+
+      - name: Upload zip archive as build artefact (allsolver tests)
+        uses: actions/upload-artifact@v6
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: conjure-allsolver-test-${{ env.RELEASE_VERSION }}
+          compression-level: 9
+          path: ${{ github.workspace }}/conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
+          if-no-files-found: error
+
       - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${RELEASE_VERSION}
+          name: ${{ env.RELEASE_VERSION }}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}.zip
-            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers.zip
+            conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
+            conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
+
+      - name: Upload allsolver test zip to release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
