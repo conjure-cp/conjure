@@ -167,8 +167,8 @@ Installing Savile Row
 ---------------------
 
 Since Conjure works by generating an Essence' model, Savile Row is a vital tool when using it.
-You do not need to download Savile Row separately when you compile Conjure from source.
-An up-to-date version of Savile Row is also copied next to the Conjure executable.
+You do not need to download Savile Row separately when you compile Conjure from source or download a ``*-with-solvers`` bundle or use a container-based installation.
+An up-to-date version of Savile Row is provided in these cases.
 
 A standalone version of Savile Row and user documentation for Savile Row can be downloaded from `its website <http://savilerow.cs.st-andrews.ac.uk>`_.
 
