@@ -17,7 +17,7 @@ ENV LIB_DIR=/opt/conjure/lib
 RUN mkdir -p $BIN_DIR
 RUN mkdir -p $LIB_DIR
 ENV PATH=$BIN_DIR:$PATH
-ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR
 ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 
 # Dependencies
@@ -89,9 +89,8 @@ WORKDIR /conjure
 ENV BIN_DIR=/opt/conjure
 ENV LIB_DIR=/opt/conjure/lib
 ENV PATH=$BIN_DIR:$PATH
-ENV LD_LIBRARY_PATH=$LIB_DIR:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR
 ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential          # so we can compile stuff
 RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless     # savilerow
 RUN apt-get update && apt-get install -y --no-install-recommends libnuma-dev              # runsolver
 RUN mkdir -p /opt/conjure
