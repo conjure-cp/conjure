@@ -1,4 +1,3 @@
-
 .. _installation:
 
 Installation
@@ -6,16 +5,92 @@ Installation
 
 Conjure can be installed either by downloading a binary distribution, or by compiling it from source code.
 
-It can also be used directly via a container that we release on GitHub. **This is the suggested way of using Conjure**, see :ref:`docker-podman-apptainer` section below. Make sure you read the entire section including :ref:`shell-wrapper`.
+It can also be used directly via a container that we release on GitHub. **This is the suggested way of using Conjure**, see :ref:`container-quickstart` and :ref:`docker-podman-apptainer` below.
+
+Why containers are recommended
+------------------------------
+
+Using Conjure via a container avoids the need to install and manage its dependencies locally, including Savile Row and backend solvers. Containers also make it easy to pin exact versions of Conjure and solvers, ensuring reproducibility across machines and over time. For most users, especially when running experiments or teaching, containers provide the simplest and most robust setup.
+
+.. _container-quickstart:
+
+Quick start using containers
+----------------------------
+
+If you have Docker, Podman, or Apptainer working locally, the simplest way to use Conjure is to install a small wrapper script that runs Conjure inside a container. This makes ``conjure`` available as a normal command, both interactively and from scripts.
+
+The examples below install the wrapper in ``~/.local/bin``. **Make sure this directory is on your ``PATH``**.
+
+Docker
+^^^^^^
+
+.. code-block:: bash
+
+    # create the directory if it doesn't exist
+    mkdir -p ~/.local/bin
+
+    # create the conjure wrapper
+    echo 'docker run --rm -v "$PWD:/work" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+
+    # make it executable
+    chmod +x ~/.local/bin/conjure
+
+Podman
+^^^^^^
+
+.. code-block:: bash
+
+    # create the directory if it doesn't exist
+    mkdir -p ~/.local/bin
+
+    # create the conjure wrapper
+    echo 'podman run --rm -v "$PWD:/work:z" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+
+    # make it executable
+    chmod +x ~/.local/bin/conjure
+
+Apptainer
+^^^^^^^^^
+
+.. code-block:: bash
+
+    # create the directory if it doesn't exist
+    mkdir -p ~/.local/bin
+
+    # create the conjure wrapper
+    echo 'apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+
+    # make it executable
+    chmod +x ~/.local/bin/conjure
+
+After installation, verify that Conjure is available:
+
+.. code-block:: bash
+
+    conjure --version
+
+You can also verify that the installed solvers are all operational:
+
+.. code-block:: bash
+    # downlad a small bundle of files, we will use this to test the installation
+    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolver-test-v2.6.0.zip
+
+    # run the test
+    unzip conjure-allsolver-test-v2.6.0.zip && bash test.sh
+
+`test.sh` should produce a bunch of output and include "Pass!" as the last line.
+
+Note that this quick start guide is not a replacement for the complete installation instructions; please keep reading to learn more.
 
 Downloading a binary
 --------------------
 
-Conjure is available as an executable binary for Linux and MacOS.
+Conjure is available as an executable binary for Linux and macOS.
 If it is available for your platform, you can just `download it <https://www.github.com/conjure-cp/conjure/releases/latest>`_ and run it.
-It may be useful to save the binary under a directory that is in your search PATH, so you do not have to type the full path to the Conjure executable to run it.
 
-You can add a directory into your PATH by executing the following commands in the terminal (assuming you extract the zip directory and `mv`` it to `~/work/conjure` - feel free to change the location to fit your workflow better)
+It may be useful to save the binary under a directory that is in your ``PATH``, so you do not have to type the full path to the Conjure executable.
+
+Assuming you extract the zip archive to ``~/work/conjure``:
 
 .. code-block:: bash
 
@@ -23,21 +98,19 @@ You can add a directory into your PATH by executing the following commands in th
     export LD_LIBRARY_PATH=~/work/conjure/lib:$LD_LIBRARY_PATH
     export MZN_STDLIB_DIR=~/work/conjure/share/minizinc/
 
-
-For MacOS, you will have to remove the quarantine attribute from all files and directories inside the downloaded directory. To do this, navigate to the directory and run the following command.
+For macOS, remove the quarantine attribute from all files and directories inside the downloaded directory:
 
 .. code-block:: bash
 
     xattr -dr com.apple.quarantine .
 
-
-You will also need to install Java for Savile Row. In macOS, we recommend using Homebrew and Amazon Corretto. Install Homebrew if you don't have it, then run the following command.
+You will also need Java for Savile Row. On macOS, we recommend Homebrew and Amazon Corretto:
 
 .. code-block:: bash
 
     brew install --cask corretto
 
-If you are using a recent Mac, you *might* need to run the following commmand to allow Intel-based applications to tun on your computer.
+On recent Macs, you *might* need to allow Intel-based applications to run:
 
 .. code-block:: bash
 
@@ -47,22 +120,22 @@ If you are using a recent Mac, you *might* need to run the following commmand to
 For Windows, please use the Linux binaries with the
 `Windows Subsystem for Linux <https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux>`_.
 
-To Install into wsl2 on Windows then use the following commands 
+To install into WSL2:
 
 .. code-block:: bash
 
-     cd 
-     wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-v2.6.0-linux-with-solvers.zip
-     unzip conjure-v2.6.0-linux-with-solvers.zip
-     echo 'export PATH="$HOME/conjure-v2.6.0-linux-with-solvers:$PATH"' >> ~/.zshrc
-     echo 'export LD_LIBRARY_PATH="$HOME/conjure-v2.6.0-linux-with-solvers/lib:$LD_LIBRARY_PATH"' >> ~/.zshrc
-     
-Then restart your shell!
+    cd
+    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-v2.6.0-linux-with-solvers.zip
+    unzip conjure-v2.6.0-linux-with-solvers.zip
+    echo 'export PATH="$HOME/conjure-v2.6.0-linux-with-solvers:$PATH"' >> ~/.zshrc
+    echo 'export LD_LIBRARY_PATH="$HOME/conjure-v2.6.0-linux-with-solvers/lib:$LD_LIBRARY_PATH"' >> ~/.zshrc
+
+Then restart your shell.
 
 Compiling from source
 ---------------------
 
-In order to compile Conjure on your computer, please download the source code from `GitHub <https://github.com/conjure-cp/conjure>`_.
+To compile Conjure yourself, download the source code from `GitHub <https://github.com/conjure-cp/conjure>`_.
 
 .. code-block:: bash
 
@@ -70,7 +143,7 @@ In order to compile Conjure on your computer, please download the source code fr
     cd conjure
     BIN_DIR=/somewhere/in/your/path make install
 
-Conjure is implemented in Haskell, it can be compiled using either `cabal-install <http://wiki.haskell.org/Cabal-Install>`_ or `stack <https://docs.haskellstack.org/en/stable/README/>`_.
+Conjure is implemented in Haskell and can be compiled using either `cabal-install <http://wiki.haskell.org/Cabal-Install>`_ or `stack <https://docs.haskellstack.org/>`_.
 
 It comes with a Makefile which will use Stack by default.
 The default target in the Makefile will install Stack using the standard procedures (which involves downloading and running a script).
@@ -100,255 +173,134 @@ Docker / Podman / Apptainer
 ---------------------------
 
 Conjure is distributed as a container image via the GitHub Container Registry.
-Using a container allows Conjure (together with Savile Row and supported
-solvers) to be run without a local installation, and makes it easy to pin a
-specific version for reproducibility.
+Using a container allows Conjure (together with Savile Row and supported solvers) to be run without a local installation, and makes it easy to pin a specific version for reproducibility.
 
 The container image includes:
 
 - ``conjure``
 - ``savilerow``
-- almost all solvers supported by Conjure
+- almost all supported solvers
 
 Available images
 ^^^^^^^^^^^^^^^^
 
 - Latest release:
-  
+
   ``ghcr.io/conjure-cp/conjure:latest``
 
-- Latest commit on ``main`` (i.e. the development version):
+- A specific release:
+
+  ``ghcr.io/conjure-cp/conjure:v2.6.0``
+
+- Latest commit on ``main`` (development version):
 
   ``ghcr.io/conjure-cp/conjure:main``
 
-- A specific immutable image (recommended for reproducibility):
+- Immutable image (recommended for reproducibility):
 
   ``ghcr.io/conjure-cp/conjure@sha256:VERSION``
 
-A full list of available images and tags is available at:
-https://github.com/conjure-cp/conjure/pkgs/container/conjure
+See all available images at: https://github.com/conjure-cp/conjure/pkgs/container/conjure
 
 Docker and Podman usage
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The examples below assume that:
+The examples below assume:
 
 - Docker or Podman is installed and running
-- Your current directory contains:
-  
+- The current directory contains:
   - an Essence model (e.g. ``test.essence``)
   - a parameter file (e.g. ``sample.param``)
 
-All commands are run from that directory.
-
-Basic example
-"""""""""""""
-
-The following command is equivalent to running::
-
-  conjure solve test.essence sample.param
-
-Using Docker:
+Docker:
 
 .. code-block:: bash
 
-   docker run --rm \
-     -v "$PWD:/work" \
-     -w /work \
-     ghcr.io/conjure-cp/conjure:v2.6.0 \
-     conjure solve test.essence sample.param
+    docker run --rm \
+      -v "$PWD:/work" \
+      -w /work \
+      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      conjure solve test.essence sample.param
 
-Using Podman:
+Podman:
 
 .. code-block:: bash
 
-   podman run --rm \
-     -v "$PWD:/work" \
-     -w /work \
-     ghcr.io/conjure-cp/conjure:v2.6.0 \
-     conjure solve test.essence sample.param
-
-Explanation
-"""""""""""
-
-- ``-v "$PWD:/work"``
-  
-  Mounts the current host directory into the container at ``/work``.
-
-- ``-w /work``
-  
-  Sets the container working directory so Conjure can find input files and write
-  outputs.
-
-- ``--rm``
-  
-  Removes the container after execution. Output files remain on the host.
-
-Output files
-""""""""""""
-
-By default, Conjure writes outputs to the working directory. After running the
-command, you should see:
-
-- a ``conjure-output/`` directory
-- one or more solution files (depending on the problem and solver)
-
-All outputs are written directly to the host filesystem.
+    podman run --rm \
+      -v "$PWD:/work:z" \
+      -w /work \
+      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      conjure solve test.essence sample.param
 
 Apptainer usage
 ^^^^^^^^^^^^^^^
 
-The same container image can be used with Apptainer (formerly Singularity),
-which is common on HPC systems.
-
 .. code-block:: bash
 
-   apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
-     conjure solve test.essence sample.param
-
-In this case, Apptainer automatically binds the current directory, so input and
-output files are available without additional flags.
-
+    apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
+      conjure solve test.essence sample.param
 
 Version pinning
 ^^^^^^^^^^^^^^^
 
-For fully reproducible experiments, use either a fixed version tag (e.g.
-``v2.6.0``) or a SHA-based image reference. This guarantees that the same Conjure,
-Savile Row, and solver versions are used across machines and over time.
-
-.. _shell-wrapper:
-
-Shell wrapper (optional, but probably a good idea!)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you frequently run Conjure via a container, you may find it convenient to
-define a shell wrapper so that ``conjure`` behaves like a locally installed
-command.
-
-The examples below assume Bash or Zsh.
-
-Docker
-""""""
-
-Add the following function to your ``.bashrc`` or ``.zshrc``:
-
-.. code-block:: bash
-
-   conjure() {
-     docker run --rm \
-       -v "$PWD:/work" \
-       -w /work \
-       ghcr.io/conjure-cp/conjure:v2.6.0 \
-       conjure "$@"
-   }
-
-Podman
-""""""
-
-.. code-block:: bash
-
-   conjure() {
-     podman run --rm \
-       -v "$PWD:/work" \
-       -w /work \
-       ghcr.io/conjure-cp/conjure:v2.6.0 \
-       conjure "$@"
-   }
-
-Apptainer
-"""""""""
-
-Apptainer automatically binds the current directory, so no explicit volume
-mount is required.
-
-.. code-block:: bash
-
-   conjure() {
-     apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
-       conjure "$@"
-   }
-
-Usage
-"""""
-
-After defining one of the wrappers above, you can run:
-
-.. code-block:: bash
-
-   conjure solve test.essence sample.param
-
-The wrapper forwards all arguments to Conjure unchanged.
-
-Notes
-"""""
-
-- Only define **one** of the wrappers, corresponding to the container runtime
-  you use.
-- To change Conjure versions, update the image tag in the wrapper.
-- For fully reproducible setups, consider using a SHA-based image reference
-  instead of a version tag.
+For fully reproducible experiments, use a fixed version tag or a SHA-based image reference.
 
 
 Authentication note (GHCR)
-""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If pulling the image fails with an error such as::
 
   denied: denied
 
-this is usually caused by cached credentials for ``ghcr.io``. Logging out and
-retrying typically resolves the issue::
+this is usually caused by cached credentials for ``ghcr.io``.
+Logging out and retrying typically resolves the issue::
 
   docker logout ghcr.io
 
-Or the same command for `podman`. Apptainer doesn't use the same credential-based system for accessing GHCR and doesn't have a `logout` command.
+or the equivalent command for Podman.
+
+Apptainer does not use Docker/Podman credential stores and does not provide a
+``logout`` command.
 
 Testing your installation
 -------------------------
 
-Each release ships a small solver smoke-test bundle called
-``conjure-allsolver-test-v2.6.0.zip``. It is the contents of
-``tests/allsolvers`` and includes ``run.sh``, ``test.sh``,
-``test.essence``, ``testo.essence``, and ``stdout.expected``.
+Each release ships a solver smoke-test bundle called ``conjure-allsolver-test-v2.6.0.zip``.
 
-Download the zip from the release page, extract it, and change into the
-extracted directory. If you compiled Conjure yourself, downloaded the
-precompiled executables, or set up the container shell wrapper above, then
-``conjure`` is already on your ``PATH`` and you can run the tests directly.
-If you did not set up the wrapper, use the container commands below.
-
-Direct run (compiling from source, precompiled executables, or wrapper alias):
+If you installed one of the wrappers above, ``conjure`` is already on your ``PATH`` and you can run the tests directly:
 
 .. code-block:: bash
 
-   bash test.sh
+    bash test.sh
 
-On success you will see ``Pass!`` and a zero exit code. If you want to see the
-solver output without the diff check, run ``run.sh`` instead.
+On success you will see ``Pass!`` and a zero exit code.
 
-Container run (no wrapper alias):
-
-.. code-block:: bash
-
-   docker run --rm \
-     -v "$PWD:/work" \
-     -w /work \
-     ghcr.io/conjure-cp/conjure:v2.6.0 \
-     bash test.sh
+Container-only execution (no wrapper):
 
 .. code-block:: bash
 
-   podman run --rm \
-     -v "$PWD:/work" \
-     -w /work \
-     ghcr.io/conjure-cp/conjure:v2.6.0 \
-     bash test.sh
+    docker run --rm \
+      -v "$PWD:/work" \
+      -w /work \
+      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      bash test.sh
 
 .. code-block:: bash
 
-   apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
-     bash test.sh
+    podman run --rm \
+      -v "$PWD:/work:z" \
+      -w /work \
+      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      bash test.sh
+
+.. code-block:: bash
+
+    apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
+      bash test.sh
+
+
+
 
 
 CPLEX with Docker/Podman
