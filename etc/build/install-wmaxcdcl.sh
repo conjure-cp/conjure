@@ -23,7 +23,7 @@ rm -rf tmp-install-wmaxcdcl
 mkdir -p tmp-install-wmaxcdcl
 pushd tmp-install-wmaxcdcl
 download "${URL}" WMaxCDCL.zip
-unzip -q WMaxCDCL.zip
+unzip WMaxCDCL.zip
 
 ################################################################################
 # WMaxCDCL's DIMACS parser carries unused locals that break some arm64 toolchains.
@@ -50,14 +50,38 @@ if end == -1:
 
 segment = text[start:end]
 original = segment
-segment = re.sub(r"\n\\s*int vars\\s*=\\s*0;\\s*", "\n", segment, count=1)
-segment = re.sub(r"\n\\s*int clauses\\s*=\\s*0;\\s*", "\n", segment, count=1)
-segment = re.sub(r"\n\\s*int cnt\\s*=\\s*0;\\s*", "\n", segment, count=1)
-segment = re.sub(r"\n\\s*cnt\\+\\+;\\s*", "\n", segment, count=1)
+segment = re.sub(r"\\bint\\s+vars\\s*=\\s*0\\s*;\\s*", "", segment, count=1)
+segment = re.sub(r"\\bint\\s+clauses\\s*=\\s*0\\s*;\\s*", "", segment, count=1)
+segment = re.sub(r"\\bint\\s+cnt\\s*=\\s*0\\s*;\\s*", "", segment, count=1)
+segment = re.sub(r"\\bcnt\\s*\\+\\+\\s*;\\s*", "", segment, count=1)
 
 if segment != original:
     text = text[:start] + segment + text[end:]
     path.write_text(text)
+PY
+################################################################################
+
+################################################################################
+# WMaxCDCL uses x86-only FPU control macros; guard them on x86 Linux only.
+python3 - <<'PY'
+from pathlib import Path
+import sys
+
+path = Path("WMaxCDCL/code/simp/Main.cc")
+if not path.exists():
+    print("NOTE: WMaxCDCL/code/simp/Main.cc not found; skipping FPU guard patch.", file=sys.stderr)
+    raise SystemExit(0)
+
+text = path.read_text()
+old = "#if defined(__linux__)"
+new = "#if defined(__linux__) && (defined(__i386__) || defined(__x86_64__))"
+if new in text:
+    raise SystemExit(0)
+if old not in text:
+    print("NOTE: linux guard not found in Main.cc; skipping FPU guard patch.", file=sys.stderr)
+    raise SystemExit(0)
+
+path.write_text(text.replace(old, new, 1))
 PY
 ################################################################################
 
