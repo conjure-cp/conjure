@@ -20,18 +20,19 @@ cd glucose
 git checkout $VERSION
 python3 - <<'PY'
 from pathlib import Path
-import re
 import sys
 
-path = Path("simp/Main.cc")
-text = path.read_text()
-pattern = r"^\\s*#if\\s+defined\\(__linux__\\)\\s*$"
-replacement = "#if defined(__linux__) && (defined(__i386__) || defined(__x86_64__))"
-new_text, count = re.subn(pattern, replacement, text, flags=re.M)
-if count > 0:
-    path.write_text(new_text)
-else:
-    print("NOTE: Expected linux guard not found in simp/Main.cc; skipping x86 guard.", file=sys.stderr)
+targets = [Path("simp/Main.cc"), Path("parallel/Main.cc")]
+replacement = "defined(__linux__) && (defined(__i386__) || defined(__x86_64__))"
+
+for path in targets:
+    text = path.read_text()
+    if replacement in text:
+        continue
+    if "defined(__linux__)" not in text:
+        print(f"NOTE: did not find defined(__linux__) in {path}; skipping x86 guard.", file=sys.stderr)
+        continue
+    path.write_text(text.replace("defined(__linux__)", replacement, 1))
 PY
 echo 'CXXFLAGS += -Wno-class-memaccess -Wno-error=class-memaccess' >> mtl/template.mk
 (
