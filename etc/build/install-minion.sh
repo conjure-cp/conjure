@@ -18,7 +18,7 @@ cd minion
 git checkout ${VERSION}
 mkdir build
 cd build
-../configure.py
+python ../configure.py || python3 ../configure.py
 make -j${PROCESSES} minion
 cp minion ${BIN_DIR}/minion
 echo "minion executable is at ${BIN_DIR}/minion"
