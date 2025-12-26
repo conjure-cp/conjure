@@ -9,7 +9,7 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
-# QEMU+arm64 toolchains can treat Glucose's class-memaccess warnings as errors
+# QEMU+arm64 toolchains can treat Glucose's class-memaccess warnings as errors.
 export CXXFLAGS="${CXXFLAGS:-} -Wno-class-memaccess -Wno-error=class-memaccess"
 
 rm -rf tmp-install-glucose
@@ -18,6 +18,7 @@ pushd tmp-install-glucose
 git clone https://github.com/audemard/glucose.git
 cd glucose
 git checkout $VERSION
+echo 'CXXFLAGS += -Wno-class-memaccess -Wno-error=class-memaccess' >> mtl/template.mk
 (
     cd simp
     make -j${PROCESSES} r
