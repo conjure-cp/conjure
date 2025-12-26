@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version as of 26 Feb 2024
+# version as of Dec 2025
 VERSION=4.2.1
 
 set -o errexit
@@ -9,15 +9,16 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
-# QEMU+arm64 toolchains can treat Glucose's class-memaccess warnings as errors.
-export CXXFLAGS="${CXXFLAGS:-} -Wno-class-memaccess -Wno-error=class-memaccess"
-
 rm -rf tmp-install-glucose
 mkdir tmp-install-glucose
 pushd tmp-install-glucose
 git clone https://github.com/audemard/glucose.git
 cd glucose
 git checkout $VERSION
+
+
+################################################################################
+# Glucose's Linux FPU control block is x86-only; tighten the guard for arm64 builds.
 python3 - <<'PY'
 from pathlib import Path
 import sys
@@ -32,9 +33,12 @@ for path in targets:
     if "defined(__linux__)" not in text:
         print(f"NOTE: did not find defined(__linux__) in {path}; skipping x86 guard.", file=sys.stderr)
         continue
+    # Glucose uses x86-only FPU control macros under a linux guard; narrow it to x86.
     path.write_text(text.replace("defined(__linux__)", replacement, 1))
 PY
-echo 'CXXFLAGS += -Wno-class-memaccess -Wno-error=class-memaccess' >> mtl/template.mk
+################################################################################
+
+
 (
     cd simp
     make -j${PROCESSES} r
