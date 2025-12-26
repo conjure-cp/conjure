@@ -14,8 +14,6 @@ export PROCESSES=${PROCESSES:-1}
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-LOCAL_WMAXCDCL_DIR="${REPO_ROOT}/WMaxCDCL"
-LOCAL_WMAXCDCL_ZIP="${REPO_ROOT}/WMaxCDCL.zip"
 URL="https://maxsat-evaluations.github.io/2023/mse23-solver-src/exact/WMaxCDCL.zip"
 
 rm -rf tmp-install-wmaxcdcl
