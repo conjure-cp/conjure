@@ -26,42 +26,6 @@ download "${URL}" WMaxCDCL.zip
 unzip WMaxCDCL.zip
 
 ################################################################################
-# WMaxCDCL's DIMACS parser carries unused locals that break some arm64 toolchains.
-python3 - <<'PY'
-from pathlib import Path
-import re
-import sys
-
-path = Path("WMaxCDCL/code/core/Dimacs.h")
-if not path.exists():
-    print("NOTE: WMaxCDCL/code/core/Dimacs.h not found; skipping patch.", file=sys.stderr)
-    raise SystemExit(0)
-
-text = path.read_text()
-start = text.find("static void parse_DIMACS_new")
-if start == -1:
-    print("NOTE: parse_DIMACS_new not found; skipping patch.", file=sys.stderr)
-    raise SystemExit(0)
-
-end = text.find("\n    template<class Solver>", start)
-if end == -1:
-    print("NOTE: parse_DIMACS_new end not found; skipping patch.", file=sys.stderr)
-    raise SystemExit(0)
-
-segment = text[start:end]
-original = segment
-segment = re.sub(r"\\bint\\s+vars\\s*=\\s*0\\s*;\\s*", "", segment, count=1)
-segment = re.sub(r"\\bint\\s+clauses\\s*=\\s*0\\s*;\\s*", "", segment, count=1)
-segment = re.sub(r"\\bint\\s+cnt\\s*=\\s*0\\s*;\\s*", "", segment, count=1)
-segment = re.sub(r"\\bcnt\\s*\\+\\+\\s*;\\s*", "", segment, count=1)
-
-if segment != original:
-    text = text[:start] + segment + text[end:]
-    path.write_text(text)
-PY
-################################################################################
-
-################################################################################
 # WMaxCDCL uses x86-only FPU control macros; guard them on x86 Linux only.
 python3 - <<'PY'
 from pathlib import Path
