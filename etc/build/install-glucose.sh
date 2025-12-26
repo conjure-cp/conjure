@@ -25,17 +25,13 @@ import sys
 
 path = Path("simp/Main.cc")
 text = path.read_text()
-pattern = r"^.*_FPU_GETCW\\(.*\\).*$"
-replacement = (
-    "#if defined(__i386__) || defined(__x86_64__)\\n"
-    "\\g<0>\\n"
-    "#endif"
-)
+pattern = r"^\\s*#if\\s+defined\\(__linux__\\)\\s*$"
+replacement = "#if defined(__linux__) && (defined(__i386__) || defined(__x86_64__))"
 new_text, count = re.subn(pattern, replacement, text, flags=re.M)
 if count > 0:
     path.write_text(new_text)
 else:
-    print("NOTE: _FPU_GETCW line not found in simp/Main.cc; skipping x86 guard.", file=sys.stderr)
+    print("NOTE: Expected linux guard not found in simp/Main.cc; skipping x86 guard.", file=sys.stderr)
 PY
 echo 'CXXFLAGS += -Wno-class-memaccess -Wno-error=class-memaccess' >> mtl/template.mk
 (
