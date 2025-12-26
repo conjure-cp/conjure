@@ -145,7 +145,6 @@ solvers:
 	@mkdir -p ${BIN_DIR}
 	@mkdir -p ${LIB_DIR}
 	@rm -f make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null
-	@etc/build/silent-wrapper.sh etc/build/install-minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-boolector.sh
 	@etc/build/silent-wrapper.sh etc/build/install-cadical.sh
 	@etc/build/silent-wrapper.sh etc/build/install-chuffed.sh
@@ -154,10 +153,11 @@ solvers:
 	@etc/build/silent-wrapper.sh etc/build/install-kissat.sh
 	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minion.sh
-	@etc/build/silent-wrapper.sh etc/build/install-wmaxcdcl.sh
-	@etc/build/silent-wrapper.sh etc/build/install-ortools.sh
+	@etc/build/silent-wrapper.sh etc/build/install-minisat_all.sh
 	@etc/build/silent-wrapper.sh etc/build/install-minizinc.sh
+	@etc/build/silent-wrapper.sh etc/build/install-ortools.sh
+	@etc/build/silent-wrapper.sh etc/build/install-runsolver.sh
+	@etc/build/silent-wrapper.sh etc/build/install-wmaxcdcl.sh
 	@etc/build/silent-wrapper.sh etc/build/install-yices.sh
 	@etc/build/silent-wrapper.sh etc/build/install-z3.sh
-	@etc/build/silent-wrapper.sh etc/build/install-runsolver.sh
 	@if ls make-solvers-*.stderr make-solvers-*.stdout > /dev/null 2> /dev/null; then echo "At least one solver didn't build successfully."; exit 1; fi
