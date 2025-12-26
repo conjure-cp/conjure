@@ -1,39 +1,27 @@
 #!/bin/bash
 
-# version as of 18 November 2022
-# we extract minion out of an SR release, so this is the version of the SR release
-VERSION=1.9.1
-
-source "download.sh" 2> /dev/null               # if called from the script dir
-source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
+# version as of December 2025
+VERSION=5c9f347c864bc2b64684b1df9d366294c21aac49
 
 set -o errexit
 set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
+export PROCESSES=${PROCESSES:-1}
+
 
 rm -rf tmp-install-minion
 mkdir -p tmp-install-minion
 pushd tmp-install-minion
-
-OS=$(uname)
-
-if [ "$OS" == "Darwin" ]; then
-    download https://www-users.york.ac.uk/peter.nightingale/savilerow/savilerow-$VERSION-mac.tgz
-    tar zxf savilerow-$VERSION-mac.tgz
-    mv savilerow-$VERSION-mac/bin/minion ${BIN_DIR}/minion
-elif [ "$OS" == "Linux" ]; then
-    download https://www-users.york.ac.uk/peter.nightingale/savilerow/savilerow-$VERSION-linux.tgz
-    tar zxf savilerow-$VERSION-linux.tgz
-    mv savilerow-$VERSION-linux/bin/minion ${BIN_DIR}/minion
-else
-    # assuming this is Windows
-    echo "Your OS is (according to uname): ${OS}"
-    echo "No Minion for you."
-fi
-
+git clone https://github.com/minion/minion.git
+cd minion
+git checkout ${VERSION}
+mkdir build
+cd build
+../configure.py
+make -j${PROCESSES} minion
+cp minion ${BIN_DIR}/minion
 echo "minion executable is at ${BIN_DIR}/minion"
 ls -l ${BIN_DIR}/minion*
 popd
 rm -rf tmp-install-minion
-
