@@ -9,6 +9,9 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
+# QEMU+arm64 toolchains can treat Glucose's class-memaccess warnings as errors
+export CXXFLAGS="${CXXFLAGS:-} -Wno-class-memaccess -Wno-error=class-memaccess"
+
 rm -rf tmp-install-glucose
 mkdir tmp-install-glucose
 pushd tmp-install-glucose
