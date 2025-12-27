@@ -11,6 +11,8 @@ on:
     paths:
       - Dockerfile
       - .github/workflows/publish-ghcr.yml
+      - docker/**
+      - etc/build/**
                             # other branches that want testing must create a PR
 
 env:
@@ -19,8 +21,105 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-solvers:
+    name: Build solver ${{ matrix.solver }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        solver:
+          - boolector
+          - cadical
+          - chuffed
+          - gecode
+          - glucose
+          - kissat
+          - lingeling
+          - minion
+          - minisat_all
+          - minizinc
+          - ortools
+          - runsolver
+          - wmaxcdcl
+          - yices
+          - z3
+        arch: [amd64, arm64]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build solver rootfs
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/solvers/Dockerfile.${{ matrix.solver }}
+          platforms: linux/${{ matrix.arch }}
+          outputs: type=local,dest=out
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=solver-${{ matrix.solver }}-${{ matrix.arch }}
+          cache-to: type=gha,scope=solver-${{ matrix.solver }}-${{ matrix.arch }},mode=max
+
+      - name: Upload solver artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: solver-${{ matrix.solver }}-${{ matrix.arch }}
+          path: out
+
+  build-conjure:
+    name: Build conjure (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build conjure rootfs
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.conjure
+          platforms: linux/${{ matrix.arch }}
+          outputs: type=local,dest=out
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=conjure-${{ matrix.arch }}
+          cache-to: type=gha,scope=conjure-${{ matrix.arch }},mode=max
+
+      - name: Upload conjure artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conjure-${{ matrix.arch }}
+          path: out
+
+  assemble-runtime:
+    name: Assemble runtime (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    needs: [build-solvers, build-conjure]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
 
     permissions:
       contents: read
@@ -34,6 +133,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Download solver artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: solver-*-${{ matrix.arch }}
+          path: artifacts/solvers
+
+      - name: Download conjure artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: conjure-${{ matrix.arch }}
+          path: artifacts/conjure
+
+      - name: Merge solver and conjure outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p opt/conjure
+          rsync -a artifacts/conjure/opt/conjure/ opt/conjure/
+          for dir in artifacts/solvers/*; do
+            rsync -a "$dir/opt/conjure/" opt/conjure/
+          done
+
       - name: Log into registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
@@ -42,26 +163,61 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
+      - name: Extract Docker metadata (arch)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            suffix=-${{ matrix.arch }}
+
+      - name: Build and push runtime image (${{ matrix.arch }})
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.runtime
+          platforms: linux/${{ matrix.arch }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          sbom: false
+
+  publish-manifest:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    needs: [assemble-runtime]
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Log into registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract Docker metadata (manifest)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Extract git version
+      - name: Create and push multi-arch manifest
         shell: bash
-        run: bash etc/build/version.sh
-
-      - name: Build and push (linux/amd64)
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }} # do not push if this was triggered by a PR
-          platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          provenance: false
-          sbom: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          set -euo pipefail
+          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
+            [ -z "$tag" ] && continue
+            docker buildx imagetools create \
+              --tag "$tag" \
+              "${tag}-amd64" \
+              "${tag}-arm64"
+          done
