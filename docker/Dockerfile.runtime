@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:1
+
+FROM ubuntu:24.04
+WORKDIR /conjure
+
+ENV BIN_DIR=/opt/conjure
+ENV LIB_DIR=/opt/conjure/lib
+ENV PATH=$BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR
+ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    default-jre-headless \
+    libnuma-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY opt/conjure /opt/conjure

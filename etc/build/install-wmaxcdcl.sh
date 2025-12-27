@@ -12,13 +12,21 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
 URL="https://maxsat-evaluations.github.io/2023/mse23-solver-src/exact/WMaxCDCL.zip"
 
 rm -rf tmp-install-wmaxcdcl
 mkdir -p tmp-install-wmaxcdcl
 pushd tmp-install-wmaxcdcl
 download "${URL}" WMaxCDCL.zip
-unzip -q WMaxCDCL.zip
+unzip WMaxCDCL.zip
+
+################################################################################
+# Same x86-only FPU guard fix as install-glucose.sh.
+python3 "${SCRIPT_DIR}/patch-x86-fpu-guard.py" WMaxCDCL/code/simp/Main.cc
+################################################################################
+
 cd WMaxCDCL/code/simp
 make -j${PROCESSES}
 mkdir -p "${BIN_DIR}"

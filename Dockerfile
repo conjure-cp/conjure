@@ -41,7 +41,6 @@ RUN mkdir -p etc
 COPY etc/build etc/build
 
 # Building solvers. We do this first to facilitate better caching. Also we don't use `make solvers` here for the same reason.
-RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-minisat_all.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-boolector.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-cadical.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-chuffed.sh
@@ -50,12 +49,13 @@ RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-glucose.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-kissat.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-minion.sh
+RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-minisat_all.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-minizinc.sh
-RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-wmaxcdcl.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-ortools.sh
+RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-runsolver.sh
+RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-wmaxcdcl.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-yices.sh
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-z3.sh
-RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-runsolver.sh
 
 # An attempt to cache more
 COPY Makefile Makefile
