@@ -11,8 +11,8 @@ ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        default-jre-headless \
-        libnuma-dev \
+    default-jre-headless \
+    libnuma-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY opt/conjure /opt/conjure

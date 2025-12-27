@@ -15,21 +15,21 @@ RUN mkdir -p $BIN_DIR $LIB_DIR
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        ca-certificates \
-        xz-utils \
-        libgmp-dev \
-        zlib1g-dev \
-        cmake \
-        git \
-        zip \
-        unzip \
-        autoconf \
-        gperf \
-        python3 \
-        default-jre-headless \
-        libnuma-dev \
+    build-essential \
+    curl \
+    ca-certificates \
+    xz-utils \
+    libgmp-dev \
+    zlib1g-dev \
+    cmake \
+    git \
+    zip \
+    unzip \
+    autoconf \
+    gperf \
+    python3 \
+    default-jre-headless \
+    libnuma-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY Makefile Makefile

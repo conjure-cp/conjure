@@ -13,7 +13,24 @@ ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
 
 RUN mkdir -p $BIN_DIR $LIB_DIR
 
-RUN apt-get update     && apt-get install -y --no-install-recommends         build-essential         curl         ca-certificates         xz-utils         libgmp-dev         zlib1g-dev         cmake         git         zip         unzip         autoconf         gperf         python3         default-jre-headless         libnuma-dev     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    ca-certificates \
+    xz-utils \
+    libgmp-dev \
+    zlib1g-dev \
+    cmake \
+    git \
+    zip \
+    unzip \
+    autoconf \
+    gperf \
+    python3 \
+    default-jre-headless \
+    libnuma-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY etc/build etc/build
 RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-glucose.sh
