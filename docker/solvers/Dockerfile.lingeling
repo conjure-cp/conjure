@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+
+FROM ubuntu:24.04 AS builder
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /conjure
+
+# All binaries will end up in /opt/conjure
+ENV BIN_DIR=/opt/conjure
+ENV LIB_DIR=/opt/conjure/lib
+ENV PATH=$BIN_DIR:$PATH
+ENV LD_LIBRARY_PATH=$LIB_DIR
+ENV MZN_STDLIB_DIR=/opt/conjure/share/minizinc
+
+RUN mkdir -p $BIN_DIR $LIB_DIR
+
+RUN apt-get update     && apt-get install -y --no-install-recommends         build-essential         curl         ca-certificates         xz-utils         libgmp-dev         zlib1g-dev         cmake         git         zip         unzip         autoconf         gperf         python3         default-jre-headless         libnuma-dev     && rm -rf /var/lib/apt/lists/*
+
+COPY etc/build etc/build
+RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
+
+FROM scratch
+COPY --from=builder /opt/conjure /opt/conjure
