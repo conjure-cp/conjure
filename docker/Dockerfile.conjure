@@ -33,7 +33,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY Makefile Makefile
-COPY etc/hs-deps etc/hs-deps
+COPY etc etc
 COPY conjure-cp.cabal conjure-cp.cabal
 RUN make installdeps
 
