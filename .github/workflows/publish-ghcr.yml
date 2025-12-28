@@ -68,11 +68,15 @@ jobs:
           cache-from: type=gha,scope=solver-${{ matrix.solver }}-${{ matrix.arch }}
           cache-to: type=gha,scope=solver-${{ matrix.solver }}-${{ matrix.arch }},mode=max
 
+      - name: Pack solver artifact
+        shell: bash
+        run: tar -C out -czf solver-${{ matrix.solver }}-${{ matrix.arch }}.tar.gz .
+
       - name: Upload solver artifact
         uses: actions/upload-artifact@v4
         with:
           name: solver-${{ matrix.solver }}-${{ matrix.arch }}
-          path: out
+          path: solver-${{ matrix.solver }}-${{ matrix.arch }}.tar.gz
 
   build-conjure:
     name: Build conjure (${{ matrix.arch }})
@@ -105,11 +109,15 @@ jobs:
           cache-from: type=gha,scope=conjure-${{ matrix.arch }}
           cache-to: type=gha,scope=conjure-${{ matrix.arch }},mode=max
 
+      - name: Pack conjure artifact
+        shell: bash
+        run: tar -C out -czf conjure-${{ matrix.arch }}.tar.gz .
+
       - name: Upload conjure artifact
         uses: actions/upload-artifact@v4
         with:
           name: conjure-${{ matrix.arch }}
-          path: out
+          path: conjure-${{ matrix.arch }}.tar.gz
 
   assemble-runtime:
     name: Assemble runtime (${{ matrix.arch }})
@@ -149,10 +157,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p opt/conjure
-          rsync -a artifacts/conjure/opt/conjure/ opt/conjure/
-          for dir in artifacts/solvers/*; do
-            rsync -a "$dir/opt/conjure/" opt/conjure/
+          rm -rf opt
+          mkdir -p opt
+          find artifacts/solvers -name '*.tar.gz' -print0 | while IFS= read -r -d '' tarball; do
+            tar -xzf "$tarball" -C .
+          done
+          find artifacts/conjure -name '*.tar.gz' -print0 | while IFS= read -r -d '' tarball; do
+            tar -xzf "$tarball" -C .
           done
 
       - name: Log into registry
