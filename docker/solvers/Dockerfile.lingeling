@@ -33,7 +33,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY etc/build etc/build
-RUN PROCESSES=2 CI=true etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
+RUN PROCESSES=2 CI=true etc/build/install-lingeling.sh
 
 RUN find /opt/conjure -type f -perm -111 -exec strip --strip-unneeded {} + 2>/dev/null || true
 
