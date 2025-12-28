@@ -12,6 +12,13 @@ set -o nounset
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export PROCESSES=${PROCESSES:-1}
 
+arch="$(uname -m)"
+if [ "${arch}" = "aarch64" ] || [ "${arch}" = "arm64" ]; then
+    # Clang on arm64 avoids Lingeling watcher stack overflows seen with GCC builds.
+    export CC=clang
+    export CXX=clang++
+fi
+
 
 rm -rf tmp-install-lingeling
 mkdir -p tmp-install-lingeling
