@@ -195,7 +195,18 @@ jobs:
           else
             {
               echo "tags<<EOF"
-              echo "${{ steps.meta.outputs.tags }}"
+              arch_suffix="-${{ matrix.arch }}"
+              printf '%s\n' "${{ steps.meta.outputs.tags }}" \
+                | while read -r tag; do
+                    [ -z "$tag" ] && continue
+                    if [[ "$tag" == *"$arch_suffix" ]]; then
+                      echo "$tag"
+                    else
+                      echo "${tag}${arch_suffix}"
+                    fi
+                  done \
+                | awk 'NF' \
+                | awk '!seen[$0]++'
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
           fi
