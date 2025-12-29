@@ -9,7 +9,7 @@ cd $DIR
 # cp stdout stdout.expected # uncomment to update the expected file
 if ! diff stdout stdout.expected; then
     echo "The generated stdout doesn't match the expected stdout."
-    echo "That's what we call a failed test around here..."
+    echo "Test failed..."
     exit 1
 else
     echo "Pass!"

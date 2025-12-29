@@ -892,9 +892,6 @@ solverExecutables =
     , ( "kissat"          , "kissat" )
     , ( "glucose"         , "glucose" )
     , ( "glucose-syrup"   , "glucose-syrup" )
-    , ( "lingeling"       , "lingeling" )
-    , ( "plingeling"      , "plingeling" )
-    , ( "treengeling"     , "treengeling" )
     , ( "minisat"         , "minisat" )
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
@@ -921,7 +918,7 @@ smtSolversSRFlag _ = bug "smtSolversSRFlag"
 smtSupportedLogics :: String -> [String]
 smtSupportedLogics "boolector" = ["bv"]
 smtSupportedLogics "yices" = ["bv", "lia", "idl"]
-smtSupportedLogics "z3" = ["bv", "lia", "nia", "idl"]
+smtSupportedLogics "z3" = ["bv", "lia", "nia"]
 smtSupportedLogics s = bug ("Unrecognised SMT solver:" <+> pretty s)
 
 
@@ -982,18 +979,6 @@ srMkArgs Solve{..} outBase modelPath = do
         "kissat"            -> return [ "-sat"
                                       , "-sat-family", "cadical"
                                       , "-satsolver-bin", "kissat"
-                                      ]
-        "lingeling"         -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "lingeling"
-                                      ]
-        "plingeling"        -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "plingeling"
-                                      ]
-        "treengeling"       -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "treengeling"
                                       ]
         "minisat"           -> return [ "-sat"
                                       , "-sat-family", "minisat"
