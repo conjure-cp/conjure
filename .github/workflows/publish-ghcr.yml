@@ -179,6 +179,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
+            latest=auto
             suffix=-${{ matrix.arch }}
 
       - name: Select image tags
