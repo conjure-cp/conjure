@@ -141,13 +141,13 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Download solver artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: solver-*-${{ matrix.arch }}
           path: artifacts/solvers
 
       - name: Download conjure artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: conjure-${{ matrix.arch }}
           path: artifacts/conjure
