@@ -1,0 +1,112 @@
+Quick-Consecutive-Independently
+conjure solve --number-of-solutions=all --solutions-in-one-file --output-format=jsonstream --unnamed-symmetry-breaking=Quick-Consecutive-Independently model.essence -o conjure-output-Quick-Consecutive-Independently
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([quickPermutationOrder([permutation((q1, succ(q1)))], i)
+                 | q1 : e, q1 < 4:e])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output-Quick-Consecutive-Independently
+Savile Row: conjure-output-Quick-Consecutive-Independently/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: model.solutions
+Copying solution to: model.solutions.json
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3", "e_4"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": []}
+Quick-Consecutive-Altogether
+conjure solve --number-of-solutions=all --solutions-in-one-file --output-format=jsonstream --unnamed-symmetry-breaking=Quick-Consecutive-Altogether model.essence -o conjure-output-Quick-Consecutive-Altogether
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([quickPermutationOrder([permutation((q1, succ(q1)))], i)
+                 | q1 : e, q1 < 4:e])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output-Quick-Consecutive-Altogether
+Savile Row: conjure-output-Quick-Consecutive-Altogether/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: model.solutions
+Copying solution to: model.solutions.json
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3", "e_4"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": []}
+Quick-AllPairs-Independently
+conjure solve --number-of-solutions=all --solutions-in-one-file --output-format=jsonstream --unnamed-symmetry-breaking=Quick-AllPairs-Independently model.essence -o conjure-output-Quick-AllPairs-Independently
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([quickPermutationOrder([permutation((q1, q2))], i)
+                 | q1 : e, q2 : e, q1 < q2])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output-Quick-AllPairs-Independently
+Savile Row: conjure-output-Quick-AllPairs-Independently/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: model.solutions
+Copying solution to: model.solutions.json
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3", "e_4"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": []}
+Quick-AllPairs-Altogether
+conjure solve --number-of-solutions=all --solutions-in-one-file --output-format=jsonstream --unnamed-symmetry-breaking=Quick-AllPairs-Altogether model.essence -o conjure-output-Quick-AllPairs-Altogether
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([quickPermutationOrder([permutation((q1, q2))], i)
+                 | q1 : e, q2 : e, q1 < q2])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output-Quick-AllPairs-Altogether
+Savile Row: conjure-output-Quick-AllPairs-Altogether/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: model.solutions
+Copying solution to: model.solutions.json
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3", "e_4"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": []}
+Quick-AllPermutations-Independently
+conjure solve --number-of-solutions=all --solutions-in-one-file --output-format=jsonstream --unnamed-symmetry-breaking=Quick-AllPermutations-Independently model.essence -o conjure-output-Quick-AllPermutations-Independently
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([quickPermutationOrder([q1], i) | q1 : permutation of e])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output-Quick-AllPermutations-Independently
+Savile Row: conjure-output-Quick-AllPermutations-Independently/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: model.solutions
+Copying solution to: model.solutions.json
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3", "e_4"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": []}
+Quick-AllPermutations-Altogether
+conjure solve --number-of-solutions=all --solutions-in-one-file --output-format=jsonstream --unnamed-symmetry-breaking=Quick-AllPermutations-Altogether model.essence -o conjure-output-Quick-AllPermutations-Altogether
+Adding the following unnamed symmetry breaking constraints:
+    such that
+        and([quickPermutationOrder([q1], i) | q1 : permutation of e])
+Generating models for model.essence
+Generated models: model000001.eprime
+Saved under: conjure-output-Quick-AllPermutations-Altogether
+Savile Row: conjure-output-Quick-AllPermutations-Altogether/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying solution to: model.solutions
+Copying solution to: model.solutions.json
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3", "e_4"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2", "e_3"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1", "e_2"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": ["e_1"]}
+{"e": ["e_1", "e_2", "e_3", "e_4"], "i": []}

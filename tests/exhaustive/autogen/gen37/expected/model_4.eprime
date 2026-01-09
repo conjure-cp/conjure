@@ -13,11 +13,9 @@ branching on
      var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag,
      var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values]
 such that
-    flatten([flatten([flatten([[-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[1, q13]);
-                                    int(1)],
-                               [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[1, q13]);
-                                    int(1)];
-                                   int(1..2)])
+    flatten([flatten([[[-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[1, q13]); int(1)],
+                       [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[1, q13]); int(1)];
+                           int(1..2)]
                           | q13 : int(1..2)]),
              flatten([[var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[1]; int(1)],
                       [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[1, q14])
@@ -25,11 +23,9 @@ such that
                           int(1..2)]);
                  int(1..2)])
     <lex
-    flatten([flatten([flatten([[-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[2, q15]);
-                                    int(1)],
-                               [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[2, q15]);
-                                    int(1)];
-                                   int(1..2)])
+    flatten([flatten([[[-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Flags[2, q15]); int(1)],
+                       [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_1_ExplicitVarSizeWithFlags_Values[2, q15]); int(1)];
+                           int(1..2)]
                           | q15 : int(1..2)]),
              flatten([[var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Flag[2]; int(1)],
                       [-toInt(var1_RelationAsSetR4R9_ExplicitR4R9_2_ExplicitWithRepetition_Values[2, q16])

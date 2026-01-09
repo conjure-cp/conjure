@@ -90,8 +90,9 @@ symbolKindFromDeclaration (LiteralDecl t) = Just $ case t of
     TypeBool -> SymbolKind_Boolean
     TypeInt it -> case it of
       TagInt -> SymbolKind_Number
-      TagEnum _ -> SymbolKind_EnumMember
-      TagUnnamed _ -> SymbolKind_Number
+      TaggedInt{} -> SymbolKind_Number
+      TagEnum{} -> SymbolKind_EnumMember
+      TagUnnamed{} -> SymbolKind_Number
     TypeEnum _ -> SymbolKind_Enum
     TypeUnnamed _ -> SymbolKind_Enum
     _ -> SymbolKind_Constant

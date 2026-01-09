@@ -6,14 +6,14 @@ find x_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..2)] of bool
 branching on
     [x_ExplicitR2_Occurrence, x_ExplicitR4_ExplicitVarSizeWithFlags_Flags, x_ExplicitR4_ExplicitVarSizeWithFlags_Values]
 such that
-    flatten([flatten([[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, q8]); int(1)],
-                      [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[1, q8]; int(1)];
-                          int(1..2)])
+    flatten([[[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, q8]); int(1)],
+              [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[1, q8]; int(1)];
+                  int(1..2)]
                  | q8 : int(1..3)])
     <lex
-    flatten([flatten([[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, q9]); int(1)],
-                      [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[2, q9]; int(1)];
-                          int(1..2)])
+    flatten([[[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, q9]); int(1)],
+              [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[2, q9]; int(1)];
+                  int(1..2)]
                  | q9 : int(1..3)]),
     and([and([x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[q2, q3 + 1] ->
               x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q2, q3] <

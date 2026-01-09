@@ -81,6 +81,11 @@ instance Pretty MiniZincData where
     pretty (MZNSet xs) = prettyList prBraces "," (map pretty xs)
     pretty (MZNNamed xs) = vcat [pretty n <+> "=" <+> pretty x <> ";" | (n,x) <- xs]
 
+
+expressionDepth :: Data a => a -> Int
+expressionDepth x = 1 + maximum (0 : map expressionDepth (children x))
+
+
 class ToFromMiniZinc a where
     toMiniZinc :: MonadUserError m => a -> m MiniZincData
     -- this is what we would use to support data files
