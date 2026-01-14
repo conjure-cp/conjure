@@ -1,6 +1,6 @@
 # --> (long arrow)
 
-The ```-->``` is used to define [function domains](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/function.md).
+The ```-->``` is used to define [function domains](https://github.com/conjure-cp/conjure/blob/main/docs/bits/function.md).
 Like: 
 ```essence
 letting letters be new type enum {A, B, C}

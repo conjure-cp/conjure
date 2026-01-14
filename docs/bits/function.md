@@ -10,11 +10,11 @@ the ```range``` set is the codomain of the function - the set of possible output
 
 There are 3 groups of function attributes: 
 
-- related to cardinality = [size](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_size.md), [minSize](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_minSize.md), and [maxSize](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_maxSize.md). They take arguments.
+- related to cardinality = [size](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_size.md), [minSize](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_minSize.md), and [maxSize](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_maxSize.md). They take arguments.
 
--  related to function properties = [injective](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_injective.md), [surjective](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_surjective.md), [bijective](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_size.md).
+-  related to function properties = [injective](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_injective.md), [surjective](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_surjective.md), [bijective](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_size.md).
 
-- related to partiality = [total](https://github.com/conjure-cp/conjure/blob/main/docs/bits/attribute/L_total.md).
+- related to partiality = [total](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_total.md).
 
   Functions are partial by default
 
