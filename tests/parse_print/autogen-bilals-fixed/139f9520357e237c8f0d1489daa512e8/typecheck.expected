@@ -8,7 +8,7 @@ Error 1:
     Error:
         Type error in sum([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Occurrence[q3, q4]
                                | q4 : int(3..5, 0)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([q3 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
@@ -19,7 +19,7 @@ Error 2:
     Error:
         Type error in sum([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_Occurrence[q3, q4]
                                | q4 : int(3..5, 0)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 3:
     In a 'such that' statement:
         and([1 >=
@@ -53,4 +53,4 @@ Error 3:
                                      [q14, q6_ExplicitVarSizeWithMarker_Values[q24]]
                                      | q24 : int(1..2), q24 <= q6_ExplicitVarSizeWithMarker_Marker]))
                                | q14 : int(1..5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

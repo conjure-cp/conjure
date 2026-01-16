@@ -2,7 +2,7 @@ Error 1:
     In a 'such that' statement: 1 <= sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..64)])
     Error:
         Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..64)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([1 =
@@ -39,4 +39,4 @@ Error 2:
                    sum([q9_ExplicitVarSizeWithFlags_Flags[q23] | q23 : int(1..5)]) <= 5])
     Error:
         Type error in sum([q9_ExplicitVarSizeWithFlags_Flags[q23] | q23 : int(1..5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

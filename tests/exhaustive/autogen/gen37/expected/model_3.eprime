@@ -13,27 +13,23 @@ branching on
      var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags,
      var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values]
 such that
-    flatten([flatten([flatten([[-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, q15]);
-                                    int(1)],
-                               [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[1, q15]);
-                                    int(1)];
-                                   int(1..2)])
+    flatten([flatten([[[-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, q15]); int(1)],
+                       [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[1, q15]); int(1)];
+                           int(1..2)]
                           | q15 : int(1..2)]),
-             flatten([flatten([[-var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags[1, q16]; int(1)],
-                               [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values[1, q16]); int(1)];
-                                   int(1..2)])
+             flatten([[[-var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags[1, q16]; int(1)],
+                       [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values[1, q16]); int(1)];
+                           int(1..2)]
                           | q16 : int(1..2)]);
                  int(1..2)])
     <lex
-    flatten([flatten([flatten([[-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, q17]);
-                                    int(1)],
-                               [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[2, q17]);
-                                    int(1)];
-                                   int(1..2)])
+    flatten([flatten([[[-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, q17]); int(1)],
+                       [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[2, q17]); int(1)];
+                           int(1..2)]
                           | q17 : int(1..2)]),
-             flatten([flatten([[-var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags[2, q18]; int(1)],
-                               [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values[2, q18]); int(1)];
-                                   int(1..2)])
+             flatten([[[-var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Flags[2, q18]; int(1)],
+                       [-toInt(var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithFlags_Values[2, q18]); int(1)];
+                           int(1..2)]
                           | q18 : int(1..2)]);
                  int(1..2)]),
     and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[q2, 2] ->

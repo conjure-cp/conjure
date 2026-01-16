@@ -2,7 +2,7 @@ Error 1:
     In a 'such that' statement: 0 <= sum([var2_ExplicitVarSizeWithFlags_Flags[q11] | q11 : int(1..16)])
     Error:
         Type error in sum([var2_ExplicitVarSizeWithFlags_Flags[q11] | q11 : int(1..16)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([var2_ExplicitVarSizeWithFlags_Flags[q12] ->
@@ -12,4 +12,4 @@ Error 2:
                  | q12 : int(1..16)])
     Error:
         Type error in sum([var2_ExplicitVarSizeWithFlags_Values_RelationAsMatrix[q12, q16, q17] | q17 : bool])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [bool] of bool
