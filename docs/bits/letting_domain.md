@@ -10,19 +10,19 @@ letting x be domain int(1..10)
 ```
 Types of domains:
 
-- [boolean](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_bool.md)
-- [integer](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_int.md)
-- [enumerated](https://github.com/conjure-cp/conjure/blob/main/docs/bits/keyword/new_type_enum.md)
-- [unnamed](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/unnamed.md)
+- [boolean](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_bool.md)
+- [integer](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_int.md)
+- [enumerated](https://github.com/conjure-cp/conjure/blob/main/docs/bits/new_type_enum.md)
+- [unnamed](https://github.com/conjure-cp/conjure/blob/main/docs/bits/unnamed.md)
 - [tuple](...)
-- [record](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_record.md)
+- [record](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_record.md)
 - [variant](...)
-- [matrix](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/matrix.md)
+- [matrix](https://github.com/conjure-cp/conjure/blob/main/docs/bits/matrix.md)
 - [set](...)
 - [multi-set](...)
-- [function](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/function.md)
-- [sequence](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_sequence.md)
-- [relation](https://github.com/conjure-cp/conjure/blob/main/docs/bits/type/L_relation.md)
+- [function](https://github.com/conjure-cp/conjure/blob/main/docs/bits/function.md)
+- [sequence](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_sequence.md)
+- [relation](https://github.com/conjure-cp/conjure/blob/main/docs/bits/L_relation.md)
 - [partition](...)
 
 

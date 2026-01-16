@@ -156,7 +156,6 @@ Currently the following solvers are supported.
 - or-tools (CP/SAT/MIP hybrid solver)
 - glucose (SAT solver)
 - glucose-syrup (SAT solver)
-- lingeling/plingeling/treengeling (SAT solver)
 - cadical (SAT solver)
 - kissat (SAT solver)
 - minisat (SAT solver)
@@ -167,7 +166,7 @@ Currently the following solvers are supported.
 - cplex (MIP solver, implemented via MiniZinc)
 - boolector (SMT solver, supported logics: bv)
 - yices (SMT solver, supported logics: bv, lia, idl)
-- z3 (SMT solver, supported logics: bv, lia, nia, idl)
+- z3 (SMT solver, supported logics: bv, lia, nia)
 
 Default is minion
 

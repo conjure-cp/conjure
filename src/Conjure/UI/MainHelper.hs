@@ -949,9 +949,6 @@ solverExecutables =
     , ( "kissat"          , "kissat" )
     , ( "glucose"         , "glucose" )
     , ( "glucose-syrup"   , "glucose-syrup" )
-    , ( "lingeling"       , "lingeling" )
-    , ( "plingeling"      , "plingeling" )
-    , ( "treengeling"     , "treengeling" )
     , ( "minisat"         , "minisat" )
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
@@ -978,7 +975,7 @@ smtSolversSRFlag _ = bug "smtSolversSRFlag"
 smtSupportedLogics :: String -> [String]
 smtSupportedLogics "boolector" = ["bv"]
 smtSupportedLogics "yices" = ["bv", "lia", "idl"]
-smtSupportedLogics "z3" = ["bv", "lia", "nia", "idl"]
+smtSupportedLogics "z3" = ["bv", "lia", "nia"]
 smtSupportedLogics s = bug ("Unrecognised SMT solver:" <+> pretty s)
 
 
@@ -1039,18 +1036,6 @@ srMkArgs Solve{..} outBase modelPath = do
         "kissat"            -> return [ "-sat"
                                       , "-sat-family", "cadical"
                                       , "-satsolver-bin", "kissat"
-                                      ]
-        "lingeling"         -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "lingeling"
-                                      ]
-        "plingeling"        -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "plingeling"
-                                      ]
-        "treengeling"       -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "treengeling"
                                       ]
         "minisat"           -> return [ "-sat"
                                       , "-sat-family", "minisat"
@@ -1127,14 +1112,17 @@ srStdoutHandler
             when (logLevel >= LogDebug) $ do
                 pp logLevel ("SR:" <+> pretty line)
             case stripPrefix "Solution: " line of
-                Nothing -> do
-                    if isPrefixOf "Created output file for domain filtering" line
-                        then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output" line
-                            then pp logLevel $ hsep ["Running solver:", pretty solver]
-                            else return ()
-                    fmap (Left line :)
-                         (srStdoutHandler args tr solutionNumber h)
+                Nothing ->
+                    if line `elem` ["MaxSAT solver exited with error code:3 and error message:", "[PARSE ERROR! Unexpected char: h]"]
+                        then srStdoutHandler args tr solutionNumber h -- wmaxcdcl produces this warning if it proves optimality...
+                        else do
+                            if isPrefixOf "Created output file for domain filtering" line
+                                then pp logLevel $ hsep ["Running minion for domain filtering."]
+                                else if isPrefixOf "Created output" line
+                                    then pp logLevel $ hsep ["Running solver:", pretty solver]
+                                    else return ()
+                            fmap (Left line :)
+                                (srStdoutHandler args tr solutionNumber h)
                 Just solutionText -> do
                     eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
                     essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
