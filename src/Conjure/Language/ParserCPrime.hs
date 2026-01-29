@@ -6,7 +6,7 @@ where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type ( IntTag(..) )
+import Conjure.Language.Type ( IntTag(..), Type(..) )
 import Conjure.Language.Pretty ( pretty, vcat, (<+>) )
 
 import qualified Data.Text as T
@@ -76,6 +76,7 @@ parseConstant txt =
   in case T.uncons t of
       Nothing -> parseError "Unexpected end of input while parsing constant" txt
       Just ('[', _) -> parseMatrix t
+      Just ('(', _) -> parseAnnotatedEmptyMatrix t
       Just (c, _) | c == '-' || isDigit c -> parseInt t
       _ -> do
         (tok, rest) <- parseIdentifier t
@@ -148,9 +149,13 @@ parseDomain txt = do
 parseIntDomain :: Text -> Either Doc (Domain () Constant, Text)
 parseIntDomain txt = do
   t1 <- expectChar '(' txt
-  (ranges, rest) <- parseRanges [] t1
-  rest' <- expectChar ')' rest
-  return (DomainInt TagInt (reverse ranges), rest')
+  let t1' = skipSpaces t1
+  case T.uncons t1' of
+    Just (')', rest) -> return (DomainInt TagInt [], rest)
+    _ -> do
+      (ranges, rest) <- parseRanges [] t1
+      rest' <- expectChar ')' rest
+      return (DomainInt TagInt (reverse ranges), rest')
 
 
 parseRanges :: [Range Constant] -> Text -> Either Doc ([Range Constant], Text)
@@ -200,6 +205,68 @@ parseError msg txt =
       [ "Fast solution parser error:" <+> pretty msg
       , "Near:" <+> pretty snippet
       ]
+
+
+parseAnnotatedEmptyMatrix :: Text -> Either Doc (Constant, Text)
+parseAnnotatedEmptyMatrix txt = do
+  t1 <- expectChar '(' txt
+  t2 <- expectChar '[' t1
+  t3 <- expectChar ']' t2
+  t4 <- expectChar ':' t3
+  t5 <- expectChar '`' t4
+  ((indexDomains, innerDomain), t6) <- parseMatrixTypeInBackticks t5
+  t7 <- expectChar '`' t6
+  t8 <- expectChar ')' t7
+  let indexDomain =
+        case indexDomains of
+          d : _ -> d
+          [] -> DomainInt TagInt []
+  let ty = typeFromDomains indexDomains innerDomain
+  let c = TypedConstant (ConstantAbstract (AbsLitMatrix indexDomain [])) ty
+  return (c, t8)
+
+
+parseMatrixTypeInBackticks :: Text -> Either Doc (([Domain () Constant], Domain () Constant), Text)
+parseMatrixTypeInBackticks txt = do
+  t1 <- parseWord "matrix" txt
+  t2 <- parseWord "indexed" t1
+  t3 <- parseWord "by" t2
+  t4 <- expectChar '[' t3
+  (indexDomains, t5) <- parseDomainList t4
+  t6 <- expectChar ']' t5
+  t7 <- parseWord "of" t6
+  (innerDomain, t8) <- parseDomain t7
+  return ((indexDomains, innerDomain), t8)
+
+
+parseDomainList :: Text -> Either Doc ([Domain () Constant], Text)
+parseDomainList txt = do
+  (d, rest) <- parseDomain txt
+  let t = skipSpaces rest
+  case T.uncons t of
+    Just (',', rest') -> do
+      (ds, rest'') <- parseDomainList rest'
+      return (d : ds, rest'')
+    _ -> return ([d], rest)
+
+
+parseWord :: Text -> Text -> Either Doc Text
+parseWord w txt = do
+  (tok, rest) <- parseIdentifier txt
+  if tok == w
+    then Right rest
+    else parseError (T.concat ["Expected '", w, "'"]) txt
+
+
+typeFromDomains :: [Domain () Constant] -> Domain () Constant -> Type
+typeFromDomains indices inner =
+  foldr TypeMatrix (typeFromDomain inner) (map typeFromDomain indices)
+
+
+typeFromDomain :: Domain () Constant -> Type
+typeFromDomain DomainBool = TypeBool
+typeFromDomain (DomainInt t _) = TypeInt t
+typeFromDomain _ = TypeAny
 
 
 parseInteger :: Text -> Integer
