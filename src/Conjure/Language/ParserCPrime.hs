@@ -19,7 +19,7 @@ parseModel :: Text -> Either Doc Model
 parseModel input = do
   lettings <- collectLettings (T.strip input) []
   let stmts = [ Declaration (Letting nm (Constant c)) | (nm, c) <- reverse lettings ]
-  return def { mStatements = stmts }
+  return (languageEprime def) { mStatements = stmts }
 
 
 collectLettings :: Text -> [(Name, Constant)] -> Either Doc [(Name, Constant)]
@@ -110,23 +110,67 @@ parseMatrix txt = do
       in Right (ConstantAbstract (AbsLitMatrix dom []), rest)
     _ -> do
       (firstVal, rest1) <- parseConstant t2
-      (vals, rest2) <- parseMatrixRest [firstVal] rest1
+      (vals, mDom, rest2) <- parseMatrixRest [firstVal] rest1
       let dom =
-            if null vals
-              then DomainInt TagInt []
-              else DomainInt TagInt [RangeBounded (ConstantInt TagInt 1) (ConstantInt TagInt (genericLength vals))]
+            case mDom of
+              Just d -> d
+              Nothing ->
+                if null vals
+                  then DomainInt TagInt []
+                  else DomainInt TagInt [RangeBounded (ConstantInt TagInt 1) (ConstantInt TagInt (genericLength vals))]
       return (ConstantAbstract (AbsLitMatrix dom vals), rest2)
 
 
-parseMatrixRest :: [Constant] -> Text -> Either Doc ([Constant], Text)
+parseMatrixRest :: [Constant] -> Text -> Either Doc ([Constant], Maybe (Domain () Constant), Text)
 parseMatrixRest acc txt =
   let t = skipSpaces txt
   in case T.uncons t of
       Just (',', rest) -> do
         (val, rest') <- parseConstant rest
         parseMatrixRest (val : acc) rest'
-      Just (']', rest) -> Right (reverse acc, rest)
-      _ -> parseError "Expected ',' or ']'" txt
+      Just (';', rest) -> do
+        (dom, rest') <- parseDomain rest
+        rest'' <- expectChar ']' rest'
+        Right (reverse acc, Just dom, rest'')
+      Just (']', rest) -> Right (reverse acc, Nothing, rest)
+      _ -> parseError "Expected ',', ';' or ']'" txt
+
+
+parseDomain :: Text -> Either Doc (Domain () Constant, Text)
+parseDomain txt = do
+  (tok, rest) <- parseIdentifier txt
+  case tok of
+    "bool" -> Right (DomainBool, rest)
+    "int" -> parseIntDomain rest
+    _ -> parseError "Expected domain (bool or int(...))" txt
+
+
+parseIntDomain :: Text -> Either Doc (Domain () Constant, Text)
+parseIntDomain txt = do
+  t1 <- expectChar '(' txt
+  (ranges, rest) <- parseRanges [] t1
+  rest' <- expectChar ')' rest
+  return (DomainInt TagInt (reverse ranges), rest')
+
+
+parseRanges :: [Range Constant] -> Text -> Either Doc ([Range Constant], Text)
+parseRanges acc txt = do
+  (r, rest) <- parseRange txt
+  let t = skipSpaces rest
+  case T.uncons t of
+    Just (',', rest') -> parseRanges (r : acc) rest'
+    _ -> Right (r : acc, rest)
+
+
+parseRange :: Text -> Either Doc (Range Constant, Text)
+parseRange txt = do
+  (c1, rest1) <- parseInt txt
+  let t = skipSpaces rest1
+  case T.stripPrefix ".." t of
+    Just rest2 -> do
+      (c2, rest3) <- parseInt rest2
+      return (RangeBounded c1 c2, rest3)
+    Nothing -> return (RangeSingle c1, rest1)
 
 
 expectChar :: Char -> Text -> Either Doc Text
