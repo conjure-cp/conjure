@@ -6,13 +6,13 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
+import Conjure.UI.IO ( readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON, prologue )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
-import Conjure.UI.TranslateSolution ( translateSolution )
+import Conjure.UI.TranslateSolution ( prepareTranslateSolution, translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
@@ -27,7 +27,7 @@ import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGen, NameGenM, runNameGen )
 import Conjure.Language.Pretty 
-import qualified Conjure.Language.ParserC as ParserC ( parseModel )
+import qualified Conjure.Language.ParserCPrime as ParserCPrime ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -796,7 +796,8 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = (dropExtension . snd . splitFileName) modelPath
     srArgs <- liftIO $ srMkArgs ui outBase modelPath
-    let tr = translateSolution eprimeModel def
+    -- prepareTranslateSolution precomputes solution-invariant work for faster translation over many solutions.
+    tr <- liftIO $ ignoreLogs $ runNameGen () $ prepareTranslateSolution eprimeModel def
     let handler = liftIO . srStdoutHandler
                     (outBase, modelPath, "<no param file>", ui)
                     tr (1::Int)
@@ -853,7 +854,8 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srArgsBase
-            let tr = translateSolution eprimeModel essenceParam
+            -- prepareTranslateSolution precomputes solution-invariant work for faster translation over many solutions.
+            tr <- liftIO $ ignoreLogs $ runNameGen () $ prepareTranslateSolution eprimeModel essenceParam
             let handler = liftIO . srStdoutHandler
                             (outBase, modelPath, paramPath, ui)
                             tr (1::Int)
@@ -1067,7 +1069,9 @@ srStdoutHandler
                             fmap (Left line :)
                                 (srStdoutHandler args tr solutionNumber h)
                 Just solutionText -> do
-                    eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
+                    eprimeSol  <- case ParserCPrime.parseModel (stringToText solutionText) of
+                        Left err -> userErr1 err
+                        Right m -> return m
                     essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
                     case solutionsInOneFile of
                         False -> do
@@ -1223,4 +1227,3 @@ doIfNotCached (show . hash -> h) savedHashesFile getResult act = do
 
 autoParallel :: [IO a] -> IO [a]
 autoParallel = if numCapabilities > 1 then parallel else sequence
-
