@@ -50,7 +50,7 @@ Error 2:
     Error:
         Type error in sum([var3_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q12, q13, q14, q15, q16]
                                | q16 : int(0, 5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 3:
     In a 'such that' statement:
         and([q12 <= var3_ExplicitVarSizeWithMarker_Marker ->
@@ -64,4 +64,4 @@ Error 3:
     Error:
         Type error in sum([var3_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q12, q13, q14, q15, q16]
                                | q16 : int(0, 5)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

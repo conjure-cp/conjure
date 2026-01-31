@@ -49,7 +49,7 @@ Error 1:
                                          | q49 : int(1..6)])
                                      | q47 : int(1..6), q9_ExplicitVarSizeWithFlags_Flags[q47]]))
                                | q29 : int(1..512)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([1 >=
@@ -73,4 +73,4 @@ Error 2:
                                = q11
                                    | q51 : int(1..2)])
                                | q30 : int(1..4)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

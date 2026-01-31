@@ -10,7 +10,7 @@ Error 1:
         Type error in sum([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags
                                [q3, q7]
                                | q7 : int(1..2)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([1 >=
@@ -43,4 +43,4 @@ Error 2:
                    sum([q9_ExplicitVarSizeWithFlags_Flags[q16] | q16 : int(1..2)]) <= 2])
     Error:
         Type error in sum([q9_ExplicitVarSizeWithFlags_Flags[q16] | q16 : int(1..2)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

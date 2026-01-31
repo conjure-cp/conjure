@@ -111,6 +111,7 @@ getCIKind (Kind ValueType {} t) = case t of
   TypeSequence _ -> CompletionItemKind_Variable
   TypeRelation _ -> CompletionItemKind_Variable
   TypePartition _ -> CompletionItemKind_Variable
+  TypePermutation{} -> CompletionItemKind_Variable
 
 snippetCompletion :: Text -> Text -> CompletionItem
 snippetCompletion label snippet = (defaultCompletion label) {_kind = pure CompletionItemKind_Snippet, _insertText = pure snippet, _insertTextFormat = pure T.InsertTextFormat_Snippet}

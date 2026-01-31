@@ -20,6 +20,8 @@ Library
                      , Conjure.Bug
                      , Conjure.UserError
 
+                     , Conjure.Util.Permutation
+
                      -- definitions of language constructs
                      , Conjure.Language
                      , Conjure.Language.AbstractLiteral
@@ -59,14 +61,17 @@ Library
                      , Conjure.Language.Expression.Op.Apart
                      , Conjure.Language.Expression.Op.AtLeast
                      , Conjure.Language.Expression.Op.AtMost
+                     , Conjure.Language.Expression.Op.Compose
                      , Conjure.Language.Expression.Op.AttributeAsConstraint
                      , Conjure.Language.Expression.Op.CatchUndef
+                     , Conjure.Language.Expression.Op.QuickPermutationOrder
                      , Conjure.Language.Expression.Op.Defined
                      , Conjure.Language.Expression.Op.Div
                      , Conjure.Language.Expression.Op.DontCare
                      , Conjure.Language.Expression.Op.DotLeq
                      , Conjure.Language.Expression.Op.DotLt
                      , Conjure.Language.Expression.Op.Eq
+                     , Conjure.Language.Expression.Op.ElementId
                      , Conjure.Language.Expression.Op.Factorial
                      , Conjure.Language.Expression.Op.Flatten
                      , Conjure.Language.Expression.Op.Freq
@@ -98,6 +103,7 @@ Library
                      , Conjure.Language.Expression.Op.Participants
                      , Conjure.Language.Expression.Op.Parts
                      , Conjure.Language.Expression.Op.Party
+                     , Conjure.Language.Expression.Op.PermInverse
                      , Conjure.Language.Expression.Op.Pow
                      , Conjure.Language.Expression.Op.PowerSet
                      , Conjure.Language.Expression.Op.Pred
@@ -187,6 +193,7 @@ Library
                      , Conjure.Representations.Function.FunctionNDPartialDummy
                      , Conjure.Representations.Function.FunctionAsRelation
                      , Conjure.Representations.Sequence.ExplicitBounded
+                     , Conjure.Representations.Permutation.PermutationAsFunction
                      , Conjure.Representations.Relation.RelationAsMatrix
                      , Conjure.Representations.Relation.RelationAsSet
                      , Conjure.Representations.Partition.Occurrence
@@ -234,6 +241,9 @@ Library
 
                      , Conjure.Rules.Transform
 
+                     , Conjure.Rules.Horizontal.Permutation
+                     , Conjure.Rules.Vertical.Permutation.PermutationAsFunction
+ 
                      , Conjure.Rules.BubbleUp
                      , Conjure.Rules.DontCare
                      , Conjure.Rules.TildeOrdering

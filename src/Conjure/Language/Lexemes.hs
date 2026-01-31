@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
 
 module Conjure.Language.Lexemes where
 
@@ -109,15 +108,23 @@ data Lexeme
     | L_strictPartialOrder
     | L_leftTotal
     | L_rightTotal
+
     -- type: partition
     | L_partition
     | L_regular
+    | L_numMoved
+    | L_minNumMoved
+    | L_maxNumMoved
     | L_partSize
     | L_minPartSize
     | L_maxPartSize
     | L_numParts
     | L_minNumParts
     | L_maxNumParts
+
+    -- type: permutation
+    | L_permutation
+    | L_compose
 
     -- operators, page 21 of the holy paper
     | L_union
@@ -142,6 +149,7 @@ data Lexeme
     | L_together
     | L_apart
     | L_party
+    | L_permInverse
     | L_participants
     | L_parts
     | L_freq
@@ -155,12 +163,15 @@ data Lexeme
     | L_allDiff
     | L_alldifferent_except
     | L_gcc
+    | L_elementId
     | L_atleast
     | L_atmost
 
     | L_dontCare
 
     | L_catchUndef
+
+    | L_quickPermutationOrder
 
     -- matrix only operators
     | L_flatten
@@ -354,6 +365,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_surjective, "surjective" )
     , ( L_bijective, "bijective" )
     , ( L_sequence, "sequence" )
+    , ( L_permutation, "permutation" )
     , ( L_relation, "relation")
     , ( L_reflexive, "reflexive")
     , ( L_irreflexive, "irreflexive")
@@ -375,6 +387,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_rightTotal , "rightTotal")
     , ( L_partition, "partition" )
     , ( L_regular, "regular" )
+    , ( L_numMoved, "numMoved" )
+    , ( L_minNumMoved, "minNumMoved" )
+    , ( L_maxNumMoved, "maxNumMoved" )
     , ( L_partSize, "partSize" )
     , ( L_minPartSize, "minPartSize" )
     , ( L_maxPartSize, "maxPartSize" )
@@ -403,6 +418,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_together, "together" )
     , ( L_apart, "apart" )
     , ( L_party, "party" )
+    , ( L_permInverse, "permInverse" )
     , ( L_participants, "participants" )
     , ( L_parts, "parts" )
     , ( L_freq, "freq" )
@@ -411,15 +427,20 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_makeTable, "makeTable" )
     , ( L_table, "table" )
 
+    , ( L_compose, "compose" )
+
 
     , ( L_allDiff, "allDiff" )
     , ( L_alldifferent_except, "alldifferent_except" )
     , ( L_gcc, "gcc" )
+    , ( L_elementId, "elementId" )
     , ( L_atleast, "atleast" )
     , ( L_atmost, "atmost" )
 
     , ( L_dontCare, "dontCare" )
     , ( L_catchUndef, "catchUndef" )
+
+    , ( L_quickPermutationOrder, "quickPermutationOrder" )
 
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )

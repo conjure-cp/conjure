@@ -7,6 +7,7 @@ module Conjure.Rules.Definition
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
+    , UnnamedSymmetryBreaking(..), USBQuickOrComplete(..), USBScope(..), USBIndependentlyOrAltogether(..)
     , ModelZipper, mkModelZipper, fromModelZipper
     , ModelWIP(..), modelWIPOut, updateModelWIPInfo
     , isAtomic
@@ -17,6 +18,7 @@ module Conjure.Rules.Definition
 
 import Conjure.Prelude
 import Conjure.UserError
+import Conjure.Language.AdHoc ( expressionDepth )
 import Conjure.Language.Definition
 import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Expression.Op
@@ -58,6 +60,7 @@ data Answer = Answer
     , aAnswer    :: Expression
     , aFullModel :: ModelWIP
     , aRuleName  :: Doc
+    , aDepth     :: Int         -- expression depth, precalculated depending on the rule. compact will use this to compare.
     }
 
 type Driver = (forall m . (MonadIO m, MonadLog m) => [Question] -> m [ModelWIP])
@@ -106,6 +109,7 @@ data Config = Config
     , outputDirectory            :: FilePath
     , channelling                :: Bool
     , representationLevels       :: Bool
+    , unnamedSymmetryBreaking    :: Maybe UnnamedSymmetryBreaking
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -138,6 +142,7 @@ instance Default Config where
         , outputDirectory            = "conjure-output"
         , channelling                = True
         , representationLevels       = True
+        , unnamedSymmetryBreaking    = Nothing
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False
@@ -148,11 +153,37 @@ instance Default Config where
         , estimateNumberOfModels     = False
         }
 
+
+-- 1. Quick/Complete. Quick is x .<= p(x)
+--                    Complete is x .<= y /\ y = p(x)
+-- 2. Scope.          Consecutive
+--                    AllPairs
+--                    AllPermutations
+-- 3. Independently/Altogether
+-- in addition, we have
+--      none
+--      fast: Quick-Consecutive-Independently
+--      full: Complete-AllPermutations-Altogether
+data UnnamedSymmetryBreaking =
+        UnnamedSymmetryBreaking
+            USBQuickOrComplete
+            USBScope
+            USBIndependentlyOrAltogether
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+data USBQuickOrComplete = USBQuick | USBComplete
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+data USBScope = USBConsecutive | USBAllPairs | USBAllPermutations
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+data USBIndependentlyOrAltogether = USBIndependently | USBAltogether
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+
 data RuleResult m = RuleResult
     { ruleResultDescr :: Doc                        -- describe this transformation
     , ruleResultType  :: QuestionType
     , ruleResult      :: m Expression               -- the result
     , ruleResultHook  :: Maybe (Model -> m Model)   -- post-application hook
+    , ruleResultSize  :: m Int                      -- expression depth, precalculated depending on the rule. compact will use this to compare.
     }
 
 data Rule = Rule
@@ -186,7 +217,7 @@ namedRule nm f = Rule
     { rName = nm
     , rApply = \ z x -> do
         (rResultDescr, rResult) <- runReaderT (f x) z
-        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
+        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing (expressionDepth <$> rResult)]
     }
 
 namedRuleZ
@@ -203,7 +234,7 @@ namedRuleZ nm f = Rule
     { rName = nm
     , rApply = \ z x -> do
         (rResultDescr, rResult) <- runReaderT (f z x) z
-        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
+        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing (expressionDepth <$> rResult)]
     }
 
 isAtomic :: Expression -> Bool

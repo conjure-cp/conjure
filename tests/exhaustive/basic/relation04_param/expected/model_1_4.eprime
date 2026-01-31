@@ -80,25 +80,25 @@ such that
              | q2 : int(1..84)]),
     and([q8 + 1 <= r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Marker ->
          flatten([[r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_1[q8]; int(1)],
-                  flatten([flatten([[-toInt(r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags
-                                                [q8, q16]);
-                                         int(1)],
-                                    [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values
-                                         [q8, q16];
-                                         int(1)];
-                                        int(1..2)])
+                  flatten([[[-toInt(r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags
+                                        [q8, q16]);
+                                 int(1)],
+                            [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values
+                                 [q8, q16];
+                                 int(1)];
+                                int(1..2)]
                                | q16 : int(1..2)]),
                   [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_3[q8]; int(1)];
                       int(1..3)])
          <lex
          flatten([[r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_1[q8 + 1]; int(1)],
-                  flatten([flatten([[-toInt(r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags
-                                                [q8 + 1, q17]);
-                                         int(1)],
-                                    [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values
-                                         [q8 + 1, q17];
-                                         int(1)];
-                                        int(1..2)])
+                  flatten([[[-toInt(r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags
+                                        [q8 + 1, q17]);
+                                 int(1)],
+                            [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values
+                                 [q8 + 1, q17];
+                                 int(1)];
+                                int(1..2)]
                                | q17 : int(1..2)]),
                   [r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_3[q8 + 1]; int(1)];
                       int(1..3)])

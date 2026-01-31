@@ -9,7 +9,7 @@ Error 1:
         Type error in sum([q18 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
                            var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q18, q6]
                                | q18 : int(1..16)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 2:
     In a 'such that' statement:
         and([q19 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
@@ -18,7 +18,7 @@ Error 2:
     Error:
         Type error in sum([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q19, q20]
                                | q20 : int(2..4, 1)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool
 Error 3:
     In a 'such that' statement:
         and([q11 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
@@ -27,4 +27,4 @@ Error 3:
     Error:
         Type error in sum([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q11, q12]
                                | q12 : int(2..4, 1)])
-                      The argument has type: [bool]
+                      The argument has type: matrix indexed by [int] of bool

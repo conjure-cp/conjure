@@ -15,6 +15,7 @@ module Conjure.Language.Expression
     , patternToExpr
     , emptyCollectionX
     , nbUses
+    , reDomExp
     , isDomainExpr
     ) where
 
@@ -169,6 +170,15 @@ instance SimpleJSON Declaration where
                 return $ JSON.Object $ KM.fromList [(fromString (renderNormal nm), JSON.Array (V.fromList xs'))]
             _ -> noToSimpleJSON d
     fromSimpleJSON = noFromSimpleJSON "Declaration"
+
+instance SimpleJSON Name where
+    toSimpleJSON n =
+        case n of
+            Name nm -> do
+             return $ JSON.String nm
+            _ -> noToSimpleJSON n
+    
+    fromSimpleJSON = noFromSimpleJSON "Name"
 
 instance ToFromMiniZinc Declaration where
     toMiniZinc st =
@@ -527,8 +537,8 @@ instance TypeOf Expression where
                     ]
         typeOf h
     typeOf p@(Comprehension x gensOrConds) = do
-        forM_ gensOrConds $ \ goc -> case goc of
-            Generator{} -> return ()                    -- TODO: do this properly
+        forM_ gensOrConds $ \case
+            Generator{} -> return ()
             Condition c -> do
                 ty <- typeOf c
                 unless (typeUnify TypeBool ty) $ failDoc $ vcat
@@ -537,7 +547,20 @@ instance TypeOf Expression where
                     , "In:" <+> pretty p
                     ]
             ComprehensionLetting{} -> return ()
-        TypeList <$> typeOf x
+        let generators = [ gen | Generator gen <- gensOrConds ]
+        let conditions = [ cond | cond@Condition{} <- gensOrConds ]
+        case (generators, conditions) of
+            ([GenDomainNoRepr _ indexDom], []) -> do
+                indexTy <- typeOfDomain indexDom
+                if typeCanIndexMatrix indexTy
+                    then TypeMatrix indexTy <$> typeOf x
+                    else TypeList <$> typeOf x
+            ([GenDomainHasRepr _ indexDom], []) -> do
+                indexTy <- typeOfDomain indexDom
+                if typeCanIndexMatrix indexTy
+                    then TypeMatrix indexTy <$> typeOf x
+                    else TypeList <$> typeOf x
+            _ -> TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
@@ -936,6 +959,11 @@ emptyCollectionX (AbstractLiteral x) = emptyCollectionAbsLit x
 emptyCollectionX (Typed x _) = emptyCollectionX x
 emptyCollectionX _ = False
 
+
+reDomExp :: Domain () Expression -> Domain () Expression 
+reDomExp exp = case exp of
+                 DomainInt t _ -> reTag t exp
+                 _ -> exp
 
 isDomainExpr :: MonadFailDoc m => Expression -> m ()
 isDomainExpr Domain{} = return ()

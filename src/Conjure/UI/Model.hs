@@ -3,7 +3,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
+{-# HLINT ignore "Use <&>" #-}
+{-# HLINT ignore "Use :" #-}
 
 module Conjure.UI.Model
     ( outputModels
@@ -19,6 +20,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
+import Conjure.Language.AdHoc
 import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -29,6 +31,8 @@ import Conjure.Compute.DomainOf
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
+import Conjure.Language.Expression ( reDomExp )
+import Conjure.Language.Constant   ( reDomConst )
 import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )
@@ -100,6 +104,9 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 import qualified Conjure.Rules.Transform as Transform
+
+import qualified Conjure.Rules.Horizontal.Permutation as Horizontal.Permutation
+import qualified Conjure.Rules.Vertical.Permutation.PermutationAsFunction as Vertical.Permutation.PermutationAsFunction
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -273,7 +280,7 @@ toCompletion :: forall m .
     Model ->
     Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue config m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
@@ -306,9 +313,9 @@ modelRepresentationsJSON ::
     EnumerateDomain m =>
     MonadLog m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m JSONValue
-modelRepresentationsJSON model = do
-    reprs <- modelRepresentations model
+    Config -> Model -> m JSONValue
+modelRepresentationsJSON config model = do
+    reprs <- modelRepresentations config model
     return $ JSON.Array $ V.fromList
         [ JSON.Object $ KM.fromList
             [ "name" ~~ r name
@@ -335,9 +342,9 @@ modelRepresentations ::
     EnumerateDomain m =>
     MonadLog m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m [(Name, [Domain HasRepresentation Expression])]
-modelRepresentations model0 = do
-    model <- prologue model0
+    Config -> Model -> m [(Name, [Domain HasRepresentation Expression])]
+modelRepresentations config model0 = do
+    model <- prologue config model0
     concatForM (mStatements model) $ \case
         Declaration (FindOrGiven _ name domain) -> do
             domOpts <- reprOptions reprsStandardOrderNoLevels domain
@@ -358,9 +365,7 @@ remainingWIP ::
     ModelWIP ->
     m [Question]
 remainingWIP config (StartOver model)
-    | Just modelZipper <- mkModelZipper model = do
-        qs <- remaining config modelZipper (mInfo model)
-        return qs
+    | Just modelZipper <- mkModelZipper model = remaining config modelZipper (mInfo model)
     | otherwise = return []
 remainingWIP config wip@(TryThisFirst modelZipper info) = do
     qs <- remaining config modelZipper info
@@ -431,6 +436,8 @@ remaining config modelZipper minfo = do
                     let m3 = m2 { mInfo = (mInfo m2) { miNameGenState = namegenst2 } }
                     return (StartOver m3)
 
+            aDepth' <- ruleResultSize
+
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
@@ -438,6 +445,7 @@ remaining config modelZipper minfo = do
                     , aBefore = hole focus
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
+                    , aDepth = aDepth'
                     }
                 , ruleResultType
                 )
@@ -613,10 +621,7 @@ executeStrategy question options@((doc, option):_) (viewAuto -> (strategy, _)) =
                                 ChooseRepr_Given nm -> Just nm
                                 ChooseRepr_Cut nm -> Just nm
                                 _ -> Nothing
-                    let storedReprResponse =
-                            case useStoredReprResponse of
-                                Just nm -> nextRecordedResponseRepresentation nm
-                                Nothing -> Nothing
+                    let storedReprResponse = useStoredReprResponse >>= nextRecordedResponseRepresentation
                     case storedReprResponse of
                         Just recorded -> do
                             putStrLn ("Response: " ++ show recorded)
@@ -689,10 +694,7 @@ executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) = d
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
-compactCompareAnswer = comparing (expressionDepth . aAnswer)
-    where
-        expressionDepth :: Data a => a -> Int
-        expressionDepth x = 1 + maximum (0 : map expressionDepth (children x))
+compactCompareAnswer = comparing aDepth
 
 
 addToTrail
@@ -866,7 +868,6 @@ inlineDecVarLettings model =
     in
         model { mStatements = statements }
 
-
 dropTagForSR ::
     MonadFailDoc m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -899,7 +900,7 @@ dropTagForSR m = do
         replacePredSucc x = return x
 
     st <- transformBiM replacePredSucc (mStatements m)
-    return m { mStatements = transformBi (\ _ -> TagInt) st }
+    return m { mStatements = transformBi (const TagInt) st }
 
 
 updateDeclarations ::
@@ -926,7 +927,7 @@ updateDeclarations model = do
                     let
                         usedAfter :: Bool
                         usedAfter = nbUses nm afters > 0
-                    
+
                         nbComplexLiterals :: Int
                         nbComplexLiterals = sum
                                             [ case y of
@@ -981,7 +982,9 @@ checkIfAllRefined :: MonadFailDoc m => Model -> m Model
 checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
-            : ("Not refined:" <+> pretty (hole x))
+            : ("Not refined:" <+> vcat [ pretty (hole x)
+                                       , stringToDoc (show (hole x))
+                                       ])
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
               | (i, c) <- zip allNats (drop 1 (ascendants x))
               ]
@@ -991,7 +994,9 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
                         return $ ""
-                               : ("Not refined:" <+> pretty (hole x))
+                               : ("Not refined:" <+> vcat [ pretty (hole x)
+                                                          , stringToDoc (show (hole x))
+                                                          ])
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | (i, c) <- zip allNats (drop 1 (ascendants x))
@@ -1003,7 +1008,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                     WithLocals{} -> returnMsg x
                     Comprehension _ stmts -> do
                         decisionConditions <-
-                            fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
+                            fmap catMaybes $ forM stmts $ \case
                                 Condition c ->
                                     if categoryOf c >= CatDecision
                                         then return (Just c)
@@ -1032,9 +1037,13 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                            | (i, c) <- zip allNats (drop 1 (ascendants x))
                                            ]
                     [essence| &_ .< &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))]
+                        return ["", "Not refined:" <+> vcat [ pretty (hole x)
+                                                            , stringToDoc (show (hole x))
+                                                            ]]
                     [essence| &_ .<= &_ |] ->
-                        return ["", ("Not refined:" <+> pretty (hole x))]
+                        return ["", "Not refined:" <+> vcat [ pretty (hole x)
+                                                            , stringToDoc (show (hole x))
+                                                            ]]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -1207,12 +1216,12 @@ lexSingletons model = do
         case (matchSingleton l, matchSingleton r) of
           (Nothing, Nothing) -> return [essence| &l <lex &r |]
           (Just ls, Just rs) -> return [essence| &ls < &rs |]
-          _ -> bug $ "lexSingleton: match inconsistent" 
+          _ -> bug $ "lexSingleton: match inconsistent"
       onExpr [essence| &l <=lex &r |] =
         case (matchSingleton l, matchSingleton r) of
           (Nothing, Nothing) -> return [essence| &l <=lex &r |]
           (Just ls, Just rs) -> return [essence| &ls <= &rs |]
-          _ -> bug $ "lexSingleton: match inconsistent" 
+          _ -> bug $ "lexSingleton: match inconsistent"
       onExpr x = return x
       matchSingleton ::  (?typeCheckerMode :: TypeCheckerMode)
               => Expression -> Maybe Expression
@@ -1232,10 +1241,13 @@ prologue ::
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m Model
-prologue model = do
+    Config ->
+    Model ->
+    m Model
+prologue config model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
+    >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
     >>= removeUnderscores             >>= logDebugIdModel "[removeUnderscores]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
     >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
@@ -1244,6 +1256,8 @@ prologue model = do
     >>= lettingsForComplexInDoms      >>= logDebugIdModel "[lettingsForComplexInDoms]"
     >>= distinctQuantifiedVars        >>= logDebugIdModel "[distinctQuantifiedVars]"
     >>= return . initInfo             >>= logDebugIdModel "[initInfo]"
+    >>= addUnnamedSymmetryBreaking (unnamedSymmetryBreaking config)
+                                      >>= logDebugIdModel "[addUnnamedSymmetryBreaking]"
     >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugIdModel "[finiteGivens]"
@@ -1252,13 +1266,15 @@ prologue model = do
     >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
     >>= return . initInfo_Lettings    >>= logDebugIdModel "[initInfo_Lettings]"
     >>= removeDomainLettings          >>= logDebugIdModel "[removeDomainLettings]"
-    >>= typeCheckModel                >>= logDebugIdModel "[typeCheckModel]"
+    >>= (let ?typeCheckerMode = RelaxedIntegerTags in typeCheckModel)
+                                      >>= logDebugIdModel "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugIdModel "[categoryChecking]"
     >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
     -- >>= evaluateModel                 >>= logDebugIdModel "[evaluateModel]"
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
+    >>= enforceTagConsistency         >>= logDebugIdModel "[enforceTagConsistency]"
 
 
 epilogue ::
@@ -1319,11 +1335,7 @@ applicableRules Config{..} rulesAtLevel x = do
                 , "          on:" <+> pretty (hole x)
                 , "     message:" <+> failed
                 ]
-            Right ys     -> logSuccess $ vcat
-                [ "rule applied:" <+> rule
-                , "          on:" <+> pretty (hole x)
-                , "     message:" <+> vcat (map ruleResultDescr ys)
-                ]
+            Right _ -> return ()
     return [ (name, res {ruleResult = ruleResult'})
            | (name, Right ress) <- mys
            , res <- ress
@@ -1331,7 +1343,7 @@ applicableRules Config{..} rulesAtLevel x = do
                     rResult <- ruleResult res
                     case (hole x, rResult) of
                         (Reference nm1 _, Reference nm2 _)
-                            | show name /= "choose-repr"
+                            | not ("choose-repr" `isPrefixOf` show name)
                             , nm1 == nm2 -> bug $ vcat
                             [ "Rule applied inside a Reference."
                             , "Rule              :" <+> pretty name
@@ -1352,7 +1364,13 @@ applicableRules Config{..} rulesAtLevel x = do
                             , "Rule output (show):" <+> pretty (show rResult)
                             , "The error         :" <+> err
                             ]
-                        Right r  -> return r
+                        Right r  -> do
+                            logSuccess $ vcat
+                                [ "rule applied:" <+> name
+                                , "          on:" <+> pretty (hole x)
+                                , "      output:" <+> pretty r
+                                ]
+                            return r
            ]
 
 
@@ -1397,13 +1415,24 @@ paramRules =
 
 verticalRules :: [Rule]
 verticalRules =
-    [ Vertical.Tuple.rule_Tuple_Eq
+    [ Vertical.Permutation.PermutationAsFunction.rule_Image
+    , Vertical.Permutation.PermutationAsFunction.rule_Image_permInverse
+    , Vertical.Permutation.PermutationAsFunction.rule_double_permInverse
+    , Vertical.Permutation.PermutationAsFunction.rule_Cardinality
+    , Vertical.Permutation.PermutationAsFunction.rule_Defined
+    , Vertical.Permutation.PermutationAsFunction.rule_Comprehension
+
+
+    , Vertical.Tuple.rule_Tuple_Eq
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
+    , Vertical.Tuple.rule_Tuple_DotLeq
     , Vertical.Tuple.rule_Tuple_Index
+
+
 
     , Vertical.Record.rule_Record_Eq
     , Vertical.Record.rule_Record_Neq
@@ -1515,7 +1544,25 @@ verticalRules =
 
 horizontalRules :: [Rule]
 horizontalRules =
-    [ Horizontal.Set.rule_Comprehension_Literal
+    [ Horizontal.Permutation.rule_Cardinality_Literal
+    , Horizontal.Permutation.rule_Equality
+    , Horizontal.Permutation.rule_Disequality
+    , Horizontal.Permutation.rule_Comprehension
+    , Horizontal.Permutation.rule_Compose_Image
+
+
+
+
+    , Horizontal.Permutation.rule_Defined_Literal
+    , Horizontal.Permutation.rule_Image_Literal
+    , Horizontal.Permutation.rule_In
+    , Horizontal.Permutation.rule_Permutation_Inverse
+
+
+
+
+
+    , Horizontal.Set.rule_Comprehension_Literal
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
     , Horizontal.Set.rule_Subset
@@ -1625,6 +1672,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
 
+
     ]
 
 
@@ -1656,9 +1704,11 @@ otherRules =
     ,
         [ DontCare.rule_Bool
         , DontCare.rule_Int
+        , DontCare.rule_Unnamed
         , DontCare.rule_Tuple
         , DontCare.rule_Record
         , DontCare.rule_Variant
+        , DontCare.rule_Permutation
         , DontCare.rule_Matrix
         , DontCare.rule_Abstract
         ]
@@ -1701,10 +1751,12 @@ delayedRules =
         , Vertical.Matrix.rule_Comprehension_SingletonDomain
         , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
+
         ]
     ,   [ rule_ReducerToComprehension
         ]
-    ,   [ rule_DotLtLeq
+    ,   [ rule_QuickPermutationOrder
+        , rule_DotLtLeq
         , rule_Flatten_Lex
         ]
     ]
@@ -1717,7 +1769,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         let reprsWhichOrder
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
                 | (forg, representationsFinds  config) == (Find , Sparse) = reprsSparseOrder
-                | representationLevels config == False                    = reprsStandardOrderNoLevels
+                | not (representationLevels config)                       = reprsStandardOrderNoLevels
                 | otherwise                                               = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder inpDom
         when (null domOpts) $
@@ -1731,6 +1783,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                     _       -> bug "rule_ChooseRepr ruleResultType"
                              , ruleResult = return out
                              , ruleResultHook = Just hook
+                             , ruleResultSize = return $ expressionDepth $ Reference nm (Just (DeclHasRepr forg nm thisDom))
                              }
                 | thisDom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty thisDom
@@ -1865,13 +1918,13 @@ rule_ChooseReprForComprehension :: Config -> Rule
 rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
 
         let reprsWhichOrder
                 | representationsGivens config == Sparse = reprsSparseOrder
-                | representationLevels config == False   = reprsStandardOrderNoLevels
+                | not (representationLevels config   )   = reprsStandardOrderNoLevels
                 | otherwise                              = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder domain
         when (null domOpts) $
@@ -1898,6 +1951,7 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
                     out <- resolveNamesX out'
                     return out
                 , ruleResultHook = Nothing
+                , ruleResultSize = return $ expressionDepth $ Reference nm (Just (DeclHasRepr Quantified nm thisDom))
                 }
             | thisDom <- domOpts
             ]
@@ -1913,7 +1967,7 @@ rule_ChooseReprForLocals :: Config -> Rule
 rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body (AuxiliaryVars locals)) = do
-        (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
+        (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \case
             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForLocals"
 
@@ -1926,7 +1980,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
 
         let reprsWhichOrder
                 | representationsAuxiliaries config == Sparse   = reprsSparseOrder
-                | representationLevels config == False          = reprsStandardOrderNoLevels
+                | not (representationLevels config)             = reprsStandardOrderNoLevels
                 | otherwise                                     = reprsStandardOrder
         domOpts <- reprOptions reprsWhichOrder domain
         when (null domOpts) $
@@ -1957,6 +2011,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                     out <- resolveNamesX out'
                     return out
                 , ruleResultHook = Nothing
+                , ruleResultSize = return $ expressionDepth $ Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
                 }
             | thisDom <- domOpts
             ]
@@ -2043,6 +2098,18 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             )
 
 
+rule_QuickPermutationOrder :: Rule
+rule_QuickPermutationOrder = "generic-QuickPermutationOrder" `namedRule` theRule where
+    theRule p@(match opQuickPermutationOrder -> Just (ps, x)) = do
+        x_ord <- symmetryOrdering x
+        let rhs = make opTransform ps x_ord
+        return
+            ( "Generic vertical rule for quickPermutationOrder:" <+> pretty p
+            , return [essence| &x_ord .<= &rhs |]
+            )
+    theRule _ = na "rule_QuickPermutationOrder"
+
+
 rule_DotLtLeq :: Rule
 rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
     theRule p = do
@@ -2050,8 +2117,18 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        ma <- symmetryOrdering a
-        mb <- symmetryOrdering b
+        -- at this point, tuples vs matrix literal shouldn't matter
+        -- replace tuple literals with matrix literals
+        let
+            tupleLitToMatrixLit (AbstractLiteral (AbsLitTuple xs)) = do
+                xs' <- forM xs $ \ x -> do
+                    ty <- typeOf x
+                    let x' = oneDimensionaliser (matrixNumDims ty) x
+                    return x'
+                return (fromList xs')
+            tupleLitToMatrixLit x = return x
+        ma <- symmetryOrdering a >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
+        mb <- symmetryOrdering b >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
@@ -2086,7 +2163,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
       return ( "Flatten Lex Lt"
              , return [essence| &fa <=lex &fb |]
              )
-    theRule _ = na "rule_Flatten_Lex"  
+    theRule _ = na "rule_Flatten_Lex"
     reject_flat a b = do
       ta <- typeOf a
       tb <- typeOf b
@@ -2096,14 +2173,14 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
         (TypeMatrix TypeBool TypeBool, _) ->
           na "rule_Flatten_Lex"
         (TypeList TypeInt{}, _) ->
-          na "rule_Flatten_Lex" 
+          na "rule_Flatten_Lex"
         (TypeMatrix TypeInt{} TypeInt{}, _) ->
           na "rule_Flatten_Lex"
         (TypeList TypeBool, _) ->
-          na "rule_Flatten_Lex" 
+          na "rule_Flatten_Lex"
         (TypeMatrix TypeInt{} TypeBool, _) ->
           na "rule_Flatten_Lex"
-        _ -> return () 
+        _ -> return ()
 
     flatten a = do
       ta <- typeOf a
@@ -2117,7 +2194,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
             AbstractLiteral x -> do
               case x of
                 AbsLitTuple xs -> do
-                  fxs <- sequence (flatten <$> xs)
+                  fxs <- mapM flatten xs
                   let flatxs = fromList fxs
                   return [essence| flatten(&flatxs) |]
                 _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
@@ -2127,7 +2204,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
                 ConstantAbstract ca ->
                   case ca of
                     AbsLitTuple xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      fxs <- mapM flatten (Constant <$> xs)
                       let flatxs = fromList fxs
                       return [essence| flatten(&flatxs) |]
                     _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
@@ -2138,9 +2215,9 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
               (oName, o) <- quantifiedVar
               flatten $ Comprehension o [ComprehensionLetting oName a]
             _ -> do
-              ps <- sequence $ (\(i,_) -> do
+              ps <- mapM (\(i,_) -> do
                                   (Single nm, tm) <- quantifiedVar
-                                  return (i,nm,tm)) <$> (zip [1..] ts)
+                                  return (i,nm,tm)) (zip [1..] ts)
               let lts = (\(i,nm,_tm) -> ComprehensionLetting (Single nm) [essence| &a[&i] |]) <$> ps
                   tup = AbstractLiteral $ AbsLitTuple $ (\(_,_,tm) -> tm) <$> ps
               flatten $ Comprehension tup lts
@@ -2149,7 +2226,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
             AbstractLiteral x -> do
               case x of
                 AbsLitMatrix _ xs -> do
-                  fxs <- sequence (flatten <$> xs)
+                  fxs <- mapM flatten xs
                   let flatxs = fromList fxs
                   return [essence| flatten(&flatxs) |]
                 _ -> bug $ "rule_FlattenLex: flatten isn't defined for this abslit fellow..."
@@ -2161,7 +2238,7 @@ rule_Flatten_Lex = "flatten-lex" `namedRule` theRule where
                     AbsLitMatrix _ [] ->
                       return [essence| ([] : `matrix indexed by [int()] of int`) |]
                     AbsLitMatrix _ xs -> do
-                      fxs <- sequence (flatten <$> (Constant <$> xs))
+                      fxs <- mapM flatten (Constant <$> xs)
                       let flatxs = fromList fxs
                       return [essence| flatten(&flatxs) |]
                     _ -> bug $ "rule_FlattenLex: flatten isn't defined for this constant fellow..."
@@ -2394,7 +2471,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
 
 -- this rule doesn't use `namedRule` because it need access to ascendants through the zipper
 rule_InlineConditions :: Rule
-rule_InlineConditions = Rule "inline-conditions" theRule where
+rule_InlineConditions = "inline-conditions" `namedRuleZ` theRule where
     theRule z (Comprehension body gensOrConds) = do
         let (toInline, toKeep) = mconcat
                 [ case goc of
@@ -2409,12 +2486,9 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
         (nameQ, opSkip) <- queryQ z
         let bodySkipped = opSkip theGuard body
         return
-            [ RuleResult
-                { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
-                , ruleResultType  = ExpressionRefinement
-                , ruleResult      = return $ Comprehension bodySkipped toKeep
-                , ruleResultHook  = Nothing
-                } ]
+            ( "Inlining conditions, inside" <+> nameQ
+            , return $ Comprehension bodySkipped toKeep
+            )
     theRule _ _ = na "rule_InlineConditions"
 
     -- keep going up, until finding a quantifier
@@ -2553,7 +2627,7 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
 
 
 timedF :: MonadIO m => String -> (a -> m b) -> a -> m b
-timedF name comp = \ a -> timeItNamed name (comp a)
+timedF name comp a = timeItNamed name (comp a)
 
 
 evaluateModel ::
@@ -2757,6 +2831,174 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) % 2 |]
                     )
     theRule _ = na "rule_Xor_To_Sum"
+
+
+enforceTagConsistency :: MonadFail m => Model -> m Model
+enforceTagConsistency model = do
+  let statements' = transformBi reDomExp $ transformBi reDomConst (mStatements model)
+  return model { mStatements = statements' }
+
+
+addUnnamedSymmetryBreaking ::
+    NameGen m =>
+    Maybe UnnamedSymmetryBreaking ->
+    Model ->
+    m Model
+addUnnamedSymmetryBreaking mode model = do
+
+    let
+        allUnnamedTypes :: [(Domain () Expression, Expression)]
+        allUnnamedTypes =
+            [ reTag (TagUnnamed nm') (DomainReference nm Nothing,  x) --x is a TagInt at this point so we must reTag it
+            | Declaration (LettingDomainDefnUnnamed nm@(Name nm') x) <- mStatements model
+            ]
+
+        allDecVars =
+            [ (Reference nm Nothing, domain)
+            | Declaration (FindOrGiven Find nm domain) <- mStatements model
+            ]
+
+        -- allDecVarsAux auxSuffix =
+        --     [ (Reference (mconcat [nm, "_auxFor_", auxSuffix]) Nothing, domain)
+        --     | Declaration (FindOrGiven Find nm domain) <- mStatements model
+        --     ]
+
+        varsTuple = case allDecVars of
+                        [v] -> fst v
+                        _ -> AbstractLiteral $ AbsLitTuple $ map fst allDecVars
+        -- mkAuxTuple auxSuffix = AbstractLiteral $ AbsLitTuple $ map fst (allDecVarsAux auxSuffix)
+
+--    traceM $ show $ "Unnamed types in this model:" <++> prettyList id "," allUnnamedTypes
+--    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
+
+    -- 3 axis of doom
+    -- 1. Quick/Complete. Quick is quickPermutationOrder(x, p)   -- this is an efficient subset of x .<= p(x)
+    --                    Complete is x .<= p(x)
+    -- 2. Scope.          Consecutive
+    --                    AllPairs
+    --                    AllPermutations
+    -- 3. Independently/Altogether
+
+    case mode of
+        Nothing -> return model
+        Just (UnnamedSymmetryBreaking quickOrComplete usbScope independentlyOrAltogether) -> do
+            -- let newDecls =
+            --         case quickOrComplete of
+            --             USBQuick -> []
+            --             USBComplete ->
+            --                 case independentlyOrAltogether of
+            --                     USBIndependently ->
+            --                         [ Declaration (FindOrGiven LocalFind nm' domain)
+            --                         | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+            --                         , (DomainReference uName _, _) <- allUnnamedTypes
+            --                         , let nm' = mconcat [nm, "_auxFor_", uName]
+            --                         ]
+            --                     USBAltogether ->
+            --                         [ Declaration (FindOrGiven LocalFind nm' domain)
+            --                         | Declaration (FindOrGiven Find nm  domain) <- mStatements model
+            --                         , let nm' = mconcat [nm, "_auxFor_all"]
+            --                         ]
+
+            let
+
+                combinedPermApply perms =
+                    case quickOrComplete of
+                        USBQuick -> make opQuickPermutationOrder perms varsTuple
+                        USBComplete ->
+                            let applied = make opTransform perms varsTuple
+                            in [essence| &varsTuple .<= &applied |]
+
+                mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
+                mkGenerator_Consecutive perms [(u, uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = [essence| permutation((&i, succ(&i))) |]
+                    let applied = combinedPermApply (perm:perms)
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &i < &uSize
+                                    ])
+                           |]
+                mkGenerator_Consecutive perms ((u, uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = [essence| permutation((&i, succ(&i))) |]
+                    applied <- mkGenerator_Consecutive (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &i < &uSize
+                                    ])
+                           |]
+
+
+                mkGenerator_AllPairs _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPairs perms [(u, _uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &j)) |]
+                    let applied = combinedPermApply (perm:perms)
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &jPat : &u
+                                    , &i < &j
+                                    ])
+                           |]
+                mkGenerator_AllPairs perms ((u, _uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let perm = [essence| permutation((&i, &j)) |]
+                    applied <- mkGenerator_AllPairs (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : &u
+                                    , &jPat : &u
+                                    , &i < &j
+                                    ])
+                           |]
+
+                mkGenerator_AllPermutations _ [] = bug "must have at least one unnamed type"
+                mkGenerator_AllPermutations perms [(u, _uSize)] = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = i
+                    let applied = combinedPermApply (perm:perms)
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : permutation of &u
+                                    ])
+                           |]
+                mkGenerator_AllPermutations perms ((u, _uSize):us) = do
+                    (iPat, i) <- quantifiedVar
+                    let perm = i
+                    applied <- mkGenerator_AllPermutations (perm:perms) us
+                    return [essence|
+                                and([ &applied
+                                    | &iPat : permutation of &u
+                                    ])
+                           |]
+
+                mkGenerator perms us =
+                    case usbScope of
+                        USBConsecutive -> mkGenerator_Consecutive perms us
+                        USBAllPairs -> mkGenerator_AllPairs perms us
+                        USBAllPermutations -> mkGenerator_AllPermutations perms us
+            newCons <-
+                case independentlyOrAltogether of
+                    USBIndependently -> do
+                      xs <- sequence
+                            [ mkGenerator [] [(u, uSize)]
+                            | (u@DomainReference{}, uSize) <- allUnnamedTypes
+                            ]
+                      return [SuchThat xs]
+                    USBAltogether -> do
+                        cons <- mkGenerator [] allUnnamedTypes
+                        return [SuchThat [cons]]
+
+            let stmts = newCons
+            traceM $ show $ vcat $ "Adding the following unnamed symmetry breaking constraints:"
+                                 : map (nest 4 . pretty) stmts
+            return model { mStatements = mStatements model ++ stmts}
+
 
 
 rule_Comprehension_Cardinality :: Rule

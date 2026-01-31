@@ -3,14 +3,12 @@
 module Conjure.Rules.Vertical.MSet.ExplicitWithFlags where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Definition
-
 
 
 rule_Comprehension :: Rule
-rule_Comprehension = "mset-comprehension{ExplicitWithFlags}" `Rule` theRule where
+rule_Comprehension = "mset-comprehension{ExplicitWithFlags}" `namedRuleZ` theRule where
     theRule z (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
         TypeMSet{}             <- typeOf s
@@ -20,22 +18,19 @@ rule_Comprehension = "mset-comprehension{ExplicitWithFlags}" `Rule` theRule wher
         let upd val old = lambdaToFunction pat old val
         theyDo <- doDuplicatesMatter z
         return
-            [ RuleResult
-                { ruleResultDescr = "Vertical rule for mset-comprehension, ExplicitWithFlags representation"
-                , ruleResultType  = ExpressionRefinement
-                , ruleResultHook  = Nothing
-                , ruleResult      = do
-                    (jPat, j) <- quantifiedVar
-                    let val = [essence| &values[&j] |]
-                    let outBody = upd val body
-                    return $ Comprehension (if theyDo then [essence| &outBody * &flags[&j] |]
-                                                      else outBody)
-                            $  gocBefore
-                            ++ [ Generator (GenDomainNoRepr jPat index)
-                               , Condition [essence| &flags[&j] > 0 |]
-                               ]
-                            ++ transformBi (upd val) gocAfter
-                } ]
+            ( "Vertical rule for mset-comprehension, ExplicitWithFlags representation"
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &values[&j] |]
+                let outBody = upd val body
+                return $ Comprehension (if theyDo then [essence| &outBody * &flags[&j] |]
+                                                    else outBody)
+                        $  gocBefore
+                        ++ [ Generator (GenDomainNoRepr jPat index)
+                            , Condition [essence| &flags[&j] > 0 |]
+                            ]
+                        ++ transformBi (upd val) gocAfter
+            )
     theRule _ _ = na "rule_Comprehension"
 
 
