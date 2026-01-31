@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: GHC_VERSION=${{ matrix.GHC_VERSION }} make stack.yaml
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         name: Cache stack
         with:
           path: |
