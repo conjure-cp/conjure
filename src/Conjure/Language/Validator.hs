@@ -725,7 +725,7 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
     validateSequenceDomain attrs dom
   PermutationDomainNode l1 attrs l2 dom -> do
     l1 `isA` TtType
-    putDocs TypeD "permutation" l1
+    putDocs "permutation" l1
     l2 `isA'` TtSubKeyword
     validatePermutationDomain attrs dom
   RelationDomainNode l1 attrs l2 doms -> do
