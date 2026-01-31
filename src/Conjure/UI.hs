@@ -975,18 +975,18 @@ ui = modes
                     \ - or-tools (CP solver)\n\
                     \ - glucose (SAT solver)\n\
                     \ - glucose-syrup (SAT solver)\n\
-                    \ - lingeling/plingeling/treengeling (SAT solver)\n\
                     \ - cadical (SAT solver)\n\
                     \ - kissat (SAT solver)\n\
                     \ - minisat (SAT solver)\n\
                     \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
                     \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
-                    \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
+                    \ - bdd_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
+                    \ - wmaxcdcl (MaxSAT solver, only works with optimisation problems)\n\
                     \ - coin-or (MIP solver, implemented via MiniZinc)\n\
                     \ - cplex (MIP solver, implemented via MiniZinc)\n\
                     \ - boolector (SMT solver, supported logics: bv)\n\
                     \ - yices (SMT solver, supported logics: bv, lia, idl)\n\
-                    \ - z3 (SMT solver, supported logics: bv, lia, nia, idl)\n\
+                    \ - z3 (SMT solver, supported logics: bv, lia, nia)\n\
                     \Default: minion\n\n\
                     \Default logic for SMT solvers is bitvector (bv).\n\
                     \Append a dash and the name of a logic to the solver name to choose a different logic. For example yices-idl."

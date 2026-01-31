@@ -16,10 +16,12 @@ if ${COVERAGE} ; then
     mkdir -p conjure-code-coverage/latest
     cp -r .stack-work/install/*/*/*/hpc/combined/custom/* conjure-code-coverage/latest
 
-    # rename the cryptic directory name for better diffs over time
-    CONJURE_DIR_NAME=$(cd conjure-code-coverage/latest ; ls | grep conjure-cp)
-    mv conjure-code-coverage/latest/"${CONJURE_DIR_NAME}" conjure-code-coverage/latest/conjure-cp
+    ls -l conjure-code-coverage/latest
 
+    # rename the cryptic directory name for better diffs over time (for the conjure-cp-* directory)
+    CONJURE_DIR_NAME=$(ls conjure-code-coverage/latest | grep conjure-cp | grep -v conjure-testing)
+    echo $CONJURE_DIR_NAME
+    mv conjure-code-coverage/latest/"${CONJURE_DIR_NAME}" conjure-code-coverage/latest/conjure-cp
     # search & replace to fix links
     find conjure-code-coverage/latest -type f -exec sed -i "s/${CONJURE_DIR_NAME}/conjure-cp/g" {} \;
 

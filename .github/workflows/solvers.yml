@@ -20,14 +20,12 @@ on:
       - .github/workflows/solvers.yml
                             # other branches that want testing must create a PR
 
-env:
-  SCCACHE_GHA_ENABLED: "true"
-
 jobs:
 
   Job:
 
     strategy:
+      fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
         os:
         - ubuntu-latest
@@ -36,11 +34,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         name: Checkout repository
 
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Configure compiler wrappers for sccache
+        uses: ./.github/actions/setup-sccache
 
       - name: Setting PATH
         shell: bash
@@ -63,4 +64,3 @@ jobs:
       - name: Building solvers
         shell: bash
         run: BIN_DIR=${HOME}/.local/bin PROCESSES=2 make solvers
-

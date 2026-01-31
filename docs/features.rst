@@ -156,18 +156,17 @@ Currently the following solvers are supported.
 - or-tools (CP/SAT/MIP hybrid solver)
 - glucose (SAT solver)
 - glucose-syrup (SAT solver)
-- lingeling/plingeling/treengeling (SAT solver)
 - cadical (SAT solver)
 - kissat (SAT solver)
 - minisat (SAT solver)
 - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)
 - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)
-- open-wbo (MaxSAT solver, only works with optimisation problems)
+- wmaxcdcl (MaxSAT solver, only works with optimisation problems)
 - coin-or (MIP solver, implemented via MiniZinc)
 - cplex (MIP solver, implemented via MiniZinc)
 - boolector (SMT solver, supported logics: bv)
 - yices (SMT solver, supported logics: bv, lia, idl)
-- z3 (SMT solver, supported logics: bv, lia, nia, idl)
+- z3 (SMT solver, supported logics: bv, lia, nia)
 
 Default is minion
 

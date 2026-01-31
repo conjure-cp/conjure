@@ -22,9 +22,6 @@ on:
       - .github/workflows/build.yml
                             # other branches that want testing must create a PR
 
-env:
-  SCCACHE_GHA_ENABLED: "true"
-
 jobs:
 
   Job:
@@ -32,15 +29,16 @@ jobs:
     continue-on-error: true
 
     strategy:
+      fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
-        GHC_VERSION: ["9.2", "9.4", "9.6", "9.8", "9.10"]
+        GHC_VERSION: ["9.4", "9.6", "9.8", "9.10"]
         os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         name: Checkout repository
 
       - name: Stack version
@@ -57,7 +55,10 @@ jobs:
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Configure compiler wrappers for sccache
+        uses: ./.github/actions/setup-sccache
 
       - name: Setting PATH
         shell: bash

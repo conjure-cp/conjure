@@ -609,8 +609,8 @@ relationCardinality x = do
             let maxCard = make opProduct $ fromList [ [essence| |`&i`| |] | i <- inners ]
             sequence
                 [ case lowerOrUpper of
-                    "lowerBound" -> return ([essence| |&x| >= &maxCard / &slice |], [grp])
-                    "upperBound" -> return ([essence| |&x| <= &maxCard / &slice |], [grp])
+                    "LowerBound" -> return ([essence| |&x| >= &maxCard / &slice |], [grp])
+                    "UpperBound" -> return ([essence| |&x| <= &maxCard / &slice |], [grp])
                     _ -> bug "relationCardinality"
                 | slice <- [1,2,4,8,16,32]
                 , lowerOrUpper <- ["LowerBound","UpperBound"]

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:        # can be triggered manually
   push:
     branches:
-      - main                # run for the main branch only
+      - main                # run for the main branch
     paths:
       - conjure-cp.cabal
       - Makefile
@@ -14,14 +14,12 @@ on:
       - etc/savilerow/**
       - .github/workflows/test-coverage.yml
 
-env:
-  SCCACHE_GHA_ENABLED: "true"
-
 jobs:
 
   Job:
 
     strategy:
+      fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
         GHC_VERSION: ["9.10"]
         os: [ubuntu-latest]
@@ -29,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         name: Checkout repository
 
       - name: Stack version
@@ -46,7 +44,10 @@ jobs:
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Configure compiler wrappers for sccache
+        uses: ./.github/actions/setup-sccache
 
       - name: Setting PATH
         shell: bash
@@ -54,7 +55,7 @@ jobs:
 
       - name: Install Conjure
         shell: bash
-        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true make
+        run: BIN_DIR=${HOME}/.local/bin BUILD_TESTS=true GHC_VERSION=${{ matrix.GHC_VERSION }} make
 
       - name: Install Minion
         shell: bash

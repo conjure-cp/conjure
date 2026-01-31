@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# version as of 18 September 2025
-VERSION=4.15.3
+# version as of December 2025
+VERSION=4.15.4
 
 source "download.sh" 2> /dev/null               # if called from the script dir
 source "etc/build/download.sh" 2> /dev/null     # if called from the repo base (the common case)
@@ -26,7 +26,7 @@ $PYTHON scripts/mk_make.py --prefix=${BIN_DIR}
 cd build
 make -j${PROCESSES}
 make -j${PROCESSES} install
-cp ${BIN_DIR}/bin/z3 ${BIN_DIR}
+mv ${BIN_DIR}/bin/z3 ${BIN_DIR}
 echo "z3 executable is at ${BIN_DIR}/z3"
 ls -l ${BIN_DIR}/z3
 popd

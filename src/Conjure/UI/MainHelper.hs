@@ -6,13 +6,13 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelFromStdin
+import Conjure.UI.IO ( readModelFromFile, readModelFromStdin
                      , readModelInfoFromFile, readParamOrSolutionFromFile
                      , writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels, modelRepresentationsJSON, prologue )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
-import Conjure.UI.TranslateSolution ( translateSolution )
+import Conjure.UI.TranslateSolution ( prepareTranslateSolution, translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
@@ -27,7 +27,7 @@ import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Domain ( Domain(..), Range(..) )
 import Conjure.Language.NameGen ( NameGen, NameGenM, runNameGen )
 import Conjure.Language.Pretty 
-import qualified Conjure.Language.ParserC as ParserC ( parseModel )
+import qualified Conjure.Language.ParserCPrime as ParserCPrime ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..)
                                 , UnnamedSymmetryBreaking(..)
@@ -277,8 +277,8 @@ mainWithArgs config@Solve{..} = do
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
                        ])
-    when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
-        userErr1 "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
+    when (solver `elem` ["bc_minisat_all", "nbc_minisat_all", "bdd_minisat_all"] && nbSolutions /= "all") $
+        userErr1 "The solvers bc_minisat_all, nbc_minisat_all and bdd_minisat_all only work with --number-of-solutions=all"
     essenceM_beforeNR <- readModelFromFile essence
     essenceM <- prologue def essenceM_beforeNR
     unless (null [ () | Objective{} <- mStatements essenceM ]) $ do -- this is an optimisation problem
@@ -853,7 +853,8 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = (dropExtension . snd . splitFileName) modelPath
     srArgs <- liftIO $ srMkArgs ui outBase modelPath
-    let tr = translateSolution eprimeModel def
+    -- prepareTranslateSolution precomputes solution-invariant work for faster translation over many solutions.
+    tr <- liftIO $ ignoreLogs $ runNameGen () $ prepareTranslateSolution eprimeModel def
     let handler = liftIO . srStdoutHandler
                     (outBase, modelPath, "<no param file>", ui)
                     tr (1::Int)
@@ -910,7 +911,8 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srArgsBase
-            let tr = translateSolution eprimeModel essenceParam
+            -- prepareTranslateSolution precomputes solution-invariant work for faster translation over many solutions.
+            tr <- liftIO $ ignoreLogs $ runNameGen () $ prepareTranslateSolution eprimeModel essenceParam
             let handler = liftIO . srStdoutHandler
                             (outBase, modelPath, paramPath, ui)
                             tr (1::Int)
@@ -949,13 +951,11 @@ solverExecutables =
     , ( "kissat"          , "kissat" )
     , ( "glucose"         , "glucose" )
     , ( "glucose-syrup"   , "glucose-syrup" )
-    , ( "lingeling"       , "lingeling" )
-    , ( "plingeling"      , "plingeling" )
-    , ( "treengeling"     , "treengeling" )
     , ( "minisat"         , "minisat" )
     , ( "bc_minisat_all"  , "bc_minisat_all_release" )
     , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
-    , ( "open-wbo"        , "open-wbo" )
+    , ( "bdd_minisat_all" , "bdd_minisat_all_release" )
+    , ( "wmaxcdcl"        , "wmaxcdcl" )
     , ( "or-tools"        , "fzn-cp-sat" )
     , ( "coin-or"         , "minizinc" )
     , ( "cplex"           , "minizinc" )
@@ -977,7 +977,7 @@ smtSolversSRFlag _ = bug "smtSolversSRFlag"
 smtSupportedLogics :: String -> [String]
 smtSupportedLogics "boolector" = ["bv"]
 smtSupportedLogics "yices" = ["bv", "lia", "idl"]
-smtSupportedLogics "z3" = ["bv", "lia", "nia", "idl"]
+smtSupportedLogics "z3" = ["bv", "lia", "nia"]
 smtSupportedLogics s = bug ("Unrecognised SMT solver:" <+> pretty s)
 
 
@@ -1039,32 +1039,24 @@ srMkArgs Solve{..} outBase modelPath = do
                                       , "-sat-family", "cadical"
                                       , "-satsolver-bin", "kissat"
                                       ]
-        "lingeling"         -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "lingeling"
-                                      ]
-        "plingeling"        -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "plingeling"
-                                      ]
-        "treengeling"       -> return [ "-sat"
-                                      , "-sat-family", "lingeling"
-                                      , "-satsolver-bin", "treengeling"
-                                      ]
         "minisat"           -> return [ "-sat"
                                       , "-sat-family", "minisat"
                                       , "-satsolver-bin", "minisat"
                                       ]
         "bc_minisat_all"    -> return [ "-sat"
-                                      , "-sat-family", "bc_minisat_all"
+                                      , "-sat-family", "nbc_minisat_all"
                                       , "-satsolver-bin", "bc_minisat_all_release"
                                       ]
         "nbc_minisat_all"   -> return [ "-sat"
                                       , "-sat-family", "nbc_minisat_all"
                                       , "-satsolver-bin", "nbc_minisat_all_release"
                                       ]
-        "open-wbo"          -> return [ "-maxsat"
-                                      , "-satsolver-bin", "open-wbo"
+        "bdd_minisat_all"   -> return [ "-sat"
+                                      , "-sat-family", "nbc_minisat_all"
+                                      , "-satsolver-bin", "bdd_minisat_all_release"
+                                      ]
+        "wmaxcdcl"          -> return [ "-maxsat"
+                                      , "-satsolver-bin", "wmaxcdcl"
                                       ]
         "coin-or"           -> return [ "-minizinc"
                                       , "-solver-options", "--solver COIN-BC"
@@ -1122,16 +1114,21 @@ srStdoutHandler
             when (logLevel >= LogDebug) $ do
                 pp logLevel ("SR:" <+> pretty line)
             case stripPrefix "Solution: " line of
-                Nothing -> do
-                    if isPrefixOf "Created output file for domain filtering" line
-                        then pp logLevel $ hsep ["Running minion for domain filtering."]
-                        else if isPrefixOf "Created output" line
-                            then pp logLevel $ hsep ["Running solver:", pretty solver]
-                            else return ()
-                    fmap (Left line :)
-                         (srStdoutHandler args tr solutionNumber h)
+                Nothing ->
+                    if line `elem` ["MaxSAT solver exited with error code:3 and error message:", "[PARSE ERROR! Unexpected char: h]"]
+                        then srStdoutHandler args tr solutionNumber h -- wmaxcdcl produces this warning if it proves optimality...
+                        else do
+                            if isPrefixOf "Created output file for domain filtering" line
+                                then pp logLevel $ hsep ["Running minion for domain filtering."]
+                                else if isPrefixOf "Created output" line
+                                    then pp logLevel $ hsep ["Running solver:", pretty solver]
+                                    else return ()
+                            fmap (Left line :)
+                                (srStdoutHandler args tr solutionNumber h)
                 Just solutionText -> do
-                    eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
+                    eprimeSol  <- case ParserCPrime.parseModel (stringToText solutionText) of
+                        Left err -> userErr1 err
+                        Right m -> return m
                     essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
                     case solutionsInOneFile of
                         False -> do
@@ -1287,4 +1284,3 @@ doIfNotCached (show . hash -> h) savedHashesFile getResult act = do
 
 autoParallel :: [IO a] -> IO [a]
 autoParallel = if numCapabilities > 1 then parallel else sequence
-
