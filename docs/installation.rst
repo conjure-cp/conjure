@@ -30,7 +30,7 @@ Docker
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
