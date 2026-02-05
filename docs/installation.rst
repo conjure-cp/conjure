@@ -30,7 +30,7 @@ Docker
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    echo 'docker run --rm -v "$PWD:/work" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -44,7 +44,7 @@ Podman
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    echo 'podman run --rm -v "$PWD:/work:z" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+    printf '#!/bin/sh\npodman run --rm -v "$PWD:/work:z" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -58,7 +58,7 @@ Apptainer
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    echo 'apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"' > ~/.local/bin/conjure
+    printf '#!/bin/sh\napptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
