@@ -51,10 +51,10 @@ import qualified Data.Set as S                  -- containers
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 
 -- filepath
-import System.FilePath ( splitFileName, takeBaseName, (<.>) )
+import System.FilePath ( splitFileName, takeBaseName, normalise, (<.>) )
 
 -- directory
-import System.Directory ( copyFile, findExecutable )
+import System.Directory ( copyFile, findExecutable, doesFileExist )
 
 -- shelly
 import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
@@ -359,11 +359,11 @@ mainWithArgs config@Solve{..} = do
                 let
                     copySolution :: MonadIO m => FilePath -> FilePath -> m ()
                     copySolution old new = do
-                        pp logLevel ("Copying solution to:" <+> pretty new)
-                        liftIO (copyFile old new)
+                        let newPath = normalise new
+                        pp logLevel ("Copying solution to:" <+> pretty newPath)
+                        liftIO (copyFile old newPath)
 
-                let (essenceDir0, essenceFilename) = splitFileName essence
-                let essenceDir = if essenceDir0 == "./" then "" else essenceDir0
+                let (essenceDir, essenceFilename) = splitFileName essence
                 let essenceBasename = takeBaseName essenceFilename
 
                 let extensions = [ ".solution", ".solution.json", ".solution.minizinc"
@@ -795,6 +795,7 @@ savileRowNoParam ::
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = (dropExtension . snd . splitFileName) modelPath
+    let essenceBasename = takeBaseName (snd (splitFileName essence))
     srArgs <- liftIO $ srMkArgs ui outBase modelPath
     -- prepareTranslateSolution precomputes solution-invariant work for faster translation over many solutions.
     tr <- liftIO $ ignoreLogs $ runNameGen () $ prepareTranslateSolution eprimeModel def
@@ -821,7 +822,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                             liftIO $ putStrLn $ "    runsolver " ++ unwords (map quoteMultiWord runsolverArgs)
                                                  ++ " savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
                         runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
-    srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
+    srCleanUp outBase essenceBasename ui (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
@@ -839,6 +840,8 @@ savileRowWithParams ::
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = (dropExtension . snd . splitFileName) modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
+    let essenceBasename = takeBaseName (snd (splitFileName essence))
+    let statsDestBase = intercalate "-" [essenceBasename, dropDirs (dropExtension paramPath)]
     let
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
@@ -880,7 +883,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                                                         ++ " savilerow " ++ unwords (map (quoteMultiWord . textToString) srArgs)
                                 runHandle "runsolver" (map stringToText runsolverArgs ++ [stringToText savilerowScriptName] ++ srArgs) handler
 
-            srCleanUp outBase ui (stringToText $ unlines stdoutSR) solutions
+            srCleanUp outBase statsDestBase ui (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
@@ -1122,8 +1125,8 @@ srStdoutHandler
 srStdoutHandler _ _ _ _ = bug "srStdoutHandler"
 
 
-srCleanUp :: FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
-srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
+srCleanUp :: FilePath -> FilePath -> UI -> Text -> [sols] -> Sh (Either [Doc] [sols])
+srCleanUp outBase statsDestBase ui@Solve{..} stdoutSR solutions = do
 
     let mkFilename ext = outputDirectory </> outBase ++ ext
 
@@ -1151,6 +1154,15 @@ srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
         stats <- mkSolveStats ui (exitCodeSR, stdoutSR, stderrSR) (fromMaybe "" savilerowInfoContent) (fromMaybe "" runsolverInfoContent)
         writeFile statsFilename (render lineWidth (toJSON stats))
 
+    when copySolutions $ do
+        let (essenceDir, _essenceFilename) = splitFileName essence
+        let statsFilename = mkFilename ".stats.json"
+        let statsDest = normalise (essenceDir </> statsDestBase ++ ".stats.json")
+        exists <- liftIO $ doesFileExist statsFilename
+        when exists $ do
+            pp logLevel ("Copying stats to:" <+> pretty statsDest)
+            liftIO $ copyFile statsFilename statsDest
+
     if  | T.isInfixOf "Savile Row timed out." combinedSR ->
             return (Left ["Savile Row timed out."])
         | T.isInfixOf "where false" combinedSR ->
@@ -1171,7 +1183,7 @@ srCleanUp outBase ui@Solve{..} stdoutSR solutions = do
                                , "Savile Row stderr:"    <+> pretty stderrSR
                                , "Savile Row exit-code:" <+> pretty exitCodeSR
                                ]])
-srCleanUp _ _ _ _ = bug "srCleanUp"
+srCleanUp _ _ _ _ _ = bug "srCleanUp"
 
 
 validateSolutionNoParam ::
