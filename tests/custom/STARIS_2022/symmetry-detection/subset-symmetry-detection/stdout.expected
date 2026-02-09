@@ -1,19 +1,11 @@
-{"model":
-     {"children":
-          [{"children": {"domain": {"DomainBool": []}, "forg": "Find", "name": {"Name": "b"}, "type": "FindOrGiven"},
-            "type": "Declaration"},
-           {"children":
-                [{"children":
-                      [{"Reference": {"Name": "b"}},
-                       {"children":
-                            [{"ConstantAbstract":
-                                  {"AbsLitSet":
-                                       [{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantInt": [{"TagInt": []}, 1]}]}},
-                             {"ConstantAbstract":
-                                  {"AbsLitSet":
-                                       [{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantInt": [{"TagInt": []}, 1]}]}}],
-                        "type": "OpSubset"}],
-                  "symmetricChildren": true, "type": "OpEq"}],
-            "symmetricChildren": true, "type": "SuchThat"}],
-      "symmetricChildren": true, "type": "Model"},
- "nodes_to_swap": ["b"]}
+Generating models for subset-symmetry-detection.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: conjure-output/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying stats to: subset-symmetry-detection.stats.json
+Copying solution to: subset-symmetry-detection.solution
+language Essence 1.3
+
+letting b be false

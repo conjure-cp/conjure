@@ -1,17 +1,11 @@
-{"model":
-     {"children":
-          [{"children":
-                {"name": {"Name": "D"}, "type": "GivenDomainDefnEnum",
-                 "values": [{"Name": "North"}, {"Name": "East"}, {"Name": "South"}, {"Name": "West"}]},
-            "type": "Declaration"},
-           {"children":
-                {"domain": {"DomainEnum": [{"Name": "D"}, null, null]}, "forg": "Find", "name": {"Name": "a"},
-                 "type": "FindOrGiven"},
-            "type": "Declaration"},
-           {"children":
-                [{"children":
-                      [{"Reference": {"Name": "a"}}, {"children": [{"Reference": {"Name": "East"}}], "type": "OpSucc"}],
-                  "symmetricChildren": true, "type": "OpEq"}],
-            "symmetricChildren": true, "type": "SuchThat"}],
-      "symmetricChildren": true, "type": "Model"},
- "nodes_to_swap": ["East", "a"]}
+Generating models for succ-symmetry-detection.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: conjure-output/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying stats to: succ-symmetry-detection.stats.json
+Copying solution to: succ-symmetry-detection.solution
+language Essence 1.3
+
+letting a be South

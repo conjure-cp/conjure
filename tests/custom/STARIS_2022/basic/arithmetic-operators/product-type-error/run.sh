@@ -1,2 +1,4 @@
-conjure model *.essence
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
+conjure solve *.essence
+cat *.solution
+rm -rf conjure-output *.solution *.stats.json

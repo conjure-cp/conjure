@@ -1,3 +1,4 @@
+rm -rf conjure-output *.solution *.stats.json
 conjure solve *.essence
-cat apart.solution
-rm -rf conjure-output
+cat *.solution
+rm -rf conjure-output *.solution *.stats.json

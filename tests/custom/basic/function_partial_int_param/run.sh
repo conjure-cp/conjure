@@ -1,5 +1,5 @@
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
 conjure solve -ax --channelling=no *.essence *.param --number-of-solutions=all --copy-solutions=no
 ls -1 conjure-output | LC_ALL=C sort
 grep letting conjure-output/*.solution | LC_ALL=C sort
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json

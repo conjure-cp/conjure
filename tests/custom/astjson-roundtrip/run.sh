@@ -1,4 +1,4 @@
-rm -rf conjure-output *.solution sample.json
+rm -rf conjure-output *.solution *.stats.json sample.json
 conjure pretty sample.essence --output-format=astjson > sample.json
 conjure solve sample.json
 echo "===== 1 ====="
@@ -7,4 +7,4 @@ echo "===== 2 ====="
 conjure pretty sample.json
 echo "===== 3 ====="
 cat *.solution
-rm -rf conjure-output *.solution sample.json
+rm -rf conjure-output *.solution *.stats.json sample.json

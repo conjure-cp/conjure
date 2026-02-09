@@ -1,4 +1,4 @@
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
 
 conjure solve 401-1.essence
 cat conjure-output/model000001.eprime | grep -v "^[$]"
@@ -16,4 +16,4 @@ conjure solve 401-3.essence
 cat conjure-output/model000001.eprime | grep -v "^[$]"
 cat 401-3.solution
 
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
