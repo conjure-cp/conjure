@@ -1,4 +1,4 @@
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
 conjure solve *.essence --validate-solutions --line-width 80
 # conjure solve *.essence --line-width 80
 #for file in conjure-output/*.eprime conjure-output/*.solution; do
@@ -8,4 +8,4 @@ conjure solve *.essence --validate-solutions --line-width 80
 #    echo ""
 #done
 cat *solution
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json

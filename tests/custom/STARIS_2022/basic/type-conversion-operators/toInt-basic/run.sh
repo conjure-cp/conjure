@@ -1,3 +1,4 @@
+rm -rf conjure-output *.solution *.stats.json
 conjure solve *.essence
-cat toInt.solution
-rm -rf conjure-output
+cat *.solution
+rm -rf conjure-output *.solution *.stats.json

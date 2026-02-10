@@ -1,17 +1,11 @@
-{"model":
-     {"children":
-          [{"children": {"domain": {"DomainBool": []}, "forg": "Find", "name": {"Name": "d"}, "type": "FindOrGiven"},
-            "type": "Declaration"},
-           {"children":
-                [{"children":
-                      [{"Reference": {"Name": "d"}},
-                       {"children":
-                            [{"ConstantAbstract":
-                                  {"AbsLitSet":
-                                       [{"ConstantInt": [{"TagInt": []}, 0]}, {"ConstantInt": [{"TagInt": []}, 1]}]}},
-                             {"ConstantAbstract": {"AbsLitSet": []}}],
-                        "type": "OpSupset"}],
-                  "symmetricChildren": true, "type": "OpEq"}],
-            "symmetricChildren": true, "type": "SuchThat"}],
-      "symmetricChildren": true, "type": "Model"},
- "nodes_to_swap": ["d"]}
+Generating models for supset-symmetry-detection.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: conjure-output/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying stats to: supset-symmetry-detection.stats.json
+Copying solution to: supset-symmetry-detection.solution
+language Essence 1.3
+
+letting d be true

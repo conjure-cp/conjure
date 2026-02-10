@@ -1,4 +1,4 @@
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
 
 conjure solve 443-workaround.essence
 cat conjure-output/model000001.eprime | grep -v "^[$]"
@@ -14,4 +14,4 @@ conjure solve 443-bool-typed.essence
 cat conjure-output/model000001.eprime | grep -v "^[$]"
 cat 443-bool-typed.solution
 
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
