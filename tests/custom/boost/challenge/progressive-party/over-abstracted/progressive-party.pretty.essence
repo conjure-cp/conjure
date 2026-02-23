@@ -1,0 +1,22 @@
+language Essence 1.3
+
+given numGuests: int(1..)
+given numHosts: int(1..)
+given numPeriods: int(1..)
+given guestCrew: matrix indexed by [int(1..numGuests)] of int(1..)
+given hostCap: matrix indexed by [int(1..numHosts)] of int(1..)
+find schedule: relation of (int(1..numGuests) * int(1..numPeriods) * int(1..numHosts))
+such that
+    and([and([sum([toInt((g, p, h) in schedule) | h : int(1..numHosts)]) = 1 | p : int(1..numPeriods)])
+             | g : int(1..numGuests)]),
+    and([and([sum([toInt((g, p, h) in schedule) * guestCrew[g] | g : int(1..numGuests)]) <= hostCap[h]
+                  | p : int(1..numPeriods)])
+             | h : int(1..numHosts)]),
+    and([and([sum([toInt((g, p, h) in schedule) | p : int(1..numPeriods)]) <= 1 | h : int(1..numHosts)])
+             | g : int(1..numGuests)]),
+    and([and([sum([toInt(or([(g1, p, h) in schedule /\ (g2, p, h) in schedule | h : int(1..numHosts)]))
+                       | p : int(1..numPeriods)])
+              <= 1
+                  | g2 : int(g1 + 1..numGuests)])
+             | g1 : int(1..numGuests)])
+

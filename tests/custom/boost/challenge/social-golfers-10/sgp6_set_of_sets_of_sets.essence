@@ -1,0 +1,50 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 6: Set of Sets of Sets (Nested Sets)
+$
+$ Domain:  set (size w) of set (size g) of set (size s) of Golfers
+$
+$ Information carried by the domain:
+$   - Cardinalities at each nesting level: w weeks, g groups, s golfers
+$   - Set semantics at each level: no duplicate weeks, no duplicate groups
+$     within a week, no duplicate golfers within a group
+$
+$ Information NOT carried (must be constrained explicitly):
+$   - Disjointness of groups within a week (groups can overlap without constraint)
+$   - Coverage: every golfer appears each week
+$   Together these form the partition constraint.
+$
+$ Explicit constraints needed:
+$   1. Partition constraint: groups within each week partition all golfers
+$   2. Pairing constraint: no pair of golfers shares a group more than once
+$
+$ Compared to Formulation 5 (matrix of sets):
+$   - No indexing at all — everything is nested sets.
+$   - Week ordering and group ordering are both eliminated by set semantics,
+$     removing those symmetries from the search space.
+$   - The trade-off: quantification uses set membership rather than array indexing.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+
+find sched : set (size w) of set (size g) of set (size s) of Golfers
+
+$ Partition constraint: within each week, groups are pairwise disjoint.
+$ With g groups of size s and g*s golfers, disjointness implies coverage.
+such that
+    forAll week in sched .
+        forAll group1 in week .
+            forAll group2 in week .
+                group1 != group2 -> |group1 intersect group2| = 0,
+
+$ Pairing constraint: no two golfers share a group more than once
+such that
+    forAll p1 : Golfers .
+        forAll p2 : Golfers .
+            p1 != p2 ->
+            (sum week in sched .
+                sum group in week .
+                    toInt(p1 in group /\ p2 in group)
+            ) <= 1

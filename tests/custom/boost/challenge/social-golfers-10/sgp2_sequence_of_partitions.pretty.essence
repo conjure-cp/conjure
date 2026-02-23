@@ -1,0 +1,14 @@
+language Essence 1.3
+
+given w: int(1..)
+given g: int(1..)
+given s: int(1..)
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+find sched: sequence (size w) of partition (numParts g, partSize s, regular) from Golfers
+such that
+    and([and([p1 != p2 ->
+              sum([sum([toInt(p1 in part /\ p2 in part) | part <- parts(image(sched, i))]) | i : int(1..w)]) <= 1
+                  | p2 : Golfers])
+             | p1 : Golfers])
+

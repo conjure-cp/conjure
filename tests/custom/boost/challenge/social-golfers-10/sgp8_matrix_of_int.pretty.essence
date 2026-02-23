@@ -1,0 +1,12 @@
+language Essence 1.3
+
+given w: int(1..)
+given g: int(1..)
+given s: int(1..)
+letting nGolfers be g * s
+find sched: matrix indexed by [int(1..w), int(1..nGolfers)] of int(1..g)
+such that and([and([sum([toInt(sched[i, p] = j) | p : int(1..nGolfers)]) = s | j : int(1..g)]) | i : int(1..w)])
+such that
+    and([and([p1 < p2 -> sum([toInt(sched[i, p1] = sched[i, p2]) | i : int(1..w)]) <= 1 | p2 : int(1..nGolfers)])
+             | p1 : int(1..nGolfers)])
+

@@ -1,0 +1,17 @@
+language Essence 1.3
+
+given v: int(1..)
+given b: int(1..)
+given r: int(1..)
+given k: int(1..)
+given lambda: int(1..)
+where
+    v * r = b * k,
+    lambda * (v - 1) = r * (k - 1)
+find design: matrix indexed by [int(1..b)] of set (size k) of int(1..v)
+such that
+    and([sum([toInt(point in design[i]) | i : int(1..b)]) = r | point : int(1..v)]),
+    and([and([sum([toInt(p1 in design[i] /\ p2 in design[i]) | i : int(1..b)]) = lambda | p2 : int(p1 + 1..v)])
+             | p1 : int(1..v)]),
+    and([[toInt(j in design[i]) | j : int(1..v)] <=lex [toInt(j in design[i + 1]) | j : int(1..v)] | i : int(1..b - 1)])
+

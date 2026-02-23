@@ -1,0 +1,11 @@
+language Essence 1.3
+
+given n, k : int(1..)
+given edges : set of set (size 2) of int(1..n)
+
+find colouring : partition (maxNumParts k) from int(1..n)
+
+such that
+    forAll edge in edges .
+        forAll u in edge . forAll v in edge . u < v ->
+            apart({u, v}, colouring)

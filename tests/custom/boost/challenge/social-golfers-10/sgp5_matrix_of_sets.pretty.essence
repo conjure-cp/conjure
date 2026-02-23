@@ -1,0 +1,17 @@
+language Essence 1.3
+
+given w: int(1..)
+given g: int(1..)
+given s: int(1..)
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+find sched: matrix indexed by [int(1..w), int(1..g)] of set (size s) of Golfers
+such that
+    and([and([and([j1 < j2 -> |sched[i, j1] intersect sched[i, j2]| = 0 | j2 : int(1..g)]) | j1 : int(1..g)])
+             | i : int(1..w)])
+such that
+    and([and([p1 != p2 ->
+              sum([sum([toInt(p1 in sched[i, j] /\ p2 in sched[i, j]) | j : int(1..g)]) | i : int(1..w)]) <= 1
+                  | p2 : Golfers])
+             | p1 : Golfers])
+

@@ -1,0 +1,16 @@
+language Essence 1.3
+
+given w: int(1..)
+given g: int(1..)
+given s: int(1..)
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+find sched: set (size w) of set (size g) of set (size s) of Golfers
+such that
+    and([and([and([group1 != group2 -> |group1 intersect group2| = 0 | group2 <- week]) | group1 <- week])
+             | week <- sched])
+such that
+    and([and([p1 != p2 -> sum([sum([toInt(p1 in group /\ p2 in group) | group <- week]) | week <- sched]) <= 1
+                  | p2 : Golfers])
+             | p1 : Golfers])
+

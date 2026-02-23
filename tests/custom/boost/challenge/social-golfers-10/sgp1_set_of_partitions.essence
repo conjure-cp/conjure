@@ -1,0 +1,38 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 1: Set of Partitions
+$
+$ Domain:  set (size w) of partition (regular, numParts g, partSize s) from Golfers
+$
+$ Information carried by the domain:
+$   - There are exactly w weeks (set size w)
+$   - Each week is a partition of all golfers into groups
+$   - Each partition has exactly g groups (numParts g)
+$   - Each group has exactly s golfers (partSize s, regular)
+$   - Disjointness: no golfer appears in two groups within a week (partition semantics)
+$   - Full coverage: every golfer plays every week (partition semantics)
+$   - Weeks are unordered (set semantics eliminates week-ordering symmetry)
+$
+$ Explicit constraints needed:
+$   - Only the pairing constraint: no two golfers share a group more than once
+$
+$ This is the most information-rich formulation. The partition domain encodes
+$ group structure, sizes, disjointness, and coverage. The set-of eliminates
+$ week ordering. Only the inter-week pairing constraint remains.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+
+find sched : set (size w) of partition (regular, numParts g, partSize s) from Golfers
+
+$ Pairing constraint: no two golfers play in the same group more than once
+such that
+    forAll p1 : Golfers .
+        forAll p2 : Golfers .
+            p1 != p2 ->
+            (sum week in sched .
+                sum part in parts(week) .
+                    toInt(p1 in part /\ p2 in part)
+            ) <= 1

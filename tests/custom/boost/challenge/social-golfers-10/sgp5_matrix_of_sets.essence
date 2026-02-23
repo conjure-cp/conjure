@@ -1,0 +1,51 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 5: Matrix of Sets
+$
+$ Domain:  matrix indexed by [int(1..w), int(1..g)] of set (size s) of Golfers
+$
+$ Information carried by the domain:
+$   - Each cell is a set of exactly s golfers (group size enforced)
+$   - Weeks and groups are indexed by integers
+$
+$ Information NOT carried (must be constrained explicitly):
+$   - Disjointness: golfers within a week must not overlap across groups
+$   - Coverage: every golfer must appear in some group each week
+$   Together these form the partition constraint, which is no longer implicit.
+$
+$ Explicit constraints needed:
+$   1. Partition constraint: groups within each week form a partition of Golfers
+$   2. Pairing constraint: no two golfers share a group more than once
+$
+$ Compared to Formulations 1–4:
+$   - The partition type is decomposed into individual sets.
+$   - Group size is still carried by set (size s), but disjointness and
+$     coverage must now be stated explicitly.
+$   - Both week and group indices are exposed, introducing group-ordering
+$     symmetry within each week.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+
+find sched : matrix indexed by [int(1..w), int(1..g)] of set (size s) of Golfers
+
+$ Partition constraint: within each week, each golfer is in exactly one group.
+$ Since each group has size s and there are g groups and g*s golfers,
+$ disjointness alone suffices to guarantee full coverage.
+such that
+    forAll i : int(1..w) .
+        forAll j1 : int(1..g) .
+            forAll j2 : int(1..g) .
+                j1 < j2 -> |sched[i, j1] intersect sched[i, j2]| = 0,
+
+$ Pairing constraint: no two golfers share a group more than once
+such that
+    forAll p1 : Golfers .
+        forAll p2 : Golfers .
+            p1 != p2 ->
+            (sum i : int(1..w) .
+                sum j : int(1..g) .
+                    toInt(p1 in sched[i, j] /\ p2 in sched[i, j])
+            ) <= 1

@@ -1,0 +1,37 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 4: Matrix of Partitions
+$
+$ Domain:  matrix indexed by [int(1..w)] of partition (regular, numParts g, partSize s) from Golfers
+$
+$ Information carried by the domain:
+$   - Fixed array of w partitions, one per week
+$   - Each partition has g groups of size s (regular)
+$   - Disjointness and coverage: partition semantics
+$
+$ Explicit constraints needed:
+$   - Pairing constraint
+$
+$ Compared to Formulations 1–3:
+$   - Functionally similar to the function and sequence formulations
+$     (indexed access to partitions).
+$   - The matrix is the most common Essence container for indexed collections.
+$   - No additional constraints beyond pairing are needed, since the partition
+$     domain still encodes all within-week structure.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+
+find sched : matrix indexed by [int(1..w)] of partition (regular, numParts g, partSize s) from Golfers
+
+$ Pairing constraint
+such that
+    forAll p1 : Golfers .
+        forAll p2 : Golfers .
+            p1 != p2 ->
+            (sum i : int(1..w) .
+                sum part in parts(sched[i]) .
+                    toInt(p1 in part /\ p2 in part)
+            ) <= 1
