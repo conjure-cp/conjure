@@ -15,6 +15,12 @@ challenge/bin-packing/under-structured/bin-packing.essence	---
 challenge/bin-packing/under-structured/bin-packing.essence	>     numBins = sum([used[bin] | bin : int(1..maxBins)]),
 challenge/bin-packing/under-structured/bin-packing.essence	>     sum([used[bin] | bin : int(1..maxBins)]) =
 challenge/bin-packing/under-structured/bin-packing.essence	>     sum([toInt(or([assignment[item] = bin | item : int(1..numItems)])) | bin : int(1..maxBins)])
+demos/gdp1/gdp1.essence	6,7c6,7
+demos/gdp1/gdp1.essence	< find f: function (bijective) int(1..n) --> int(1..k)
+demos/gdp1/gdp1.essence	< such that d <= sum([toInt(preImage(f, i) = {i}) | i : int(1..k)])
+demos/gdp1/gdp1.essence	---
+demos/gdp1/gdp1.essence	> find f: function (total, injective) int(1..k) --> int(1..n)
+demos/gdp1/gdp1.essence	> such that d <= sum([toInt(image(f, i) = i) | i : int(1..k)])
 demos/kfold-colouring-boost/input.essence	9c9
 demos/kfold-colouring-boost/input.essence	< find colouring: relation (size n * coloursPerNode) of (vertices * colours)
 demos/kfold-colouring-boost/input.essence	---
@@ -921,6 +927,12 @@ type/mset-to-set/3.essence	---
 type/mset-to-set/3.essence	> find x: set (maxSize 5) of int(0..9)
 type/mset-to-set/3.essence	> find y: mset (maxSize 5, maxOccur 5) of int(0..9)
 type/mset-to-set/3.essence	> such that toMSet(x) subsetEq y
+type/partial-bijective-to-inverse/1.essence	6,7c6,7
+type/partial-bijective-to-inverse/1.essence	< find f: function (bijective) int(1..n) --> int(1..k)
+type/partial-bijective-to-inverse/1.essence	< such that d <= sum([toInt(preImage(f, i) = {i}) | i : int(1..k)])
+type/partial-bijective-to-inverse/1.essence	---
+type/partial-bijective-to-inverse/1.essence	> find f: function (total, injective) int(1..k) --> int(1..n)
+type/partial-bijective-to-inverse/1.essence	> such that d <= sum([toInt(image(f, i) = i) | i : int(1..k)])
 type/relation-to-function/partial-functional-on1-andMaxSize.essence	3,6c3,4
 type/relation-to-function/partial-functional-on1-andMaxSize.essence	< find x: relation of (int(0..9) * int(10..20))
 type/relation-to-function/partial-functional-on1-andMaxSize.essence	< such that

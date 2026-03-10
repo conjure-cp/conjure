@@ -1,0 +1,10 @@
+$ backward Guard Dog Problem
+$ assign guards to dogs, so that at least the target number share names
+given n : int $ number of guards
+given k : int $ number of dogs
+given d : int $ target number of shared names
+$find f : function (bijective) int(1..n) --> int(1..k)
+$such that d <= sum i : int(1..k) . toInt(preImage(f, i) = {i})
+find f : function (total, injective) int(1..k) --> int(1..n)
+such that d <= sum i : int(1..k) . toInt(f(i) = i)
+

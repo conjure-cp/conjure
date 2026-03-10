@@ -109,6 +109,7 @@ boost logLevel logRuleSuccesses = resolveNames >=> return . fixRelationProj >=> 
                        (log logLevel $ name <+> pretty n <+> ":" <+> pretty dCur)
                   return (updateDecl (n, dom) m1, toAddRem tatr2 tatr1))
               modelAndToKeep [ (mSetToSet, "multiset changed to set")
+                             , (partialBijectiveToInverse, "partial bijective function inverted")
                              , (relationToSizedSetFunction, "relation changed to function with fixed-size set codomain")
                              ])
           (model3, ([], []))
@@ -918,6 +919,77 @@ mSetToSet _ ((n, DomainMSet r (MSetAttr sa oa) d), cs) | maxOccur1 oa = do
     maxOccur1 (OccurAttr_MinMaxOccur _ 1) = True
     maxOccur1 _                           = False
 mSetToSet _ ((_, dom), _) = return (dom, mempty)
+
+-- | Invert a partial bijective function into a total injective function.
+--   Constraints are translated to preserve meaning where possible.
+partialBijectiveToInverse :: (MonadFailDoc m, MonadLog m)
+                          => Model
+                          -> (FindVar, [ExpressionZ])
+                          -> m (Domain () Expression, ToAddToRem)
+partialBijectiveToInverse _ (((n, dom@(DomainFunction r (FunctionAttr _ PartialityAttr_Partial JectivityAttr_Bijective) from to)), cs)) = do
+  let relatedConstraints = filter (any (nameExpEq n) . universe . hole) cs
+  case mapM (rewriteInvertedFunctionConstraint n . hole) relatedConstraints of
+       Just rewritten
+         | all (not . hasUnsupportedInverseUse n) rewritten ->
+             let dom' = DomainFunction r
+                                       (FunctionAttr SizeAttr_None PartialityAttr_Total JectivityAttr_Injective)
+                                       to
+                                       from
+             in return (dom', (map zipper rewritten, relatedConstraints))
+       _ -> return (dom, mempty)
+partialBijectiveToInverse _ ((_, dom), _) = return (dom, mempty)
+
+-- | Rewrite a constraint to use the inverse function.
+rewriteInvertedFunctionConstraint :: Name -> Expression -> Maybe Expression
+rewriteInvertedFunctionConstraint n c = Just $ transform rewrite c
+  where
+    rewrite [essence| preImage(&f, &y) = &s |]
+      | nameExpEq n f
+      , Just x <- singletonSetElement s
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &s = preImage(&f, &y) |]
+      | nameExpEq n f
+      , Just x <- singletonSetElement s
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &x in preImage(&f, &y) |]
+      | nameExpEq n f
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| image(&f, &x) = &y |]
+      | nameExpEq n f
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &y = image(&f, &x) |]
+      | nameExpEq n f
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &f(&x) = &y |]
+      | nameExpEq n f
+      = [essence| &f(&y) = &x |]
+    rewrite [essence| &y = &f(&x) |]
+      | nameExpEq n f
+      = [essence| &f(&y) = &x |]
+    rewrite e = e
+
+-- | A singleton set expression: {x} or toSet([x]).
+singletonSetElement :: Expression -> Maybe Expression
+singletonSetElement [essence| {&x} |] = Just x
+singletonSetElement [essence| toSet([&x]) |] = Just x
+singletonSetElement _ = Nothing
+
+-- | Check if an expression still contains unsupported occurrences of a function
+--   that has been inverted.
+hasUnsupportedInverseUse :: Name -> Expression -> Bool
+hasUnsupportedInverseUse n [essence| image(&f, &x) = &y |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| &y = image(&f, &x) |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| &f(&x) = &y |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| &y = &f(&x) |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| preImage(&f, &_) |] | nameExpEq n f = True
+hasUnsupportedInverseUse n [essence| image(&f, &_) |] | nameExpEq n f = True
+hasUnsupportedInverseUse n [essence| &f(&_) |] | nameExpEq n f = True
+hasUnsupportedInverseUse n (Reference n' _) = n == n'
+hasUnsupportedInverseUse n e = any (hasUnsupportedInverseUse n) (children e)
 
 -- | Change a binary relation into a total function to a fixed-size set,
 --   when each value in the first component is constrained to have the same
