@@ -1,0 +1,23 @@
+language Essence 1.3
+
+given numGuests : int(1..)
+given numHosts : int(1..)
+given numPeriods : int(1..)
+given guestCrew : matrix indexed by [int(1..numGuests)] of int(1..)
+given hostCap : matrix indexed by [int(1..numHosts)] of int(1..)
+
+find schedule : matrix indexed by [int(1..numPeriods), int(1..numGuests)] of int(1..numHosts)
+
+such that
+    $ Capacity: total guest crew at each host per period must not exceed capacity
+    forAll h : int(1..numHosts) . forAll p : int(1..numPeriods) .
+        (sum g : int(1..numGuests) . toInt(schedule[p, g] = h) * guestCrew[g]) <= hostCap[h],
+    $ No repeat: each guest visits a different host each period
+    forAll g : int(1..numGuests) .
+        allDiff([schedule[p, g] | p : int(1..numPeriods)]),
+    $ Social: no two guests meet at the same host more than once
+    forAll g1 : int(1..numGuests) . forAll g2 : int(g1+1..numGuests) .
+        (sum p : int(1..numPeriods) . toInt(schedule[p, g1] = schedule[p, g2])) <= 1,
+    $ Symmetry breaking: lexicographic ordering on periods
+    forAll p : int(1..numPeriods-1) .
+        [schedule[p, g] | g : int(1..numGuests)] <=lex [schedule[p+1, g] | g : int(1..numGuests)]

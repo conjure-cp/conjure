@@ -1,0 +1,13 @@
+language Essence 1.3
+
+given w: int(1..)
+given g: int(1..)
+given s: int(1..)
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+find sched: matrix indexed by [int(1..w)] of function (total) Golfers --> int(1..g)
+such that and([and([sum([toInt(image(sched[i], p) = j) | p : Golfers]) = s | j : int(1..g)]) | i : int(1..w)])
+such that
+    and([and([p1 != p2 -> sum([toInt(image(sched[i], p1) = image(sched[i], p2)) | i : int(1..w)]) <= 1 | p2 : Golfers])
+             | p1 : Golfers])
+

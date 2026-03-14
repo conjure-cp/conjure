@@ -1,0 +1,44 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 8: Integer Assignment Matrix
+$
+$ Domain:  matrix indexed by [int(1..w), int(1..nGolfers)] of int(1..g)
+$
+$ Information carried by the domain:
+$   - Each golfer gets a group number in 1..g each week
+$   - Every golfer is assigned each week (the matrix is fully populated)
+$
+$ Information NOT carried (must be constrained explicitly):
+$   - Group sizes: nothing prevents all golfers from being assigned to group 1
+$
+$ Explicit constraints needed:
+$   1. Group size constraint: each group has exactly s golfers each week
+$   2. Pairing constraint: no pair of golfers shares a group more than once
+$
+$ Compared to Formulation 7 (matrix of functions):
+$   - Same golfer-centric perspective, but the function abstraction is removed.
+$   - With plain integers, we lose the typed function semantics.
+$   - The constraints are identical to Formulation 7, but expressed using
+$     matrix indexing rather than function application.
+$   - This is a common "flat" encoding seen in many CP textbooks.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+
+find sched : matrix indexed by [int(1..w), int(1..nGolfers)] of int(1..g)
+
+$ Group size constraint: each group has exactly s members each week
+such that
+    forAll i : int(1..w) .
+        forAll j : int(1..g) .
+            (sum p : int(1..nGolfers) . toInt(sched[i, p] = j)) = s,
+
+$ Pairing constraint: no two golfers share a group more than once
+such that
+    forAll p1 : int(1..nGolfers) .
+        forAll p2 : int(1..nGolfers) .
+            p1 < p2 ->
+            (sum i : int(1..w) .
+                toInt(sched[i, p1] = sched[i, p2])
+            ) <= 1

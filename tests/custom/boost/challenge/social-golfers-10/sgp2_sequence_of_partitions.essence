@@ -1,0 +1,37 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 2: Sequence of Partitions
+$
+$ Domain:  sequence (size w) of partition (regular, numParts g, partSize s) from Golfers
+$
+$ Information carried by the domain:
+$   - There are exactly w weeks (sequence size w)
+$   - Each week is a partition of all golfers into groups
+$   - Each partition has exactly g groups, each of size s (regular)
+$   - Disjointness and full coverage: partition semantics
+$   - Weeks are ordered (sequence introduces positional indexing)
+$
+$ Explicit constraints needed:
+$   - Pairing constraint
+$
+$ Compared to Formulation 1 (set of partitions):
+$   - Weeks now have an order (week 1, week 2, ...), introducing potential
+$     week-ordering symmetry that was absent in the set formulation.
+$   - The partition domain still carries all within-week structure.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+
+find sched : sequence (size w) of partition (regular, numParts g, partSize s) from Golfers
+
+$ Pairing constraint: no two golfers share a group more than once across weeks
+such that
+    forAll p1 : Golfers .
+        forAll p2 : Golfers .
+            p1 != p2 ->
+            (sum i : int(1..w) .
+                sum part in parts(sched(i)) .
+                    toInt(p1 in part /\ p2 in part)
+            ) <= 1

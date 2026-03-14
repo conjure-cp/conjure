@@ -1,0 +1,47 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 7: Matrix of Functions
+$
+$ Domain:  matrix indexed by [int(1..w)] of function (total) Golfers --> int(1..g)
+$
+$ Information carried by the domain:
+$   - Each week maps every golfer to a group number (totality)
+$   - Every golfer is assigned exactly one group per week (function semantics)
+$   - Coverage is implicit: total function means every golfer is assigned
+$
+$ Information NOT carried (must be constrained explicitly):
+$   - Group sizes: the function does not enforce that each group gets exactly s golfers
+$   (A total function guarantees every golfer is assigned but not that groups are balanced.)
+$
+$ Explicit constraints needed:
+$   1. Group size constraint: each group has exactly s golfers
+$   2. Pairing constraint: no pair shares a group more than once
+$
+$ Compared to Formulations 1–6:
+$   - Perspective shift: golfer-centric rather than group-centric. Instead of
+$     asking "which golfers are in this group?", we ask "which group is this
+$     golfer in?"
+$   - Totality gives us coverage for free, but group sizes must be explicit.
+$   - Disjointness is automatic: a function assigns each golfer to exactly one group.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+letting Golfers be new type of size nGolfers
+
+find sched : matrix indexed by [int(1..w)] of function (total) Golfers --> int(1..g)
+
+$ Group size constraint: each group in each week has exactly s golfers
+such that
+    forAll i : int(1..w) .
+        forAll j : int(1..g) .
+            (sum p : Golfers . toInt(sched[i](p) = j)) = s,
+
+$ Pairing constraint: no two golfers share a group more than once
+such that
+    forAll p1 : Golfers .
+        forAll p2 : Golfers .
+            p1 != p2 ->
+            (sum i : int(1..w) .
+                toInt(sched[i](p1) = sched[i](p2))
+            ) <= 1

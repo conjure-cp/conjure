@@ -102,13 +102,15 @@ boost logLevel logRuleSuccesses = resolveNames >=> return . fixRelationProj >=> 
       -- Apply type change rules to each decision (find) variable
       (model4, toAddToRem') <- foldM (\modelAndToKeep findAndCstrs@((n, d), _) ->
           foldM (\(m1, tatr1) (rule, name) -> do
-                  (dom, tatr2) <- rule m1 findAndCstrs
-                  when ((dom /= d || toAddRem tatr2 tatr1 /= tatr1) &&
+                  let dCur = fromMaybe d (lookup n (collectFindVariables m1))
+                  (dom, tatr2) <- rule m1 ((n, dCur), snd findAndCstrs)
+                  when ((dom /= dCur || toAddRem tatr2 tatr1 /= tatr1) &&
                         logRuleSuccesses)
-                       (log logLevel $ name <+> pretty n <+> ":" <+> pretty d)
+                       (log logLevel $ name <+> pretty n <+> ":" <+> pretty dCur)
                   return (updateDecl (n, dom) m1, toAddRem tatr2 tatr1))
               modelAndToKeep [ (mSetToSet, "multiset changed to set")
-                             -- , (relationToFunction, "relation to function")
+                             , (partialBijectiveToInverse, "partial bijective function inverted")
+                             , (relationToSizedSetFunction, "relation changed to function with fixed-size set codomain")
                              ])
           (model3, ([], []))
           (zip (collectFindVariables model3)
@@ -918,23 +920,257 @@ mSetToSet _ ((n, DomainMSet r (MSetAttr sa oa) d), cs) | maxOccur1 oa = do
     maxOccur1 _                           = False
 mSetToSet _ ((_, dom), _) = return (dom, mempty)
 
--- relationToFunction ::
---     MonadFailDoc m =>
---     MonadLog m =>
---     Model ->
---     (FindVar, [ExpressionZ]) ->
---     m (Domain () Expression, ToAddToRem)
--- -- relationToFunction _ ((n, DomainRelation r (MSetAttr sa oa) d), cs) | maxOccur1 oa = do
--- --   let dom'  = DomainSet r (SetAttr sa) d
--- --   let torem = filter (any (nameExpEq n) . universe . hole) cs
--- --   let toadd = map (zipper . transform (\e -> if nameExpEq n e
--- --                                                 then [essence| toMSet(&e) |]
--- --                                                 else e)
--- --                           . hole)
--- --                   cs
--- --   return (dom', (toadd, torem))
--- --   where
--- --     maxOccur1 (OccurAttr_MaxOccur 1)      = True
--- --     maxOccur1 (OccurAttr_MinMaxOccur _ 1) = True
--- --     maxOccur1 _                           = False
--- relationToFunction _ ((_, dom), _) = return (dom, mempty)
+-- | Invert a partial bijective function into a total injective function.
+--   Constraints are translated to preserve meaning where possible.
+partialBijectiveToInverse :: (MonadFailDoc m, MonadLog m)
+                          => Model
+                          -> (FindVar, [ExpressionZ])
+                          -> m (Domain () Expression, ToAddToRem)
+partialBijectiveToInverse _ (((n, dom@(DomainFunction r (FunctionAttr _ PartialityAttr_Partial JectivityAttr_Bijective) from to)), cs)) = do
+  let relatedConstraints = filter (any (nameExpEq n) . universe . hole) cs
+  case mapM (rewriteInvertedFunctionConstraint n . hole) relatedConstraints of
+       Just rewritten
+         | all (not . hasUnsupportedInverseUse n) rewritten ->
+             let dom' = DomainFunction r
+                                       (FunctionAttr SizeAttr_None PartialityAttr_Total JectivityAttr_Injective)
+                                       to
+                                       from
+             in return (dom', (map zipper rewritten, relatedConstraints))
+       _ -> return (dom, mempty)
+partialBijectiveToInverse _ ((_, dom), _) = return (dom, mempty)
+
+-- | Rewrite a constraint to use the inverse function.
+rewriteInvertedFunctionConstraint :: Name -> Expression -> Maybe Expression
+rewriteInvertedFunctionConstraint n c = Just $ transform rewrite c
+  where
+    rewrite [essence| preImage(&f, &y) = &s |]
+      | nameExpEq n f
+      , Just x <- singletonSetElement s
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &s = preImage(&f, &y) |]
+      | nameExpEq n f
+      , Just x <- singletonSetElement s
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &x in preImage(&f, &y) |]
+      | nameExpEq n f
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| image(&f, &x) = &y |]
+      | nameExpEq n f
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &y = image(&f, &x) |]
+      | nameExpEq n f
+      = [essence| image(&f, &y) = &x |]
+    rewrite [essence| &f(&x) = &y |]
+      | nameExpEq n f
+      = [essence| &f(&y) = &x |]
+    rewrite [essence| &y = &f(&x) |]
+      | nameExpEq n f
+      = [essence| &f(&y) = &x |]
+    rewrite e = e
+
+-- | A singleton set expression: {x} or toSet([x]).
+singletonSetElement :: Expression -> Maybe Expression
+singletonSetElement [essence| {&x} |] = Just x
+singletonSetElement [essence| toSet([&x]) |] = Just x
+singletonSetElement _ = Nothing
+
+-- | Check if an expression still contains unsupported occurrences of a function
+--   that has been inverted.
+hasUnsupportedInverseUse :: Name -> Expression -> Bool
+hasUnsupportedInverseUse n [essence| image(&f, &x) = &y |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| &y = image(&f, &x) |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| &f(&x) = &y |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| &y = &f(&x) |] | nameExpEq n f
+  = hasUnsupportedInverseUse n x || hasUnsupportedInverseUse n y
+hasUnsupportedInverseUse n [essence| preImage(&f, &_) |] | nameExpEq n f = True
+hasUnsupportedInverseUse n [essence| image(&f, &_) |] | nameExpEq n f = True
+hasUnsupportedInverseUse n [essence| &f(&_) |] | nameExpEq n f = True
+hasUnsupportedInverseUse n (Reference n' _) = n == n'
+hasUnsupportedInverseUse n e = any (hasUnsupportedInverseUse n) (children e)
+
+-- | Change a binary relation into a total function to a fixed-size set,
+--   when each value in the first component is constrained to have the same
+--   number of related second-component values.
+relationToSizedSetFunction :: (MonadFailDoc m, MonadLog m, NameGen m)
+                           => Model
+                           -> (FindVar, [ExpressionZ])
+                           -> m (Domain () Expression, ToAddToRem)
+relationToSizedSetFunction _ ((n, dom@(DomainRelation r relAttrs [from, to])), cs) = do
+    let RelationAttr relSizeAttr _ = relAttrs
+    let relatedConstraints = filter (any (nameExpEq n) . universe . hole) cs
+    let cardinalityCs = mapMaybe (matchCardinalityConstraint n) relatedConstraints
+    case nub [k | (k, _) <- cardinalityCs] of
+         [k] | not (null cardinalityCs) ->
+             do compatible <- relationAttrsCompatible relAttrs from k
+                let edgeCs = mapMaybe (matchEdgeDisjointnessConstraint n) relatedConstraints
+                let matchedCs = map snd cardinalityCs `union` map snd edgeCs
+                let unmatched = filter (`notElem` matchedCs) relatedConstraints
+                let dom' = DomainFunction r
+                                          (FunctionAttr SizeAttr_None PartialityAttr_Total JectivityAttr_None)
+                                          from
+                                          (DomainSet def (SetAttr (SizeAttr_Size k)) to)
+                case mapM (rewriteRelationConstraint n . hole) unmatched of
+                     Nothing -> return (dom, mempty)
+                     Just rewrittenUnmatched
+                       | compatible -> do
+                           edgeAdds <- mapM (fmap zipper . mkEdgeDisjointConstraint n . fst) edgeCs
+                           sizeAdds <- map zipper <$> relationSizeConstraints n from relSizeAttr
+                           let toadd = edgeAdds `union` sizeAdds `union` map zipper rewrittenUnmatched
+                           return (dom', (toadd, relatedConstraints))
+                       | otherwise -> return (dom, mempty)
+         _ -> return (dom, mempty)
+relationToSizedSetFunction _ ((_, dom), _) = return (dom, mempty)
+
+-- | The relation attributes must be representable by the target function form.
+relationAttrsCompatible :: MonadFailDoc m
+                        => RelationAttr Expression
+                        -> Domain () Expression
+                        -> Expression
+                        -> m Bool
+relationAttrsCompatible (RelationAttr _ binRelAttrs) _from _k
+  | binRelAttrs /= def = return False
+  | otherwise = return True
+
+-- | Preserve relation size attributes as explicit constraints after type change.
+relationSizeConstraints :: NameGen m
+                        => Name
+                        -> Domain () Expression
+                        -> SizeAttr Expression
+                        -> m [Expression]
+relationSizeConstraints _ _ SizeAttr_None = return []
+relationSizeConstraints n from sa = do
+    (uP, u) <- quantifiedVar
+    let f = fromName n
+    let totalSize = [essence| sum([ |&f(&u)| | &uP : &from ]) |]
+    return $
+      case sa of
+           SizeAttr_Size s -> [[essence| &totalSize = &s |]]
+           SizeAttr_MinSize s -> [[essence| &totalSize >= &s |]]
+           SizeAttr_MaxSize s -> [[essence| &totalSize <= &s |]]
+           SizeAttr_MinMaxSize lo hi -> [ [essence| &totalSize >= &lo |]
+                                        , [essence| &totalSize <= &hi |]
+                                        ]
+
+-- | Match a fixed-cardinality-per-first-component constraint for a binary relation.
+matchCardinalityConstraint :: Name -> ExpressionZ -> Maybe (Expression, ExpressionZ)
+matchCardinalityConstraint n z = matchSumCard <|> matchSumMembership <|> matchProjCard
+  where
+    matchSumCard =
+      case hole z of
+           [essence| and([ &k = sum([toInt(&lhs = &u') | &ca <- &rel]) | &u : &_ ]) |]
+             | nameExpEq n rel
+             , tupleFirstOf lhs ca
+             , u' `refersTo` u
+             , validCardinalityExpr k
+             -> Just (k, z)
+           [essence| and([ sum([toInt(&lhs = &u') | &ca <- &rel]) = &k | &u : &_ ]) |]
+             | nameExpEq n rel
+             , tupleFirstOf lhs ca
+             , u' `refersTo` u
+             , validCardinalityExpr k
+             -> Just (k, z)
+           _ -> Nothing
+    matchSumMembership =
+      case hole z of
+           [essence| and([ sum([toInt((&u', &v') in &rel) | &v : &_ ]) = &k | &u : &_ ]) |]
+             | nameExpEq n rel
+             , u' `refersTo` u
+             , v' `refersTo` v
+             , validCardinalityExpr k
+             -> Just (k, z)
+           [essence| and([ &k = sum([toInt((&u', &v') in &rel) | &v : &_ ]) | &u : &_ ]) |]
+             | nameExpEq n rel
+             , u' `refersTo` u
+             , v' `refersTo` v
+             , validCardinalityExpr k
+             -> Just (k, z)
+           [essence| and([ sum([toInt(tuple(&u', &v') in &rel) | &v : &_ ]) = &k | &u : &_ ]) |]
+             | nameExpEq n rel
+             , u' `refersTo` u
+             , v' `refersTo` v
+             , validCardinalityExpr k
+             -> Just (k, z)
+           [essence| and([ &k = sum([toInt(tuple(&u', &v') in &rel) | &v : &_ ]) | &u : &_ ]) |]
+             | nameExpEq n rel
+             , u' `refersTo` u
+             , v' `refersTo` v
+             , validCardinalityExpr k
+             -> Just (k, z)
+           _ -> Nothing
+    matchProjCard =
+      case hole z of
+           [essence| and([ |&rel(&u', _)| = &k | &u : &_ ]) |]
+             | nameExpEq n rel
+             , u' `refersTo` u
+             , validCardinalityExpr k
+             -> Just (k, z)
+           [essence| and([ &k = |&rel(&u', _)| | &u : &_ ]) |]
+             | nameExpEq n rel
+             , u' `refersTo` u
+             , validCardinalityExpr k
+             -> Just (k, z)
+           _ -> Nothing
+
+-- | Rewrite a constraint from binary relation usage to function-to-set usage.
+rewriteRelationConstraint :: Name -> Expression -> Maybe Expression
+rewriteRelationConstraint n c =
+    let c' = transform rewrite c
+    in if hasUnsupportedBinaryRelationUse n c'
+          then Nothing
+          else Just c'
+  where
+    rewrite [essence| (&x, &y) in &rel |] | nameExpEq n rel = [essence| &y in &rel(&x) |]
+    rewrite [essence| tuple(&x, &y) in &rel |] | nameExpEq n rel = [essence| &y in &rel(&x) |]
+    rewrite [essence| &rel(&x, _) |] | nameExpEq n rel = [essence| &rel(&x) |]
+    rewrite e = e
+
+-- | Check whether an expression still relies on binary-relation-only operators.
+hasUnsupportedBinaryRelationUse :: Name -> Expression -> Bool
+hasUnsupportedBinaryRelationUse n [essence| &f(&x) |] | nameExpEq n f
+  = hasUnsupportedBinaryRelationUse n x
+hasUnsupportedBinaryRelationUse n [essence| image(&f, &x) |] | nameExpEq n f
+  = hasUnsupportedBinaryRelationUse n x
+hasUnsupportedBinaryRelationUse n [essence| defined(&f) |] | nameExpEq n f = False
+hasUnsupportedBinaryRelationUse n [essence| range(&f) |] | nameExpEq n f = False
+hasUnsupportedBinaryRelationUse n [essence| (&_, &_) in &rel |] | nameExpEq n rel = True
+hasUnsupportedBinaryRelationUse n [essence| tuple(&_, &_) in &rel |] | nameExpEq n rel = True
+hasUnsupportedBinaryRelationUse n [essence| &rel(&_, _) |] | nameExpEq n rel = True
+hasUnsupportedBinaryRelationUse n (Reference n' _) = n == n'
+hasUnsupportedBinaryRelationUse n e = any (hasUnsupportedBinaryRelationUse n) (children e)
+
+-- | Match edge constraints of the form:
+--   forAll (u,v) in edges . forAll ca in rel . ca[1] = u -> !((v, ca[2]) in rel)
+matchEdgeDisjointnessConstraint :: Name -> ExpressionZ -> Maybe (Expression, ExpressionZ)
+matchEdgeDisjointnessConstraint n z =
+  case hole z of
+       [essence| and([and([ &lhs = &u' -> !((&v', &rhs) in &rel2) | &ca <- &rel1 ])
+                     | (&u, &v) <- &edges ]) |]
+         | nameExpEq n rel1
+         , nameExpEq n rel2
+         , tupleFirstOf lhs ca
+         , tupleSecondOf rhs ca
+         , u' `refersTo` u
+         , v' `refersTo` v
+         -> Just (edges, z)
+       _ -> Nothing
+
+-- | Rewrite the matched edge constraint for the transformed function.
+mkEdgeDisjointConstraint :: NameGen m => Name -> Expression -> m Expression
+mkEdgeDisjointConstraint n edges = do
+    (uvP, uv) <- quantifiedVar
+    let f = fromName n
+    return [essence| and([ &f(&uv[2]) intersect &f(&uv[1]) = {} | &uvP <- &edges ]) |]
+
+tupleFirstOf :: Expression -> AbstractPattern -> Bool
+tupleFirstOf [essence| &ca'[1] |] ca = ca' `refersTo` ca
+tupleFirstOf _ _ = False
+
+tupleSecondOf :: Expression -> AbstractPattern -> Bool
+tupleSecondOf [essence| &ca'[2] |] ca = ca' `refersTo` ca
+tupleSecondOf _ _ = False
+
+validCardinalityExpr :: Expression -> Bool
+validCardinalityExpr e = not (isFind e)
