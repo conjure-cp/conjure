@@ -1,5 +1,5 @@
 
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
 
 conjure solve riddle1.essence
 conjure solve riddle1.essence --solver kissat
@@ -7,4 +7,4 @@ conjure solve riddle1.essence --solver kissat
 conjure solve riddle2.essence
 conjure solve riddle2.essence --solver kissat
 
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json

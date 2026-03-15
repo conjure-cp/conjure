@@ -1,0 +1,18 @@
+language Essence 1.3
+
+given n : int(0..100)
+letting vertices be domain int(0..n-1)
+given edges : relation (irreflexive) of (vertices * vertices)
+given numberColours : int(1..n)
+given coloursPerNode : int(1..n)
+letting colours be domain int(1..numberColours)
+
+find colouring : relation (size n*coloursPerNode) of (vertices * colours)
+
+such that
+forAll (u,v) in edges .
+(forAll colourAssignment in colouring .
+(colourAssignment[1] = u) -> !((v, colourAssignment[2]) in colouring)),
+forAll u : vertices .
+coloursPerNode = (sum colourAssignment in colouring .
+toInt(colourAssignment[1] = u))

@@ -1,4 +1,4 @@
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
 conjure solve *.essence --line-width 80
 for file in conjure-output/*.eprime conjure-output/*.solution; do
     echo "File: $file"
@@ -6,4 +6,4 @@ for file in conjure-output/*.eprime conjure-output/*.solution; do
     echo "--------------------"
     echo ""
 done
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json

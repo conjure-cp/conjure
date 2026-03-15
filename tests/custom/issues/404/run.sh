@@ -1,2 +1,2 @@
 conjure solve *.essence *.param
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json

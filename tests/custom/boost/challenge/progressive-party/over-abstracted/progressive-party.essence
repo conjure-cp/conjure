@@ -1,0 +1,25 @@
+language Essence 1.3
+
+given numGuests : int(1..)
+given numHosts : int(1..)
+given numPeriods : int(1..)
+given guestCrew : matrix indexed by [int(1..numGuests)] of int(1..)
+given hostCap : matrix indexed by [int(1..numHosts)] of int(1..)
+
+find schedule : relation of (int(1..numGuests) * int(1..numPeriods) * int(1..numHosts))
+
+such that
+    $ Each guest attends exactly one host per period
+    forAll g : int(1..numGuests) . forAll p : int(1..numPeriods) .
+        (sum h : int(1..numHosts) . toInt((g, p, h) in schedule)) = 1,
+    $ Capacity: total guest crew at each host per period must not exceed capacity
+    forAll h : int(1..numHosts) . forAll p : int(1..numPeriods) .
+        (sum g : int(1..numGuests) . toInt((g, p, h) in schedule) * guestCrew[g]) <= hostCap[h],
+    $ No guest visits same host twice
+    forAll g : int(1..numGuests) . forAll h : int(1..numHosts) .
+        (sum p : int(1..numPeriods) . toInt((g, p, h) in schedule)) <= 1,
+    $ Social: no two guests meet at the same host more than once
+    forAll g1 : int(1..numGuests) . forAll g2 : int(g1+1..numGuests) .
+        (sum p : int(1..numPeriods) .
+            toInt(exists h : int(1..numHosts) . (g1, p, h) in schedule /\ (g2, p, h) in schedule)
+        ) <= 1

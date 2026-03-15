@@ -1,3 +1,4 @@
-conjure symmetry-detection *.essence
-cat hist-symmetry-detection.essence-json
-rm *.essence-json
+rm -rf conjure-output *.solution *.stats.json
+conjure solve *.essence
+cat *.solution
+rm -rf conjure-output *.solution *.stats.json

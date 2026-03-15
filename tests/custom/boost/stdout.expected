@@ -1,0 +1,948 @@
+challenge/bibd/over-abstracted/bibd.essence	8c8
+challenge/bibd/over-abstracted/bibd.essence	< find design: relation of (int(1..v) * int(1..b))
+challenge/bibd/over-abstracted/bibd.essence	---
+challenge/bibd/over-abstracted/bibd.essence	> find design: function (total) int(1..v) --> set (size r) of int(1..b)
+challenge/bibd/over-abstracted/bibd.essence	10,12c10,11
+challenge/bibd/over-abstracted/bibd.essence	<     and([sum([toInt((point, block) in design) | block : int(1..b)]) = r | point : int(1..v)]),
+challenge/bibd/over-abstracted/bibd.essence	<     and([sum([toInt((point, block) in design) | point : int(1..v)]) = k | block : int(1..b)]),
+challenge/bibd/over-abstracted/bibd.essence	<     and([and([sum([toInt((p1, block) in design /\ (p2, block) in design) | block : int(1..b)]) = lambda
+challenge/bibd/over-abstracted/bibd.essence	---
+challenge/bibd/over-abstracted/bibd.essence	>     and([sum([toInt(block in design(point)) | point : int(1..v)]) = k | block : int(1..b)]),
+challenge/bibd/over-abstracted/bibd.essence	>     and([and([sum([toInt(block in design(p1) /\ block in design(p2)) | block : int(1..b)]) = lambda
+challenge/bin-packing/under-structured/bin-packing.essence	15c15,17
+challenge/bin-packing/under-structured/bin-packing.essence	<     numBins = sum([used[bin] | bin : int(1..maxBins)])
+challenge/bin-packing/under-structured/bin-packing.essence	---
+challenge/bin-packing/under-structured/bin-packing.essence	>     numBins = sum([used[bin] | bin : int(1..maxBins)]),
+challenge/bin-packing/under-structured/bin-packing.essence	>     sum([used[bin] | bin : int(1..maxBins)]) =
+challenge/bin-packing/under-structured/bin-packing.essence	>     sum([toInt(or([assignment[item] = bin | item : int(1..numItems)])) | bin : int(1..maxBins)])
+demos/gdp1/gdp1.essence	6,7c6,7
+demos/gdp1/gdp1.essence	< find f: function (bijective) int(1..n) --> int(1..k)
+demos/gdp1/gdp1.essence	< such that d <= sum([toInt(preImage(f, i) = {i}) | i : int(1..k)])
+demos/gdp1/gdp1.essence	---
+demos/gdp1/gdp1.essence	> find f: function (total, injective) int(1..k) --> int(1..n)
+demos/gdp1/gdp1.essence	> such that d <= sum([toInt(image(f, i) = i) | i : int(1..k)])
+demos/kfold-colouring-boost/input.essence	9c9
+demos/kfold-colouring-boost/input.essence	< find colouring: relation (size n * coloursPerNode) of (vertices * colours)
+demos/kfold-colouring-boost/input.essence	---
+demos/kfold-colouring-boost/input.essence	> find colouring: function (total) vertices --> set (size coloursPerNode) of colours
+demos/kfold-colouring-boost/input.essence	11,13c11,12
+demos/kfold-colouring-boost/input.essence	<     and([and([colourAssignment[1] = u -> !((v, colourAssignment[2]) in colouring) | colourAssignment <- colouring])
+demos/kfold-colouring-boost/input.essence	<              | (u, v) <- edges]),
+demos/kfold-colouring-boost/input.essence	<     and([coloursPerNode = sum([toInt(colourAssignment[1] = u) | colourAssignment <- colouring]) | u : vertices])
+demos/kfold-colouring-boost/input.essence	---
+demos/kfold-colouring-boost/input.essence	>     and([colouring(q1[2]) intersect colouring(q1[1]) = {} | q1 <- edges]),
+demos/kfold-colouring-boost/input.essence	>     sum([|colouring(q2)| | q2 : vertices]) = n * coloursPerNode
+domain/nested1-mset/mset-maxOccur/1.essence	3,4c3
+domain/nested1-mset/mset-maxOccur/1.essence	< find mx: mset (size 2) of mset (size 10) of int(0..9)
+domain/nested1-mset/mset-maxOccur/1.essence	< such that and([and([freq(x, i) <= 3 | i : int(0..9)]) | x <- mx])
+domain/nested1-mset/mset-maxOccur/1.essence	---
+domain/nested1-mset/mset-maxOccur/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (size 10, maxOccur 3) of int(0..9)
+domain/nested1-mset/mset-maxSize/1.essence	3,4c3
+domain/nested1-mset/mset-maxSize/1.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-maxSize/1.essence	< such that and([|x| <= 3 | x <- mx])
+domain/nested1-mset/mset-maxSize/1.essence	---
+domain/nested1-mset/mset-maxSize/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-maxSize/2.essence	3,4c3
+domain/nested1-mset/mset-maxSize/2.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 3 | x <- mx])
+domain/nested1-mset/mset-maxSize/2.essence	---
+domain/nested1-mset/mset-maxSize/2.essence	> find mx: mset (size 2, maxOccur 2) of mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	3,6c3
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	< find mx: mset (size 2) of mset (size 10) of int(0..9)
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	< such that
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	<     true -> and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]),
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	<     and([and([freq(x, i) <= 8 | i : int(0..9)]) | x <- mx])
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	---
+domain/nested1-mset/mset-minOccur-maxOccur/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (size 10, minOccur 3, maxOccur 8) of int(0..9)
+domain/nested1-mset/mset-minOccur-minSize/1.essence	3,6c3
+domain/nested1-mset/mset-minOccur-minSize/1.essence	< find mx: mset (size 2) of mset (maxSize 10) of int(0..9)
+domain/nested1-mset/mset-minOccur-minSize/1.essence	< such that
+domain/nested1-mset/mset-minOccur-minSize/1.essence	<     and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]),
+domain/nested1-mset/mset-minOccur-minSize/1.essence	<     and([|x| >= 4 | x <- mx])
+domain/nested1-mset/mset-minOccur-minSize/1.essence	---
+domain/nested1-mset/mset-minOccur-minSize/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested1-mset/mset-minOccur-minSize/2.essence	3,6c3
+domain/nested1-mset/mset-minOccur-minSize/2.essence	< find mx: mset (size 2) of mset (maxSize 10) of int(0..9)
+domain/nested1-mset/mset-minOccur-minSize/2.essence	< such that
+domain/nested1-mset/mset-minOccur-minSize/2.essence	<     and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]),
+domain/nested1-mset/mset-minOccur-minSize/2.essence	<     and([sum([1 | i <- x]) >= 4 | x <- mx])
+domain/nested1-mset/mset-minOccur-minSize/2.essence	---
+domain/nested1-mset/mset-minOccur-minSize/2.essence	> find mx: mset (size 2, maxOccur 2) of mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested1-mset/mset-minOccur/1.essence	3,4c3
+domain/nested1-mset/mset-minOccur/1.essence	< find mx: mset (size 2) of mset (size 10) of int(0..9)
+domain/nested1-mset/mset-minOccur/1.essence	< such that and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx])
+domain/nested1-mset/mset-minOccur/1.essence	---
+domain/nested1-mset/mset-minOccur/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (size 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested1-mset/mset-minSize-maxSize/1.essence	3,6c3
+domain/nested1-mset/mset-minSize-maxSize/1.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize-maxSize/1.essence	< such that
+domain/nested1-mset/mset-minSize-maxSize/1.essence	<     and([|x| >= 3 | x <- mx]),
+domain/nested1-mset/mset-minSize-maxSize/1.essence	<     and([|x| <= 5 | x <- mx])
+domain/nested1-mset/mset-minSize-maxSize/1.essence	---
+domain/nested1-mset/mset-minSize-maxSize/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize-maxSize/2.essence	3,6c3
+domain/nested1-mset/mset-minSize-maxSize/2.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize-maxSize/2.essence	< such that
+domain/nested1-mset/mset-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) >= 3 | x <- mx]),
+domain/nested1-mset/mset-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) <= 5 | x <- mx])
+domain/nested1-mset/mset-minSize-maxSize/2.essence	---
+domain/nested1-mset/mset-minSize-maxSize/2.essence	> find mx: mset (size 2, maxOccur 2) of mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize/1.essence	3,4c3
+domain/nested1-mset/mset-minSize/1.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize/1.essence	< such that and([|x| >= 3 | x <- mx])
+domain/nested1-mset/mset-minSize/1.essence	---
+domain/nested1-mset/mset-minSize/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (minSize 3, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize/2.essence	3,4c3
+domain/nested1-mset/mset-minSize/2.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-minSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-mset/mset-minSize/2.essence	---
+domain/nested1-mset/mset-minSize/2.essence	> find mx: mset (size 2, maxOccur 2) of mset (minSize 3, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-size/1.essence	3,4c3
+domain/nested1-mset/mset-size/1.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-size/1.essence	< such that and([|x| = 3 | x <- mx])
+domain/nested1-mset/mset-size/1.essence	---
+domain/nested1-mset/mset-size/1.essence	> find mx: mset (size 2, maxOccur 2) of mset (size 3, maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-size/2.essence	3,4c3
+domain/nested1-mset/mset-size/2.essence	< find mx: mset (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-mset/mset-size/2.essence	< such that and([sum([1 | i <- x]) = 3 | x <- mx])
+domain/nested1-mset/mset-size/2.essence	---
+domain/nested1-mset/mset-size/2.essence	> find mx: mset (size 2, maxOccur 2) of mset (size 3, maxOccur 2) of int(0..9)
+domain/nested1-mset/partition-maxNumParts/1.essence	3,4c3
+domain/nested1-mset/partition-maxNumParts/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-maxNumParts/1.essence	< such that and([|parts(x)| <= 3 | x <- mx])
+domain/nested1-mset/partition-maxNumParts/1.essence	---
+domain/nested1-mset/partition-maxNumParts/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (maxNumParts 3) from int(0..9)
+domain/nested1-mset/partition-maxPartSize/1.essence	3,4c3
+domain/nested1-mset/partition-maxPartSize/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-maxPartSize/1.essence	< such that and([and([|i| <= 3 | i <- parts(x)]) | x <- mx])
+domain/nested1-mset/partition-maxPartSize/1.essence	---
+domain/nested1-mset/partition-maxPartSize/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (maxPartSize 3) from int(0..9)
+domain/nested1-mset/partition-minNumParts/1.essence	3,4c3
+domain/nested1-mset/partition-minNumParts/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-minNumParts/1.essence	< such that and([|parts(x)| >= 3 | x <- mx])
+domain/nested1-mset/partition-minNumParts/1.essence	---
+domain/nested1-mset/partition-minNumParts/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (minNumParts 3) from int(0..9)
+domain/nested1-mset/partition-minPartSize/1.essence	3,4c3
+domain/nested1-mset/partition-minPartSize/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-minPartSize/1.essence	< such that and([and([sum([1 | j <- i]) >= 3 | i <- parts(x)]) | x <- mx])
+domain/nested1-mset/partition-minPartSize/1.essence	---
+domain/nested1-mset/partition-minPartSize/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (minPartSize 3) from int(0..9)
+domain/nested1-mset/partition-numParts/1.essence	3,4c3
+domain/nested1-mset/partition-numParts/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-numParts/1.essence	< such that and([|parts(x)| = 3 | x <- mx])
+domain/nested1-mset/partition-numParts/1.essence	---
+domain/nested1-mset/partition-numParts/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (numParts 3) from int(0..9)
+domain/nested1-mset/partition-partSize/1.essence	3,4c3
+domain/nested1-mset/partition-partSize/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-partSize/1.essence	< such that and([and([|i| = 3 | i <- parts(x)]) | x <- mx])
+domain/nested1-mset/partition-partSize/1.essence	---
+domain/nested1-mset/partition-partSize/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (partSize 3) from int(0..9)
+domain/nested1-mset/partition-regular/1.essence	3,4c3
+domain/nested1-mset/partition-regular/1.essence	< find mx: mset (size 2) of partition from int(0..9)
+domain/nested1-mset/partition-regular/1.essence	< such that and([and([|i| = |j| | i <- parts(x), j <- parts(x)]) | x <- mx])
+domain/nested1-mset/partition-regular/1.essence	---
+domain/nested1-mset/partition-regular/1.essence	> find mx: mset (size 2, maxOccur 2) of partition (regular) from int(0..9)
+domain/nested1-mset/relation-maxSize/1.essence	3,4c3
+domain/nested1-mset/relation-maxSize/1.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-maxSize/1.essence	< such that and([|x| <= 3 | x <- mx])
+domain/nested1-mset/relation-maxSize/1.essence	---
+domain/nested1-mset/relation-maxSize/1.essence	> find mx: mset (size 2, maxOccur 2) of relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-maxSize/2.essence	3,4c3
+domain/nested1-mset/relation-maxSize/2.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 3 | x <- mx])
+domain/nested1-mset/relation-maxSize/2.essence	---
+domain/nested1-mset/relation-maxSize/2.essence	> find mx: mset (size 2, maxOccur 2) of relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize-maxSize/1.essence	3,6c3
+domain/nested1-mset/relation-minSize-maxSize/1.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize-maxSize/1.essence	< such that
+domain/nested1-mset/relation-minSize-maxSize/1.essence	<     and([|x| >= 3 | x <- mx]),
+domain/nested1-mset/relation-minSize-maxSize/1.essence	<     and([|x| <= 5 | x <- mx])
+domain/nested1-mset/relation-minSize-maxSize/1.essence	---
+domain/nested1-mset/relation-minSize-maxSize/1.essence	> find mx: mset (size 2, maxOccur 2) of relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize-maxSize/2.essence	3,5c3
+domain/nested1-mset/relation-minSize-maxSize/2.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize-maxSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-mset/relation-minSize-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 5 | x <- mx])
+domain/nested1-mset/relation-minSize-maxSize/2.essence	---
+domain/nested1-mset/relation-minSize-maxSize/2.essence	> find mx: mset (size 2, maxOccur 2) of relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize/1.essence	3,4c3
+domain/nested1-mset/relation-minSize/1.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize/1.essence	< such that and([|x| >= 3 | x <- mx])
+domain/nested1-mset/relation-minSize/1.essence	---
+domain/nested1-mset/relation-minSize/1.essence	> find mx: mset (size 2, maxOccur 2) of relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize/2.essence	3,4c3
+domain/nested1-mset/relation-minSize/2.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-minSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-mset/relation-minSize/2.essence	---
+domain/nested1-mset/relation-minSize/2.essence	> find mx: mset (size 2, maxOccur 2) of relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/1.essence	3,4c3
+domain/nested1-mset/relation-size/1.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/1.essence	< such that and([|x| = 3 | x <- mx])
+domain/nested1-mset/relation-size/1.essence	---
+domain/nested1-mset/relation-size/1.essence	> find mx: mset (size 2, maxOccur 2) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/2.essence	3,4c3
+domain/nested1-mset/relation-size/2.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/2.essence	< such that and([sum([1 | i <- x]) = 3 | x <- mx])
+domain/nested1-mset/relation-size/2.essence	---
+domain/nested1-mset/relation-size/2.essence	> find mx: mset (size 2, maxOccur 2) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/3.essence	3,7c3,4
+domain/nested1-mset/relation-size/3.essence	< find mx: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/3.essence	< find my: mset (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/3.essence	< such that
+domain/nested1-mset/relation-size/3.essence	<     and([|x| = 3 | x <- mx]),
+domain/nested1-mset/relation-size/3.essence	<     and([|y| <= 2 | y <- my])
+domain/nested1-mset/relation-size/3.essence	---
+domain/nested1-mset/relation-size/3.essence	> find mx: mset (size 2, maxOccur 2) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/relation-size/3.essence	> find my: mset (size 2, maxOccur 2) of relation (maxSize 2) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-mset/set-maxSize/1.essence	3,4c3
+domain/nested1-mset/set-maxSize/1.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-maxSize/1.essence	< such that and([|x| <= 3 | x <- mx])
+domain/nested1-mset/set-maxSize/1.essence	---
+domain/nested1-mset/set-maxSize/1.essence	> find mx: mset (size 2, maxOccur 2) of set (maxSize 3) of int(0..9)
+domain/nested1-mset/set-maxSize/2.essence	3,4c3
+domain/nested1-mset/set-maxSize/2.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 3 | x <- mx])
+domain/nested1-mset/set-maxSize/2.essence	---
+domain/nested1-mset/set-maxSize/2.essence	> find mx: mset (size 2, maxOccur 2) of set (maxSize 3) of int(0..9)
+domain/nested1-mset/set-minSize-maxSize/1.essence	3,6c3
+domain/nested1-mset/set-minSize-maxSize/1.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-minSize-maxSize/1.essence	< such that
+domain/nested1-mset/set-minSize-maxSize/1.essence	<     and([|x| >= 3 | x <- mx]),
+domain/nested1-mset/set-minSize-maxSize/1.essence	<     and([|x| <= 5 | x <- mx])
+domain/nested1-mset/set-minSize-maxSize/1.essence	---
+domain/nested1-mset/set-minSize-maxSize/1.essence	> find mx: mset (size 2, maxOccur 2) of set (minSize 3, maxSize 5) of int(0..9)
+domain/nested1-mset/set-minSize-maxSize/2.essence	3,6c3
+domain/nested1-mset/set-minSize-maxSize/2.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-minSize-maxSize/2.essence	< such that
+domain/nested1-mset/set-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) >= 3 | x <- mx]),
+domain/nested1-mset/set-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) <= 5 | x <- mx])
+domain/nested1-mset/set-minSize-maxSize/2.essence	---
+domain/nested1-mset/set-minSize-maxSize/2.essence	> find mx: mset (size 2, maxOccur 2) of set (minSize 3, maxSize 5) of int(0..9)
+domain/nested1-mset/set-minSize/1.essence	3,4c3
+domain/nested1-mset/set-minSize/1.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-minSize/1.essence	< such that and([|x| >= 3 | x <- mx])
+domain/nested1-mset/set-minSize/1.essence	---
+domain/nested1-mset/set-minSize/1.essence	> find mx: mset (size 2, maxOccur 2) of set (minSize 3) of int(0..9)
+domain/nested1-mset/set-minSize/2.essence	3,4c3
+domain/nested1-mset/set-minSize/2.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-minSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-mset/set-minSize/2.essence	---
+domain/nested1-mset/set-minSize/2.essence	> find mx: mset (size 2, maxOccur 2) of set (minSize 3) of int(0..9)
+domain/nested1-mset/set-size/1.essence	3,4c3
+domain/nested1-mset/set-size/1.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-size/1.essence	< such that and([|x| = 3 | x <- mx])
+domain/nested1-mset/set-size/1.essence	---
+domain/nested1-mset/set-size/1.essence	> find mx: mset (size 2, maxOccur 2) of set (size 3) of int(0..9)
+domain/nested1-mset/set-size/2.essence	3,4c3
+domain/nested1-mset/set-size/2.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-size/2.essence	< such that and([sum([1 | i <- x]) = 3 | x <- mx])
+domain/nested1-mset/set-size/2.essence	---
+domain/nested1-mset/set-size/2.essence	> find mx: mset (size 2, maxOccur 2) of set (size 3) of int(0..9)
+domain/nested1-mset/set-size/3.essence	3,7c3,4
+domain/nested1-mset/set-size/3.essence	< find mx: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-size/3.essence	< find my: mset (size 2) of set of int(0..9)
+domain/nested1-mset/set-size/3.essence	< such that
+domain/nested1-mset/set-size/3.essence	<     and([|x| = 3 | x <- mx]),
+domain/nested1-mset/set-size/3.essence	<     and([|y| <= 4 - 2 | y <- my])
+domain/nested1-mset/set-size/3.essence	---
+domain/nested1-mset/set-size/3.essence	> find mx: mset (size 2, maxOccur 2) of set (size 3) of int(0..9)
+domain/nested1-mset/set-size/3.essence	> find my: mset (size 2, maxOccur 2) of set (maxSize 2) of int(0..9)
+domain/nested1-set/mset-maxOccur/1.essence	3,4c3
+domain/nested1-set/mset-maxOccur/1.essence	< find mx: set (size 2) of mset (size 10) of int(0..9)
+domain/nested1-set/mset-maxOccur/1.essence	< such that and([and([freq(x, i) <= 3 | i : int(0..9)]) | x <- mx])
+domain/nested1-set/mset-maxOccur/1.essence	---
+domain/nested1-set/mset-maxOccur/1.essence	> find mx: set (size 2) of mset (size 10, maxOccur 3) of int(0..9)
+domain/nested1-set/mset-maxSize/1.essence	3,4c3
+domain/nested1-set/mset-maxSize/1.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-maxSize/1.essence	< such that and([|x| <= 3 | x <- mx])
+domain/nested1-set/mset-maxSize/1.essence	---
+domain/nested1-set/mset-maxSize/1.essence	> find mx: set (size 2) of mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-maxSize/2.essence	3,4c3
+domain/nested1-set/mset-maxSize/2.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 3 | x <- mx])
+domain/nested1-set/mset-maxSize/2.essence	---
+domain/nested1-set/mset-maxSize/2.essence	> find mx: set (size 2) of mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	3,6c3
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	< find mx: set (size 2) of mset (size 10) of int(0..9)
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	< such that
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	<     true -> and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]),
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	<     and([and([freq(x, i) <= 8 | i : int(0..9)]) | x <- mx])
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	---
+domain/nested1-set/mset-minOccur-maxOccur/1.essence	> find mx: set (size 2) of mset (size 10, minOccur 3, maxOccur 8) of int(0..9)
+domain/nested1-set/mset-minOccur-minSize/1.essence	3,6c3
+domain/nested1-set/mset-minOccur-minSize/1.essence	< find mx: set (size 2) of mset (maxSize 10) of int(0..9)
+domain/nested1-set/mset-minOccur-minSize/1.essence	< such that
+domain/nested1-set/mset-minOccur-minSize/1.essence	<     and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]),
+domain/nested1-set/mset-minOccur-minSize/1.essence	<     and([|x| >= 4 | x <- mx])
+domain/nested1-set/mset-minOccur-minSize/1.essence	---
+domain/nested1-set/mset-minOccur-minSize/1.essence	> find mx: set (size 2) of mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested1-set/mset-minOccur-minSize/2.essence	3,6c3
+domain/nested1-set/mset-minOccur-minSize/2.essence	< find mx: set (size 2) of mset (maxSize 10) of int(0..9)
+domain/nested1-set/mset-minOccur-minSize/2.essence	< such that
+domain/nested1-set/mset-minOccur-minSize/2.essence	<     and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]),
+domain/nested1-set/mset-minOccur-minSize/2.essence	<     and([sum([1 | i <- x]) >= 4 | x <- mx])
+domain/nested1-set/mset-minOccur-minSize/2.essence	---
+domain/nested1-set/mset-minOccur-minSize/2.essence	> find mx: set (size 2) of mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested1-set/mset-minOccur/1.essence	3,4c3
+domain/nested1-set/mset-minOccur/1.essence	< find mx: set (size 2) of mset (size 10) of int(0..9)
+domain/nested1-set/mset-minOccur/1.essence	< such that and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx])
+domain/nested1-set/mset-minOccur/1.essence	---
+domain/nested1-set/mset-minOccur/1.essence	> find mx: set (size 2) of mset (size 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested1-set/mset-minSize-maxSize/1.essence	3,6c3
+domain/nested1-set/mset-minSize-maxSize/1.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize-maxSize/1.essence	< such that
+domain/nested1-set/mset-minSize-maxSize/1.essence	<     and([|x| >= 3 | x <- mx]),
+domain/nested1-set/mset-minSize-maxSize/1.essence	<     and([|x| <= 5 | x <- mx])
+domain/nested1-set/mset-minSize-maxSize/1.essence	---
+domain/nested1-set/mset-minSize-maxSize/1.essence	> find mx: set (size 2) of mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize-maxSize/2.essence	3,6c3
+domain/nested1-set/mset-minSize-maxSize/2.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize-maxSize/2.essence	< such that
+domain/nested1-set/mset-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) >= 3 | x <- mx]),
+domain/nested1-set/mset-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) <= 5 | x <- mx])
+domain/nested1-set/mset-minSize-maxSize/2.essence	---
+domain/nested1-set/mset-minSize-maxSize/2.essence	> find mx: set (size 2) of mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize/1.essence	3,4c3
+domain/nested1-set/mset-minSize/1.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize/1.essence	< such that and([|x| >= 3 | x <- mx])
+domain/nested1-set/mset-minSize/1.essence	---
+domain/nested1-set/mset-minSize/1.essence	> find mx: set (size 2) of mset (minSize 3, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize/2.essence	3,4c3
+domain/nested1-set/mset-minSize/2.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-minSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-set/mset-minSize/2.essence	---
+domain/nested1-set/mset-minSize/2.essence	> find mx: set (size 2) of mset (minSize 3, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-size/1.essence	3,4c3
+domain/nested1-set/mset-size/1.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-size/1.essence	< such that and([|x| = 3 | x <- mx])
+domain/nested1-set/mset-size/1.essence	---
+domain/nested1-set/mset-size/1.essence	> find mx: set (size 2) of mset (size 3, maxOccur 2) of int(0..9)
+domain/nested1-set/mset-size/2.essence	3,4c3
+domain/nested1-set/mset-size/2.essence	< find mx: set (size 2) of mset (maxOccur 2) of int(0..9)
+domain/nested1-set/mset-size/2.essence	< such that and([sum([1 | i <- x]) = 3 | x <- mx])
+domain/nested1-set/mset-size/2.essence	---
+domain/nested1-set/mset-size/2.essence	> find mx: set (size 2) of mset (size 3, maxOccur 2) of int(0..9)
+domain/nested1-set/partition-maxNumParts/1.essence	3,4c3
+domain/nested1-set/partition-maxNumParts/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-maxNumParts/1.essence	< such that and([|parts(x)| <= 3 | x <- mx])
+domain/nested1-set/partition-maxNumParts/1.essence	---
+domain/nested1-set/partition-maxNumParts/1.essence	> find mx: set (size 2) of partition (maxNumParts 3) from int(0..9)
+domain/nested1-set/partition-maxPartSize/1.essence	3,4c3
+domain/nested1-set/partition-maxPartSize/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-maxPartSize/1.essence	< such that and([and([|i| <= 3 | i <- parts(x)]) | x <- mx])
+domain/nested1-set/partition-maxPartSize/1.essence	---
+domain/nested1-set/partition-maxPartSize/1.essence	> find mx: set (size 2) of partition (maxPartSize 3) from int(0..9)
+domain/nested1-set/partition-minNumParts/1.essence	3,4c3
+domain/nested1-set/partition-minNumParts/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-minNumParts/1.essence	< such that and([|parts(x)| >= 3 | x <- mx])
+domain/nested1-set/partition-minNumParts/1.essence	---
+domain/nested1-set/partition-minNumParts/1.essence	> find mx: set (size 2) of partition (minNumParts 3) from int(0..9)
+domain/nested1-set/partition-minPartSize/1.essence	3,4c3
+domain/nested1-set/partition-minPartSize/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-minPartSize/1.essence	< such that and([and([sum([1 | j <- i]) >= 3 | i <- parts(x)]) | x <- mx])
+domain/nested1-set/partition-minPartSize/1.essence	---
+domain/nested1-set/partition-minPartSize/1.essence	> find mx: set (size 2) of partition (minPartSize 3) from int(0..9)
+domain/nested1-set/partition-numParts/1.essence	3,4c3
+domain/nested1-set/partition-numParts/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-numParts/1.essence	< such that and([|parts(x)| = 3 | x <- mx])
+domain/nested1-set/partition-numParts/1.essence	---
+domain/nested1-set/partition-numParts/1.essence	> find mx: set (size 2) of partition (numParts 3) from int(0..9)
+domain/nested1-set/partition-partSize/1.essence	3,4c3
+domain/nested1-set/partition-partSize/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-partSize/1.essence	< such that and([and([|i| = 3 | i <- parts(x)]) | x <- mx])
+domain/nested1-set/partition-partSize/1.essence	---
+domain/nested1-set/partition-partSize/1.essence	> find mx: set (size 2) of partition (partSize 3) from int(0..9)
+domain/nested1-set/partition-regular/1.essence	3,4c3
+domain/nested1-set/partition-regular/1.essence	< find mx: set (size 2) of partition from int(0..9)
+domain/nested1-set/partition-regular/1.essence	< such that and([and([|i| = |j| | i <- parts(x), j <- parts(x)]) | x <- mx])
+domain/nested1-set/partition-regular/1.essence	---
+domain/nested1-set/partition-regular/1.essence	> find mx: set (size 2) of partition (regular) from int(0..9)
+domain/nested1-set/relation-maxSize/1.essence	3,4c3
+domain/nested1-set/relation-maxSize/1.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-maxSize/1.essence	< such that and([|x| <= 3 | x <- mx])
+domain/nested1-set/relation-maxSize/1.essence	---
+domain/nested1-set/relation-maxSize/1.essence	> find mx: set (size 2) of relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-maxSize/2.essence	3,4c3
+domain/nested1-set/relation-maxSize/2.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 3 | x <- mx])
+domain/nested1-set/relation-maxSize/2.essence	---
+domain/nested1-set/relation-maxSize/2.essence	> find mx: set (size 2) of relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize-maxSize/1.essence	3,6c3
+domain/nested1-set/relation-minSize-maxSize/1.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize-maxSize/1.essence	< such that
+domain/nested1-set/relation-minSize-maxSize/1.essence	<     and([|x| >= 3 | x <- mx]),
+domain/nested1-set/relation-minSize-maxSize/1.essence	<     and([|x| <= 5 | x <- mx])
+domain/nested1-set/relation-minSize-maxSize/1.essence	---
+domain/nested1-set/relation-minSize-maxSize/1.essence	> find mx: set (size 2) of relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize-maxSize/2.essence	3,5c3
+domain/nested1-set/relation-minSize-maxSize/2.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize-maxSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-set/relation-minSize-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 5 | x <- mx])
+domain/nested1-set/relation-minSize-maxSize/2.essence	---
+domain/nested1-set/relation-minSize-maxSize/2.essence	> find mx: set (size 2) of relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize/1.essence	3,4c3
+domain/nested1-set/relation-minSize/1.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize/1.essence	< such that and([|x| >= 3 | x <- mx])
+domain/nested1-set/relation-minSize/1.essence	---
+domain/nested1-set/relation-minSize/1.essence	> find mx: set (size 2) of relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize/2.essence	3,4c3
+domain/nested1-set/relation-minSize/2.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-minSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-set/relation-minSize/2.essence	---
+domain/nested1-set/relation-minSize/2.essence	> find mx: set (size 2) of relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/1.essence	3,4c3
+domain/nested1-set/relation-size/1.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/1.essence	< such that and([|x| = 3 | x <- mx])
+domain/nested1-set/relation-size/1.essence	---
+domain/nested1-set/relation-size/1.essence	> find mx: set (size 2) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/2.essence	3,4c3
+domain/nested1-set/relation-size/2.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/2.essence	< such that and([sum([1 | i <- x]) = 3 | x <- mx])
+domain/nested1-set/relation-size/2.essence	---
+domain/nested1-set/relation-size/2.essence	> find mx: set (size 2) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/3.essence	3,7c3,4
+domain/nested1-set/relation-size/3.essence	< find mx: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/3.essence	< find my: set (size 2) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/3.essence	< such that
+domain/nested1-set/relation-size/3.essence	<     and([|x| = 3 | x <- mx]),
+domain/nested1-set/relation-size/3.essence	<     and([|y| <= 2 | y <- my])
+domain/nested1-set/relation-size/3.essence	---
+domain/nested1-set/relation-size/3.essence	> find mx: set (size 2) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/relation-size/3.essence	> find my: set (size 2) of relation (maxSize 2) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested1-set/set-maxSize/1.essence	3,4c3
+domain/nested1-set/set-maxSize/1.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-maxSize/1.essence	< such that and([|x| <= 3 | x <- mx])
+domain/nested1-set/set-maxSize/1.essence	---
+domain/nested1-set/set-maxSize/1.essence	> find mx: set (size 2) of set (maxSize 3) of int(0..9)
+domain/nested1-set/set-maxSize/2.essence	3,4c3
+domain/nested1-set/set-maxSize/2.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-maxSize/2.essence	< such that and([sum([1 | i <- x]) <= 3 | x <- mx])
+domain/nested1-set/set-maxSize/2.essence	---
+domain/nested1-set/set-maxSize/2.essence	> find mx: set (size 2) of set (maxSize 3) of int(0..9)
+domain/nested1-set/set-minSize-maxSize/1.essence	3,6c3
+domain/nested1-set/set-minSize-maxSize/1.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-minSize-maxSize/1.essence	< such that
+domain/nested1-set/set-minSize-maxSize/1.essence	<     and([|x| >= 3 | x <- mx]),
+domain/nested1-set/set-minSize-maxSize/1.essence	<     and([|x| <= 5 | x <- mx])
+domain/nested1-set/set-minSize-maxSize/1.essence	---
+domain/nested1-set/set-minSize-maxSize/1.essence	> find mx: set (size 2) of set (minSize 3, maxSize 5) of int(0..9)
+domain/nested1-set/set-minSize-maxSize/2.essence	3,6c3
+domain/nested1-set/set-minSize-maxSize/2.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-minSize-maxSize/2.essence	< such that
+domain/nested1-set/set-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) >= 3 | x <- mx]),
+domain/nested1-set/set-minSize-maxSize/2.essence	<     and([sum([1 | i <- x]) <= 5 | x <- mx])
+domain/nested1-set/set-minSize-maxSize/2.essence	---
+domain/nested1-set/set-minSize-maxSize/2.essence	> find mx: set (size 2) of set (minSize 3, maxSize 5) of int(0..9)
+domain/nested1-set/set-minSize/1.essence	3,4c3
+domain/nested1-set/set-minSize/1.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-minSize/1.essence	< such that and([|x| >= 3 | x <- mx])
+domain/nested1-set/set-minSize/1.essence	---
+domain/nested1-set/set-minSize/1.essence	> find mx: set (size 2) of set (minSize 3) of int(0..9)
+domain/nested1-set/set-minSize/2.essence	3,4c3
+domain/nested1-set/set-minSize/2.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-minSize/2.essence	< such that and([sum([1 | i <- x]) >= 3 | x <- mx])
+domain/nested1-set/set-minSize/2.essence	---
+domain/nested1-set/set-minSize/2.essence	> find mx: set (size 2) of set (minSize 3) of int(0..9)
+domain/nested1-set/set-size/1.essence	3,4c3
+domain/nested1-set/set-size/1.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-size/1.essence	< such that and([|x| = 3 | x <- mx])
+domain/nested1-set/set-size/1.essence	---
+domain/nested1-set/set-size/1.essence	> find mx: set (size 2) of set (size 3) of int(0..9)
+domain/nested1-set/set-size/2.essence	3,4c3
+domain/nested1-set/set-size/2.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-size/2.essence	< such that and([sum([1 | i <- x]) = 3 | x <- mx])
+domain/nested1-set/set-size/2.essence	---
+domain/nested1-set/set-size/2.essence	> find mx: set (size 2) of set (size 3) of int(0..9)
+domain/nested1-set/set-size/3.essence	3,7c3,4
+domain/nested1-set/set-size/3.essence	< find mx: set (size 2) of set of int(0..9)
+domain/nested1-set/set-size/3.essence	< find my: set (size 2) of set of int(0..9)
+domain/nested1-set/set-size/3.essence	< such that
+domain/nested1-set/set-size/3.essence	<     and([|x| = 3 | x <- mx]),
+domain/nested1-set/set-size/3.essence	<     and([|y| <= 4 - 2 | y <- my])
+domain/nested1-set/set-size/3.essence	---
+domain/nested1-set/set-size/3.essence	> find mx: set (size 2) of set (size 3) of int(0..9)
+domain/nested1-set/set-size/3.essence	> find my: set (size 2) of set (maxSize 2) of int(0..9)
+domain/nested2-set-mset/set-mset/1.essence	3,6c3
+domain/nested2-set-mset/set-mset/1.essence	< find S: set of mset of int(0..9)
+domain/nested2-set-mset/set-mset/1.essence	< such that
+domain/nested2-set-mset/set-mset/1.essence	<     |S| = 2,
+domain/nested2-set-mset/set-mset/1.essence	<     and([and([freq(m, i) <= 3 | i : int(0..9)]) | m <- S])
+domain/nested2-set-mset/set-mset/1.essence	---
+domain/nested2-set-mset/set-mset/1.essence	> find S: set (size 2) of mset (maxOccur 3) of int(0..9)
+domain/nested2-set-set/mset-maxOccur/1.essence	3,4c3
+domain/nested2-set-set/mset-maxOccur/1.essence	< find mmx: set (size 2) of set (size 3) of mset (size 10) of int(0..9)
+domain/nested2-set-set/mset-maxOccur/1.essence	< such that and([and([and([freq(x, i) <= 3 | i : int(0..9)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-maxOccur/1.essence	---
+domain/nested2-set-set/mset-maxOccur/1.essence	> find mmx: set (size 2) of set (size 3) of mset (size 10, maxOccur 3) of int(0..9)
+domain/nested2-set-set/mset-maxSize/1.essence	3,4c3
+domain/nested2-set-set/mset-maxSize/1.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-maxSize/1.essence	< such that and([and([|x| <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-maxSize/1.essence	---
+domain/nested2-set-set/mset-maxSize/1.essence	> find mmx: set (size 2) of set (size 3) of mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-maxSize/2.essence	3,4c3
+domain/nested2-set-set/mset-maxSize/2.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-maxSize/2.essence	< such that and([and([sum([1 | i <- x]) <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-maxSize/2.essence	---
+domain/nested2-set-set/mset-maxSize/2.essence	> find mmx: set (size 2) of set (size 3) of mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	3,6c3
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	< find mmx: set (size 2) of set (size 3) of mset (size 10) of int(0..9)
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	< such that
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	<     true -> and([and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	<     and([and([and([freq(x, i) <= 8 | i : int(0..9)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	---
+domain/nested2-set-set/mset-minOccur-maxOccur/1.essence	> find mmx: set (size 2) of set (size 3) of mset (size 10, minOccur 3, maxOccur 8) of int(0..9)
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	3,6c3
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	< find mmx: set (size 2) of set (size 3) of mset (maxSize 10) of int(0..9)
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	< such that
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	<     and([and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	<     and([and([|x| >= 4 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	---
+domain/nested2-set-set/mset-minOccur-minSize/1.essence	> find mmx: set (size 2) of set (size 3) of mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	3,6c3
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	< find mmx: set (size 2) of set (size 3) of mset (maxSize 10) of int(0..9)
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	< such that
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	<     and([and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	<     and([and([sum([1 | i <- x]) >= 4 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	---
+domain/nested2-set-set/mset-minOccur-minSize/2.essence	> find mmx: set (size 2) of set (size 3) of mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested2-set-set/mset-minOccur/1.essence	3,4c3
+domain/nested2-set-set/mset-minOccur/1.essence	< find mmx: set (size 2) of set (size 3) of mset (size 10) of int(0..9)
+domain/nested2-set-set/mset-minOccur/1.essence	< such that and([and([and([freq(x, i) >= 3 | i : int(0..9)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minOccur/1.essence	---
+domain/nested2-set-set/mset-minOccur/1.essence	> find mmx: set (size 2) of set (size 3) of mset (size 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	3,6c3
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	< such that
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	<     and([and([|x| >= 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	<     and([and([|x| <= 5 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	---
+domain/nested2-set-set/mset-minSize-maxSize/1.essence	> find mmx: set (size 2) of set (size 3) of mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	3,6c3
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	< such that
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	<     and([and([sum([1 | i <- x]) >= 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	<     and([and([sum([1 | i <- x]) <= 5 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	---
+domain/nested2-set-set/mset-minSize-maxSize/2.essence	> find mmx: set (size 2) of set (size 3) of mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize/1.essence	3,4c3
+domain/nested2-set-set/mset-minSize/1.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize/1.essence	< such that and([and([|x| >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minSize/1.essence	---
+domain/nested2-set-set/mset-minSize/1.essence	> find mmx: set (size 2) of set (size 3) of mset (minSize 3, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize/2.essence	3,4c3
+domain/nested2-set-set/mset-minSize/2.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-minSize/2.essence	< such that and([and([sum([1 | i <- x]) >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-minSize/2.essence	---
+domain/nested2-set-set/mset-minSize/2.essence	> find mmx: set (size 2) of set (size 3) of mset (minSize 3, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-size/1.essence	3,4c3
+domain/nested2-set-set/mset-size/1.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-size/1.essence	< such that and([and([|x| = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-size/1.essence	---
+domain/nested2-set-set/mset-size/1.essence	> find mmx: set (size 2) of set (size 3) of mset (size 3, maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-size/2.essence	3,4c3
+domain/nested2-set-set/mset-size/2.essence	< find mmx: set (size 2) of set (size 3) of mset (maxOccur 2) of int(0..9)
+domain/nested2-set-set/mset-size/2.essence	< such that and([and([sum([1 | i <- x]) = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/mset-size/2.essence	---
+domain/nested2-set-set/mset-size/2.essence	> find mmx: set (size 2) of set (size 3) of mset (size 3, maxOccur 2) of int(0..9)
+domain/nested2-set-set/partition-maxNumParts/1.essence	3,4c3
+domain/nested2-set-set/partition-maxNumParts/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-maxNumParts/1.essence	< such that and([and([|parts(x)| <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-maxNumParts/1.essence	---
+domain/nested2-set-set/partition-maxNumParts/1.essence	> find mmx: set (size 2) of set (size 3) of partition (maxNumParts 3) from int(0..9)
+domain/nested2-set-set/partition-maxPartSize/1.essence	3,4c3
+domain/nested2-set-set/partition-maxPartSize/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-maxPartSize/1.essence	< such that and([and([and([|i| <= 3 | i <- parts(x)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-maxPartSize/1.essence	---
+domain/nested2-set-set/partition-maxPartSize/1.essence	> find mmx: set (size 2) of set (size 3) of partition (maxPartSize 3) from int(0..9)
+domain/nested2-set-set/partition-minNumParts/1.essence	3,4c3
+domain/nested2-set-set/partition-minNumParts/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-minNumParts/1.essence	< such that and([and([|parts(x)| >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-minNumParts/1.essence	---
+domain/nested2-set-set/partition-minNumParts/1.essence	> find mmx: set (size 2) of set (size 3) of partition (minNumParts 3) from int(0..9)
+domain/nested2-set-set/partition-minPartSize/1.essence	3,4c3
+domain/nested2-set-set/partition-minPartSize/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-minPartSize/1.essence	< such that and([and([and([sum([1 | j <- i]) >= 3 | i <- parts(x)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-minPartSize/1.essence	---
+domain/nested2-set-set/partition-minPartSize/1.essence	> find mmx: set (size 2) of set (size 3) of partition (minPartSize 3) from int(0..9)
+domain/nested2-set-set/partition-numParts/1.essence	3,4c3
+domain/nested2-set-set/partition-numParts/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-numParts/1.essence	< such that and([and([|parts(x)| = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-numParts/1.essence	---
+domain/nested2-set-set/partition-numParts/1.essence	> find mmx: set (size 2) of set (size 3) of partition (numParts 3) from int(0..9)
+domain/nested2-set-set/partition-partSize/1.essence	3,4c3
+domain/nested2-set-set/partition-partSize/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-partSize/1.essence	< such that and([and([and([|i| = 3 | i <- parts(x)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-partSize/1.essence	---
+domain/nested2-set-set/partition-partSize/1.essence	> find mmx: set (size 2) of set (size 3) of partition (partSize 3) from int(0..9)
+domain/nested2-set-set/partition-regular/1.essence	3,4c3
+domain/nested2-set-set/partition-regular/1.essence	< find mmx: set (size 2) of set (size 3) of partition from int(0..9)
+domain/nested2-set-set/partition-regular/1.essence	< such that and([and([and([|i| = |j| | i <- parts(x), j <- parts(x)]) | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/partition-regular/1.essence	---
+domain/nested2-set-set/partition-regular/1.essence	> find mmx: set (size 2) of set (size 3) of partition (regular) from int(0..9)
+domain/nested2-set-set/relation-maxSize/1.essence	3,4c3
+domain/nested2-set-set/relation-maxSize/1.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-maxSize/1.essence	< such that and([and([|x| <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-maxSize/1.essence	---
+domain/nested2-set-set/relation-maxSize/1.essence	> find mmx: set (size 2) of set (size 3) of relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-maxSize/2.essence	3,4c3
+domain/nested2-set-set/relation-maxSize/2.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-maxSize/2.essence	< such that and([and([sum([1 | i <- x]) <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-maxSize/2.essence	---
+domain/nested2-set-set/relation-maxSize/2.essence	> find mmx: set (size 2) of set (size 3) of relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	3,6c3
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	< such that
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	<     and([and([|x| >= 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	<     and([and([|x| <= 5 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	---
+domain/nested2-set-set/relation-minSize-maxSize/1.essence	> find mmx: set (size 2) of set (size 3) of relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize-maxSize/2.essence	3,5c3
+domain/nested2-set-set/relation-minSize-maxSize/2.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize-maxSize/2.essence	< such that and([and([sum([1 | i <- x]) >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-minSize-maxSize/2.essence	< such that and([and([sum([1 | i <- x]) <= 5 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-minSize-maxSize/2.essence	---
+domain/nested2-set-set/relation-minSize-maxSize/2.essence	> find mmx: set (size 2) of set (size 3) of relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize/1.essence	3,4c3
+domain/nested2-set-set/relation-minSize/1.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize/1.essence	< such that and([and([|x| >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-minSize/1.essence	---
+domain/nested2-set-set/relation-minSize/1.essence	> find mmx: set (size 2) of set (size 3) of relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize/2.essence	3,4c3
+domain/nested2-set-set/relation-minSize/2.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-minSize/2.essence	< such that and([and([sum([1 | i <- x]) >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-minSize/2.essence	---
+domain/nested2-set-set/relation-minSize/2.essence	> find mmx: set (size 2) of set (size 3) of relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/1.essence	3,4c3
+domain/nested2-set-set/relation-size/1.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/1.essence	< such that and([and([|x| = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-size/1.essence	---
+domain/nested2-set-set/relation-size/1.essence	> find mmx: set (size 2) of set (size 3) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/2.essence	3,4c3
+domain/nested2-set-set/relation-size/2.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/2.essence	< such that and([and([sum([1 | i <- x]) = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/relation-size/2.essence	---
+domain/nested2-set-set/relation-size/2.essence	> find mmx: set (size 2) of set (size 3) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/3.essence	3,7c3,4
+domain/nested2-set-set/relation-size/3.essence	< find mmx: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/3.essence	< find mmy: set (size 2) of set (size 3) of relation of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/3.essence	< such that
+domain/nested2-set-set/relation-size/3.essence	<     and([and([|x| = 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/relation-size/3.essence	<     and([and([|y| <= 2 | y <- my]) | my <- mmy])
+domain/nested2-set-set/relation-size/3.essence	---
+domain/nested2-set-set/relation-size/3.essence	> find mmx: set (size 2) of set (size 3) of relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/relation-size/3.essence	> find mmy: set (size 2) of set (size 3) of relation (maxSize 2) of (int(0..9) * int(0..9) * int(0..9))
+domain/nested2-set-set/set-maxSize/1.essence	3,4c3
+domain/nested2-set-set/set-maxSize/1.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-maxSize/1.essence	< such that and([and([|x| <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-maxSize/1.essence	---
+domain/nested2-set-set/set-maxSize/1.essence	> find mmx: set (size 2) of set (size 3) of set (maxSize 3) of int(0..9)
+domain/nested2-set-set/set-maxSize/2.essence	3,4c3
+domain/nested2-set-set/set-maxSize/2.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-maxSize/2.essence	< such that and([and([sum([1 | i <- x]) <= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-maxSize/2.essence	---
+domain/nested2-set-set/set-maxSize/2.essence	> find mmx: set (size 2) of set (size 3) of set (maxSize 3) of int(0..9)
+domain/nested2-set-set/set-minSize-maxSize/1.essence	3,6c3
+domain/nested2-set-set/set-minSize-maxSize/1.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-minSize-maxSize/1.essence	< such that
+domain/nested2-set-set/set-minSize-maxSize/1.essence	<     and([and([|x| >= 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/set-minSize-maxSize/1.essence	<     and([and([|x| <= 5 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-minSize-maxSize/1.essence	---
+domain/nested2-set-set/set-minSize-maxSize/1.essence	> find mmx: set (size 2) of set (size 3) of set (minSize 3, maxSize 5) of int(0..9)
+domain/nested2-set-set/set-minSize-maxSize/2.essence	3,6c3
+domain/nested2-set-set/set-minSize-maxSize/2.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-minSize-maxSize/2.essence	< such that
+domain/nested2-set-set/set-minSize-maxSize/2.essence	<     and([and([sum([1 | i <- x]) >= 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/set-minSize-maxSize/2.essence	<     and([and([sum([1 | i <- x]) <= 5 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-minSize-maxSize/2.essence	---
+domain/nested2-set-set/set-minSize-maxSize/2.essence	> find mmx: set (size 2) of set (size 3) of set (minSize 3, maxSize 5) of int(0..9)
+domain/nested2-set-set/set-minSize/1.essence	3,4c3
+domain/nested2-set-set/set-minSize/1.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-minSize/1.essence	< such that and([and([|x| >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-minSize/1.essence	---
+domain/nested2-set-set/set-minSize/1.essence	> find mmx: set (size 2) of set (size 3) of set (minSize 3) of int(0..9)
+domain/nested2-set-set/set-minSize/2.essence	3,4c3
+domain/nested2-set-set/set-minSize/2.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-minSize/2.essence	< such that and([and([sum([1 | i <- x]) >= 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-minSize/2.essence	---
+domain/nested2-set-set/set-minSize/2.essence	> find mmx: set (size 2) of set (size 3) of set (minSize 3) of int(0..9)
+domain/nested2-set-set/set-size/1.essence	3,4c3
+domain/nested2-set-set/set-size/1.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-size/1.essence	< such that and([and([|x| = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-size/1.essence	---
+domain/nested2-set-set/set-size/1.essence	> find mmx: set (size 2) of set (size 3) of set (size 3) of int(0..9)
+domain/nested2-set-set/set-size/2.essence	3,4c3
+domain/nested2-set-set/set-size/2.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-size/2.essence	< such that and([and([sum([1 | i <- x]) = 3 | x <- mx]) | mx <- mmx])
+domain/nested2-set-set/set-size/2.essence	---
+domain/nested2-set-set/set-size/2.essence	> find mmx: set (size 2) of set (size 3) of set (size 3) of int(0..9)
+domain/nested2-set-set/set-size/3.essence	3,7c3,4
+domain/nested2-set-set/set-size/3.essence	< find mmx: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-size/3.essence	< find mmy: set (size 2) of set (size 3) of set of int(0..9)
+domain/nested2-set-set/set-size/3.essence	< such that
+domain/nested2-set-set/set-size/3.essence	<     and([and([|x| = 3 | x <- mx]) | mx <- mmx]),
+domain/nested2-set-set/set-size/3.essence	<     and([and([|y| <= 4 - 2 | y <- my]) | my <- mmy])
+domain/nested2-set-set/set-size/3.essence	---
+domain/nested2-set-set/set-size/3.essence	> find mmx: set (size 2) of set (size 3) of set (size 3) of int(0..9)
+domain/nested2-set-set/set-size/3.essence	> find mmy: set (size 2) of set (size 3) of set (maxSize 2) of int(0..9)
+domain/not-nested/function-total/1.essence	3c3
+domain/not-nested/function-total/1.essence	< find x: function int(1..9) --> int(0..100)
+domain/not-nested/function-total/1.essence	---
+domain/not-nested/function-total/1.essence	> find x: function (total) int(1..9) --> int(0..100)
+domain/not-nested/mset-maxOccur/1.essence	3,4c3
+domain/not-nested/mset-maxOccur/1.essence	< find x: mset (size 10) of int(0..9)
+domain/not-nested/mset-maxOccur/1.essence	< such that and([freq(x, i) <= 3 | i : int(0..9)])
+domain/not-nested/mset-maxOccur/1.essence	---
+domain/not-nested/mset-maxOccur/1.essence	> find x: mset (size 10, maxOccur 3) of int(0..9)
+domain/not-nested/mset-maxSize/1.essence	3,4c3
+domain/not-nested/mset-maxSize/1.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-maxSize/1.essence	< such that |x| <= 3
+domain/not-nested/mset-maxSize/1.essence	---
+domain/not-nested/mset-maxSize/1.essence	> find x: mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/not-nested/mset-maxSize/2.essence	3,4c3
+domain/not-nested/mset-maxSize/2.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-maxSize/2.essence	< such that sum([1 | i <- x]) <= 3
+domain/not-nested/mset-maxSize/2.essence	---
+domain/not-nested/mset-maxSize/2.essence	> find x: mset (maxSize 3, maxOccur 2) of int(0..9)
+domain/not-nested/mset-minOccur-maxOccur/1.essence	3,6c3
+domain/not-nested/mset-minOccur-maxOccur/1.essence	< find x: mset (size 10) of int(0..9)
+domain/not-nested/mset-minOccur-maxOccur/1.essence	< such that
+domain/not-nested/mset-minOccur-maxOccur/1.essence	<     true -> and([freq(x, i) >= 3 | i : int(0..9)]),
+domain/not-nested/mset-minOccur-maxOccur/1.essence	<     and([freq(x, i) <= 8 | i : int(0..9)])
+domain/not-nested/mset-minOccur-maxOccur/1.essence	---
+domain/not-nested/mset-minOccur-maxOccur/1.essence	> find x: mset (size 10, minOccur 3, maxOccur 8) of int(0..9)
+domain/not-nested/mset-minOccur-minSize/1.essence	3,6c3
+domain/not-nested/mset-minOccur-minSize/1.essence	< find x: mset (maxSize 10) of int(0..9)
+domain/not-nested/mset-minOccur-minSize/1.essence	< such that
+domain/not-nested/mset-minOccur-minSize/1.essence	<     and([freq(x, i) >= 3 | i : int(0..9)]),
+domain/not-nested/mset-minOccur-minSize/1.essence	<     |x| >= 4
+domain/not-nested/mset-minOccur-minSize/1.essence	---
+domain/not-nested/mset-minOccur-minSize/1.essence	> find x: mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/not-nested/mset-minOccur-minSize/2.essence	3,6c3
+domain/not-nested/mset-minOccur-minSize/2.essence	< find x: mset (maxSize 10) of int(0..9)
+domain/not-nested/mset-minOccur-minSize/2.essence	< such that
+domain/not-nested/mset-minOccur-minSize/2.essence	<     and([freq(x, i) >= 3 | i : int(0..9)]),
+domain/not-nested/mset-minOccur-minSize/2.essence	<     sum([1 | i <- x]) >= 4
+domain/not-nested/mset-minOccur-minSize/2.essence	---
+domain/not-nested/mset-minOccur-minSize/2.essence	> find x: mset (minSize 4, maxSize 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/not-nested/mset-minOccur/1.essence	3,4c3
+domain/not-nested/mset-minOccur/1.essence	< find x: mset (size 10) of int(0..9)
+domain/not-nested/mset-minOccur/1.essence	< such that and([freq(x, i) >= 3 | i : int(0..9)])
+domain/not-nested/mset-minOccur/1.essence	---
+domain/not-nested/mset-minOccur/1.essence	> find x: mset (size 10, minOccur 3, maxOccur 10) of int(0..9)
+domain/not-nested/mset-minSize-maxSize/1.essence	3,6c3
+domain/not-nested/mset-minSize-maxSize/1.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize-maxSize/1.essence	< such that
+domain/not-nested/mset-minSize-maxSize/1.essence	<     |x| >= 3,
+domain/not-nested/mset-minSize-maxSize/1.essence	<     |x| <= 5
+domain/not-nested/mset-minSize-maxSize/1.essence	---
+domain/not-nested/mset-minSize-maxSize/1.essence	> find x: mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize-maxSize/2.essence	3,6c3
+domain/not-nested/mset-minSize-maxSize/2.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize-maxSize/2.essence	< such that
+domain/not-nested/mset-minSize-maxSize/2.essence	<     sum([1 | i <- x]) >= 3,
+domain/not-nested/mset-minSize-maxSize/2.essence	<     sum([1 | i <- x]) <= 5
+domain/not-nested/mset-minSize-maxSize/2.essence	---
+domain/not-nested/mset-minSize-maxSize/2.essence	> find x: mset (minSize 3, maxSize 5, maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize/1.essence	3,4c3
+domain/not-nested/mset-minSize/1.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize/1.essence	< such that |x| >= 3
+domain/not-nested/mset-minSize/1.essence	---
+domain/not-nested/mset-minSize/1.essence	> find x: mset (minSize 3, maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize/2.essence	3,4c3
+domain/not-nested/mset-minSize/2.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-minSize/2.essence	< such that sum([1 | i <- x]) >= 3
+domain/not-nested/mset-minSize/2.essence	---
+domain/not-nested/mset-minSize/2.essence	> find x: mset (minSize 3, maxOccur 2) of int(0..9)
+domain/not-nested/mset-size/1.essence	3,4c3
+domain/not-nested/mset-size/1.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-size/1.essence	< such that |x| = 3
+domain/not-nested/mset-size/1.essence	---
+domain/not-nested/mset-size/1.essence	> find x: mset (size 3, maxOccur 2) of int(0..9)
+domain/not-nested/mset-size/2.essence	3,4c3
+domain/not-nested/mset-size/2.essence	< find x: mset (maxOccur 2) of int(0..9)
+domain/not-nested/mset-size/2.essence	< such that sum([1 | i <- x]) = 3
+domain/not-nested/mset-size/2.essence	---
+domain/not-nested/mset-size/2.essence	> find x: mset (size 3, maxOccur 2) of int(0..9)
+domain/not-nested/partition-maxNumParts/1.essence	3,4c3
+domain/not-nested/partition-maxNumParts/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-maxNumParts/1.essence	< such that |parts(x)| <= 3
+domain/not-nested/partition-maxNumParts/1.essence	---
+domain/not-nested/partition-maxNumParts/1.essence	> find x: partition (maxNumParts 3) from int(0..9)
+domain/not-nested/partition-maxPartSize/1.essence	3,4c3
+domain/not-nested/partition-maxPartSize/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-maxPartSize/1.essence	< such that and([|i| <= 3 | i <- parts(x)])
+domain/not-nested/partition-maxPartSize/1.essence	---
+domain/not-nested/partition-maxPartSize/1.essence	> find x: partition (maxPartSize 3) from int(0..9)
+domain/not-nested/partition-minNumParts/1.essence	3,4c3
+domain/not-nested/partition-minNumParts/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-minNumParts/1.essence	< such that |parts(x)| >= 3
+domain/not-nested/partition-minNumParts/1.essence	---
+domain/not-nested/partition-minNumParts/1.essence	> find x: partition (minNumParts 3) from int(0..9)
+domain/not-nested/partition-minPartSize/1.essence	3,4c3
+domain/not-nested/partition-minPartSize/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-minPartSize/1.essence	< such that and([sum([1 | j <- i]) >= 3 | i <- parts(x)])
+domain/not-nested/partition-minPartSize/1.essence	---
+domain/not-nested/partition-minPartSize/1.essence	> find x: partition (minPartSize 3) from int(0..9)
+domain/not-nested/partition-numParts/1.essence	3,4c3
+domain/not-nested/partition-numParts/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-numParts/1.essence	< such that |parts(x)| = 3
+domain/not-nested/partition-numParts/1.essence	---
+domain/not-nested/partition-numParts/1.essence	> find x: partition (numParts 3) from int(0..9)
+domain/not-nested/partition-partSize/1.essence	3,4c3
+domain/not-nested/partition-partSize/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-partSize/1.essence	< such that and([|i| = 3 | i <- parts(x)])
+domain/not-nested/partition-partSize/1.essence	---
+domain/not-nested/partition-partSize/1.essence	> find x: partition (partSize 3) from int(0..9)
+domain/not-nested/partition-regular/1.essence	3,4c3
+domain/not-nested/partition-regular/1.essence	< find x: partition from int(0..9)
+domain/not-nested/partition-regular/1.essence	< such that and([|i| = |j| | i <- parts(x), j <- parts(x)])
+domain/not-nested/partition-regular/1.essence	---
+domain/not-nested/partition-regular/1.essence	> find x: partition (regular) from int(0..9)
+domain/not-nested/relation-maxSize/1.essence	3,4c3
+domain/not-nested/relation-maxSize/1.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-maxSize/1.essence	< such that |x| <= 3
+domain/not-nested/relation-maxSize/1.essence	---
+domain/not-nested/relation-maxSize/1.essence	> find x: relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-maxSize/2.essence	3,4c3
+domain/not-nested/relation-maxSize/2.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-maxSize/2.essence	< such that sum([1 | i <- x]) <= 3
+domain/not-nested/relation-maxSize/2.essence	---
+domain/not-nested/relation-maxSize/2.essence	> find x: relation (maxSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize-maxSize/1.essence	3,6c3
+domain/not-nested/relation-minSize-maxSize/1.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize-maxSize/1.essence	< such that
+domain/not-nested/relation-minSize-maxSize/1.essence	<     |x| >= 3,
+domain/not-nested/relation-minSize-maxSize/1.essence	<     |x| <= 5
+domain/not-nested/relation-minSize-maxSize/1.essence	---
+domain/not-nested/relation-minSize-maxSize/1.essence	> find x: relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize-maxSize/2.essence	3,6c3
+domain/not-nested/relation-minSize-maxSize/2.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize-maxSize/2.essence	< such that
+domain/not-nested/relation-minSize-maxSize/2.essence	<     sum([1 | i <- x]) >= 3,
+domain/not-nested/relation-minSize-maxSize/2.essence	<     sum([1 | i <- x]) <= 5
+domain/not-nested/relation-minSize-maxSize/2.essence	---
+domain/not-nested/relation-minSize-maxSize/2.essence	> find x: relation (minSize 3, maxSize 5) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize/1.essence	3,4c3
+domain/not-nested/relation-minSize/1.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize/1.essence	< such that |x| >= 3
+domain/not-nested/relation-minSize/1.essence	---
+domain/not-nested/relation-minSize/1.essence	> find x: relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize/2.essence	3,4c3
+domain/not-nested/relation-minSize/2.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-minSize/2.essence	< such that sum([1 | i <- x]) >= 3
+domain/not-nested/relation-minSize/2.essence	---
+domain/not-nested/relation-minSize/2.essence	> find x: relation (minSize 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/1.essence	3,4c3
+domain/not-nested/relation-size/1.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/1.essence	< such that |x| = 3
+domain/not-nested/relation-size/1.essence	---
+domain/not-nested/relation-size/1.essence	> find x: relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/2.essence	3,4c3
+domain/not-nested/relation-size/2.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/2.essence	< such that sum([1 | i <- x]) = 3
+domain/not-nested/relation-size/2.essence	---
+domain/not-nested/relation-size/2.essence	> find x: relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/3.essence	3,7c3,4
+domain/not-nested/relation-size/3.essence	< find x: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/3.essence	< find y: relation of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/3.essence	< such that
+domain/not-nested/relation-size/3.essence	<     |x| = 3,
+domain/not-nested/relation-size/3.essence	<     |y| <= 2
+domain/not-nested/relation-size/3.essence	---
+domain/not-nested/relation-size/3.essence	> find x: relation (size 3) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/relation-size/3.essence	> find y: relation (maxSize 2) of (int(0..9) * int(0..9) * int(0..9))
+domain/not-nested/set-maxSize/1.essence	3,4c3
+domain/not-nested/set-maxSize/1.essence	< find x: set of int(0..9)
+domain/not-nested/set-maxSize/1.essence	< such that |x| <= 3
+domain/not-nested/set-maxSize/1.essence	---
+domain/not-nested/set-maxSize/1.essence	> find x: set (maxSize 3) of int(0..9)
+domain/not-nested/set-maxSize/2.essence	3,4c3
+domain/not-nested/set-maxSize/2.essence	< find x: set of int(0..9)
+domain/not-nested/set-maxSize/2.essence	< such that sum([1 | i <- x]) <= 3
+domain/not-nested/set-maxSize/2.essence	---
+domain/not-nested/set-maxSize/2.essence	> find x: set (maxSize 3) of int(0..9)
+domain/not-nested/set-minSize-maxSize/1.essence	3,6c3
+domain/not-nested/set-minSize-maxSize/1.essence	< find x: set of int(0..9)
+domain/not-nested/set-minSize-maxSize/1.essence	< such that
+domain/not-nested/set-minSize-maxSize/1.essence	<     |x| >= 3,
+domain/not-nested/set-minSize-maxSize/1.essence	<     |x| <= 5
+domain/not-nested/set-minSize-maxSize/1.essence	---
+domain/not-nested/set-minSize-maxSize/1.essence	> find x: set (minSize 3, maxSize 5) of int(0..9)
+domain/not-nested/set-minSize-maxSize/2.essence	3,6c3
+domain/not-nested/set-minSize-maxSize/2.essence	< find x: set of int(0..9)
+domain/not-nested/set-minSize-maxSize/2.essence	< such that
+domain/not-nested/set-minSize-maxSize/2.essence	<     sum([1 | i <- x]) >= 3,
+domain/not-nested/set-minSize-maxSize/2.essence	<     sum([1 | i <- x]) <= 5
+domain/not-nested/set-minSize-maxSize/2.essence	---
+domain/not-nested/set-minSize-maxSize/2.essence	> find x: set (minSize 3, maxSize 5) of int(0..9)
+domain/not-nested/set-minSize/1.essence	3,4c3
+domain/not-nested/set-minSize/1.essence	< find x: set of int(0..9)
+domain/not-nested/set-minSize/1.essence	< such that |x| >= 3
+domain/not-nested/set-minSize/1.essence	---
+domain/not-nested/set-minSize/1.essence	> find x: set (minSize 3) of int(0..9)
+domain/not-nested/set-minSize/2.essence	3,4c3
+domain/not-nested/set-minSize/2.essence	< find x: set of int(0..9)
+domain/not-nested/set-minSize/2.essence	< such that sum([1 | i <- x]) >= 3
+domain/not-nested/set-minSize/2.essence	---
+domain/not-nested/set-minSize/2.essence	> find x: set (minSize 3) of int(0..9)
+domain/not-nested/set-size/1.essence	3,4c3
+domain/not-nested/set-size/1.essence	< find x: set of int(0..9)
+domain/not-nested/set-size/1.essence	< such that |x| = 3
+domain/not-nested/set-size/1.essence	---
+domain/not-nested/set-size/1.essence	> find x: set (size 3) of int(0..9)
+domain/not-nested/set-size/2.essence	3,4c3
+domain/not-nested/set-size/2.essence	< find x: set of int(0..9)
+domain/not-nested/set-size/2.essence	< such that sum([1 | i <- x]) = 3
+domain/not-nested/set-size/2.essence	---
+domain/not-nested/set-size/2.essence	> find x: set (size 3) of int(0..9)
+domain/not-nested/set-size/3.essence	3,7c3,4
+domain/not-nested/set-size/3.essence	< find x: set of int(0..9)
+domain/not-nested/set-size/3.essence	< find y: set of int(0..9)
+domain/not-nested/set-size/3.essence	< such that
+domain/not-nested/set-size/3.essence	<     |x| = 3,
+domain/not-nested/set-size/3.essence	<     |y| <= 4 - 2
+domain/not-nested/set-size/3.essence	---
+domain/not-nested/set-size/3.essence	> find x: set (size 3) of int(0..9)
+domain/not-nested/set-size/3.essence	> find y: set (maxSize 2) of int(0..9)
+type/mset-to-set/1.essence	3,4c3
+type/mset-to-set/1.essence	< find x: mset (maxSize 5) of int(0..9)
+type/mset-to-set/1.essence	< such that and([freq(x, i) <= 1 | i : int(0..9)])
+type/mset-to-set/1.essence	---
+type/mset-to-set/1.essence	> find x: set (maxSize 5) of int(0..9)
+type/mset-to-set/2.essence	3,6c3,4
+type/mset-to-set/2.essence	< find x: mset (maxSize 5) of int(0..9)
+type/mset-to-set/2.essence	< such that
+type/mset-to-set/2.essence	<     and([freq(x, i) <= 1 | i : int(0..9)]),
+type/mset-to-set/2.essence	<     freq(x, 2) = 0
+type/mset-to-set/2.essence	---
+type/mset-to-set/2.essence	> find x: set (maxSize 5) of int(0..9)
+type/mset-to-set/2.essence	> such that freq(toMSet(x), 2) = 0
+type/mset-to-set/3.essence	3,7c3,5
+type/mset-to-set/3.essence	< find x: mset (maxSize 5) of int(0..9)
+type/mset-to-set/3.essence	< find y: mset (maxSize 5) of int(0..9)
+type/mset-to-set/3.essence	< such that
+type/mset-to-set/3.essence	<     and([freq(x, i) <= 1 | i : int(0..9)]),
+type/mset-to-set/3.essence	<     x subsetEq y
+type/mset-to-set/3.essence	---
+type/mset-to-set/3.essence	> find x: set (maxSize 5) of int(0..9)
+type/mset-to-set/3.essence	> find y: mset (maxSize 5, maxOccur 5) of int(0..9)
+type/mset-to-set/3.essence	> such that toMSet(x) subsetEq y
+type/partial-bijective-to-inverse/1.essence	6,7c6,7
+type/partial-bijective-to-inverse/1.essence	< find f: function (bijective) int(1..n) --> int(1..k)
+type/partial-bijective-to-inverse/1.essence	< such that d <= sum([toInt(preImage(f, i) = {i}) | i : int(1..k)])
+type/partial-bijective-to-inverse/1.essence	---
+type/partial-bijective-to-inverse/1.essence	> find f: function (total, injective) int(1..k) --> int(1..n)
+type/partial-bijective-to-inverse/1.essence	> such that d <= sum([toInt(image(f, i) = i) | i : int(1..k)])
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	3,6c3,4
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	< find x: relation of (int(0..9) * int(10..20))
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	< such that
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	<     and([|x(i, _)| <= 1 | i : int(0..9)]),
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	<     |x| <= 5
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	---
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	> find x: relation (maxSize 5) of (int(0..9) * int(10..20))
+type/relation-to-function/partial-functional-on1-andMaxSize.essence	> such that and([|x(i, _)| <= 1 | i : int(0..9)])
+type/relation-to-function/total-functional-on1.essence	3,4c3
+type/relation-to-function/total-functional-on1.essence	< find x: relation of (int(0..9) * int(10..20))
+type/relation-to-function/total-functional-on1.essence	< such that and([|x(i, _)| = 1 | i : int(0..9)])
+type/relation-to-function/total-functional-on1.essence	---
+type/relation-to-function/total-functional-on1.essence	> find x: function (total) int(0..9) --> set (size 1) of int(10..20)

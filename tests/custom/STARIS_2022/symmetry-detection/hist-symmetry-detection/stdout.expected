@@ -1,40 +1,16 @@
-{"model":
-     {"children":
-          [{"children":
-                {"name": {"Name": "m"}, "type": "Letting",
-                 "value":
-                     {"Constant":
-                          {"ConstantAbstract":
-                               {"AbsLitMSet":
-                                    [{"ConstantInt": [{"TagInt": []}, 1]}, {"ConstantInt": [{"TagInt": []}, 3]},
-                                     {"ConstantInt": [{"TagInt": []}, 6]}, {"ConstantInt": [{"TagInt": []}, 3]},
-                                     {"ConstantInt": [{"TagInt": []}, 1]}]}}}},
-            "type": "Declaration"},
-           {"children":
-                {"domain":
-                     {"DomainMatrix":
-                          [{"DomainInt":
-                                [{"TagInt": []},
-                                 [{"RangeBounded":
-                                       [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
-                                        {"Constant": {"ConstantInt": [{"TagInt": []}, 3]}}]}]]},
-                           {"DomainTuple":
-                                [{"DomainInt":
-                                      [{"TagInt": []},
-                                       [{"RangeBounded":
-                                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
-                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}]]},
-                                 {"DomainInt":
-                                      [{"TagInt": []},
-                                       [{"RangeBounded":
-                                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 1]}},
-                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 6]}}]}]]}]}]},
-                 "forg": "Find", "name": {"Name": "s"}, "type": "FindOrGiven"},
-            "type": "Declaration"},
-           {"children":
-                [{"children":
-                      [{"Reference": {"Name": "s"}}, {"children": [{"Reference": {"Name": "m"}}], "type": "OpHist"}],
-                  "symmetricChildren": true, "type": "OpEq"}],
-            "symmetricChildren": true, "type": "SuchThat"}],
-      "symmetricChildren": true, "type": "Model"},
- "nodes_to_swap": ["m", "s"]}
+Generating models for hist-symmetry-detection.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: conjure-output/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying stats to: hist-symmetry-detection.stats.json
+Copying solution to: hist-symmetry-detection.solution
+language Essence 1.3
+
+letting s be [(1, 2), (3, 2), (6, 1); int(1..3)]
+$ Visualisation for s
+$ 1 2
+$ 3 2
+$ 6 1
+

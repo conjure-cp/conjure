@@ -1,0 +1,10 @@
+language Essence 1.3
+
+given numItems: int(1..)
+given itemSize: matrix indexed by [int(1..numItems)] of int(1..)
+given binCap: int(1..)
+letting maxBins be numItems
+find packing: partition from int(1..numItems)
+minimising |parts(packing)|
+such that and([sum([itemSize[item] | item <- bin]) <= binCap | bin <- parts(packing)])
+

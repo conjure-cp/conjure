@@ -1,0 +1,56 @@
+language Essence 1.3
+
+$ Social Golfers Problem — Formulation 10: Ternary Relation
+$
+$ Domain:  relation of (int(1..w) * int(1..g) * int(1..nGolfers))
+$           with |relation| = w * g * s
+$
+$ Information carried by the domain:
+$   - The total number of (week, group, golfer) assignments is w * g * s
+$     (via the size attribute)
+$   - Each tuple is unique (relation semantics — no duplicate triples)
+$
+$ Information NOT carried (must be constrained explicitly):
+$   - Each golfer is in exactly one group per week (assignment)
+$   - Each group has exactly s golfers per week (group size)
+$
+$ Explicit constraints needed:
+$   1. Assignment constraint: each golfer in exactly one group per week
+$   2. Group size constraint: each group has exactly s golfers per week
+$   3. Pairing constraint: no pair of golfers shares a group more than once
+$
+$ Compared to Formulation 9 (3D boolean matrix):
+$   - The relation is the set-based counterpart of the boolean matrix:
+$     (i, j, p) in sched  iff  boolMatrix[i, j, p] = true
+$   - The size constraint replaces the implicit "fully populated matrix"
+$     assumption, explicitly stating the total number of assignments.
+$   - This is the least structured formulation — all properties of the
+$     schedule must be stated as explicit constraints.
+
+given w, g, s : int(1..)
+
+letting nGolfers be g * s
+
+find sched : relation (size w * g * s) of (int(1..w) * int(1..g) * int(1..nGolfers))
+
+$ Assignment constraint: each golfer is in exactly one group per week
+such that
+    forAll i : int(1..w) .
+        forAll p : int(1..nGolfers) .
+            (sum j : int(1..g) . toInt((i, j, p) in sched)) = 1,
+
+$ Group size constraint: each group has exactly s golfers per week
+such that
+    forAll i : int(1..w) .
+        forAll j : int(1..g) .
+            (sum p : int(1..nGolfers) . toInt((i, j, p) in sched)) = s,
+
+$ Pairing constraint: no pair of golfers shares a group more than once
+such that
+    forAll p1 : int(1..nGolfers) .
+        forAll p2 : int(1..nGolfers) .
+            p1 < p2 ->
+            (sum i : int(1..w) .
+                sum j : int(1..g) .
+                    toInt((i, j, p1) in sched /\ (i, j, p2) in sched)
+            ) <= 1

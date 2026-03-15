@@ -1,0 +1,11 @@
+language Essence 1.3
+
+given g, s, w : int(1..)
+letting n be g * s
+
+find schedule : matrix indexed by [int(1..w)] of set (size g) of set (size s) of int(1..n)
+
+such that
+    forAll w1 : int(1..w) . forAll w2 : int(w1+1..w) .
+        forAll g1 in schedule[w1] . forAll g2 in schedule[w2] .
+            |g1 intersect g2| <= 1

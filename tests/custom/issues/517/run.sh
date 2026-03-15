@@ -1,3 +1,3 @@
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
 conjure solve --verbose-trail --rewrites-trail 517.essence 2>&1 | grep "Malformed JSON in a cached Essence Prime model."
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json

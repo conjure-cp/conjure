@@ -1,0 +1,14 @@
+language Essence 1.3
+
+given g, s, w : int(1..)
+letting n be g * s
+
+find schedule : matrix indexed by [int(1..w), int(1..n)] of int(1..g)
+
+such that
+    forAll week : int(1..w) .
+        forAll grp : int(1..g) .
+            (sum player : int(1..n) . toInt(schedule[week, player] = grp)) = s,
+    forAll w1 : int(1..w) . forAll w2 : int(w1+1..w) .
+        forAll p1, p2 : int(1..n) . p1 < p2 ->
+            !(schedule[w1, p1] = schedule[w1, p2] /\ schedule[w2, p1] = schedule[w2, p2])

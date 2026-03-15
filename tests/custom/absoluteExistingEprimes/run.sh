@@ -25,5 +25,5 @@ conjure solve test.essence --use-existing-models=some/other/dir/model000002.epri
 # echo ""
 # conjure solve test.essence --use-existing-models=${PWD}/some/other/dir/model000002.eprime -o conjure-output-2-2
 
-rm -rf conjure-output* some *.solution
+rm -rf conjure-output-* *.solution *.stats.json* some
 

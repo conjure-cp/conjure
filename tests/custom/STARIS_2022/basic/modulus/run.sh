@@ -1,2 +1,4 @@
+rm -rf conjure-output *.solution *.stats.json
 conjure solve *.essence --number-of-solutions=all
-rm -rf conjure-output
+cat *.solution
+rm -rf conjure-output *.solution *.stats.json

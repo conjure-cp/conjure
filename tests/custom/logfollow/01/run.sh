@@ -1,4 +1,4 @@
-rm -rf conjure-output*
+rm -rf conjure-output-* *.solution *.stats.json*
 
 # run it normally
 conjure -aai --smart-filenames model.essence --responses 1,1,3 -o conjure-output-1
@@ -11,4 +11,4 @@ diff conjure-output-1/*.eprime conjure-output-2/*.eprime
 conjure modelling model2.essence --follow-model conjure-output-1/model_1_1_3.eprime -o conjure-output-3 \
     --responses 4       # for the extra constraint
 
-rm -rf conjure-output*
+rm -rf conjure-output-* *.solution *.stats.json*

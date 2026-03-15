@@ -1,24 +1,15 @@
-{"model":
-     {"children":
-          [{"children":
-                {"domain":
-                     {"DomainSet":
-                          [[], {"SizeAttr_None": []},
-                           {"DomainSet":
-                                [[], {"SizeAttr_None": []},
-                                 {"DomainInt":
-                                      [{"TagInt": []},
-                                       [{"RangeBounded":
-                                             [{"Constant": {"ConstantInt": [{"TagInt": []}, 0]}},
-                                              {"Constant": {"ConstantInt": [{"TagInt": []}, 2]}}]}]]}]}]},
-                 "forg": "Find", "name": {"Name": "S"}, "type": "FindOrGiven"},
-            "type": "Declaration"},
-           {"children":
-                [{"children":
-                      [{"Reference": {"Name": "S"}},
-                       {"children": [{"ConstantAbstract": {"AbsLitSet": [{"ConstantInt": [{"TagInt": []}, 0]}]}}],
-                        "type": "OpPowerSet"}],
-                  "symmetricChildren": true, "type": "OpEq"}],
-            "symmetricChildren": true, "type": "SuchThat"}],
-      "symmetricChildren": true, "type": "Model"},
- "nodes_to_swap": ["S"]}
+Generating models for powerSet-symmetry-detection.essence
+Generated models: model000001.eprime
+Saved under: conjure-output
+Savile Row: conjure-output/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+Copying stats to: powerSet-symmetry-detection.stats.json
+Copying solution to: powerSet-symmetry-detection.solution
+language Essence 1.3
+
+letting S be {{}, {0}}
+$ Visualisation for S
+$ 
+$ 0
+

@@ -1,5 +1,5 @@
 
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
 
 conjure solve -ax --smart-filenames --channelling=no *.essence --validate-solutions --number-of-solutions=all
 
@@ -9,5 +9,5 @@ cat conjure-output/*.solution
 echo "----"
 cat conjure-output/*.solution | LC_ALL=C sort -u
 
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
 

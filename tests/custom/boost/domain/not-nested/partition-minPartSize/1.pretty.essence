@@ -1,0 +1,5 @@
+language Essence 1.3
+
+find x: partition from int(0..9)
+such that and([sum([1 | j <- i]) >= 3 | i <- parts(x)])
+

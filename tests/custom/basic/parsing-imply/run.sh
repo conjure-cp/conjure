@@ -8,4 +8,4 @@ for essence in *.essence; do
     cat conjure-output/model000001.solutions
 done
 
-rm -rf *.pretty *.solutions conjure-output
+rm -rf conjure-output *.solutions* *.stats.json *.pretty

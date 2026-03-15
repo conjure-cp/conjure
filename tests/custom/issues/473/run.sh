@@ -7,4 +7,4 @@ echo ""
 conjure solve regression.essence test.param
 cat regression*.solution
 
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json

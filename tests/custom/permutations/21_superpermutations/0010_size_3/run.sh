@@ -1,4 +1,4 @@
 #conjure solve *.essence *.param 
 #cat conjure-output/*.solution
-#rm -rf conjure-output *.solution
+#rm -rf conjure-output *.solution *.stats.json
 echo TODO: Speed up test

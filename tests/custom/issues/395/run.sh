@@ -1,4 +1,4 @@
-rm -rf conjure-output
+rm -rf conjure-output *.solution *.stats.json
 
 conjure modelling 1.essence ; cat conjure-output/model000001.eprime | grep -v "^[$]"
 conjure modelling 2.essence ; cat conjure-output/model000001.eprime | grep -v "^[$]"
@@ -8,4 +8,4 @@ conjure modelling 3.essence ; cat conjure-output/model000001.eprime | grep -v "^
 # conjure solve 2.essence m_is_3.param ; cat *.solution ; rm -f *.solution
 conjure solve 3.essence m_is_3.param ; cat *.solution ; rm -f *.solution
 
-rm -rf conjure-output *.solution
+rm -rf conjure-output *.solution *.stats.json
