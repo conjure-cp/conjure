@@ -3,11 +3,10 @@
 module Conjure.Rules.Vertical.MSet.Occurrence where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Definition
 
 
 rule_Comprehension :: Rule
-rule_Comprehension = "mset-comprehension{Occurrence}" `Rule` theRule where
+rule_Comprehension = "mset-comprehension{Occurrence}" `namedRuleZ` theRule where
     theRule z (Comprehension body gensOrConds) = do
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
@@ -19,22 +18,19 @@ rule_Comprehension = "mset-comprehension{Occurrence}" `Rule` theRule where
         let upd val old = lambdaToFunction pat old val
         theyDo <- doDuplicatesMatter z
         return
-            [ RuleResult
-                { ruleResultDescr = "Vertical rule for mset-comprehension, Occurrence representation"
-                , ruleResultType  = ExpressionRefinement
-                , ruleResultHook  = Nothing
-                , ruleResult      = do
-                    (jPat, j) <- quantifiedVar
-                    let val = j
-                    let outBody = upd val body
-                    return $ Comprehension (if theyDo then [essence| &outBody * &m[&j] |]
-                                                      else outBody)
-                            $  gocBefore
-                            ++ [ Generator (GenDomainNoRepr jPat index)
-                               , Condition [essence| &m[&j] > 0 |]
-                               ]
-                            ++ transformBi (upd val) gocAfter
-                } ]
+            ( "Vertical rule for mset-comprehension, Occurrence representation"
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = j
+                let outBody = upd val body
+                return $ Comprehension (if theyDo then [essence| &outBody * &m[&j] |]
+                                                    else outBody)
+                        $  gocBefore
+                        ++ [ Generator (GenDomainNoRepr jPat index)
+                            , Condition [essence| &m[&j] > 0 |]
+                            ]
+                        ++ transformBi (upd val) gocAfter
+            )
     theRule _ _ = na "rule_Comprehension"
 
 

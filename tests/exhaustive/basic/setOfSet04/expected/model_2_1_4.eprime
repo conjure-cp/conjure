@@ -43,14 +43,14 @@ such that
                       | q31 : int(1..3)])
                  | q26 : int(1..2)])
              | q24 : int(1..2)]),
-    flatten([flatten([[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, q39]); int(1)],
-                      [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[1, q39]; int(1)];
-                          int(1..2)])
+    flatten([[[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, q39]); int(1)],
+              [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[1, q39]; int(1)];
+                  int(1..2)]
                  | q39 : int(1..3)])
     <lex
-    flatten([flatten([[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, q40]); int(1)],
-                      [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[2, q40]; int(1)];
-                          int(1..2)])
+    flatten([[[-toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, q40]); int(1)],
+              [x_ExplicitR4_ExplicitVarSizeWithFlags_Values[2, q40]; int(1)];
+                  int(1..2)]
                  | q40 : int(1..3)]),
     and([and([x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[q33, q34 + 1] ->
               x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q33, q34] <
