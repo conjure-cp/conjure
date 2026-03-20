@@ -559,7 +559,18 @@ rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
 rule_ExpandSlices :: Rule
 rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
     theRule p = do
-        (m, is) <- match opMatrixIndexingSlicing p
+        let
+            flattenSlicingMultiD =
+                case match opFlatten p >>= match opMatrixIndexingSlicing of
+                    Just (m, is) -> return (m, is)
+                    _ -> Nothing
+            slicing1D =
+                case match opMatrixIndexingSlicing p of
+                    Just (m, is@[_]) -> return (m, is)
+                    _ -> Nothing
+        (m, is) <- case flattenSlicingMultiD <|> slicing1D of
+                    Just (m, is) -> return (m, is)
+                    _ -> na "rule_ExpandSlices"
         indexDoms <- indexDomainsOf m
         unless (length is == length indexDoms) $ na "rule_ExpandSlices"
         (is', gocs) <- unzip <$> sequence
