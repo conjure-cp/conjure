@@ -566,7 +566,7 @@ rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
                     _ -> Nothing
             slicing1D =
                 case match opMatrixIndexingSlicing p of
-                    Just (m, is@[_]) -> return (m, is)
+                    Just (m, is) -> return (m, is)
                     _ -> Nothing
         (m, is) <- case flattenSlicingMultiD <|> slicing1D of
                     Just (m, is) -> return (m, is)
