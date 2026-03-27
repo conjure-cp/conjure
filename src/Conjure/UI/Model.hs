@@ -2517,10 +2517,10 @@ rule_InlineConditions = "inline-conditions" `namedRuleZ` theRule where
     opAndSkip     b x = [essence| &b -> &x |]
     opOrSkip      b x = [essence| &b /\ &x |]
     opSumSkip     b x = [essence| toInt(&b) * catchUndef(&x, 0) |]
-    opProductSkip b x = [essence| [ 1
-                                  , catchUndef(&x,1)
-                                  ; int(0..1)
-                                  ] [toInt(&b)] |]
+    opProductSkip b x = [essence| elementId([ 1
+                                            , catchUndef(&x,1)
+                                            ; bool
+                                            ], &b) |]
 
 
 rule_InlineConditions_AllDiff :: Rule
@@ -3019,4 +3019,3 @@ rule_Flatten_Cardinality = "flatten-cardinality" `namedRule` theRule where
                    (iPat, i) <- quantifiedVar
                    return [essence| sum([ |&i| | &iPat <- &list ]) |]
                )
-

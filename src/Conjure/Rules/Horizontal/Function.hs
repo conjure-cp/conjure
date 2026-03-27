@@ -805,5 +805,3 @@ rule_DefinedOrRange_Difference = "function-DefinedOrRange-difference" `namedRule
                     ++ gocAfter
             )
     theRule _ = na "rule_DefinedOrRange_Difference"
-
-
