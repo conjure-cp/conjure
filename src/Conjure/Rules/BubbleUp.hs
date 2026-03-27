@@ -163,11 +163,10 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
             let ifDef = make opAnd (fromList cons)
             return
                 ( ""
-                , return [essence| elementId([ &ifUndefVal
-                                             , catchUndef(&body, &ifUndefVal)
-                                             ; bool
-                                             ], &ifDef)
-                         |]
+                , return [essence| [ catchUndef(&body, &ifUndefVal)
+                                   , &ifUndefVal
+                                   ; int(0..1)
+                                   ] [ toInt(!&ifDef) ]
                 )
 
     theRule (Comprehension (WithLocals body locals) gensOrConds)
