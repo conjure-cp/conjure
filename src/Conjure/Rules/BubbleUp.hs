@@ -167,6 +167,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                                    , &ifUndefVal
                                    ; int(0..1)
                                    ] [ toInt(!&ifDef) ]
+                         |]
                 )
 
     theRule (Comprehension (WithLocals body locals) gensOrConds)
