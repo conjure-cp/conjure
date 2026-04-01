@@ -86,8 +86,14 @@ jobs:
         run: brew install autoconf cmake gmp gperf
         if: runner.os == 'macOS'
 
-      - name: Build solvers
+      - name: Build solvers on Linux
         shell: bash
+        if: runner.os == 'Linux'
+        run: CC=gcc-10 CXX=g++-10 BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
+
+      - name: Build solvers on macOS
+        shell: bash
+        if: runner.os == 'macOS'
         run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
 
       - name: Set version string to the commit hash
