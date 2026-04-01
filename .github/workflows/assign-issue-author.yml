@@ -1,0 +1,58 @@
+name: Assign issue author
+
+on:
+  issues:
+    types:
+    - opened
+
+jobs:
+  assign-author:
+    name: Assign issue to author
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Create conjure-bot token
+      id: bot-token
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ secrets.CONJURE_BOT_ID }}
+        private-key: ${{ secrets.CONJURE_BOT_PRIVATE_KEY }}
+
+    - name: Assign issue to author
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ steps.bot-token.outputs.token }}
+        script: |
+          const issue = context.payload.issue;
+          const issueNumber = issue?.number;
+          const author = issue?.user?.login;
+          const existingAssignees = issue?.assignees ?? [];
+
+          if (!issueNumber || !author) {
+            core.info("No issue number or author found in event payload.");
+            return;
+          }
+
+          if (existingAssignees.length > 0) {
+            core.info("Issue already has an assignee; skipping assignment and comment.");
+            return;
+          }
+
+          await github.rest.issues.addAssignees({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            assignees: [author],
+          });
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: [
+              `Automatically assigned this issue to @${author}.`,
+              "",
+              "If it makes more sense for someone else to own it, feel free to reassign it."
+            ].join("\n"),
+          });
