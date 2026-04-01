@@ -126,12 +126,12 @@ jobs:
 
           popd
 
-      - name: Create allsolver test zip
+      - name: Create allsolvers test zip
         shell: bash
         if: runner.os == 'Linux'
         run: |
           pushd ${GITHUB_WORKSPACE}/tests/allsolvers
-          zip -r -9 ${GITHUB_WORKSPACE}/conjure-allsolver-test-${RELEASE_VERSION}.zip .
+          zip -r -9 ${GITHUB_WORKSPACE}/conjure-allsolvers-test-${RELEASE_VERSION}.zip .
           popd
 
       - name: Upload zip archives as build artefacts (conjure only)
@@ -150,13 +150,13 @@ jobs:
           path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
           if-no-files-found: error
 
-      - name: Upload zip archive as build artefact (allsolver tests)
+      - name: Upload zip archive as build artefact (allsolvers tests)
         uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: conjure-allsolver-test-${{ env.RELEASE_VERSION }}
+          name: conjure-allsolvers-test-${{ env.RELEASE_VERSION }}
           compression-level: 9
-          path: ${{ github.workspace }}/conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
+          path: ${{ github.workspace }}/conjure-allsolvers-test-${{ env.RELEASE_VERSION }}.zip
           if-no-files-found: error
 
       - name: Create Release
@@ -173,11 +173,11 @@ jobs:
             conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
             conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
 
-      - name: Upload allsolver test zip to release
+      - name: Upload allsolvers test zip to release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') && runner.os == 'Linux'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
+            conjure-allsolvers-test-${{ env.RELEASE_VERSION }}.zip
