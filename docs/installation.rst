@@ -79,10 +79,10 @@ You can also verify that the installed solvers are all operational:
 .. code-block:: bash
 
     # download a small bundle of files, we will use this to test the installation
-    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolver-test-v2.6.0.zip
+    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolvers-test-v2.6.0.zip
 
     # run the test
-    unzip conjure-allsolver-test-v2.6.0.zip && bash test.sh
+    unzip conjure-allsolvers-test-v2.6.0.zip && bash test.sh
 
 ``test.sh`` should produce a bunch of output and include "Pass!" as the last line.
 
@@ -274,7 +274,7 @@ Apptainer does not use Docker/Podman credential stores and does not provide a
 Testing your installation
 -------------------------
 
-Each release ships a solver smoke-test bundle called ``conjure-allsolver-test-v2.6.0.zip``.
+Each release ships a solver smoke-test bundle called ``conjure-allsolvers-test-v2.6.0.zip``.
 
 If you installed one of the wrappers above, ``conjure`` is already on your ``PATH`` and you can run the tests directly:
 
