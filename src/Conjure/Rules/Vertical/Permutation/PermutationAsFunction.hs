@@ -74,10 +74,11 @@ rule_Image = "permutation-image{AsFunction}" `namedRule` theRule
           if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI]
             then do
               [f, _] <- downX1 p
+              [values] <- downX1 f
               return
                 ( "Vertical rule for permutation application to a single value",
                   do
-                    return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
+                    return [essence| elementId(&values, &i) |]
                 )
             else
               if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
@@ -101,10 +102,11 @@ rule_Image_permInverse = "permutation-image-permInverse{AsFunction}" `namedRule`
           if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI]
             then do
               [_, f] <- downX1 p
+              [values] <- downX1 f
               return
                 ( "Vertical rule for permutation application to a single value",
                   do
-                    return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
+                    return [essence| elementId(&values, &i) |]
                 )
             else
               if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner

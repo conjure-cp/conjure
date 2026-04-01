@@ -8,12 +8,10 @@ branching on
     [i, p_PermutationAsFunction_PermutationFunction_forwards_Function1D,
      p_PermutationAsFunction_PermutationFunction_backwards_Function1D, j]
 such that
-    j =
-    [i, catchUndef(p_PermutationAsFunction_PermutationFunction_forwards_Function1D[i], 0); int(1..2)]
-        [toInt(or([q9 = i | q9 : int(1..5)])) + 1],
-    sum([toInt(q16 != p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q16]) *
-         catchUndef(toInt(q16 != p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q16]), 0)
-             | q16 : int(1..5)])
+    j = elementId(p_PermutationAsFunction_PermutationFunction_forwards_Function1D, i),
+    sum([toInt(q14 != p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q14]) *
+         catchUndef(toInt(q14 != p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q14]), 0)
+             | q14 : int(1..5)])
     = 3,
     allDiff(p_PermutationAsFunction_PermutationFunction_forwards_Function1D),
     and([or([p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q3] = q2 | q3 : int(1..5)])
