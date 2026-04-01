@@ -3019,4 +3019,3 @@ rule_Flatten_Cardinality = "flatten-cardinality" `namedRule` theRule where
                    (iPat, i) <- quantifiedVar
                    return [essence| sum([ |&i| | &iPat <- &list ]) |]
                )
-
