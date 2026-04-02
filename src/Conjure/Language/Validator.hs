@@ -743,7 +743,8 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
   where
 
     validateRangedInt :: Maybe (LToken, ETok) -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
-    validateRangedInt maybe_tag' (Just (ListNode _ (Seq [SeqElem a _]) _)) = do
+    validateRangedInt maybe_tag' (Just ranges@(ListNode _ (Seq [SeqElem a _]) _)) = do
+      void $ listToSeq ranges
       let maybe_tag = case maybe_tag' of Nothing -> Nothing ; Just (_, t) -> Just t
       d <- case a of
         SingleRangeNode en -> do
@@ -2911,20 +2912,20 @@ binOpType l = case l of
       TypeInt TagInt -> return t
       TypeInt TagEnum {} -> return t
       TypeAny -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number or Enum" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "number or enum" t)
     minusArgs t = case t of
       TypeInt TagInt -> return t
       TypeSet _ -> return t
       TypeMSet _ -> return t
       TypeRelation _ -> return t
       TypeFunction _ _ -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number / set/ mset / relation / function" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "number, set, mset, relation or function" t)
     orderable t = case t of
       TypeInt TagInt -> return t
       TypeInt TagEnum {} -> return t
       TypeBool -> return t
       TypeAny -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number, Enum or Bool" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "number, enum or Boolean" t)
     justSequence t = case t of
       TypeAny -> return t
       TypeSequence _ -> return t
@@ -2939,4 +2940,4 @@ binOpType l = case l of
       TypeSet _ -> return t
       TypeFunction _ _ -> return t
       TypeRelation _ -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Set MSet funcition or relation" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "set, mset, function or relation" t)
