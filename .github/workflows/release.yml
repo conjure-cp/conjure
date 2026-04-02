@@ -89,7 +89,15 @@ jobs:
       - name: Build solvers on Linux
         shell: bash
         if: runner.os == 'Linux'
-        run: CC=gcc-10 CXX=g++-10 BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
+        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
+
+      - name: Add Linux C++ runtime libraries to the release bundle
+        shell: bash
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/artefacts/lib"
+          cp -L "$(g++ -print-file-name=libstdc++.so.6)" "${GITHUB_WORKSPACE}/artefacts/lib/libstdc++.so.6"
+          cp -L "$(gcc -print-file-name=libgcc_s.so.1)" "${GITHUB_WORKSPACE}/artefacts/lib/libgcc_s.so.1"
 
       - name: Build solvers on macOS
         shell: bash
