@@ -1,0 +1,59 @@
+name: Assign PR author
+
+on:
+  pull_request_target:
+    types:
+    - opened
+
+jobs:
+  assign-author:
+    name: Assign PR to author
+    if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Create conjure-bot token
+      id: bot-token
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ secrets.CONJURE_BOT_ID }}
+        private-key: ${{ secrets.CONJURE_BOT_PRIVATE_KEY }}
+
+    - name: Assign PR to author
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ steps.bot-token.outputs.token }}
+        script: |
+          const pullRequest = context.payload.pull_request;
+          const prNumber = pullRequest?.number;
+          const author = pullRequest?.user?.login;
+          const existingAssignees = pullRequest?.assignees ?? [];
+
+          if (!prNumber || !author) {
+            core.info("No pull request number or author found in event payload.");
+            return;
+          }
+
+          if (existingAssignees.length > 0) {
+            core.info("Pull request already has an assignee; skipping assignment and comment.");
+            return;
+          }
+
+          await github.rest.issues.addAssignees({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            assignees: [author],
+          });
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            body: [
+              `Automatically assigned this pull request to @${author}.`,
+              "",
+              "If it makes more sense for someone else to own it, feel free to reassign it."
+            ].join("\n"),
+          });
