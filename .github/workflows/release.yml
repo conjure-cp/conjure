@@ -28,9 +28,9 @@ jobs:
       fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
         GHC_VERSION: ["9.10"]
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-22.04, macos-latest]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             release_suffix: linux
           - os: macos-latest
             release_suffix: macos
@@ -86,8 +86,22 @@ jobs:
         run: brew install autoconf cmake gmp gperf
         if: runner.os == 'macOS'
 
-      - name: Build solvers
+      - name: Build solvers on Linux
         shell: bash
+        if: runner.os == 'Linux'
+        run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
+
+      - name: Add Linux C++ runtime libraries to the release bundle
+        shell: bash
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/artefacts/lib"
+          cp -L "$(g++ -print-file-name=libstdc++.so.6)" "${GITHUB_WORKSPACE}/artefacts/lib/libstdc++.so.6"
+          cp -L "$(gcc -print-file-name=libgcc_s.so.1)" "${GITHUB_WORKSPACE}/artefacts/lib/libgcc_s.so.1"
+
+      - name: Build solvers on macOS
+        shell: bash
+        if: runner.os == 'macOS'
         run: BIN_DIR=${GITHUB_WORKSPACE}/artefacts PROCESSES=2 make solvers
 
       - name: Set version string to the commit hash
@@ -109,7 +123,9 @@ jobs:
           find artefacts -type f
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
-          cp -r artefacts conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
+          bash etc/build/package-release-with-solvers.sh \
+            artefacts \
+            conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}-with-solvers
 
           rm -rf conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
           mkdir conjure-${RELEASE_VERSION}-${{ matrix.release_suffix }}
@@ -124,12 +140,12 @@ jobs:
 
           popd
 
-      - name: Create allsolver test zip
+      - name: Create allsolvers test zip
         shell: bash
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: |
           pushd ${GITHUB_WORKSPACE}/tests/allsolvers
-          zip -r -9 ${GITHUB_WORKSPACE}/conjure-allsolver-test-${RELEASE_VERSION}.zip .
+          zip -r -9 ${GITHUB_WORKSPACE}/conjure-allsolvers-test-${RELEASE_VERSION}.zip .
           popd
 
       - name: Upload zip archives as build artefacts (conjure only)
@@ -148,13 +164,13 @@ jobs:
           path: ${{ github.workspace }}/conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
           if-no-files-found: error
 
-      - name: Upload zip archive as build artefact (allsolver tests)
+      - name: Upload zip archive as build artefact (allsolvers tests)
         uses: actions/upload-artifact@v7
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         with:
-          name: conjure-allsolver-test-${{ env.RELEASE_VERSION }}
+          name: conjure-allsolvers-test-${{ env.RELEASE_VERSION }}
           compression-level: 9
-          path: ${{ github.workspace }}/conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
+          path: ${{ github.workspace }}/conjure-allsolvers-test-${{ env.RELEASE_VERSION }}.zip
           if-no-files-found: error
 
       - name: Create Release
@@ -171,11 +187,11 @@ jobs:
             conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}.zip
             conjure-${{ env.RELEASE_VERSION }}-${{ matrix.release_suffix }}-with-solvers.zip
 
-      - name: Upload allsolver test zip to release
+      - name: Upload allsolvers test zip to release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
+        if: startsWith(github.ref, 'refs/tags/') && runner.os == 'Linux'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            conjure-allsolver-test-${{ env.RELEASE_VERSION }}.zip
+            conjure-allsolvers-test-${{ env.RELEASE_VERSION }}.zip

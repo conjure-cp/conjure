@@ -79,10 +79,10 @@ You can also verify that the installed solvers are all operational:
 .. code-block:: bash
 
     # download a small bundle of files, we will use this to test the installation
-    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolver-test-v2.6.0.zip
+    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolvers-test-v2.6.0.zip
 
     # run the test
-    unzip conjure-allsolver-test-v2.6.0.zip && bash test.sh
+    unzip conjure-allsolvers-test-v2.6.0.zip && bash test.sh
 
 ``test.sh`` should produce a bunch of output and include "Pass!" as the last line.
 
@@ -91,36 +91,36 @@ Note that this quick start guide is not a replacement for the complete installat
 Downloading a binary
 --------------------
 
-Conjure is available as an executable binary for Linux and macOS.
-If it is available for your platform, you can just `download it <https://www.github.com/conjure-cp/conjure/releases/latest>`_ and run it.
+Conjure releases for Linux and macOS ship as zip archives.
+For most users, the recommended download is the ``*-with-solvers.zip`` archive, which contains Conjure, Savile Row, and the bundled open-source solvers.
+The smaller archive without ``-with-solvers`` only contains the ``conjure`` executable, so you will need to install Savile Row and any solver binaries separately.
 
-It may be useful to save the binary under a directory that is in your ``PATH``, so you do not have to type the full path to the Conjure executable.
+If it is available for your platform, you can `download the latest release <https://www.github.com/conjure-cp/conjure/releases/latest>`_, extract the archive, and add the extracted directory to your ``PATH``.
 
-Assuming you extract the zip archive to ``~/work/conjure``:
-
-.. code-block:: bash
-
-    export PATH=~/work/conjure:$PATH
-    export LD_LIBRARY_PATH=~/work/conjure/lib:$LD_LIBRARY_PATH
-    export MZN_STDLIB_DIR=~/work/conjure/share/minizinc/
-
-For macOS, remove the quarantine attribute from all files and directories inside the downloaded directory:
+Assuming you extract ``conjure-v2.6.0-linux-with-solvers.zip`` to ``~/work``:
 
 .. code-block:: bash
 
-    xattr -dr com.apple.quarantine .
+    export PATH="$HOME/work/conjure-v2.6.0-linux-with-solvers:$PATH"
 
-You will also need Java for Savile Row. On macOS, we recommend Homebrew and Amazon Corretto:
+The top-level commands in the extracted ``*-with-solvers`` directory are wrappers that keep solver lookup, shared-library search paths, and the MiniZinc standard library rooted inside the extracted bundle.
+When you run those top-level commands directly from the extracted bundle, you do not need to set ``LD_LIBRARY_PATH``, ``DYLD_LIBRARY_PATH``, or ``MZN_STDLIB_DIR`` yourself.
+If you copy individual binaries out of the bundle or bypass the top-level wrappers, that no longer applies.
+
+For macOS, remove the quarantine attribute from the extracted directory before running the bundled tools:
+
+.. code-block:: bash
+
+    xattr -dr com.apple.quarantine "$HOME/work/conjure-v2.6.0-macos-with-solvers"
+
+You will also need a Java runtime for Savile Row.
+On macOS, we recommend Homebrew and Amazon Corretto:
 
 .. code-block:: bash
 
     brew install --cask corretto
 
-On recent Macs, you *might* need to allow Intel-based applications to run:
-
-.. code-block:: bash
-
-    /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+On Linux, install a recent Java runtime using your distribution's package manager.
 
 
 For Windows, please use the Linux binaries with the
@@ -133,8 +133,7 @@ To install into WSL2:
     cd
     wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-v2.6.0-linux-with-solvers.zip
     unzip conjure-v2.6.0-linux-with-solvers.zip
-    echo 'export PATH="$HOME/conjure-v2.6.0-linux-with-solvers:$PATH"' >> ~/.zshrc
-    echo 'export LD_LIBRARY_PATH="$HOME/conjure-v2.6.0-linux-with-solvers/lib:$LD_LIBRARY_PATH"' >> ~/.zshrc
+    echo 'export PATH="$HOME/conjure-v2.6.0-linux-with-solvers:$PATH"' >> ~/.bashrc
 
 Then restart your shell.
 
@@ -274,7 +273,7 @@ Apptainer does not use Docker/Podman credential stores and does not provide a
 Testing your installation
 -------------------------
 
-Each release ships a solver smoke-test bundle called ``conjure-allsolver-test-v2.6.0.zip``.
+Each release ships a solver smoke-test bundle called ``conjure-allsolvers-test-v2.6.0.zip``.
 
 If you installed one of the wrappers above, ``conjure`` is already on your ``PATH`` and you can run the tests directly:
 
@@ -336,9 +335,6 @@ We assume you are on a Linux system here, though steps for macOS are very simila
 - ``podman images`` should now list ``localhost/conjure-cplex`` as well as a bunch of other images.
 
 - You can replace podman with docker in the last 2 commands to use docker instead.
-
-
-
 
 
 
