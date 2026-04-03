@@ -2628,11 +2628,11 @@ functionOps l = case l of
         TypeMatrix _ t -> return t
         TypeSet t -> return t
         TypeMSet t -> return t
-        _ -> TypeAny <$ raiseTypeError (r <!> ComplexTypeError "Matrix or Set" t')
+        _ -> TypeAny <$ raiseTypeError (r <!> ComplexTypeError "matrix or set" t')
       case t of
         TypeAny -> return $ pure ()
         TypeInt TagInt -> return $ pure ()
-        _ -> Nothing <$ raiseTypeError (r <!> ComplexTypeError "Integer elements" t)
+        _ -> Nothing <$ raiseTypeError (r <!> ComplexTypeError "integer elements" t)
 
     funcSeq :: SArg -> Validator ()
     funcSeq (r, typeOf_ -> t') = case t' of
@@ -2669,7 +2669,7 @@ functionOps l = case l of
       TypeList _ -> return $ pure ()
       TypeMatrix _ _ -> return $ pure ()
       TypeAny -> return $ pure ()
-      _ -> invalid $ r <!> ComplexTypeError "Matrix, List or MSet" a
+      _ -> invalid $ r <!> ComplexTypeError "matrix, list or mset" a
 
     histType :: Maybe Type -> Maybe Type
     histType (Just ((TypeMSet a))) = Just $ TypeMatrix tInt $ TypeTuple [a, tInt]
@@ -2684,7 +2684,7 @@ functionOps l = case l of
       TypeInt _ -> return $ pure ()
       TypeEnum {} -> return $ pure ()
       TypeBool -> return $ pure ()
-      _ -> invalid $ r <!> ComplexTypeError "int enum or bool" t
+      _ -> invalid $ r <!> ComplexTypeError "int, enum or bool" t
 
     enumerableType :: Maybe Type -> Maybe Type
     enumerableType (Just t@(TypeInt TagInt)) = Just t
@@ -2722,7 +2722,7 @@ isLogicalContainer (r, Typed t _) = case t of
   TypeMatrix _ TypeBool -> return $ pure ()
   TypeSet TypeAny -> return $ pure ()
   TypeMSet TypeBool -> return $ pure ()
-  _ -> invalid $ r <!> ComplexTypeError "Collection of boolean" t
+  _ -> invalid $ r <!> ComplexTypeError "Collection of Booleans" t
 
 -- validateArgList :: [RegionTagged (Typed Expression) -> ValidatorS Bool] -> [RegionTagged (Typed Expression)] -> Validator [Typed Expression]
 -- validateArgList ps args | length args < length ps = do invalid $ args <!> MissingArgsError (length ps)
@@ -2904,7 +2904,7 @@ binOpType l = case l of
       rt <- getValueType kr
       case innerTypeOf rt of
         Just t -> unifyTypes t (r1, Typed lt ())
-        Nothing -> unless (rt == TypeAny) $ raiseTypeError (r2 <!> ComplexTypeError (T.pack . show $ "Container of " <+> pretty lt) rt)
+        Nothing -> unless (rt == TypeAny) $ raiseTypeError (r2 <!> ComplexTypeError (T.pack . show $ "container of" <+> pretty lt) rt)
       return TypeBool
 
     number :: Type -> ValidatorS Type
