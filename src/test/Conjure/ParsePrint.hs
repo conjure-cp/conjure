@@ -80,9 +80,13 @@ testSingleDir TestDirFiles{..} = testCaseSteps (map (\ch -> if ch == '/' then '.
         Left "" -> do
             removeFileIfExists (tBaseDir </> "stderr")
             removeFileIfExists (tBaseDir </> "stdout")
+            removeFileIfExists (tBaseDir </> "model.json")
+            removeFileIfExists (tBaseDir </> "typecheck")
         Left err -> do
             writeFile (tBaseDir </> "stderr") (renderNormal err)
             removeFileIfExists (tBaseDir </> "stdout")
+            removeFileIfExists (tBaseDir </> "model.json")
+            removeFileIfExists (tBaseDir </> "typecheck")
         Right model -> do
             writeModel 120 ASTJSON (Just (tBaseDir </> "model.json")) model
             writeModel 120 Plain (Just (tBaseDir </> "stdout")) model
