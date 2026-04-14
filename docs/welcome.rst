@@ -16,3 +16,7 @@ In this documentation, you will find the following.
 * a description of Conjure's input language Essence, and
 * a collection of simple demonstrations of Conjure's use.
 
+Zulip
+-----
+
+We have recently enabled Zulip for Conjure/Essence users, developers and learners. If you are interested in joining, you can use [this link](https://conjure.zulipchat.com/join/twl2qs42agcbggc5nr5jbn4i/) to find us!
