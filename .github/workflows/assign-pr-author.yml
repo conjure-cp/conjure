@@ -21,7 +21,7 @@ jobs:
         private-key: ${{ secrets.CONJURE_BOT_PRIVATE_KEY }}
 
     - name: Assign PR to author
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         github-token: ${{ steps.bot-token.outputs.token }}
         script: |
