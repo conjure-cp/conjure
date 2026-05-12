@@ -44,7 +44,7 @@ jobs:
           restore-keys: stack-${{ runner.os }}-ghc${{ matrix.GHC_VERSION }}
 
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.10
 
       - name: Configure compiler wrappers for sccache
         uses: ./.github/actions/setup-sccache
