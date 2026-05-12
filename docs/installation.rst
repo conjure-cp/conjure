@@ -21,6 +21,8 @@ If you have Docker, Podman, or Apptainer working locally, the simplest way to us
 
 The examples below install the wrapper in ``~/.local/bin``. **Make sure this directory is on your ``PATH``**.
 
+In the Docker and Podman commands below, the directory named by the ``TMPDIR`` environment variable is mounted to ``/tmp`` in the container, so Conjure writes temporaries on the host where you expect. Invoke Docker or Podman from a shell where ``TMPDIR`` is set and non-empty (many environments do this for you; if not, export a suitable directory first).
+
 Docker
 ^^^^^^
 
@@ -30,7 +32,7 @@ Docker
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -v "/tmp:/tmp" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
+    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -v "$TMPDIR:/tmp" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -44,7 +46,7 @@ Podman
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    printf '#!/bin/sh\npodman run --rm -v "$PWD:/work:z" -v "/tmp:/tmp" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
+    printf '#!/bin/sh\npodman run --rm -v "$PWD:/work:z" -v "$TMPDIR:/tmp:z" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -224,6 +226,7 @@ Docker:
 
     docker run --rm \
       -v "$PWD:/work" \
+      -v "$TMPDIR:/tmp" \
       -w /work \
       ghcr.io/conjure-cp/conjure:v2.6.0 \
       conjure solve test.essence sample.param
@@ -234,11 +237,13 @@ Podman:
 
     podman run --rm \
       -v "$PWD:/work:z" \
+      -v "$TMPDIR:/tmp:z" \
       -w /work \
       ghcr.io/conjure-cp/conjure:v2.6.0 \
       conjure solve test.essence sample.param
 
-Note that ``:z`` above is for handling SELinux. A side-effect of this is that you will not be able to run conjure this command inside your home directory. If you try to do so, you will get the following error message: "Error: SELinux relabeling of <your home directory> is not allowed".
+
+Note that ``:z`` above is for handling SELinux. A side-effect of this is that you will not be able to run this Podman command inside your home directory. If you try to do so, you will get the following error message: "Error: SELinux relabeling of <your home directory> is not allowed".
 
 Apptainer usage
 ^^^^^^^^^^^^^^^
@@ -247,6 +252,8 @@ Apptainer usage
 
     apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
       conjure solve test.essence sample.param
+
+You normally do not need the Docker/Podman ``-v "$TMPDIR:/tmp"`` bind with Apptainer: in the default configuration it already bind-mounts the host ``/tmp`` into the container, so ``/tmp`` inside the container is the host ``/tmp``.
 
 Version pinning
 ^^^^^^^^^^^^^^^
@@ -290,6 +297,7 @@ Container-only execution (no wrapper):
 
     docker run --rm \
       -v "$PWD:/work" \
+      -v "$TMPDIR:/tmp" \
       -w /work \
       ghcr.io/conjure-cp/conjure:v2.6.0 \
       bash test.sh
@@ -298,6 +306,7 @@ Container-only execution (no wrapper):
 
     podman run --rm \
       -v "$PWD:/work:z" \
+      -v "$TMPDIR:/tmp:z" \
       -w /work \
       ghcr.io/conjure-cp/conjure:v2.6.0 \
       bash test.sh
@@ -336,7 +345,6 @@ We assume you are on a Linux system here, though steps for macOS are very simila
 - ``podman images`` should now list ``localhost/conjure-cplex`` as well as a bunch of other images.
 
 - You can replace podman with docker in the last 2 commands to use docker instead.
-
 
 
 
