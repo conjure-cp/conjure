@@ -4,7 +4,7 @@ Error:
 6 | such that b = forAll i in a . i=i*i
   |                                 ^
 Type error:
-	Expected: "Number or Enum"
+	Expected: number or enum
 	Got: matrix indexed by [int] of int
 
 matrix-forAll.essence:6:35:
@@ -12,6 +12,6 @@ matrix-forAll.essence:6:35:
 6 | such that b = forAll i in a . i=i*i
   |                                   ^
 Type error:
-	Expected: "Number or Enum"
+	Expected: number or enum
 	Got: matrix indexed by [int] of int
 

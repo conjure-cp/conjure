@@ -743,7 +743,8 @@ validateDomain dm = setCategoryLimit (CatParameter, "Domain") $ case dm of
   where
 
     validateRangedInt :: Maybe (LToken, ETok) -> Maybe (ListNode RangeNode) -> ValidatorS TypedDomain
-    validateRangedInt maybe_tag' (Just (ListNode _ (Seq [SeqElem a _]) _)) = do
+    validateRangedInt maybe_tag' (Just ranges@(ListNode _ (Seq [SeqElem a _]) _)) = do
+      void $ listToSeq ranges
       let maybe_tag = case maybe_tag' of Nothing -> Nothing ; Just (_, t) -> Just t
       d <- case a of
         SingleRangeNode en -> do
@@ -2627,11 +2628,11 @@ functionOps l = case l of
         TypeMatrix _ t -> return t
         TypeSet t -> return t
         TypeMSet t -> return t
-        _ -> TypeAny <$ raiseTypeError (r <!> ComplexTypeError "Matrix or Set" t')
+        _ -> TypeAny <$ raiseTypeError (r <!> ComplexTypeError "matrix or set" t')
       case t of
         TypeAny -> return $ pure ()
         TypeInt TagInt -> return $ pure ()
-        _ -> Nothing <$ raiseTypeError (r <!> ComplexTypeError "Integer elements" t)
+        _ -> Nothing <$ raiseTypeError (r <!> ComplexTypeError "integer elements" t)
 
     funcSeq :: SArg -> Validator ()
     funcSeq (r, typeOf_ -> t') = case t' of
@@ -2668,7 +2669,7 @@ functionOps l = case l of
       TypeList _ -> return $ pure ()
       TypeMatrix _ _ -> return $ pure ()
       TypeAny -> return $ pure ()
-      _ -> invalid $ r <!> ComplexTypeError "Matrix, List or MSet" a
+      _ -> invalid $ r <!> ComplexTypeError "matrix, list or mset" a
 
     histType :: Maybe Type -> Maybe Type
     histType (Just ((TypeMSet a))) = Just $ TypeMatrix tInt $ TypeTuple [a, tInt]
@@ -2683,7 +2684,7 @@ functionOps l = case l of
       TypeInt _ -> return $ pure ()
       TypeEnum {} -> return $ pure ()
       TypeBool -> return $ pure ()
-      _ -> invalid $ r <!> ComplexTypeError "int enum or bool" t
+      _ -> invalid $ r <!> ComplexTypeError "int, enum or bool" t
 
     enumerableType :: Maybe Type -> Maybe Type
     enumerableType (Just t@(TypeInt TagInt)) = Just t
@@ -2721,7 +2722,7 @@ isLogicalContainer (r, Typed t _) = case t of
   TypeMatrix _ TypeBool -> return $ pure ()
   TypeSet TypeAny -> return $ pure ()
   TypeMSet TypeBool -> return $ pure ()
-  _ -> invalid $ r <!> ComplexTypeError "Collection of boolean" t
+  _ -> invalid $ r <!> ComplexTypeError "Collection of Booleans" t
 
 -- validateArgList :: [RegionTagged (Typed Expression) -> ValidatorS Bool] -> [RegionTagged (Typed Expression)] -> Validator [Typed Expression]
 -- validateArgList ps args | length args < length ps = do invalid $ args <!> MissingArgsError (length ps)
@@ -2903,7 +2904,7 @@ binOpType l = case l of
       rt <- getValueType kr
       case innerTypeOf rt of
         Just t -> unifyTypes t (r1, Typed lt ())
-        Nothing -> unless (rt == TypeAny) $ raiseTypeError (r2 <!> ComplexTypeError (T.pack . show $ "Container of " <+> pretty lt) rt)
+        Nothing -> unless (rt == TypeAny) $ raiseTypeError (r2 <!> ComplexTypeError (T.pack . show $ "container of" <+> pretty lt) rt)
       return TypeBool
 
     number :: Type -> ValidatorS Type
@@ -2911,20 +2912,20 @@ binOpType l = case l of
       TypeInt TagInt -> return t
       TypeInt TagEnum {} -> return t
       TypeAny -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number or Enum" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "number or enum" t)
     minusArgs t = case t of
       TypeInt TagInt -> return t
       TypeSet _ -> return t
       TypeMSet _ -> return t
       TypeRelation _ -> return t
       TypeFunction _ _ -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number / set/ mset / relation / function" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "number, set, mset, relation or function" t)
     orderable t = case t of
       TypeInt TagInt -> return t
       TypeInt TagEnum {} -> return t
       TypeBool -> return t
       TypeAny -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Number, Enum or Bool" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "number, enum or Boolean" t)
     justSequence t = case t of
       TypeAny -> return t
       TypeSequence _ -> return t
@@ -2939,4 +2940,4 @@ binOpType l = case l of
       TypeSet _ -> return t
       TypeFunction _ _ -> return t
       TypeRelation _ -> return t
-      _ -> TypeAny <$ contextTypeError (ComplexTypeError "Set MSet funcition or relation" t)
+      _ -> TypeAny <$ contextTypeError (ComplexTypeError "set, mset, function or relation" t)

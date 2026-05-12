@@ -4,7 +4,7 @@ Error:
 14 |           partition({true, true, true, false, false}, {true}, {false}, {true, false},
    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected: "Number / set/ mset / relation / function"
+	Expected: number, set, mset, relation or function
 	Got: partition from bool
 
 tests/parse_print/autogen/613~1436580506_52/spec.essence:17:11:
@@ -12,5 +12,5 @@ tests/parse_print/autogen/613~1436580506_52/spec.essence:17:11:
 17 |           partition({true, false, false, true, true}, {false, true, true},
    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected: "Number / set/ mset / relation / function"
+	Expected: number, set, mset, relation or function
 	Got: partition from bool

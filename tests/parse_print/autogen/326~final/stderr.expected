@@ -4,7 +4,7 @@ Error:
 6 |              partition({[true; int(1..1)]}) - partition({[false; int(1..1)]}))
   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected: "Number / set/ mset / relation / function"
+	Expected: number, set, mset, relation or function
 	Got: partition from matrix indexed by [int] of bool
 
 tests/parse_print/autogen/326~final/spec.essence:6:47:
@@ -12,5 +12,5 @@ tests/parse_print/autogen/326~final/spec.essence:6:47:
 6 |              partition({[true; int(1..1)]}) - partition({[false; int(1..1)]}))
   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Type error:
-	Expected: "Number / set/ mset / relation / function"
+	Expected: number, set, mset, relation or function
 	Got: partition from matrix indexed by [int] of bool

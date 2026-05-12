@@ -4,7 +4,7 @@ Error:
 4 | such that apart({3}, partition({5}) - partition({5}))
   |                      ^^^^^^^^^^^^^^
 Type error:
-	Expected: "Number / set/ mset / relation / function"
+	Expected: number, set, mset, relation or function
 	Got: partition from int
 
 tests/parse_print/autogen/563~final/spec.essence:4:39:
@@ -12,5 +12,5 @@ tests/parse_print/autogen/563~final/spec.essence:4:39:
 4 | such that apart({3}, partition({5}) - partition({5}))
   |                                       ^^^^^^^^^^^^^^
 Type error:
-	Expected: "Number / set/ mset / relation / function"
+	Expected: number, set, mset, relation or function
 	Got: partition from int

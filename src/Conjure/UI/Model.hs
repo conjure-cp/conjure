@@ -2343,9 +2343,21 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 (jPat, j) <- quantifiedVar
+                let indexInto matrix ix =
+                        case match opMatrixIndexingSlicing matrix of
+                            Just (base, indices) ->
+                                make opMatrixIndexingSlicing base (replaceFirstSlice ix indices)
+                            Nothing ->
+                                [essence| &matrix[&ix] |]
+                    replaceFirstSlice ix = \case
+                        Right _ : rest -> Left ix : rest
+                        indexer : rest -> indexer : replaceFirstSlice ix rest
+                        [] -> []
+                    mi = indexInto m i
+                    mj = indexInto m j
                 return
                     [essence|
-                        and([ &m[&i] != &m[&j]
+                        and([ &mi != &mj
                             | &iPat : &index
                             , &jPat : &index
                             , &i < &j
@@ -3019,4 +3031,3 @@ rule_Flatten_Cardinality = "flatten-cardinality" `namedRule` theRule where
                    (iPat, i) <- quantifiedVar
                    return [essence| sum([ |&i| | &iPat <- &list ]) |]
                )
-

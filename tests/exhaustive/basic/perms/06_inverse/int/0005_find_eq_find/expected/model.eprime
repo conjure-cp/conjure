@@ -10,26 +10,16 @@ branching on
      q_PermutationAsFunction_PermutationFunction_forwards_Function1D,
      q_PermutationAsFunction_PermutationFunction_backwards_Function1D]
 such that
-    and([q23 != p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q23] ->
-         [p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q23],
-          catchUndef(q_PermutationAsFunction_PermutationFunction_forwards_Function1D
-                         [p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q23]],
-                     0);
-              int(1..2)]
-             [toInt(or([q21 = p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q23] | q21 : int(1..4)]))
-              + 1]
-         = q23
-             | q23 : int(1..4)]),
-    and([q31 != q_PermutationAsFunction_PermutationFunction_forwards_Function1D[q31] ->
-         [q_PermutationAsFunction_PermutationFunction_forwards_Function1D[q31],
-          catchUndef(p_PermutationAsFunction_PermutationFunction_forwards_Function1D
-                         [q_PermutationAsFunction_PermutationFunction_forwards_Function1D[q31]],
-                     0);
-              int(1..2)]
-             [toInt(or([q29 = q_PermutationAsFunction_PermutationFunction_forwards_Function1D[q31] | q29 : int(1..4)]))
-              + 1]
-         = q31
-             | q31 : int(1..4)]),
+    and([q21 != p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q21] ->
+         elementId(q_PermutationAsFunction_PermutationFunction_forwards_Function1D,
+                   p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q21])
+         = q21
+             | q21 : int(1..4)]),
+    and([q27 != q_PermutationAsFunction_PermutationFunction_forwards_Function1D[q27] ->
+         elementId(p_PermutationAsFunction_PermutationFunction_forwards_Function1D,
+                   q_PermutationAsFunction_PermutationFunction_forwards_Function1D[q27])
+         = q27
+             | q27 : int(1..4)]),
     allDiff(p_PermutationAsFunction_PermutationFunction_forwards_Function1D),
     and([or([p_PermutationAsFunction_PermutationFunction_forwards_Function1D[q3] = q2 | q3 : int(1..4)])
              | q2 : int(1..4)]),

@@ -299,9 +299,9 @@ parseIntLiteral :: Parser LiteralNode
 parseIntLiteral = do
   lit <- intLiteral
   maybe_tag <- optional $ do
-    cln <- want L_Colon
+    cln <- need L_Colon
     idn <- identifier
-    return (cln, idn)
+    return (RealToken cln, idn)
   return $ IntLiteral (StrictToken [] lit) maybe_tag
 
 parseBoolLiteral :: Parser LiteralNode
@@ -638,9 +638,9 @@ parseIntDomain :: Parser DomainNode
 parseIntDomain = do
   lInt <- need L_int
   maybe_tag <- optional $ do
-    cln <- want L_Colon
+    cln <- need L_Colon
     idn <- identifier
-    return (cln, idn)
+    return (RealToken cln, idn)
   ranges <- optional $ parenListStrict $ commaList parseRange
   return $ RangedIntDomainNode lInt maybe_tag ranges
 

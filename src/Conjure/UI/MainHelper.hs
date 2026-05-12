@@ -57,7 +57,7 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import System.FilePath ( splitFileName, takeBaseName, normalise, (<.>) )
 
 -- directory
-import System.Directory ( copyFile, findExecutable, doesFileExist )
+import System.Directory ( copyFile, findExecutable )
 
 -- shelly
 import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
