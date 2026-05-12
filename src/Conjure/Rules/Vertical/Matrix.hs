@@ -562,12 +562,16 @@ rule_ExpandSlices = "matrix-expand-slices" `namedRule` theRule where
         let
             flattenSlicingMultiD =
                 case match opFlatten p >>= match opMatrixIndexingSlicing of
-                    Just (m, is) -> return (m, is)
+                    Just (m, is)
+                        | countSlices is > 1 -> return (m, is)
                     _ -> Nothing
             slicing1D =
                 case match opMatrixIndexingSlicing p of
-                    Just (m, is) -> return (m, is)
+                    Just (m, is)
+                        | countSlices is == 1 -> return (m, is)
                     _ -> Nothing
+            countSlices is =
+                length [ () | Right _ <- is ]
         (m, is) <- case flattenSlicingMultiD <|> slicing1D of
                     Just (m, is) -> return (m, is)
                     _ -> na "rule_ExpandSlices"
@@ -612,4 +616,3 @@ rule_Freq = "matrix-freq" `namedRule` theRule where
                 return $ make opSum $ Comprehension [essence| toInt(&mis = &arg) |]
                             [Generator (GenDomainNoRepr iPat indexDom)]
             )
-
