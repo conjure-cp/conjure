@@ -37,7 +37,7 @@ if [ ${LIMIT_TIME} = 0 ]; then
     echo "conjure.exhaustive.autogen.gen32"                         >> test_commands
 fi
 
-./conjure-testing --limit-time ${LIMIT_TIME} -l > all-tests-list
+./conjure-testing -j1 --limit-time ${LIMIT_TIME} -l > all-tests-list
 cat all-tests-list | grep 'conjure.custom'     >> test_commands
 cat all-tests-list | grep 'conjure.exhaustive' >> test_commands
 rm all-tests-list
@@ -47,7 +47,7 @@ awk '!x[$0]++' test_commands > test_commands_uniq
 mv test_commands_uniq test_commands
 
 function t {
-    ./conjure-testing --limit-time 0 -p "$1"
+    ./conjure-testing -j1 --limit-time 0 -p "$1"
 }
 export -f t
 
