@@ -3,6 +3,8 @@ name: Make a release
 on:
   workflow_dispatch:        # can be triggered manually
   push:
+    branches:
+      - main                # run for every push to the main branch
     tags:
       - "v*.*.*"
   pull_request:             # and for PRs
@@ -19,11 +21,15 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref == 'refs/heads/main' && 'latest' || github.run_id }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
 env:
-  RELEASE_VERSION: ${{ github.sha }} # will be overwritten below depending on PR/tag
+  RELEASE_VERSION: ${{ github.sha }} # will be overwritten below depending on PR/tag/main
 
 jobs:
-  Job:
+  Build:
     strategy:
       fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
@@ -115,6 +121,10 @@ jobs:
         run: echo "RELEASE_VERSION=${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
         if: github.event_name == 'pull_request'
 
+      - name: Set version string based on trigger (latest if on main)
+        run: echo "RELEASE_VERSION=latest" >> "$GITHUB_ENV"
+        if: github.ref == 'refs/heads/main'
+
       - name: Create the zip archives
         shell: bash
         run: |
@@ -195,3 +205,61 @@ jobs:
         with:
           files: |
             conjure-allsolvers-test-${{ env.RELEASE_VERSION }}.zip
+
+  # Keep GitHub release updates in one job: the build matrix uploads artefacts, then
+  # this single writer publishes them after every platform bundle is ready.
+  Release:
+    needs: Build
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Download release bundles
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Move latest tag to this commit
+        uses: actions/github-script@v8
+        if: github.ref == 'refs/heads/main'
+        with:
+          script: |
+            const tag = 'latest';
+            const ref = `tags/${tag}`;
+
+            try {
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref,
+                sha: context.sha,
+                force: true,
+              });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/${ref}`,
+                sha: context.sha,
+              });
+            }
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
+          name: latest
+          draft: false
+          prerelease: false
+          make_latest: true
+          overwrite_files: true
+          files: |
+            dist/*.zip
