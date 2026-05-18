@@ -237,7 +237,11 @@ jobs:
                 force: true,
               });
             } catch (error) {
-              if (error.status !== 404) {
+              const missingRef =
+                error.status === 404 ||
+                (error.status === 422 && error.response?.data?.message === 'Reference does not exist');
+
+              if (!missingRef) {
                 throw error;
               }
 
