@@ -22,7 +22,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref == 'refs/heads/main' && 'latest' || github.run_id }}
+  group: release-${{ github.ref == 'refs/heads/main' && 'nightly' || github.run_id }}
   cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
 env:
@@ -121,8 +121,8 @@ jobs:
         run: echo "RELEASE_VERSION=${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
         if: github.event_name == 'pull_request'
 
-      - name: Set version string based on trigger (latest if on main)
-        run: echo "RELEASE_VERSION=latest" >> "$GITHUB_ENV"
+      - name: Set version string based on trigger (nightly if on main)
+        run: echo "RELEASE_VERSION=nightly" >> "$GITHUB_ENV"
         if: github.ref == 'refs/heads/main'
 
       - name: Create the zip archives
@@ -220,12 +220,12 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Move latest tag to this commit
+      - name: Move nightly tag to this commit
         uses: actions/github-script@v8
         if: github.ref == 'refs/heads/main'
         with:
           script: |
-            const tag = 'latest';
+            const tag = 'nightly';
             const ref = `tags/${tag}`;
 
             try {
@@ -258,9 +258,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: latest
+          tag_name: nightly
           target_commitish: ${{ github.sha }}
-          name: latest
+          name: nightly
           draft: false
           prerelease: false
           make_latest: true
