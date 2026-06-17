@@ -676,6 +676,8 @@ instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
 --   (Srsly: Can be useful after parsing a solution file, for example.)
 e2c :: MonadFailDoc m => Expression -> m Constant
 e2c (Constant c) = return c
+e2c (AbstractLiteral (AbsLitMatrix (DomainReference _ Nothing) _)) =
+    failDoc "Cannot convert a matrix literal with an unresolved index domain to a constant."
 e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
 e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt t x))))) = return $ ConstantInt t $ negate x
 e2c x = failDoc ("e2c, not a constant:" <+> pretty x)
