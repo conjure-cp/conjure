@@ -75,6 +75,7 @@ instance (ToFromMiniZinc x, Pretty x, ExpressionLike x) => ToFromMiniZinc (Abstr
             AbsLitMatrix _index xs -> MZNArray Nothing <$> mapM toMiniZinc xs
             AbsLitSet xs ->
                 case xs of
+                    [] -> return $ MZNSet []
                     (x:_) | Just _ <- intOut "toMiniZinc" x -> MZNSet <$> mapM toMiniZinc xs
                     _ -> MZNArray Nothing <$> mapM toMiniZinc xs
             AbsLitMSet xs -> MZNArray Nothing <$> mapM toMiniZinc xs
