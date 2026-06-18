@@ -9,6 +9,7 @@ module Conjure.Language.NameResolution
     ) where
 
 import Conjure.Prelude
+import Data.Traversable (traverse)
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
@@ -227,6 +228,8 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
 
 resolveX (AbstractLiteral lit) = AbstractLiteral <$> resolveAbsLit lit
 
+resolveX (Constant c) = Constant <$> resolveConstant c
+
 resolveX (Domain x) = Domain <$> resolveD x
 
 resolveX p@Comprehension{} = scope $ do
@@ -354,6 +357,52 @@ resolveAbsLit (AbsLitVariant Nothing n x) = do
     case mapMaybe (isTheVariant . snd) mval of
         (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
         _ -> return (AbsLitVariant Nothing n x')
+resolveAbsLit (AbsLitVariant (Just doms) n x) = do
+    doms' <- forM doms $ \ (nm, d) -> (nm,) <$> resolveD d
+    x'    <- resolveX x
+    return $ AbsLitVariant (Just doms') n x'
+resolveAbsLit (AbsLitMatrix ind xs) = do
+    ind' <- resolveD ind
+    xs'  <- mapM resolveX xs
+    return $ AbsLitMatrix ind' xs'
 resolveAbsLit lit = (descendBiM resolveX >=> descendBiM resolveD') lit
     where
         resolveD' d = resolveD (d :: Domain () Expression)
+
+
+resolveConstant ::
+    MonadFailDoc m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Constant -> m Constant
+resolveConstant (ConstantAbstract (AbsLitMatrix ind xs))
+    | hasUnresolvedDomainReference ind = do
+        ind' <- resolveDConstant ind
+        return $ ConstantAbstract $ AbsLitMatrix ind' xs
+resolveConstant (TypedConstant c ty) = TypedConstant <$> resolveConstant c <*> pure ty
+resolveConstant c = return c
+
+hasUnresolvedDomainReference :: Domain () a -> Bool
+hasUnresolvedDomainReference (DomainReference _ Nothing) = True
+hasUnresolvedDomainReference _ = False
+
+resolveDConstant ::
+    MonadFailDoc m =>
+    MonadState [(Name, ReferenceTo)] m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain () Constant -> m (Domain () Constant)
+resolveDConstant (DomainReference nm (Just d)) =
+    DomainReference nm . Just <$> resolveDConstant d
+resolveDConstant (DomainReference nm Nothing) = do
+    mval <- gets (lookup nm)
+    case mval of
+        Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
+        Just (Alias (Domain r)) -> do
+            r' <- resolveD (changeRepr def r)
+            traverse e2c r'
+        Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
+resolveDConstant d = return d
