@@ -32,7 +32,7 @@ Docker
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -v "$TMPDIR:/tmp" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
+    printf '#!/bin/sh\ndocker run --rm -v "$PWD:/work" -v "$TMPDIR:/tmp" -w /work ghcr.io/conjure-cp/conjure:v2.6.1 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -46,7 +46,7 @@ Podman
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    printf '#!/bin/sh\npodman run --rm -v "$PWD:/work:z" -v "$TMPDIR:/tmp:z" -w /work ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
+    printf '#!/bin/sh\npodman run --rm -v "$PWD:/work:z" -v "$TMPDIR:/tmp:z" -w /work ghcr.io/conjure-cp/conjure:v2.6.1 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -60,7 +60,7 @@ Apptainer
     mkdir -p ~/.local/bin
 
     # create the conjure wrapper
-    printf '#!/bin/sh\napptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 conjure "$@"\n' > ~/.local/bin/conjure
+    printf '#!/bin/sh\napptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.1 conjure "$@"\n' > ~/.local/bin/conjure
 
     # make it executable
     chmod +x ~/.local/bin/conjure
@@ -81,10 +81,10 @@ You can also verify that the installed solvers are all operational:
 .. code-block:: bash
 
     # download a small bundle of files, we will use this to test the installation
-    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-allsolvers-test-v2.6.0.zip
+    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.1/conjure-allsolvers-test-v2.6.1.zip
 
     # run the test
-    unzip conjure-allsolvers-test-v2.6.0.zip && bash test.sh
+    unzip conjure-allsolvers-test-v2.6.1.zip && bash test.sh
 
 ``test.sh`` should produce a bunch of output and include "Pass!" as the last line.
 
@@ -99,11 +99,11 @@ The smaller archive without ``-with-solvers`` only contains the ``conjure`` exec
 
 If it is available for your platform, you can `download the latest release <https://www.github.com/conjure-cp/conjure/releases/latest>`_, extract the archive, and add the extracted directory to your ``PATH``.
 
-Assuming you extract ``conjure-v2.6.0-linux-with-solvers.zip`` to ``~/work``:
+Assuming you extract ``conjure-v2.6.1-linux-with-solvers.zip`` to ``~/work``:
 
 .. code-block:: bash
 
-    export PATH="$HOME/work/conjure-v2.6.0-linux-with-solvers:$PATH"
+    export PATH="$HOME/work/conjure-v2.6.1-linux-with-solvers:$PATH"
 
 The top-level commands in the extracted ``*-with-solvers`` directory are wrappers that keep solver lookup, shared-library search paths, and the MiniZinc standard library rooted inside the extracted bundle.
 When you run those top-level commands directly from the extracted bundle, you do not need to set ``LD_LIBRARY_PATH``, ``DYLD_LIBRARY_PATH``, or ``MZN_STDLIB_DIR`` yourself.
@@ -113,7 +113,7 @@ For macOS, remove the quarantine attribute from the extracted directory before r
 
 .. code-block:: bash
 
-    xattr -dr com.apple.quarantine "$HOME/work/conjure-v2.6.0-macos-with-solvers"
+    xattr -dr com.apple.quarantine "$HOME/work/conjure-v2.6.1-macos-with-solvers"
 
 You will also need a Java runtime for Savile Row.
 On macOS, we recommend Homebrew and Amazon Corretto:
@@ -133,9 +133,9 @@ To install into WSL2:
 .. code-block:: bash
 
     cd
-    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.0/conjure-v2.6.0-linux-with-solvers.zip
-    unzip conjure-v2.6.0-linux-with-solvers.zip
-    echo 'export PATH="$HOME/conjure-v2.6.0-linux-with-solvers:$PATH"' >> ~/.bashrc
+    wget https://github.com/conjure-cp/conjure/releases/download/v2.6.1/conjure-v2.6.1-linux-with-solvers.zip
+    unzip conjure-v2.6.1-linux-with-solvers.zip
+    echo 'export PATH="$HOME/conjure-v2.6.1-linux-with-solvers:$PATH"' >> ~/.bashrc
 
 Then restart your shell.
 
@@ -197,7 +197,7 @@ Available images
 
 - A specific release:
 
-  ``ghcr.io/conjure-cp/conjure:v2.6.0``
+  ``ghcr.io/conjure-cp/conjure:v2.6.1``
 
 - Latest commit on ``main`` (development version):
 
@@ -227,7 +227,7 @@ Docker:
       -v "$PWD:/work" \
       -v "$TMPDIR:/tmp" \
       -w /work \
-      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      ghcr.io/conjure-cp/conjure:v2.6.1 \
       conjure solve test.essence sample.param
 
 Podman:
@@ -238,7 +238,7 @@ Podman:
       -v "$PWD:/work:z" \
       -v "$TMPDIR:/tmp:z" \
       -w /work \
-      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      ghcr.io/conjure-cp/conjure:v2.6.1 \
       conjure solve test.essence sample.param
 
 
@@ -249,7 +249,7 @@ Apptainer usage
 
 .. code-block:: bash
 
-    apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
+    apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.1 \
       conjure solve test.essence sample.param
 
 You normally do not need the Docker/Podman ``-v "$TMPDIR:/tmp"`` bind with Apptainer: in the default configuration it already bind-mounts the host ``/tmp`` into the container, so ``/tmp`` inside the container is the host ``/tmp``.
@@ -280,7 +280,7 @@ Apptainer does not use Docker/Podman credential stores and does not provide a
 Testing your installation
 -------------------------
 
-Each release ships a solver smoke-test bundle called ``conjure-allsolvers-test-v2.6.0.zip``.
+Each release ships a solver smoke-test bundle called ``conjure-allsolvers-test-v2.6.1.zip``.
 
 If you installed one of the wrappers above, ``conjure`` is already on your ``PATH`` and you can run the tests directly:
 
@@ -298,7 +298,7 @@ Container-only execution (no wrapper):
       -v "$PWD:/work" \
       -v "$TMPDIR:/tmp" \
       -w /work \
-      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      ghcr.io/conjure-cp/conjure:v2.6.1 \
       bash test.sh
 
 .. code-block:: bash
@@ -307,12 +307,12 @@ Container-only execution (no wrapper):
       -v "$PWD:/work:z" \
       -v "$TMPDIR:/tmp:z" \
       -w /work \
-      ghcr.io/conjure-cp/conjure:v2.6.0 \
+      ghcr.io/conjure-cp/conjure:v2.6.1 \
       bash test.sh
 
 .. code-block:: bash
 
-    apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.0 \
+    apptainer exec docker://ghcr.io/conjure-cp/conjure:v2.6.1 \
       bash test.sh
 
 
