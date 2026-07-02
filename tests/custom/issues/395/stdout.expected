@@ -22,10 +22,6 @@ such that
              /\ (conjure_aux1_ExplicitBounded_Values[m, Cz_ExplicitBounded_Values, q5] <= m /\ q5 <= m)
                  | q5 : int(1..m), q5 <= m])
             | Cz_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)])
-    \/
-    or([conjure_aux1_ExplicitBounded_Length[m, Cz_ExplicitBounded_Values] = m /\
-        and([conjure_aux1_ExplicitBounded_Values[m, Cz_ExplicitBounded_Values, q6] = 1 | q6 : int(1..m)])
-            | Cz_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)])
 
 language ESSENCE' 1.0
 
@@ -50,10 +46,6 @@ such that
              /\ q5 <= m
              /\ (conjure_aux1_ExplicitBounded_Values[m, Cs_ExplicitBounded_Values, q5] <= m /\ q5 <= m)
                  | q5 : int(1..m), q5 <= m])
-            | Cs_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)])
-    \/
-    or([conjure_aux1_ExplicitBounded_Length[m, Cs_ExplicitBounded_Values] = m /\
-        and([conjure_aux1_ExplicitBounded_Values[m, Cs_ExplicitBounded_Values, q6] = 1 | q6 : int(1..m)])
             | Cs_ExplicitBounded_Values : matrix indexed by [int(1..m)] of int(0..m)])
 
 language ESSENCE' 1.0
