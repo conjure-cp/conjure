@@ -1,0 +1,28 @@
+language Essence 1.3
+$ Equidistant Frequency Permutation Arrays.
+$ Copied from conjure-cp/EssenceCatalog/problems/csplib-prob055-EFPA/EFPA.essence
+
+given numChars       : int(1..)        $ aka q, the number of symbols.
+given lam            : int(1..)        $ aka lambda, the number of each symbol in a word.
+given numCodeWords   : int(1..)        $ aka v
+given dist           : int(1..)        $ aka d, the hamming distance between all pairs of words.
+
+letting Character be domain int(1..numChars)
+
+letting wordLength be lam*numChars
+
+letting Index be domain int(1..wordLength)
+
+letting String be domain function (total) Index --> Character
+
+find c : set (size numCodeWords) of String
+
+$ each codeword must contain each symbol lambda times.
+such that
+    forAll s in c . forAll a : Character .
+        ( (sum i : Index . toInt(s(i)=a) )=lam)
+
+$ each pair of codewords must differ in exactly d places.
+such that
+    forAll s1, s2 in c .
+        s1 != s2 -> (sum i : Index . toInt(s1(i)!=s2(i))) = dist
