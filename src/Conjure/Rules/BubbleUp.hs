@@ -187,17 +187,15 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
         let cons  = concat [ xs | SuchThat xs <- locals ]
 
-        (_conditions, generators) <- fmap mconcat $ forM gensOrConds $ \ goc -> case goc of
+        (conditions, generators) <- fmap mconcat $ forM gensOrConds $ \ goc -> case goc of
             Condition{} -> return ([goc], [])
             ComprehensionLetting{} -> return ([], [goc])
             Generator (GenDomainHasRepr _ _) -> return ([], [goc])
             _ -> na "rule_LiftVars"
 
-        let gensOrConds_dontCare = [ case goc of
-                                        Condition c -> Condition (make opNot c)
-                                        _ -> goc
-                                   | goc <- gensOrConds
-                                   ]
+        let conditionsExprs = [ c | Condition c <- conditions ]
+        let gensOrConds_dontCare =
+                generators ++ [ Condition (make opNot (make opAnd (fromList conditionsExprs))) | not (null conditionsExprs) ]
 
         let patRefs = [ Reference patName Nothing | Generator (GenDomainHasRepr patName _domain) <- generators ]
         let indexDomains = [domain | Generator (GenDomainHasRepr _patName domain) <- generators ]
@@ -244,6 +242,10 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                                      ]
 
         let dontCareCons = make opAnd $ fromList [ make opDontCare (Reference r Nothing) | r <- declsLiftedNames ]
+        let dontCareConsLifted =
+                [ make opAnd $ Comprehension (transform upd dontCareCons) (transformBi upd gensOrConds_dontCare)
+                | not (null conditionsExprs)
+                ]
 
         -- traceM $ show $ "unrefinedInBody" <+> vcat (map pretty unrefinedInBody)
         -- traceM $ show $ "unrefinedInCons" <+> vcat (map pretty unrefinedInCons)
@@ -252,10 +254,8 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
 
         return
             ( "Bubbling up auxiliary variables through a comprehension."
-            , return $ WithLocals (make opConcatenate $ fromList [ Comprehension (transform upd body) (transformBi upd gensOrConds)
-                                                                 , Comprehension (transform upd dontCareCons) (transformBi upd gensOrConds_dontCare)
-                                                                 ])
-                                  (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
+            , return $ WithLocals (Comprehension (transform upd body) (transformBi upd gensOrConds))
+                                  (AuxiliaryVars (declsLifted ++ [SuchThat (consLifted ++ dontCareConsLifted)]))
             )
 
     -- this is to deal with when an AuxiliaryVars expression is in the generator

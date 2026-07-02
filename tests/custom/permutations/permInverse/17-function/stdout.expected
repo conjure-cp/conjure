@@ -66,6 +66,10 @@ such that
                       | q39 : int(1..6)])
                   | q37 : int(1..6)])
              | q1 : int(1..4), q1 < 4]),
+    and([conjure_aux1_ExplicitVarSizeWithMarkerR2_Marker[q1] = 0 /\
+         and([conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q68, q69] = false
+                  | q68 : int(1..6), q69 : int(1..4)])
+             | q1 : int(1..4), !(q1 < 4)]),
     and([flatten([[i_ExplicitVarSizeWithMarkerR2_Marker; int(1)],
                   flatten([[-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q59, q60]) | q60 : int(1..4)]
                                | q59 : int(1..6)]);
@@ -77,10 +81,6 @@ such that
                                | q61 : int(1..6)]);
                       int(1..2)])
              | q1 : int(1..4), q1 < 4]),
-    and([conjure_aux1_ExplicitVarSizeWithMarkerR2_Marker[q1] = 0 /\
-         and([conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q68, q69] = false
-                  | q68 : int(1..6), q69 : int(1..4)])
-             | q1 : int(1..4), !(q1 < 4)]),
     and([q10 + 1 <= i_ExplicitVarSizeWithMarkerR2_Marker ->
          [-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10, q14]) | q14 : int(1..4)] <lex
          [-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10 + 1, q15]) | q15 : int(1..4)]

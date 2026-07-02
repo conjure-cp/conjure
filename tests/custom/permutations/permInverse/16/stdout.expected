@@ -981,6 +981,13 @@ such that
                       | q72 : int(1..2)])
                   | q70 : int(1..2)])
              | q1 : int(1..4), q1 < 4]),
+    and([and([and([conjure_aux1_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q1, q149] = 0 | q149 : int(1..2)]),
+              and([conjure_aux1_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[q1, q150, q151] = 1
+                       | q150 : int(1..2), q151 : int(1..2)]),
+              and([conjure_aux1_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[q1, q152, q153] = 1
+                       | q152 : int(1..2), q153 : int(1..2)]);
+                  int(1..3)])
+             | q1 : int(1..4), !(q1 < 4)]),
     and([flatten([[[i_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q135]; int(1)],
                    flatten([[[i_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[q135, q136]; int(1)],
                              [i_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[q135, q136]; int(1)];
@@ -997,13 +1004,6 @@ such that
                        int(1..2)]
                       | q137 : int(1..2)])
              | q1 : int(1..4), q1 < 4]),
-    and([and([and([conjure_aux1_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q1, q149] = 0 | q149 : int(1..2)]),
-              and([conjure_aux1_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[q1, q150, q151] = 1
-                       | q150 : int(1..2), q151 : int(1..2)]),
-              and([conjure_aux1_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[q1, q152, q153] = 1
-                       | q152 : int(1..2), q153 : int(1..2)]);
-                  int(1..3)])
-             | q1 : int(1..4), !(q1 < 4)]),
     flatten([[i_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
              flatten([[[i_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[1, q15]; int(1)],
                        [i_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[1, q15]; int(1)];
