@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# version as of Dec 2025
-VERSION=v9.14
+# version as of July 2026
+VERSION=v9.15
 
 set -o errexit
 set -o nounset
