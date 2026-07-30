@@ -141,6 +141,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , graphSolver                   = False
             , cgroups                       = False
             , nbSolutions                   = show enumerateDomainMax
+            , printSolutions                = True
             , copySolutions                 = False
             , solutionsInOneFile            = False
             , runsolverCPUTimeLimit         = Nothing

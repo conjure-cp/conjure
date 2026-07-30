@@ -136,6 +136,7 @@ data UI
         , graphSolver                :: Bool
         , cgroups                    :: Bool
         , nbSolutions                :: String              -- a number, or "all". by default 1
+        , printSolutions             :: Bool
         , copySolutions              :: Bool
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
@@ -1010,6 +1011,13 @@ ui = modes
             &= help "Number of solutions to find; \
                     \\"all\" enumerates all solutions.\n\
                     \Default: 1"
+        , printSolutions
+            = True
+            &= name "print-solutions"
+            &= groupname "General"
+            &= explicit
+            &= help "Whether to print solutions.\n\
+                    \Default: yes"
         , copySolutions
             = True
             &= name "copy-solutions"
