@@ -1016,7 +1016,7 @@ srMkArgs Solve{..} outBase modelPath = do
             , "-solutions-to-stdout-one-line"
             ] ++
             [ "-cgroups" | cgroups ] ++
-            [ "-noprintsols" | not printSolutions ] ++
+            [ "-solutions-to-null" | not printSolutions ] ++
             ( if nbSolutions == "all"
                 then ["-all-solutions"]
                 else ["-num-solutions", stringToText nbSolutions]
