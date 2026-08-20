@@ -144,14 +144,14 @@ rule_Union :: Rule
 rule_Union = "set-union" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, iPat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, matchDef opToSet expr)
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
             _ -> na "rule_Union"
         (mkModifier, s)    <- match opModifier expr
         (x, y)             <- match opUnion s
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
-            TypeMSet{}     -> return ()
+            TypeMSet{}     -> na "rule_Union: multiset union"
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
             _              -> failDoc "type incompatibility in union operator"

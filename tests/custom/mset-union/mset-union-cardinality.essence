@@ -1,0 +1,9 @@
+language Essence 1.3
+
+find x : mset (maxSize 2) of int(1..2)
+find unionCardinality : int(0..5)
+find distinctUnionCardinality : int(0..2)
+
+such that x = mset(1, 1)
+such that unionCardinality = |x union mset(1, 2, 2)|
+such that distinctUnionCardinality = |toSet(x union mset(1, 2, 2))|
