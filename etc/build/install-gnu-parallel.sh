@@ -11,8 +11,8 @@ export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 rm -rf tmp-install-parallel
 mkdir -p tmp-install-parallel
 pushd tmp-install-parallel
-download https://ftpmirror.gnu.org/parallel/parallel-latest.tar.bz2
-tar -xvjf parallel-latest.tar.bz2
+download https://ftpmirror.gnu.org/parallel/parallel-20260522.tar.bz2
+tar -xvjf parallel-20260522.tar.bz2
 cp parallel-*/src/parallel ${BIN_DIR}/parallel
 echo "parallel executable is at ${BIN_DIR}/parallel"
 ls -l ${BIN_DIR}/parallel
