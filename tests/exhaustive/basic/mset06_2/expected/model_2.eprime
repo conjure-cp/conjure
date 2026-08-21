@@ -8,11 +8,12 @@ such that
          x_ExplicitWithRepetition_Values[q1] <= x_ExplicitWithRepetition_Values[q1 + 1]
              | q1 : int(1..11)]),
     and([q2 > x_ExplicitWithRepetition_Flag -> x_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..12)]),
-    and([sum([toInt(q9 <= x_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(x_ExplicitWithRepetition_Values[q9] = q3), 0)
-                  | q9 : int(1..12)])
+    and([q8 <= x_ExplicitWithRepetition_Flag ->
+         sum([toInt(q10 <= x_ExplicitWithRepetition_Flag) *
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q10] = x_ExplicitWithRepetition_Values[q8]), 0)
+                  | q10 : int(1..12)])
          >= 2
-             | q3 : int(1..4)]),
+             | q8 : int(1..12)]),
     and([q4 <= x_ExplicitWithRepetition_Flag ->
          sum([toInt(q7 <= x_ExplicitWithRepetition_Flag) *
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q7] = x_ExplicitWithRepetition_Values[q4]), 0)
