@@ -89,7 +89,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : &innerDomain .
+                            forAll &iPat in &mset .
                                 freq(&mset, &i) >= &minOccur
                                   |]
                         | Just minOccur <- [getMinOccur attrs]
@@ -234,4 +234,3 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                       ]
                     )
                 |]
-
