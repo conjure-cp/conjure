@@ -353,7 +353,7 @@ mainWithArgs config@Solve{..} = do
         Left msg        -> userErr msg
         Right solutions -> do
 
-            when (null solutions) (pp logLevel "No solutions found.")
+            when (printSolutions && null solutions) (pp logLevel "No solutions found.")
 
             when validateSolutionsOpt $ validating solutions
 
@@ -1016,6 +1016,7 @@ srMkArgs Solve{..} outBase modelPath = do
             , "-solutions-to-stdout-one-line"
             ] ++
             [ "-cgroups" | cgroups ] ++
+            [ "-solutions-to-null" | not printSolutions ] ++
             ( if nbSolutions == "all"
                 then ["-all-solutions"]
                 else ["-num-solutions", stringToText nbSolutions]
@@ -1189,7 +1190,7 @@ srCleanUp outBase statsDestBase ui@Solve{..} stdoutSR solutions = do
 
     -- closing the array in the all solutions json file
     case outputFormat of
-        JSON -> case solutionsInOneFile of
+        JSON | printSolutions -> case solutionsInOneFile of
             False -> return ()
             True -> do
                 let filenameEssenceSolJSON = mkFilename ".solutions.json"
