@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# version as of 10 December 2025
-# alas, none of the published releases compile correctly
-VERSION=998aada2a54f868727f64a94955cff142ef18a81
+# version as of July 2026
+VERSION=release-6.4.0
 
 set -o errexit
 set -o nounset

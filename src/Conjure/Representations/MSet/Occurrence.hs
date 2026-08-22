@@ -56,7 +56,7 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
                         let
                             minOccur = getMinOccur attrs
                             minOccurCons =
-                                [ [essence| forAll &iPat : &innerDomain . &m[&i] >= &minOccur |]
+                                [ [essence| forAll &iPat : &innerDomain . &m[&i] = 0 \/ &m[&i] >= &minOccur |]
                                 | minOccur /= 0 ]
                         let
                             cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
@@ -116,4 +116,3 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
             innerSO downX1 inner innerDomain
-
