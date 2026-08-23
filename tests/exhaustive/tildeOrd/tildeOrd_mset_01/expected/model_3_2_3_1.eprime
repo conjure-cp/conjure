@@ -9,40 +9,36 @@ branching on
     [a_MOccurrence, b_ExplicitWithFlags_Flags, b_ExplicitWithFlags_Values, b_ExplicitWithRepetition_Flag,
      b_ExplicitWithRepetition_Values]
 such that
-    or([a_MOccurrence[q35] > 0 /\
-        (a_MOccurrence[q35] < sum([toInt(b_ExplicitWithRepetition_Values[q25] = q35) | q25 : int(1..3), q25 <= 3]) /\
-         (and([a_MOccurrence[q31] > 0 ->
-               a_MOccurrence[q31] = sum([toInt(b_ExplicitWithRepetition_Values[q27] = q31) | q27 : int(1..3), q27 <= 3])
-                   | q31 : int(1..2), q31 < q35])
+    or([a_MOccurrence[q39] > 0 /\
+        (a_MOccurrence[q39] < sum([toInt(b_ExplicitWithRepetition_Values[q25] = q39) | q25 : int(1..3), q25 <= 3]) /\
+         (and([a_MOccurrence[q33] > 0 ->
+               a_MOccurrence[q33] = sum([toInt(b_ExplicitWithRepetition_Values[q27] = q33) | q27 : int(1..3), q27 <= 3])
+                   | q33 : int(1..2), q33 < q39])
           /\
-          and([!or([a_MOccurrence[q30] > 0 /\ q30 = b_ExplicitWithRepetition_Values[q28] | q30 : int(1..2)]) /\
-               b_ExplicitWithRepetition_Values[q28] < q35
+          and([sum([toInt(b_ExplicitWithRepetition_Values[q32] = q23) | q32 : int(1..3), q32 <= 3]) > 0 /\
+               (a_MOccurrence[q23] < q28 /\
+                q28 <= sum([toInt(b_ExplicitWithRepetition_Values[q30] = q23) | q30 : int(1..3), q30 <= 3]))
                ->
-               a_MOccurrence[b_ExplicitWithRepetition_Values[q28]] =
-               sum([toInt(b_ExplicitWithRepetition_Values[q27] = b_ExplicitWithRepetition_Values[q28])
-                        | q27 : int(1..3), q27 <= 3])
-                   | q28 : int(1..3), q28 <= 3])))
-            | q35 : int(1..2)])
+               a_MOccurrence[q23] = sum([toInt(b_ExplicitWithRepetition_Values[q27] = q23) | q27 : int(1..3), q27 <= 3])
+                   | q23 : int(1..2), q28 : int(1..3), q23 < q39])))
+            | q39 : int(1..2)])
     \/
-    or([!or([a_MOccurrence[q34] > 0 /\ q34 = b_ExplicitWithRepetition_Values[q32] | q34 : int(1..2)]) /\
-        (a_MOccurrence[b_ExplicitWithRepetition_Values[q32]] <
-         sum([toInt(b_ExplicitWithRepetition_Values[q25] = b_ExplicitWithRepetition_Values[q32])
-                  | q25 : int(1..3), q25 <= 3])
-         /\
-         (and([q31 < b_ExplicitWithRepetition_Values[q32] ->
-               (a_MOccurrence[q31] > 0 ->
-                a_MOccurrence[q31] =
-                sum([toInt(b_ExplicitWithRepetition_Values[q27] = q31) | q27 : int(1..3), q27 <= 3]))
-                   | q31 : int(1..2)])
+    or([sum([toInt(b_ExplicitWithRepetition_Values[q38] = q22) | q38 : int(1..3), q38 <= 3]) > 0 /\
+        (a_MOccurrence[q22] < q34 /\
+         q34 <= sum([toInt(b_ExplicitWithRepetition_Values[q36] = q22) | q36 : int(1..3), q36 <= 3]))
+        /\
+        (a_MOccurrence[q22] < sum([toInt(b_ExplicitWithRepetition_Values[q25] = q22) | q25 : int(1..3), q25 <= 3]) /\
+         (and([a_MOccurrence[q33] > 0 ->
+               a_MOccurrence[q33] = sum([toInt(b_ExplicitWithRepetition_Values[q27] = q33) | q27 : int(1..3), q27 <= 3])
+                   | q33 : int(1..2), q33 < q22])
           /\
-          and([!or([a_MOccurrence[q30] > 0 /\ q30 = b_ExplicitWithRepetition_Values[q28] | q30 : int(1..2)]) /\
-               b_ExplicitWithRepetition_Values[q28] < b_ExplicitWithRepetition_Values[q32]
+          and([sum([toInt(b_ExplicitWithRepetition_Values[q32] = q23) | q32 : int(1..3), q32 <= 3]) > 0 /\
+               (a_MOccurrence[q23] < q28 /\
+                q28 <= sum([toInt(b_ExplicitWithRepetition_Values[q30] = q23) | q30 : int(1..3), q30 <= 3]))
                ->
-               a_MOccurrence[b_ExplicitWithRepetition_Values[q28]] =
-               sum([toInt(b_ExplicitWithRepetition_Values[q27] = b_ExplicitWithRepetition_Values[q28])
-                        | q27 : int(1..3), q27 <= 3])
-                   | q28 : int(1..3), q28 <= 3])))
-            | q32 : int(1..3), q32 <= 3]),
+               a_MOccurrence[q23] = sum([toInt(b_ExplicitWithRepetition_Values[q27] = q23) | q27 : int(1..3), q27 <= 3])
+                   | q23 : int(1..2), q28 : int(1..3), q23 < q22])))
+            | q22 : int(1..2), q34 : int(1..3)]),
     3 = sum([a_MOccurrence[q1] | q1 : int(1..2)]),
     and([b_ExplicitWithRepetition_Values[q2] <= b_ExplicitWithRepetition_Values[q2 + 1] | q2 : int(1..2), q2 + 1 <= 3]),
     and([b_ExplicitWithFlags_Flags[q7 + 1] > 0 -> b_ExplicitWithFlags_Values[q7] < b_ExplicitWithFlags_Values[q7 + 1]

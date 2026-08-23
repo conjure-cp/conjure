@@ -10,59 +10,54 @@ branching on
     [a_ExplicitWithRepetition_Flag, a_ExplicitWithRepetition_Values, b_ExplicitWithFlags_Flags,
      b_ExplicitWithFlags_Values, b_ExplicitWithRepetition_Flag, b_ExplicitWithRepetition_Values]
 such that
-    or([sum([toInt(a_ExplicitWithRepetition_Values[q49] = a_ExplicitWithRepetition_Values[q28])
-                 | q49 : int(1..3), q49 <= 3])
+    or([sum([toInt(a_ExplicitWithRepetition_Values[q57] = a_ExplicitWithRepetition_Values[q55])
+                 | q57 : int(1..3), q57 <= 3])
         <
-        sum([toInt(b_ExplicitWithRepetition_Values[q51] = a_ExplicitWithRepetition_Values[q28])
-                 | q51 : int(1..3), q51 <= 3])
+        sum([toInt(b_ExplicitWithRepetition_Values[q59] = a_ExplicitWithRepetition_Values[q55])
+                 | q59 : int(1..3), q59 <= 3])
         /\
-        (and([a_ExplicitWithRepetition_Values[q52] < a_ExplicitWithRepetition_Values[q28] ->
-              sum([toInt(a_ExplicitWithRepetition_Values[q61] = a_ExplicitWithRepetition_Values[q52])
-                       | q61 : int(1..3), q61 <= 3])
+        (and([a_ExplicitWithRepetition_Values[q71] < a_ExplicitWithRepetition_Values[q55] ->
+              sum([toInt(a_ExplicitWithRepetition_Values[q73] = a_ExplicitWithRepetition_Values[q71])
+                       | q73 : int(1..3), q73 <= 3])
               =
-              sum([toInt(b_ExplicitWithRepetition_Values[q63] = a_ExplicitWithRepetition_Values[q52])
-                       | q63 : int(1..3), q63 <= 3])
-                  | q52 : int(1..3), q52 <= 3])
+              sum([toInt(b_ExplicitWithRepetition_Values[q75] = a_ExplicitWithRepetition_Values[q71])
+                       | q75 : int(1..3), q75 <= 3])
+                  | q71 : int(1..3), q71 <= 3])
          /\
-         and([!or([a_ExplicitWithRepetition_Values[q55] = b_ExplicitWithRepetition_Values[q53]
-                       | q55 : int(1..3), q55 <= 3])
-              /\ b_ExplicitWithRepetition_Values[q53] < a_ExplicitWithRepetition_Values[q28]
+         and([and([sum([toInt(b_ExplicitWithRepetition_Values[q66] = q27) | q66 : int(1..3), q66 <= 3]) > 0,
+                   sum([toInt(a_ExplicitWithRepetition_Values[q68] = q27) | q68 : int(1..3), q68 <= 3]) < q60 /\
+                   q60 <= sum([toInt(b_ExplicitWithRepetition_Values[q70] = q27) | q70 : int(1..3), q70 <= 3]),
+                   q27 < a_ExplicitWithRepetition_Values[q55];
+                       int(1..3)])
               ->
-              sum([toInt(a_ExplicitWithRepetition_Values[q57] = b_ExplicitWithRepetition_Values[q53])
-                       | q57 : int(1..3), q57 <= 3])
-              =
-              sum([toInt(b_ExplicitWithRepetition_Values[q59] = b_ExplicitWithRepetition_Values[q53])
-                       | q59 : int(1..3), q59 <= 3])
-                  | q53 : int(1..3), q53 <= 3]))
-            | q28 : int(1..3), q28 <= 3])
+              sum([toInt(a_ExplicitWithRepetition_Values[q62] = q27) | q62 : int(1..3), q62 <= 3]) =
+              sum([toInt(b_ExplicitWithRepetition_Values[q64] = q27) | q64 : int(1..3), q64 <= 3])
+                  | q27 : int(1..2), q60 : int(1..3)]))
+            | q55 : int(1..3), q55 <= 3])
     \/
-    or([!or([a_ExplicitWithRepetition_Values[q31] = b_ExplicitWithRepetition_Values[q29] | q31 : int(1..3), q31 <= 3])
+    or([sum([toInt(b_ExplicitWithRepetition_Values[q50] = q26) | q50 : int(1..3), q50 <= 3]) > 0 /\
+        (sum([toInt(a_ExplicitWithRepetition_Values[q52] = q26) | q52 : int(1..3), q52 <= 3]) < q28 /\
+         q28 <= sum([toInt(b_ExplicitWithRepetition_Values[q54] = q26) | q54 : int(1..3), q54 <= 3]))
         /\
-        (sum([toInt(a_ExplicitWithRepetition_Values[q33] = b_ExplicitWithRepetition_Values[q29])
-                  | q33 : int(1..3), q33 <= 3])
-         <
-         sum([toInt(b_ExplicitWithRepetition_Values[q35] = b_ExplicitWithRepetition_Values[q29])
-                  | q35 : int(1..3), q35 <= 3])
+        (sum([toInt(a_ExplicitWithRepetition_Values[q30] = q26) | q30 : int(1..3), q30 <= 3]) <
+         sum([toInt(b_ExplicitWithRepetition_Values[q32] = q26) | q32 : int(1..3), q32 <= 3])
          /\
-         (and([a_ExplicitWithRepetition_Values[q36] < b_ExplicitWithRepetition_Values[q29] ->
-               sum([toInt(a_ExplicitWithRepetition_Values[q45] = a_ExplicitWithRepetition_Values[q36])
-                        | q45 : int(1..3), q45 <= 3])
+         (and([a_ExplicitWithRepetition_Values[q44] < q26 ->
+               sum([toInt(a_ExplicitWithRepetition_Values[q46] = a_ExplicitWithRepetition_Values[q44])
+                        | q46 : int(1..3), q46 <= 3])
                =
-               sum([toInt(b_ExplicitWithRepetition_Values[q47] = a_ExplicitWithRepetition_Values[q36])
-                        | q47 : int(1..3), q47 <= 3])
-                   | q36 : int(1..3), q36 <= 3])
+               sum([toInt(b_ExplicitWithRepetition_Values[q48] = a_ExplicitWithRepetition_Values[q44])
+                        | q48 : int(1..3), q48 <= 3])
+                   | q44 : int(1..3), q44 <= 3])
           /\
-          and([!or([a_ExplicitWithRepetition_Values[q39] = b_ExplicitWithRepetition_Values[q37]
-                        | q39 : int(1..3), q39 <= 3])
-               /\ b_ExplicitWithRepetition_Values[q37] < b_ExplicitWithRepetition_Values[q29]
+          and([sum([toInt(b_ExplicitWithRepetition_Values[q39] = q27) | q39 : int(1..3), q39 <= 3]) > 0 /\
+               (sum([toInt(a_ExplicitWithRepetition_Values[q41] = q27) | q41 : int(1..3), q41 <= 3]) < q33 /\
+                q33 <= sum([toInt(b_ExplicitWithRepetition_Values[q43] = q27) | q43 : int(1..3), q43 <= 3]))
                ->
-               sum([toInt(a_ExplicitWithRepetition_Values[q41] = b_ExplicitWithRepetition_Values[q37])
-                        | q41 : int(1..3), q41 <= 3])
-               =
-               sum([toInt(b_ExplicitWithRepetition_Values[q43] = b_ExplicitWithRepetition_Values[q37])
-                        | q43 : int(1..3), q43 <= 3])
-                   | q37 : int(1..3), q37 <= 3])))
-            | q29 : int(1..3), q29 <= 3]),
+               sum([toInt(a_ExplicitWithRepetition_Values[q35] = q27) | q35 : int(1..3), q35 <= 3]) =
+               sum([toInt(b_ExplicitWithRepetition_Values[q37] = q27) | q37 : int(1..3), q37 <= 3])
+                   | q27 : int(1..2), q33 : int(1..3), q27 < q26])))
+            | q26 : int(1..2), q28 : int(1..3)]),
     and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
     and([b_ExplicitWithRepetition_Values[q6] <= b_ExplicitWithRepetition_Values[q6 + 1] | q6 : int(1..2), q6 + 1 <= 3]),
     and([b_ExplicitWithFlags_Flags[q11 + 1] > 0 -> b_ExplicitWithFlags_Values[q11] < b_ExplicitWithFlags_Values[q11 + 1]
