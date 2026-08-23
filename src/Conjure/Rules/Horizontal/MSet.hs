@@ -120,6 +120,39 @@ rule_Comprehension_ToSet = "mset-comprehension-toSet" `namedRule` theRule where
             return inner
 
 
+-- Is this argument of a toMSet guaranteed not to contain the same element twice?
+duplicateFreeToMSetArg ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Bool
+duplicateFreeToMSetArg x = case (typeOf x :: Maybe Type) of
+    Just TypeSet{}      -> True
+    Just TypeFunction{} -> True
+    Just TypeRelation{} -> True
+    _ -> case x of
+        -- a collection that has already been refined into a comprehension
+        -- generating each member of a domain at most once
+        Comprehension (Reference nm _) gensOrConds ->
+            case [ gen | Generator gen <- gensOrConds ] of
+                [GenDomainNoRepr  (Single nm') _] -> nm == nm'
+                [GenDomainHasRepr nm'          _] -> nm == nm'
+                _ -> False
+        _ -> False
+
+
+-- Matches toMSet(x) union toMSet(y), where neither x nor y can contain duplicates.
+-- Such a union has the same elements as the (much cheaper) union of the two
+-- containers, so it is handled by the set union rule instead of by rule_Union.
+tryMatchUnionOfSimpleToMSets ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Maybe (Expression, Expression)
+tryMatchUnionOfSimpleToMSets p = do
+    (x, y) <- match opUnion p
+    x' <- match opToMSet x
+    y' <- match opToMSet y
+    unless (duplicateFreeToMSetArg x' && duplicateFreeToMSetArg y') Nothing
+    return (x', y')
+
+
 -- A multiset union contains max(freq(x, i), freq(y, i)) copies of each i.
 -- Keep all copies from x, then add only the excess copies from y.
 rule_Union :: Rule
@@ -130,7 +163,10 @@ rule_Union = "mset-union" `namedRule` theRule where
             _ -> na "rule_Union"
         (x, y) <- match opUnion expr
         TypeMSet{} <- typeOf x
-        yMaxSize <- msetMaxSize y
+        case tryMatchUnionOfSimpleToMSets expr of
+            Just{} -> na "rule_Union: set-union has a cheaper translation for this"
+            Nothing -> return ()
+        yMaxOccur <- msetMaxOccur y
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for multiset union"
@@ -145,7 +181,7 @@ rule_Union = "mset-union" `namedRule` theRule where
                     , Comprehension body
                         $  gocBefore
                         ++ [ Generator (GenInExpr pat [essence| toSet(&y) |])
-                           , Generator (GenDomainNoRepr jPat (mkDomainIntB 1 yMaxSize))
+                           , Generator (GenDomainNoRepr jPat (mkDomainIntB 1 yMaxOccur))
                            , Condition [essence| freq(&x, &i) < &j /\ &j <= freq(&y, &i) |]
                            ]
                         ++ gocAfter
@@ -153,18 +189,31 @@ rule_Union = "mset-union" `namedRule` theRule where
             )
     theRule _ = na "rule_Union"
 
-    msetMaxSize mset = case tryMatch opUnion mset of
+    -- an upper bound on the number of occurrences of a single element in the multiset
+    msetMaxOccur mset = case tryMatch opUnion mset of
         Just (x, y) -> do
-            xMaxSize <- msetMaxSize x
-            yMaxSize <- msetMaxSize y
-            return [essence| max([&xMaxSize, &yMaxSize]) |]
-        Nothing -> do
-            DomainMSet _ (MSetAttr sizeAttr _) _ <- domainOf mset
-            case sizeAttr of
-                SizeAttr_Size size -> return size
-                SizeAttr_MaxSize size -> return size
-                SizeAttr_MinMaxSize _ size -> return size
-                _ -> failDoc "rule_Union maxSize"
+            xMaxOccur <- msetMaxOccur x
+            yMaxOccur <- msetMaxOccur y
+            return [essence| max([&xMaxOccur, &yMaxOccur]) |]
+        Nothing -> case tryMatch opToMSet mset of
+            -- toMSet of a set, function or relation never repeats an element
+            Just inner -> do
+                tyInner <- typeOf inner
+                case tyInner of
+                    TypeSet{}      -> return 1
+                    TypeFunction{} -> return 1
+                    TypeRelation{} -> return 1
+                    TypeMSet{}     -> msetMaxOccur inner
+                    _              -> msetMaxOccurFromDomain mset
+            Nothing -> msetMaxOccurFromDomain mset
+
+    msetMaxOccurFromDomain mset = do
+        DomainMSet _ (MSetAttr sizeAttr _) _ <- domainOf mset
+        case sizeAttr of
+            SizeAttr_Size size -> return size
+            SizeAttr_MaxSize size -> return size
+            SizeAttr_MinMaxSize _ size -> return size
+            _ -> failDoc "rule_Union maxOccur"
 
 
 rule_Eq :: Rule

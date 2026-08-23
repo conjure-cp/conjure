@@ -3,6 +3,7 @@
 module Conjure.Rules.Horizontal.Set where
 
 import Conjure.Rules.Import
+import Conjure.Rules.Horizontal.MSet ( tryMatchUnionOfSimpleToMSets )
 import Conjure.Process.Sanity ( isInfinite )
 
 rule_Comprehension_Literal :: Rule
@@ -151,7 +152,11 @@ rule_Union = "set-union" `namedRule` theRule where
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
-            TypeMSet{}     -> na "rule_Union: multiset union"
+            -- a multiset union only agrees with a set union when neither side
+            -- can contain duplicates, rule_Union in Horizontal.MSet handles the rest
+            TypeMSet{}     -> case tryMatchUnionOfSimpleToMSets s of
+                                Just{}  -> return ()
+                                Nothing -> na "rule_Union: multiset union"
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
             _              -> failDoc "type incompatibility in union operator"
