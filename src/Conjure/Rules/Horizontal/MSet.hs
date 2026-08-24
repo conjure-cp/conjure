@@ -86,6 +86,136 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
     theRule _ = na "rule_Comprehension_ToSet_Literal"
 
 
+rule_Comprehension_ToSet :: Rule
+rule_Comprehension_ToSet = "mset-comprehension-toSet" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, iPat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_Comprehension_ToSet"
+        mset <- match opToSet expr
+        TypeMSet{} <- typeOf mset
+        case tryMatch msetLiteral mset of
+            Just{} -> na "rule_Comprehension_ToSet: literal has a more specific rule"
+            Nothing -> return ()
+        innerDomain <- msetInnerDomain mset
+        let i = Reference iPat Nothing
+        return
+            ( "Comprehension on toSet of a multiset"
+            , return $ Comprehension body
+                $  gocBefore
+                ++ [ Generator (GenDomainNoRepr pat innerDomain)
+                   , Condition [essence| freq(&mset, &i) > 0 |]
+                   ]
+                ++ gocAfter
+            )
+    theRule _ = na "rule_Comprehension_ToSet"
+
+    msetInnerDomain mset = case tryMatch opUnion mset of
+        Just (x, y) -> do
+            xInner <- msetInnerDomain x
+            yInner <- msetInnerDomain y
+            domainUnion xInner yInner
+        Nothing -> do
+            DomainMSet _ _ inner <- domainOf mset
+            return inner
+
+
+-- Is this argument of a toMSet guaranteed not to contain the same element twice?
+duplicateFreeToMSetArg ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Bool
+duplicateFreeToMSetArg x = case (typeOf x :: Maybe Type) of
+    Just TypeSet{}      -> True
+    Just TypeFunction{} -> True
+    Just TypeRelation{} -> True
+    _ -> case x of
+        -- a collection that has already been refined into a comprehension
+        -- generating each member of a domain at most once
+        Comprehension (Reference nm _) gensOrConds ->
+            case [ gen | Generator gen <- gensOrConds ] of
+                [GenDomainNoRepr  (Single nm') _] -> nm == nm'
+                [GenDomainHasRepr nm'          _] -> nm == nm'
+                _ -> False
+        _ -> False
+
+
+-- Matches toMSet(x) union toMSet(y), where neither x nor y can contain duplicates.
+-- Such a union has the same elements as the (much cheaper) union of the two
+-- containers, so it is handled by the set union rule instead of by rule_Union.
+tryMatchUnionOfSimpleToMSets ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Maybe (Expression, Expression)
+tryMatchUnionOfSimpleToMSets p = do
+    (x, y) <- match opUnion p
+    x' <- match opToMSet x
+    y' <- match opToMSet y
+    unless (duplicateFreeToMSetArg x' && duplicateFreeToMSetArg y') Nothing
+    return (x', y')
+
+
+-- A multiset union contains max(freq(x, i), freq(y, i)) copies of each i.
+-- Keep all copies from x, then add only the excess copies from y.
+rule_Union :: Rule
+rule_Union = "mset-union" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, iPat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_Union"
+        (x, y) <- match opUnion expr
+        TypeMSet{} <- typeOf x
+        case tryMatchUnionOfSimpleToMSets expr of
+            Just{} -> na "rule_Union: set-union has a cheaper translation for this"
+            Nothing -> return ()
+        yMaxOccur <- msetMaxOccur y
+        let i = Reference iPat Nothing
+        return
+            ( "Horizontal rule for multiset union"
+            , do
+                (jPat, j) <- quantifiedVar
+                return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+                    (DomainInt TagInt [RangeBounded 1 2])
+                    [ Comprehension body
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr pat x) ]
+                        ++ gocAfter
+                    , Comprehension body
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr pat [essence| toSet(&y) |])
+                           , Generator (GenDomainNoRepr jPat (mkDomainIntB 1 yMaxOccur))
+                           , Condition [essence| freq(&x, &i) < &j /\ &j <= freq(&y, &i) |]
+                           ]
+                        ++ gocAfter
+                    ]
+            )
+    theRule _ = na "rule_Union"
+
+    -- an upper bound on the number of occurrences of a single element in the multiset
+    msetMaxOccur mset = case tryMatch opUnion mset of
+        Just (x, y) -> do
+            xMaxOccur <- msetMaxOccur x
+            yMaxOccur <- msetMaxOccur y
+            return [essence| max([&xMaxOccur, &yMaxOccur]) |]
+        Nothing -> case tryMatch opToMSet mset of
+            -- toMSet of a set, function or relation never repeats an element
+            Just inner -> do
+                tyInner <- typeOf inner
+                case tyInner of
+                    TypeSet{}      -> return 1
+                    TypeFunction{} -> return 1
+                    TypeRelation{} -> return 1
+                    TypeMSet{}     -> msetMaxOccur inner
+                    _              -> msetMaxOccurFromDomain mset
+            Nothing -> msetMaxOccurFromDomain mset
+
+    msetMaxOccurFromDomain mset = do
+        DomainMSet _ (MSetAttr sizeAttr _) _ <- domainOf mset
+        case sizeAttr of
+            SizeAttr_Size size -> return size
+            SizeAttr_MaxSize size -> return size
+            SizeAttr_MinMaxSize _ size -> return size
+            _ -> failDoc "rule_Union maxOccur"
+
+
 rule_Eq :: Rule
 rule_Eq = "mset-eq" `namedRule` theRule where
     theRule p = do
@@ -201,6 +331,19 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
                     return [essence| min([&i | &iPat <- &s]) |]
             )
     theRule _ = na "rule_MaxMin"
+
+
+-- freq(x union y, arg) ~~> max([freq(x, arg), freq(y, arg)])
+rule_Freq_Union :: Rule
+rule_Freq_Union = "mset-freq-union" `namedRule` theRule where
+    theRule p = do
+        (mset, arg) <- match opFreq p
+        (x, y) <- match opUnion mset
+        TypeMSet{} <- typeOf x
+        return
+            ( "Horizontal rule for frequency in a multiset union."
+            , return [essence| max([freq(&x, &arg), freq(&y, &arg)]) |]
+            )
 
 
 -- freq(mset,arg) ~~> sum([ toInt(arg = i) | i in mset ])

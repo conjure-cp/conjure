@@ -1573,6 +1573,8 @@ horizontalRules =
     , Horizontal.Set.rule_Card
     , Horizontal.Set.rule_CardViaFreq
     , Horizontal.Set.rule_Intersect
+    , Horizontal.MSet.rule_Comprehension_ToSet
+    , Horizontal.MSet.rule_Union
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_Difference
     , Horizontal.Set.rule_PowerSet_Comprehension
@@ -1588,6 +1590,7 @@ horizontalRules =
     , Horizontal.MSet.rule_SubsetEq
     , Horizontal.MSet.rule_Supset
     , Horizontal.MSet.rule_SupsetEq
+    , Horizontal.MSet.rule_Freq_Union
     , Horizontal.MSet.rule_Freq
     , Horizontal.MSet.rule_In
     , Horizontal.MSet.rule_Card

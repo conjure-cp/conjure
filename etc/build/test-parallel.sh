@@ -9,9 +9,25 @@ echo "conjure.domainSize"       >> test_commands
 echo "conjure.representations"  >> test_commands
 echo "conjure.type-checking"    >> test_commands
 
+# an unmatched glob stays literal in bash, so a missing executable shows up as a
+# single entry that is not a file
+conjure_testing=(.stack-work/dist/*/*/build/conjure-testing/conjure-testing)
+if [ ! -f "${conjure_testing[0]}" ]; then
+    echo "ERROR: the conjure-testing executable has not been built."
+    echo "Without it we would silently run whichever stale ./conjure-testing is lying around."
+    echo "Build it with: BUILD_TESTS=true make"
+    exit 1
+fi
+if [ ${#conjure_testing[@]} -ne 1 ]; then
+    echo "ERROR: found ${#conjure_testing[@]} conjure-testing executables:"
+    printf '    %s\n' "${conjure_testing[@]}"
+    echo "Cannot tell which one to test with, they are built for different architectures or GHC versions."
+    echo "Remove the stale ones (or the whole .stack-work) and rebuild with: BUILD_TESTS=true make"
+    exit 1
+fi
 echo "Using conjure-testing executable from the following location."
-ls .stack-work/dist/*/*/build/conjure-testing/conjure-testing
-cp .stack-work/dist/*/*/build/conjure-testing/conjure-testing .
+ls "${conjure_testing[0]}"
+cp "${conjure_testing[0]}" .
 
 # these are the 20 longest-running tests, let's put them at the front
 if [ ${LIMIT_TIME} = 0 ]; then

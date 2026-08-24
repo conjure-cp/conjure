@@ -17,6 +17,11 @@ fi
 
 if ${BUILD_TESTS}; then
     rm -f .stack-work/dist/*/*/build/conjure-testing/conjure-testing
+    # stack decides what to relink from its own build cache, not from whether the
+    # executable is still there, so drop the cache entry as well. without this,
+    # deleting the executable when nothing else is dirty leaves us with no
+    # executable at all: stack sees the test component as up to date and skips it.
+    rm -f .stack-work/dist/*/*/stack-build-caches/*/test-conjure-testing
     COMMAND="${COMMAND} --test --no-run-tests"
 fi
 
