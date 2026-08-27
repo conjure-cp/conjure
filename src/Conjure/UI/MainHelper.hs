@@ -1176,7 +1176,12 @@ srStdoutHandler
                             appendFile filenameEssenceSol (render lineWidth essenceSol ++ "\n\n")
                             when (outputFormat `elem` [JSON, JSONStream]) $ do
                                 essenceSol' <- toSimpleJSON essenceSol
-                                appendFile filenameEssenceSolJSON (render lineWidth essenceSol')
+                                -- jsonstream prints one solution per line, so it must not be
+                                -- wrapped at lineWidth. json stays pretty printed.
+                                let solWidth = case outputFormat of
+                                                    JSONStream -> maxBound
+                                                    _          -> lineWidth
+                                appendFile filenameEssenceSolJSON (render solWidth essenceSol')
                                 appendFile filenameEssenceSolJSON  ("\n")
                             fmap (Right (modelPath, paramPath, Nothing) :)
                                  (srStdoutHandler args tr (solutionNumber+1) h)
