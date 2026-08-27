@@ -1,0 +1,12 @@
+$ Complete symmetry breaking compares x with transform(p,x) using .<= , which orders its
+$ two sides by a representation-specific key. The right hand side becomes an auxiliary,
+$ so the auxiliary has to be given the same representation as x -- two different keys are
+$ not comparable, and comparing them keeps or loses whole orbits.
+$
+$ Whichever representations conjure picks, the answer has to be the same: the 9 partial
+$ functions on 2 points fall into 6 orbits under Sym(e) -- the empty function, the two
+$ one-point functions, and the three total ones. Before this was fixed, the models
+$ disagreed with each other, reporting 1, 6 and 7.
+letting e be new type of size 2
+
+find x : function e --> e

@@ -11,7 +11,7 @@ module Conjure.Rules.Definition
     , ModelZipper, mkModelZipper, fromModelZipper
     , ModelWIP(..), modelWIPOut, updateModelWIPInfo
     , isAtomic
-    , representationOf, hasRepresentation
+    , representationOf, hasRepresentation, representationTreeOf
     , sameRepresentation, sameRepresentationTree
     , matchFirst
     ) where

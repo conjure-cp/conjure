@@ -1,0 +1,10 @@
+$ .<= must be a total order on the abstract value, whichever representations the two
+$ sides happen to get (they may differ, and the orderings the representations define
+$ are not comparable with each other). There are 3**2 = 9 partial functions on 2
+$ points, so exactly 9*10/2 = 45 of the 9*9 pairs satisfy a .<= b -- in every model.
+letting e be new type of size 2
+
+find a : function e --> e
+find b : function e --> e
+
+such that a .<= b

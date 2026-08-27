@@ -1765,18 +1765,47 @@ delayedRules =
     ]
 
 
-rule_ChooseRepr :: (?typeCheckerMode :: TypeCheckerMode) => Config -> Rule
-rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
+-- | The two operands, if this expression is a .< or a .<= .
+dotOrderOperands :: Expression -> Maybe (Expression, Expression)
+dotOrderOperands p = case p of
+    [essence| &l .<  &r |] -> Just (l, r)
+    [essence| &l .<= &r |] -> Just (l, r)
+    _ -> Nothing
 
-    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
+-- | symmetryOrdering is representation-specific, so rule_DotLtLeq can only order two sides
+--   that share a representation tree. When one operand of a .< / .<= has already been given
+--   a representation, restrict the options for the other operand to match it, so mismatched
+--   models are never generated instead of being generated and then found to be dead ends.
+restrictToSiblingRepr
+    :: (?typeCheckerMode :: TypeCheckerMode)
+    => Maybe Expression
+    -> [Domain HasRepresentation Expression]
+    -> [Domain HasRepresentation Expression]
+restrictToSiblingRepr mbSibling domOpts = fromMaybe domOpts $ do
+    sibling <- mbSibling
+    tree    <- representationTreeOf sibling
+    case [ d | d <- domOpts, reprTree d == tree ] of
+        [] -> Nothing               -- sibling undecided, or no common representation
+        ds -> Just ds
+
+
+rule_ChooseRepr :: (?typeCheckerMode :: TypeCheckerMode) => Config -> Rule
+rule_ChooseRepr config = Rule "choose-repr" theRule where
+
+    theRule zipper (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
         let reprsWhichOrder
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
                 | (forg, representationsFinds  config) == (Find , Sparse) = reprsSparseOrder
                 | not (representationLevels config)                       = reprsStandardOrderNoLevels
                 | otherwise                                               = reprsStandardOrder
-        domOpts <- reprOptions reprsWhichOrder inpDom
-        when (null domOpts) $
+        domOptsAll <- reprOptions reprsWhichOrder inpDom
+        when (null domOptsAll) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
+        -- symmetryOrdering is representation-specific, so rule_DotLtLeq can only order two
+        -- sides that share a representation tree. Restrict the choice here so mismatched
+        -- models are never generated, rather than generated and then found to be dead ends.
+        -- Whichever side is decided second sees the first one's choice and follows it.
+        let domOpts = restrictToSiblingRepr (dotOrderSibling zipper) domOptsAll
         let options =
                 [ RuleResult { ruleResultDescr = msg
                              , ruleResultType = case forg of
@@ -1794,7 +1823,14 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 , let hook = mkHook (channelling config) forg nm thisDom region
                 ]
         return options
-    theRule _ = na "rule_ChooseRepr"
+    theRule _ _ = na "rule_ChooseRepr"
+
+    -- The other operand, when this occurrence is directly an operand of .< or .<=
+    dotOrderSibling z = do
+        parent    <- Zipper.up z
+        (l, r)    <- dotOrderOperands (hole parent)
+        let me = hole z
+        if l == me then Just r else if r == me then Just l else Nothing
 
     mkHook
         :: ( MonadLog m
@@ -1985,9 +2021,19 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                 | representationsAuxiliaries config == Sparse   = reprsSparseOrder
                 | not (representationLevels config)             = reprsStandardOrderNoLevels
                 | otherwise                                     = reprsStandardOrder
-        domOpts <- reprOptions reprsWhichOrder domain
-        when (null domOpts) $
+        domOptsAll <- reprOptions reprsWhichOrder domain
+        when (null domOptsAll) $
             bug $ "No representation matches this beast:" <++> pretty domain
+        -- an auxiliary that is compared with .< / .<= has to match the other operand
+        let mbSibling = listToMaybe
+                [ other
+                | p <- universeBi body
+                , Just (l, r) <- [dotOrderOperands p]
+                , (me, other) <- [(l, r), (r, l)]
+                , Reference nm' _ <- [me]
+                , nm == nm'
+                ]
+        let domOpts = restrictToSiblingRepr mbSibling domOptsAll
 
         return
             [ RuleResult
@@ -2120,6 +2166,16 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
+        -- symmetryOrdering is representation-specific: each representation defines its own
+        -- total order, and the vectors two different representations produce are not
+        -- comparable (they can even have different lengths). Refuse only when both sides
+        -- do have a representation and the two differ. Operands without one -- tuple
+        -- literals, comprehensions, ... -- are left alone, so that the rules which
+        -- decompose them still get their chance.
+        case (representationTreeOf a, representationTreeOf b) of
+            (Just treeA, Just treeB) | treeA /= treeB ->
+                na "rule_DotLtLeq: operands have different representations"
+            _ -> return ()
         -- at this point, tuples vs matrix literal shouldn't matter
         -- replace tuple literals with matrix literals
         let
