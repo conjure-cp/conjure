@@ -116,12 +116,13 @@ rule_Image_permInverse = "permutation-image-permInverse{AsFunction}" `namedRule`
                     ( "Vertical rule for permutation application to a type the permutation doesn't care about",
                       return i
                     )
-        Just (_, [[_, _]]) ->
+        Just (ty, cycles) ->
           return
-            ( "Vertical rule for permutation application, where the permutation is a literal and contains 2 objects",
-              return [essence| image(&p, &i) |]
+            ( "Vertical rule for permutation application, where the permutation is a literal",
+              do
+                let pInv = make permutationLiteral ty (reverse <$> cycles)
+                return [essence| image(&pInv, &i) |]
             )
-        _ -> na "rule_Image_permInverse" -- TODO: missing case for permutation literal
     theRule _ = na "rule_Image_permInverse"
 
 
