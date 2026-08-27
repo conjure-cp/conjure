@@ -228,13 +228,15 @@ writeModel  lnWidth ASTJSON (Just fp) spec
     | otherwise                            = liftIO $    writeFile fp (render lnWidth (toJSON spec))
 writeModel lnWidth fmt Nothing spec | fmt `elem` [JSON, JSONStream] = do
     spec' <- toSimpleJSON spec
+    -- a line width of 0 means "do not wrap". It must still be rendered as JSON:
+    -- show would give the Haskell representation of the value instead.
     if lnWidth == 0
-        then liftIO $ putStrLn (show spec')
+        then liftIO $ putStrLn (render maxBound spec')
         else liftIO $ putStrLn (render lnWidth spec')
 writeModel lnWidth fmt (Just fp) spec | fmt `elem` [JSON, JSONStream] = do
     spec' <- toSimpleJSON spec
     if lnWidth == 0
-        then liftIO $ writeFile fp (show spec')
+        then liftIO $ writeFile fp (render maxBound spec')
         else liftIO $ writeFile fp (render lnWidth spec')
 writeModel lnWidth MiniZinc Nothing spec = do
     spec' <- toMiniZinc spec
