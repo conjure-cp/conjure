@@ -371,35 +371,52 @@ rule_Transform_Comprehension = "transform-comprehension" `namedRule` theRule
       ([morphism], cmp@(Comprehension body gensOrConds)) <- match opTransform x
       ty <- typeOf cmp
       inn <- morphing =<< typeOf morphism
+      -- A comprehension over a domain is a matrix indexed by that domain, and the image
+      -- of a matrix m under a permutation p is [ p(m[permInverse(p)(i)]) | i : indexDom ].
+      -- So the quantified index has to be mapped back through the *inverse* morphism,
+      -- while everything else is mapped forwards. Getting this wrong permutes the entries
+      -- of the result into the wrong order, which is invisible for set-like uses but
+      -- silently wrong under .<= / <=lex.
+      morphismInv <-
+        if any isDomainGenerator gensOrConds
+          then do
+            TypePermutation {} <- typeOf morphism
+            return [essence| permInverse(&morphism) |]
+          else return morphism
       if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn
         then
           return
             ( "Horizontal rule for transform comprehension",
               do
-                gox <- mapM (transformOverGenOrCond morphism) gensOrConds
+                gox <- mapM (transformOverGenOrCond morphism morphismInv) gensOrConds
                 return $ Comprehension [essence| transform([&morphism], &body) |] (join gox)
             )
         else na "rule_Transform_Comprehension"
-    transformOverGenOrCond m (Generator g) = transformOverGenerator m g
-    transformOverGenOrCond m (Condition e) =
+
+    isDomainGenerator (Generator GenDomainHasRepr {}) = True
+    isDomainGenerator (Generator GenDomainNoRepr {}) = True
+    isDomainGenerator _ = False
+
+    transformOverGenOrCond m mInv (Generator g) = transformOverGenerator m mInv g
+    transformOverGenOrCond m _ (Condition e) =
       return [Condition [essence| transform([&m], &e) |]]
-    transformOverGenOrCond m (ComprehensionLetting pat e) =
+    transformOverGenOrCond m _ (ComprehensionLetting pat e) =
       return [ComprehensionLetting pat [essence| transform([&m], &e) |]]
 
-    transformOverGenerator m (GenDomainHasRepr a d) = do
+    transformOverGenerator _ mInv (GenDomainHasRepr a d) = do
       (Single nm, n) <- quantifiedVarOverDomain $ forgetRepr d
       return
         [ Generator (GenDomainHasRepr nm d),
-          ComprehensionLetting (Single a) [essence| transform([&m], &n) |]
+          ComprehensionLetting (Single a) [essence| transform([&mInv], &n) |]
         ]
-    transformOverGenerator m (GenInExpr a e) =
+    transformOverGenerator m _ (GenInExpr a e) =
       return [Generator (GenInExpr a [essence| transform([&m], &e) |])]
-    transformOverGenerator m (GenDomainNoRepr absPat d) = do
+    transformOverGenerator _ mInv (GenDomainNoRepr absPat d) = do
       (rPat, ns) <- clonePattern absPat
       return
         $ Generator (GenDomainNoRepr rPat d)
         : ( ( \(pat, exp) ->
-                ComprehensionLetting (Single pat) [essence| transform([&m], &exp) |]
+                ComprehensionLetting (Single pat) [essence| transform([&mInv], &exp) |]
             )
               <$> ns
           )
