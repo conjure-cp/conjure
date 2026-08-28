@@ -15,6 +15,7 @@ rules_Transform =
     -- rule_Transform_Sequence_Literal,
     rule_Transform_FunctionImage,
     rule_Transform_Tuple,
+    rule_Transform_Matrix_Literal,
     rule_Transform_Functorially,
     rule_Transform_Comprehension,
     rule_Transform_Product_Types,
@@ -337,6 +338,30 @@ rule_Transform_Tuple = "transform-tuple" `namedRule` theRule
                   ]
             )
     theRule _ = na "rule_Transform_Tuple"
+
+-- transform(p, [a, b, c]) ~~> [transform(p, a), transform(p, b), transform(p, c)]
+-- Only valid when the index domain of the matrix is untouched by the morphisms,
+-- otherwise the entries would have to be reordered as well.
+rule_Transform_Matrix_Literal :: Rule
+rule_Transform_Matrix_Literal = "transform-matrix-literal" `namedRule` theRule
+  where
+    theRule p = do
+      (morphisms, x) <- match opTransform p
+      (index, elems) <- case x of
+        AbstractLiteral (AbsLitMatrix index elems) -> return (index, elems)
+        _ -> na "rule_Transform_Matrix_Literal"
+      TypeMatrix tyIndex _ <- typeOf x
+      forM_ morphisms $ \morphism -> do
+        inn <- morphing =<< typeOf morphism
+        when (let ?typeCheckerMode = StronglyTyped in tyIndex `containsType` inn)
+          $ na "rule_Transform_Matrix_Literal"
+      return
+        ( "Horizontal rule for transform of a matrix literal",
+          return
+            $ AbstractLiteral
+            $ AbsLitMatrix index
+            $ [make opTransform morphisms e | e <- elems]
+        )
 
 rule_Transform_Functorially :: Rule
 rule_Transform_Functorially = "transform-functorially" `namedRule` theRule
