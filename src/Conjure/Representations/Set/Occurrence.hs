@@ -98,6 +98,6 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
         symmetryOrdering :: (MonadFail m) => TypeOf_SymmetryOrdering m
         symmetryOrdering _innerSO downX1 inp (DomainSet Set_Occurrence _attrs innerDomain) = do
             [m] <- downX1 inp
-            (iPat, i) <- quantifiedVar
+            (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomain)
             return [essence| [ -toInt(&m[&i]) | &iPat : &innerDomain ] |]
         symmetryOrdering _ _ _ _ = na "{symmetryOrdering} Occurrence"
