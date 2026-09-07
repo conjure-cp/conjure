@@ -1,0 +1,8 @@
+language Essence 1.3
+find a,b : set (maxSize 1) of int(1..2)
+find lt,leq,dotlt,dotleq : bool
+such that
+    lt <-> a ~< b,
+    leq <-> a ~<= b,
+    dotlt <-> a .< b,
+    dotleq <-> a .<= b

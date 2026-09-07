@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+find pairs_1: matrix indexed by [int(1..2)] of int(1..2)
+find pairs_2_Occurrence: matrix indexed by [int(1..2), int(1..2)] of bool
+find lt: bool
+find leq: bool
+branching on [pairs_1, pairs_2_Occurrence, lt, leq]
+such that
+    lt <->
+    pairs_1[1] < pairs_1[2] \/ pairs_1[1] = pairs_1[2] /\ pairs_2_Occurrence[1, ..] <lex pairs_2_Occurrence[2, ..],
+    leq <->
+    pairs_1[1] < pairs_1[2] \/ pairs_1[1] = pairs_1[2] /\ pairs_2_Occurrence[1, ..] <=lex pairs_2_Occurrence[2, ..],
+    and([1 = sum([toInt(pairs_2_Occurrence[q1, q2]) | q2 : int(1..2)]) | q1 : int(1..2)])
+

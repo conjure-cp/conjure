@@ -529,8 +529,8 @@ such that
          sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q32, q33]) | q33 : int(1..2)]) >= 1
              | q32 : int(1..2)]),
     2 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-    [-toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[1, q25]) | q25 : int(1..2)] <lex
-    [-toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[2, q26]) | q26 : int(1..2)],
+    [toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[1, q25]) | q25 : int(1..2)] <lex
+    [toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[2, q26]) | q26 : int(1..2)],
     and([q21 > b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q27] = false | q27 : int(1..2)])
              | q21 : int(1..2)]),

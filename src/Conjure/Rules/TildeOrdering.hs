@@ -3,10 +3,12 @@
 module Conjure.Rules.TildeOrdering where
 
 import Conjure.Rules.Import
+import Conjure.Representations.Ordering
+import Conjure.Compute.DomainOf ( domainOfR )
 
 
--- Occurrence coordinates are already in the global element order.  Unlike
--- symmetryOrdering for sets, use positive membership bits: absence < presence.
+-- Occurrence coordinates are already in the global element order.
+-- Use positive membership bits: absence < presence.
 -- Equal index domains are essential; equal vector lengths alone are not enough.
 rule_Occurrence :: Rule
 rule_Occurrence = "tildeOrd-occurrence" `namedRule` theRule where
@@ -39,7 +41,7 @@ rule_Occurrence = "tildeOrd-occurrence" `namedRule` theRule where
 -- Sorted explicit lists encode the first differing frequency by the first
 -- differing value, with the value order reversed.  An exhausted list comes
 -- before a live entry.  Restrict this to integer elements: .< reverses Boolean
--- order, and structured values need not agree with their global order either.
+-- order. Structured elements require a certified global storage order.
 rule_Explicit :: Rule
 rule_Explicit = "tildeOrd-explicit" `namedRule` theRule where
     theRule p = do
@@ -58,34 +60,48 @@ rule_Explicit = "tildeOrd-explicit" `namedRule` theRule where
         ys <- downX1 y
         vx : _ <- return $ reverse xs
         vy : _ <- return $ reverse ys
-        DomainMatrix ix dx <- domainOf vx
-        DomainMatrix iy dy <- domainOf vy
+        DomainMatrix ixR dx <- domainOfR vx
+        DomainMatrix iyR dy <- domainOfR vy
+        let ix = forgetRepr ixR
+        let iy = forgetRepr iyR
         unless (ix == iy) $ na "rule_Explicit: different capacities"
         tx <- typeOfDomain dx
         ty <- typeOfDomain dy
-        unless (tx == ty && case tx of TypeInt{} -> True; _ -> False) $
-            na "rule_Explicit: non-integer elements"
+        let primitive = case tx of TypeInt{} -> True; _ -> False
+        unless (tx == ty && (primitive || (dx == dy && orderingIsGlobal dx))) $
+            na "rule_Explicit: element order is not certified global"
         -- Dummy values must denote the same sentinel on both sides.
         when (rx == Set_ExplicitVarSizeWithDummy && dx /= dy) $
             na "rule_Explicit: different dummy domains"
         return
             ( "Global order via lexicographic explicit-list comparison"
-            , if rx `elem` [Set_Explicit, Set_ExplicitVarSizeWithDummy]
+            , if primitive && rx `elem` [Set_Explicit, Set_ExplicitVarSizeWithDummy]
                 then return $ mk vy vx
                 else do
                     let key refs = do
-                            [flags, values] <- return refs
-                            (iPat, i) <- quantifiedVar
+                            (flags, values) <- case refs of
+                                [values] | rx == Set_Explicit -> return (0, values)
+                                [flags, values] -> return (flags, values)
+                                _ -> na "rule_Explicit: unexpected components"
+                            (iPat, i) <- quantifiedVarOverDomain ix
                             let active = case rx of
+                                    Set_Explicit -> [essence| true |]
                                     Set_ExplicitVarSizeWithFlags -> [essence| &flags[&i] |]
                                     MSet_ExplicitWithFlags -> [essence| &flags[&i] > 0 |]
                                     _ -> [essence| &i <= &flags |]
                             let value = [essence| &values[&i] |]
                             -- Inactive values are don't-cares; normalise them so
                             -- equality is independent of their chosen padding.
-                            let entry = if rx == MSet_ExplicitWithFlags
+                            entry <- if primitive
+                                then return $ if rx == MSet_ExplicitWithFlags
                                     then [essence| [toInt(&active), -&value * toInt(&active), &flags[&i]] |]
                                     else [essence| [toInt(&active), -&value * toInt(&active)] |]
+                                else do
+                                    masked <- mapGlobalOrderingKey
+                                        (\ k -> [essence| -&k * toInt(&active) |]) downX1 value dx
+                                    return $ if rx == MSet_ExplicitWithFlags
+                                        then [essence| flatten([[toInt(&active)], &masked, [&flags[&i]]]) |]
+                                        else [essence| flatten([[toInt(&active)], &masked]) |]
                             return [essence| flatten([&entry | &iPat : &ix]) |]
                     kx <- key xs
                     ky <- key ys

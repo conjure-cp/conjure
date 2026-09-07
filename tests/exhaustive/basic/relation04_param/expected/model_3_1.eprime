@@ -120,13 +120,13 @@ such that
              | q3 : int(1..84)]),
     and([q10 + 1 <= r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker ->
          flatten([[r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q10]; int(1)],
-                  [-toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q10, q14])
+                  [toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q10, q14])
                        | q14 : int(2..3)],
                   [r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q10]; int(1)];
                       int(1..3)])
          <lex
          flatten([[r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q10 + 1]; int(1)],
-                  [-toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q10 + 1, q15])
+                  [toInt(r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q10 + 1, q15])
                        | q15 : int(2..3)],
                   [r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q10 + 1]; int(1)];
                       int(1..3)])

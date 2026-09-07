@@ -1,0 +1,37 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given p_ExplicitWithRepetitionR2_Flag: int(fin1)
+given p_ExplicitWithRepetitionR2_Values_Occurrence: matrix indexed by [int(1..fin1), int(1..2)] of bool
+find a_ExplicitWithFlagsR3_Flags: matrix indexed by [int(1..3)] of int(0..3)
+find a_ExplicitWithFlagsR3_Values_Explicit: matrix indexed by [int(1..3), int(1)] of int(1..2)
+branching on [a_ExplicitWithFlagsR3_Flags, a_ExplicitWithFlagsR3_Values_Explicit]
+such that
+    and([a_ExplicitWithFlagsR3_Flags[q13] > 0 ->
+         sum([toInt(a_ExplicitWithFlagsR3_Values_Explicit[q14, 1] = a_ExplicitWithFlagsR3_Values_Explicit[q13, 1]) *
+              catchUndef(a_ExplicitWithFlagsR3_Flags[q14], 0)
+                  | q14 : int(1..3)])
+         =
+         sum([toInt(and([a_ExplicitWithFlagsR3_Values_Explicit[q13, 1] = q19
+                             | q19 : int(1..2), p_ExplicitWithRepetitionR2_Values_Occurrence[q18, q19]])
+                    /\ p_ExplicitWithRepetitionR2_Values_Occurrence[q18, a_ExplicitWithFlagsR3_Values_Explicit[q13, 1]])
+                  | q18 : int(1..fin1), q18 <= fin1])
+             | q13 : int(1..3)]),
+    and([sum([toInt(p_ExplicitWithRepetitionR2_Values_Occurrence[q24, a_ExplicitWithFlagsR3_Values_Explicit[q25, 1]] /\
+                    and([a_ExplicitWithFlagsR3_Values_Explicit[q25, 1] = q28
+                             | q28 : int(1..2), p_ExplicitWithRepetitionR2_Values_Occurrence[q24, q28]]))
+              * catchUndef(a_ExplicitWithFlagsR3_Flags[q25], 0)
+                  | q25 : int(1..3)])
+         =
+         sum([toInt(and([p_ExplicitWithRepetitionR2_Values_Occurrence[q32, q33] =
+                         p_ExplicitWithRepetitionR2_Values_Occurrence[q24, q33]
+                             | q33 : int(1..2)]))
+                  | q32 : int(1..fin1), q32 <= fin1])
+             | q24 : int(1..fin1), q24 <= fin1]),
+    and([a_ExplicitWithFlagsR3_Flags[q1 + 1] > 0 ->
+         -a_ExplicitWithFlagsR3_Values_Explicit[q1, 1] < -a_ExplicitWithFlagsR3_Values_Explicit[q1 + 1, 1]
+             | q1 : int(1..2)]),
+    and([a_ExplicitWithFlagsR3_Flags[q2] = 0 -> a_ExplicitWithFlagsR3_Values_Explicit[q2, 1] = 1 | q2 : int(1..3)]),
+    and([a_ExplicitWithFlagsR3_Flags[q3 + 1] > 0 -> a_ExplicitWithFlagsR3_Flags[q3] > 0 | q3 : int(1..2)]),
+    sum([a_ExplicitWithFlagsR3_Flags[q5] | q5 : int(1..3)]) <= 3
+

@@ -10,6 +10,8 @@ import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
+import Conjure.Representations.Ordering ( orderingIsGlobal )
+import Conjure.Language.EvaluateOp ( ordTildeLt )
 
 
 msetExplicitWithFlags :: forall m . (MonadFailDoc m, NameGen m, EnumerateDomain m) => Representation m
@@ -134,7 +136,10 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up symmet
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = mkDomainIntB 1 maxSize
 
-            let constants = histogram constants'
+            let countsByValue = histogram constants'
+            let constants = if orderingIsGlobal innerDomain
+                    then sortBy (\ (a, _) (b, _) -> ordTildeLt a b) countsByValue
+                    else countsByValue
 
             maxSizeInt <-
                 case maxSize of
