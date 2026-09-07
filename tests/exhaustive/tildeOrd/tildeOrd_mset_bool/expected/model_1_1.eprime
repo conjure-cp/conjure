@@ -1,0 +1,202 @@
+language ESSENCE' 1.0
+
+find a_ExplicitWithFlags_Flags: matrix indexed by [int(1..2)] of int(0..2)
+find a_ExplicitWithFlags_Values: matrix indexed by [int(1..2)] of bool
+find b_ExplicitWithFlags_Flags: matrix indexed by [int(1..2)] of int(0..2)
+find b_ExplicitWithFlags_Values: matrix indexed by [int(1..2)] of bool
+find lt: bool
+find leq: bool
+branching on
+    [a_ExplicitWithFlags_Flags, a_ExplicitWithFlags_Values, b_ExplicitWithFlags_Flags, b_ExplicitWithFlags_Values, lt,
+     leq]
+such that
+    lt <->
+    or([a_ExplicitWithFlags_Flags[q28] > 0 /\
+        (sum([toInt(a_ExplicitWithFlags_Values[q15] = a_ExplicitWithFlags_Values[q28]) *
+              catchUndef(a_ExplicitWithFlags_Flags[q15], 0)
+                  | q15 : int(1..2)])
+         <
+         sum([toInt(b_ExplicitWithFlags_Values[q16] = a_ExplicitWithFlags_Values[q28]) *
+              catchUndef(b_ExplicitWithFlags_Flags[q16], 0)
+                  | q16 : int(1..2)])
+         /\
+         (and([a_ExplicitWithFlags_Flags[q23] > 0 /\ a_ExplicitWithFlags_Values[q23] < a_ExplicitWithFlags_Values[q28]
+               ->
+               sum([toInt(a_ExplicitWithFlags_Values[q17] = a_ExplicitWithFlags_Values[q23]) *
+                    catchUndef(a_ExplicitWithFlags_Flags[q17], 0)
+                        | q17 : int(1..2)])
+               =
+               sum([toInt(b_ExplicitWithFlags_Values[q18] = a_ExplicitWithFlags_Values[q23]) *
+                    catchUndef(b_ExplicitWithFlags_Flags[q18], 0)
+                        | q18 : int(1..2)])
+                   | q23 : int(1..2)])
+          /\
+          and([q14 < a_ExplicitWithFlags_Values[q28] ->
+               (sum([toInt(b_ExplicitWithFlags_Values[q22] = q14) * catchUndef(b_ExplicitWithFlags_Flags[q22], 0)
+                         | q22 : int(1..2)])
+                > 0
+                /\
+                (sum([toInt(a_ExplicitWithFlags_Values[q20] = q14) * catchUndef(a_ExplicitWithFlags_Flags[q20], 0)
+                          | q20 : int(1..2)])
+                 < q19
+                 /\
+                 q19 <=
+                 sum([toInt(b_ExplicitWithFlags_Values[q21] = q14) * catchUndef(b_ExplicitWithFlags_Flags[q21], 0)
+                          | q21 : int(1..2)]))
+                ->
+                sum([toInt(a_ExplicitWithFlags_Values[q17] = q14) * catchUndef(a_ExplicitWithFlags_Flags[q17], 0)
+                         | q17 : int(1..2)])
+                =
+                sum([toInt(b_ExplicitWithFlags_Values[q18] = q14) * catchUndef(b_ExplicitWithFlags_Flags[q18], 0)
+                         | q18 : int(1..2)]))
+                   | q14 : bool, q19 : int(1..2)])))
+            | q28 : int(1..2)])
+    \/
+    or([sum([toInt(b_ExplicitWithFlags_Values[q27] = q13) * catchUndef(b_ExplicitWithFlags_Flags[q27], 0)
+                 | q27 : int(1..2)])
+        > 0
+        /\
+        (sum([toInt(a_ExplicitWithFlags_Values[q25] = q13) * catchUndef(a_ExplicitWithFlags_Flags[q25], 0)
+                  | q25 : int(1..2)])
+         < q24
+         /\
+         q24 <=
+         sum([toInt(b_ExplicitWithFlags_Values[q26] = q13) * catchUndef(b_ExplicitWithFlags_Flags[q26], 0)
+                  | q26 : int(1..2)]))
+        /\
+        (sum([toInt(a_ExplicitWithFlags_Values[q15] = q13) * catchUndef(a_ExplicitWithFlags_Flags[q15], 0)
+                  | q15 : int(1..2)])
+         <
+         sum([toInt(b_ExplicitWithFlags_Values[q16] = q13) * catchUndef(b_ExplicitWithFlags_Flags[q16], 0)
+                  | q16 : int(1..2)])
+         /\
+         (and([a_ExplicitWithFlags_Flags[q23] > 0 /\ a_ExplicitWithFlags_Values[q23] < q13 ->
+               sum([toInt(a_ExplicitWithFlags_Values[q17] = a_ExplicitWithFlags_Values[q23]) *
+                    catchUndef(a_ExplicitWithFlags_Flags[q17], 0)
+                        | q17 : int(1..2)])
+               =
+               sum([toInt(b_ExplicitWithFlags_Values[q18] = a_ExplicitWithFlags_Values[q23]) *
+                    catchUndef(b_ExplicitWithFlags_Flags[q18], 0)
+                        | q18 : int(1..2)])
+                   | q23 : int(1..2)])
+          /\
+          and([sum([toInt(b_ExplicitWithFlags_Values[q22] = q14) * catchUndef(b_ExplicitWithFlags_Flags[q22], 0)
+                        | q22 : int(1..2)])
+               > 0
+               /\
+               (sum([toInt(a_ExplicitWithFlags_Values[q20] = q14) * catchUndef(a_ExplicitWithFlags_Flags[q20], 0)
+                         | q20 : int(1..2)])
+                < q19
+                /\
+                q19 <=
+                sum([toInt(b_ExplicitWithFlags_Values[q21] = q14) * catchUndef(b_ExplicitWithFlags_Flags[q21], 0)
+                         | q21 : int(1..2)]))
+               ->
+               sum([toInt(a_ExplicitWithFlags_Values[q17] = q14) * catchUndef(a_ExplicitWithFlags_Flags[q17], 0)
+                        | q17 : int(1..2)])
+               =
+               sum([toInt(b_ExplicitWithFlags_Values[q18] = q14) * catchUndef(b_ExplicitWithFlags_Flags[q18], 0)
+                        | q18 : int(1..2)])
+                   | q14 : bool, q19 : int(1..2), q14 < q13])))
+            | q13 : bool, q24 : int(1..2)]),
+    leq <->
+    and([a_ExplicitWithFlags_Flags[q29] = b_ExplicitWithFlags_Flags[q29] | q29 : int(1..2)]) /\
+    and([a_ExplicitWithFlags_Values[q31] = b_ExplicitWithFlags_Values[q31] | q31 : int(1..2)])
+    \/
+    (or([a_ExplicitWithFlags_Flags[q48] > 0 /\
+         (sum([toInt(a_ExplicitWithFlags_Values[q35] = a_ExplicitWithFlags_Values[q48]) *
+               catchUndef(a_ExplicitWithFlags_Flags[q35], 0)
+                   | q35 : int(1..2)])
+          <
+          sum([toInt(b_ExplicitWithFlags_Values[q36] = a_ExplicitWithFlags_Values[q48]) *
+               catchUndef(b_ExplicitWithFlags_Flags[q36], 0)
+                   | q36 : int(1..2)])
+          /\
+          (and([a_ExplicitWithFlags_Flags[q43] > 0 /\ a_ExplicitWithFlags_Values[q43] < a_ExplicitWithFlags_Values[q48]
+                ->
+                sum([toInt(a_ExplicitWithFlags_Values[q37] = a_ExplicitWithFlags_Values[q43]) *
+                     catchUndef(a_ExplicitWithFlags_Flags[q37], 0)
+                         | q37 : int(1..2)])
+                =
+                sum([toInt(b_ExplicitWithFlags_Values[q38] = a_ExplicitWithFlags_Values[q43]) *
+                     catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                         | q38 : int(1..2)])
+                    | q43 : int(1..2)])
+           /\
+           and([q34 < a_ExplicitWithFlags_Values[q48] ->
+                (sum([toInt(b_ExplicitWithFlags_Values[q42] = q34) * catchUndef(b_ExplicitWithFlags_Flags[q42], 0)
+                          | q42 : int(1..2)])
+                 > 0
+                 /\
+                 (sum([toInt(a_ExplicitWithFlags_Values[q40] = q34) * catchUndef(a_ExplicitWithFlags_Flags[q40], 0)
+                           | q40 : int(1..2)])
+                  < q39
+                  /\
+                  q39 <=
+                  sum([toInt(b_ExplicitWithFlags_Values[q41] = q34) * catchUndef(b_ExplicitWithFlags_Flags[q41], 0)
+                           | q41 : int(1..2)]))
+                 ->
+                 sum([toInt(a_ExplicitWithFlags_Values[q37] = q34) * catchUndef(a_ExplicitWithFlags_Flags[q37], 0)
+                          | q37 : int(1..2)])
+                 =
+                 sum([toInt(b_ExplicitWithFlags_Values[q38] = q34) * catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                          | q38 : int(1..2)]))
+                    | q34 : bool, q39 : int(1..2)])))
+             | q48 : int(1..2)])
+     \/
+     or([sum([toInt(b_ExplicitWithFlags_Values[q47] = q33) * catchUndef(b_ExplicitWithFlags_Flags[q47], 0)
+                  | q47 : int(1..2)])
+         > 0
+         /\
+         (sum([toInt(a_ExplicitWithFlags_Values[q45] = q33) * catchUndef(a_ExplicitWithFlags_Flags[q45], 0)
+                   | q45 : int(1..2)])
+          < q44
+          /\
+          q44 <=
+          sum([toInt(b_ExplicitWithFlags_Values[q46] = q33) * catchUndef(b_ExplicitWithFlags_Flags[q46], 0)
+                   | q46 : int(1..2)]))
+         /\
+         (sum([toInt(a_ExplicitWithFlags_Values[q35] = q33) * catchUndef(a_ExplicitWithFlags_Flags[q35], 0)
+                   | q35 : int(1..2)])
+          <
+          sum([toInt(b_ExplicitWithFlags_Values[q36] = q33) * catchUndef(b_ExplicitWithFlags_Flags[q36], 0)
+                   | q36 : int(1..2)])
+          /\
+          (and([a_ExplicitWithFlags_Flags[q43] > 0 /\ a_ExplicitWithFlags_Values[q43] < q33 ->
+                sum([toInt(a_ExplicitWithFlags_Values[q37] = a_ExplicitWithFlags_Values[q43]) *
+                     catchUndef(a_ExplicitWithFlags_Flags[q37], 0)
+                         | q37 : int(1..2)])
+                =
+                sum([toInt(b_ExplicitWithFlags_Values[q38] = a_ExplicitWithFlags_Values[q43]) *
+                     catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                         | q38 : int(1..2)])
+                    | q43 : int(1..2)])
+           /\
+           and([sum([toInt(b_ExplicitWithFlags_Values[q42] = q34) * catchUndef(b_ExplicitWithFlags_Flags[q42], 0)
+                         | q42 : int(1..2)])
+                > 0
+                /\
+                (sum([toInt(a_ExplicitWithFlags_Values[q40] = q34) * catchUndef(a_ExplicitWithFlags_Flags[q40], 0)
+                          | q40 : int(1..2)])
+                 < q39
+                 /\
+                 q39 <=
+                 sum([toInt(b_ExplicitWithFlags_Values[q41] = q34) * catchUndef(b_ExplicitWithFlags_Flags[q41], 0)
+                          | q41 : int(1..2)]))
+                ->
+                sum([toInt(a_ExplicitWithFlags_Values[q37] = q34) * catchUndef(a_ExplicitWithFlags_Flags[q37], 0)
+                         | q37 : int(1..2)])
+                =
+                sum([toInt(b_ExplicitWithFlags_Values[q38] = q34) * catchUndef(b_ExplicitWithFlags_Flags[q38], 0)
+                         | q38 : int(1..2)])
+                    | q34 : bool, q39 : int(1..2), q34 < q33])))
+             | q33 : bool, q44 : int(1..2)])),
+    a_ExplicitWithFlags_Flags[2] > 0 -> -toInt(a_ExplicitWithFlags_Values[1]) < -toInt(a_ExplicitWithFlags_Values[2]),
+    and([a_ExplicitWithFlags_Flags[q2] = 0 -> a_ExplicitWithFlags_Values[q2] = false | q2 : int(1..2)]),
+    a_ExplicitWithFlags_Flags[2] > 0 -> a_ExplicitWithFlags_Flags[1] > 0,
+    sum([a_ExplicitWithFlags_Flags[q5] | q5 : int(1..2)]) <= 2,
+    b_ExplicitWithFlags_Flags[2] > 0 -> -toInt(b_ExplicitWithFlags_Values[1]) < -toInt(b_ExplicitWithFlags_Values[2]),
+    and([b_ExplicitWithFlags_Flags[q8] = 0 -> b_ExplicitWithFlags_Values[q8] = false | q8 : int(1..2)]),
+    b_ExplicitWithFlags_Flags[2] > 0 -> b_ExplicitWithFlags_Flags[1] > 0,
+    sum([b_ExplicitWithFlags_Flags[q11] | q11 : int(1..2)]) <= 2
+

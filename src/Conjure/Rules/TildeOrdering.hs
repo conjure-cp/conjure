@@ -36,6 +36,63 @@ rule_Occurrence = "tildeOrd-occurrence" `namedRule` theRule where
             )
 
 
+-- Sorted explicit lists encode the first differing frequency by the first
+-- differing value, with the value order reversed.  An exhausted list comes
+-- before a live entry.  Restrict this to integer elements: .< reverses Boolean
+-- order, and structured values need not agree with their global order either.
+rule_Explicit :: Rule
+rule_Explicit = "tildeOrd-explicit" `namedRule` theRule where
+    theRule p = do
+        (x, y, mk) <- case p of
+            [essence| &x ~< &y |]  -> return (x, y, \ a b -> [essence| &a <lex &b |])
+            [essence| &x ~<= &y |] -> return (x, y, \ a b -> [essence| &a <=lex &b |])
+            _ -> na "rule_Explicit"
+        rx <- representationOf x
+        ry <- representationOf y
+        unless (rx == ry) $ na "rule_Explicit: different representations"
+        unless (rx `elem` [Set_Explicit, Set_ExplicitVarSizeWithDummy,
+                          Set_ExplicitVarSizeWithFlags, Set_ExplicitVarSizeWithMarker,
+                          MSet_ExplicitWithRepetition, MSet_ExplicitWithFlags]) $
+            na "rule_Explicit: unsupported representation"
+        xs <- downX1 x
+        ys <- downX1 y
+        vx : _ <- return $ reverse xs
+        vy : _ <- return $ reverse ys
+        DomainMatrix ix dx <- domainOf vx
+        DomainMatrix iy dy <- domainOf vy
+        unless (ix == iy) $ na "rule_Explicit: different capacities"
+        tx <- typeOfDomain dx
+        ty <- typeOfDomain dy
+        unless (tx == ty && case tx of TypeInt{} -> True; _ -> False) $
+            na "rule_Explicit: non-integer elements"
+        -- Dummy values must denote the same sentinel on both sides.
+        when (rx == Set_ExplicitVarSizeWithDummy && dx /= dy) $
+            na "rule_Explicit: different dummy domains"
+        return
+            ( "Global order via lexicographic explicit-list comparison"
+            , if rx `elem` [Set_Explicit, Set_ExplicitVarSizeWithDummy]
+                then return $ mk vy vx
+                else do
+                    let key refs = do
+                            [flags, values] <- return refs
+                            (iPat, i) <- quantifiedVar
+                            let active = case rx of
+                                    Set_ExplicitVarSizeWithFlags -> [essence| &flags[&i] |]
+                                    MSet_ExplicitWithFlags -> [essence| &flags[&i] > 0 |]
+                                    _ -> [essence| &i <= &flags |]
+                            let value = [essence| &values[&i] |]
+                            -- Inactive values are don't-cares; normalise them so
+                            -- equality is independent of their chosen padding.
+                            let entry = if rx == MSet_ExplicitWithFlags
+                                    then [essence| [toInt(&active), -&value * toInt(&active), &flags[&i]] |]
+                                    else [essence| [toInt(&active), -&value * toInt(&active)] |]
+                            return [essence| flatten([&entry | &iPat : &ix]) |]
+                    kx <- key xs
+                    ky <- key ys
+                    return $ mk kx ky
+            )
+
+
 rule_BoolInt :: Rule
 rule_BoolInt = "tildeOrd-bool-int" `namedRule` theRule where
     theRule [essence| &x ~< &y |] = do
