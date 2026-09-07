@@ -1,4 +1,4 @@
-module Conjure.Language.EvaluateOp ( EvaluateOp(..) ) where
+module Conjure.Language.EvaluateOp ( EvaluateOp(..), ordTildeLt ) where
 
 import Conjure.Prelude
 import Conjure.Bug

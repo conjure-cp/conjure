@@ -70,8 +70,8 @@ such that
          sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q54, q55]) | q55 : int(1..4)]) >= 1
              | q54 : int(1..4)]),
     and([q20 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         [-toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q20, q25]) | q25 : int(1..4)] <lex
-         [-toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q20 + 1, q26]) | q26 : int(1..4)]
+         [toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q20, q25]) | q25 : int(1..4)] <lex
+         [toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q20 + 1, q26]) | q26 : int(1..4)]
              | q20 : int(1..3)]),
     and([q21 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q27] = false | q27 : int(1..4)])

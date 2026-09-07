@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+find pairs_1: matrix indexed by [int(1..2)] of int(1..2)
+find pairs_2_Explicit: matrix indexed by [int(1..2), int(1)] of int(1..2)
+find lt: bool
+find leq: bool
+branching on [pairs_1, pairs_2_Explicit, lt, leq]
+such that
+    lt <-> pairs_1[1] < pairs_1[2] \/ pairs_1[1] = pairs_1[2] /\ pairs_2_Explicit[2, ..] <lex pairs_2_Explicit[1, ..],
+    leq <-> pairs_1[1] < pairs_1[2] \/ pairs_1[1] = pairs_1[2] /\ pairs_2_Explicit[2, ..] <=lex pairs_2_Explicit[1, ..]
+

@@ -8,6 +8,7 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.Domain
+import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Process.Enumerate ( EnumerateDomainNoIO(..) )
 import Conjure.Representations ( downC, up, downC1, up1 )
@@ -673,7 +674,7 @@ tests = testGroup "representations"
             mid =
                 [ ( "x_ExplicitR3"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_Explicit (SetAttr (SizeAttr_Size ((ConstantInt TagInt) 2))) (intDomain 0 9))
-                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) $ reverse
                         [ ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2, (ConstantInt TagInt) 3]
                         , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 5, (ConstantInt TagInt) 6]
                         , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 5, (ConstantInt TagInt) 7]
@@ -683,7 +684,7 @@ tests = testGroup "representations"
             low =
                 [ ( "x_ExplicitR3_Explicit"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
-                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) $ reverse
                         [ ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt TagInt) 2, (ConstantInt TagInt) 3]
                         , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt TagInt) 5, (ConstantInt TagInt) 6]
                         , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt TagInt) 5, (ConstantInt TagInt) 7]
@@ -997,9 +998,9 @@ tests = testGroup "representations"
                 , ( "x_ExplicitVarSizeWithMarkerR2_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize ((ConstantInt TagInt) 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
-                      [ ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2]
+                      [ ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 3,(ConstantInt TagInt) 4,(ConstantInt TagInt) 6]
+                      , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2]
                       , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2,(ConstantInt TagInt) 5]
-                      , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 3,(ConstantInt TagInt) 4,(ConstantInt TagInt) 6]
                       , ConstantAbstract $ AbsLitSet []
                       ]
                   )
@@ -1012,15 +1013,15 @@ tests = testGroup "representations"
                 , ( "x_ExplicitVarSizeWithMarkerR2_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
-                      [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 3,4,6
+                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
+                          , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
                       , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2,5
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 3,4,6
-                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
-                          , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
                       , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- {}
                           [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
@@ -1062,9 +1063,9 @@ tests = testGroup "representations"
                 , ( "x_ExplicitVarSizeWithFlagsR2_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize ((ConstantInt TagInt) 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
-                      [ ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2]
+                      [ ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 3,(ConstantInt TagInt) 4,(ConstantInt TagInt) 6]
+                      , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2]
                       , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 2,(ConstantInt TagInt) 5]
-                      , ConstantAbstract $ AbsLitSet [(ConstantInt TagInt) 3,(ConstantInt TagInt) 4,(ConstantInt TagInt) 6]
                       , ConstantAbstract $ AbsLitSet []
                       ]
                   )
@@ -1077,15 +1078,15 @@ tests = testGroup "representations"
                 , ( "x_ExplicitVarSizeWithFlagsR2_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
-                      [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 3,4,6
+                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
+                          , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
                       , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2,5
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 3,4,6
-                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
-                          , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
                       , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- {}
                           [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
@@ -1147,7 +1148,7 @@ up1Test info lows high' =
     case up1 info lows of
         TriedIO -> assertFailure "TriedIO"
         Failed err -> assertFailure (show err)
-        Done high -> Pr high @?= Pr high'
+        Done high -> Pr (normaliseHigh high) @?= Pr (normaliseHigh high')
 
 upTest ::
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -1159,7 +1160,7 @@ upTest info lows high' =
     case up lows info of
         TriedIO -> assertFailure "TriedIO"
         Failed err -> assertFailure (show err)
-        Done high -> Pr high @?= Pr high'
+        Done high -> Pr (normaliseHigh high) @?= Pr (normaliseHigh high')
 
 
 testCasesAuto ::
@@ -1186,7 +1187,7 @@ downUp1Test high =
             case up1 (dropConstant high) lows of
                 TriedIO -> assertFailure "TriedIO"
                 Failed err -> assertFailure (show err)
-                Done high' -> Pr high' @?= Pr (dropDomain high)
+                Done high' -> Pr (normaliseHigh high') @?= Pr (normaliseHigh (dropDomain high))
 
 downUpTest ::
     (?typeCheckerMode :: TypeCheckerMode) =>
@@ -1200,7 +1201,13 @@ downUpTest high =
             case up (map dropDomain lows) (dropConstant high) of
                 TriedIO -> assertFailure "TriedIO"
                 Failed err -> assertFailure (show err)
-                Done high' -> Pr high' @?= Pr (dropDomain high)
+                Done high' -> Pr (normaliseHigh high') @?= Pr (normaliseHigh (dropDomain high))
+
+
+-- High-level sets and multisets are unordered. Their representation's storage
+-- order need not be the canonical constant order; low-level checks stay exact.
+normaliseHigh :: (Name, Constant) -> (Name, Constant)
+normaliseHigh (name, value) = (name, normaliseConstant value)
 
 
 intDomain :: Default r => Integer -> Integer -> Domain r Constant
@@ -1233,4 +1240,3 @@ instance Show (Pr (Name, Constant)) where
 
 instance Show (Pr [(Name, Constant)]) where
     show (Pr xs) = intercalate "\n" $ map (show . Pr) xs
-

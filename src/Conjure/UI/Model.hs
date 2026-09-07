@@ -1415,7 +1415,9 @@ paramRules =
 
 verticalRules :: [Rule]
 verticalRules =
-    [ Vertical.Permutation.PermutationAsFunction.rule_Image
+    [ TildeOrdering.rule_Occurrence
+    , TildeOrdering.rule_Explicit
+    , Vertical.Permutation.PermutationAsFunction.rule_Image
     , Vertical.Permutation.PermutationAsFunction.rule_Image_permInverse
     , Vertical.Permutation.PermutationAsFunction.rule_double_permInverse
     , Vertical.Permutation.PermutationAsFunction.rule_Cardinality

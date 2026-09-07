@@ -1,0 +1,28 @@
+language ESSENCE' 1.0
+
+find a_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find a_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
+find b_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find b_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [a_ExplicitVarSizeWithMarker_Marker, a_ExplicitVarSizeWithMarker_Values, b_ExplicitVarSizeWithMarker_Marker,
+     b_ExplicitVarSizeWithMarker_Values]
+such that
+    flatten([[toInt(q7 <= a_ExplicitVarSizeWithMarker_Marker),
+              -a_ExplicitVarSizeWithMarker_Values[q7] * toInt(q7 <= a_ExplicitVarSizeWithMarker_Marker);
+                  int(1..2)]
+                 | q7 : int(1..2)])
+    <=lex
+    flatten([[toInt(q8 <= b_ExplicitVarSizeWithMarker_Marker),
+              -b_ExplicitVarSizeWithMarker_Values[q8] * toInt(q8 <= b_ExplicitVarSizeWithMarker_Marker);
+                  int(1..2)]
+                 | q8 : int(1..2)]),
+    2 <= a_ExplicitVarSizeWithMarker_Marker ->
+    a_ExplicitVarSizeWithMarker_Values[1] < a_ExplicitVarSizeWithMarker_Values[2],
+    and([q2 > a_ExplicitVarSizeWithMarker_Marker -> a_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
+    a_ExplicitVarSizeWithMarker_Marker <= 2,
+    2 <= b_ExplicitVarSizeWithMarker_Marker ->
+    b_ExplicitVarSizeWithMarker_Values[1] < b_ExplicitVarSizeWithMarker_Values[2],
+    and([q5 > b_ExplicitVarSizeWithMarker_Marker -> b_ExplicitVarSizeWithMarker_Values[q5] = 1 | q5 : int(1..2)]),
+    b_ExplicitVarSizeWithMarker_Marker <= 2
+

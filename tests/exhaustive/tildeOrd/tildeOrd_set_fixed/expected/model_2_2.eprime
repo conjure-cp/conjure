@@ -1,0 +1,13 @@
+language ESSENCE' 1.0
+
+find a_Occurrence: matrix indexed by [int(-2, 0, 3)] of bool
+find b_Occurrence: matrix indexed by [int(-2, 0, 3)] of bool
+find lt: bool
+find leq: bool
+branching on [a_Occurrence, b_Occurrence, lt, leq]
+such that
+    lt <-> a_Occurrence <lex b_Occurrence,
+    leq <-> a_Occurrence <=lex b_Occurrence,
+    1 = sum([toInt(a_Occurrence[q1]) | q1 : int(-2, 0, 3)]),
+    1 = sum([toInt(b_Occurrence[q2]) | q2 : int(-2, 0, 3)])
+

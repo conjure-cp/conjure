@@ -3,6 +3,110 @@
 module Conjure.Rules.TildeOrdering where
 
 import Conjure.Rules.Import
+import Conjure.Representations.Ordering
+import Conjure.Compute.DomainOf ( domainOfR )
+
+
+-- Occurrence coordinates are already in the global element order.
+-- Use positive membership bits: absence < presence.
+-- Equal index domains are essential; equal vector lengths alone are not enough.
+rule_Occurrence :: Rule
+rule_Occurrence = "tildeOrd-occurrence" `namedRule` theRule where
+    theRule p = do
+        (x, y, mk) <- case p of
+            [essence| &x ~< &y |]  -> return (x, y, \ a b -> [essence| &a <lex &b |])
+            [essence| &x ~<= &y |] -> return (x, y, \ a b -> [essence| &a <=lex &b |])
+            _ -> na "rule_Occurrence"
+        rx <- representationOf x
+        ry <- representationOf y
+        unless (rx == ry) $ na "rule_Occurrence: different representations"
+        case rx of
+            Set_Occurrence    -> return ()
+            MSet_Occurrence   -> return ()
+            Relation_AsMatrix -> return ()
+            _ -> na "rule_Occurrence: not an occurrence representation"
+        [mx] <- downX1 x
+        [my] <- downX1 y
+        ix <- indexDomainsOf mx
+        iy <- indexDomainsOf my
+        unless (not (null ix) && ix == iy) $ na "rule_Occurrence: different index domains"
+        indexTypes <- mapM typeOfDomain ix
+        unless (all typeCanIndexMatrix indexTypes) $ na "rule_Occurrence: non-primitive indices"
+        return
+            ( "Global order via lexicographic occurrence comparison"
+            , return $ mk (make opFlatten mx) (make opFlatten my)
+            )
+
+
+-- Sorted explicit lists encode the first differing frequency by the first
+-- differing value, with the value order reversed.  An exhausted list comes
+-- before a live entry.  Restrict this to integer elements: .< reverses Boolean
+-- order. Structured elements require a certified global storage order.
+rule_Explicit :: Rule
+rule_Explicit = "tildeOrd-explicit" `namedRule` theRule where
+    theRule p = do
+        (x, y, mk) <- case p of
+            [essence| &x ~< &y |]  -> return (x, y, \ a b -> [essence| &a <lex &b |])
+            [essence| &x ~<= &y |] -> return (x, y, \ a b -> [essence| &a <=lex &b |])
+            _ -> na "rule_Explicit"
+        rx <- representationOf x
+        ry <- representationOf y
+        unless (rx == ry) $ na "rule_Explicit: different representations"
+        unless (rx `elem` [Set_Explicit, Set_ExplicitVarSizeWithDummy,
+                          Set_ExplicitVarSizeWithFlags, Set_ExplicitVarSizeWithMarker,
+                          MSet_ExplicitWithRepetition, MSet_ExplicitWithFlags]) $
+            na "rule_Explicit: unsupported representation"
+        xs <- downX1 x
+        ys <- downX1 y
+        vx : _ <- return $ reverse xs
+        vy : _ <- return $ reverse ys
+        DomainMatrix ixR dx <- domainOfR vx
+        DomainMatrix iyR dy <- domainOfR vy
+        let ix = forgetRepr ixR
+        let iy = forgetRepr iyR
+        unless (ix == iy) $ na "rule_Explicit: different capacities"
+        tx <- typeOfDomain dx
+        ty <- typeOfDomain dy
+        let primitive = case tx of TypeInt{} -> True; _ -> False
+        unless (tx == ty && (primitive || (dx == dy && orderingIsGlobal dx))) $
+            na "rule_Explicit: element order is not certified global"
+        -- Dummy values must denote the same sentinel on both sides.
+        when (rx == Set_ExplicitVarSizeWithDummy && dx /= dy) $
+            na "rule_Explicit: different dummy domains"
+        return
+            ( "Global order via lexicographic explicit-list comparison"
+            , if primitive && rx `elem` [Set_Explicit, Set_ExplicitVarSizeWithDummy]
+                then return $ mk vy vx
+                else do
+                    let key refs = do
+                            (flags, values) <- case refs of
+                                [values] | rx == Set_Explicit -> return (0, values)
+                                [flags, values] -> return (flags, values)
+                                _ -> na "rule_Explicit: unexpected components"
+                            (iPat, i) <- quantifiedVarOverDomain ix
+                            let active = case rx of
+                                    Set_Explicit -> [essence| true |]
+                                    Set_ExplicitVarSizeWithFlags -> [essence| &flags[&i] |]
+                                    MSet_ExplicitWithFlags -> [essence| &flags[&i] > 0 |]
+                                    _ -> [essence| &i <= &flags |]
+                            let value = [essence| &values[&i] |]
+                            -- Inactive values are don't-cares; normalise them so
+                            -- equality is independent of their chosen padding.
+                            entry <- if primitive
+                                then return $ if rx == MSet_ExplicitWithFlags
+                                    then [essence| [toInt(&active), -&value * toInt(&active), &flags[&i]] |]
+                                    else [essence| [toInt(&active), -&value * toInt(&active)] |]
+                                else do
+                                    masked <- mapGlobalOrderingKey
+                                        (\ k -> [essence| -&k * toInt(&active) |]) downX1 value dx
+                                    return $ if rx == MSet_ExplicitWithFlags
+                                        then [essence| flatten([[toInt(&active)], &masked, [&flags[&i]]]) |]
+                                        else [essence| flatten([[toInt(&active)], &masked]) |]
+                            return [essence| flatten([&entry | &iPat : &ix]) |]
+                    kx <- key xs
+                    ky <- key ys
+                    return $ mk kx ky
+            )
 
 
 rule_BoolInt :: Rule

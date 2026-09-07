@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+find a_Explicit: matrix indexed by [int(1)] of int(-2, 0, 3)
+find b_Explicit: matrix indexed by [int(1)] of int(-2, 0, 3)
+find lt: bool
+find leq: bool
+branching on [a_Explicit, b_Explicit, lt, leq]
+such that
+    lt <-> b_Explicit <lex a_Explicit,
+    leq <-> b_Explicit <=lex a_Explicit
+

@@ -13,9 +13,11 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.Instantiate
+import Conjure.Language.EvaluateOp ( ordTildeLt )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 import Conjure.Representations.Internal
+import Conjure.Representations.Ordering
 import Conjure.Representations.Primitive
 import Conjure.Representations.Tuple
 import Conjure.Representations.Matrix
@@ -71,7 +73,16 @@ downC1 ::
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     (Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)])
-downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, constant)
+downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, ordered)
+    where
+        -- Explicit storage uses .< on its elements.  Once that order is global,
+        -- parameter/literal translation must use the same order, recursively.
+        ordered = case (domain, constant) of
+            (DomainSet _ _ inner, ConstantAbstract (AbsLitSet xs))
+                | orderingIsGlobal inner -> ConstantAbstract $ AbsLitSet $ sortBy ordTildeLt xs
+            (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet xs))
+                | orderingIsGlobal inner -> ConstantAbstract $ AbsLitMSet $ sortBy ordTildeLt xs
+            _ -> constant
 
 
 -- | Translate a bunch of low level constants up, one level.
@@ -157,7 +168,11 @@ symmetryOrderingDispatch ::
     Expression ->
     DomainX Expression ->
     m Expression
-symmetryOrderingDispatch downX1 inp domain =
+symmetryOrderingDispatch downX1 inp domain
+    -- Integers, tuples and occurrence multisets already have the right order.
+    -- Preserve their key shape: transformation rules also consume these keys.
+    | DomainSet{} <- domain, orderingIsGlobal domain = globalOrderingKey downX1 inp domain
+    | otherwise =
     rSymmetryOrdering
         (dispatch domain)
         symmetryOrderingDispatch downX1
@@ -330,4 +345,3 @@ getStructurals ::
     DomainX Expression ->
     m (Expression -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
-

@@ -1,0 +1,64 @@
+language ESSENCE' 1.0
+
+find a_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2)] of int(1..3)
+find b_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [a_ExplicitVarSizeWithDummy, b_Occurrence]
+such that
+    and([a_ExplicitVarSizeWithDummy[q7] != 3 -> b_Occurrence[a_ExplicitVarSizeWithDummy[q7]] | q7 : int(1..2)]) /\
+    and([b_Occurrence[q8] ->
+         or([a_ExplicitVarSizeWithDummy[q10] != 3 /\ a_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..2)])
+             | q8 : int(1..2)])
+    \/
+    (or([a_ExplicitVarSizeWithDummy[q13] != 3 /\
+         (toInt(or([a_ExplicitVarSizeWithDummy[q26] != 3 /\
+                    a_ExplicitVarSizeWithDummy[q26] = a_ExplicitVarSizeWithDummy[q13]
+                        | q26 : int(1..2)]))
+          < toInt(b_Occurrence[a_ExplicitVarSizeWithDummy[q13]])
+          /\
+          (and([a_ExplicitVarSizeWithDummy[q27] != 3 /\
+                a_ExplicitVarSizeWithDummy[q27] < a_ExplicitVarSizeWithDummy[q13]
+                ->
+                toInt(or([a_ExplicitVarSizeWithDummy[q33] != 3 /\
+                          a_ExplicitVarSizeWithDummy[q33] = a_ExplicitVarSizeWithDummy[q27]
+                              | q33 : int(1..2)]))
+                = toInt(b_Occurrence[a_ExplicitVarSizeWithDummy[q27]])
+                    | q27 : int(1..2)])
+           /\
+           and([and([b_Occurrence[q12],
+                     !or([a_ExplicitVarSizeWithDummy[q31] != 3 /\ a_ExplicitVarSizeWithDummy[q31] = q12
+                              | q31 : int(1..2)]),
+                     q12 < a_ExplicitVarSizeWithDummy[q13];
+                         int(1..3)])
+                ->
+                toInt(or([a_ExplicitVarSizeWithDummy[q29] != 3 /\ a_ExplicitVarSizeWithDummy[q29] = q12
+                              | q29 : int(1..2)]))
+                = toInt(b_Occurrence[q12])
+                    | q12 : int(1..2)])))
+             | q13 : int(1..2)])
+     \/
+     or([b_Occurrence[q11] /\
+         !or([a_ExplicitVarSizeWithDummy[q24] != 3 /\ a_ExplicitVarSizeWithDummy[q24] = q11 | q24 : int(1..2)])
+         /\
+         (toInt(or([a_ExplicitVarSizeWithDummy[q15] != 3 /\ a_ExplicitVarSizeWithDummy[q15] = q11 | q15 : int(1..2)])) <
+          toInt(b_Occurrence[q11])
+          /\
+          (and([a_ExplicitVarSizeWithDummy[q16] != 3 /\ a_ExplicitVarSizeWithDummy[q16] < q11 ->
+                toInt(or([a_ExplicitVarSizeWithDummy[q22] != 3 /\
+                          a_ExplicitVarSizeWithDummy[q22] = a_ExplicitVarSizeWithDummy[q16]
+                              | q22 : int(1..2)]))
+                = toInt(b_Occurrence[a_ExplicitVarSizeWithDummy[q16]])
+                    | q16 : int(1..2)])
+           /\
+           and([b_Occurrence[q12] /\
+                !or([a_ExplicitVarSizeWithDummy[q20] != 3 /\ a_ExplicitVarSizeWithDummy[q20] = q12 | q20 : int(1..2)])
+                ->
+                toInt(or([a_ExplicitVarSizeWithDummy[q18] != 3 /\ a_ExplicitVarSizeWithDummy[q18] = q12
+                              | q18 : int(1..2)]))
+                = toInt(b_Occurrence[q12])
+                    | q12 : int(1..2), q12 < q11])))
+             | q11 : int(1..2)])),
+    a_ExplicitVarSizeWithDummy[1] < a_ExplicitVarSizeWithDummy[2] \/ a_ExplicitVarSizeWithDummy[1] = 3,
+    a_ExplicitVarSizeWithDummy[1] = 3 -> a_ExplicitVarSizeWithDummy[2] = 3,
+    sum([toInt(a_ExplicitVarSizeWithDummy[q3] != 3) | q3 : int(1..2)]) <= 2,
+    sum([toInt(b_Occurrence[q5]) | q5 : int(1..2)]) <= 2
+

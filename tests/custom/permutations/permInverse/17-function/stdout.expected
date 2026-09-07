@@ -25,8 +25,8 @@ find conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence:
         matrix indexed by [int(1..4), int(1..6), int(1..4)] of bool
 such that
     and([and([q3 + 1 <= conjure_aux1_ExplicitVarSizeWithMarkerR2_Marker[q1] ->
-              [-toInt(conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q3, q7]) | q7 : int(1..4)] <lex
-              [-toInt(conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q3 + 1, q8]) | q8 : int(1..4)]
+              [toInt(conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q3, q7]) | q7 : int(1..4)] <lex
+              [toInt(conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q3 + 1, q8]) | q8 : int(1..4)]
                   | q3 : int(1..5)])
              | q1 : int(1..4), q1 < 4]),
     and([and([q4 > conjure_aux1_ExplicitVarSizeWithMarkerR2_Marker[q1] ->
@@ -71,19 +71,19 @@ such that
                   | q68 : int(1..6), q69 : int(1..4)])
              | q1 : int(1..4), !(q1 < 4)]),
     and([flatten([[i_ExplicitVarSizeWithMarkerR2_Marker; int(1)],
-                  flatten([[-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q59, q60]) | q60 : int(1..4)]
+                  flatten([[toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q59, q60]) | q60 : int(1..4)]
                                | q59 : int(1..6)]);
                       int(1..2)])
          <=lex
          flatten([[conjure_aux1_ExplicitVarSizeWithMarkerR2_Marker[q1]; int(1)],
-                  flatten([[-toInt(conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q61, q62])
+                  flatten([[toInt(conjure_aux1_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q1, q61, q62])
                                 | q62 : int(1..4)]
                                | q61 : int(1..6)]);
                       int(1..2)])
              | q1 : int(1..4), q1 < 4]),
     and([q10 + 1 <= i_ExplicitVarSizeWithMarkerR2_Marker ->
-         [-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10, q14]) | q14 : int(1..4)] <lex
-         [-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10 + 1, q15]) | q15 : int(1..4)]
+         [toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10, q14]) | q14 : int(1..4)] <lex
+         [toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10 + 1, q15]) | q15 : int(1..4)]
              | q10 : int(1..5)]),
     and([q11 > i_ExplicitVarSizeWithMarkerR2_Marker ->
          and([i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q11, q16] = false | q16 : int(1..4)])
@@ -114,23 +114,23 @@ find i_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..
 branching on [i_ExplicitVarSizeWithMarkerR2_Marker, i_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 such that
     and([flatten([[i_ExplicitVarSizeWithMarkerR2_Marker; int(1)],
-                  flatten([[-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q9, q10]) | q10 : int(1..4)]
+                  flatten([[toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q9, q10]) | q10 : int(1..4)]
                                | q9 : int(1..6)]);
                       int(1..2)])
          <=lex
          flatten([[i_ExplicitVarSizeWithMarkerR2_Marker; int(1)],
-                  flatten([[-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                                       [q11,
-                                        catchUndef([q12, q1 + 1, q1; int(0..2)]
-                                                       [toInt(q1 = q12) + toInt(q1 + 1 = q12) * 2],
-                                                   1)])
+                  flatten([[toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+                                      [q11,
+                                       catchUndef([q12, q1 + 1, q1; int(0..2)]
+                                                      [toInt(q1 = q12) + toInt(q1 + 1 = q12) * 2],
+                                                  1)])
                                 | q12 : int(1..4)]
                                | q11 : int(1..6)]);
                       int(1..2)])
              | q1 : int(1..4), q1 < 4]),
     and([q2 + 1 <= i_ExplicitVarSizeWithMarkerR2_Marker ->
-         [-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q2, q6]) | q6 : int(1..4)] <lex
-         [-toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q2 + 1, q7]) | q7 : int(1..4)]
+         [toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q2, q6]) | q6 : int(1..4)] <lex
+         [toInt(i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q2 + 1, q7]) | q7 : int(1..4)]
              | q2 : int(1..5)]),
     and([q3 > i_ExplicitVarSizeWithMarkerR2_Marker ->
          and([i_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q3, q8] = false | q8 : int(1..4)])

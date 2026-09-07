@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+find a_MOccurrence: matrix indexed by [int(1..2)] of int(0..2)
+find b_MOccurrence: matrix indexed by [int(1..2)] of int(0..2)
+branching on [a_MOccurrence, b_MOccurrence]
+such that
+    a_MOccurrence <=lex b_MOccurrence,
+    sum([a_MOccurrence[q1] | q1 : int(1..2)]) <= 2,
+    sum([b_MOccurrence[q2] | q2 : int(1..2)]) <= 2
+

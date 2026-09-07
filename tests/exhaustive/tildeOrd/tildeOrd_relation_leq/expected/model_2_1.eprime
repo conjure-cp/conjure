@@ -1,0 +1,131 @@
+language ESSENCE' 1.0
+
+find a_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0..1)
+find a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1)] of int(1..2)
+find a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1)] of bool
+find b_RelationAsMatrix: matrix indexed by [int(1..2), bool] of bool
+branching on
+    [a_RelationAsSet_ExplicitVarSizeWithMarker_Marker, a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1,
+     a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2, b_RelationAsMatrix]
+such that
+    (1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+     or([b_RelationAsMatrix[q9_1, q9_2] /\
+         (q9_1 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] /\
+          q9_2 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1])
+             | q9_1 : int(1..2), q9_2 : bool]))
+    /\
+    and([b_RelationAsMatrix[q10_1, q10_2] ->
+         1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+         (a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q10_1 /\
+          a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q10_2)
+             | q10_1 : int(1..2), q10_2 : bool])
+    /\
+    a_RelationAsSet_ExplicitVarSizeWithMarker_Marker =
+    sum([toInt(b_RelationAsMatrix[q14_1, q14_2]) | q14_1 : int(1..2), q14_2 : bool])
+    \/
+    (1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+     (toInt(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker) *
+      catchUndef(toInt(a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] =
+                       a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1]
+                       /\
+                       a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] =
+                       a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1]),
+                 0)
+      <
+      sum([toInt(b_RelationAsMatrix[q19_1, q19_2]) *
+           catchUndef(toInt(q19_1 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] /\
+                            q19_2 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1]),
+                      0)
+               | q19_1 : int(1..2), q19_2 : bool])
+      /\
+      ((1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+        (a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] < a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1]
+         \/
+         a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1]
+         /\
+         a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] < a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1])
+        ->
+        toInt(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker) *
+        catchUndef(toInt(a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] =
+                         a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1]
+                         /\
+                         a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] =
+                         a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1]),
+                   0)
+        =
+        sum([toInt(b_RelationAsMatrix[q22_1, q22_2]) *
+             catchUndef(toInt(q22_1 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] /\
+                              q22_2 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1]),
+                        0)
+                 | q22_1 : int(1..2), q22_2 : bool]))
+       /\
+       and([and([b_RelationAsMatrix[q23_1, q23_2],
+                 !(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                   (a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q23_1 /\
+                    a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q23_2)),
+                 q23_1 < a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] \/
+                 q23_1 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] /\
+                 q23_2 < a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1];
+                     int(1..3)])
+            ->
+            toInt(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker) *
+            catchUndef(toInt(a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q23_1 /\
+                             a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q23_2),
+                       0)
+            =
+            sum([toInt(b_RelationAsMatrix[q25_1, q25_2]) * catchUndef(toInt(q25_1 = q23_1 /\ q25_2 = q23_2), 0)
+                     | q25_1 : int(1..2), q25_2 : bool])
+                | q23_1 : int(1..2), q23_2 : bool])))
+     \/
+     or([b_RelationAsMatrix[q50_1, q50_2] /\
+         !(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+           (a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q50_1 /\
+            a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q50_2))
+         /\
+         (toInt(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker) *
+          catchUndef(toInt(a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q50_1 /\
+                           a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q50_2),
+                     0)
+          <
+          sum([toInt(b_RelationAsMatrix[q52_1, q52_2]) * catchUndef(toInt(q52_1 = q50_1 /\ q52_2 = q50_2), 0)
+                   | q52_1 : int(1..2), q52_2 : bool])
+          /\
+          ((1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+            (a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] < q50_1 \/
+             a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q50_1 /\
+             a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] < q50_2)
+            ->
+            toInt(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker) *
+            catchUndef(toInt(a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] =
+                             a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1]
+                             /\
+                             a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] =
+                             a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1]),
+                       0)
+            =
+            sum([toInt(b_RelationAsMatrix[q55_1, q55_2]) *
+                 catchUndef(toInt(q55_1 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] /\
+                                  q55_2 = a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1]),
+                            0)
+                     | q55_1 : int(1..2), q55_2 : bool]))
+           /\
+           and([b_RelationAsMatrix[q56_1, q56_2] /\
+                !(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q56_1 /\
+                   a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q56_2))
+                ->
+                toInt(1 <= a_RelationAsSet_ExplicitVarSizeWithMarker_Marker) *
+                catchUndef(toInt(a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = q56_1 /\
+                                 a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = q56_2),
+                           0)
+                =
+                sum([toInt(b_RelationAsMatrix[q58_1, q58_2]) * catchUndef(toInt(q58_1 = q56_1 /\ q58_2 = q56_2), 0)
+                         | q58_1 : int(1..2), q58_2 : bool])
+                    | q56_1 : int(1..2), q56_2 : bool, q56_1 < q50_1 \/ q56_1 = q50_1 /\ q56_2 < q50_2])))
+             | q50_1 : int(1..2), q50_2 : bool])),
+    1 > a_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+    a_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1] = 1 /\
+    a_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[1] = false,
+    a_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 1,
+    sum([sum([toInt(b_RelationAsMatrix[q4, q5]) | q5 : bool]) | q4 : int(1..2)]) <= 1
+

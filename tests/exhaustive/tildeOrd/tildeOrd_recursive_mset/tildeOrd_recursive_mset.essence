@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find a,b : mset (maxSize 2) of set (size 1) of int(1..2)
+find lt,leq : bool
+such that
+    lt <-> a ~< b,
+    leq <-> a ~<= b

@@ -1,0 +1,28 @@
+language ESSENCE' 1.0
+
+find a_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find a_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+find b_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find b_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [a_ExplicitVarSizeWithFlags_Flags, a_ExplicitVarSizeWithFlags_Values, b_ExplicitVarSizeWithFlags_Flags,
+     b_ExplicitVarSizeWithFlags_Values]
+such that
+    flatten([[toInt(a_ExplicitVarSizeWithFlags_Flags[q11]),
+              -a_ExplicitVarSizeWithFlags_Values[q11] * toInt(a_ExplicitVarSizeWithFlags_Flags[q11]);
+                  int(1..2)]
+                 | q11 : int(1..2)])
+    <=lex
+    flatten([[toInt(b_ExplicitVarSizeWithFlags_Flags[q12]),
+              -b_ExplicitVarSizeWithFlags_Values[q12] * toInt(b_ExplicitVarSizeWithFlags_Flags[q12]);
+                  int(1..2)]
+                 | q12 : int(1..2)]),
+    a_ExplicitVarSizeWithFlags_Flags[2] -> a_ExplicitVarSizeWithFlags_Values[1] < a_ExplicitVarSizeWithFlags_Values[2],
+    and([a_ExplicitVarSizeWithFlags_Flags[q2] = false -> a_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..2)]),
+    a_ExplicitVarSizeWithFlags_Flags[2] -> a_ExplicitVarSizeWithFlags_Flags[1],
+    sum([toInt(a_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..2)]) <= 2,
+    b_ExplicitVarSizeWithFlags_Flags[2] -> b_ExplicitVarSizeWithFlags_Values[1] < b_ExplicitVarSizeWithFlags_Values[2],
+    and([b_ExplicitVarSizeWithFlags_Flags[q7] = false -> b_ExplicitVarSizeWithFlags_Values[q7] = 1 | q7 : int(1..2)]),
+    b_ExplicitVarSizeWithFlags_Flags[2] -> b_ExplicitVarSizeWithFlags_Flags[1],
+    sum([toInt(b_ExplicitVarSizeWithFlags_Flags[q9]) | q9 : int(1..2)]) <= 2
+
