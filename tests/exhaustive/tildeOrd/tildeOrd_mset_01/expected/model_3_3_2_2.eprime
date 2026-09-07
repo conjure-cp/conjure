@@ -10,21 +10,7 @@ branching on
     [a_ExplicitWithRepetition_Flag, a_ExplicitWithRepetition_Values, a_MOccurrence, b_ExplicitWithRepetition_Flag,
      b_ExplicitWithRepetition_Values, b_MOccurrence]
 such that
-    or([a_MOccurrence[q32] > 0 /\
-        (a_MOccurrence[q32] < b_MOccurrence[q32] /\
-         (and([a_MOccurrence[q30] > 0 -> a_MOccurrence[q30] = b_MOccurrence[q30] | q30 : int(1..2), q30 < q32]) /\
-          and([b_MOccurrence[q28] > 0 /\ (a_MOccurrence[q28] < q29 /\ q29 <= b_MOccurrence[q28]) ->
-               a_MOccurrence[q28] = b_MOccurrence[q28]
-                   | q28 : int(1..2), q29 : int(1..3), q28 < q32])))
-            | q32 : int(1..2)])
-    \/
-    or([b_MOccurrence[q27] > 0 /\ (a_MOccurrence[q27] < q31 /\ q31 <= b_MOccurrence[q27]) /\
-        (a_MOccurrence[q27] < b_MOccurrence[q27] /\
-         (and([a_MOccurrence[q30] > 0 -> a_MOccurrence[q30] = b_MOccurrence[q30] | q30 : int(1..2), q30 < q27]) /\
-          and([b_MOccurrence[q28] > 0 /\ (a_MOccurrence[q28] < q29 /\ q29 <= b_MOccurrence[q28]) ->
-               a_MOccurrence[q28] = b_MOccurrence[q28]
-                   | q28 : int(1..2), q29 : int(1..3), q28 < q27])))
-            | q27 : int(1..2), q31 : int(1..3)]),
+    a_MOccurrence <lex b_MOccurrence,
     3 = sum([a_MOccurrence[q1] | q1 : int(1..2)]),
     3 = sum([b_MOccurrence[q2] | q2 : int(1..2)]),
     and([a_ExplicitWithRepetition_Values[q3] <= a_ExplicitWithRepetition_Values[q3 + 1] | q3 : int(1..2), q3 + 1 <= 3]),

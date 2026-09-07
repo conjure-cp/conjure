@@ -5,6 +5,37 @@ module Conjure.Rules.TildeOrdering where
 import Conjure.Rules.Import
 
 
+-- Occurrence coordinates are already in the global element order.  Unlike
+-- symmetryOrdering for sets, use positive membership bits: absence < presence.
+-- Equal index domains are essential; equal vector lengths alone are not enough.
+rule_Occurrence :: Rule
+rule_Occurrence = "tildeOrd-occurrence" `namedRule` theRule where
+    theRule p = do
+        (x, y, mk) <- case p of
+            [essence| &x ~< &y |]  -> return (x, y, \ a b -> [essence| &a <lex &b |])
+            [essence| &x ~<= &y |] -> return (x, y, \ a b -> [essence| &a <=lex &b |])
+            _ -> na "rule_Occurrence"
+        rx <- representationOf x
+        ry <- representationOf y
+        unless (rx == ry) $ na "rule_Occurrence: different representations"
+        case rx of
+            Set_Occurrence    -> return ()
+            MSet_Occurrence   -> return ()
+            Relation_AsMatrix -> return ()
+            _ -> na "rule_Occurrence: not an occurrence representation"
+        [mx] <- downX1 x
+        [my] <- downX1 y
+        ix <- indexDomainsOf mx
+        iy <- indexDomainsOf my
+        unless (not (null ix) && ix == iy) $ na "rule_Occurrence: different index domains"
+        indexTypes <- mapM typeOfDomain ix
+        unless (all typeCanIndexMatrix indexTypes) $ na "rule_Occurrence: non-primitive indices"
+        return
+            ( "Global order via lexicographic occurrence comparison"
+            , return $ mk (make opFlatten mx) (make opFlatten my)
+            )
+
+
 rule_BoolInt :: Rule
 rule_BoolInt = "tildeOrd-bool-int" `namedRule` theRule where
     theRule [essence| &x ~< &y |] = do
