@@ -1264,6 +1264,7 @@ prologue config model = do
     >>= renameQuantifiedVarsToAvoidShadowing
                                       >>= logDebugIdModel "[renameQuantifiedVarsToAvoidShadowing]"
     >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
+    >>= checkCustomSymmetries
     >>= return . initInfo_Lettings    >>= logDebugIdModel "[initInfo_Lettings]"
     >>= removeDomainLettings          >>= logDebugIdModel "[removeDomainLettings]"
     >>= (let ?typeCheckerMode = RelaxedIntegerTags in typeCheckModel)
@@ -1758,7 +1759,9 @@ delayedRules =
         ]
     ,   [ rule_ReducerToComprehension
         ]
-    ,   [ rule_QuickPermutationOrder
+    ,   [ rule_ApplySymmetries
+        , rule_CompletePermutationOrder
+        , rule_QuickPermutationOrder
         , rule_DotLtLeq
         , rule_Flatten_Lex
         ]
@@ -1875,8 +1878,24 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                         }
                 in  return m { mInfo = newInfo }
 
+            -- All symmetry comparisons of a variable must share one key,
+            -- including separate independently-generated type actions. Other
+            -- constraints may still channel that variable as usual.
+            fixSymmetryRepresentations m =
+                let pin (Reference nm (Just DeclNoRepr{})) | nm == name =
+                        Reference nm (Just (DeclHasRepr forg name domain))
+                    pin x = x
+                    onOp (Op (MkOpApplySymmetries (OpApplySymmetries quick values syms))) =
+                        Op (MkOpApplySymmetries (OpApplySymmetries quick (transformBi pin values) syms))
+                    onOp (Op (MkOpQuickPermutationOrder (OpQuickPermutationOrder ps values))) =
+                        make opQuickPermutationOrder ps (transformBi pin values)
+                    onOp (Op (MkOpCompletePermutationOrder (OpCompletePermutationOrder ps values))) =
+                        make opCompletePermutationOrder ps (transformBi pin values)
+                    onOp x = x
+                in return m { mStatements = transformBi onOp (mStatements m) }
+
             fixReprForAllOthers
-                | useChannelling = return           -- no-op, if channelling=yes
+                | useChannelling = fixSymmetryRepresentations
                 | otherwise = \ m ->
                 let
                     f (Reference nm _)
@@ -2101,6 +2120,115 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             )
 
 
+-- The public operators expand a parameter matrix; the internal operation keeps
+-- Complete intact until the source representation has been selected.
+rule_ApplySymmetries :: Rule
+rule_ApplySymmetries = "apply-symmetries" `namedRule` theRule where
+    theRule (Op (MkOpApplySymmetries op@(OpApplySymmetries quick values symmetries))) = do
+        void $ typeOf op
+        when (categoryOf symmetries > CatParameter) $
+            failDoc "applySymmetries: symmetries must be constant or given"
+        let checkValue v = case followAliases id v of
+                AbstractLiteral (AbsLitTuple xs) -> mapM_ checkValue xs
+                Reference _ (Just DeclNoRepr{}) -> return ()
+                Reference _ (Just DeclHasRepr{}) -> return ()
+                _ -> failDoc "applySymmetries: values must be a tuple of variable references"
+        checkValue values
+        ts <- typeOf symmetries
+        let entries = case ts of
+                TypeMatrix _ (TypeTuple xs) -> xs
+                TypeList (TypeTuple xs) -> xs
+                _ -> [] -- rejected by typeOf above
+        return ("Apply the supplied symmetry tuples", do
+            (pPat, permTuple) <- quantifiedVar
+            let perms = [ make opIndexing permTuple (fromInt i)
+                        | i <- [1 .. genericLength entries] ]
+                applied = if quick
+                    then make opQuickPermutationOrder perms values
+                    else make opCompletePermutationOrder perms values
+            return $ make opAnd $ Comprehension applied
+                [Generator (GenInExpr pPat symmetries)])
+    theRule _ = na "rule_ApplySymmetries"
+
+
+rule_CompletePermutationOrder :: Rule
+rule_CompletePermutationOrder = "complete-permutation-order" `namedRule` theRule where
+    theRule (match opCompletePermutationOrder -> Just (perms, value0)) = do
+        let value = followAliases id value0
+        -- Wait for all representation choices before creating the image. This
+        -- also checks nested tuple literals, which have no representation tree.
+        let ready x = case followAliases id x of
+                AbstractLiteral (AbsLitTuple xs) -> mapM_ ready xs
+                r@Reference{} -> void $ domainOfR r
+                _ -> na "completePermutationOrder: expected represented variables"
+        ready value
+        return ("Complete symmetry comparison in the source representation", do
+            (lhs, rhs, locals) <- keys perms value
+            let comparison = [essence| &lhs <=lex &rhs |]
+            return $ if null locals then comparison
+                else WithLocals comparison (AuxiliaryVars locals))
+    theRule _ = na "rule_CompletePermutationOrder"
+
+    keys perms x0 = case followAliases id x0 of
+        AbstractLiteral (AbsLitTuple xs) -> do
+            images <- mapM (keys perms) xs
+            let lhs = make opFlatten $ fromList [a | (a,_,_) <- images]
+                rhs = make opFlatten $ fromList [b | (_,b,_) <- images]
+            return (lhs, rhs, concat [ds | (_,_,ds) <- images])
+        x -> do
+            ty <- typeOf x
+            lhs <- symmetryOrderingVector x
+            if isPrimitiveType ty
+                -- Scalars and primitive matrices have a fixed coordinate order;
+                -- relabelling their key needs no collection canonicalization.
+                -- Avoid auxiliaries indexed by a quantified permutation here.
+                then do
+                    dom <- domainOfR x
+                    rhs <- primitiveImageKey perms x dom
+                    return (lhs, rhs, [])
+                else do
+                    dom <- domainOfR x
+                    (nm, _) <- auxiliaryVar
+                    let imageValue = Reference nm (Just (DeclHasRepr LocalFind nm dom))
+                    sameRepresentationTree x imageValue
+                    -- downD lowers the entire selected tree, not just its root.
+                    leaves <- downD (nm, dom)
+                    structurals <- getStructurals downX1 dom >>= (\f -> f imageValue)
+                    rhs <- symmetryOrderingVector imageValue
+                    let transformed = make opTransform perms x
+                        equality = [essence| &imageValue = &transformed |]
+                    return (lhs, rhs,
+                        [Declaration (FindOrGiven LocalFind name (forgetRepr d)) | (name,d) <- leaves]
+                        ++ [SuchThat (structurals ++ [equality])])
+
+    primitiveImageKey perms x (DomainMatrix index inner) = do
+        let ix = forgetRepr index
+        (iPat, i) <- quantifiedVarOverDomain ix
+        let oldIndex = make opTransform (map (make opPermInverse) perms) i
+        row <- primitiveImageKey perms [essence| &x[&oldIndex] |] inner
+        return [essence| flatten([&row | &iPat : &ix]) |]
+    primitiveImageKey perms x DomainBool = do
+        let imageValue = make opTransform perms x
+        return [essence| [-toInt(&imageValue)] |]
+    primitiveImageKey perms x DomainInt{} =
+        return $ fromList [make opTransform perms x]
+    primitiveImageKey _ _ _ = na "completePermutationOrder: expected a primitive domain"
+
+
+symmetryOrderingVector ::
+    (MonadFailDoc m, NameGen m, EnumerateDomain m, ?typeCheckerMode :: TypeCheckerMode)
+    => Expression -> m Expression
+symmetryOrderingVector x =
+    symmetryOrdering x >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
+  where
+    tupleLitToMatrixLit (AbstractLiteral (AbsLitTuple xs)) = do
+        xs' <- forM xs $ \v -> do
+            ty <- typeOf v
+            return $ oneDimensionaliser (matrixNumDims ty) v
+        return (fromList xs')
+    tupleLitToMatrixLit v = return v
+
+
 rule_QuickPermutationOrder :: Rule
 rule_QuickPermutationOrder = "generic-QuickPermutationOrder" `namedRule` theRule where
     theRule p@(match opQuickPermutationOrder -> Just (ps, x)) = do
@@ -2120,18 +2248,8 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                     [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
                     [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        -- at this point, tuples vs matrix literal shouldn't matter
-        -- replace tuple literals with matrix literals
-        let
-            tupleLitToMatrixLit (AbstractLiteral (AbsLitTuple xs)) = do
-                xs' <- forM xs $ \ x -> do
-                    ty <- typeOf x
-                    let x' = oneDimensionaliser (matrixNumDims ty) x
-                    return x'
-                return (fromList xs')
-            tupleLitToMatrixLit x = return x
-        ma <- symmetryOrdering a >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
-        mb <- symmetryOrdering b >>= resolveNamesX >>= transformM tupleLitToMatrixLit >>= return . make opFlatten
+        ma <- symmetryOrderingVector a
+        mb <- symmetryOrderingVector b
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
@@ -2848,6 +2966,32 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
     theRule _ = na "rule_Xor_To_Sum"
 
 
+-- These representation-dependent assertions are symmetry hints, not reifiable
+-- predicates on abstract constants. Restrict them before any rewriting.
+checkCustomSymmetries :: MonadFailDoc m => Model -> m Model
+checkCustomSymmetries model = do
+    forM_ (mStatements model) $ \st -> case st of
+        SuchThat xs -> mapM_ checkAssertion xs
+        _ -> rejectNested (universeBi st)
+    return model
+  where
+    rejectNested xs = when (any isCustom xs) $
+        failDoc "applySymmetries and applySymmetriesQuick must be top-level such-that assertions"
+    isCustom (Op MkOpApplySymmetries{}) = True
+    isCustom _ = False
+    checkAssertion (Op (MkOpApplySymmetries (OpApplySymmetries _ values syms))) = do
+        rejectNested (universe values ++ universe syms)
+        when (categoryOf syms > CatParameter) $
+            failDoc "applySymmetries: symmetries must be constant or given"
+        checkValues values
+    checkAssertion x = rejectNested (universe x)
+    checkValues x = case followAliases id x of
+        AbstractLiteral (AbsLitTuple xs) -> mapM_ checkValues xs
+        Reference _ (Just DeclNoRepr{}) -> return ()
+        Reference _ (Just DeclHasRepr{}) -> return ()
+        _ -> failDoc "applySymmetries: values must be a tuple of variable references"
+
+
 enforceTagConsistency :: MonadFail m => Model -> m Model
 enforceTagConsistency model = do
   let statements' = transformBi reDomExp $ transformBi reDomConst (mStatements model)
@@ -2919,9 +3063,7 @@ addUnnamedSymmetryBreaking mode model = do
                 combinedPermApply perms =
                     case quickOrComplete of
                         USBQuick -> make opQuickPermutationOrder perms varsTuple
-                        USBComplete ->
-                            let applied = make opTransform perms varsTuple
-                            in [essence| &varsTuple .<= &applied |]
+                        USBComplete -> make opCompletePermutationOrder perms varsTuple
 
                 mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
                 mkGenerator_Consecutive perms [(u, uSize)] = do

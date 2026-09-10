@@ -4,6 +4,7 @@ module Conjure.UI.ValidateSolution ( validateSolution ) where
 import Conjure.Bug
 import Conjure.Prelude
 import Conjure.UserError
+import Conjure.Language.Expression.Op
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
@@ -143,7 +144,12 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
         Objective{} -> return ()
         SuchThat xs -> do
             vals     <- gets id
-            forM_ xs $ \ x -> do
+            -- Custom symmetry assertions are checked on the represented solver
+            -- model. Abstract values do not determine their representation key.
+            -- The modelling prologue prohibits nesting/reification of these.
+            let isSymmetryAssertion (Op MkOpApplySymmetries{}) = True
+                isSymmetryAssertion _ = False
+            forM_ (filter (not . isSymmetryAssertion) xs) $ \ x -> do
                 constant <- instantiateExpression vals x
                 case (constant, viewConstantMatrix constant) of
                     (ConstantBool True, _) -> return ()
