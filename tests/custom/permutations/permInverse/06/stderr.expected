@@ -1,2 +1,3 @@
 Adding the following unnamed symmetry breaking constraints:
-    such that and([x .<= transform([q1], x) | q1 : permutation of A])
+    such that
+        and([completePermutationOrder([q1], x) | q1 : permutation of A])

@@ -8,7 +8,8 @@ import Conjure.Rules.Import
 
 rules_Transform :: [Rule]
 rules_Transform =
-  [ rule_Transform_DotLess_matrix,
+  [ rule_Transform_DisjointPermutations,
+    rule_Transform_DotLess_matrix,
     rule_Transform_DotLess_function,
     rule_Transform_DotLess_set,
     rule_Transform_DotLess_relation,
@@ -36,6 +37,23 @@ rules_Transform =
     -- rule_Transformed_Variant_Index,
     -- rule_Transformed_Variant_Active
   ]
+
+
+-- Actions on distinct types commute. Lower them one at a time so the existing
+-- comprehension rule can preserve each domain's inverse-index substitution.
+rule_Transform_DisjointPermutations :: Rule
+rule_Transform_DisjointPermutations = "transform-disjoint-permutations" `namedRule` theRule where
+    theRule (match opTransform -> Just (ps, x)) | length ps > 1 = do
+        domains <- forM ps $ \p -> do
+            TypePermutation d <- typeOf p
+            return d
+        let distinct = and [not (let ?typeCheckerMode = StronglyTyped in typesUnify [a,b])
+                           | (i,a) <- zip [0 :: Int ..] domains
+                           , (j,b) <- zip [0 :: Int ..] domains, i < j]
+        unless distinct $ na "transform-disjoint-permutations: overlapping types"
+        return ("Apply commuting actions on distinct types",
+                return $ foldr (\p v -> make opTransform [p] v) x ps)
+    theRule _ = na "rule_Transform_DisjointPermutations"
 
 
 rule_Transform_DotLess_matrix :: Rule
@@ -663,9 +681,18 @@ rule_Lift_Transformed_Indexing = "lift-transformed-indexing" `namedRule` theRule
   where
     theRule [essence| transform([&p], &x)[&i] |] = do
       TypePermutation {} <- typeOf p
+      tx <- typeOf x
+      index <- case tx of
+        -- Tuple positions and record fields are structural selectors, not
+        -- values in the permuted domain. They must remain constant.
+        TypeTuple{} -> return i
+        TypeRecord{} -> return i
+        TypeMatrix{} -> return [essence| transform([permInverse(&p)], &i) |]
+        TypeList{} -> return [essence| transform([permInverse(&p)], &i) |]
+        _ -> na "lift-transformed-indexing: unsupported container"
       return
         ( "transformed indexing",
-          return [essence| transform([&p], &x[transform([permInverse(&p)], &i)]) |]
+          return [essence| transform([&p], &x[&index]) |]
         )
     theRule _ = na "rule_Lift_Transformed_Indexing"
 
