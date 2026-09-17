@@ -1,4 +1,4 @@
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([permutation((q1, succ(q1)))], i)
+        and([permutationOrderEager([permutation((q1, succ(q1)))], i)
                  | q1 : e, q1 < n])

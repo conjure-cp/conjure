@@ -6,8 +6,8 @@ set -o nounset
 rm -rf conjure-output* *solutions* *.stats.json
 
 
-# for sym in Quick Complete; do
-for sym in Quick; do
+# for sym in Delayed Eager; do
+for sym in Delayed; do
     for amount in Consecutive AllPairs AllPermutations; do
         for combine in Independently Altogether; do
             echo $sym-$amount-$combine

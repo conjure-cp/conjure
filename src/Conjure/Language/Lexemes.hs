@@ -171,10 +171,10 @@ data Lexeme
 
     | L_catchUndef
 
-    | L_applySymmetries
-    | L_applySymmetriesQuick
-    | L_completePermutationOrder
-    | L_quickPermutationOrder
+    | L_applySymmetriesEager
+    | L_applySymmetriesDelayed
+    | L_permutationOrderEager
+    | L_permutationOrderDelayed
 
     -- matrix only operators
     | L_flatten
@@ -443,10 +443,10 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_dontCare, "dontCare" )
     , ( L_catchUndef, "catchUndef" )
 
-    , ( L_applySymmetries, "applySymmetries" )
-    , ( L_applySymmetriesQuick, "applySymmetriesQuick" )
-    , ( L_completePermutationOrder, "completePermutationOrder" )
-    , ( L_quickPermutationOrder, "quickPermutationOrder" )
+    , ( L_applySymmetriesEager, "applySymmetriesEager" )
+    , ( L_applySymmetriesDelayed, "applySymmetriesDelayed" )
+    , ( L_permutationOrderEager, "permutationOrderEager" )
+    , ( L_permutationOrderDelayed, "permutationOrderDelayed" )
 
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )

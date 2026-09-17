@@ -65,15 +65,15 @@ def check_case(root, name, declarations, variables, groups, constraint='', all_r
     base = prefix+declarations+'\n'+('such that '+constraint+'\n' if constraint else '')
     param = d/'input.param'
     rows = ['tuple('+','.join(permutation(a[tag], tag) for tag in groups)+')' for a in actions]
-    param.write_text('letting symmetries be ['+','.join(rows)+']\n')
+    param.write_text('letting symmetries be sequence('+','.join(rows)+')\n')
     expected = None
     counts = []
-    for mode in ['none', 'applySymmetries', 'applySymmetriesQuick']:
+    for mode in ['none', 'applySymmetriesEager', 'applySymmetriesDelayed']:
         model = d/(mode+'.essence')
         text = base
         if mode != 'none':
             dom = 'tuple('+','.join('permutation of '+tag for tag in groups)+')'
-            text = prefix+f'given symmetries : matrix indexed by [int(1..{len(actions)})] of {dom}\n'+declarations+'\n'
+            text = prefix+f'given symmetries : sequence of {dom}\n'+declarations+'\n'
             text += 'such that '+(constraint+',\n' if constraint else '')+mode+'(tuple('+','.join(n for n,_ in variables)+'), symmetries)\n'
         model.write_text(text)
         out = d/mode
@@ -99,7 +99,7 @@ def check_case(root, name, declarations, variables, groups, constraint='', all_r
             if mode == 'none':
                 if expected is None: expected = actual
             assert actual == expected, (name, mode, f.name, len(expected), len(actual), expected-actual)
-            if mode == 'applySymmetries':
+            if mode == 'applySymmetriesEager':
                 assert len(solutions) == len(expected), (name, f.name, len(solutions),len(expected))
             mode_counts.append(len(solutions))
         counts.append(mode_counts)
@@ -132,18 +132,17 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
                [('x',('function','E','bool'))], {'E':s3})
     check_case(root, 'two-types', 'find x : E\nfind y : F', [('x','E'),('y','F')], {'E':s2,'F':s3})
 
-    # The same compiled model accepts empty, identity and duplicate lists.
-    for mode in ['applySymmetries', 'applySymmetriesQuick']:
+    # The same compiled model accepts empty, identity and duplicate sequences.
+    for mode in ['applySymmetriesEager', 'applySymmetriesDelayed']:
         d = root/('edges-'+mode);d.mkdir()
         model = d/'model.essence'
         model.write_text('letting E be domain int:E(1..3)\n'
-                         'given k : int(0..)\n'
-                         'given ps : matrix indexed by [int(1..k)] of tuple(permutation of E)\n'
+                         'given ps : sequence of tuple(permutation of E)\n'
                          'find x : E\n'
                          f'such that {mode}(tuple(x), ps)\n')
         for k in [0,1,2]:
             param = d/f'{k}.param'
-            param.write_text(f'letting k be {k}\nletting ps be ['+','.join(['tuple(permutation())']*k)+']\n')
+            param.write_text('letting ps be sequence('+','.join(['tuple(permutation())']*k)+')\n')
             out=d/str(k)
             run(['solve',model,param,'-ac','-o',out,'--unnamed-symmetry-breaking=none',
                  '--number-of-solutions=all','--solutions-in-one-file','--output-format=jsonstream',
@@ -152,7 +151,7 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
             assert len(sols)==1
             assert len([json.loads(l) for l in sols[0].read_text().splitlines() if l.strip()])==3
         param = d/'generator.param'
-        param.write_text('letting k be 1\nletting ps be [tuple(permutation((1:E,2:E,3:E)))]\n')
+        param.write_text('letting ps be sequence(tuple(permutation((1:E,2:E,3:E))))\n')
         out = d/'generator'
         run(['solve',model,param,'-ac','-o',out,'--unnamed-symmetry-breaking=none',
              '--number-of-solutions=all','--solutions-in-one-file','--output-format=jsonstream',
@@ -160,20 +159,22 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
         sols=list(out.glob('*.solutions.json'))
         assert len(sols)==1
         assert len([json.loads(l) for l in sols[0].read_text().splitlines() if l.strip()])==2
-    print('empty, identity and duplicate lists: unchanged solution sets in both modes')
+    print('empty, identity and duplicate sequences: unchanged solution sets in both modes')
     print('a single generator is applied without computing group closure')
 
     invalid = [
-        ('nested', 'letting ps be [tuple(permutation((1:E,2:E)))]',
-         '!applySymmetries(tuple(x), ps)', 'top-level such-that'),
-        ('non-permutation', 'letting ps be [tuple(1)]',
-         'applySymmetries(tuple(x), ps)', 'not a permutation'),
-        ('duplicate-type', 'letting ps be [tuple(permutation((1:E,2:E)),permutation((1:E,2:E)))]',
-         'applySymmetries(tuple(x), ps)', 'multiple permutations'),
-        ('decision-list', 'find ps : matrix indexed by [int(1..1)] of tuple(permutation of E)',
-         'applySymmetries(tuple(x), ps)', 'constant or given'),
-        ('value-expression', 'letting ps be [tuple(permutation((1:E,2:E)))]',
-         'applySymmetries(tuple(x+1:E), ps)', 'variable references'),
+        ('matrix', 'given ps : matrix indexed by [int(1..1)] of tuple(permutation of E)',
+         'applySymmetriesEager(tuple(x), ps)', 'expects a sequence'),
+        ('nested', 'letting ps be sequence(tuple(permutation((1:E,2:E))))',
+         '!applySymmetriesEager(tuple(x), ps)', 'top-level such-that'),
+        ('non-permutation', 'letting ps be sequence(tuple(1))',
+         'applySymmetriesEager(tuple(x), ps)', 'not a permutation'),
+        ('duplicate-type', 'letting ps be sequence(tuple(permutation((1:E,2:E)),permutation((1:E,2:E))))',
+         'applySymmetriesEager(tuple(x), ps)', 'multiple permutations'),
+        ('decision-sequence', 'find ps : sequence (maxSize 1) of tuple(permutation of E)',
+         'applySymmetriesEager(tuple(x), ps)', 'constant or given'),
+        ('value-expression', 'letting ps be sequence(tuple(permutation((1:E,2:E))))',
+         'applySymmetriesEager(tuple(x+1:E), ps)', 'variable references'),
     ]
     for name, decl, assertion, message in invalid:
         model=root/(name+'.essence')
@@ -185,11 +186,11 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
 
     # Compare the generated refinement itself, not whether a particular rule fired.
     fixtures = Path(__file__).resolve().parent
-    for mode in ['applySymmetries', 'applySymmetriesQuick']:
+    for mode in ['applySymmetriesEager', 'applySymmetriesDelayed']:
         model=root/('refinement-'+mode+'.essence')
-        model.write_text((fixtures/'refinement.essence').read_text().replace('applySymmetries(',mode+'('))
+        model.write_text((fixtures/'refinement.essence').read_text().replace('applySymmetriesEager(',mode+'('))
         out=root/('refinement-'+mode)
         run(['modelling',model,'-a','f','--unnamed-symmetry-breaking=none','-o',out],root/(mode+'-refinement.log'))
         actual=(out/'model000001.eprime').read_text().split("$ Conjure's",1)[0].rstrip()+'\n'
         assert actual == (fixtures/'expected'/(mode+'.eprime')).read_text(), mode+' refinement changed'
-    print('Complete and Quick Essence-prime refinements match snapshots')
+    print('Eager and Delayed Essence-prime refinements match snapshots')
