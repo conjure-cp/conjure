@@ -19,8 +19,8 @@ Delayed-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
         and([and([permutationOrderDelayed([permutation((q2, succ(q2))),
-                                         permutation((q1, succ(q1)))],
-                                        (i, j))
+                                           permutation((q1, succ(q1)))],
+                                          (i, j))
                       | q2 : f, q2 < 4:f])
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
@@ -54,8 +54,8 @@ Delayed-AllPairs-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
         and([and([permutationOrderDelayed([permutation((q3, q4)),
-                                         permutation((q1, q2))],
-                                        (i, j))
+                                           permutation((q1, q2))],
+                                          (i, j))
                       | q3 : f, q4 : f, q3 < q4])
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
@@ -71,8 +71,10 @@ Copying solution to: model.solutions.json
 Delayed-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([q1], (i, j)) | q1 : permutation of e]),
-        and([permutationOrderDelayed([q2], (i, j)) | q2 : permutation of f])
+        and([permutationOrderDelayed([q1], (i, j))
+                 | q1 : permutation of e]),
+        and([permutationOrderDelayed([q2], (i, j))
+                 | q2 : permutation of f])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -102,11 +104,9 @@ Copying solution to: model.solutions.json
 Eager-Consecutive-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, succ(q1)))],
-                                      (i, j))
+        and([permutationOrderEager([permutation((q1, succ(q1)))], (i, j))
                  | q1 : e, q1 < 4:e]),
-        and([permutationOrderEager([permutation((q2, succ(q2)))],
-                                      (i, j))
+        and([permutationOrderEager([permutation((q2, succ(q2)))], (i, j))
                  | q2 : f, q2 < 4:f])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -122,8 +122,8 @@ Eager-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
         and([and([permutationOrderEager([permutation((q2, succ(q2))),
-                                            permutation((q1, succ(q1)))],
-                                           (i, j))
+                                         permutation((q1, succ(q1)))],
+                                        (i, j))
                       | q2 : f, q2 < 4:f])
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
@@ -157,8 +157,8 @@ Eager-AllPairs-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
         and([and([permutationOrderEager([permutation((q3, q4)),
-                                            permutation((q1, q2))],
-                                           (i, j))
+                                         permutation((q1, q2))],
+                                        (i, j))
                       | q3 : f, q4 : f, q3 < q4])
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
@@ -174,10 +174,8 @@ Copying solution to: model.solutions.json
 Eager-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([q1], (i, j))
-                 | q1 : permutation of e]),
-        and([permutationOrderEager([q2], (i, j))
-                 | q2 : permutation of f])
+        and([permutationOrderEager([q1], (i, j)) | q1 : permutation of e]),
+        and([permutationOrderEager([q2], (i, j)) | q2 : permutation of f])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output

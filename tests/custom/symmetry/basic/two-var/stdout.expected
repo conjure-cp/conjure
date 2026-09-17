@@ -65,7 +65,8 @@ Copying solution to: model.solutions.json
 Delayed-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([q1], (i, j)) | q1 : permutation of e])
+        and([permutationOrderDelayed([q1], (i, j))
+                 | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -80,7 +81,8 @@ Copying solution to: model.solutions.json
 Delayed-AllPermutations-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([q1], (i, j)) | q1 : permutation of e])
+        and([permutationOrderDelayed([q1], (i, j))
+                 | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -95,8 +97,7 @@ Copying solution to: model.solutions.json
 Eager-Consecutive-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, succ(q1)))],
-                                      (i, j))
+        and([permutationOrderEager([permutation((q1, succ(q1)))], (i, j))
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -112,8 +113,7 @@ Copying solution to: model.solutions.json
 Eager-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, succ(q1)))],
-                                      (i, j))
+        and([permutationOrderEager([permutation((q1, succ(q1)))], (i, j))
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -161,8 +161,7 @@ Copying solution to: model.solutions.json
 Eager-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([q1], (i, j))
-                 | q1 : permutation of e])
+        and([permutationOrderEager([q1], (i, j)) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -177,8 +176,7 @@ Copying solution to: model.solutions.json
 Eager-AllPermutations-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([q1], (i, j))
-                 | q1 : permutation of e])
+        and([permutationOrderEager([q1], (i, j)) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
