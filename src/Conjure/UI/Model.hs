@@ -2120,7 +2120,7 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
             )
 
 
--- The public operators expand a parameter matrix; the internal operation keeps
+-- The public operators expand a parameter sequence; the internal operation keeps
 -- Eager intact until the source representation has been selected.
 rule_ApplySymmetries :: Rule
 rule_ApplySymmetries = "apply-symmetries" `namedRule` theRule where
@@ -2136,11 +2136,11 @@ rule_ApplySymmetries = "apply-symmetries" `namedRule` theRule where
         checkValue values
         ts <- typeOf symmetries
         let entries = case ts of
-                TypeMatrix _ (TypeTuple xs) -> xs
-                TypeList (TypeTuple xs) -> xs
+                TypeSequence (TypeTuple xs) -> xs
                 _ -> [] -- rejected by typeOf above
         return ("Apply the supplied symmetry tuples", do
-            (pPat, permTuple) <- quantifiedVar
+            (pPat, entry) <- quantifiedVar
+            let permTuple = make opIndexing entry (fromInt 2)
             let perms = [ make opIndexing permTuple (fromInt i)
                         | i <- [1 .. genericLength entries] ]
                 applied = if delayed

@@ -11,7 +11,7 @@ import Data.Aeson qualified as JSON -- aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.Vector qualified as V -- vector
 
--- Delayed flag, ordered values, and a parameter matrix of permutation tuples.
+-- Delayed flag, ordered values, and a parameter sequence of permutation tuples.
 data OpApplySymmetries x = OpApplySymmetries Bool x x
   deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
@@ -26,21 +26,22 @@ instance (ToJSON x) => ToJSON (OpApplySymmetries x) where
 instance (FromJSON x) => FromJSON (OpApplySymmetries x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpApplySymmetries x) where
-  typeOf p@(OpApplySymmetries _ values symmetries) = do
+  typeOf p@(OpApplySymmetries delayed values symmetries) = do
+    let opName :: Doc
+        opName = if delayed then "applySymmetriesDelayed" else "applySymmetriesEager"
     tv <- typeOf values
     ts <- typeOf symmetries
     case tv of
       TypeTuple _ -> return ()
-      _ -> raiseTypeError $ "applySymmetriesEager expects a tuple of values:" <+> pretty p
+      _ -> raiseTypeError $ opName <+> "expects a tuple of values:" <+> pretty p
     entries <- case ts of
-      TypeMatrix TypeInt{} (TypeTuple xs) -> return xs
-      TypeList (TypeTuple xs) -> return xs
-      _ -> raiseTypeError $ "applySymmetriesEager expects a matrix of permutation tuples:" <+> pretty p
+      TypeSequence (TypeTuple xs) -> return xs
+      _ -> raiseTypeError $ opName <+> "expects a sequence of permutation tuples:" <+> pretty p
     domains <- forM entries $ \t -> case t of
       TypePermutation d -> return d
-      _ -> raiseTypeError $ "applySymmetriesEager entry is not a permutation:" <+> pretty p
+      _ -> raiseTypeError $ opName <+> "entry is not a permutation:" <+> pretty p
     unless (length domains == length (nub domains)) $
-      raiseTypeError $ "applySymmetriesEager has multiple permutations for the same type:" <+> pretty p
+      raiseTypeError $ opName <+> "has multiple permutations for the same type:" <+> pretty p
     return TypeBool
 
 instance SimplifyOp OpApplySymmetries x where

@@ -1,6 +1,6 @@
 # Custom symmetry breaking for experiments
 
-`applySymmetriesEager(values, symmetries)` posts Eager symmetry breaking for a supplied list. `applySymmetriesDelayed(values, symmetries)` uses Conjure's existing Delayed method instead. Both use the existing representation-specific order, not `~<=`.
+`applySymmetriesEager(values, symmetries)` posts Eager symmetry breaking for a supplied sequence. `applySymmetriesDelayed(values, symmetries)` uses Conjure's existing Delayed method instead. Both use the existing representation-specific order, not `~<=`.
 
 Run this example with:
 
@@ -16,12 +16,12 @@ The constraint fixes `f(1:E) = 1:E`. Only the identity and the swap of 2 and 3 a
 
 - Put each operator directly in `such that`, as a separate assertion. These are symmetry-breaking hints; they cannot be negated, reified, used inside another expression, or used to define a variable.
 - `values` is a tuple of variable references (aliases and nested tuple literals are allowed). Use `tuple(f)` for a singleton. Tuple order controls comparison priority.
-- `symmetries` is a constant or given one-dimensional integer-indexed matrix of permutation tuples. Each tuple is one joint action on all the selected values. Its positions identify type actions, not individual variables.
+- `symmetries` is a constant or given sequence of permutation tuples. Each tuple is one joint action on all the selected values. Its positions identify type actions, not individual variables.
 - Permutations in one tuple must target distinct types. Use tags to distinguish independent actions on integer domains. For example, `tuple(permutation of int:A(1..2), permutation of int:B(1..3))` permits different domain sizes and acts on A and B independently.
 - Permutation literals omit fixed points. The declared parameter domain supplies the type of an empty identity permutation.
 - Use one common ordered value tuple for all symmetry assertions in a model. Independently minimizing different tuples can remove whole orbits even when each supplied action is a valid symmetry.
 - Eager orders the selected tuple; omitted variables can leave multiple full solutions with the same selected tuple.
-- The supplied entries are applied exactly as given. Conjure does not generate group closure. Empty lists impose no constraints; identity or repeated entries do not strengthen the result.
+- The supplied entries are applied exactly as given. Conjure does not generate group closure. Empty sequences impose no constraints; identity or repeated entries do not strengthen the result.
 - Every supplied action must be a symmetry of the entire problem. Conjure checks types and parameter validity, but cannot prove this semantic property for arbitrary constraints. Supplying generators alone need not produce complete symmetry breaking.
 - Disable automatic unnamed symmetry breaking for custom-group experiments, as above. Otherwise the automatic constraints are additional constraints and may use symmetries that your problem does not have.
 
