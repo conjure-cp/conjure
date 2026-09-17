@@ -2223,6 +2223,9 @@ functionOps l = case l of
   L_allDiff -> unFuncV listOrMatrix (const $ pure TypeBool)
   L_alldifferent_except -> biFuncV (indep listOrMatrix enumerable) (const2 TypeBool)
   L_catchUndef -> biFuncV unifies (\a b -> pure $ mostDefinedS $ catMaybes [a, b])
+  L_applySymmetries -> biFunc quickPermutationOrderArgs quickPermutationOrderTypes
+  L_applySymmetriesQuick -> biFunc quickPermutationOrderArgs quickPermutationOrderTypes
+  L_completePermutationOrder -> biFunc quickPermutationOrderArgs quickPermutationOrderTypes
   L_quickPermutationOrder -> biFunc quickPermutationOrderArgs quickPermutationOrderTypes
   L_dontCare -> unFunc anyType (const $ pure TypeBool)
   L_toSet -> unFuncV toSetArgs typeToSet

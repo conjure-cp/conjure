@@ -31,7 +31,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTransform x) where
         TypePermutation ov -> return (ov, ov)
         _ -> raiseTypeError $ "(transform first argument not a morphism)" <+> pretty p
       return (from, to)
-    if typesUnify $ concat [[a, b] | (a, b) <- fromTos]
+    if all (\(a, b) -> typesUnify [a, b]) fromTos
       then typeOf x
       else
         raiseTypeError
