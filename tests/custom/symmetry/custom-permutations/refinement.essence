@@ -5,4 +5,4 @@ given symmetries : matrix indexed by [int(1..numberOfSymmetries)] of tuple(permu
 find f : function (total) E --> E
 such that
     f(1:E) = 1:E,
-    applySymmetries(tuple(f), symmetries)
+    applySymmetriesEager(tuple(f), symmetries)

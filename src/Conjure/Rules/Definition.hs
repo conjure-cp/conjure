@@ -7,7 +7,7 @@ module Conjure.Rules.Definition
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
-    , UnnamedSymmetryBreaking(..), USBQuickOrComplete(..), USBScope(..), USBIndependentlyOrAltogether(..)
+    , UnnamedSymmetryBreaking(..), USBDelayedOrEager(..), USBScope(..), USBIndependentlyOrAltogether(..)
     , ModelZipper, mkModelZipper, fromModelZipper
     , ModelWIP(..), modelWIPOut, updateModelWIPInfo
     , isAtomic
@@ -154,23 +154,23 @@ instance Default Config where
         }
 
 
--- 1. Quick/Complete. Quick is x .<= p(x)
---                    Complete is x .<= y /\ y = p(x)
+-- 1. Delayed/Eager. Delayed is x .<= p(x)
+--                    Eager is x .<= y /\ y = p(x)
 -- 2. Scope.          Consecutive
 --                    AllPairs
 --                    AllPermutations
 -- 3. Independently/Altogether
 -- in addition, we have
 --      none
---      fast: Quick-Consecutive-Independently
---      full: Complete-AllPermutations-Altogether
+--      fast: Delayed-Consecutive-Independently
+--      full: Eager-AllPermutations-Altogether
 data UnnamedSymmetryBreaking =
         UnnamedSymmetryBreaking
-            USBQuickOrComplete
+            USBDelayedOrEager
             USBScope
             USBIndependentlyOrAltogether
     deriving (Eq, Ord, Show, Read, Data, Typeable)
-data USBQuickOrComplete = USBQuick | USBComplete
+data USBDelayedOrEager = USBDelayed | USBEager
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 data USBScope = USBConsecutive | USBAllPairs | USBAllPermutations
     deriving (Eq, Ord, Show, Read, Data, Typeable)

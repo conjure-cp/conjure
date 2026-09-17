@@ -68,7 +68,7 @@ def check_case(root, name, declarations, variables, groups, constraint='', all_r
     param.write_text('letting symmetries be ['+','.join(rows)+']\n')
     expected = None
     counts = []
-    for mode in ['none', 'applySymmetries', 'applySymmetriesQuick']:
+    for mode in ['none', 'applySymmetriesEager', 'applySymmetriesDelayed']:
         model = d/(mode+'.essence')
         text = base
         if mode != 'none':
@@ -99,7 +99,7 @@ def check_case(root, name, declarations, variables, groups, constraint='', all_r
             if mode == 'none':
                 if expected is None: expected = actual
             assert actual == expected, (name, mode, f.name, len(expected), len(actual), expected-actual)
-            if mode == 'applySymmetries':
+            if mode == 'applySymmetriesEager':
                 assert len(solutions) == len(expected), (name, f.name, len(solutions),len(expected))
             mode_counts.append(len(solutions))
         counts.append(mode_counts)
@@ -133,7 +133,7 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
     check_case(root, 'two-types', 'find x : E\nfind y : F', [('x','E'),('y','F')], {'E':s2,'F':s3})
 
     # The same compiled model accepts empty, identity and duplicate lists.
-    for mode in ['applySymmetries', 'applySymmetriesQuick']:
+    for mode in ['applySymmetriesEager', 'applySymmetriesDelayed']:
         d = root/('edges-'+mode);d.mkdir()
         model = d/'model.essence'
         model.write_text('letting E be domain int:E(1..3)\n'
@@ -165,15 +165,15 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
 
     invalid = [
         ('nested', 'letting ps be [tuple(permutation((1:E,2:E)))]',
-         '!applySymmetries(tuple(x), ps)', 'top-level such-that'),
+         '!applySymmetriesEager(tuple(x), ps)', 'top-level such-that'),
         ('non-permutation', 'letting ps be [tuple(1)]',
-         'applySymmetries(tuple(x), ps)', 'not a permutation'),
+         'applySymmetriesEager(tuple(x), ps)', 'not a permutation'),
         ('duplicate-type', 'letting ps be [tuple(permutation((1:E,2:E)),permutation((1:E,2:E)))]',
-         'applySymmetries(tuple(x), ps)', 'multiple permutations'),
+         'applySymmetriesEager(tuple(x), ps)', 'multiple permutations'),
         ('decision-list', 'find ps : matrix indexed by [int(1..1)] of tuple(permutation of E)',
-         'applySymmetries(tuple(x), ps)', 'constant or given'),
+         'applySymmetriesEager(tuple(x), ps)', 'constant or given'),
         ('value-expression', 'letting ps be [tuple(permutation((1:E,2:E)))]',
-         'applySymmetries(tuple(x+1:E), ps)', 'variable references'),
+         'applySymmetriesEager(tuple(x+1:E), ps)', 'variable references'),
     ]
     for name, decl, assertion, message in invalid:
         model=root/(name+'.essence')
@@ -185,11 +185,11 @@ with tempfile.TemporaryDirectory(prefix='conjure-custom-symmetries-') as tmp:
 
     # Compare the generated refinement itself, not whether a particular rule fired.
     fixtures = Path(__file__).resolve().parent
-    for mode in ['applySymmetries', 'applySymmetriesQuick']:
+    for mode in ['applySymmetriesEager', 'applySymmetriesDelayed']:
         model=root/('refinement-'+mode+'.essence')
-        model.write_text((fixtures/'refinement.essence').read_text().replace('applySymmetries(',mode+'('))
+        model.write_text((fixtures/'refinement.essence').read_text().replace('applySymmetriesEager(',mode+'('))
         out=root/('refinement-'+mode)
         run(['modelling',model,'-a','f','--unnamed-symmetry-breaking=none','-o',out],root/(mode+'-refinement.log'))
         actual=(out/'model000001.eprime').read_text().split("$ Conjure's",1)[0].rstrip()+'\n'
         assert actual == (fixtures/'expected'/(mode+'.eprime')).read_text(), mode+' refinement changed'
-    print('Complete and Quick Essence-prime refinements match snapshots')
+    print('Eager and Delayed Essence-prime refinements match snapshots')

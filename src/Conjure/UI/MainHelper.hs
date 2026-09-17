@@ -31,7 +31,7 @@ import qualified Conjure.Language.ParserCPrime as ParserCPrime ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..)
                                 , UnnamedSymmetryBreaking(..)
-                                , USBQuickOrComplete(..), USBScope(..), USBIndependentlyOrAltogether(..)
+                                , USBDelayedOrEager(..), USBScope(..), USBIndependentlyOrAltogether(..)
                                 )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
@@ -724,27 +724,27 @@ mainWithArgs_Modelling modelNamePrefix Modelling{..} portfolioSize modelHashesBe
                                                  ]
 
             unnamedSymmetryBreakingParsed <-
-            -- 1. Quick/Complete. Quick is x .<= p(x)
-            --                    Complete is x .<= y /\ y = p(x)
+            -- 1. Delayed/Eager. Delayed is x .<= p(x)
+            --                    Eager is x .<= y /\ y = p(x)
             -- 2. Scope.          Consecutive
             --                    AllPairs
             --                    AllPermutations
             -- 3. Independently/Altogether
             -- in addition, we have
             --      none
-            --      fast: Quick-Consecutive-Independently
-            --      full: Complete-AllPermutations-Altogether
+            --      fast: Delayed-Consecutive-Independently
+            --      full: Eager-AllPermutations-Altogether
                 case (unnamedSymmetryBreaking, splitOn "-" unnamedSymmetryBreaking) of
                     ("none", _)  -> return Nothing
-                    ("fast", _)  -> return $ Just $ UnnamedSymmetryBreaking USBQuick USBConsecutive USBIndependently
-                    ("full", _)  -> return $ Just $ UnnamedSymmetryBreaking USBComplete USBAllPermutations USBAltogether
+                    ("fast", _)  -> return $ Just $ UnnamedSymmetryBreaking USBDelayed USBConsecutive USBIndependently
+                    ("full", _)  -> return $ Just $ UnnamedSymmetryBreaking USBEager USBAllPermutations USBAltogether
                     (_, [a,b,c]) -> do
                         a' <- case a of
-                            "Quick" -> return USBQuick
-                            "Complete" -> return USBComplete
+                            "Delayed" -> return USBDelayed
+                            "Eager" -> return USBEager
                             _ -> userErr1 $ vcat
                                 [ "Unrecognised value for the first component of --unnamed-symmetry-breaking"
-                                , "Expected one of: Quick / Complete"
+                                , "Expected one of: Delayed / Eager"
                                 , "But got:" <+> pretty a
                                 ]
                         b' <- case b of

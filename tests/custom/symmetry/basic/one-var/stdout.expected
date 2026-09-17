@@ -1,7 +1,7 @@
-Quick-Consecutive-Independently
+Delayed-Consecutive-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([quickPermutationOrder([permutation((q1, succ(q1)))], i)
+        and([permutationOrderDelayed([permutation((q1, succ(q1)))], i)
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -13,10 +13,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Quick-Consecutive-Altogether
+Delayed-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([quickPermutationOrder([permutation((q1, succ(q1)))], i)
+        and([permutationOrderDelayed([permutation((q1, succ(q1)))], i)
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -28,10 +28,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Quick-AllPairs-Independently
+Delayed-AllPairs-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([quickPermutationOrder([permutation((q1, q2))], i)
+        and([permutationOrderDelayed([permutation((q1, q2))], i)
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -43,10 +43,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Quick-AllPairs-Altogether
+Delayed-AllPairs-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([quickPermutationOrder([permutation((q1, q2))], i)
+        and([permutationOrderDelayed([permutation((q1, q2))], i)
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -58,10 +58,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Quick-AllPermutations-Independently
+Delayed-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([quickPermutationOrder([q1], i) | q1 : permutation of e])
+        and([permutationOrderDelayed([q1], i) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -72,10 +72,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Quick-AllPermutations-Altogether
+Delayed-AllPermutations-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([quickPermutationOrder([q1], i) | q1 : permutation of e])
+        and([permutationOrderDelayed([q1], i) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -86,10 +86,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Complete-Consecutive-Independently
+Eager-Consecutive-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([permutation((q1, succ(q1)))], i)
+        and([permutationOrderEager([permutation((q1, succ(q1)))], i)
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -101,10 +101,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Complete-Consecutive-Altogether
+Eager-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([permutation((q1, succ(q1)))], i)
+        and([permutationOrderEager([permutation((q1, succ(q1)))], i)
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -116,10 +116,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Complete-AllPairs-Independently
+Eager-AllPairs-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([permutation((q1, q2))], i)
+        and([permutationOrderEager([permutation((q1, q2))], i)
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -131,10 +131,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Complete-AllPairs-Altogether
+Eager-AllPairs-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([permutation((q1, q2))], i)
+        and([permutationOrderEager([permutation((q1, q2))], i)
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -146,10 +146,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Complete-AllPermutations-Independently
+Eager-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([q1], i) | q1 : permutation of e])
+        and([permutationOrderEager([q1], i) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -160,10 +160,10 @@ Copying stats to: model.stats.json
 Copying solution to: model.solutions
 Copying solution to: model.solutions.json
 {"e": ["e_1", "e_2", "e_3", "e_4"], "i": "e_1"}
-Complete-AllPermutations-Altogether
+Eager-AllPermutations-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([completePermutationOrder([q1], i) | q1 : permutation of e])
+        and([permutationOrderEager([q1], i) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output

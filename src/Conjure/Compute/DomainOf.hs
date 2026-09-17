@@ -182,8 +182,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpTwoBars x) = domainOf x
     domainOf (MkOpUnion x) = domainOf x
     domainOf (MkOpXor x) = domainOf x
-    domainOf (MkOpQuickPermutationOrder x) = domainOf x
-    domainOf (MkOpCompletePermutationOrder x) = domainOf x
+    domainOf (MkOpPermutationOrderDelayed x) = domainOf x
+    domainOf (MkOpPermutationOrderEager x) = domainOf x
     domainOf (MkOpApplySymmetries x) = domainOf x
 
     indexDomainsOf (MkOpActive x) = indexDomainsOf x
@@ -265,8 +265,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpTwoBars x) = indexDomainsOf x
     indexDomainsOf (MkOpUnion x) = indexDomainsOf x
     indexDomainsOf (MkOpXor x) = indexDomainsOf x
-    indexDomainsOf (MkOpQuickPermutationOrder x) = indexDomainsOf x
-    indexDomainsOf (MkOpCompletePermutationOrder x) = indexDomainsOf x
+    indexDomainsOf (MkOpPermutationOrderDelayed x) = indexDomainsOf x
+    indexDomainsOf (MkOpPermutationOrderEager x) = indexDomainsOf x
     indexDomainsOf (MkOpApplySymmetries x) = indexDomainsOf x
 
 instance DomainOf Constant where
@@ -741,10 +741,10 @@ instance (Pretty x, TypeOf x, Domain () x :< x) => DomainOf (OpTwoBars x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpUnion x) where
     domainOf op = mkDomainAny ("OpUnion:" <++> pretty op) <$> typeOf op
 
-instance DomainOf (OpQuickPermutationOrder x) where
+instance DomainOf (OpPermutationOrderDelayed x) where
     domainOf _ = return DomainBool
 
-instance DomainOf (OpCompletePermutationOrder x) where
+instance DomainOf (OpPermutationOrderEager x) where
     domainOf _ = return DomainBool
 
 

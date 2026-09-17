@@ -3,9 +3,9 @@ find x : set of A
 
 find p : permutation (numMoved 3) of A
 $ such that x .<= transform([p], x)
-such that quickPermutationOrder([p], x)
+such that permutationOrderDelayed([p], x)
 
-$ should have 2 additional solutions with quick, or more!
+$ should have 2 additional solutions with delayed, or more!
 
 $ the above rule, Oz thinks can be written recursively for all types
 $ produce aux for the rhs

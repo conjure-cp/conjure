@@ -293,10 +293,10 @@ functionals =
     , L_atleast
     , L_atmost
     , L_catchUndef
-    , L_applySymmetries
-    , L_applySymmetriesQuick
-    , L_completePermutationOrder
-    , L_quickPermutationOrder
+    , L_applySymmetriesEager
+    , L_applySymmetriesDelayed
+    , L_permutationOrderEager
+    , L_permutationOrderDelayed
     , L_dontCare
     , L_hist
     , L_factorial
