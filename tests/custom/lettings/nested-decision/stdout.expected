@@ -1,0 +1,36 @@
+Generating models for chain.essence
+Generated models: model000001.eprime
+Saved under: out-chain
+Savile Row: out-chain/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+--- chain eprime ---
+language ESSENCE' 1.0
+
+find x: bool
+branching on [x]
+such that x
+
+--- chain solutions ---
+out-chain/model000001-solution000001.solution:letting x be true
+Generating models for bools.essence
+Generated models: model000001.eprime
+Saved under: out-bools
+Savile Row: out-bools/model000001.eprime
+Running minion for domain filtering.
+Running solver: minion
+--- bools eprime ---
+language ESSENCE' 1.0
+
+find x: bool
+find y: int(0..3)
+branching on [x, y]
+such that
+    x,
+    y + 1 + y <= 4
+
+--- bools solutions ---
+out-bools/model000001-solution000001.solution:letting x be true
+out-bools/model000001-solution000001.solution:letting y be 0
+out-bools/model000001-solution000002.solution:letting x be true
+out-bools/model000001-solution000002.solution:letting y be 1
