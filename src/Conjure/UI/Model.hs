@@ -848,9 +848,18 @@ addSearchOrder model
 inlineDecVarLettings :: Model -> Model
 inlineDecVarLettings model =
     let
+        -- Substitute a decision letting everywhere it is named, including
+        -- through other decision lettings. The name is removed while its body
+        -- is expanded so a cyclic letting cannot diverge.
         inline p@(Reference nm _) = do
-            x <- gets (lookup nm)
-            return (fromMaybe p x)
+            mx <- gets (lookup nm)
+            case mx of
+                Nothing -> return p
+                Just x  -> do
+                    modify (filter ((/= nm) . fst))
+                    x' <- transformM inline x
+                    modify ((nm, x') :)
+                    return x'
         inline p = return p
 
         statements = catMaybes
@@ -860,7 +869,10 @@ inlineDecVarLettings model =
             case st of
                 Declaration (Letting nm x)
                     | categoryOf x == CatDecision
-                    -> modify ((nm,x) :) >> return Nothing
+                    -> do
+                        x' <- transformM inline x
+                        modify ((nm, x') :)
+                        return Nothing
                 -- The following doesn't work when the identifier is used in a domain
                 -- Declaration (Letting nm x@Reference{})
                 --     -> modify ((nm,x) :) >> return Nothing
