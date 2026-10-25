@@ -32,7 +32,9 @@ jobs:
       fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
         GHC_VERSION: ["9.4", "9.6", "9.8", "9.10"]
-        os: [ubuntu-latest, macos-latest]
+        # macos-latest pairs Xcode 26's ld with the macOS 27 SDK, which that
+        # linker cannot parse (actions/runner-images#14940).
+        os: [ubuntu-latest, macos-15]
 
     runs-on: ${{ matrix.os }}
 

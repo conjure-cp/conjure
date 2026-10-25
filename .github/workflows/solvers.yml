@@ -27,9 +27,11 @@ jobs:
     strategy:
       fail-fast: false # run all combinations of the matrix even if one combination fails
       matrix:
+        # macos-latest pairs Xcode 26's ld with the macOS 27 SDK, which that
+        # linker cannot parse (actions/runner-images#14940).
         os:
         - ubuntu-latest
-        - macos-latest
+        - macos-15
 
     runs-on: ${{ matrix.os }}
 

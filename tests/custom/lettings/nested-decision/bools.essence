@@ -1,0 +1,14 @@
+language Essence 1.3
+
+find x : bool
+find y : int(0..3)
+
+letting k be 1
+letting a be and([x, true])
+letting b be or([a, false])
+letting c be and([b, x])
+letting d be y + k
+letting e be d + y
+letting f be and([c, e <= 4])
+
+such that f
