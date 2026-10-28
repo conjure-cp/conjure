@@ -65,7 +65,11 @@ rule_Transform_DotLess_matrix = "transform-dotless" `namedRule` theRule
           let mk = case match opDotLeq p of Just _ -> make opDotLeq; Nothing -> make opDotLt
           ty_x <- typeOf x
           xIndices <- case ty_x of
-            TypeMatrix {} -> indexDomainsOf x
+            TypeMatrix {} -> do
+              -- Compound elements must be decomposed by symmetryOrdering before
+              -- introducing indexing into the transformed matrix.
+              unless (isPrimitiveType ty_x) $ na "rule_Transform_DotLess_matrix"
+              indexDomainsOf x
             TypeList {} ->
               case x of
                 Comprehension _ [Generator (GenDomainHasRepr _ d)] -> return [forgetRepr d]
