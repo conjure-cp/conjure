@@ -99,6 +99,18 @@ instance DomainOf Expression where
     indexDomainsOf (AbstractLiteral x) = indexDomainsOf x
     indexDomainsOf (Op x) = indexDomainsOf x
     indexDomainsOf (WithLocals h _) = indexDomainsOf h
+    indexDomainsOf x@(Comprehension h [Generator gen]) = do
+        TypeMatrix{} <- typeOf x
+        index <- case gen of
+            GenDomainNoRepr _ d -> return d
+            GenDomainHasRepr _ d -> return (forgetRepr d)
+            _ -> failDoc "indexDomainsOf: expected a domain generator"
+        innerIndices <- indexDomainsOf h
+        let positionalIndex = case index of
+                DomainInt tag _ -> DomainInt tag
+                    [RangeBounded (Constant (ConstantInt tag 1)) (make opTwoBars (Domain index))]
+                _ -> index
+        return $ positionalIndex : innerIndices
     indexDomainsOf x = failDoc ("indexDomainsOf{Expression}:" <+> pretty (show x))
 
 -- this should be better implemented by some ghc-generics magic
