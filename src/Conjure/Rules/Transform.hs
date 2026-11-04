@@ -9,6 +9,7 @@ import Conjure.Rules.Import
 rules_Transform :: [Rule]
 rules_Transform =
   [ rule_Transform_DisjointPermutations,
+    rule_Transform_MSetFreq,
     rule_Transform_DotLess_matrix,
     rule_Transform_DotLess_function,
     rule_Transform_DotLess_set,
@@ -54,6 +55,20 @@ rule_Transform_DisjointPermutations = "transform-disjoint-permutations" `namedRu
         return ("Apply commuting actions on distinct types",
                 return $ foldr (\p v -> make opTransform [p] v) x ps)
     theRule _ = na "rule_Transform_DisjointPermutations"
+
+
+-- Counting in a bijective image is counting the inverse image in the source.
+-- This avoids expanding generators over transformed abstract multiset entries.
+rule_Transform_MSetFreq :: Rule
+rule_Transform_MSetFreq = "transform-mset-freq" `namedRule` theRule where
+    theRule [essence| freq(transform([&p], &x), &a) |] = do
+        TypePermutation{} <- typeOf p
+        TypeMSet{} <- typeOf x
+        return
+            ( "Frequency in a permuted multiset"
+            , return [essence| freq(&x, transform([permInverse(&p)], &a)) |]
+            )
+    theRule _ = na "rule_Transform_MSetFreq"
 
 
 rule_Transform_DotLess_matrix :: Rule

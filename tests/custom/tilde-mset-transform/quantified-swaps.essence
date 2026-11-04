@@ -1,0 +1,6 @@
+language Essence 1.5
+letting T be domain int:T(1..3)
+find x : mset (maxSize 2) of mset (maxSize 1) of T
+such that forAll a,b : T .
+    (a < b /\ (forAll c : T . (a < c /\ c < b) -> false)) ->
+    tuple(x) ~<= transform([permutation((a,b))], tuple(x))
