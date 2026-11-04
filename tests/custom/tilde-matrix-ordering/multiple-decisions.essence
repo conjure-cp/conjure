@@ -1,0 +1,6 @@
+language Essence 1.5
+letting T be domain int:T(1..2)
+find design : matrix indexed by [T, int(1..2)] of int(0..1)
+find printings : matrix indexed by [T] of int(0..1)
+such that tuple(design,printings) ~<=
+    transform([permutation((1:T,2:T))], tuple(design,printings))

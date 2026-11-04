@@ -1,0 +1,5 @@
+language Essence 1.5
+letting I be domain int:I(0..2)
+letting T be domain int:T(0..2)
+find x : matrix indexed by [I] of set (size 1) of T
+such that x ~<= transform([permutation((0:I,1:I,2:I)), permutation((0:T,1:T,2:T))], x)

@@ -414,13 +414,109 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
             )
 
 
+
+-- Predefined ordering must recurse through abstract entries, rather than their
+-- representations. In particular, Boolean ~<= uses false before true; .<= is
+-- allowed to use a different, representation-dependent Boolean key.
+rule_Matrix_TildeOrdering :: Rule
+rule_Matrix_TildeOrdering = "matrix-tilde-ordering" `namedRule` theRule where
+    theRule p = do
+        (x0, y0, strict) <- case (match opTildeLt p, match opTildeLeq p) of
+            (Just (x, y), _) -> return (x, y, True)
+            (_, Just (x, y)) -> return (x, y, False)
+            _ -> na "rule_Matrix_TildeOrdering"
+        let x = followAliases id x0
+            y = followAliases id y0
+        tx <- typeOf x
+        ty <- typeOf y
+        unless (matrixNumDims tx > 0 && matrixNumDims ty > 0) $
+            na "rule_Matrix_TildeOrdering: expected matrices"
+        -- Check that matrix domains are available while testing applicability.
+        -- Tuple projections and other child expressions may still need rewriting;
+        -- failures here must defer this rule, not abort its selected RuleResult.
+        if isPrimitiveType tx && isPrimitiveType ty
+            then do
+                indicesX <- imageIndices x
+                indicesY <- imageIndices y
+                return
+                    ( "Predefined lexicographic ordering of primitive matrices"
+                    , do
+                        xs <- primitiveVector x tx indicesX
+                        ys <- primitiveVector y ty indicesY
+                        return $ if strict then [essence| &xs <lex &ys |]
+                                           else [essence| &xs <=lex &ys |]
+                    )
+            else do
+                indexX:_ <- indexDomainsOf x
+                indexY:_ <- indexDomainsOf y
+                return
+                    ( "Predefined lexicographic ordering of abstract matrix entries"
+                    , if indexX == indexY
+                        then sameIndexComparison strict x y indexX
+                        else positionalComparison strict x y indexX indexY
+                    )
+
+    imageIndices x = case match opTransform x of
+        Just{} -> Just <$> indexDomainsOf x
+        Nothing -> return Nothing
+
+    primitiveVector x ty Nothing = return $ flattenIfNeeded (matrixNumDims ty) x
+    primitiveVector x _ (Just indices) = do
+        -- Read the image at its original coordinates before flattening, so the
+        -- existing transformed-indexing rule can apply inverse index actions.
+        pairs <- forM indices $ \index -> do
+            (pat, i) <- quantifiedVar
+            return (Generator (GenDomainNoRepr pat index), i)
+        return $ Comprehension (make opMatrixIndexing x (map snd pairs)) (map fst pairs)
+
+    sameIndexComparison strict x y index = do
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let less = [essence|
+                exists &iPat : &index .
+                    &x[&i] ~< &y[&i] /\
+                    (forAll &jPat : &index , &j < &i . &x[&j] = &y[&j])
+            |]
+        if strict
+            then return less
+            else do
+                (kPat, k) <- quantifiedVar
+                return [essence| &less \/ (forAll &kPat : &index . &x[&k] = &y[&k]) |]
+
+    -- Different lengths use the usual lexicographic prefix rule. Enumerating
+    -- indices gives positional access even for shifted index domains. The
+    -- common-domain path above avoids this indirection in symmetry comparisons.
+    positionalComparison strict x y indexX indexY = do
+        (aPat, a) <- quantifiedVar
+        (bPat, b) <- quantifiedVar
+        let indicesX = Comprehension a [Generator (GenDomainNoRepr aPat indexX)]
+            indicesY = Comprehension b [Generator (GenDomainNoRepr bPat indexY)]
+            sizeX = make opTwoBars (Domain indexX)
+            sizeY = make opTwoBars (Domain indexY)
+            common = mkDomainIntB 1 [essence| min([&sizeX, &sizeY]) |]
+            atX pos = make opIndexing x (make opIndexing indicesX pos)
+            atY pos = make opIndexing y (make opIndexing indicesY pos)
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        (kPat, k) <- quantifiedVar
+        let xi = atX i
+            yi = atY i
+            xj = atX j
+            yj = atY j
+            xk = atX k
+            yk = atY k
+            lengthOrder = if strict then [essence| &sizeX < &sizeY |]
+                                    else [essence| &sizeX <= &sizeY |]
+        return [essence|
+            (exists &iPat : &common .
+                &xi ~< &yi /\ (forAll &jPat : &common , &j < &i . &xj = &yj))
+            \/ ((forAll &kPat : &common . &xk = &yk) /\ &lengthOrder)
+            |]
+
 rule_Matrix_Lt_Primitive :: Rule
 rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
     theRule p = do
-        (x,y)           <- case (match opLt p, match opTildeLt p) of
-                                (Just a, _) -> return a
-                                (_, Just a) -> return a
-                                _ -> na "rule_Matrix_Lt_Primitive"
+        (x,y)           <- match opLt p
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
         unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ failDoc ("not a primitive type:" <+> pretty tx)
@@ -436,10 +532,7 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
 rule_Matrix_Leq_Primitive :: Rule
 rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
     theRule p = do
-        (x,y)           <- case (match opLeq p, match opTildeLeq p) of
-                                (Just a, _) -> return a
-                                (_, Just a) -> return a
-                                _ -> na "rule_Matrix_Leq_Primitive"
+        (x,y)           <- match opLeq p
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
         unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ failDoc ("not a primitive type:" <+> pretty tx)
