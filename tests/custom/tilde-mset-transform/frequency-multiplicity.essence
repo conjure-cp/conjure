@@ -1,0 +1,8 @@
+language Essence 1.5
+letting T be domain int:T(1..3)
+find x : mset (maxSize 2) of mset (maxSize 1) of T
+find counts : matrix indexed by [int(1..4)] of int(0..2)
+such that counts = [freq(transform([permutation((1:T,2:T))],x),mset()),
+                    freq(transform([permutation((1:T,2:T))],x),mset(1:T)),
+                    freq(transform([permutation((1:T,2:T))],x),mset(2:T)),
+                    freq(transform([permutation((1:T,2:T))],x),mset(3:T))]

@@ -1,0 +1,6 @@
+language Essence 1.5
+find a, b : bool
+find checks : matrix indexed by [int(1..8)] of bool
+such that
+    checks = [a ~< b, [a] ~< [b], a ~<= b, [a] ~<= [b],
+              a .< b, [a] .< [b], a .<= b, [a] .<= [b]]

@@ -1,0 +1,4 @@
+language Essence 1.5
+letting T be domain int:T(1..3)
+find x : mset (maxSize 2) of mset (maxSize 2) of T
+such that x ~<= transform([permutation((1:T,2:T,3:T))], x)

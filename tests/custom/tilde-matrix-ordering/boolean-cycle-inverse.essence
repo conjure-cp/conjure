@@ -1,0 +1,4 @@
+language Essence 1.5
+letting I be domain int:I(0..2)
+find x : matrix indexed by [I, I] of bool
+such that x ~<= transform([permutation((0:I,1:I,2:I))], x)

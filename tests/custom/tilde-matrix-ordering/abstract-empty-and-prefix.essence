@@ -1,0 +1,6 @@
+language Essence 1.5
+find emptyX, emptyY : matrix indexed by [int(1..0)] of set of int(1..2)
+find checks : matrix indexed by [int(1..6)] of bool
+such that checks = [emptyX ~<= emptyY, emptyX ~< emptyY,
+                    emptyX ~< [{1}], [{1}] ~<= emptyX,
+                    [{1}] ~< [{1},{2}], [{1},{2}] ~<= [{1}]]

@@ -1,0 +1,8 @@
+language Essence 1.5
+given n, s, t : int
+where n >= 2
+where s >= 0
+where t >= 0
+letting T be domain int:T(1..n)
+find x : mset (maxSize s) of mset (maxSize t) of T
+such that tuple(x) ~<= transform([permutation((1:T,2:T))], tuple(x))
