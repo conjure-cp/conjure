@@ -28,7 +28,7 @@ instance (FromJSON x) => FromJSON (OpApplySymmetries x) where parseJSON = generi
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpApplySymmetries x) where
   typeOf p@(OpApplySymmetries delayed values symmetries) = do
     let opName :: Doc
-        opName = if delayed then "applySymmetriesDelayed" else "applySymmetriesEager"
+        opName = if delayed then "applySymmetriesAfterRepresentation" else "applySymmetries"
     tv <- typeOf values
     ts <- typeOf symmetries
     case tv of
@@ -49,11 +49,11 @@ instance SimplifyOp OpApplySymmetries x where
 
 instance Pretty x => Pretty (OpApplySymmetries x) where
   prettyPrec _ (OpApplySymmetries delayed values symmetries) =
-    (if delayed then "applySymmetriesDelayed" else "applySymmetriesEager") <>
+    (if delayed then "applySymmetriesAfterRepresentation" else "applySymmetries") <>
       prettyList prParens "," [values, symmetries]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpApplySymmetries x) where
   varSymBreakingDescription (OpApplySymmetries delayed values symmetries) = JSON.Object $ KM.fromList
-    [ ("type", JSON.String (if delayed then "OpApplySymmetriesDelayed" else "OpApplySymmetries"))
+    [ ("type", JSON.String (if delayed then "OpApplySymmetriesAfterRepresentation" else "OpApplySymmetries"))
     , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription [values, symmetries])
     ]

@@ -2223,10 +2223,10 @@ functionOps l = case l of
   L_allDiff -> unFuncV listOrMatrix (const $ pure TypeBool)
   L_alldifferent_except -> biFuncV (indep listOrMatrix enumerable) (const2 TypeBool)
   L_catchUndef -> biFuncV unifies (\a b -> pure $ mostDefinedS $ catMaybes [a, b])
-  L_applySymmetriesEager -> biFunc permutationOrderDelayedArgs permutationOrderDelayedTypes
-  L_applySymmetriesDelayed -> biFunc permutationOrderDelayedArgs permutationOrderDelayedTypes
-  L_permutationOrderEager -> biFunc permutationOrderDelayedArgs permutationOrderDelayedTypes
-  L_permutationOrderDelayed -> biFunc permutationOrderDelayedArgs permutationOrderDelayedTypes
+  L_applySymmetries -> biFunc permutationOrderArgs permutationOrderTypes
+  L_applySymmetriesAfterRepresentation -> biFunc permutationOrderArgs permutationOrderTypes
+  L_permutationOrder -> biFunc permutationOrderArgs permutationOrderTypes
+  L_permutationOrderAfterRepresentation -> biFunc permutationOrderArgs permutationOrderTypes
   L_dontCare -> unFunc anyType (const $ pure TypeBool)
   L_toSet -> unFuncV toSetArgs typeToSet
   L_toMSet -> unFuncV toMSetArgs typeToMSet
@@ -2469,16 +2469,16 @@ functionOps l = case l of
           _ -> TypeAny
 
     -- TODO: validate
-    permutationOrderDelayedArgs :: Arg -> Arg -> Validator ()
-    permutationOrderDelayedArgs _ _ = return (pure ())
+    permutationOrderArgs :: Arg -> Arg -> Validator ()
+    permutationOrderArgs _ _ = return (pure ())
 
     -- TODO
     permInverseArgs :: SArg -> Validator ()
     permInverseArgs _ = return (pure ())
 
     -- TODO
-    permutationOrderDelayedTypes :: Maybe (Kind, Expression) -> Maybe (Kind, Expression) -> Maybe Type
-    permutationOrderDelayedTypes _ _ = Just TypeBool
+    permutationOrderTypes :: Maybe (Kind, Expression) -> Maybe (Kind, Expression) -> Maybe Type
+    permutationOrderTypes _ _ = Just TypeBool
 
     imSetArgs :: SArg -> SArg -> Validator ()
     imSetArgs (r1, a) (r2, b) = do

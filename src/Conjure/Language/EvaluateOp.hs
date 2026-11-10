@@ -865,11 +865,11 @@ instance EvaluateOp OpXor where
     evaluateOp (OpXor x) = ConstantBool . xor <$> boolsOut x
         where xor xs = odd (length [ () | True <- xs ])
 
-instance EvaluateOp OpPermutationOrderDelayed where
-    evaluateOp op = na $ "evaluateOp{OpPermutationOrderDelayed}:" <++> pretty (show op)
+instance EvaluateOp OpPermutationOrderAfterRepresentation where
+    evaluateOp op = na $ "evaluateOp{OpPermutationOrderAfterRepresentation}:" <++> pretty (show op)
 
-instance EvaluateOp OpPermutationOrderEager where
-    evaluateOp op = na $ "evaluateOp{OpPermutationOrderEager}:" <++> pretty (show op)
+instance EvaluateOp OpPermutationOrder where
+    evaluateOp op = na $ "evaluateOp{OpPermutationOrder}:" <++> pretty (show op)
 
 instance EvaluateOp OpApplySymmetries where
     evaluateOp op = na $ "evaluateOp{OpApplySymmetries}:" <++> pretty (show op)
@@ -1068,6 +1068,6 @@ instance EvaluateOp Op where
     evaluateOp (MkOpTwoBars x) = evaluateOp x
     evaluateOp (MkOpUnion x) = evaluateOp x
     evaluateOp (MkOpXor x) = evaluateOp x
-    evaluateOp (MkOpPermutationOrderDelayed x) = evaluateOp x
-    evaluateOp (MkOpPermutationOrderEager x) = evaluateOp x
+    evaluateOp (MkOpPermutationOrderAfterRepresentation x) = evaluateOp x
+    evaluateOp (MkOpPermutationOrder x) = evaluateOp x
     evaluateOp (MkOpApplySymmetries x) = evaluateOp x
