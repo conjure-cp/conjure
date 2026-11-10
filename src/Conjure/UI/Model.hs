@@ -1773,8 +1773,8 @@ delayedRules =
     ,   [ rule_ReducerToComprehension
         ]
     ,   [ rule_ApplySymmetries
-        , rule_PermutationOrderEager
-        , rule_PermutationOrderDelayed
+        , rule_PermutationOrder
+        , rule_PermutationOrderAfterRepresentation
         , rule_DotLtLeq
         , rule_Flatten_Lex
         ]
@@ -1900,10 +1900,10 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                     pin x = x
                     onOp (Op (MkOpApplySymmetries (OpApplySymmetries delayed values syms))) =
                         Op (MkOpApplySymmetries (OpApplySymmetries delayed (transformBi pin values) syms))
-                    onOp (Op (MkOpPermutationOrderDelayed (OpPermutationOrderDelayed ps values))) =
-                        make opPermutationOrderDelayed ps (transformBi pin values)
-                    onOp (Op (MkOpPermutationOrderEager (OpPermutationOrderEager ps values))) =
-                        make opPermutationOrderEager ps (transformBi pin values)
+                    onOp (Op (MkOpPermutationOrderAfterRepresentation (OpPermutationOrderAfterRepresentation ps values))) =
+                        make opPermutationOrderAfterRepresentation ps (transformBi pin values)
+                    onOp (Op (MkOpPermutationOrder (OpPermutationOrder ps values))) =
+                        make opPermutationOrder ps (transformBi pin values)
                     onOp x = x
                 in return m { mStatements = transformBi onOp (mStatements m) }
 
@@ -2139,13 +2139,14 @@ rule_ApplySymmetries :: Rule
 rule_ApplySymmetries = "apply-symmetries" `namedRule` theRule where
     theRule (Op (MkOpApplySymmetries op@(OpApplySymmetries delayed values symmetries))) = do
         void $ typeOf op
+        let opName = if delayed then "applySymmetriesAfterRepresentation" else "applySymmetries"
         when (categoryOf symmetries > CatParameter) $
-            failDoc "applySymmetriesEager: symmetries must be constant or given"
+            failDoc $ opName <> ": symmetries must be constant or given"
         let checkValue v = case followAliases id v of
                 AbstractLiteral (AbsLitTuple xs) -> mapM_ checkValue xs
                 Reference _ (Just DeclNoRepr{}) -> return ()
                 Reference _ (Just DeclHasRepr{}) -> return ()
-                _ -> failDoc "applySymmetriesEager: values must be a tuple of variable references"
+                _ -> failDoc $ opName <> ": values must be a tuple of variable references"
         checkValue values
         ts <- typeOf symmetries
         let entries = case ts of
@@ -2157,30 +2158,30 @@ rule_ApplySymmetries = "apply-symmetries" `namedRule` theRule where
             let perms = [ make opIndexing permTuple (fromInt i)
                         | i <- [1 .. genericLength entries] ]
                 applied = if delayed
-                    then make opPermutationOrderDelayed perms values
-                    else make opPermutationOrderEager perms values
+                    then make opPermutationOrderAfterRepresentation perms values
+                    else make opPermutationOrder perms values
             return $ make opAnd $ Comprehension applied
                 [Generator (GenInExpr pPat symmetries)])
     theRule _ = na "rule_ApplySymmetries"
 
 
-rule_PermutationOrderEager :: Rule
-rule_PermutationOrderEager = "permutation-order-eager" `namedRule` theRule where
-    theRule (match opPermutationOrderEager -> Just (perms, value0)) = do
+rule_PermutationOrder :: Rule
+rule_PermutationOrder = "permutation-order" `namedRule` theRule where
+    theRule (match opPermutationOrder -> Just (perms, value0)) = do
         let value = followAliases id value0
         -- Wait for all representation choices before creating the image. This
         -- also checks nested tuple literals, which have no representation tree.
         let ready x = case followAliases id x of
                 AbstractLiteral (AbsLitTuple xs) -> mapM_ ready xs
                 r@Reference{} -> void $ domainOfR r
-                _ -> na "permutationOrderEager: expected represented variables"
+                _ -> na "permutationOrder: expected represented variables"
         ready value
         return ("Eager symmetry comparison in the source representation", do
             (lhs, rhs, locals) <- keys perms value
             let comparison = [essence| &lhs <=lex &rhs |]
             return $ if null locals then comparison
                 else WithLocals comparison (AuxiliaryVars locals))
-    theRule _ = na "rule_PermutationOrderEager"
+    theRule _ = na "rule_PermutationOrder"
 
     keys perms x0 = case followAliases id x0 of
         AbstractLiteral (AbsLitTuple xs) -> do
@@ -2225,7 +2226,7 @@ rule_PermutationOrderEager = "permutation-order-eager" `namedRule` theRule where
         return [essence| [-toInt(&imageValue)] |]
     primitiveImageKey perms x DomainInt{} =
         return $ fromList [make opTransform perms x]
-    primitiveImageKey _ _ _ = na "permutationOrderEager: expected a primitive domain"
+    primitiveImageKey _ _ _ = na "permutationOrder: expected a primitive domain"
 
 
 symmetryOrderingVector ::
@@ -2242,16 +2243,16 @@ symmetryOrderingVector x =
     tupleLitToMatrixLit v = return v
 
 
-rule_PermutationOrderDelayed :: Rule
-rule_PermutationOrderDelayed = "generic-PermutationOrderDelayed" `namedRule` theRule where
-    theRule p@(match opPermutationOrderDelayed -> Just (ps, x)) = do
+rule_PermutationOrderAfterRepresentation :: Rule
+rule_PermutationOrderAfterRepresentation = "generic-PermutationOrderAfterRepresentation" `namedRule` theRule where
+    theRule p@(match opPermutationOrderAfterRepresentation -> Just (ps, x)) = do
         x_ord <- symmetryOrdering x
         let rhs = make opTransform ps x_ord
         return
-            ( "Generic vertical rule for permutationOrderDelayed:" <+> pretty p
+            ( "Generic vertical rule for permutationOrderAfterRepresentation:" <+> pretty p
             , return [essence| &x_ord .<= &rhs |]
             )
-    theRule _ = na "rule_PermutationOrderDelayed"
+    theRule _ = na "rule_PermutationOrderAfterRepresentation"
 
 
 rule_DotLtLeq :: Rule
@@ -2989,20 +2990,21 @@ checkCustomSymmetries model = do
     return model
   where
     rejectNested xs = when (any isCustom xs) $
-        failDoc "applySymmetriesEager and applySymmetriesDelayed must be top-level such-that assertions"
+        failDoc "applySymmetries and applySymmetriesAfterRepresentation must be top-level such-that assertions"
     isCustom (Op MkOpApplySymmetries{}) = True
     isCustom _ = False
-    checkAssertion (Op (MkOpApplySymmetries (OpApplySymmetries _ values syms))) = do
+    checkAssertion (Op (MkOpApplySymmetries (OpApplySymmetries delayed values syms))) = do
+        let opName = if delayed then "applySymmetriesAfterRepresentation" else "applySymmetries"
         rejectNested (universe values ++ universe syms)
         when (categoryOf syms > CatParameter) $
-            failDoc "applySymmetriesEager: symmetries must be constant or given"
-        checkValues values
+            failDoc $ opName <> ": symmetries must be constant or given"
+        checkValues opName values
     checkAssertion x = rejectNested (universe x)
-    checkValues x = case followAliases id x of
-        AbstractLiteral (AbsLitTuple xs) -> mapM_ checkValues xs
+    checkValues opName x = case followAliases id x of
+        AbstractLiteral (AbsLitTuple xs) -> mapM_ (checkValues opName) xs
         Reference _ (Just DeclNoRepr{}) -> return ()
         Reference _ (Just DeclHasRepr{}) -> return ()
-        _ -> failDoc "applySymmetriesEager: values must be a tuple of variable references"
+        _ -> failDoc $ opName <> ": values must be a tuple of variable references"
 
 
 enforceTagConsistency :: MonadFail m => Model -> m Model
@@ -3044,7 +3046,7 @@ addUnnamedSymmetryBreaking mode model = do
 --    traceM $ show $ "Unnamed decision variables in this model:" <++> prettyList id "," allDecVars
 
     -- 3 axis of doom
-    -- 1. Delayed/Eager. Delayed is permutationOrderDelayed(x, p)   -- this is an efficient subset of x .<= p(x)
+    -- 1. Delayed/Eager. Delayed is permutationOrderAfterRepresentation(x, p)   -- this is an efficient subset of x .<= p(x)
     --                    Eager is x .<= p(x)
     -- 2. Scope.          Consecutive
     --                    AllPairs
@@ -3075,8 +3077,8 @@ addUnnamedSymmetryBreaking mode model = do
 
                 combinedPermApply perms =
                     case delayedOrEager of
-                        USBDelayed -> make opPermutationOrderDelayed perms varsTuple
-                        USBEager -> make opPermutationOrderEager perms varsTuple
+                        USBDelayed -> make opPermutationOrderAfterRepresentation perms varsTuple
+                        USBEager -> make opPermutationOrder perms varsTuple
 
                 mkGenerator_Consecutive _ [] = bug "must have at least one unnamed type"
                 mkGenerator_Consecutive perms [(u, uSize)] = do

@@ -1,7 +1,9 @@
 Delayed-Consecutive-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([permutation((q1, succ(q1)))], (i, j))
+        and([permutationOrderAfterRepresentation([permutation((q1,
+                                                               succ(q1)))],
+                                                 (i, j))
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -17,7 +19,9 @@ Copying solution to: model.solutions.json
 Delayed-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([permutation((q1, succ(q1)))], (i, j))
+        and([permutationOrderAfterRepresentation([permutation((q1,
+                                                               succ(q1)))],
+                                                 (i, j))
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -33,7 +37,8 @@ Copying solution to: model.solutions.json
 Delayed-AllPairs-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([permutation((q1, q2))], (i, j))
+        and([permutationOrderAfterRepresentation([permutation((q1, q2))],
+                                                 (i, j))
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -49,7 +54,8 @@ Copying solution to: model.solutions.json
 Delayed-AllPairs-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([permutation((q1, q2))], (i, j))
+        and([permutationOrderAfterRepresentation([permutation((q1, q2))],
+                                                 (i, j))
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -65,7 +71,7 @@ Copying solution to: model.solutions.json
 Delayed-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([q1], (i, j))
+        and([permutationOrderAfterRepresentation([q1], (i, j))
                  | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -81,7 +87,7 @@ Copying solution to: model.solutions.json
 Delayed-AllPermutations-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderDelayed([q1], (i, j))
+        and([permutationOrderAfterRepresentation([q1], (i, j))
                  | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -97,7 +103,7 @@ Copying solution to: model.solutions.json
 Eager-Consecutive-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, succ(q1)))], (i, j))
+        and([permutationOrder([permutation((q1, succ(q1)))], (i, j))
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -113,7 +119,7 @@ Copying solution to: model.solutions.json
 Eager-Consecutive-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, succ(q1)))], (i, j))
+        and([permutationOrder([permutation((q1, succ(q1)))], (i, j))
                  | q1 : e, q1 < 4:e])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -129,7 +135,7 @@ Copying solution to: model.solutions.json
 Eager-AllPairs-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, q2))], (i, j))
+        and([permutationOrder([permutation((q1, q2))], (i, j))
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -145,7 +151,7 @@ Copying solution to: model.solutions.json
 Eager-AllPairs-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([permutation((q1, q2))], (i, j))
+        and([permutationOrder([permutation((q1, q2))], (i, j))
                  | q1 : e, q2 : e, q1 < q2])
 Generating models for model.essence
 Generated models: model000001.eprime
@@ -161,7 +167,7 @@ Copying solution to: model.solutions.json
 Eager-AllPermutations-Independently
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([q1], (i, j)) | q1 : permutation of e])
+        and([permutationOrder([q1], (i, j)) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
@@ -176,7 +182,7 @@ Copying solution to: model.solutions.json
 Eager-AllPermutations-Altogether
 Adding the following unnamed symmetry breaking constraints:
     such that
-        and([permutationOrderEager([q1], (i, j)) | q1 : permutation of e])
+        and([permutationOrder([q1], (i, j)) | q1 : permutation of e])
 Generating models for model.essence
 Generated models: model000001.eprime
 Saved under: conjure-output

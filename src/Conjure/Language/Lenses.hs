@@ -452,7 +452,7 @@ opTransform _ =
     )
 
 
-opPermutationOrderDelayed
+opPermutationOrderAfterRepresentation
     :: ( Op x :< x
        , Pretty x
        , MonadFailDoc m
@@ -461,16 +461,16 @@ opPermutationOrderDelayed
     -> ( [x] -> x -> x
        , x -> m ([x], x)
        )
-opPermutationOrderDelayed _ =
-    ( \ x y -> inject $ MkOpPermutationOrderDelayed $ OpPermutationOrderDelayed x y
+opPermutationOrderAfterRepresentation _ =
+    ( \ x y -> inject $ MkOpPermutationOrderAfterRepresentation $ OpPermutationOrderAfterRepresentation x y
     , \ p -> do
             op <- project p
             case op of
-                MkOpPermutationOrderDelayed (OpPermutationOrderDelayed x y) -> return (x,y)
+                MkOpPermutationOrderAfterRepresentation (OpPermutationOrderAfterRepresentation x y) -> return (x,y)
                 _ -> na ("Lenses.opTransform:" <++> pretty p)
     )
 
-opPermutationOrderEager
+opPermutationOrder
     :: ( Op x :< x
        , Pretty x
        , MonadFailDoc m
@@ -479,12 +479,12 @@ opPermutationOrderEager
     -> ( [x] -> x -> x
        , x -> m ([x], x)
        )
-opPermutationOrderEager _ =
-    ( \ x y -> inject $ MkOpPermutationOrderEager $ OpPermutationOrderEager x y
+opPermutationOrder _ =
+    ( \ x y -> inject $ MkOpPermutationOrder $ OpPermutationOrder x y
     , \ p -> do
             op <- project p
             case op of
-                MkOpPermutationOrderEager (OpPermutationOrderEager x y) -> return (x,y)
+                MkOpPermutationOrder (OpPermutationOrder x y) -> return (x,y)
                 _ -> na ("Lenses.opTransform:" <++> pretty p)
     )
 
