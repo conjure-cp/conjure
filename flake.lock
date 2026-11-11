@@ -1,5 +1,39 @@
 {
   "nodes": {
+    "chuffed": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1712105532,
+        "narHash": "sha256-D4HEcCDcJi05AL9suc7Twtf/wjpwBkLEeumGY3nNi5g=",
+        "owner": "chuffed",
+        "repo": "chuffed",
+        "rev": "2016f7eb7943a86b9ce93bb70b821d701667a5ca",
+        "type": "github"
+      },
+      "original": {
+        "owner": "chuffed",
+        "ref": "0.13.2",
+        "repo": "chuffed",
+        "type": "github"
+      }
+    },
+    "minion": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1751882457,
+        "narHash": "sha256-b4bPVFY8oLJrd/tuLAtyBawnz2qQJUPzUqokVPD/UzE=",
+        "owner": "minion",
+        "repo": "minion",
+        "rev": "5c9f347c864bc2b64684b1df9d366294c21aac49",
+        "type": "github"
+      },
+      "original": {
+        "owner": "minion",
+        "repo": "minion",
+        "rev": "5c9f347c864bc2b64684b1df9d366294c21aac49",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1793977579,
@@ -18,6 +52,8 @@
     },
     "root": {
       "inputs": {
+        "chuffed": "chuffed",
+        "minion": "minion",
         "nixpkgs": "nixpkgs"
       }
     }
